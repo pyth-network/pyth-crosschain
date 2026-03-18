@@ -9,6 +9,7 @@ type Props = {
   reset?: () => void;
 };
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Error component intentionally shadows global Error
 export const Error = ({ error, reset }: Props) => {
   const logger = useLogger();
 

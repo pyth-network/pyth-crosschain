@@ -1,37 +1,8 @@
 import { createMDX } from "fumadocs-mdx/next";
 
 const config = {
-  reactStrictMode: true,
-  pageExtensions: ["ts", "tsx", "mdx"],
-
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-
-  turbopack: {
-    resolveExtensions: [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".mts",
-      ".mjs",
-      ".cts",
-      ".cjs",
-    ],
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
-  },
-
   headers: async () => [
     {
-      source: "/:path*",
       headers: [
         {
           key: "X-XSS-Protection",
@@ -55,277 +26,286 @@ const config = {
             "vibrate=(), geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=self",
         },
       ],
+      source: "/:path*",
     },
   ],
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  pageExtensions: ["ts", "tsx", "mdx"],
+  reactStrictMode: true,
 
   async redirects() {
     return [
       {
-        source: "/home",
         destination: "/",
         permanent: true,
+        source: "/home",
       },
       // First version of docs site -> third version
       {
-        source: "/evm",
         destination:
           "/price-feeds/core/use-real-time-data/pull-integration/evm",
         permanent: true,
+        source: "/evm",
       },
 
       // Second version of docs site -> third version
       {
-        source: "/documentation/metrics/:path*",
         destination: "/metrics/:path*",
         permanent: true,
+        source: "/documentation/metrics/:path*",
       },
       {
-        source: "/documentation/how-pyth-works/:slug*",
         destination: "/price-feeds/core/how-pyth-works/:slug*",
         permanent: true,
+        source: "/documentation/how-pyth-works/:slug*",
       },
       {
-        source: "/documentation/benchmarks",
         destination: "/price-feeds/core/use-historic-price-data",
         permanent: true,
+        source: "/documentation/benchmarks",
       },
       {
-        source: "/documentation/publish-data/:slug*",
         destination: "/price-feeds/core/publish-data/:slug*",
         permanent: true,
+        source: "/documentation/publish-data/:slug*",
       },
       {
-        source: "/documentation/solana-price-feeds/:slug*",
         destination: "/price-feeds/core/solana-price-feeds/:slug*",
         permanent: true,
+        source: "/documentation/solana-price-feeds/:slug*",
       },
       {
-        source: "/documentation/whitepaper/:slug*",
         destination: "/whitepaper/:slug*",
         permanent: true,
+        source: "/documentation/whitepaper/:slug*",
       },
       {
-        source: "/documentation/security",
         destination: "/security",
         permanent: true,
+        source: "/documentation/security",
       },
       {
-        source: "/documentation/entropy",
         destination: "/entropy",
         permanent: true,
+        source: "/documentation/entropy",
       },
       {
-        source: "/documentation/entropy/protocol-design",
         destination: "/entropy/protocol-design",
         permanent: true,
+        source: "/documentation/entropy/protocol-design",
       },
       {
-        source: "/documentation/entropy/best-practices",
         destination: "/entropy/best-practices",
         permanent: true,
+        source: "/documentation/entropy/best-practices",
       },
       {
+        destination: "/entropy/generate-random-numbers-evm",
+        permanent: true,
         source: "/documentation/entropy/solidity-sdk",
-        destination: "/entropy/generate-random-numbers-evm",
-        permanent: true,
       },
       {
+        destination: "/entropy/generate-random-numbers-evm",
+        permanent: true,
         source: "/documentation/entropy/evm",
-        destination: "/entropy/generate-random-numbers-evm",
-        permanent: true,
       },
       {
-        source: "/documentation/pythnet-price-feeds",
         destination: "/price-feeds/core/pythnet-price-feeds",
         permanent: true,
+        source: "/documentation/pythnet-price-feeds",
       },
       {
+        destination: "/price-feeds/core/pull-updates",
+        permanent: true,
         source: "/documentation/pythnet-price-feeds/on-demand",
-        destination: "/price-feeds/core/pull-updates",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/best-practices",
+        permanent: true,
         source: "/documentation/pythnet-price-feeds/best-practices",
-        destination: "/price-feeds/core/best-practices",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/best-practices",
+        permanent: true,
         source: "/price-feeds/pythnet-price-feeds/best-practices",
-        destination: "/price-feeds/core/best-practices",
-        permanent: true,
       },
       {
-        source: "/price-feeds/pythnet-price-feeds/pull-updates",
         destination: "/price-feeds/core/pull-updates",
         permanent: true,
+        source: "/price-feeds/pythnet-price-feeds/pull-updates",
       },
       {
-        source: "/price-feeds/solana-price-feeds/best-practices",
         destination: "/price-feeds/core/best-practices",
         permanent: true,
+        source: "/price-feeds/solana-price-feeds/best-practices",
       },
       {
+        destination: "/price-feeds/core/how-pyth-works/hermes",
+        permanent: true,
         source: "/documentation/pythnet-price-feeds/hermes",
-        destination: "/price-feeds/core/how-pyth-works/hermes",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/how-pyth-works/hermes",
+        permanent: true,
         source: "/pythnet-price-feeds/hermes",
-        destination: "/price-feeds/core/how-pyth-works/hermes",
-        permanent: true,
       },
       {
+        destination:
+          "/price-feeds/core/schedule-price-updates/using-price-pusher",
+        permanent: true,
         source: "/documentation/pythnet-price-feeds/scheduler",
+      },
+      {
         destination:
           "/price-feeds/core/schedule-price-updates/using-price-pusher",
         permanent: true,
-      },
-      {
         source: "/price-feeds/schedule-price-updates/using-scheduler",
-        destination:
-          "/price-feeds/core/schedule-price-updates/using-price-pusher",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/fetch-price-updates",
+        permanent: true,
         source: "/documentation/pythnet-price-feeds/off-chain",
-        destination: "/price-feeds/core/fetch-price-updates",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/fetch-price-updates",
+        permanent: true,
         source: "/price-feeds/use-real-time-data/off-chain",
-        destination: "/price-feeds/core/fetch-price-updates",
-        permanent: true,
       },
       {
-        source: "/documentation/pythnet-price-feeds/evm",
         destination:
           "/price-feeds/core/use-real-time-data/pull-integration/evm",
         permanent: true,
+        source: "/documentation/pythnet-price-feeds/evm",
       },
       {
-        source: "/documentation",
         destination: "/price-feeds",
         permanent: true,
+        source: "/documentation",
       },
       {
-        source: "/api-explorer/:slug*",
         destination: "/price-feeds/core/api-reference/:slug*",
         permanent: true,
+        source: "/api-explorer/:slug*",
       },
       {
-        source: "/guides/how-to-schedule-price-updates-with-gelato",
         destination: "/price-feeds/core/schedule-price-updates/using-gelato",
         permanent: true,
+        source: "/guides/how-to-schedule-price-updates-with-gelato",
       },
       {
-        source: "/guides/how-to-create-tradingview-charts",
         destination: "/price-feeds/core/create-tradingview-charts",
         permanent: true,
+        source: "/guides/how-to-create-tradingview-charts",
       },
       {
-        source: "/home/oracle-integrity-staking/examples",
         destination: "/oracle-integrity-staking/reward-examples",
         permanent: true,
+        source: "/home/oracle-integrity-staking/examples",
       },
       {
-        source: "/guides",
         destination: "/price-feeds",
         permanent: true,
+        source: "/guides",
       },
 
       // Lazer (top-level) to Pyth Pro Redirects - MUST come before general price-feeds redirects
       {
-        source: "/lazer",
         destination: "/price-feeds/pro",
         permanent: true,
+        source: "/lazer",
       },
       {
-        source: "/lazer/:path*",
         destination: "/price-feeds/pro/:path*",
         permanent: true,
+        source: "/lazer/:path*",
       },
 
       // Explicitly map legacy lazer paths under /price-feeds to Pro - MUST come before general price-feeds redirects
       {
-        source: "/price-feeds/lazer",
         destination: "/price-feeds/pro",
         permanent: true,
+        source: "/price-feeds/lazer",
       },
       {
-        source: "/price-feeds/lazer/:path*",
         destination: "/price-feeds/pro/:path*",
         permanent: true,
+        source: "/price-feeds/lazer/:path*",
       },
 
       {
-        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)).*)`,
         destination: "/price-feeds/core/:path",
         permanent: true,
+        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)).*)`,
       },
 
       // HIP-3 redirect - fumadocs meta.json links prepend parent path
       {
-        source: "/price-feeds/core/hip-3-service",
         destination: "/price-feeds/hip-3-service",
         permanent: true,
+        source: "/price-feeds/core/hip-3-service",
       },
 
       // some other price feed redirects
       {
+        destination: "/price-feeds/core/push-feeds",
+        permanent: true,
         source: "/price-feeds/sponsored-feeds",
-        destination: "/price-feeds/core/push-feeds",
-        permanent: true,
       },
       {
+        destination: "/price-feeds/core/push-feeds",
+        permanent: true,
         source: "/price-feeds/core/sponsored-feeds",
-        destination: "/price-feeds/core/push-feeds",
-        permanent: true,
       },
       {
+        destination:
+          "/price-feeds/core/use-real-time-data/pull-integration/:path",
+        permanent: true,
         source:
           "/price-feeds/use-real-time-data/:path((?!pull-integration(?:/|$)).*)",
+      },
+      {
         destination:
           "/price-feeds/core/use-real-time-data/pull-integration/:path",
         permanent: true,
-      },
-      {
         source:
           "/price-feeds/core/use-real-time-data/:path((?!pull-integration(?:/|$)|push-integration(?:/|$)|index(?:/|$)).*)",
-        destination:
-          "/price-feeds/core/use-real-time-data/pull-integration/:path",
-        permanent: true,
       },
       {
-        source: "/benchmarks",
         destination: "/price-feeds/core/use-historic-price-data",
         permanent: true,
+        source: "/benchmarks",
       },
       {
-        source: "/benchmarks/how-to-create-tradingview-charts",
         destination: "/price-feeds/core/create-tradingview-charts",
         permanent: true,
+        source: "/benchmarks/how-to-create-tradingview-charts",
       },
       {
-        source: "/benchmarks/api-instances",
         destination: "/price-feeds/core/api-reference",
         permanent: true,
+        source: "/benchmarks/api-instances",
       },
       {
-        source: "/benchmarks/rate-limits",
         destination: "/price-feeds/core/rate-limits",
         permanent: true,
+        source: "/benchmarks/rate-limits",
       },
 
       // External API reference redirects (non-permanent)
       {
-        source: "/price-feeds/api-reference/evm/:slug",
         destination: "https://api-reference.pyth.network/price-feeds/evm/:slug",
         permanent: false,
+        source: "/price-feeds/api-reference/evm/:slug",
       },
       {
-        source: "/price-feeds/api-reference/evm",
         destination: "https://api-reference.pyth.network/price-feeds/evm/",
         permanent: false,
+        source: "/price-feeds/api-reference/evm",
       },
     ];
   },
@@ -334,14 +314,33 @@ const config = {
   async rewrites() {
     return [
       {
-        source: "/:path*.mdx",
         destination: "/mdx/:path*",
+        source: "/:path*.mdx",
       },
       {
-        source: "/:path*.md",
         destination: "/mdx/:path*",
+        source: "/:path*.md",
       },
     ];
+  },
+
+  turbopack: {
+    resolveExtensions: [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
+    ],
+    rules: {
+      "*.svg": {
+        as: "*.js",
+        loaders: ["@svgr/webpack"],
+      },
+    },
   },
 };
 

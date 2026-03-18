@@ -3,7 +3,7 @@
 import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllowedCryptoSymbolsType } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -55,8 +55,8 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
     bids: Map<string, string>; // price -> quantity
     asks: Map<string, string>; // price -> quantity
   }>({
-    bids: new Map(),
     asks: new Map(),
+    bids: new Map(),
   });
 
   /** callbacks */
@@ -103,9 +103,9 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
       if (!productId) return;
 
       const subscribeMessage = {
-        type: "subscribe",
-        product_ids: [productId],
         channel: "level2",
+        product_ids: [productId],
+        type: "subscribe",
       };
       socket.json(subscribeMessage);
     },
@@ -155,7 +155,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
           orderbookRef.current.asks.clear();
 
           // Load bids
-          if (snapshotEvent.bids?.length) {
+          if (snapshotEvent.bids && snapshotEvent.bids.length > 0) {
             for (const bid of snapshotEvent.bids) {
               if (Number.parseFloat(bid.new_quantity) > 0) {
                 orderbookRef.current.bids.set(
@@ -167,7 +167,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
           }
 
           // Load asks
-          if (snapshotEvent.asks?.length) {
+          if (snapshotEvent.asks && snapshotEvent.asks.length > 0) {
             for (const ask of snapshotEvent.asks) {
               if (Number.parseFloat(ask.new_quantity) > 0) {
                 orderbookRef.current.asks.set(
@@ -191,7 +191,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
         else if (event.type === "update") {
           const updateEvent = event;
 
-          if (updateEvent.updates?.length) {
+          if (updateEvent.updates && updateEvent.updates.length > 0) {
             for (const update of updateEvent.updates) {
               const quantity = Number.parseFloat(update.new_quantity);
 

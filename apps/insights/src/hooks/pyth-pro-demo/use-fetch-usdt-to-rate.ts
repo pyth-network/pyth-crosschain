@@ -24,7 +24,7 @@ export function useFetchUsdtToUsdRate(opts?: UseFetchUsdtToUsdRateOpts) {
   /** state */
   const [usdtToUsdRate, setUsdtToUsdRate] =
     useState<Nullish<number>>(undefined);
-  const [fetchTime, setFetchTime] = useState(0);
+  const [_fetchTime, setFetchTime] = useState(0);
   const [error, setError] = useState<Error | undefined>(undefined);
 
   /** effects */
@@ -57,7 +57,7 @@ export function useFetchUsdtToUsdRate(opts?: UseFetchUsdtToUsdRateOpts) {
     return () => {
       abortSignalRef.current?.abort();
     };
-  }, [enabled, fetchTime, url]);
+  }, [enabled, url]);
 
   useEffect(() => {
     if (!refetchInterval || !enabled) return;

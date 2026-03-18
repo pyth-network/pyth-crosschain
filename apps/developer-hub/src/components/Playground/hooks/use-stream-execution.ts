@@ -76,10 +76,10 @@ export function useStreamExecution(
   const addMessage = useCallback(
     (event: string, data: unknown, timestamp?: string) => {
       const message: StreamMessage = {
+        data,
+        event,
         id: generateMessageId(),
         timestamp: timestamp ?? new Date().toISOString(),
-        event,
-        data,
       };
       setMessages((prev) => [...prev, message]);
 
@@ -122,22 +122,22 @@ export function useStreamExecution(
       // Build request body
       const requestBody = {
         accessToken: config.accessToken,
-        priceFeedIds: config.priceFeedIds,
-        properties: config.properties,
-        formats: config.formats,
         channel: config.channel,
         deliveryFormat: config.deliveryFormat,
+        formats: config.formats,
         jsonBinaryEncoding: config.jsonBinaryEncoding,
         parsed: config.parsed,
+        priceFeedIds: config.priceFeedIds,
+        properties: config.properties,
       };
 
       // Use fetch with streaming response
       fetch("/api/playground/stream", {
-        method: "POST",
+        body: JSON.stringify(requestBody),
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        method: "POST",
         signal: abortControllerRef.current.signal,
       })
         .then(async (response) => {
@@ -250,11 +250,11 @@ export function useStreamExecution(
   }, []);
 
   return {
-    status,
-    messages,
-    error,
-    startStream,
-    stopStream,
     clearMessages,
+    error,
+    messages,
+    startStream,
+    status,
+    stopStream,
   };
 }

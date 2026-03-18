@@ -17,8 +17,8 @@ export const generateMetadata = async ({
   const publisher = knownPublisher?.name ?? key;
 
   return {
-    title: publisher,
     description: `Evaluate performance for data published by ${publisher}.`,
+    title: publisher,
   };
 };
 

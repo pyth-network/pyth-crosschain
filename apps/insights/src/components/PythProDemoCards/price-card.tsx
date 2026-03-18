@@ -4,9 +4,6 @@ import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
 import cx from "clsx";
 import { useEffect, useState } from "react";
-
-import { PriceCardUtils } from "./price-card-utils";
-import classes from "./price-card.module.scss";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
@@ -23,6 +20,8 @@ import {
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 import { PriceCard } from "../PriceCard";
+import classes from "./price-card.module.scss";
+import { PriceCardUtils } from "./price-card-utils";
 
 function transformDataSourceName(dataSource: AllDataSourcesType) {
   if (dataSource === "nbbo") return dataSource.toUpperCase();

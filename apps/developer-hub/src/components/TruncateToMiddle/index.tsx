@@ -19,18 +19,18 @@ const TruncateToMiddle = ({
   // (e.g., 'i' is narrower than 'W'), the exact count of visible characters
   // might differ slightly from the specified 'ch' value.
   const style = {
-    "--min-chars-start-ch": `${minCharsStart.toString()}ch`,
     "--min-chars-end-ch": `${minCharsEnd.toString()}ch`,
+    "--min-chars-start-ch": `${minCharsStart.toString()}ch`,
   } as React.CSSProperties;
 
   return (
     <>
       <span
-        className={styles.truncateToMiddle}
-        style={style}
-        data-text-start={text.slice(0, Math.floor(text.length / 2))}
-        data-text-end={text.slice(Math.floor(text.length / 2) * -1)}
         aria-hidden="true"
+        className={styles.truncateToMiddle}
+        data-text-end={text.slice(Math.floor(text.length / 2) * -1)}
+        data-text-start={text.slice(0, Math.floor(text.length / 2))}
+        style={style}
       />
       <span className={styles.srOnly}>{text}</span>
     </>

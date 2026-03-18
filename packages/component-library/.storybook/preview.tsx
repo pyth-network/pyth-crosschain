@@ -1,37 +1,37 @@
-import type { Preview, Decorator } from "@storybook/react";
+import type { Decorator, Preview } from "@storybook/react";
 import { useEffect } from "react";
 
 import "../src/v2/v2-theme.css";
-import styles from "./storybook.module.scss";
 import { BodyProviders } from "../src/AppShell/body-providers.jsx";
 import { sans } from "../src/AppShell/fonts";
 import { RootProviders } from "../src/AppShell/index.jsx";
 import shellStyles from "../src/AppShell/index.module.scss";
+import styles from "./storybook.module.scss";
 
 const preview = {
   globalTypes: {
-    theme: {
-      description: "Theme",
-      toolbar: {
-        title: "Theme",
-        icon: "sun",
-        items: [
-          { value: "light", title: "Light", icon: "sun" },
-          { value: "dark", title: "Dark", icon: "moon" },
-        ],
-        dynamicTitle: true,
-      },
-    },
     background: {
       description: "Background",
       toolbar: {
-        title: "Background",
+        dynamicTitle: true,
         icon: "switchalt",
         items: [
-          { value: "primary", title: "Primary", icon: "switchalt" },
-          { value: "secondary", title: "Secondary", icon: "contrast" },
+          { icon: "switchalt", title: "Primary", value: "primary" },
+          { icon: "contrast", title: "Secondary", value: "secondary" },
         ],
+        title: "Background",
+      },
+    },
+    theme: {
+      description: "Theme",
+      toolbar: {
         dynamicTitle: true,
+        icon: "sun",
+        items: [
+          { icon: "sun", title: "Light", value: "light" },
+          { icon: "moon", title: "Dark", value: "dark" },
+        ],
+        title: "Theme",
       },
     },
   },
@@ -40,8 +40,8 @@ const preview = {
     theme: "light",
   },
   parameters: {
-    layout: "centered",
     actions: { argTypesRegex: "^on[A-Z].*" },
+    layout: "centered",
     nextjs: {
       appDirectory: true,
       navigation: {

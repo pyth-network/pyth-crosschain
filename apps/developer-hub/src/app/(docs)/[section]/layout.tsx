@@ -23,8 +23,8 @@ export default async function Layout({
               Try the{" "}
               <a
                 href="https://entropy-explorer.pyth.network/"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 Entropy Explorer
               </a>

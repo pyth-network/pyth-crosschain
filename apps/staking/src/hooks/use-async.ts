@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { useLogger } from "./use-logger";
 
@@ -20,9 +20,9 @@ export const useAsync = (fn: () => Promise<void>) => {
       setState(State.ErrorState(error));
       throw error;
     }
-  }, [state, fn, setState, logger]);
+  }, [state, fn, logger]);
 
-  return { state, execute };
+  return { execute, state };
 };
 
 export enum StateType {
@@ -34,12 +34,12 @@ export enum StateType {
 
 const State = {
   Base: () => ({ type: StateType.Base as const }),
-  Running: () => ({ type: StateType.Running as const }),
   Complete: () => ({ type: StateType.Complete as const }),
   ErrorState: (error: unknown) => ({
-    type: StateType.Error as const,
     error,
+    type: StateType.Error as const,
   }),
+  Running: () => ({ type: StateType.Running as const }),
 };
 
 type State = ReturnType<(typeof State)[keyof typeof State]>;

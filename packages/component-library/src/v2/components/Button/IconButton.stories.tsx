@@ -1,14 +1,11 @@
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { IconButton } from "./IconButton";
-import { buttonVariants } from "./types";
 import { IconControl } from "../../__stories__/helpers";
 import { ThemeV2 } from "../../theme";
+import { IconButton } from "./IconButton";
+import { buttonVariants } from "./types";
 
 const meta = {
-  title: "V2/Icon Button",
-  component: IconButton,
   args: {
     icon: Plus,
     size: "md",
@@ -28,6 +25,8 @@ const meta = {
       options: buttonVariants,
     },
   },
+  component: IconButton,
+  title: "V2/Icon Button",
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

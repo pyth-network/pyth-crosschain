@@ -1,10 +1,9 @@
 import { Moon, Sun } from "@phosphor-icons/react/dist/ssr";
 import { NOOP } from "@pythnetwork/shared-lib/constants";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState, useEffect } from "react";
-
-import { Toggle } from "./Switch";
+import { useEffect, useState } from "react";
 import { IconControl } from "../../__stories__/helpers";
+import { Toggle } from "./Switch";
 
 const SwitchStory: Meta<typeof Toggle>["render"] = (args) => {
   const [checked, setChecked] = useState(args.checked);
@@ -28,8 +27,6 @@ const SwitchStory: Meta<typeof Toggle>["render"] = (args) => {
 };
 
 const meta = {
-  title: "V2/Switch",
-  component: Toggle,
   args: {
     checked: true,
     onChange: NOOP,
@@ -37,16 +34,18 @@ const meta = {
   },
   argTypes: {
     children: { control: "text" },
-    onChange: { action: "onChange" },
     offIcon: IconControl,
+    onChange: { action: "onChange" },
     onIcon: IconControl,
     variant: {
-      options: ["normal", "icon"],
       control: { type: "select" },
+      options: ["normal", "icon"],
     },
   },
+  component: Toggle,
   // Moving the state logic into a wrapper component
   render: SwitchStory,
+  title: "V2/Switch",
 } satisfies Meta<typeof Toggle>;
 
 export default meta;
@@ -54,16 +53,16 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    children: "Enable alerts",
     checked: false, // Defaulting to false for variety
+    children: "Enable alerts",
   },
 };
 
 export const IconVariant: Story = {
   args: {
     checked: true,
-    variant: "icon",
-    onIcon: Sun,
     offIcon: Moon,
+    onIcon: Sun,
+    variant: "icon",
   },
 };

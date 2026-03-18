@@ -1,12 +1,10 @@
 [
   {
-    "type": "impl",
+    "interface_name": "pyth::pyth::interface::IPyth",
     "name": "PythImpl",
-    "interface_name": "pyth::pyth::interface::IPyth"
+    "type": "impl"
   },
   {
-    "type": "struct",
-    "name": "core::integer::u256",
     "members": [
       {
         "name": "low",
@@ -16,11 +14,11 @@
         "name": "high",
         "type": "core::integer::u128"
       }
-    ]
+    ],
+    "name": "core::integer::u256",
+    "type": "struct"
   },
   {
-    "type": "struct",
-    "name": "pyth::pyth::interface::Price",
     "members": [
       {
         "name": "price",
@@ -38,11 +36,13 @@
         "name": "publish_time",
         "type": "core::integer::u64"
       }
-    ]
+    ],
+    "name": "pyth::pyth::interface::Price",
+    "type": "struct"
   },
   {
-    "type": "enum",
     "name": "pyth::pyth::errors::GetPriceNoOlderThanError",
+    "type": "enum",
     "variants": [
       {
         "name": "PriceFeedNotFound",
@@ -55,8 +55,8 @@
     ]
   },
   {
-    "type": "enum",
     "name": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceNoOlderThanError>",
+    "type": "enum",
     "variants": [
       {
         "name": "Ok",
@@ -69,8 +69,8 @@
     ]
   },
   {
-    "type": "enum",
     "name": "pyth::pyth::errors::GetPriceUnsafeError",
+    "type": "enum",
     "variants": [
       {
         "name": "PriceFeedNotFound",
@@ -79,8 +79,8 @@
     ]
   },
   {
-    "type": "enum",
     "name": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceUnsafeError>",
+    "type": "enum",
     "variants": [
       {
         "name": "Ok",
@@ -93,8 +93,6 @@
     ]
   },
   {
-    "type": "struct",
-    "name": "pyth::pyth::interface::PriceFeed",
     "members": [
       {
         "name": "id",
@@ -108,11 +106,13 @@
         "name": "ema_price",
         "type": "pyth::pyth::interface::Price"
       }
-    ]
+    ],
+    "name": "pyth::pyth::interface::PriceFeed",
+    "type": "struct"
   },
   {
-    "type": "enum",
     "name": "core::result::Result::<pyth::pyth::interface::PriceFeed, pyth::pyth::errors::GetPriceNoOlderThanError>",
+    "type": "enum",
     "variants": [
       {
         "name": "Ok",
@@ -125,8 +125,8 @@
     ]
   },
   {
-    "type": "enum",
     "name": "core::result::Result::<pyth::pyth::interface::PriceFeed, pyth::pyth::errors::GetPriceUnsafeError>",
+    "type": "enum",
     "variants": [
       {
         "name": "Ok",
@@ -139,8 +139,8 @@
     ]
   },
   {
-    "type": "enum",
     "name": "core::bool",
+    "type": "enum",
     "variants": [
       {
         "name": "False",
@@ -153,8 +153,6 @@
     ]
   },
   {
-    "type": "struct",
-    "name": "pyth::byte_buffer::ByteBuffer",
     "members": [
       {
         "name": "num_last_bytes",
@@ -164,11 +162,11 @@
         "name": "data",
         "type": "core::array::Array::<core::felt252>"
       }
-    ]
+    ],
+    "name": "pyth::byte_buffer::ByteBuffer",
+    "type": "struct"
   },
   {
-    "type": "struct",
-    "name": "pyth::pyth::interface::PriceFeedPublishTime",
     "members": [
       {
         "name": "price_id",
@@ -178,11 +176,11 @@
         "name": "publish_time",
         "type": "core::integer::u64"
       }
-    ]
+    ],
+    "name": "pyth::pyth::interface::PriceFeedPublishTime",
+    "type": "struct"
   },
   {
-    "type": "struct",
-    "name": "pyth::pyth::interface::DataSource",
     "members": [
       {
         "name": "emitter_chain_id",
@@ -192,51 +190,49 @@
         "name": "emitter_address",
         "type": "core::integer::u256"
       }
-    ]
+    ],
+    "name": "pyth::pyth::interface::DataSource",
+    "type": "struct"
   },
   {
-    "type": "interface",
-    "name": "pyth::pyth::interface::IPyth",
     "items": [
       {
-        "type": "function",
+        "inputs": [
+          {
+            "name": "price_id",
+            "type": "core::integer::u256"
+          },
+          {
+            "name": "age",
+            "type": "core::integer::u64"
+          }
+        ],
         "name": "get_price_no_older_than",
-        "inputs": [
-          {
-            "name": "price_id",
-            "type": "core::integer::u256"
-          },
-          {
-            "name": "age",
-            "type": "core::integer::u64"
-          }
-        ],
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceNoOlderThanError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
+        "inputs": [
+          {
+            "name": "price_id",
+            "type": "core::integer::u256"
+          }
+        ],
         "name": "get_price_unsafe",
-        "inputs": [
-          {
-            "name": "price_id",
-            "type": "core::integer::u256"
-          }
-        ],
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceUnsafeError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "get_ema_price_no_older_than",
         "inputs": [
           {
             "name": "price_id",
@@ -247,32 +243,32 @@
             "type": "core::integer::u64"
           }
         ],
+        "name": "get_ema_price_no_older_than",
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceNoOlderThanError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "get_ema_price_unsafe",
         "inputs": [
           {
             "name": "price_id",
             "type": "core::integer::u256"
           }
         ],
+        "name": "get_ema_price_unsafe",
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::Price, pyth::pyth::errors::GetPriceUnsafeError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "query_price_feed_no_older_than",
         "inputs": [
           {
             "name": "price_id",
@@ -283,76 +279,76 @@
             "type": "core::integer::u64"
           }
         ],
+        "name": "query_price_feed_no_older_than",
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::PriceFeed, pyth::pyth::errors::GetPriceNoOlderThanError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "query_price_feed_unsafe",
         "inputs": [
           {
             "name": "price_id",
             "type": "core::integer::u256"
           }
         ],
+        "name": "query_price_feed_unsafe",
         "outputs": [
           {
             "type": "core::result::Result::<pyth::pyth::interface::PriceFeed, pyth::pyth::errors::GetPriceUnsafeError>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "price_feed_exists",
         "inputs": [
           {
             "name": "price_id",
             "type": "core::integer::u256"
           }
         ],
+        "name": "price_feed_exists",
         "outputs": [
           {
             "type": "core::bool"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "latest_price_info_publish_time",
         "inputs": [
           {
             "name": "price_id",
             "type": "core::integer::u256"
           }
         ],
+        "name": "latest_price_info_publish_time",
         "outputs": [
           {
             "type": "core::integer::u64"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "update_price_feeds",
         "inputs": [
           {
             "name": "data",
             "type": "pyth::byte_buffer::ByteBuffer"
           }
         ],
+        "name": "update_price_feeds",
         "outputs": [],
-        "state_mutability": "external"
+        "state_mutability": "external",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "update_price_feeds_if_necessary",
         "inputs": [
           {
             "name": "update",
@@ -363,12 +359,12 @@
             "type": "core::array::Array::<pyth::pyth::interface::PriceFeedPublishTime>"
           }
         ],
+        "name": "update_price_feeds_if_necessary",
         "outputs": [],
-        "state_mutability": "external"
+        "state_mutability": "external",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "parse_price_feed_updates",
         "inputs": [
           {
             "name": "data",
@@ -387,16 +383,16 @@
             "type": "core::integer::u64"
           }
         ],
+        "name": "parse_price_feed_updates",
         "outputs": [
           {
             "type": "core::array::Array::<pyth::pyth::interface::PriceFeed>"
           }
         ],
-        "state_mutability": "external"
+        "state_mutability": "external",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "parse_unique_price_feed_updates",
         "inputs": [
           {
             "name": "data",
@@ -415,16 +411,16 @@
             "type": "core::integer::u64"
           }
         ],
+        "name": "parse_unique_price_feed_updates",
         "outputs": [
           {
             "type": "core::array::Array::<pyth::pyth::interface::PriceFeed>"
           }
         ],
-        "state_mutability": "external"
+        "state_mutability": "external",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "get_update_fee",
         "inputs": [
           {
             "name": "data",
@@ -435,177 +431,179 @@
             "type": "core::starknet::contract_address::ContractAddress"
           }
         ],
+        "name": "get_update_fee",
         "outputs": [
           {
             "type": "core::integer::u256"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "wormhole_address",
         "inputs": [],
+        "name": "wormhole_address",
         "outputs": [
           {
             "type": "core::starknet::contract_address::ContractAddress"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "fee_token_addresses",
         "inputs": [],
+        "name": "fee_token_addresses",
         "outputs": [
           {
             "type": "core::array::Array::<core::starknet::contract_address::ContractAddress>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "get_single_update_fee",
         "inputs": [
           {
             "name": "token",
             "type": "core::starknet::contract_address::ContractAddress"
           }
         ],
+        "name": "get_single_update_fee",
         "outputs": [
           {
             "type": "core::integer::u256"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "valid_data_sources",
         "inputs": [],
+        "name": "valid_data_sources",
         "outputs": [
           {
             "type": "core::array::Array::<pyth::pyth::interface::DataSource>"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
+        "inputs": [
+          {
+            "name": "source",
+            "type": "pyth::pyth::interface::DataSource"
+          }
+        ],
         "name": "is_valid_data_source",
-        "inputs": [
-          {
-            "name": "source",
-            "type": "pyth::pyth::interface::DataSource"
-          }
-        ],
         "outputs": [
           {
             "type": "core::bool"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
+        "inputs": [],
         "name": "governance_data_source",
-        "inputs": [],
         "outputs": [
           {
             "type": "pyth::pyth::interface::DataSource"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "is_valid_governance_data_source",
         "inputs": [
           {
             "name": "source",
             "type": "pyth::pyth::interface::DataSource"
           }
         ],
+        "name": "is_valid_governance_data_source",
         "outputs": [
           {
             "type": "core::bool"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "last_executed_governance_sequence",
         "inputs": [],
+        "name": "last_executed_governance_sequence",
         "outputs": [
           {
             "type": "core::integer::u64"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "governance_data_source_index",
         "inputs": [],
+        "name": "governance_data_source_index",
         "outputs": [
           {
             "type": "core::integer::u32"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "chain_id",
         "inputs": [],
+        "name": "chain_id",
         "outputs": [
           {
             "type": "core::integer::u16"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "execute_governance_instruction",
         "inputs": [
           {
             "name": "data",
             "type": "pyth::byte_buffer::ByteBuffer"
           }
         ],
+        "name": "execute_governance_instruction",
         "outputs": [],
-        "state_mutability": "external"
+        "state_mutability": "external",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "version",
         "inputs": [],
+        "name": "version",
         "outputs": [
           {
             "type": "core::felt252"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "pyth_upgradable_magic",
         "inputs": [],
+        "name": "pyth_upgradable_magic",
         "outputs": [
           {
             "type": "core::integer::u32"
           }
         ],
-        "state_mutability": "view"
+        "state_mutability": "view",
+        "type": "function"
       }
-    ]
+    ],
+    "name": "pyth::pyth::interface::IPyth",
+    "type": "interface"
   },
   {
-    "type": "constructor",
-    "name": "constructor",
     "inputs": [
       {
         "name": "wormhole_address",
@@ -643,159 +641,161 @@
         "name": "governance_initial_sequence",
         "type": "core::integer::u64"
       }
-    ]
+    ],
+    "name": "constructor",
+    "type": "constructor"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::PriceFeedUpdated",
     "kind": "struct",
     "members": [
       {
+        "kind": "key",
         "name": "price_id",
-        "type": "core::integer::u256",
-        "kind": "key"
+        "type": "core::integer::u256"
       },
       {
+        "kind": "data",
         "name": "price",
-        "type": "core::integer::i64",
-        "kind": "data"
+        "type": "core::integer::i64"
       },
       {
+        "kind": "data",
         "name": "conf",
-        "type": "core::integer::u64",
-        "kind": "data"
+        "type": "core::integer::u64"
       },
       {
+        "kind": "data",
         "name": "publish_time",
-        "type": "core::integer::u64",
-        "kind": "data"
+        "type": "core::integer::u64"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::PriceFeedUpdated",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::FeeSet",
     "kind": "struct",
     "members": [
       {
+        "kind": "data",
         "name": "old_fee",
-        "type": "core::integer::u256",
-        "kind": "data"
+        "type": "core::integer::u256"
       },
       {
+        "kind": "data",
         "name": "new_fee",
-        "type": "core::integer::u256",
-        "kind": "data"
+        "type": "core::integer::u256"
       },
       {
+        "kind": "data",
         "name": "token",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::FeeSet",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::DataSourcesSet",
     "kind": "struct",
     "members": [
       {
+        "kind": "data",
         "name": "old_data_sources",
-        "type": "core::array::Array::<pyth::pyth::interface::DataSource>",
-        "kind": "data"
+        "type": "core::array::Array::<pyth::pyth::interface::DataSource>"
       },
       {
+        "kind": "data",
         "name": "new_data_sources",
-        "type": "core::array::Array::<pyth::pyth::interface::DataSource>",
-        "kind": "data"
+        "type": "core::array::Array::<pyth::pyth::interface::DataSource>"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::DataSourcesSet",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::WormholeAddressSet",
     "kind": "struct",
     "members": [
       {
+        "kind": "data",
         "name": "old_address",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "new_address",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::WormholeAddressSet",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::GovernanceDataSourceSet",
     "kind": "struct",
     "members": [
       {
+        "kind": "data",
         "name": "old_data_source",
-        "type": "pyth::pyth::interface::DataSource",
-        "kind": "data"
+        "type": "pyth::pyth::interface::DataSource"
       },
       {
+        "kind": "data",
         "name": "new_data_source",
-        "type": "pyth::pyth::interface::DataSource",
-        "kind": "data"
+        "type": "pyth::pyth::interface::DataSource"
       },
       {
+        "kind": "data",
         "name": "last_executed_governance_sequence",
-        "type": "core::integer::u64",
-        "kind": "data"
+        "type": "core::integer::u64"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::GovernanceDataSourceSet",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::ContractUpgraded",
     "kind": "struct",
     "members": [
       {
+        "kind": "data",
         "name": "new_class_hash",
-        "type": "core::starknet::class_hash::ClassHash",
-        "kind": "data"
+        "type": "core::starknet::class_hash::ClassHash"
       }
-    ]
+    ],
+    "name": "pyth::pyth::pyth::ContractUpgraded",
+    "type": "event"
   },
   {
-    "type": "event",
-    "name": "pyth::pyth::pyth::Event",
     "kind": "enum",
+    "name": "pyth::pyth::pyth::Event",
+    "type": "event",
     "variants": [
       {
+        "kind": "nested",
         "name": "PriceFeedUpdated",
-        "type": "pyth::pyth::pyth::PriceFeedUpdated",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::PriceFeedUpdated"
       },
       {
+        "kind": "nested",
         "name": "FeeSet",
-        "type": "pyth::pyth::pyth::FeeSet",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::FeeSet"
       },
       {
+        "kind": "nested",
         "name": "DataSourcesSet",
-        "type": "pyth::pyth::pyth::DataSourcesSet",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::DataSourcesSet"
       },
       {
+        "kind": "nested",
         "name": "WormholeAddressSet",
-        "type": "pyth::pyth::pyth::WormholeAddressSet",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::WormholeAddressSet"
       },
       {
+        "kind": "nested",
         "name": "GovernanceDataSourceSet",
-        "type": "pyth::pyth::pyth::GovernanceDataSourceSet",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::GovernanceDataSourceSet"
       },
       {
+        "kind": "nested",
         "name": "ContractUpgraded",
-        "type": "pyth::pyth::pyth::ContractUpgraded",
-        "kind": "nested"
+        "type": "pyth::pyth::pyth::ContractUpgraded"
       }
     ]
   }

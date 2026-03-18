@@ -114,9 +114,9 @@ export type InstructionAccountsTypeMap = {
 /**
  * Result of validating an uploaded configuration
  */
-export interface ValidationResult {
+export type ValidationResult = {
   isValid: boolean;
   error?: string;
   // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   changes?: any;
-}
+};

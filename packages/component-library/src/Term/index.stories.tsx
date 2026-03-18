@@ -3,7 +3,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Term as TermComponent } from "./index.jsx";
 
 const meta = {
-  component: TermComponent,
   argTypes: {
     children: {
       control: "text",
@@ -18,12 +17,13 @@ const meta = {
       },
     },
   },
+  component: TermComponent,
 } satisfies Meta<typeof TermComponent>;
 export default meta;
 
 export const Term = {
   args: {
-    term: "Term",
     children: "This is a description",
+    term: "Term",
   },
 } satisfies StoryObj<typeof TermComponent>;

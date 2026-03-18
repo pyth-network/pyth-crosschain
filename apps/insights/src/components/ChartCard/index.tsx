@@ -3,9 +3,9 @@
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import type { ElementType, ComponentProps, ReactNode } from "react";
-import { Suspense, useState, useMemo, useCallback } from "react";
-import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
+import type { ComponentProps, ElementType, ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
+import { Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
 import styles from "./index.module.scss";
@@ -60,44 +60,41 @@ export const ChartCard = <T extends ElementType, U>({
     ],
     [data],
   );
-  const updateSelectedPoint = useCallback(
-    (chart: CategoricalChartState) => {
-      setSelectedPoint(
-        (chart.activePayload as { payload: Point<U> }[] | undefined)?.[0]
-          ?.payload,
-      );
-    },
-    [setSelectedPoint],
-  );
+  const updateSelectedPoint = useCallback((chart: CategoricalChartState) => {
+    setSelectedPoint(
+      (chart.activePayload as { payload: Point<U> }[] | undefined)?.[0]
+        ?.payload,
+    );
+  }, []);
 
   return (
     <StatCard
       className={clsx(className, styles.chartCard)}
       {...props}
-      stat={selectedPoint ? (selectedPoint.displayY ?? selectedPoint.y) : stat}
       miniStat={selectedDate ?? miniStat}
+      stat={selectedPoint ? (selectedPoint.displayY ?? selectedPoint.y) : stat}
     >
       <Suspense
         fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
       >
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <ResponsiveContainer height={CHART_HEIGHT} width="100%">
           <LineChart
             className={chartClassName ?? ""}
             data={data}
             onMouseEnter={updateSelectedPoint}
-            onMouseMove={updateSelectedPoint}
             onMouseLeave={updateSelectedPoint}
+            onMouseMove={updateSelectedPoint}
           >
             <Tooltip content={() => <></>} />
             <Line
-              type="monotone"
-              dataKey="y"
               className={styles.line ?? ""}
-              stroke="currentColor"
+              dataKey="y"
               dot={false}
+              stroke="currentColor"
+              type="monotone"
             />
             <XAxis dataKey="date" hide />
-            <YAxis hide domain={domain} />
+            <YAxis domain={domain} hide />
           </LineChart>
         </ResponsiveContainer>
       </Suspense>

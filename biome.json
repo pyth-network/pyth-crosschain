@@ -230,6 +230,26 @@
   },
   "overrides": [
     {
+      "includes": ["target_chains/**", "**/scripts/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/mcp/**", "governance/xc_admin/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": [
         "**/*.spec.ts",
         "**/*.test.ts",
@@ -248,6 +268,112 @@
           "test",
           "jest"
         ]
+      }
+    },
+    {
+      "includes": ["**/examples/**", "**/scripts/**", "**/vendor/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noUndeclaredEnvVars": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "noProcessEnv": "off"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "warn",
+            "noExplicitAny": "warn",
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "governance/xc_admin/**",
+        "apps/price_pusher/**",
+        "contract_manager/**",
+        "price_service/**",
+        "target_chains/**",
+        "lazer/**",
+        "pythnet/**"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noForEach": "warn"
+          },
+          "correctness": {
+            "noUndeclaredVariables": "warn"
+          },
+          "style": {
+            "noNonNullAssertion": "warn"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "warn",
+            "noExplicitAny": "warn",
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "**/tests/**",
+        "**/deploy/**",
+        "**/deploy-scripts/**"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noForEach": "warn"
+          },
+          "style": {
+            "noDoneCallback": "warn",
+            "noNonNullAssertion": "warn",
+            "noProcessEnv": "warn"
+          },
+          "suspicious": {
+            "noConsole": "warn",
+            "noExplicitAny": "warn",
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.js"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "warn"
+          },
+          "style": {
+            "noCommonJs": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/hermes/**",
+        "apps/developer-hub/**",
+        "apps/api-reference/**"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementInteractions": "warn",
+            "noStaticElementInteractions": "warn"
+          },
+          "suspicious": {
+            "noShadowRestrictedNames": "warn",
+            "useAwait": "warn"
+          }
+        }
       }
     }
   ],

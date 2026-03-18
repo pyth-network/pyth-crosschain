@@ -2,20 +2,19 @@
 
 import { Select } from "@pythnetwork/component-library/Select";
 import clsx from "clsx";
-
-import styles from "./index.module.scss";
 import { usePlaygroundContext } from "../PlaygroundContext";
 import type { Channel } from "../types";
 import { CHANNEL_OPTIONS } from "../types";
+import styles from "./index.module.scss";
 
 type ChannelSelectorProps = {
   className?: string;
 };
 
 const selectOptions = CHANNEL_OPTIONS.map((option) => ({
+  description: option.description,
   id: option.id,
   label: option.label,
-  description: option.description,
 }));
 
 const isValidChannel = (key: string | number): key is Channel => {
@@ -35,14 +34,14 @@ export function ChannelSelector({ className }: ChannelSelectorProps) {
     <div className={clsx(styles.container, className)}>
       <Select
         label="Channel"
+        onSelectionChange={handleSelectionChange}
         options={selectOptions}
         selectedKey={config.channel}
-        onSelectionChange={handleSelectionChange}
         show={(option) => (
           <span className={styles.optionDisplay}>{option.label}</span>
         )}
-        variant="outline"
         size="sm"
+        variant="outline"
       />
     </div>
   );

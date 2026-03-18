@@ -3,40 +3,9 @@ const config = {
   experimental: {
     useCache: true,
   },
-  reactStrictMode: true,
-
-  pageExtensions: ["ts", "tsx", "mdx"],
-
-  reactCompiler: true,
-
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-
-  turbopack: {
-    resolveExtensions: [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".mts",
-      ".mjs",
-      ".cts",
-      ".cjs",
-    ],
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
-  },
 
   headers: async () => [
     {
-      source: "/:path*",
       headers: [
         {
           key: "X-XSS-Protection",
@@ -60,7 +29,38 @@ const config = {
             "vibrate=(), geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=self",
         },
       ],
+      source: "/:path*",
     },
   ],
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+
+  pageExtensions: ["ts", "tsx", "mdx"],
+
+  reactCompiler: true,
+  reactStrictMode: true,
+
+  turbopack: {
+    resolveExtensions: [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
+    ],
+    rules: {
+      "*.svg": {
+        as: "*.js",
+        loaders: ["@svgr/webpack"],
+      },
+    },
+  },
 };
 export default config;

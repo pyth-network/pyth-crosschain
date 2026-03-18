@@ -37,5 +37,5 @@ export const useChangelog = () => {
     toggleOpen(true);
   }, [toggleOpen]);
 
-  return { isOpen, toggleOpen, open };
+  return { isOpen, open, toggleOpen };
 };

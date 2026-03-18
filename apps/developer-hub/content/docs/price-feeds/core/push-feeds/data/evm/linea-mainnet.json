@@ -2,17 +2,17 @@
   "feeds": [
     {
       "alias": "REX33/USD",
+      "confidence_ratio": 100,
       "id": "583015352f5936e099fa7149d496ac087c5bfbfc386ce875be27dc4d69c2e023",
-      "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "LINEA/USD",
+      "confidence_ratio": 100,
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
-      "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "time_difference": 3600
     }
   ]
 }

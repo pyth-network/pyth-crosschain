@@ -2,14 +2,13 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  EvmExecute,
   decodeGovernancePayload,
+  EvmExecute,
 } from "@pythnetwork/xc-admin-common";
-
-import { DefaultStore } from "./store.js";
 import type { PrivateKey, TxResult } from "../../core/base.js";
 import { EvmChain } from "../../core/chains.js";
 import { EvmExecutorContract } from "../../core/contracts/evm.js";
+import { DefaultStore } from "./store.js";
 
 // TODO: A better place for this would be `base.ts`. That will require
 // significant refactor. Todo in separate PR.
@@ -38,16 +37,9 @@ async function executeForGovernanceContract(
     const lastExecutedSequence =
       await contract.getLastExecutedGovernanceSequence();
     if (lastExecutedSequence >= parsedVaa.sequence) {
-      console.log(
-        `Skipping on contract ${contract.getId()} as it was already executed`,
-      );
       return;
     }
-    const { id } = await contract.executeGovernanceInstruction(
-      senderPrivateKey,
-      vaa,
-    );
-    console.log(`Executed on contract ${contract.getId()} with txHash: ${id}`);
+    await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
   }
 }
 

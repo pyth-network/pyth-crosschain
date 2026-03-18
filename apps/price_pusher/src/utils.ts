@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { HexString } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 
 import type { PriceItem } from "./interface.js";
 
@@ -13,7 +12,7 @@ export type TxSpeed = (typeof txSpeeds)[number];
 export const customGasChainIds = [137] as const;
 export type CustomGasChainId = (typeof customGasChainIds)[number];
 
-export async function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -44,6 +43,7 @@ export function isWsEndpoint(endpoint: string): boolean {
 export function verifyValidOption<
   options extends readonly any[],
   validOption extends options[number],
+  // biome-ignore lint/suspicious/noExplicitAny: Legacy parameter type
 >(option: any, validOptions: options) {
   if (validOptions.includes(option)) {
     return option as validOption;

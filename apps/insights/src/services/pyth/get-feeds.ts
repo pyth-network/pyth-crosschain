@@ -1,7 +1,7 @@
-import { Cluster } from ".";
-import { getPythMetadata } from "./get-metadata";
 import { redisCache } from "../../cache";
 import { priceFeedsSchema } from "../../schemas/pyth/price-feeds-schema";
+import type { Cluster } from ".";
+import { getPythMetadata } from "./get-metadata";
 
 const _getFeeds = async (cluster: Cluster) => {
   const unfilteredData = await getPythMetadata(cluster);
@@ -14,8 +14,6 @@ const _getFeeds = async (cluster: Cluster) => {
       return hasDisplaySymbol && hasPriceAccount;
     })
     .map((symbol) => ({
-      symbol,
-      product: unfilteredData.productFromSymbol.get(symbol),
       price: {
         ...unfilteredData.productPrice.get(symbol),
         priceComponents:
@@ -25,6 +23,8 @@ const _getFeeds = async (cluster: Cluster) => {
               publisher: publisher.toBase58(),
             })) ?? [],
       },
+      product: unfilteredData.productFromSymbol.get(symbol),
+      symbol,
     }));
   return priceFeedsSchema.parse(filtered);
 };

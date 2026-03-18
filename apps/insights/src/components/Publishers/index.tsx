@@ -4,23 +4,22 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-
-import styles from "./index.module.scss";
-import { PublishersCard } from "./publishers-card";
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import { getPublisherCaps } from "../../services/hermes";
 import { Cluster } from "../../services/pyth";
 import {
-  getDelState,
   getClaimableRewards,
+  getDelState,
   getDistributedRewards,
 } from "../../services/staking";
 import { ExplainAverage } from "../Explanations";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedTokens } from "../FormattedTokens";
 import { PublisherIcon } from "../PublisherIcon";
-import { SemicircleMeter, Label } from "../SemicircleMeter";
+import { Label, SemicircleMeter } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
+import styles from "./index.module.scss";
+import { PublishersCard } from "./publishers-card";
 
 const INITIAL_REWARD_POOL_SIZE = 110_000_010_000_000n;
 
@@ -46,10 +45,10 @@ export const Publishers = async () => {
             <span>
               Rankings last updated{" "}
               <FormattedDate
-                value={rankingTime}
                 dateStyle="long"
                 timeStyle="long"
                 timeZone="utc"
+                value={rankingTime}
               />
             </span>
             <ClockCountdown className={styles.clockIcon} />
@@ -58,15 +57,15 @@ export const Publishers = async () => {
       </div>
       <div className={styles.body}>
         <StatCard
-          variant="primary"
+          className={styles.statCard ?? ""}
           header="Active Publishers"
           stat={pythnetPublishers.length}
-          className={styles.statCard ?? ""}
+          variant="primary"
         />
         <StatCard
-          header="Average Feed Score"
-          corner={<ExplainAverage scoreTime={scoreTime} />}
           className={styles.statCard ?? ""}
+          corner={<ExplainAverage scoreTime={scoreTime} />}
+          header="Average Feed Score"
           stat={(
             rankedPublishers.reduce(
               (sum, publisher) => sum + (publisher.averageScore ?? 0),
@@ -85,26 +84,26 @@ export const Publishers = async () => {
           )}
         />
         <Card
-          title="Oracle Integrity Staking (OIS)"
           className={styles.oisCard}
+          title="Oracle Integrity Staking (OIS)"
           toolbar={
             <Button
-              href="https://staking.pyth.network"
-              target="_blank"
-              size="sm"
-              variant="outline"
               afterIcon={<ArrowSquareOut />}
+              href="https://staking.pyth.network"
+              size="sm"
+              target="_blank"
+              variant="outline"
             >
               Staking App
             </Button>
           }
         >
           <SemicircleMeter
-            width={340}
-            height={340}
-            value={Number(oisStats.totalStaked)}
-            maxValue={oisStats.maxPoolSize ?? 0}
             className={styles.oisPool ?? ""}
+            height={340}
+            maxValue={oisStats.maxPoolSize ?? 0}
+            value={Number(oisStats.totalStaked)}
+            width={340}
           >
             <Label className={styles.title}>PYTH Staking Pool</Label>
             <p className={styles.poolUsed}>
@@ -121,23 +120,23 @@ export const Publishers = async () => {
           <div className={styles.oisStats}>
             <StatCard
               header="Total Staked"
-              variant="tertiary"
               stat={
                 <>
                   <TokenIcon />
                   <FormattedTokens tokens={oisStats.totalStaked} />
                 </>
               }
+              variant="tertiary"
             />
             <StatCard
               header="Total Rewards Distributed"
-              variant="tertiary"
               stat={
                 <>
                   <TokenIcon />
                   <FormattedTokens tokens={oisStats.rewardsDistributed} />
                 </>
               }
+              variant="tertiary"
             />
           </div>
         </Card>
@@ -155,14 +154,14 @@ const toTableRow = ({
 }: Awaited<ReturnType<typeof getPublishersWithRankings>>[number]) => {
   const knownPublisher = lookupPublisher(key);
   return {
-    id: key,
-    ranking: rank,
-    permissionedFeeds,
     activeFeeds,
     averageScore,
+    id: key,
+    permissionedFeeds,
+    ranking: rank,
     ...(knownPublisher && {
-      name: knownPublisher.name,
       icon: <PublisherIcon knownPublisher={knownPublisher} />,
+      name: knownPublisher.name,
     }),
   };
 };
@@ -176,13 +175,13 @@ const getOisStats = async () => {
       getPublisherCaps(),
     ]);
   return {
-    totalStaked:
-      sumDelegations(delState.delState) + sumDelegations(delState.selfDelState),
-    rewardsDistributed:
-      claimableRewards + INITIAL_REWARD_POOL_SIZE - distributedRewards,
     maxPoolSize: publisherCaps.parsed?.[0]?.publisher_stake_caps
       .map(({ cap }) => cap)
       .reduce((acc, value) => acc + value),
+    rewardsDistributed:
+      claimableRewards + INITIAL_REWARD_POOL_SIZE - distributedRewards,
+    totalStaked:
+      sumDelegations(delState.delState) + sumDelegations(delState.selfDelState),
   };
 };
 

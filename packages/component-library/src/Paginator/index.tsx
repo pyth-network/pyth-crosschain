@@ -2,16 +2,15 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Link } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.jsx";
 import { Spinner } from "../Spinner/index.jsx";
 import { Toolbar } from "../unstyled/Toolbar/index.jsx";
+import styles from "./index.module.scss";
 
 type Props = {
   numPages: number;
@@ -42,18 +41,18 @@ export const Paginator = ({
 }: Props) => (
   <div className={clsx(styles.paginator, className)}>
     <PageSizeSelect
+      isPending={isPageSizeTransitioning}
+      onPageSizeChange={onPageSizeChange}
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
-      onPageSizeChange={onPageSizeChange}
-      isPending={isPageSizeTransitioning}
     />
     {numPages > 1 && (
       <PaginatorToolbar
         currentPage={currentPage}
+        isPending={isPageTransitioning}
+        mkPageLink={mkPageLink}
         numPages={numPages}
         onPageChange={onPageChange}
-        mkPageLink={mkPageLink}
-        isPending={isPageTransitioning}
       />
     )}
   </div>
@@ -74,15 +73,15 @@ const PageSizeSelect = ({
 }: PageSizeSelectProps) => (
   <Select
     className={styles.pageSizeSelect ?? ""}
-    label="Page size"
     hideLabel
+    isPending={isPending ?? false}
+    label="Page size"
+    onSelectionChange={onPageSizeChange}
     options={pageSizeOptions.map((option) => ({ id: option }))}
     selectedKey={pageSize}
-    onSelectionChange={onPageSizeChange}
     show={(value) => `${value.id.toString()} per page`}
-    variant="ghost"
     size="sm"
-    isPending={isPending ?? false}
+    variant="ghost"
   />
 );
 
@@ -121,18 +120,18 @@ const PaginatorToolbar = ({
     <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
       {isPending && (
         <Spinner
+          className={styles.spinner ?? ""}
           isIndeterminate
           label="Loading page..."
-          className={styles.spinner ?? ""}
         />
       )}
       <PageSelector
-        hideText
         beforeIcon={<CaretLeft />}
+        hideText
         isDisabled={currentPage === 1}
-        page={1}
-        onPageChange={onPageChange}
         mkPageLink={mkPageLink}
+        onPageChange={onPageChange}
+        page={1}
       >
         First Page
       </PageSelector>
@@ -141,23 +140,23 @@ const PaginatorToolbar = ({
           <SelectedPage key={page}>{page.toString()}</SelectedPage>
         ) : (
           <PageSelector
-            key={page}
-            page={page}
             aria-label={`Page ${page.toString()}`}
-            onPageChange={onPageChange}
+            key={page}
             mkPageLink={mkPageLink}
+            onPageChange={onPageChange}
+            page={page}
           >
             {page.toString()}
           </PageSelector>
         );
       })}
       <PageSelector
-        hideText
         beforeIcon={<CaretRight />}
+        hideText
         isDisabled={currentPage === numPages}
-        page={numPages}
-        onPageChange={onPageChange}
         mkPageLink={mkPageLink}
+        onPageChange={onPageChange}
+        page={numPages}
       >
         Last Page
       </PageSelector>
@@ -204,11 +203,11 @@ const PageLink = ({
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      onPress={onPress}
       href={url}
       isDisabled={isDisabled === true}
+      onPress={onPress}
+      size="sm"
+      variant="ghost"
       {...props}
     />
   );
@@ -234,10 +233,10 @@ const PageButton = ({
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      onPress={onPress}
       isDisabled={isDisabled === true}
+      onPress={onPress}
+      size="sm"
+      variant="ghost"
       {...props}
     />
   );
@@ -246,9 +245,9 @@ const PageButton = ({
 const SelectedPage = ({ children }: { children: string }) => (
   <div
     className={clsx(buttonStyles.button, styles.selectedPage)}
+    data-pressed
     data-size="sm"
     data-variant="ghost"
-    data-pressed
     key={children}
   >
     <span className={buttonStyles.text}>{children}</span>

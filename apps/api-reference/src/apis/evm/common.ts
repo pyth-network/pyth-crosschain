@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import type { ReadApi, WriteApi, NetworkInfo } from "../../components/EvmApi";
+import type { NetworkInfo, ReadApi, WriteApi } from "../../components/EvmApi";
 import { EvmApiType, Language } from "../../components/EvmApi";
-import { singletonArray, safeFetch } from "../../zod-utils";
+import { safeFetch, singletonArray } from "../../zod-utils";
 
 export const readApi = <ParameterName extends string>(
   spec: Omit<ReadApi<ParameterName>, "type">,
@@ -47,11 +47,6 @@ const priceFeedSchema = z.object({
 export const solidity = <ParameterName extends string>(
   code: string | ((params: Partial<Record<ParameterName, string>>) => string),
 ) => ({
-  language: Language.Solidity,
-  dimRange: [
-    { line: 0, character: 0 },
-    { line: 7, character: 0 },
-  ] as const,
   code: (
     network: NetworkInfo,
     params: Partial<Record<ParameterName, string>>,
@@ -65,16 +60,16 @@ IPyth pyth = IPyth(contractAddress);
 
 ${typeof code === "string" ? code.trim() : code(params).trim()}
   `,
+  dimRange: [
+    { character: 0, line: 0 },
+    { character: 0, line: 7 },
+  ] as const,
+  language: Language.Solidity,
 });
 
 export const ethersJS = <ParameterName extends string>(
   code: string | ((params: Partial<Record<ParameterName, string>>) => string),
 ) => ({
-  language: Language.EthersJSV6,
-  dimRange: [
-    { line: 0, character: 0 },
-    { line: 8, character: 0 },
-  ] as const,
   code: (
     network: NetworkInfo,
     params: Partial<Record<ParameterName, string>>,
@@ -89,4 +84,9 @@ const contract = new ethers.Contract(contractAddress, PythAbi, provider);
 
 ${typeof code === "string" ? code.trim() : code(params).trim()}
   `,
+  dimRange: [
+    { character: 0, line: 0 },
+    { character: 0, line: 8 },
+  ] as const,
+  language: Language.EthersJSV6,
 });

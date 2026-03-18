@@ -2,45 +2,45 @@
   "feeds": [
     {
       "alias": "USDC/USD",
+      "confidence_ratio": 100,
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
-      "time_difference": 3600,
       "price_deviation": 2,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "USR/USD",
+      "confidence_ratio": 100,
       "id": "10b013adec14c0fe839ca0fe54cec9e4d0b6c1585ac6d7e70010dac015e57f9c",
-      "time_difference": 3600,
       "price_deviation": 2,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "WSTUSR/USR",
+      "confidence_ratio": 100,
       "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
-      "time_difference": 3600,
       "price_deviation": 2,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "LINEA/USD",
+      "confidence_ratio": 100,
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
-      "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "BOLD/USD",
+      "confidence_ratio": 100,
       "id": "d6134dbb0427240f901e3e596d6e63f7d85088f96cd4cd4ae2f89c0819b5d623",
-      "time_difference": 3600,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 3600
     },
     {
       "alias": "SPYX/USD",
+      "confidence_ratio": 100,
       "id": "2817b78438c769357182c04346fddaad1178c82f4048828fe0997c3c64624e14",
-      "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "time_difference": 3600
     }
   ]
 }

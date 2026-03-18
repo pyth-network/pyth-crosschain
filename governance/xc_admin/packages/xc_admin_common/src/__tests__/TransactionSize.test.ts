@@ -1,34 +1,35 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
+import {
+  getSizeOfTransaction,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import type { TransactionInstruction } from "@solana/web3.js";
 import {
   Connection,
   Keypair,
   PACKET_DATA_SIZE,
   PublicKey,
   Transaction,
-  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   batchIntoExecutorPayload,
   getSizeOfExecutorInstructions,
   MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-import {
-  getSizeOfTransaction,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
 
 it("Unit test for getSizeOfTransaction", async () => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
@@ -51,9 +52,9 @@ it("Unit test for getSizeOfTransaction", async () => {
         asset_type: "Crypto",
         base: "ETH",
         description: "ETH/USD",
+        generic_symbol: "ETHUSD",
         quote_currency: "USD",
         symbol: "Crypto.ETH/USD",
-        generic_symbol: "ETHUSD",
       })
       .accounts({
         fundingAccount: payer.publicKey,
@@ -68,14 +69,14 @@ it("Unit test for getSizeOfTransaction", async () => {
       .addPrice(-8, 1)
       .accounts({
         fundingAccount: payer.publicKey,
-        productAccount,
         priceAccount: PublicKey.unique(),
+        productAccount,
       })
       .instruction(),
   );
 
   const transaction = new Transaction();
-  for (let ix of ixsToSend) {
+  for (const ix of ixsToSend) {
     transaction.add(ix);
   }
 
@@ -87,7 +88,7 @@ it("Unit test for getSizeOfTransaction", async () => {
 });
 
 it("Unit test for getSizeOfTransaction", async () => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
@@ -115,7 +116,7 @@ it("Unit test for getSizeOfTransaction", async () => {
 
   const txToSend: Transaction[] =
     TransactionBuilder.batchIntoLegacyTransactions(ixsToSend, {
-      computeUnitPriceMicroLamports: 50000,
+      computeUnitPriceMicroLamports: 50_000,
     });
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b),
@@ -126,7 +127,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     ),
   ).toBeTruthy();
 
-  for (let tx of txToSend) {
+  for (const tx of txToSend) {
     tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
     tx.feePayer = payer.publicKey;
     expect(tx.serialize({ requireAllSignatures: false }).length).toBe(

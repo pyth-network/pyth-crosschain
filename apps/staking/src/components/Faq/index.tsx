@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import { LazyMotion, m, domAnimation } from "framer-motion";
-import type { HTMLProps, ReactNode, ComponentProps } from "react";
+import { domAnimation, LazyMotion, m } from "framer-motion";
+import type { ComponentProps, HTMLProps, ReactNode } from "react";
 import { useState } from "react";
 import { Button } from "react-aria-components";
 
@@ -26,7 +26,7 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
         )}
         <dl className="flex flex-col divide-y divide-neutral-600/50 lg:grow">
           {questions.map(({ question, answer }, i) => (
-            <div key={i} className="flex flex-col py-6">
+            <div className="flex flex-col py-6" key={i}>
               <dt>
                 <Button
                   className="-mx-2 flex w-[calc(100%_+_1rem)] flex-row items-start justify-between gap-4 p-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 md:gap-8"
@@ -38,27 +38,27 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
                     {question}
                   </div>
                   <svg
-                    viewBox="0 0 8 8"
-                    stroke="currentColor"
                     className="relative mt-[.35rem] size-4 flex-none"
+                    stroke="currentColor"
+                    viewBox="0 0 8 8"
                   >
                     <line
-                      x1="4"
-                      y1="0"
-                      x2="4"
-                      y2="9"
                       className={clsx("origin-center transition duration-300", {
                         "rotate-90": openItem === i,
                       })}
+                      x1="4"
+                      x2="4"
+                      y1="0"
+                      y2="9"
                     />
-                    <line x1="0" y1="4" x2="9" y2="4" />
+                    <line x1="0" x2="9" y1="4" y2="4" />
                   </svg>
                 </Button>
               </dt>
               <m.dt
+                animate={{ height: openItem === i ? "auto" : 0 }}
                 className="-mt-1 flex max-w-prose flex-col gap-4 overflow-hidden font-light"
                 initial={{ height: openItem === i ? "auto" : 0 }}
-                animate={{ height: openItem === i ? "auto" : 0 }}
               >
                 {answer}
               </m.dt>

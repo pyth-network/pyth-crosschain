@@ -92,12 +92,12 @@ export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
 
       // Subscribe to BTC price feed
       const subscribeMessage = {
-        subscriptionId: 1,
-        type: "subscribe",
-        priceFeedIds: [feedId],
-        properties: ["exponent", "price"],
         chains: [],
         channel: SYMBOL_TO_CHANNEL_MAP.get(selectedSource),
+        priceFeedIds: [feedId],
+        properties: ["exponent", "price"],
+        subscriptionId: 1,
+        type: "subscribe",
       };
       socket.json(subscribeMessage);
     },
@@ -119,7 +119,9 @@ export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
       if (
         data.type === "streamUpdated" &&
         data.subscriptionId === 1 &&
-        data.parsed?.priceFeeds?.length
+        data.parsed &&
+        data.parsed.priceFeeds &&
+        data.parsed.priceFeeds.length > 0
       ) {
         const priceFeed = data.parsed.priceFeeds[0];
 

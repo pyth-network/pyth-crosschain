@@ -5,8 +5,8 @@
  * based on the user's configuration.
  */
 
-export { generateTypeScriptCode } from "./typescript";
 export { generateCliCode } from "./cli";
+export { generateCode, getFileExtension, getMonacoLanguage } from "./generator";
 export { generateGoCode } from "./go";
 export { generatePythonCode } from "./python";
-export { generateCode, getFileExtension, getMonacoLanguage } from "./generator";
+export { generateTypeScriptCode } from "./typescript";

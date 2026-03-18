@@ -29,8 +29,8 @@ export function CheckboxGroup({
   return (
     <BaseCheckboxGroup
       className={cx(classes.checkboxGroup, className)}
-      value={value}
       onValueChange={onChange}
+      value={value}
     >
       <div className={classes.label}>{label}</div>
       <div className={classes.checkboxes}>

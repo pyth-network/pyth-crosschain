@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from "fs";
+import { exec } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import toml from "@ltd/j-toml";
-import { exec } from "child_process";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -32,17 +32,17 @@ function cargoPreSetup(contractTomlFilePath: string, feature: string) {
   const parsedToml = toml.parse(originalTomlContentStr);
 
   // add default feature to the cargo.toml
-  // @ts-ignore
+  // @ts-expect-error
   parsedToml.features.default = [feature];
 
-  // @ts-ignore
+  // @ts-expect-error
   const updatedToml = toml.stringify(parsedToml, {
+    forceInlineArraySpacing: 0,
     // don't remove this or else stringify will return an array of strings
     // where each string represents a line
     // this lets it combine all of those line
     newline: "\n",
     newlineAround: "section",
-    forceInlineArraySpacing: 0,
   });
 
   writeFileSync(contractTomlFilePath, updatedToml);
@@ -66,9 +66,6 @@ function build() {
           : undefined;
 
     if (feature === undefined) {
-      console.log(
-        "Please provide one of the options: ['cosmwasm', 'injective', 'osmosis']",
-      );
       return;
     }
 
@@ -90,10 +87,7 @@ function build() {
           `;
 
   // build contract by running the command
-  exec(buildCommand, (_error, stdout, stderr) => {
-    console.log(stdout);
-    console.log(stderr);
-
+  exec(buildCommand, (_error, _stdout, _stderr) => {
     cleanup();
   });
 }

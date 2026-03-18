@@ -1,25 +1,26 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useMemo } from 'react'
+import type React from "react";
+import { createContext, useContext, useMemo } from "react";
 
-import type { MultisigHookData } from '../hooks/useMultisig'
-import { useMultisig } from '../hooks/useMultisig'
+import type { MultisigHookData } from "../hooks/useMultisig";
+import { useMultisig } from "../hooks/useMultisig";
 
-const MultisigContext = createContext<MultisigHookData | undefined>(undefined)
+const MultisigContext = createContext<MultisigHookData | undefined>(undefined);
 
 export const useMultisigContext = () => {
-  const context = useContext(MultisigContext)
+  const context = useContext(MultisigContext);
   if (!context) {
     throw new Error(
-      'useMultisigContext must be used within a MultisigContext.Provider'
-    )
+      "useMultisigContext must be used within a MultisigContext.Provider",
+    );
   }
-  return context
-}
+  return context;
+};
 
 type MultisigContextProviderProps = {
-  children?: React.ReactNode
-}
+  children?: React.ReactNode;
+};
 
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
@@ -34,19 +35,19 @@ export const MultisigContextProvider: React.FC<
     refreshData,
     connection,
     readOnlySquads,
-  } = useMultisig()
+  } = useMultisig();
 
   const value = useMemo(
     () => ({
-      upgradeMultisigAccount,
-      priceFeedMultisigAccount,
-      upgradeMultisigProposals,
-      priceFeedMultisigProposals,
-      isLoading,
-      walletSquads,
-      refreshData,
       connection,
+      isLoading,
+      priceFeedMultisigAccount,
+      priceFeedMultisigProposals,
       readOnlySquads,
+      refreshData,
+      upgradeMultisigAccount,
+      upgradeMultisigProposals,
+      walletSquads,
     }),
     [
       walletSquads,
@@ -58,12 +59,12 @@ export const MultisigContextProvider: React.FC<
       refreshData,
       connection,
       readOnlySquads,
-    ]
-  )
+    ],
+  );
 
   return (
     <MultisigContext.Provider value={value}>
       {children}
     </MultisigContext.Provider>
-  )
-}
+  );
+};

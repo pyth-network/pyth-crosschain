@@ -7,43 +7,40 @@ import { getNetworkInfo } from "@injectivelabs/networks";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
-import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
-import { Controller } from "../controller.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { filterInvalidPriceItems } from "../utils.js";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
 export default {
-  command: "injective",
-  describe: "run price pusher for injective",
   builder: {
-    "grpc-endpoint": {
-      description:
-        "gRPC endpoint URL for injective. The pusher will periodically" +
-        "poll for updates. The polling interval is configurable via the " +
-        "`polling-frequency` command-line argument.",
-      type: "string",
-      required: true,
-    } as Options,
-    network: {
-      description: "testnet or mainnet",
-      type: "string",
-      required: true,
+    "gas-multiplier": {
+      description: "Gas multiplier to be used for each transaction",
+      type: "number",
     } as Options,
     "gas-price": {
       description: "Gas price to be used for each transaction",
       type: "number",
     } as Options,
-    "gas-multiplier": {
-      description: "Gas multiplier to be used for each transaction",
-      type: "number",
+    "grpc-endpoint": {
+      description:
+        "gRPC endpoint URL for injective. The pusher will periodically" +
+        "poll for updates. The polling interval is configurable via the " +
+        "`polling-frequency` command-line argument.",
+      required: true,
+      type: "string",
+    } as Options,
+    network: {
+      description: "testnet or mainnet",
+      required: true,
+      type: "string",
     } as Options,
     "price-ids-process-chunk-size": {
       description:
         "Set in case we wanna split price feeds updates into chunks to have smaller transactions. Set to -1 to disable chunking.",
-      type: "number",
       required: false,
+      type: "number",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -54,7 +51,10 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  command: "injective",
+  describe: "run price pusher for injective",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       network,
@@ -82,7 +82,7 @@ export default {
     const hermesClient = new HermesClient(priceServiceEndpoint);
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =
@@ -121,8 +121,8 @@ export default {
       mnemonic,
       {
         chainId: getNetworkInfo(network).chainId,
-        gasPrice,
         gasMultiplier,
+        gasPrice,
         priceIdsProcessChunkSize,
       },
     );

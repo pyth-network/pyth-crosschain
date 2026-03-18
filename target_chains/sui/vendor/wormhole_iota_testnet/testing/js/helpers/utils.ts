@@ -1,8 +1,8 @@
-import { JsonRpcProvider } from "@mysten/sui.js";
+import type { JsonRpcProvider } from "@mysten/sui.js";
 
 export async function getPackageId(
   provider: JsonRpcProvider,
-  stateId: string
+  stateId: string,
 ): Promise<string> {
   const state = await provider
     .getObject({
@@ -12,7 +12,7 @@ export async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 

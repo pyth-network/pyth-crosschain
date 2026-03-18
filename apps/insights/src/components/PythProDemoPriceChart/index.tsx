@@ -10,10 +10,8 @@ import type {
   Time,
   UTCTimestamp,
 } from "lightweight-charts";
-import { createChart, CrosshairMode, LineSeries } from "lightweight-charts";
+import { CrosshairMode, createChart, LineSeries } from "lightweight-charts";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-
-import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -24,6 +22,7 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+import classes from "./index.module.scss";
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
@@ -102,8 +101,8 @@ export function PythProDemoPriceChartImpl({
 
         series.applyOptions({
           color: colorToUse,
-          lineWidth: 2,
           lineStyle: 0, // solid
+          lineWidth: 2,
           visible,
         });
 
@@ -133,6 +132,10 @@ export function PythProDemoPriceChartImpl({
       crosshair: {
         mode: CrosshairMode.Magnet,
       },
+      grid: {
+        horzLines: { color: grayColor },
+        vertLines: { color: grayColor },
+      },
       layout: {
         attributionLogo: false, // hide TradingView logo
         background: { color: "transparent" },
@@ -142,10 +145,6 @@ export function PythProDemoPriceChartImpl({
         timeFormatter(time: UTCTimestamp) {
           return format(new Date(time), "PPpp");
         },
-      },
-      grid: {
-        horzLines: { color: grayColor },
-        vertLines: { color: grayColor },
       },
       rightPriceScale: {
         borderColor: grayColor,
@@ -275,7 +274,6 @@ export function PythProDemoPriceChartImpl({
   }, [
     chartRef,
     createSeriesIfNotExist,
-    dataSourceVisibility,
     dataSourcesInUse,
     metrics,
     selectedSource,
@@ -322,12 +320,12 @@ export function PythProDemoPriceChart() {
       chartRef={chartRef}
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
-      key={`${selectedSource}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
       handleSetChartRef={handleSetChartRef}
+      key={`${selectedSource}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
       metrics={metrics}
       playbackSpeed={playbackSpeed}
-      selectedSource={selectedSource}
       selectedReplayDate={selectedReplayDate}
+      selectedSource={selectedSource}
     />
   );
 }

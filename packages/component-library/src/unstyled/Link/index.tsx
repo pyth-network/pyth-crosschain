@@ -18,9 +18,9 @@ export const Link = ({
 }: Props) => {
   const prefetchProps = usePrefetch<HTMLAnchorElement>({
     href: props.href,
-    prefetch,
     onHoverStart,
     onPressStart,
+    prefetch,
     ref,
   });
 

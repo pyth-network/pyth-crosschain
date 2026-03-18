@@ -1,5 +1,3 @@
-// biome-ignore-all lint/style/noProcessEnv: config.ts is the designated env var loading point
-// biome-ignore-all lint/nursery/noUndeclaredEnvVars: MCP server uses its own env vars, not cached by turbo
 import { z } from "zod";
 
 const ConfigSchema = z.object({

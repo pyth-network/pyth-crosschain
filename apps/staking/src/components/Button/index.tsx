@@ -28,13 +28,13 @@ export const Button = ({
   ...props
 }: ButtonProps) => (
   <ReactAriaButton
-    isDisabled={isLoading === true || isDisabled === true}
     className={clsx(
       "relative text-center disabled:border-neutral-50/10 disabled:bg-neutral-50/10 disabled:text-white/60",
       isLoading ? "cursor-wait" : "disabled:cursor-not-allowed",
-      baseClassName({ variant, size }),
+      baseClassName({ size, variant }),
       className,
     )}
+    isDisabled={isLoading === true || isDisabled === true}
     {...props}
   >
     {(values) => (
@@ -69,7 +69,7 @@ export const LinkButton = ({
   ...props
 }: LinkButtonProps) => (
   <Link
-    className={clsx(baseClassName({ variant, size }), className)}
+    className={clsx(baseClassName({ size, variant }), className)}
     {...props}
   />
 );

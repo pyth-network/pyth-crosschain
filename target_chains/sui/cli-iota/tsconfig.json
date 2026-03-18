@@ -1,4 +1,7 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
-  "exclude": ["dist", "node_modules"]
+  "compilerOptions": {
+    "noUnusedLocals": false
+  },
+  "exclude": ["dist", "node_modules"],
+  "extends": "@cprussin/tsconfig/base.json"
 }

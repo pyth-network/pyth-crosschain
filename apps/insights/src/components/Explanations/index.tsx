@@ -54,10 +54,10 @@ export const ExplainAverage = ({
       </p>
       {scoreTime && <EvaluationTime scoreTime={scoreTime} />}
       <Button
-        size="xs"
-        variant="solid"
         href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
+        size="xs"
         target="_blank"
+        variant="solid"
       >
         Learn more
       </Button>
@@ -77,19 +77,19 @@ export const EvaluationTime = ({ scoreTime }: { scoreTime: Date }) => {
       This value is calculated based on feed performance from{" "}
       <b>
         <FormattedDate
-          value={startTime}
           dateStyle="long"
           timeStyle="long"
           timeZone="utc"
+          value={startTime}
         />
       </b>{" "}
       to{" "}
       <b>
         <FormattedDate
-          value={scoreTime}
           dateStyle="long"
           timeStyle="long"
           timeZone="utc"
+          value={scoreTime}
         />
       </b>
       .

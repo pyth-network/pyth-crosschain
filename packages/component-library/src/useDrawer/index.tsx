@@ -3,17 +3,16 @@ import { useMediaQuery } from "@react-hookz/web";
 import clsx from "clsx";
 import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useIsSSR } from "react-aria";
 import { Heading } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import type { ModalDialogProps } from "../ModalDialog/index.jsx";
 import {
-  ModalDialog,
   createModalDialogContext,
+  ModalDialog,
 } from "../ModalDialog/index.jsx";
+import styles from "./index.module.scss";
 
 const CLOSE_DURATION_IN_S = 0.15;
 
@@ -81,30 +80,30 @@ const Drawer = ({
 
   return (
     <ModalDialog
-      key={`modal-dialog-${isLarge ? "large" : "small"}`}
+      className={clsx(styles.drawer, className)}
+      data-fill={fill ? "" : undefined}
+      data-has-footer={footer === undefined ? undefined : ""}
+      data-hide-heading={hideHeading ? "" : undefined}
       data-variant={variant}
+      key={`modal-dialog-${isLarge ? "large" : "small"}`}
+      overlayClassName={styles.modalOverlay ?? ""}
       overlayVariants={{
-        unmounted: { backgroundColor: "#00000000" },
         hidden: { backgroundColor: "#00000000" },
+        unmounted: { backgroundColor: "#00000000" },
         visible: { backgroundColor: "#00000080" },
       }}
-      overlayClassName={styles.modalOverlay ?? ""}
-      className={clsx(styles.drawer, className)}
-      data-has-footer={footer === undefined ? undefined : ""}
-      data-fill={fill ? "" : undefined}
-      data-hide-heading={hideHeading ? "" : undefined}
       {...animationProps}
       {...props}
     >
       <div
         className={styles.handle}
+        data-is-pressed={isHandlePressed || isDragging ? "" : undefined}
         onPointerDown={() => {
           setIsHandlePressed(true);
         }}
         onPointerUp={() => {
           setIsHandlePressed(false);
         }}
-        data-is-pressed={isHandlePressed || isDragging ? "" : undefined}
       />
       <div className={clsx(styles.heading, headingClassName)}>
         <div className={styles.headingTop}>
@@ -114,13 +113,13 @@ const Drawer = ({
           <div className={styles.headingEnd}>
             {headingExtra}
             <Button
-              className={styles.closeButton ?? ""}
               beforeIcon={<XCircle weight="fill" />}
-              slot="close"
+              className={styles.closeButton ?? ""}
               hideText
               rounded
-              variant="ghost"
               size="sm"
+              slot="close"
+              variant="ghost"
               {...(closeHref && { href: closeHref })}
             >
               Close
@@ -169,35 +168,35 @@ const useAnimationProps = (
           variants:
             variant === "dialog"
               ? {
-                  visible: {
-                    y: 0,
-                    transition: { type: "spring", duration: 0.8, bounce: 0.35 },
-                  },
                   hidden: {
-                    y: "calc(-100% - 8rem)",
                     transition: {
-                      ease: "linear",
                       duration: CLOSE_DURATION_IN_S,
+                      ease: "linear",
                     },
+                    y: "calc(-100% - 8rem)",
                   },
                   unmounted: {
                     y: "calc(-100% - 8rem)",
+                  },
+                  visible: {
+                    transition: { bounce: 0.35, duration: 0.8, type: "spring" },
+                    y: 0,
                   },
                 }
               : {
-                  visible: {
-                    x: 0,
-                    transition: { type: "spring", duration: 1, bounce: 0.35 },
-                  },
                   hidden: {
-                    x: "calc(100% + 1rem)",
                     transition: {
-                      ease: "linear",
                       duration: CLOSE_DURATION_IN_S,
+                      ease: "linear",
                     },
+                    x: "calc(100% + 1rem)",
                   },
                   unmounted: {
                     x: "calc(100% + 1rem)",
+                  },
+                  visible: {
+                    transition: { bounce: 0.35, duration: 1, type: "spring" },
+                    x: 0,
                   },
                 },
         },
@@ -206,44 +205,44 @@ const useAnimationProps = (
         isDragging,
         props: {
           ...commonProps,
-          variants: {
-            visible: {
-              y: 0,
-              transition: {
-                duration: 0.5,
-                ease: [0.32, 0.72, 0, 1],
-              },
-            },
-            hidden: {
-              y: "100%",
-              transition: { ease: "linear", duration: CLOSE_DURATION_IN_S },
-            },
-            unmounted: {
-              y: "100%",
-            },
-          },
-          style: { y },
           drag: "y",
           dragConstraints: { top: 0 },
           dragElastic: false,
           dragPropagation: true,
-          onDragStart: () => {
-            setIsDragging(true);
-          },
           onDragEnd: (e, { velocity }, { state }) => {
             setIsDragging(false);
             if (e.type !== "pointercancel" && velocity.y > 10) {
               state.close();
             } else {
               animate(y, "0", {
-                type: "inertia",
-                bounceStiffness: 300,
                 bounceDamping: 40,
-                timeConstant: 300,
-                min: 0,
+                bounceStiffness: 300,
                 max: 0,
+                min: 0,
+                timeConstant: 300,
+                type: "inertia",
               });
             }
+          },
+          onDragStart: () => {
+            setIsDragging(true);
+          },
+          style: { y },
+          variants: {
+            hidden: {
+              transition: { duration: CLOSE_DURATION_IN_S, ease: "linear" },
+              y: "100%",
+            },
+            unmounted: {
+              y: "100%",
+            },
+            visible: {
+              transition: {
+                duration: 0.5,
+                ease: [0.32, 0.72, 0, 1],
+              },
+              y: 0,
+            },
           },
         },
       };

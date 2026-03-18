@@ -47,7 +47,7 @@ export class PythWrapperQuerier {
       });
 
       return updateFeeResponse as Coin;
-    } catch (e) {
+    } catch (_e) {
       throw new Error("Error fetching update fee");
     }
   }
@@ -76,7 +76,7 @@ export class PythWrapperQuerier {
       });
 
       return (priceFeedResponse as any).price_feed as PriceFeedResponse;
-    } catch (e) {
+    } catch (_e) {
       throw new Error("Error fetching update fee");
     }
   }
@@ -122,12 +122,12 @@ export class PythWrapperExecutor {
 
     return await this.chainExecutor.executeContract({
       contractAddr: contractAddr,
+      funds: [fund],
       msg: {
         update_price_feeds: {
           data: vaas,
         },
       },
-      funds: [fund],
     });
   }
 

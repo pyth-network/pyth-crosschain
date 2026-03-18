@@ -15,7 +15,7 @@ export const Section = ({
   isHighlight?: boolean;
   children: React.ReactNode;
 }) => (
-  <section data-highlight={isHighlight} className={styles.section}>
+  <section className={styles.section} data-highlight={isHighlight}>
     <div className={styles.sectionContent}>
       <div className={styles.sectionHeader}>
         <div>

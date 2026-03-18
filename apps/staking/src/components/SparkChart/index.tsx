@@ -1,9 +1,10 @@
 "use client";
 
-import { ResponsiveContainer, LineChart, Tooltip, Line, XAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import resolveConfig from "tailwindcss/resolveConfig";
 
 import tailwindConfig from "../../../tailwind.config";
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Date component intentionally shadows global Date
 import { Date } from "../Date";
 
 const fullConfig = resolveConfig(tailwindConfig);
@@ -13,16 +14,16 @@ type Props = {
 };
 
 export const SparkChart = ({ data }: Props) => (
-  <ResponsiveContainer width="100%" height="100%">
+  <ResponsiveContainer height="100%" width="100%">
     <LineChart data={data}>
       <Tooltip
-        content={<TooltipContent />}
         allowEscapeViewBox={{ x: true, y: true }}
+        content={<TooltipContent />}
       />
       <Line
-        type="monotone"
         dataKey="value"
         stroke={fullConfig.theme.colors.pythpurple[400]}
+        type="monotone"
       />
       <XAxis dataKey="date" hide />
     </LineChart>

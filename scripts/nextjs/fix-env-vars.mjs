@@ -26,9 +26,6 @@ if (platform === "darwin") {
       let contents = fs.readFileSync(localEnvFile, "utf-8");
       contents = contents.replaceAll(/\$/gm, "\\$");
       fs.writeFileSync(localEnvFile, contents, "utf-8");
-      console.info(`fixed ${localEnvFile} file`);
     }
-  } catch (error) {
-    console.error(error);
-  }
+  } catch (_error) {}
 }

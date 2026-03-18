@@ -12,16 +12,14 @@ export const PublisherFaq = (
       header="Preparation"
       questions={[
         {
-          question:
-            "Is there a Market Data Publisher (MDP) specific guide or tutorial?",
           answer: (
             <>
               <p>
                 For a comprehensive walkthrough of the OIS program, publishers
                 can refer to the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -32,8 +30,8 @@ export const PublisherFaq = (
                 For a guide on the OIS parameters and reward calculations,
                 publishers can refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   target="_blank"
                 >
                   OIS Documentation
@@ -44,8 +42,8 @@ export const PublisherFaq = (
                 For an explanation of slashing events and their conditions,
                 publishers can refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook#slashing-conditions"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook#slashing-conditions"
                   target="_blank"
                 >
                   Slashing Rulebook
@@ -54,32 +52,33 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question:
+            "Is there a Market Data Publisher (MDP) specific guide or tutorial?",
         },
         {
-          question: "Is participation in OIS mandatory?",
           answer:
             "Participation in OIS as a publisher is optional and voluntary. If you choose not to participate in OIS, you do not need to perform any actions in addition to your regular publisher activities. There are no penalties for choosing not to participate in OIS.",
+          question: "Is participation in OIS mandatory?",
         },
         {
-          question:
-            "Are there penalties for data publishers for choosing not to participate in OIS?",
           answer:
             "No. There are no penalties imposed on data publishers for choosing not to participate in OIS.",
+          question:
+            "Are there penalties for data publishers for choosing not to participate in OIS?",
         },
         {
-          question:
-            "Does participating in OIS affect my participation in other Pyth Network publisher programs?",
           answer:
             "No, participating in Oracle Integrity Staking (OIS) does not affect your involvement in any other Pyth Network publisher incentive programs. Your performance and earnings in these programs are completely separate from the OIS program. Likewise, participating in other publisher programs does not impact your participation or potential rewards you would earn in the OIS program.",
+          question:
+            "Does participating in OIS affect my participation in other Pyth Network publisher programs?",
         },
         {
-          question: "Which MDPs can participate in OIS?",
           answer:
             "All publishers can choose to participate in OIS. All publishers are already assigned a stake pool for OIS.",
+          question: "Which MDPs can participate in OIS?",
         },
 
         {
-          question: "How do I opt in to receive OIS rewards as an MDP?",
           answer: (
             <>
               <p>
@@ -96,8 +95,8 @@ export const PublisherFaq = (
               <p>
                 If you wish to opt out of rewards, please follow the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -106,9 +105,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "How do I opt in to receive OIS rewards as an MDP?",
         },
         {
-          question: "How do I opt out of receiving OIS rewards as an MDP?",
           answer: (
             <>
               <p>
@@ -121,8 +120,8 @@ export const PublisherFaq = (
               <p>
                 Please follow the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -131,16 +130,15 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "How do I opt out of receiving OIS rewards as an MDP?",
         },
         {
-          question:
-            "If I opt in to receiving OIS rewards, do I have to stake as well?",
           answer:
             "No. You are not obligated to stake to OIS, even if you remain opted in for OIS rewards.",
+          question:
+            "If I opt in to receiving OIS rewards, do I have to stake as well?",
         },
         {
-          question:
-            "Does opting in make me subject to both the staking rewards and slashing mechanisms?",
           answer: (
             <>
               <p>
@@ -158,8 +156,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   target="_blank"
                 >
                   OIS Documentation
@@ -169,6 +167,8 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question:
+            "Does opting in make me subject to both the staking rewards and slashing mechanisms?",
         },
       ]}
     />
@@ -176,7 +176,6 @@ export const PublisherFaq = (
       header="Understanding OIS"
       questions={[
         {
-          question: "What are the risks associated with OIS?",
           answer: (
             <>
               <p>
@@ -193,8 +192,8 @@ export const PublisherFaq = (
                 It is important to understand the requirements,
                 responsibilities, and implications of participating in OIS. The{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -204,17 +203,16 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "What are the risks associated with OIS?",
         },
         {
-          question:
-            "I have previously staked in Pyth Governance (the previous program found on staking.pyth.network). Is OIS the same program?",
           answer: (
             <>
               <p>
                 No. The program available on{" "}
                 <Link
-                  href="http://staking.pyth.network"
                   className="underline"
+                  href="http://staking.pyth.network"
                   target="_blank"
                 >
                   staking.pyth.network
@@ -223,8 +221,8 @@ export const PublisherFaq = (
                 enables PYTH holders to participate in the governance of Pyth
                 Network in accordance with the{" "}
                 <Link
-                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   className="underline"
+                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   target="_blank"
                 >
                   Pyth DAO Constitution
@@ -238,27 +236,28 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question:
+            "I have previously staked in Pyth Governance (the previous program found on staking.pyth.network). Is OIS the same program?",
         },
         {
-          question:
-            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
           answer:
             "Yes. You can participate in OIS, PG, both, or neither programs. The same PYTH token can be staked simultaneously in OIS and PG in any order. To withdraw your tokens back to your wallet, the tokens must be unstaked from both OIS and PG.",
+          question:
+            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
         },
 
         {
-          question: "Does participating in OIS affect my participation in PG?",
           answer:
             "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIS does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
+          question: "Does participating in OIS affect my participation in PG?",
         },
 
         {
-          question: "Does slashing reduce voting weights?",
           answer:
             "If your tokens are slashed and these tokens were also staked in PG, then your voting power would be reduced insofar that the slashing event reduces the total amount of tokens that were staked in both OIS and PG.",
+          question: "Does slashing reduce voting weights?",
         },
         {
-          question: "Can I stake tokens if my tokens have a lockup schedule?",
           answer: (
             <>
               <p>
@@ -272,14 +271,14 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "Can I stake tokens if my tokens have a lockup schedule?",
         },
         {
-          question: "Are OIS rewards unlocked or locked tokens?",
           answer:
             "In its current design, OIS rewards come in the form of unlocked PYTH tokens.",
+          question: "Are OIS rewards unlocked or locked tokens?",
         },
         {
-          question: "When are OIS rewards distributed?",
           answer: (
             <>
               <p>
@@ -290,8 +289,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   target="_blank"
                 >
                   OIS documentation
@@ -300,10 +299,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "When are OIS rewards distributed?",
         },
         {
-          question:
-            "Where can I find my OIS rewards and accumulated delegation fees?",
           answer: (
             <p>
               The rewards and delegation fees from other participants in the
@@ -312,11 +310,13 @@ export const PublisherFaq = (
               this balance can be withdrawn immediately.
             </p>
           ),
+          question:
+            "Where can I find my OIS rewards and accumulated delegation fees?",
         },
         {
-          question: "Does OIS affect other publisher reward programs?",
           answer:
             "No. OIS is a separate program and set of rewards from the other publisher reward programs.",
+          question: "Does OIS affect other publisher reward programs?",
         },
       ]}
     />
@@ -324,7 +324,6 @@ export const PublisherFaq = (
       header="Getting Started"
       questions={[
         {
-          question: "Which wallet should I connect?",
           answer: (
             <>
               <p>
@@ -340,8 +339,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -350,9 +349,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "Which wallet should I connect?",
         },
         {
-          question: "How do I know if I have connected my main stake account?",
           answer: (
             <>
               <p>
@@ -365,8 +364,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -375,10 +374,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "How do I know if I have connected my main stake account?",
         },
         {
-          question:
-            "Can I reassign a different stake account as my main stake account?",
           answer: (
             <>
               <p>
@@ -398,8 +396,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -408,16 +406,17 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question:
+            "Can I reassign a different stake account as my main stake account?",
         },
         {
-          question: "How do I start staking as an MDP?",
           answer: (
             <>
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
+                  href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   target="_blank"
                 >
                   OIS Guide for MDPs
@@ -431,6 +430,7 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "How do I start staking as an MDP?",
         },
       ]}
     />
@@ -438,7 +438,6 @@ export const PublisherFaq = (
       header="Staking and Slashing"
       questions={[
         {
-          question: "How are staking rewards calculated and distributed?",
           answer: (
             <>
               <p>
@@ -455,8 +454,8 @@ export const PublisherFaq = (
               <p>
                 For a detailed breakdown, you can refer to these{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking/examples"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/examples"
                   target="_blank"
                 >
                   reward calculation examples
@@ -465,9 +464,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "How are staking rewards calculated and distributed?",
         },
         {
-          question: "What factors affect my reward potential as an MDP?",
           answer: (
             <>
               <p>
@@ -486,8 +485,8 @@ export const PublisherFaq = (
               <p>
                 For a detailed explanation, you can refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking"
                   target="_blank"
                 >
                   OIS documentation
@@ -496,17 +495,17 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "What factors affect my reward potential as an MDP?",
         },
         {
-          question: "What is the source of OIS rewards?",
           answer: (
             <>
               <p>
                 This initial set of OIS rewards is bootstrapped by Pyth Data
                 Association. Please refer to the{" "}
                 <Link
-                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   className="underline"
+                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   target="_blank"
                 >
                   official announcemen
@@ -515,9 +514,9 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "What is the source of OIS rewards?",
         },
         {
-          question: "What triggers a slashing event?",
           answer: (
             <>
               <p>
@@ -546,8 +545,8 @@ export const PublisherFaq = (
               <p>
                 Please refer to the{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook"
                   target="_blank"
                 >
                   Slashing Rulebook
@@ -556,11 +555,12 @@ export const PublisherFaq = (
               </p>
             </>
           ),
+          question: "What triggers a slashing event?",
         },
         {
-          question: "What is the slashing penalty rate?",
           answer:
             "The current slashing rate is capped at 5% of a pool’s total stake. The Pyth DAO can vote to adjust this rate.",
+          question: "What is the slashing penalty rate?",
         },
       ]}
     />

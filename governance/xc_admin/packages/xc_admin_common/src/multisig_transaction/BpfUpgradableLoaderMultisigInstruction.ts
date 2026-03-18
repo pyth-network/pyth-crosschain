@@ -93,7 +93,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
           );
         }
         default: // Many more cases are not supported
-          throw Error("Not implemented");
+          throw new Error("Not implemented");
       }
     } catch {
       return new BpfUpgradableLoaderInstruction(

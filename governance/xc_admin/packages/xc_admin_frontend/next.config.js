@@ -1,9 +1,9 @@
+// biome-ignore-all lint/style/noProcessEnv: Standard Next.js environment configuration
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
   reactStrictMode: true,
-  transpilePackages: ['@pythnetwork/client'],
-
-  output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+  transpilePackages: ["@pythnetwork/client"],
   turbopack: {
     resolveAlias: {
       fs: {
@@ -16,26 +16,26 @@ const nextConfig = {
          * of this project, shimming accidental node imports with an
          * empty module is what we'll use
          */
-        browser: './turbopack-hacks/empty.ts',
+        browser: "./turbopack-hacks/empty.ts",
       },
     },
     resolveExtensions: [
-      '.ts',
-      '.tsx',
-      '.js',
-      '.jsx',
-      '.mts',
-      '.mjs',
-      '.cts',
-      '.cjs',
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
     ],
     rules: {
-      '*.inline.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
+      "*.inline.svg": {
+        as: "*.js",
+        loaders: ["@svgr/webpack"],
       },
     },
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

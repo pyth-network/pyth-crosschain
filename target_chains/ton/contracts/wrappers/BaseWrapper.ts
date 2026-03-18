@@ -1,18 +1,15 @@
-import {
+import type { HexString, Price } from "@pythnetwork/price-service-sdk";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type {
   Address,
-  beginCell,
   Cell,
   Contract,
   ContractProvider,
-  Dictionary,
   Sender,
-  SendMode,
-  toNano,
 } from "@ton/core";
-import { createCellChain } from "@pythnetwork/pyth-ton-js";
+import { beginCell, Dictionary, SendMode, toNano } from "@ton/core";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
-import { HexString, Price } from "@pythnetwork/price-service-sdk";
-import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export class BaseWrapper implements Contract {
   constructor(
@@ -21,7 +18,7 @@ export class BaseWrapper implements Contract {
   ) {}
 
   static createFromAddress(address: Address) {
-    return new this(address);
+    return new BaseWrapper(address);
   }
 
   static createInitData(config: {
@@ -91,7 +88,7 @@ export class BaseWrapper implements Contract {
           .storeUint(source.emitterChain, 16)
           .storeBuffer(Buffer.from(source.emitterAddress, "hex"))
           .endCell();
-        const cellHash = BigInt("0x" + sourceCell.hash().toString("hex"));
+        const cellHash = BigInt(`0x${sourceCell.hash().toString("hex")}`);
         isValidDataSourceDict.set(cellHash, true);
       });
     }
@@ -147,9 +144,9 @@ export class BaseWrapper implements Contract {
 
   async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
     await provider.internal(via, {
-      value,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: beginCell().endCell(),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value,
     });
   }
 
@@ -172,9 +169,9 @@ export class BaseWrapper implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -190,9 +187,9 @@ export class BaseWrapper implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: updateFee,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: updateFee,
     });
   }
 
@@ -216,9 +213,9 @@ export class BaseWrapper implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -240,9 +237,9 @@ export class BaseWrapper implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -262,9 +259,9 @@ export class BaseWrapper implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -286,9 +283,9 @@ export class BaseWrapper implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -299,7 +296,7 @@ export class BaseWrapper implements Contract {
     methodName: string,
   ) {
     const result = await provider.get(methodName, [
-      { type: "slice", cell: createCellChain(vm) },
+      { cell: createCellChain(vm), type: "slice" },
     ]);
 
     return result.stack.readNumber();

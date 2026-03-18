@@ -5,11 +5,11 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useId } from "react";
-
-import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
 import { Tab, TabList } from "../unstyled/Tabs/index.jsx";
+import styles from "./index.module.scss";
 
+// biome-ignore lint/suspicious/noRedeclare: Intentionally shadowing Tab to create local type
 type Tab = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
   segment: string;
 };
@@ -28,31 +28,31 @@ export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
     <TabList
       aria-label="Main Navigation"
       className={clsx(styles.mainNavTabs, className)}
-      dependencies={[pathname]}
       data-selectable={
         tabs.every((tab) => pathname !== `/${tab.segment}`) ? "" : undefined
       }
+      dependencies={[pathname]}
       items={tabs}
       {...props}
     >
       {({ className: tabClassName, children, ...tab }) => (
         <Tab
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
+          data-rounded
           data-size="sm"
           data-variant="ghost"
-          data-rounded
-          id={tab.segment}
           href={`/${tab.segment}`}
+          id={tab.segment}
           {...tab}
         >
           {(args) => (
             <>
               {args.isSelected && (
                 <motion.span
-                  layoutId={`${id}-bubble`}
                   className={styles.bubble}
-                  transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                  layoutId={`${id}-bubble`}
                   style={{ originY: "top" }}
+                  transition={{ bounce: 0.3, duration: 0.6, type: "spring" }}
                 />
               )}
               <span className={buttonStyles.text}>

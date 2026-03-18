@@ -4,12 +4,12 @@ import { z } from "zod";
 import { EntropyDeploymentsConfig } from "./entropy-deployments-config";
 
 const ApiChainConfigSchema = z.object({
+  contract_addr: z.string(),
+  default_fee: z.number(),
+  gas_limit: z.number(),
   name: z.string(),
   network_id: z.number(),
-  contract_addr: z.string(),
   reveal_delay_blocks: z.number(),
-  gas_limit: z.number(),
-  default_fee: z.number(),
 });
 
 export type EntropyDeployment = {
@@ -39,11 +39,11 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
   const deployment: EntropyDeployment = {
     address: chain.contract_addr,
+    default_fee: chain.default_fee,
     delay: `${String(chain.reveal_delay_blocks)} block${
       chain.reveal_delay_blocks === 1 ? "" : "s"
     }`,
     gasLimit: String(chain.gas_limit),
-    default_fee: chain.default_fee,
     ...(rpc ? { rpc } : {}),
     ...(explorer ? { explorer } : {}),
     ...(nativeCurrency ? { nativeCurrency } : {}),

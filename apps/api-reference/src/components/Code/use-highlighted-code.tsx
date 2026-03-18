@@ -4,16 +4,15 @@ import type { ReactNode, RefObject } from "react";
 import {
   createContext,
   useContext,
-  useState,
-  useMemo,
   useEffect,
+  useMemo,
   useRef,
+  useState,
 } from "react";
 import type { OffsetOrPosition } from "shiki";
-
+import { getLogger } from "../../browser-logger";
 import type { Highlighter } from "./shiki";
 import type { SupportedLanguage } from "./supported-language";
-import { getLogger } from "../../browser-logger";
 
 const HighlighterContext = createContext<
   undefined | RefObject<undefined | Highlighter>
@@ -55,11 +54,11 @@ export const useHighlightedCode = (
       dimRange
         ? [
             {
-              start: dimRange[0],
               end: dimRange[1],
               properties: {
                 class: "opacity-40 group-hover:opacity-100 transition",
               },
+              start: dimRange[0],
             },
           ]
         : undefined,
@@ -102,6 +101,9 @@ export const useHighlightedCode = (
 const createShikiLoader = () => {
   let cancelled = false;
   return {
+    cancel: () => {
+      cancelled = true;
+    },
     load: async () => {
       const { getHighlighter } = await import("./shiki");
       if (cancelled) {
@@ -116,9 +118,6 @@ const createShikiLoader = () => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         return cancelled ? undefined : highlighter;
       }
-    },
-    cancel: () => {
-      cancelled = true;
     },
   };
 };

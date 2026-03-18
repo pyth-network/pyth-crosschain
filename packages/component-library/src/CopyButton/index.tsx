@@ -30,10 +30,10 @@ export const CopyButton = ({
   const { isCopied, copy } = useCopy(text);
   return (
     <Button
-      onPress={copy}
       className={clsx(styles.copyButton, className)}
-      data-is-copied={isCopied ? "" : undefined}
       data-icon-only={iconOnly ? "" : undefined}
+      data-is-copied={isCopied ? "" : undefined}
+      onPress={copy}
       {...props}
     >
       {(...args) => (

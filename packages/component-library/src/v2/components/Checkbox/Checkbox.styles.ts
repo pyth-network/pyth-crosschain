@@ -17,32 +17,24 @@ export const { classes } = createStyles("v2-checkbox", (theme) => {
   return {
     checkbox: {
       ...theme.flexHorizontalCenter({ inline: true }),
-      gap: theme.spacing(1),
 
       "&:focus": {
-        outline: "none",
-
         "& $indicator": {
           boxShadow: `0 0 0 3px ${theme.resolveThemeColor(theme.colors.focus)}`,
         },
+        outline: "none",
       },
 
       "&:focus-visible": {
-        outline: "none",
-
         "& $indicator": {
           boxShadow: `0 0 0 3px ${theme.resolveThemeColor(theme.colors.focus)}`,
         },
+        outline: "none",
       },
+      gap: theme.spacing(1),
     },
     indicator: {
       ...theme.flexHorizontalCenter({ inline: true }),
-      border: `2px solid ${theme.resolveThemeColor(theme.colors.forms.input.border)}`,
-      borderRadius: theme.tokens.borderRadius.sm,
-      height: "1em",
-      gap: theme.spacing(1),
-      transition: "border-color .2s ease",
-      width: "1em",
 
       "& > svg": {
         height: "1em",
@@ -50,32 +42,36 @@ export const { classes } = createStyles("v2-checkbox", (theme) => {
         transition: "opacity .2s ease",
         width: "auto",
       },
+      border: `2px solid ${theme.resolveThemeColor(theme.colors.forms.input.border)}`,
+      borderRadius: theme.tokens.borderRadius.sm,
+      gap: theme.spacing(1),
+      height: "1em",
+      transition: "border-color .2s ease",
+      width: "1em",
     },
     root: {
       ...theme.flexHorizontalCenter({ inline: true }),
-      gap: theme.spacing(1),
-
-      '&[data-checked="true"]': {
-        "& $indicator": {
-          backgroundColor: theme.palette.violet500,
-          borderColor: theme.palette.violet500,
-          color: theme.palette.white,
-
-          "& > svg": {
-            opacity: 1,
-          },
-        },
-      },
 
       "&:hover": {
-        cursor: "pointer",
-
         "& $indicator": {
           borderColor: theme.resolveThemeColor(
             theme.colors.forms.input.hover.border,
           ),
         },
+        cursor: "pointer",
       },
+
+      '&[data-checked="true"]': {
+        "& $indicator": {
+          "& > svg": {
+            opacity: 1,
+          },
+          backgroundColor: theme.palette.violet500,
+          borderColor: theme.palette.violet500,
+          color: theme.palette.white,
+        },
+      },
+      gap: theme.spacing(1),
 
       ...sizeVariants,
     },

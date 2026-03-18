@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
-import { Connection, TransactionInstruction } from "@solana/web3.js";
+import type { Connection, TransactionInstruction } from "@solana/web3.js";
 
 import type { PythStakingWallet } from "./wallet.js";
 

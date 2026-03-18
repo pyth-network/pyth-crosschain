@@ -1,5 +1,5 @@
 {
-  "title": "Use Real-Time Price Data",
+  "defaultOpen": true,
   "pages": ["pull-integration", "push-integration"],
-  "defaultOpen": true
+  "title": "Use Real-Time Price Data"
 }

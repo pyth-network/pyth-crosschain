@@ -11,25 +11,24 @@ import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import type { ReactNode, ComponentProps } from "react";
-
-import { getPriceFeeds } from "./get-price-feeds";
-import styles from "./performance.module.scss";
-import { TopFeedsTable } from "./top-feeds-table";
+import type { ComponentProps, ReactNode } from "react";
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
 import {
   ExplainActive,
-  ExplainInactive,
   ExplainAverage,
+  ExplainInactive,
 } from "../Explanations";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./performance.module.scss";
+import { TopFeedsTable } from "./top-feeds-table";
 
 const PUBLISHER_SCORE_WIDTH = 24;
 
@@ -59,15 +58,7 @@ export const Performance = async ({ params }: Props) => {
   const rows = slicedPublishers?.map((publisher) => {
     const knownPublisher = lookup(publisher.key);
     return {
-      id: publisher.key,
-      prefetch: false,
-      nameAsString: knownPublisher?.name ?? publisher.key,
       data: {
-        ranking: (publisher.rank !== undefined || publisher.key === key) && (
-          <Ranking isCurrent={publisher.key === key} className={styles.ranking}>
-            {publisher.rank}
-          </Ranking>
-        ),
         activeFeeds: (
           <Link
             href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
@@ -76,6 +67,9 @@ export const Performance = async ({ params }: Props) => {
           >
             {publisher.activeFeeds}
           </Link>
+        ),
+        averageScore: publisher.averageScore !== undefined && (
+          <Score score={publisher.averageScore} width={PUBLISHER_SCORE_WIDTH} />
         ),
         inactiveFeeds: (
           <Link
@@ -86,20 +80,25 @@ export const Performance = async ({ params }: Props) => {
             {publisher.inactiveFeeds}
           </Link>
         ),
-        averageScore: publisher.averageScore !== undefined && (
-          <Score width={PUBLISHER_SCORE_WIDTH} score={publisher.averageScore} />
-        ),
         name: (
           <PublisherTag
             cluster={parsedCluster}
             publisherKey={publisher.key}
             {...(knownPublisher && {
-              name: knownPublisher.name,
               icon: <PublisherIcon knownPublisher={knownPublisher} />,
+              name: knownPublisher.name,
             })}
           />
         ),
+        ranking: (publisher.rank !== undefined || publisher.key === key) && (
+          <Ranking className={styles.ranking} isCurrent={publisher.key === key}>
+            {publisher.rank}
+          </Ranking>
+        ),
       },
+      id: publisher.key,
+      nameAsString: knownPublisher?.name ?? publisher.key,
+      prefetch: false,
       ...(publisher.key !== key && {
         href: `/publishers/${ClusterToName[parsedCluster]}/${publisher.key}`,
       }),
@@ -124,12 +123,12 @@ export const Performance = async ({ params }: Props) => {
     notFound()
   ) : (
     <PerformanceImpl
-      publishers={rows}
+      averageScoreTime={publishers[0]?.scoreTime}
+      cluster={parsedCluster}
       highPerformingFeeds={highPerformingFeeds}
       lowPerformingFeeds={lowPerformingFeeds}
-      averageScoreTime={publishers[0]?.scoreTime}
       publisherKey={key}
-      cluster={parsedCluster}
+      publishers={rows}
     />
   );
 };
@@ -164,35 +163,32 @@ type PerformanceImplProps =
 const PerformanceImpl = (props: PerformanceImplProps) => (
   <div className={styles.performance}>
     <Card
+      className={styles.publishersRankingCard ?? ""}
       icon={<Broadcast />}
       title="Publishers Ranking"
-      className={styles.publishersRankingCard ?? ""}
     >
       <EntityList
-        label="Publishers Ranking"
         className={styles.publishersRankingList ?? ""}
-        headerLoadingSkeleton={<PublisherTag isLoading />}
         fields={[
           { id: "ranking", name: "Ranking" },
           { id: "averageScore", name: "Average Score" },
           { id: "activeFeeds", name: "Active Feeds" },
           { id: "inactiveFeeds", name: "Inactive Feeds" },
         ]}
+        headerLoadingSkeleton={<PublisherTag isLoading />}
+        label="Publishers Ranking"
         {...(props.isLoading
           ? { isLoading: true }
           : {
               rows: props.publishers.map((publisher) => ({
                 ...publisher,
-                textValue: publisher.nameAsString,
                 header: publisher.data.name,
+                textValue: publisher.nameAsString,
               })),
             })}
       />
       <Table
-        rounded
-        fill
         className={styles.publishersRankingTable ?? ""}
-        label="Publishers Ranking"
         columns={[
           {
             id: "ranking",
@@ -200,13 +196,14 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
             width: 25,
           },
           {
-            id: "name",
-            name: "NAME / ID",
-            isRowHeader: true,
             alignment: "left",
+            id: "name",
+            isRowHeader: true,
             loadingSkeleton: <PublisherTag isLoading />,
+            name: "NAME / ID",
           },
           {
+            alignment: "center",
             id: "activeFeeds",
             name: (
               <>
@@ -214,10 +211,10 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
                 <ExplainActive />
               </>
             ),
-            alignment: "center",
             width: 30,
           },
           {
+            alignment: "center",
             id: "inactiveFeeds",
             name: (
               <>
@@ -225,10 +222,10 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
                 <ExplainInactive />
               </>
             ),
-            alignment: "center",
             width: 30,
           },
           {
+            alignment: "right",
             id: "averageScore",
             name: (
               <>
@@ -240,10 +237,12 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
                 />
               </>
             ),
-            alignment: "right",
             width: PUBLISHER_SCORE_WIDTH,
           },
         ]}
+        fill
+        label="Publishers Ranking"
+        rounded
         {...(props.isLoading
           ? { isLoading: true }
           : {
@@ -252,31 +251,31 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
       />
     </Card>
     <TopFeedsCard
-      title="High-Performing"
-      emptyIcon={<SmileySad />}
-      emptyHeader="Oh no!"
       emptyBody="This publisher has no high performing feeds"
+      emptyHeader="Oh no!"
+      emptyIcon={<SmileySad />}
       emptyVariant="error"
+      title="High-Performing"
       {...(props.isLoading
         ? { isLoading: true }
         : {
-            publisherKey: props.publisherKey,
             cluster: props.cluster,
             feeds: props.highPerformingFeeds,
+            publisherKey: props.publisherKey,
           })}
     />
     <TopFeedsCard
-      title="Low-Performing"
-      emptyIcon={<Confetti />}
-      emptyHeader="Looking good!"
       emptyBody="This publisher has no low performing feeds"
+      emptyHeader="Looking good!"
+      emptyIcon={<Confetti />}
       emptyVariant="success"
+      title="Low-Performing"
       {...(props.isLoading
         ? { isLoading: true }
         : {
-            publisherKey: props.publisherKey,
             cluster: props.cluster,
             feeds: props.lowPerformingFeeds,
+            publisherKey: props.publisherKey,
           })}
     />
   </div>
@@ -296,17 +295,17 @@ const getFeedRows = (
     .filter((feed) => feed.status === Status.Active)
     .slice(0, 20)
     .map(({ feed, ranking, status }) => ({
-      key: feed.product.price_account,
-      symbol: feed.symbol,
-      displaySymbol: feed.product.display_symbol,
-      description: feed.product.description,
       assetClass: feed.product.asset_type,
-      score: ranking.final_score,
-      rank: ranking.final_rank,
-      status,
+      description: feed.product.description,
+      displaySymbol: feed.product.display_symbol,
       firstEvaluation: ranking.first_ranking_time,
-      icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
       href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
+      icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
+      key: feed.product.price_account,
+      rank: ranking.final_rank,
+      score: ranking.final_score,
+      status,
+      symbol: feed.symbol,
     }));
 
 const sliceAround = <T,>(
@@ -359,21 +358,21 @@ const TopFeedsCard = ({
     {props.isLoading || props.feeds.length > 0 ? (
       <TopFeedsTable
         label={`${title} Feeds`}
-        publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
         nameLoadingSkeleton={<SymbolPairTag isLoading />}
+        publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
         {...(props.isLoading
           ? { isLoading: true }
           : {
+              cluster: props.cluster,
               feeds: props.feeds,
               publisherKey: props.publisherKey,
-              cluster: props.cluster,
             })}
       />
     ) : (
       <NoResults
-        icon={emptyIcon}
-        header={emptyHeader}
         body={<p>{emptyBody}</p>}
+        header={emptyHeader}
+        icon={emptyIcon}
         variant={emptyVariant}
       />
     )}

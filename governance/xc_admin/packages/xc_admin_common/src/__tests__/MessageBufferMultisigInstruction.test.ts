@@ -1,24 +1,37 @@
-import crypto from "crypto";
+/** biome-ignore-all lint/style/noDoneCallback: test behavior was existing pre-biome */
+import crypto from "node:crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
-import { AnchorProvider, Wallet, Program, type Idl } from "@coral-xyz/anchor";
-import {
-  getPythClusterApiUrl,
-  type PythCluster,
-} from "@pythnetwork/client/lib/cluster";
+import type { Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
+import type { AccountMeta } from "@solana/web3.js";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+import messageBuffer from "message_buffer/idl/message_buffer.json";
 import {
   AnchorMultisigInstruction,
   MESSAGE_BUFFER_PROGRAM_ID,
   MultisigInstructionProgram,
   MultisigParser,
 } from "..";
-import messageBuffer from "message_buffer/idl/message_buffer.json";
-import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+
+/**
+ * Helper function to safely get an account key from instruction keys array
+ */
+function getKeyAtIndex(keys: AccountMeta[], index: number): PublicKey {
+  const key = keys[index];
+  if (!key) {
+    throw new Error(`Expected key at index ${index} but found undefined`);
+  }
+  return key.pubkey;
+}
 
 test("Message buffer multisig instruction parse: create buffer", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "pythtest-crosschain";
 
@@ -45,9 +58,9 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
     })
     .remainingAccounts([
       {
-        pubkey: PublicKey.unique(),
         isSigner: false,
         isWritable: true,
+        pubkey: PublicKey.unique(),
       },
     ])
     .instruction()
@@ -61,58 +74,58 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
         expect(parsedInstruction.name).toBe("createBuffer");
 
         expect(
-          parsedInstruction.accounts.named["whitelist"]?.pubkey.equals(
-            instruction.keys[0]!.pubkey,
+          parsedInstruction.accounts.named.whitelist?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["whitelist"]?.isSigner).toBe(
-          instruction.keys[0]!.isSigner,
+        expect(parsedInstruction.accounts.named.whitelist?.isSigner).toBe(
+          instruction.keys[0]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["whitelist"]?.isWritable).toBe(
-          instruction.keys[0]!.isWritable,
+        expect(parsedInstruction.accounts.named.whitelist?.isWritable).toBe(
+          instruction.keys[0]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["admin"]?.pubkey.equals(
-            instruction.keys[1]!.pubkey,
+          parsedInstruction.accounts.named.admin?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["admin"]?.isSigner).toBe(
-          instruction.keys[1]!.isSigner,
+        expect(parsedInstruction.accounts.named.admin?.isSigner).toBe(
+          instruction.keys[1]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["admin"]?.isWritable).toBe(
-          instruction.keys[1]!.isWritable,
+        expect(parsedInstruction.accounts.named.admin?.isWritable).toBe(
+          instruction.keys[1]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["payer"]?.pubkey.equals(
-            instruction.keys[2]!.pubkey,
+          parsedInstruction.accounts.named.payer?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["payer"]?.isSigner).toBe(
+        expect(parsedInstruction.accounts.named.payer?.isSigner).toBe(
           instruction.keys[2]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["payer"]?.isWritable).toBe(
+        expect(parsedInstruction.accounts.named.payer?.isWritable).toBe(
           instruction.keys[2]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["systemProgram"]?.pubkey.equals(
-            instruction.keys[3]!.pubkey,
+          parsedInstruction.accounts.named.systemProgram?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
-        expect(
-          parsedInstruction.accounts.named["systemProgram"]?.isSigner,
-        ).toBe(instruction.keys[3]?.isSigner);
-        expect(
-          parsedInstruction.accounts.named["systemProgram"]?.isWritable,
-        ).toBe(instruction.keys[3]?.isWritable);
+        expect(parsedInstruction.accounts.named.systemProgram?.isSigner).toBe(
+          instruction.keys[3]?.isSigner,
+        );
+        expect(parsedInstruction.accounts.named.systemProgram?.isWritable).toBe(
+          instruction.keys[3]?.isWritable,
+        );
 
         expect(parsedInstruction.accounts.remaining.length).toBe(1);
 
         expect(
           parsedInstruction.accounts.remaining[0]?.pubkey.equals(
-            instruction.keys[4]!.pubkey,
+            getKeyAtIndex(instruction.keys, 4),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.remaining[0]?.isSigner).toBe(
@@ -138,7 +151,7 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
 });
 
 test("Message buffer multisig instruction parse: delete buffer", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "pythtest-crosschain";
 
@@ -161,8 +174,8 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
     .deleteBuffer(allowedProgramAuth, baseAccountKey)
     .accounts({
       admin: PublicKey.unique(),
-      payer: PublicKey.unique(),
       messageBuffer: PublicKey.unique(),
+      payer: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {
@@ -175,52 +188,52 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
         expect(parsedInstruction.name).toBe("deleteBuffer");
 
         expect(
-          parsedInstruction.accounts.named["whitelist"]?.pubkey.equals(
-            instruction.keys[0]!.pubkey,
+          parsedInstruction.accounts.named.whitelist?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["whitelist"]?.isSigner).toBe(
+        expect(parsedInstruction.accounts.named.whitelist?.isSigner).toBe(
           instruction.keys[0]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["whitelist"]?.isWritable).toBe(
+        expect(parsedInstruction.accounts.named.whitelist?.isWritable).toBe(
           instruction.keys[0]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["admin"]?.pubkey.equals(
-            instruction.keys[1]!.pubkey,
+          parsedInstruction.accounts.named.admin?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["admin"]?.isSigner).toBe(
+        expect(parsedInstruction.accounts.named.admin?.isSigner).toBe(
           instruction.keys[1]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["admin"]?.isWritable).toBe(
+        expect(parsedInstruction.accounts.named.admin?.isWritable).toBe(
           instruction.keys[1]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["payer"]?.pubkey.equals(
-            instruction.keys[2]!.pubkey,
+          parsedInstruction.accounts.named.payer?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["payer"]?.isSigner).toBe(
-          instruction.keys[2]!.isSigner,
+        expect(parsedInstruction.accounts.named.payer?.isSigner).toBe(
+          instruction.keys[2]?.isSigner,
         );
-        expect(parsedInstruction.accounts.named["payer"]?.isWritable).toBe(
+        expect(parsedInstruction.accounts.named.payer?.isWritable).toBe(
           instruction.keys[2]?.isWritable,
         );
 
         expect(
-          parsedInstruction.accounts.named["messageBuffer"]?.pubkey.equals(
-            instruction.keys[3]!.pubkey,
+          parsedInstruction.accounts.named.messageBuffer?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
-        expect(
-          parsedInstruction.accounts.named["messageBuffer"]?.isSigner,
-        ).toBe(instruction.keys[3]?.isSigner);
-        expect(
-          parsedInstruction.accounts.named["messageBuffer"]?.isWritable,
-        ).toBe(instruction.keys[3]?.isWritable);
+        expect(parsedInstruction.accounts.named.messageBuffer?.isSigner).toBe(
+          instruction.keys[3]?.isSigner,
+        );
+        expect(parsedInstruction.accounts.named.messageBuffer?.isWritable).toBe(
+          instruction.keys[3]?.isWritable,
+        );
 
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 

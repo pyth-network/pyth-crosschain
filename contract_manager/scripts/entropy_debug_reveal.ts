@@ -11,11 +11,10 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -27,15 +26,15 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain id where the contract is deployed",
+      type: "string",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     "sequence-number": {
-      type: "string",
       demandOption: true,
       desc: "Sequence number of the request to reveal or a range of sequence numbers to reveal separated by colon (e.g. 1000:1100 reveals requests with 1000 <= number < 1100)",
+      type: "string",
     },
   });
 
@@ -56,41 +55,26 @@ async function main() {
     endingSequenceNumber = startingSequenceNumber + 1; // Default to revealing a single request
   }
   if (startingSequenceNumber >= endingSequenceNumber) {
-    console.error(
-      "Invalid sequence number range provided. Use format: <start>:<end>",
-    );
     return;
   }
-  console.log(
-    `Revealing requests from sequence number ${startingSequenceNumber} to ${endingSequenceNumber}`,
-  );
 
   for (
     let sequenceNumber = startingSequenceNumber;
     sequenceNumber < endingSequenceNumber;
     sequenceNumber++
   ) {
-    console.log("Revealing request for sequence number:", sequenceNumber);
     const request = await contract.getRequest(provider, sequenceNumber);
     if (request.sequenceNumber === "0") {
-      console.log("Request not found");
       continue;
     }
-    console.log("Request block number:", request.blockNumber);
     const userRandomNumber = await contract.getUserRandomNumber(
       provider,
       sequenceNumber,
       Number.parseInt(request.blockNumber),
     );
-    console.log("User random number:", userRandomNumber);
     const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status !== 200) {
-      console.error("Fortuna response status:", fortunaResponse.status);
-      console.error("Fortuna response body:", await fortunaResponse.text());
-      console.error(
-        "Refusing to continue the script, please check the Fortuna service first.",
-      );
       return;
     }
     const payload = await fortunaResponse.json();
@@ -104,8 +88,7 @@ async function main() {
         sequenceNumber,
         privateKey,
       );
-    } catch (error) {
-      console.error("Error revealing request:", error);
+    } catch (_error) {
       continue;
     }
   }

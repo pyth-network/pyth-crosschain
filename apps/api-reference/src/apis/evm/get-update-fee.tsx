@@ -1,43 +1,14 @@
+import { ParameterType } from "../../components/EvmApi";
 import {
-  readApi,
   BTCUSD,
   ETHUSD,
-  getLatestPriceUpdate,
-  solidity,
   ethersJS,
+  getLatestPriceUpdate,
+  readApi,
+  solidity,
 } from "./common";
-import { ParameterType } from "../../components/EvmApi";
 
 export const getUpdateFee = readApi<"updateData">({
-  name: "getUpdateFee",
-  summary:
-    "Get the fee required to update the on-chain price feeds with the provided `updateData`.",
-  description: `
-  This method returns the fee required to update the on-chain price feeds for the given \`updateData\`.
-
-  The fee returned is in **wei**.
-
-  The caller should send the returned fee amount as the transaction value when calling [updatePriceFeeds](update-price-feeds).
-  The \`updateData\` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
-  `,
-  parameters: [
-    {
-      name: "updateData",
-      type: ParameterType.HexArray,
-      description:
-        "The price updates that you would like to submit to [updatePriceFeeds](updatePriceFeeds). Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
-    },
-  ],
-  examples: [
-    {
-      name: "Latest BTC/USD update data",
-      parameters: () => getParams(BTCUSD),
-    },
-    {
-      name: "Latest ETH/USD update data",
-      parameters: () => getParams(ETHUSD),
-    },
-  ],
   code: [
     solidity(
       ({ updateData }) => `
@@ -53,6 +24,35 @@ const [feeAmount] = await contract.getUpdateFee(updateData);
     `,
     ),
   ],
+  description: `
+  This method returns the fee required to update the on-chain price feeds for the given \`updateData\`.
+
+  The fee returned is in **wei**.
+
+  The caller should send the returned fee amount as the transaction value when calling [updatePriceFeeds](update-price-feeds).
+  The \`updateData\` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
+  `,
+  examples: [
+    {
+      name: "Latest BTC/USD update data",
+      parameters: () => getParams(BTCUSD),
+    },
+    {
+      name: "Latest ETH/USD update data",
+      parameters: () => getParams(ETHUSD),
+    },
+  ],
+  name: "getUpdateFee",
+  parameters: [
+    {
+      description:
+        "The price updates that you would like to submit to [updatePriceFeeds](updatePriceFeeds). Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
+      name: "updateData",
+      type: ParameterType.HexArray,
+    },
+  ],
+  summary:
+    "Get the fee required to update the on-chain price feeds with the provided `updateData`.",
 });
 
 const getParams = async (feedId: string) => {

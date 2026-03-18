@@ -1,7 +1,29 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["NODE_ENV"],
-  "globalPassThroughEnv": ["COREPACK_HOME", "FORCE_COLOR", "BIOME_BINARY"],
+  "globalPassThroughEnv": [
+    "COREPACK_HOME",
+    "FORCE_COLOR",
+    "BIOME_BINARY",
+    "PORT",
+    "SOLANA_RPC",
+    "SOLANA_RPC_URL",
+    "COMMITMENT",
+    "COMPUTE_UNIT_PRICE_MICROLAMPORTS",
+    "OFFSET",
+    "SKIP_FAILED_REMOTE_INSTRUCTIONS",
+    "GUARDIAN_RPC",
+    "TESTNET_RPC",
+    "MAINNET_RPC",
+    "DEVNET_RPC",
+    "LOCALNET_RPC",
+    "CLUSTER",
+    "MESSAGE_BUFFER_PROGRAM_ID",
+    "PAYER_KEYPAIR_PATH",
+    "INITIAL_SIZE",
+    "WHITELIST_ADMIN",
+    "APTOS_PRIVATE_KEY"
+  ],
   "tasks": {
     "//#fix": {
       "cache": false,

@@ -3,25 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { AppBody as AppShellComponent } from "./index.jsx";
 
 const meta = {
-  component: AppShellComponent,
-  globals: {
-    bare: true,
-    theme: {
-      disable: true,
-    },
-  },
-  parameters: {
-    layout: "fullscreen",
-    themes: {
-      disable: true,
-    },
-  },
   argTypes: {
-    tabs: {
-      table: {
-        disable: true,
-      },
-    },
     appName: {
       control: "text",
       table: {
@@ -33,6 +15,24 @@ const meta = {
       table: {
         category: "Contents",
       },
+    },
+    tabs: {
+      table: {
+        disable: true,
+      },
+    },
+  },
+  component: AppShellComponent,
+  globals: {
+    bare: true,
+    theme: {
+      disable: true,
+    },
+  },
+  parameters: {
+    layout: "fullscreen",
+    themes: {
+      disable: true,
     },
   },
 } satisfies Meta<typeof AppShellComponent>;

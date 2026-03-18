@@ -1,6 +1,7 @@
 import { getFeedsForPublisherRequest } from "../../server/pyth";
 import { getFeedRankingsByPublisher } from "../../services/clickhouse";
-import { Cluster, ClusterToName } from "../../services/pyth";
+import type { Cluster } from "../../services/pyth";
+import { ClusterToName } from "../../services/pyth";
 import { getStatus } from "../../status";
 
 export const getPriceFeeds = async (cluster: Cluster, key: string) => {
@@ -15,8 +16,8 @@ export const getPriceFeeds = async (cluster: Cluster, key: string) => {
         ranking.cluster === ClusterToName[cluster],
     );
     return {
-      ranking,
       feed,
+      ranking,
       status: getStatus(ranking),
     };
   });

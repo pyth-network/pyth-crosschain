@@ -9,15 +9,7 @@ import base58 from "bs58";
 import clsx from "clsx";
 import Image from "next/image";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-
-import type { Parameter } from "./parameter";
-import {
-  isValid,
-  getValidationError,
-  ParameterType,
-  getPlaceHolder,
-} from "./parameter";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PriceFeed } from "../../use-price-feed-list";
 import {
   PriceFeedListContextType,
@@ -26,6 +18,13 @@ import {
 import { InlineLink } from "../InlineLink";
 import { Input } from "../Input";
 import { Markdown } from "../Markdown";
+import type { Parameter } from "./parameter";
+import {
+  getPlaceHolder,
+  getValidationError,
+  isValid,
+  ParameterType,
+} from "./parameter";
 
 type ParameterProps<ParameterName extends string> = {
   spec: Parameter<ParameterName>;
@@ -70,11 +69,11 @@ const PriceFeedIdInput = <ParameterName extends string>({
 
   return (
     <Combobox
-      value={selectedPriceFeed}
-      onChange={onSelectPriceFeed}
       as="div"
       className="group relative"
       immediate
+      onChange={onSelectPriceFeed}
+      value={selectedPriceFeed}
       virtual={{
         options:
           priceFeedList.type === PriceFeedListContextType.Loaded
@@ -84,17 +83,17 @@ const PriceFeedIdInput = <ParameterName extends string>({
     >
       <ComboboxInput
         as={Input}
+        description={<Markdown inline>{spec.description}</Markdown>}
         displayValue={() =>
           selectedPriceFeed
             ? `${selectedPriceFeed.name} (${selectedPriceFeed.feedId})`
             : internalValue
         }
-        onChange={onChangeInput}
-        validationError={validationError}
         label={spec.name}
-        description={<Markdown inline>{spec.description}</Markdown>}
+        onChange={onChangeInput}
         placeholder={getPlaceHolder(spec)}
         required={true}
+        validationError={validationError}
       />
       <div className="absolute right-0 top-0 z-50 mt-20 hidden w-full min-w-[34rem] overflow-hidden rounded-lg border border-neutral-400 bg-neutral-100 text-sm shadow focus-visible:border-pythpurple-600 focus-visible:outline-none group-data-[open]:block dark:border-neutral-600 dark:bg-neutral-800 dark:shadow-white/20 dark:focus-visible:border-pythpurple-400">
         <PriceFeedListOptions priceFeedList={priceFeedList} />
@@ -107,8 +106,8 @@ const PriceFeedIdInput = <ParameterName extends string>({
         >
           See all price feed IDs on{" "}
           <InlineLink
-            target="_blank"
             href="https://pyth.network/developers/price-feed-ids"
+            target="_blank"
           >
             the reference page
           </InlineLink>
@@ -134,9 +133,9 @@ const PriceFeedListOptions = ({ priceFeedList }: PriceFeedListOptionsProps) => {
           const { feedId, name, description } = option;
           return (
             <ComboboxOption
+              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
               key={feedId}
               value={option}
-              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
             >
               <PriceFeedIcon name={name} />
               <div>
@@ -170,7 +169,7 @@ const PriceFeedIcon = ({ name }: PriceFeedIconProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const setLoaded = useCallback(() => {
     setIsLoaded(true);
-  }, [setIsLoaded]);
+  }, []);
   const icon = useMemo(() => {
     const nameParts = name.split(".");
     return nameParts.at(-1)?.split("/")[0]?.toLowerCase() ?? "generic";
@@ -179,21 +178,21 @@ const PriceFeedIcon = ({ name }: PriceFeedIconProps) => {
   return (
     <div className="relative size-6">
       <Image
-        src={`/currency-icons/${icon}.svg`}
         alt=""
         className={clsx("absolute inset-0 transition", {
           "opacity-0": !isLoaded,
         })}
-        width={24}
         height={24}
         onLoad={setLoaded}
+        src={`/currency-icons/${icon}.svg`}
+        width={24}
       />
       <Image
-        src={`/currency-icons/generic.svg`}
         alt=""
         className="size-full"
-        width={24}
         height={24}
+        src={`/currency-icons/generic.svg`}
+        width={24}
       />
     </div>
   );
@@ -218,13 +217,13 @@ const DefaultParameterInput = <ParameterName extends string>({
 
   return (
     <Input
-      validationError={validationError}
-      label={spec.name}
       description={<Markdown inline>{spec.description}</Markdown>}
+      label={spec.name}
+      onChange={onChangeInput}
       placeholder={getPlaceHolder(spec)}
       required={true}
+      validationError={validationError}
       value={internalValue}
-      onChange={onChangeInput}
     />
   );
 };
@@ -258,7 +257,7 @@ const useParameterInput = <ParameterName extends string>(
     }
   }, [value]);
 
-  return { internalValue, validationError, onChange };
+  return { internalValue, onChange, validationError };
 };
 
 const usePriceFeedSelector = (
@@ -305,17 +304,17 @@ const usePriceFeedSelector = (
     () =>
       priceFeedList.type === PriceFeedListContextType.Loaded
         ? {
-            type: PriceFeedListContextType.Loaded as const,
             list: filteredPriceFeedList,
+            type: PriceFeedListContextType.Loaded as const,
           }
         : priceFeedList,
     [priceFeedList, filteredPriceFeedList],
   );
 
   return {
-    selectedPriceFeed,
     onSelectPriceFeed,
     priceFeedList: transformedPriceFeedList,
+    selectedPriceFeed,
   };
 };
 

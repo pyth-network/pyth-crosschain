@@ -110,8 +110,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
         case "Merge":
         case "Split":
         case "Withdraw":
-        case "Authorize":
-          throw Error("Unsupported instruction type");
+          throw new Error("Unsupported instruction type");
       }
     } catch {
       return new SolanaStakingMultisigInstruction(

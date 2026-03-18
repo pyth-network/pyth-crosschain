@@ -1,9 +1,8 @@
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Suspense } from "react";
-
-import { getFeed } from "./get-feed";
 import { Cluster } from "../../services/pyth";
 import { LiveValue } from "../LivePrices";
+import { getFeed } from "./get-feed";
 
 type Props = {
   params: Promise<{
@@ -22,10 +21,10 @@ const FeedCountBadgeImpl = async ({ params }: Props) => {
   return (
     <Badge size="xs" style="filled" variant="neutral">
       <LiveValue
+        cluster={Cluster.Pythnet}
+        defaultValue={feed.price.numComponentPrices}
         feedKey={feed.product.price_account}
         field="numComponentPrices"
-        defaultValue={feed.price.numComponentPrices}
-        cluster={Cluster.Pythnet}
       />
     </Badge>
   );

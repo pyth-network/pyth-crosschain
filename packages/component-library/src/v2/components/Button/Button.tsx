@@ -21,8 +21,8 @@ export function Button({
   const propsToSpread = {
     ...rest,
     className: cx(classes.root, className),
-    "data-variant": variant,
     "data-size": size,
+    "data-variant": variant,
   };
 
   if (tooltip) {
@@ -59,4 +59,4 @@ export function Button({
   );
 }
 
-export { type ButtonProps } from "./types";
+export type { ButtonProps } from "./types";

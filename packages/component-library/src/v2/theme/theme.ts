@@ -346,15 +346,6 @@ const stone600 = Color(palette.stone600);
 const violet600 = Color(palette.violet600);
 
 const elevations = {
-  primary: {
-    2: [
-      `0px 66px 18px 0px ${violet600.alpha(0).hexa()}`,
-      `0px 42px 17px 0px ${violet600.alpha(0.03).hexa()}`,
-      `0px 24px 14px 0px ${violet600.alpha(0.08).hexa()}`,
-      `0px 11px 11px 0px ${violet600.alpha(0.14).hexa()}`,
-      `0px 3px 6px 0px ${violet600.alpha(0.17).hexa()}`,
-    ].join(", "),
-  },
   default: {
     1: [
       `0px 4px 6px -4px ${blackBase.alpha(0.1).hexa()}`,
@@ -365,6 +356,15 @@ const elevations = {
       `0px 16px 10px 0px ${lightDark(stone600.alpha(0.06).hexa(), blackBase.alpha(0.12).hexa())}`,
       `0px 7px 7px 0px ${lightDark(stone600.alpha(0.12).hexa(), blackBase.alpha(0.2).hexa())}`,
       `0px 2px 4px 0px ${lightDark(stone600.alpha(0.14).hexa(), blackBase.alpha(0.3).hexa())}`,
+    ].join(", "),
+  },
+  primary: {
+    2: [
+      `0px 66px 18px 0px ${violet600.alpha(0).hexa()}`,
+      `0px 42px 17px 0px ${violet600.alpha(0.03).hexa()}`,
+      `0px 24px 14px 0px ${violet600.alpha(0.08).hexa()}`,
+      `0px 11px 11px 0px ${violet600.alpha(0.14).hexa()}`,
+      `0px 3px 6px 0px ${violet600.alpha(0.17).hexa()}`,
     ].join(", "),
   },
 } as const;
@@ -406,12 +406,12 @@ const states = {
     normal: { dark: palette.indigo400, light: palette.indigo600 },
   },
   neutral: {
+    background: { dark: palette.white, light: palette.steel900 },
+    border: { dark: palette.steel300, light: palette.steel600 },
     normal: {
       dark: Color(palette.beige50).alpha(0.2).hexa(),
       light: Color(palette.steel900).alpha(0.2).hexa(),
     },
-    border: { dark: palette.steel300, light: palette.steel600 },
-    background: { dark: palette.white, light: palette.steel900 },
   },
   success: {
     background: { dark: palette.green950, light: palette.green50 },
@@ -429,12 +429,12 @@ const border = { dark: palette.stone800, light: palette.stone300 };
 
 const colors = {
   background: {
-    cardHighlight: { dark: palette.slate950, light: palette.violet50 },
-    cardSecondary: { dark: palette.steel950, light: palette.white },
     backdrop: {
       dark: Color(palette.black).alpha(0.6).hexa(),
       light: Color(palette.black).alpha(0.4).hexa(),
     },
+    cardHighlight: { dark: palette.slate950, light: palette.violet50 },
+    cardSecondary: { dark: palette.steel950, light: palette.white },
     modal: { dark: palette.steel950, light: palette.white },
     navBlur: {
       dark: Color(palette.steel950).alpha(0.7).hexa(),
@@ -451,7 +451,6 @@ const colors = {
       foreground: { dark: palette.steel400, light: palette.stone400 },
     },
     ghost: omitKeys(buttonOutlineColors, ["border"]),
-    outline: buttonOutlineColors,
     navlink: {
       background: {
         active: buttonOutlineColors.background.active,
@@ -459,19 +458,19 @@ const colors = {
           dark: "transparent",
           light: "transparent",
         },
-        normal: "transparent",
         hover: buttonOutlineColors.background.hover,
+        normal: "transparent",
       },
       border: {
         active: {
           dark: palette.stone600,
           light: palette.stone500,
         },
-        normal: "transparent",
         hover: {
           dark: palette.stone600,
           light: palette.stone500,
         },
+        normal: "transparent",
       },
       foreground: {
         disabled: {
@@ -481,6 +480,7 @@ const colors = {
         normal: foreground,
       },
     },
+    outline: buttonOutlineColors,
     primary: {
       background: {
         active: { dark: palette.violet800, light: palette.violet900 },
@@ -620,63 +620,63 @@ const tokens = {
 } as const;
 
 const cardSizes = {
-  sm: {
-    borderRadius: tokens.borderRadius.lg,
-    padding: spacing(3),
+  lg: {
+    borderRadius: tokens.borderRadius.xl2,
+    padding: spacing(6),
   },
   md: {
     borderRadius: tokens.borderRadius.xl,
     padding: spacing(4),
   },
-  lg: {
-    borderRadius: tokens.borderRadius.xl2,
-    padding: spacing(6),
+  sm: {
+    borderRadius: tokens.borderRadius.lg,
+    padding: spacing(3),
   },
 } as const;
 
 const formFieldSizes = {
-  xs: {
-    fontSize: tokens.fontSizes.xs2,
-    padding: `${spacing(0.5)} ${spacing(2)}`,
-    height: buttonSizes.xs.height,
-  },
-  sm: {
-    fontSize: tokens.fontSizes.xs,
-    padding: `${spacing(0.75)} ${spacing(2.5)}`,
-    height: buttonSizes.sm.height,
+  lg: {
+    fontSize: tokens.fontSizes.base,
+    height: buttonSizes.lg.height,
+    padding: `${spacing(1.25)} ${spacing(4)}`,
   },
   md: {
     fontSize: tokens.fontSizes.sm,
-    padding: `${spacing(1)} ${spacing(3)}`,
     height: buttonSizes.md.height,
+    padding: `${spacing(1)} ${spacing(3)}`,
   },
-  lg: {
-    fontSize: tokens.fontSizes.base,
-    padding: `${spacing(1.25)} ${spacing(4)}`,
-    height: buttonSizes.lg.height,
+  sm: {
+    fontSize: tokens.fontSizes.xs,
+    height: buttonSizes.sm.height,
+    padding: `${spacing(0.75)} ${spacing(2.5)}`,
+  },
+  xs: {
+    fontSize: tokens.fontSizes.xs2,
+    height: buttonSizes.xs.height,
+    padding: `${spacing(0.5)} ${spacing(2)}`,
   },
 } as const;
 
 const spinnerSizes = {
-  xs: {
-    borderWidth: "2px",
-    fontSize: tokens.fontSizes.xs,
-    height: buttonSizes.sm.height,
-  },
-  sm: {
-    borderWidth: "3px",
-    fontSize: tokens.fontSizes.sm,
-    height: buttonSizes.sm.height,
+  lg: {
+    borderWidth: "5px",
+    fontSize: tokens.fontSizes.lg,
+    height: buttonSizes.lg.height,
   },
   md: {
     borderWidth: "4px",
     fontSize: tokens.fontSizes.base,
     height: buttonSizes.md.height,
   },
-  lg: {
-    borderWidth: "5px",
-    fontSize: tokens.fontSizes.lg,
-    height: buttonSizes.lg.height,
+  sm: {
+    borderWidth: "3px",
+    fontSize: tokens.fontSizes.sm,
+    height: buttonSizes.sm.height,
+  },
+  xs: {
+    borderWidth: "2px",
+    fontSize: tokens.fontSizes.xs,
+    height: buttonSizes.sm.height,
   },
 } as const;
 
@@ -747,17 +747,6 @@ export const ThemeV2 = {
   breakpoints,
 
   /**
-   * Consolidated Size Tokens
-   */
-  sizes: {
-    button: buttonSizes,
-    card: cardSizes,
-    checkbox: formFieldSizes,
-    formField: formFieldSizes,
-    spinner: spinnerSizes,
-  },
-
-  /**
    * Functional Color Tokens (Light/Dark support)
    */
   colors,
@@ -771,8 +760,6 @@ export const ThemeV2 = {
   flexVertical,
 
   lightDark,
-
-  resolveThemeColor,
 
   /**
    * Media Query Methods
@@ -806,6 +793,19 @@ export const ThemeV2 = {
   palette,
 
   popoverTooltipStyles,
+
+  resolveThemeColor,
+
+  /**
+   * Consolidated Size Tokens
+   */
+  sizes: {
+    button: buttonSizes,
+    card: cardSizes,
+    checkbox: formFieldSizes,
+    formField: formFieldSizes,
+    spinner: spinnerSizes,
+  },
 
   spacing,
 

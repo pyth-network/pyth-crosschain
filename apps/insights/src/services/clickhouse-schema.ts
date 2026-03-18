@@ -21,8 +21,8 @@ export const LooseDate = z.union([
 export const GetPythProFeedPricesOptsSchema = z.object({
   end: LooseDate,
   sources: z.array(PythProHistoricalDataSources),
-  symbol: z.string().nonempty(),
   start: LooseDate,
+  symbol: z.string().nonempty(),
 });
 
 export type GetPythProFeedPricesOpts = z.infer<

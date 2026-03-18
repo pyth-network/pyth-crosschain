@@ -1,43 +1,40 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
-import { getWormholeConfig } from "./configs.js";
+import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
 } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
-import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
-import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
-import type { DeploymentType } from "./helper.js";
-import {
-  DefaultStore,
-  Store,
-} from "@pythnetwork/contract-manager/node/utils/store";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common/chains";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
+import { getWormholeConfig } from "./configs.js";
+import type { DeploymentType } from "./helper.js";
 
 const yargs = createCLI(hideBin(process.argv));
 
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("private-key", {
-    type: "string",
     demandOption: "Please provide the private key",
+    type: "string",
   })
   .option("contract-version", {
-    type: "string",
+    default: "2.14.9",
     desc: `Please input the contract-version of the wormhole contract.
     There should be a compiled code at the path - "../wormhole-stub/artifacts/wormhole-\${contract-version}.wasm"`,
-    default: "2.14.9",
+    type: "string",
   })
   .option("deploy", {
-    type: "string",
-    desc: "Execute this script for the given deployment type.",
     choices: ["stable", "beta"],
     demandOption: "Please provide the deployment type",
+    desc: "Execute this script for the given deployment type.",
+    type: "string",
   })
   .option("chain", {
-    type: "string",
-    desc: "Deploy the wormhole contract to the given chain",
     demandOption: "Please provide a chain to deploy the contract to",
+    desc: "Deploy the wormhole contract to the given chain",
+    type: "string",
   })
   .help()
   .alias("help", "h")
@@ -57,49 +54,35 @@ async function run() {
     privateKey,
     wasmFilePath,
   );
-  console.log(
-    `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`,
-  );
   const chainExecutor = await chain.getExecutor(privateKey);
   const instantiateContractRes = await chainExecutor.instantiateContract({
     codeId: storeCodeRes.codeId,
     instMsg: getWormholeConfig({
+      deploymentType: argv.deploy as DeploymentType, // TODO: use branded types
       feeDenom: chain.feeDenom,
       // @ts-expect-error - Chains can be safely indexed
       wormholeChainId: CHAINS[chain.wormholeChainName],
-      deploymentType: argv.deploy as DeploymentType, // TODO: use branded types
     }),
     label: "wormhole",
   });
-  console.log(
-    `Contract instantiated at ${instantiateContractRes.contractAddr}`,
-  );
 
   await chainExecutor.updateContractAdmin({
-    newAdminAddr: instantiateContractRes.contractAddr,
     contractAddr: instantiateContractRes.contractAddr,
+    newAdminAddr: instantiateContractRes.contractAddr,
   });
-  console.log(`Contract admin set to ${instantiateContractRes.contractAddr}`);
 
   const contract = new CosmWasmWormholeContract(
     chain,
     instantiateContractRes.contractAddr,
   );
   if (argv.deploy === "stable") {
-    console.log("Syncing guardian sets for mainnet contract");
     // @ts-expect-error - TODO: typings indicate that syncMainnetGuardianSets() does not exist
     // on the contract object, which means this has a high probabiltiy to explode at runtime
     await contract.syncMainnetGuardianSets(privateKey);
-    console.log("Sync complete");
   }
-  console.log(
-    `Contract deployed on chain ${chain.getId()} at ${contract.address}`,
-  );
 
   DefaultStore.wormhole_contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
-  console.log("Added the following to your CosmWasm contracts configs");
-  console.log(Store.serialize(contract));
 }
 
 run();

@@ -1,7 +1,8 @@
-import { CONFIG_TYPE, type NetworkConfig } from "./config.js";
-import { TerraDeployer } from "./terra.js";
+import type { NetworkConfig } from "./config.js";
+import { CONFIG_TYPE } from "./config.js";
 import { InjectiveDeployer } from "./injective.js";
 import { OsmosisDeployer } from "./osmosis.js";
+import { TerraDeployer } from "./terra.js";
 
 export type ContractInfo = {
   codeId: number;
@@ -11,7 +12,7 @@ export type ContractInfo = {
   initMsg: any;
 };
 
-export interface Deployer {
+export type Deployer = {
   deployArtifact(artifact: string): Promise<number>;
   instantiate(
     codeId: number,
@@ -21,8 +22,9 @@ export interface Deployer {
   migrate(contract: string, codeId: number): Promise<void>;
   updateAdmin(newAdmin: string, contract: string): Promise<void>;
   getContractInfo(contract: string): Promise<ContractInfo>;
-}
+};
 
+// biome-ignore lint/complexity/noStaticOnlyClass: legacy API
 export class DeployerFactory {
   static create(config: NetworkConfig, mnemonic: string): Deployer {
     switch (config.type) {

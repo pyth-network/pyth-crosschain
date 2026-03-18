@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import * as React from "react";
+import { useEffect } from "react";
 import * as ReactDOM from "react-dom";
 
 import { getLogger } from "../../browser-logger";

@@ -37,13 +37,13 @@ import { z } from "zod";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import ConformanceReport from "../ConformanceReport/conformance-report";
+import type { Interval } from "../ConformanceReport/types";
+import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
 import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 import styles from "./index.module.scss";
-import type { Interval } from "../ConformanceReport/types";
-import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -89,7 +89,7 @@ export const usePriceComponentDrawer = ({
         });
       });
     },
-    [router, startTransition, logger, drawer],
+    [router, logger, drawer],
   );
 
   const [selectedComponentId, setSelectedComponentId] = useQueryState(
@@ -129,33 +129,15 @@ export const usePriceComponentDrawer = ({
   const openDrawer = useCallback(
     (component: PriceComponent) => {
       drawer.open({
-        title: component.name,
-        className: styles.priceComponentDrawer ?? "",
         bodyClassName: styles.priceComponentDrawerBody ?? "",
-        onClose: clearSelectedComponent,
-        headingExtra: (
-          <RouterProvider navigate={navigate}>
-            <HeadingExtra
-              identifiesPublisher={identifiesPublisher}
-              status={component.status}
-              cluster={component.cluster}
-              publisherKey={component.publisherKey}
-              symbol={component.symbol}
-            />
-          </RouterProvider>
-        ),
-        headingAfter: (
-          <div className={styles.badges}>
-            <StatusComponent status={component.status} />
-          </div>
-        ),
+        className: styles.priceComponentDrawer ?? "",
         contents: (
           <RouterProvider navigate={navigate}>
             {component.cluster === Cluster.PythtestConformance && (
               <InfoBox
-                icon={<Flask />}
-                header={`This publisher is in test`}
                 className={styles.testFeedMessage}
+                header={`This publisher is in test`}
+                icon={<Flask />}
               >
                 This is a test publisher. Its prices are not included in the
                 Pyth aggregate price for {component.displaySymbol}.
@@ -163,65 +145,65 @@ export const usePriceComponentDrawer = ({
             )}
             <div className={styles.stats}>
               <StatCard
-                nonInteractive
                 header={
                   <>
                     Aggregated <PriceName assetClass={component.assetClass} />
                   </>
                 }
+                nonInteractive
                 small
                 stat={
                   <LivePrice
-                    feedKey={component.feedKey}
                     cluster={component.cluster}
+                    feedKey={component.feedKey}
                   />
                 }
               />
               <StatCard
-                nonInteractive
                 header={
                   <>
                     Publisher <PriceName assetClass={component.assetClass} />
                   </>
                 }
-                variant="primary"
+                nonInteractive
                 small
                 stat={
                   <LivePrice
+                    cluster={component.cluster}
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
-                    cluster={component.cluster}
                   />
                 }
+                variant="primary"
               />
               <StatCard
-                nonInteractive
                 header="Publisher Confidence"
+                nonInteractive
                 small
                 stat={
                   <LiveConfidence
+                    cluster={component.cluster}
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
-                    cluster={component.cluster}
                   />
                 }
               />
               <StatCard
-                nonInteractive
                 header="Last Slot"
+                nonInteractive
                 small
                 stat={
                   <LiveComponentValue
-                    feedKey={component.feedKey}
-                    publisherKey={component.publisherKey}
-                    field="publishSlot"
                     cluster={component.cluster}
+                    feedKey={component.feedKey}
+                    field="publishSlot"
+                    publisherKey={component.publisherKey}
                   />
                 }
               />
               <StatCard
-                nonInteractive
                 header="Score"
+                nonInteractive
                 small
                 stat={
                   component.score ? (
@@ -232,22 +214,40 @@ export const usePriceComponentDrawer = ({
                 }
               />
               <StatCard
-                nonInteractive
                 header="Quality Rank"
+                nonInteractive
                 small
                 stat={component.rank ?? <></>}
               />
             </div>
             {component.firstEvaluation && (
               <ScoreBreakdown
-                firstEvaluation={component.firstEvaluation}
                 cluster={component.cluster}
+                firstEvaluation={component.firstEvaluation}
                 publisherKey={component.publisherKey}
                 symbol={component.symbol}
               />
             )}
           </RouterProvider>
         ),
+        headingAfter: (
+          <div className={styles.badges}>
+            <StatusComponent status={component.status} />
+          </div>
+        ),
+        headingExtra: (
+          <RouterProvider navigate={navigate}>
+            <HeadingExtra
+              cluster={component.cluster}
+              identifiesPublisher={identifiesPublisher}
+              publisherKey={component.publisherKey}
+              status={component.status}
+              symbol={component.symbol}
+            />
+          </RouterProvider>
+        ),
+        onClose: clearSelectedComponent,
+        title: component.name,
       });
     },
     [clearSelectedComponent, drawer, identifiesPublisher, navigate],
@@ -280,10 +280,10 @@ const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
   const handleDownloadReport = useCallback(
     (timeframe: Interval) => {
       return downloadReportForFeed({
-        symbol: props.symbol,
-        publisher: props.publisherKey,
-        timeframe,
         cluster: ClusterToName[props.cluster],
+        publisher: props.publisherKey,
+        symbol: props.symbol,
+        timeframe,
       });
     },
     [downloadReportForFeed, props.cluster, props.publisherKey, props.symbol],
@@ -296,16 +296,16 @@ const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
         <StatusComponent status={status} />
       </div>
       <OpenButton
-        variant="ghost"
-        hideText
         beforeIcon={<ArrowSquareOut />}
-        rounded
         className={styles.ghostOpenButton ?? ""}
+        hideText
+        rounded
+        variant="ghost"
         {...props}
       />
       <OpenButton
-        variant="outline"
         className={styles.outlineOpenButton ?? ""}
+        variant="outline"
         {...props}
       />
     </>
@@ -335,7 +335,7 @@ const OpenButton = ({
   );
 
   return (
-    <Button size="sm" href={href} {...props}>
+    <Button href={href} size="sm" {...props}>
       Open {identifiesPublisher ? "Publisher" : "Feed"}
     </Button>
   );
@@ -363,16 +363,13 @@ const ScoreBreakdown = ({
 
   return (
     <Card
-      title="Score Breakdown"
-      nonInteractive
       className={styles.rankingBreakdown}
+      nonInteractive
+      title="Score Breakdown"
       toolbar={
         <Select
-          size="sm"
-          variant="outline"
           hideLabel
           label="Evaluation Period"
-          selectedKey={selectedPeriod.label}
           onSelectionChange={(label) => {
             const evaluationPeriod = evaluationPeriods.find(
               (period) => period.label === label,
@@ -383,6 +380,9 @@ const ScoreBreakdown = ({
           }}
           options={evaluationPeriods.map(({ label }) => ({ id: label }))}
           placement="bottom end"
+          selectedKey={selectedPeriod.label}
+          size="sm"
+          variant="outline"
         />
       }
     >
@@ -420,9 +420,9 @@ const useEvaluationPeriods = (firstEvaluation: Date) => {
       const end = new Date(cursor);
       end.setDate(15);
       evaluations.unshift({
-        start,
         end,
         label: `${dateFormatter.format(start)} to ${end < today ? dateFormatter.format(end) : "Now"}`,
+        start,
       });
     }
 
@@ -438,7 +438,7 @@ const useEvaluationPeriods = (firstEvaluation: Date) => {
     evaluationPeriods[0],
   );
 
-  return { selectedPeriod, setSelectedPeriod, evaluationPeriods };
+  return { evaluationPeriods, selectedPeriod, setSelectedPeriod };
 };
 
 type EvaluationPeriod = {
@@ -458,9 +458,9 @@ const ScoreHistory = ({ state }: ScoreHistoryProps) => {
     case StateType.NotLoaded: {
       return (
         <Spinner
-          label="Loading score history"
-          isIndeterminate
           className={styles.spinner ?? ""}
+          isIndeterminate
+          label="Loading score history"
         />
       );
     }
@@ -497,11 +497,11 @@ const formatDate = (date: Date) => {
 
 const scoreHistorySchema = z.array(
   z.strictObject({
-    time: z.string().transform((value) => new Date(value)),
-    score: z.number(),
-    uptimeScore: z.number(),
     deviationScore: z.number(),
+    score: z.number(),
     stalledScore: z.number(),
+    time: z.string().transform((value) => new Date(value)),
+    uptimeScore: z.number(),
   }),
 );
 
@@ -523,14 +523,11 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
   const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(
     undefined,
   );
-  const updateSelectedPoint = useCallback(
-    (chart: CategoricalChartState) => {
-      setSelectedPoint(
-        (chart.activePayload as { payload: Point }[] | undefined)?.[0]?.payload,
-      );
-    },
-    [setSelectedPoint],
-  );
+  const updateSelectedPoint = useCallback((chart: CategoricalChartState) => {
+    setSelectedPoint(
+      (chart.activePayload as { payload: Point }[] | undefined)?.[0]?.payload,
+    );
+  }, []);
   const currentPoint = useMemo(
     () => selectedPoint ?? scoreHistory.at(-1),
     [selectedPoint, scoreHistory],
@@ -546,29 +543,26 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
   );
   const hoverUptime = useCallback(() => {
     setHoveredScore("uptime");
-  }, [setHoveredScore]);
+  }, []);
   const hoverDeviation = useCallback(() => {
     setHoveredScore("deviation");
-  }, [setHoveredScore]);
+  }, []);
   const hoverStalled = useCallback(() => {
     setHoveredScore("stalled");
-  }, [setHoveredScore]);
+  }, []);
   const hoverFinal = useCallback(() => {
     setHoveredScore("final");
-  }, [setHoveredScore]);
+  }, []);
   const clearHover = useCallback(() => {
     setHoveredScore(undefined);
-  }, [setHoveredScore]);
+  }, []);
 
   const [focusedScore, setFocusedScore] = useState<ScoreComponent | undefined>(
     undefined,
   );
-  const toggleFocusedScore = useCallback(
-    (value: typeof focusedScore) => {
-      setFocusedScore((cur) => (cur === value ? undefined : value));
-    },
-    [setFocusedScore],
-  );
+  const toggleFocusedScore = useCallback((value: typeof focusedScore) => {
+    setFocusedScore((cur) => (cur === value ? undefined : value));
+  }, []);
   const toggleFocusUptime = useCallback(() => {
     toggleFocusedScore("uptime");
   }, [toggleFocusedScore]);
@@ -586,8 +580,8 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
     <>
       <div
         className={styles.scoreHistoryChart}
-        data-hovered-score={hoveredScore}
         data-focused-score={focusedScore}
+        data-hovered-score={hoveredScore}
       >
         <div className={styles.top}>
           <div className={styles.left}>
@@ -599,47 +593,47 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         <Suspense
           fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
         >
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <ResponsiveContainer height={CHART_HEIGHT} width="100%">
             <LineChart
-              data={scoreHistory}
               className={styles.chart ?? ""}
+              data={scoreHistory}
+              margin={{ bottom: 0, left: 0, right: 0, top: 3 }}
               onMouseEnter={updateSelectedPoint}
-              onMouseMove={updateSelectedPoint}
               onMouseLeave={updateSelectedPoint}
-              margin={{ bottom: 0, left: 0, top: 3, right: 0 }}
+              onMouseMove={updateSelectedPoint}
             >
               <Tooltip content={() => <></>} />
               <Line
-                type="monotone"
+                className={styles.score ?? ""}
                 dataKey="score"
                 dot={false}
-                className={styles.score ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "final" ? 3 : 1}
+                type="monotone"
               />
               <Line
-                type="monotone"
+                className={styles.uptimeScore ?? ""}
                 dataKey="uptimeScore"
                 dot={false}
-                className={styles.uptimeScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "uptime" ? 3 : 1}
+                type="monotone"
               />
               <Line
-                type="monotone"
+                className={styles.deviationScore ?? ""}
                 dataKey="deviationScore"
                 dot={false}
-                className={styles.deviationScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "deviation" ? 3 : 1}
+                type="monotone"
               />
               <Line
-                type="monotone"
+                className={styles.stalledScore ?? ""}
                 dataKey="stalledScore"
                 dot={false}
-                className={styles.stalledScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "stalled" ? 3 : 1}
+                type="monotone"
               />
               <XAxis dataKey="time" hide />
               <YAxis hide />
@@ -655,8 +649,8 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         <li>
           <Metric
             component="uptime"
-            name={SCORE_COMPONENT_TO_LABEL.uptime}
             description="Percentage of time a publisher is available and active"
+            name={SCORE_COMPONENT_TO_LABEL.uptime}
           />
           <dl>
             <div className={styles.weight}>
@@ -672,8 +666,8 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         <li>
           <Metric
             component="deviation"
-            name={SCORE_COMPONENT_TO_LABEL.deviation}
             description="Deviations that occur between a publishers' price and the aggregate price"
+            name={SCORE_COMPONENT_TO_LABEL.deviation}
           />
           <dl>
             <div className={styles.weight}>
@@ -691,8 +685,8 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         <li>
           <Metric
             component="stalled"
-            name={SCORE_COMPONENT_TO_LABEL.stalled}
             description="Penalizes publishers reporting the same value for the price"
+            name={SCORE_COMPONENT_TO_LABEL.stalled}
           />
           <dl>
             <div className={styles.weight}>
@@ -708,8 +702,8 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         <li>
           <Metric
             component="final"
-            name={SCORE_COMPONENT_TO_LABEL.final}
             description="The aggregate score, calculated by combining the other three score components"
+            name={SCORE_COMPONENT_TO_LABEL.final}
           />
           <dl>
             <div className={styles.weight}></div>
@@ -721,100 +715,100 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         </li>
       </ul>
       <Table
-        label="Score Breakdown"
-        rounded
-        fill
         className={styles.legendTable ?? ""}
         columns={[
           {
-            id: "metric",
-            name: "METRIC",
-            isRowHeader: true,
             alignment: "left",
+            id: "metric",
+            isRowHeader: true,
+            name: "METRIC",
           },
           {
+            alignment: "right",
+            className: styles.scoreCell ?? "",
             id: "weight",
             name: "WEIGHT",
-            alignment: "right",
             width: 10,
-            className: styles.scoreCell ?? "",
           },
           {
+            alignment: "right",
+            className: styles.scoreCell ?? "",
             id: "score",
             name: "SCORE",
-            alignment: "right",
             width: 14,
-            className: styles.scoreCell ?? "",
           },
         ]}
+        fill
+        label="Score Breakdown"
+        rounded
         rows={[
           {
-            id: "uptime",
-            onHoverStart: hoverUptime,
-            onHoverEnd: clearHover,
-            onAction: toggleFocusUptime,
             data: {
               metric: (
                 <Metric
                   component="uptime"
-                  name={SCORE_COMPONENT_TO_LABEL.uptime}
                   description="Percentage of time a publisher is available and active"
+                  name={SCORE_COMPONENT_TO_LABEL.uptime}
                 />
               ),
-              weight: "40%",
               score: numberFormatter.format(currentPoint?.uptimeScore ?? 0),
+              weight: "40%",
             },
+            id: "uptime",
+            onAction: toggleFocusUptime,
+            onHoverEnd: clearHover,
+            onHoverStart: hoverUptime,
           },
           {
-            id: "deviation",
-            onHoverStart: hoverDeviation,
-            onHoverEnd: clearHover,
-            onAction: toggleFocusDeviation,
             data: {
               metric: (
                 <Metric
                   component="deviation"
-                  name={SCORE_COMPONENT_TO_LABEL.deviation}
                   description="Deviations that occur between a publishers' price and the aggregate price"
+                  name={SCORE_COMPONENT_TO_LABEL.deviation}
                 />
               ),
-              weight: "40%",
               score: numberFormatter.format(currentPoint?.deviationScore ?? 0),
+              weight: "40%",
             },
+            id: "deviation",
+            onAction: toggleFocusDeviation,
+            onHoverEnd: clearHover,
+            onHoverStart: hoverDeviation,
           },
           {
-            id: "staleness",
-            onHoverStart: hoverStalled,
-            onHoverEnd: clearHover,
-            onAction: toggleFocusStalled,
             data: {
               metric: (
                 <Metric
                   component="stalled"
-                  name={SCORE_COMPONENT_TO_LABEL.stalled}
                   description="Penalizes publishers reporting the same value for the price"
+                  name={SCORE_COMPONENT_TO_LABEL.stalled}
                 />
               ),
-              weight: "20%",
               score: numberFormatter.format(currentPoint?.stalledScore ?? 0),
+              weight: "20%",
             },
+            id: "staleness",
+            onAction: toggleFocusStalled,
+            onHoverEnd: clearHover,
+            onHoverStart: hoverStalled,
           },
           {
-            id: "final",
-            onHoverStart: hoverFinal,
-            onHoverEnd: clearHover,
-            onAction: toggleFocusFinal,
             data: {
               metric: (
                 <Metric
                   component="final"
-                  name={SCORE_COMPONENT_TO_LABEL.final}
                   description="The aggregate score, calculated by combining the other three score components"
+                  name={SCORE_COMPONENT_TO_LABEL.final}
                 />
               ),
-              weight: undefined,
               score: numberFormatter.format(currentPoint?.score ?? 0),
+              weight: undefined,
             },
+            id: "final",
+            onAction: toggleFocusFinal,
+            onHoverEnd: clearHover,
+            onHoverStart: hoverFinal,
           },
         ]}
       />
@@ -825,10 +819,10 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
 type ScoreComponent = "uptime" | "deviation" | "stalled" | "final";
 
 const SCORE_COMPONENT_TO_LABEL = {
-  uptime: "Uptime Score",
   deviation: "Deviation Score",
-  stalled: "Stalled Score",
   final: "Final Score",
+  stalled: "Stalled Score",
+  uptime: "Uptime Score",
 } as const;
 
 const MainChartLabel = ({
@@ -846,7 +840,7 @@ type MetricProps = {
 const Metric = ({ name, description, component }: MetricProps) => (
   <div className={styles.metric} data-component={component}>
     <div className={styles.metricName}>
-      <svg viewBox="0 0 12 12" className={styles.legend}>
+      <svg className={styles.legend} viewBox="0 0 12 12">
         <circle cx="6" cy="6" r="4" strokeWidth="2" />
       </svg>
       {name}

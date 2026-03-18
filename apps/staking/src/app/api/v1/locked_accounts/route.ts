@@ -1,6 +1,6 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
+import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -8,19 +8,19 @@ import { MAINNET_API_RPC } from "../../../../config/server";
 import { tokensToString } from "../../../../tokens";
 
 const UnlockScheduleSchema = z.object({
-  date: z.date(),
   amount: z.string(),
+  date: z.date(),
 });
 
 const LockSchema = z.object({
-  type: z.string(),
   schedule: z.array(UnlockScheduleSchema),
+  type: z.string(),
 });
 
 const ResponseSchema = z.array(
   z.object({
-    custodyAccount: z.string(),
     actualAmount: z.string(),
+    custodyAccount: z.string(),
     lock: LockSchema,
   }),
 );
@@ -68,16 +68,16 @@ export async function GET(req: NextRequest) {
         await stakingClient.getStakeAccountCustody(position);
       const lock = await stakingClient.getUnlockSchedule(position, true);
       return {
-        custodyAccount: custodyAccount.address.toBase58(),
         actualAmount: tokensToString(custodyAccount.amount),
+        custodyAccount: custodyAccount.address.toBase58(),
         lock: {
-          type: lock.type,
           schedule: lock.schedule
             .filter((unlock) => unlock.date > new Date())
             .map((unlock) => ({
-              date: unlock.date,
               amount: tokensToString(unlock.amount),
+              date: unlock.date,
             })),
+          type: lock.type,
         },
       };
     }),

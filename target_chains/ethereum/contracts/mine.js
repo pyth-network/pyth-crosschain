@@ -7,11 +7,11 @@ advanceBlock = () => {
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
+        id: Date.now(),
         jsonrpc: "2.0",
         method: "evm_mine",
-        id: new Date().getTime(),
       },
-      (err, result) => {
+      (err, _result) => {
         if (err) {
           return reject(err);
         }
@@ -27,13 +27,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-module.exports = function (callback) {
+module.exports = (_callback) => {
   const fn = async () => {
     while (true) {
-      console.log(await advanceBlock());
       await sleep(1000);
     }
   };
 
-  fn().catch((reason) => console.error(reason));
+  fn().catch((_reason) => {});
 };

@@ -43,13 +43,13 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-interface Row {
+type Row = {
   chainName: string;
   mainnet: boolean;
   startIndex: string;
   endIndex: string;
   error?: string;
-}
+};
 
 async function syncChain(
   contract: WormholeContract,
@@ -84,7 +84,12 @@ async function syncChain(
         GUARDIAN_INDEX_TIMEOUT_MS,
       );
     }
-    return { chainName: chain.getId(), mainnet: chain.isMainnet(), startIndex: String(startIndex), endIndex: String(endIndex) };
+    return {
+      chainName: chain.getId(),
+      endIndex: String(endIndex),
+      mainnet: chain.isMainnet(),
+      startIndex: String(startIndex),
+    };
   } catch (error) {
     const message =
       verbose && error instanceof Error
@@ -93,14 +98,13 @@ async function syncChain(
           ? String((error as { message: unknown }).message)
           : "An error occurred";
     if (verbose) {
-      console.error(`[${chain.getId()}]`, error);
     }
     return {
       chainName: chain.getId(),
-      mainnet: contract.getChain().isMainnet(),
-      startIndex: "—",
       endIndex: "—",
       error: message.slice(0, 120),
+      mainnet: contract.getChain().isMainnet(),
+      startIndex: "—",
     };
   }
 }
@@ -108,35 +112,35 @@ async function syncChain(
 const parser = yargs(hideBin(process.argv))
   .usage("Update the guardian set in stable networks. Usage: $0")
   .options({
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to sign the transactions with",
-    },
     chain: {
-      type: "string",
       array: true,
       desc: "Can be one of the chains available in the store",
-    },
-    "target-index": {
-      type: "number",
-      demandOption: true,
-      desc: "Only sync and show contracts whose current guardian set index is below this value",
+      type: "string",
     },
     "dry-run": {
-      type: "boolean",
       default: false,
       desc: "Dry run the script",
-    },
-    verbose: {
       type: "boolean",
-      default: false,
-      desc: "Print full error messages and stack traces; by default only a short message is shown",
     },
     json: {
-      type: "boolean",
       default: false,
       desc: "Output results as a single JSON line (for scripting); exit 0 when no chains need update, 1 otherwise",
+      type: "boolean",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions with",
+      type: "string",
+    },
+    "target-index": {
+      demandOption: true,
+      desc: "Only sync and show contracts whose current guardian set index is below this value",
+      type: "number",
+    },
+    verbose: {
+      default: false,
+      desc: "Print full error messages and stack traces; by default only a short message is shown",
+      type: "boolean",
     },
   });
 
@@ -153,22 +157,14 @@ async function main() {
 
   const results = await Promise.all(
     contracts.map((contract) =>
-      syncChain(
-        contract,
-        privateKey,
-        targetIndex,
-        argv.dryRun,
-        argv.verbose,
-      ),
+      syncChain(contract, privateKey, targetIndex, argv.dryRun, argv.verbose),
     ),
   );
 
   const rows = results.filter((row): row is Row => row !== undefined);
   if (argv.json) {
-    console.log(JSON.stringify({ rows, needRetry: rows.length > 0 }));
     process.exit(rows.length > 0 ? 1 : 0);
   }
-  console.table(rows);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

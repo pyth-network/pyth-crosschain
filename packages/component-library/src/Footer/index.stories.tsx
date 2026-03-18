@@ -3,11 +3,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Footer as FooterComponent } from "./index.jsx";
 
 const meta = {
+  argTypes: {},
   component: FooterComponent,
   parameters: {
     layout: "fullscreen",
   },
-  argTypes: {},
 } satisfies Meta<typeof FooterComponent>;
 export default meta;
 

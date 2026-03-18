@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 import { GetPythFeedsDemoDataRequestSchema } from "../../../../../schemas/pyth/pyth-pro-demo-schema";
 import { getNbboAndPythProHistoricalPricesForSymbol } from "../../../../../services/clickhouse";

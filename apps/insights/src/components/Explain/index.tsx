@@ -14,18 +14,18 @@ type Props = {
 export const Explain = ({ size, title, children }: Props) => (
   <div className={styles.explain}>
     <Button
-      className={styles.trigger ?? ""}
-      variant="ghost"
-      size={size}
-      beforeIcon={<Info weight="fill" />}
-      rounded
-      hideText
       alert={{
-        title,
-        icon: <Lightbulb />,
         bodyClassName: styles.description,
         contents: children,
+        icon: <Lightbulb />,
+        title,
       }}
+      beforeIcon={<Info weight="fill" />}
+      className={styles.trigger ?? ""}
+      hideText
+      rounded
+      size={size}
+      variant="ghost"
     >
       Explain {title}
     </Button>

@@ -69,7 +69,7 @@ export function ProductCard({
               <p className={styles.sectionLabel}>FEATURES</p>
               <div className={styles.features}>
                 {features.map((feature) => (
-                  <div key={feature.label} className={styles.featureItem}>
+                  <div className={styles.featureItem} key={feature.label}>
                     <div className={styles.featureIcon}>
                       {feature.icon ?? <Lightning size={12.5} />}
                     </div>
@@ -87,9 +87,9 @@ export function ProductCard({
               <div className={styles.quickLinks}>
                 {quickLinks.map((link) => (
                   <Link
-                    key={link.href}
-                    href={link.href}
                     className={styles.quickLink}
+                    href={link.href}
+                    key={link.href}
                   >
                     {link.label}
                   </Link>
@@ -102,13 +102,13 @@ export function ProductCard({
         {buttonLabel && (
           <div className={styles.buttonWrapper}>
             <Button
+              className={clsx(styles.button, className)}
               onClick={(e) => {
                 e.preventDefault();
                 handleButtonClick();
               }}
               size="md"
               variant="primary"
-              className={clsx(styles.button, className)}
             >
               {buttonLabel}
             </Button>

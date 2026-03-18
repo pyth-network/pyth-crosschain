@@ -55,13 +55,13 @@ export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
       if (!instId) return;
 
       const subscribeMessage = {
-        op: "subscribe",
         args: [
           {
             channel: "bbo-tbt",
             instId,
           },
         ],
+        op: "subscribe",
       };
       socket.json(subscribeMessage);
     },
@@ -77,11 +77,20 @@ export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
         const data = JSON.parse(strData) as Partial<OKXBBOData>;
 
         // Handle best bid/offer updates
-        if (data.arg?.channel === "bbo-tbt" && data.data?.length) {
+        if (
+          data.arg?.channel === "bbo-tbt" &&
+          data.data &&
+          data.data.length > 0
+        ) {
           const bboData = data as OKXBBOData;
           const tickData = bboData.data[0];
 
-          if (tickData?.bids?.length && tickData.asks?.length) {
+          if (
+            tickData?.bids &&
+            tickData.bids.length > 0 &&
+            tickData.asks &&
+            tickData.asks.length > 0
+          ) {
             // Get best bid and ask (directly from bbo-tbt channel)
             const bestBid = Number.parseFloat(tickData.bids[0]?.[0] ?? "");
             const bestAsk = Number.parseFloat(tickData.asks[0]?.[0] ?? "");

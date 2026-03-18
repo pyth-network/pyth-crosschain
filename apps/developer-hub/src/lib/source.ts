@@ -1,24 +1,24 @@
 import {
+  ArrowsClockwise,
+  Book,
+  Bug,
   CardsThree,
   ChartLine,
+  Code,
+  CurrencyDollar,
+  DiceSix,
+  FileText,
   FolderSimpleDashed,
+  Gauge,
   Gavel,
   Lightning,
-  Shuffle,
-  DiceSix,
-  Sparkle,
-  RocketLaunch,
-  FileText,
   MagnifyingGlass,
+  RocketLaunch,
   Shield,
-  Gauge,
-  Bug,
   ShieldCheck,
-  ArrowsClockwise,
+  Shuffle,
+  Sparkle,
   WarningCircle,
-  Code,
-  Book,
-  CurrencyDollar,
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
@@ -28,25 +28,25 @@ import { createElement } from "react";
 import { docs } from "../../.source/server";
 
 const icons: Record<string, React.ComponentType> = {
+  ArrowsClockwise,
+  Book,
+  Bug,
   CardsThree,
   ChartLine,
+  Code,
+  CurrencyDollar,
+  DiceSix,
+  FileText,
+  Gauge,
   Gavel,
   Lightning,
-  Shuffle,
-  DiceSix,
-  Sparkle,
-  RocketLaunch,
-  FileText,
   MagnifyingGlass,
+  RocketLaunch,
   Shield,
-  Gauge,
-  Bug,
   ShieldCheck,
-  ArrowsClockwise,
+  Shuffle,
+  Sparkle,
   WarningCircle,
-  Code,
-  Book,
-  CurrencyDollar,
 };
 
 export const source = loader({
@@ -54,8 +54,8 @@ export const source = loader({
   icon(icon) {
     return icon ? createElement(icons[icon] ?? FolderSimpleDashed) : undefined;
   },
-  source: docs.toFumadocsSource(),
   plugins: [openapiPlugin()],
+  source: docs.toFumadocsSource(),
 });
 
 export type Page = InferPageType<typeof source>;

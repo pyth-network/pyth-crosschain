@@ -29,10 +29,10 @@ const CopyAddress = ({
 
   return url ? (
     <div className={styles.address}>
-      <Link href={url} target="_blank" rel="noreferrer">
+      <Link href={url} rel="noreferrer" target="_blank">
         {formattedAddress}
       </Link>
-      <CopyButton text={address} iconOnly />
+      <CopyButton iconOnly text={address} />
     </div>
   ) : (
     <CopyButton text={address}>{formattedAddress}</CopyButton>

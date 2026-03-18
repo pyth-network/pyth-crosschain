@@ -1,7 +1,7 @@
-import type { ChainName } from "../chains";
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 // 33-byte signer address, used by Sui
 export class UpdateTrustedSigner264Bit extends PythGovernanceActionImpl {
@@ -37,8 +37,8 @@ export class UpdateTrustedSigner264Bit extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(UpdateTrustedSigner264Bit.layout, {
-      publicKey: this.publicKey,
       expiresAt: this.expiresAt,
+      publicKey: this.publicKey,
     });
   }
 }

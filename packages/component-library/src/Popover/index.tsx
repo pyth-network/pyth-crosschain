@@ -1,13 +1,13 @@
 import cx from "clsx";
 import type { ComponentProps, PropsWithChildren, ReactNode } from "react";
 import type {
-  DialogProps,
   PopoverProps as AriaPopoverProps,
+  DialogProps,
 } from "react-aria-components";
 import {
+  Popover as AriaPopover,
   Dialog,
   DialogTrigger,
-  Popover as AriaPopover,
 } from "react-aria-components";
 
 import classes from "./index.module.scss";

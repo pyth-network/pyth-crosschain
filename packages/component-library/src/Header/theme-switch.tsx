@@ -7,13 +7,12 @@ import { Sun } from "@phosphor-icons/react/dist/ssr/Sun";
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
-import type { ReactNode, ElementType } from "react";
-import { useCallback, useRef, useMemo } from "react";
+import type { ElementType, ReactNode } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useIsSSR } from "react-aria";
-
-import styles from "./theme-switch.module.scss";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
+import styles from "./theme-switch.module.scss";
 
 type Props<T extends ElementType> = Omit<
   ButtonProps<T>,
@@ -33,13 +32,13 @@ export const ThemeSwitch = <T extends ElementType>({
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      hideText
-      onPress={toggleTheme}
       beforeIcon={<IconPath />}
       className={clsx(styles.themeSwitch, className)}
+      hideText
+      onPress={toggleTheme}
       rounded
+      size="sm"
+      variant="ghost"
       {...props}
     >
       Dark mode
@@ -74,10 +73,10 @@ type IconMovementProps = {
 
 const IconMovement = ({ icon, offset }: IconMovementProps) => (
   <motion.div
-    className={styles.iconMovement}
     animate={{ offsetDistance: offset }}
-    transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
+    className={styles.iconMovement}
     initial={false}
+    transition={{ bounce: 0.35, duration: 0.6, type: "spring" }}
   >
     {icon}
   </motion.div>
@@ -101,13 +100,13 @@ const useOffsets = () => {
 
     switch (theme) {
       case "light": {
-        return { desktop: calc(1 / 3), sun: calc(0), moon: calc(-1 / 3) };
+        return { desktop: calc(1 / 3), moon: calc(-1 / 3), sun: calc(0) };
       }
       case "dark": {
-        return { desktop: calc(2 / 3), sun: calc(1 / 3), moon: calc(0) };
+        return { desktop: calc(2 / 3), moon: calc(0), sun: calc(1 / 3) };
       }
       default: {
-        return { desktop: calc(1), sun: calc(2 / 3), moon: calc(1 / 3) };
+        return { desktop: calc(1), moon: calc(1 / 3), sun: calc(2 / 3) };
       }
     }
   }, [theme]);

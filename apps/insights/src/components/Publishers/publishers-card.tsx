@@ -18,24 +18,23 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import {
-  useQueryState,
   parseAsStringEnum,
+  useQueryState,
 } from "@pythnetwork/react-hooks/nuqs";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { Suspense, useMemo, useCallback } from "react";
-import { useFilter, useCollator } from "react-aria";
-
-import styles from "./publishers-card.module.scss";
+import { Suspense, useCallback, useMemo } from "react";
+import { useCollator, useFilter } from "react-aria";
 import { CLUSTER_NAMES } from "../../services/pyth";
 import {
-  ExplainPermissioned,
   ExplainActive,
+  ExplainPermissioned,
   ExplainRanking,
 } from "../Explanations";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
+import styles from "./publishers-card.module.scss";
 
 const PUBLISHER_SCORE_WIDTH = 38;
 
@@ -153,22 +152,7 @@ const ResolvedPublishersCard = ({
           activeFeeds,
           ...publisher
         }) => ({
-          id,
-          href: `/publishers/${cluster}/${id}`,
-          textValue: publisher.name ?? id,
-          prefetch: false,
           data: {
-            ranking: ranking !== undefined && <Ranking>{ranking}</Ranking>,
-            name: (
-              <PublisherTag
-                publisherKey={id}
-                {...(publisher.name && {
-                  name: publisher.name,
-                  icon: publisher.icon,
-                })}
-              />
-            ),
-            permissionedFeeds,
             activeFeeds: (
               <Link
                 href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
@@ -181,7 +165,22 @@ const ResolvedPublishersCard = ({
             averageScore: averageScore !== undefined && (
               <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
             ),
+            name: (
+              <PublisherTag
+                publisherKey={id}
+                {...(publisher.name && {
+                  icon: publisher.icon,
+                  name: publisher.name,
+                })}
+              />
+            ),
+            permissionedFeeds,
+            ranking: ranking !== undefined && <Ranking>{ranking}</Ranking>,
           },
+          href: `/publishers/${cluster}/${id}`,
+          id,
+          prefetch: false,
+          textValue: publisher.name ?? id,
         }),
       ),
     [paginatedItems, cluster],
@@ -199,20 +198,20 @@ const ResolvedPublishersCard = ({
 
   return (
     <PublishersCardContents
-      numResults={numResults}
-      search={search}
-      sortDescriptor={sortDescriptor}
+      cluster={cluster}
+      mkPageLink={mkPageLink}
       numPages={numPages}
-      page={page}
-      pageSize={pageSize}
+      numResults={numResults}
+      onChangeCluster={updateCluster}
+      onPageChange={updatePage}
+      onPageSizeChange={updatePageSize}
       onSearchChange={updateSearch}
       onSortChange={updateSortDescriptor}
-      onPageSizeChange={updatePageSize}
-      onPageChange={updatePage}
-      mkPageLink={mkPageLink}
-      cluster={cluster}
-      onChangeCluster={updateCluster}
+      page={page}
+      pageSize={pageSize}
       rows={rows}
+      search={search}
+      sortDescriptor={sortDescriptor}
       {...props}
     />
   );
@@ -258,67 +257,67 @@ const PublishersCardContents = ({
       <>
         <span>Publishers</span>
         {!props.isLoading && (
-          <Badge style="filled" variant="neutral" size="md">
+          <Badge size="md" style="filled" variant="neutral">
             {props.numResults}
           </Badge>
         )}
       </>
     }
-    toolbarClassName={styles.toolbar}
     toolbar={
       <>
         <SearchInput
+          className={styles.searchInput ?? ""}
+          placeholder="Publisher key or name"
           size="sm"
           width={60}
-          placeholder="Publisher key or name"
-          className={styles.searchInput ?? ""}
           {...(props.isLoading
-            ? { isPending: true, isDisabled: true }
+            ? { isDisabled: true, isPending: true }
             : {
-                value: props.search,
                 onChange: props.onSearchChange,
+                value: props.search,
               })}
         />
         <Select
+          hideLabel
+          icon={<Database />}
           label="Cluster"
+          options={CLUSTER_NAMES.map((id) => ({ id }))}
           size="sm"
           variant="outline"
-          hideLabel
-          options={CLUSTER_NAMES.map((id) => ({ id }))}
-          icon={<Database />}
           {...(props.isLoading
-            ? { isPending: true, buttonLabel: "Cluster" }
+            ? { buttonLabel: "Cluster", isPending: true }
             : {
+                onSelectionChange: props.onChangeCluster,
                 placement: "bottom end",
                 selectedKey: props.cluster,
-                onSelectionChange: props.onChangeCluster,
               })}
         />
       </>
     }
+    toolbarClassName={styles.toolbar}
     {...(!props.isLoading && {
       footer: (
         <Paginator
-          numPages={props.numPages}
           currentPage={props.page}
-          onPageChange={props.onPageChange}
-          pageSize={props.pageSize}
-          onPageSizeChange={props.onPageSizeChange}
           mkPageLink={props.mkPageLink}
+          numPages={props.numPages}
+          onPageChange={props.onPageChange}
+          onPageSizeChange={props.onPageSizeChange}
+          pageSize={props.pageSize}
         />
       ),
     })}
   >
     <EntityList
-      label="Publishers"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PublisherTag isLoading />}
       fields={[
         { id: "averageScore", name: "Average Score" },
         { id: "permissionedFeeds", name: "Permissioned Feeds" },
         { id: "activeFeeds", name: "Active Feeds" },
       ]}
+      headerLoadingSkeleton={<PublisherTag isLoading />}
       isLoading={props.isLoading}
+      label="Publishers"
       rows={
         props.isLoading
           ? []
@@ -334,14 +333,12 @@ const PublishersCardContents = ({
       }
     />
     <Table
-      rounded
-      fill
-      label="Publishers"
-      stickyHeader="appHeader"
       className={styles.table ?? ""}
       columns={[
         {
+          allowsSorting: true,
           id: "ranking",
+          loadingSkeleton: <Ranking isLoading />,
           name: (
             <>
               RANKING
@@ -349,18 +346,18 @@ const PublishersCardContents = ({
             </>
           ),
           width: 25,
-          loadingSkeleton: <Ranking isLoading />,
-          allowsSorting: true,
         },
         {
-          id: "name",
-          name: "NAME / ID",
-          isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PublisherTag isLoading />,
           allowsSorting: true,
+          id: "name",
+          isRowHeader: true,
+          loadingSkeleton: <PublisherTag isLoading />,
+          name: "NAME / ID",
         },
         {
+          alignment: "center",
+          allowsSorting: true,
           id: "permissionedFeeds",
           name: (
             <>
@@ -368,11 +365,11 @@ const PublishersCardContents = ({
               <ExplainPermissioned />
             </>
           ),
-          alignment: "center",
           width: 30,
-          allowsSorting: true,
         },
         {
+          alignment: "center",
+          allowsSorting: true,
           id: "activeFeeds",
           name: (
             <>
@@ -380,40 +377,42 @@ const PublishersCardContents = ({
               <ExplainActive />
             </>
           ),
-          alignment: "center",
           width: 24,
-          allowsSorting: true,
         },
         {
+          alignment: "right",
+          allowsSorting: true,
           id: "averageScore",
+          loadingSkeleton: <Score isLoading width={PUBLISHER_SCORE_WIDTH} />,
           name: (
             <>
               AVERAGE SCORE
               {explainAverage}
             </>
           ),
-          alignment: "right",
           width: PUBLISHER_SCORE_WIDTH,
-          loadingSkeleton: <Score isLoading width={PUBLISHER_SCORE_WIDTH} />,
-          allowsSorting: true,
         },
       ]}
+      fill
+      label="Publishers"
+      rounded
+      stickyHeader="appHeader"
       {...(props.isLoading
         ? {
             isLoading: true,
           }
         : {
-            rows: props.rows,
-            sortDescriptor: props.sortDescriptor,
-            onSortChange: props.onSortChange,
             emptyState: (
               <NoResults
-                query={props.search}
                 onClearSearch={() => {
                   props.onSearchChange("");
                 }}
+                query={props.search}
               />
             ),
+            onSortChange: props.onSortChange,
+            rows: props.rows,
+            sortDescriptor: props.sortDescriptor,
           })}
     />
   </Card>

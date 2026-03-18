@@ -2,13 +2,8 @@ import { Layout } from "@solana/buffer-layout";
 import { toBigIntBE, toBufferBE } from "bigint-buffer";
 
 export class UIntBE extends Layout<bigint> {
-  // span is the number of bytes to read
-  constructor(span: number, property?: string) {
-    super(span, property);
-  }
-
   override decode(b: Uint8Array, offset?: number): bigint {
-    let o = offset ?? 0;
+    const o = offset ?? 0;
     const buffer = Buffer.from(b.slice(o, o + this.span));
     return toBigIntBE(buffer);
   }
@@ -21,13 +16,8 @@ export class UIntBE extends Layout<bigint> {
 }
 
 export class HexBytes extends Layout<string> {
-  // span is the number of bytes to read
-  constructor(span: number, property?: string) {
-    super(span, property);
-  }
-
   override decode(b: Uint8Array, offset?: number): string {
-    let o = offset ?? 0;
+    const o = offset ?? 0;
     return Buffer.from(b.slice(o, o + this.span)).toString("hex");
   }
 

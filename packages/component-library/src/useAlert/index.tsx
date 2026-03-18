@@ -4,14 +4,13 @@ import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Heading } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import type { ModalDialogProps } from "../ModalDialog/index.jsx";
 import {
-  ModalDialog,
   createModalDialogContext,
+  ModalDialog,
 } from "../ModalDialog/index.jsx";
+import styles from "./index.module.scss";
 
 const CLOSE_DURATION_IN_S = 0.1;
 
@@ -37,29 +36,29 @@ const Alert = ({
   ...props
 }: Props) => (
   <ModalDialog
+    className={clsx(styles.alert, className)}
     overlayClassName={styles.modalOverlay ?? ""}
     variants={{
-      visible: {
-        y: 0,
-        transition: { type: "spring", duration: 0.75, bounce: 0.5 },
-      },
       hidden: {
+        transition: { duration: CLOSE_DURATION_IN_S, ease: "linear" },
         y: "calc(100% + 2rem)",
-        transition: { ease: "linear", duration: CLOSE_DURATION_IN_S },
       },
       unmounted: { y: "calc(100% + 2rem)" },
+      visible: {
+        transition: { bounce: 0.5, duration: 0.75, type: "spring" },
+        y: 0,
+      },
     }}
-    className={clsx(styles.alert, className)}
     {...props}
   >
     <Button
-      className={styles.closeButton ?? ""}
       beforeIcon={<XCircle weight="fill" />}
-      slot="close"
+      className={styles.closeButton ?? ""}
       hideText
       rounded
-      variant="ghost"
       size="sm"
+      slot="close"
+      variant="ghost"
     >
       Close
     </Button>

@@ -27,8 +27,8 @@ export const generateMetadata = async ({
 
   return feed
     ? {
-        title: feed.product.display_symbol,
         description: `See live market quotes for ${feed.product.description}.`,
+        title: feed.product.display_symbol,
       }
     : notFound();
 };

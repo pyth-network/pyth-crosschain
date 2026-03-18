@@ -8,15 +8,14 @@ import { readFileSync } from "node:fs";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { toPrivateKey } from "../src/core/base";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { toPrivateKey } from "../src/core/base";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
 
 const EXECUTOR_CACHE_FILE = ".cache-upgrade-evm-executor-contract";
 const ENTROPY_CACHE_FILE = ".cache-upgrade-evm-entropy-contract";
@@ -30,18 +29,18 @@ const parser = yargs(hideBin(process.argv))
   .options({
     ...COMMON_UPGRADE_OPTIONS,
     "contract-type": {
-      type: "string",
       choices: ["executor", "entropy"],
       demandOption: true,
+      type: "string",
     },
   });
 
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
 const RPCS = {
+  devnet: "https://api.devnet.solana.com",
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
-  devnet: "https://api.devnet.solana.com",
 } as Record<PythCluster, string>;
 
 function registry(cluster: PythCluster): string {
@@ -67,8 +66,6 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
 
-  console.log("Using cache file", cacheFile);
-
   // Try to deploy on every chain, then collect any failures at the end. This logic makes it simpler to
   // identify deployment problems (e.g., not enough gas) on every chain where they occur.
   const payloads: Buffer[] = [];
@@ -76,7 +73,6 @@ async function main() {
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
-      console.log("Deploying contract to", contract.chain.getId());
       try {
         const address = await runIfNotCached(
           `deploy-${contract.chain.getId()}`,
@@ -90,18 +86,12 @@ async function main() {
             );
           },
         );
-        console.log(
-          `Deployed contract at ${address} on ${contract.chain.getId()}`,
-        );
         const payload =
           argv["contract-type"] === "executor"
             ? await contract.generateUpgradeExecutorContractsPayload(address)
             : await contract.generateUpgradeEntropyContractPayload(address);
-
-        console.log(payload.toString("hex"));
         payloads.push(payload);
-      } catch (error) {
-        console.log(`error deploying: ${error}`);
+      } catch (_error) {
         failures.push(contract.chain.getId());
       }
     }
@@ -114,13 +104,9 @@ async function main() {
       )}. Scroll up to see the errors from each chain.`,
     );
   }
-
-  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet", wallet.publicKey.toBase58());
   vault?.connect(wallet, registry);
-  const proposal = await vault?.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal?.address.toBase58());
+  const _proposal = await vault?.proposeWormholeMessage(payloads);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

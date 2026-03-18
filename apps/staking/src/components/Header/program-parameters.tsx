@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 
-import type { StateType, States } from "../../hooks/use-api";
+import type { States, StateType } from "../../hooks/use-api";
 import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { tokensToString } from "../../tokens";
 import { Link } from "../Link";
@@ -22,19 +22,19 @@ export const ProgramParameters = ({ api, ...props }: Props) => {
 
   return (
     <ModalDialog
-      title="Program Parameters"
       description={
         <>
           See the current program parameters. For more details, see{" "}
           <Link
-            href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
             className="underline"
+            href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
             target="_blank"
           >
             the docs
           </Link>
         </>
       }
+      title="Program Parameters"
       {...props}
     >
       <ul className="mb-4 mt-8 flex flex-col gap-4 sm:mb-8 sm:mt-16">

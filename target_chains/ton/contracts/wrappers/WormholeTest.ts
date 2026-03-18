@@ -1,14 +1,10 @@
 import {
-  Cell,
-  contractAddress,
-  type ContractProvider,
-  type Sender,
-} from "@ton/core";
-import { BaseWrapper } from "./BaseWrapper";
-import {
   createCellChain,
   parseGuardianSetKeys,
 } from "@pythnetwork/pyth-ton-js";
+import type { Cell, ContractProvider, Sender } from "@ton/core";
+import { contractAddress } from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;
@@ -31,11 +27,11 @@ export class WormholeTest extends BaseWrapper {
 
   static getWormholeInitData(config: WormholeTestConfig): Cell {
     return BaseWrapper.createInitData({
-      guardianSetIndex: config.guardianSetIndex,
-      guardianSet: config.guardianSet,
       chainId: config.chainId,
       governanceChainId: config.governanceChainId,
       governanceContract: config.governanceContract,
+      guardianSet: config.guardianSet,
+      guardianSetIndex: config.guardianSetIndex,
     });
   }
 
@@ -54,22 +50,22 @@ export class WormholeTest extends BaseWrapper {
   ) {
     const result = await provider.get("test_parse_encoded_upgrade", [
       { type: "int", value: BigInt(currentGuardianSetIndex) },
-      { type: "slice", cell: createCellChain(encodedUpgrade) },
+      { cell: createCellChain(encodedUpgrade), type: "slice" },
     ]);
 
     return {
       action: result.stack.readNumber(),
       chain: result.stack.readNumber(),
       module: result.stack.readBigNumber(),
-      newGuardianSetKeys: parseGuardianSetKeys(result.stack.readCell()),
       newGuardianSetIndex: result.stack.readNumber(),
+      newGuardianSetKeys: parseGuardianSetKeys(result.stack.readCell()),
     };
   }
 
   async getParseAndVerifyWormholeVm(provider: ContractProvider, vm: Buffer) {
     const cell = createCellChain(vm);
     const result = await provider.get("test_parse_and_verify_wormhole_vm", [
-      { type: "slice", cell: cell },
+      { cell: cell, type: "slice" },
     ]);
 
     const version = result.stack.readNumber();
@@ -99,16 +95,16 @@ export class WormholeTest extends BaseWrapper {
     const hash = result.stack.readBigNumber().toString(16);
 
     return {
+      consistency_level,
+      emitter_address,
+      emitter_chain_id,
+      hash,
+      nonce,
+      payload,
+      sequence,
+      timestamp,
       version,
       vm_guardian_set_index,
-      timestamp,
-      nonce,
-      emitter_chain_id,
-      emitter_address,
-      sequence,
-      consistency_level,
-      payload,
-      hash,
     };
   }
 
@@ -130,8 +126,8 @@ export class WormholeTest extends BaseWrapper {
 
     return {
       expirationTime,
-      keys,
       keyCount,
+      keys,
     };
   }
 

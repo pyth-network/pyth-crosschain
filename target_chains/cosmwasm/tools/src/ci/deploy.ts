@@ -3,9 +3,9 @@
 // as well. You can use Dockerfile.cosmwasm in the root of this repo
 // to do that.
 
-import { readdirSync } from "fs";
-import { DeployerFactory } from "./deployer/index.js";
+import { readdirSync } from "node:fs";
 import { CONFIG as NetworkConfig } from "./deployer/config.js";
+import { DeployerFactory } from "./deployer/index.js";
 import { NETWORKS } from "./network.js";
 
 async function deploy() {
@@ -25,29 +25,20 @@ async function deploy() {
   const missing_artifacts = artifacts.filter(
     (a) => !actual_artifacts.includes(a),
   );
-  if (missing_artifacts.length) {
-    console.log(
-      "Error during terra deployment. The following files are expected to be in the artifacts folder:",
-    );
-    missing_artifacts.forEach((file) => console.log(`  - ${file}`));
-    console.log(
-      "Hint: the deploy script needs to run after the contracts have been built.",
-    );
-    console.log(
-      "External binary blobs need to be manually added in tools/Dockerfile.",
-    );
+  if (missing_artifacts.length > 0) {
+    for (const _file of missing_artifacts) {
+      /* legacy no-op */
+    }
     process.exit(1);
   }
 
   const unexpected_artifacts = actual_artifacts.filter(
     (a) => !artifacts.includes(a),
   );
-  if (unexpected_artifacts.length) {
-    console.log(
-      "Error during terra deployment. The following files are not expected to be in the artifacts folder:",
-    );
-    unexpected_artifacts.forEach((file) => console.log(`  - ${file}`));
-    console.log("Hint: you might need to modify tools/deploy.js");
+  if (unexpected_artifacts.length > 0) {
+    for (const _file of unexpected_artifacts) {
+      /* legacy no-op */
+    }
     process.exit(1);
   }
 
@@ -63,7 +54,6 @@ async function deploy() {
     const codeId = await deployer.deployArtifact(`../artifacts/${file}`);
     codeIds[file] = codeId;
   }
-  console.log(codeIds);
 
   /* Instantiate contracts.
    *
@@ -85,9 +75,11 @@ async function deploy() {
     "0000000000000000000000000000000000000000000000000000000000000004";
 
   let inst_msg: Object = {
-    gov_chain: govChain,
+    chain_id: 18,
+    fee_denom: "uluna",
     gov_address: Buffer.from(govAddress, "hex").toString("base64"),
-    guardian_set_expirity: 86400,
+    gov_chain: govChain,
+    guardian_set_expirity: 86_400,
     initial_guardian_set: {
       addresses: [
         {
@@ -99,11 +91,9 @@ async function deploy() {
       ],
       expiration_time: 0,
     },
-    chain_id: 18,
-    fee_denom: "uluna",
   };
-  console.log("Instantiating Wormhole contract");
   addresses[contract] = await deployer.instantiate(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     codeIds[contract]!,
     inst_msg,
     "wormhole",
@@ -118,31 +108,30 @@ async function deploy() {
   const pythChain = 1;
 
   inst_msg = {
-    wormhole_contract: addresses["wormhole.wasm"],
+    chain_id: 3,
     data_sources: [
       {
-        emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
         chain_id: pythChain,
+        emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
       },
     ],
-    governance_source: {
-      emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
-        "base64",
-      ),
-      chain_id: pythChain,
-    },
-    governance_source_index: 0,
-    governance_sequence_number: 0,
-    chain_id: 3,
-    valid_time_period_secs: 60,
     fee: {
       amount: "1",
       denom: "uluna",
     },
+    governance_sequence_number: 0,
+    governance_source: {
+      chain_id: pythChain,
+      emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
+        "base64",
+      ),
+    },
+    governance_source_index: 0,
+    valid_time_period_secs: 60,
+    wormhole_contract: addresses["wormhole.wasm"],
   };
-
-  console.log("Instantiating Pyth contract");
   addresses[contract] = await deployer.instantiate(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     codeIds[contract]!,
     inst_msg,
     "pyth",

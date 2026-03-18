@@ -1,23 +1,26 @@
+// biome-ignore-all lint/suspicious/useAwait: Async wrappers for API consistency
 import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import { lookup } from "@pythnetwork/known-publishers";
-import type { StakeAccountPositions } from "@pythnetwork/staking-sdk";
+import type {
+  PythnetClient,
+  PythStakingClient,
+  StakeAccountPositions,
+} from "@pythnetwork/staking-sdk";
 import {
   epochToDate,
   extractPublisherData,
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
-  PythnetClient,
-  PythStakingClient,
 } from "@pythnetwork/staking-sdk";
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
 const publishersRankingSchema = z
   .object({
+    numSymbols: z.number(),
     publisher: z.string(),
     rank: z.number(),
-    numSymbols: z.number(),
     timestamp: z.string(),
   })
   .array();
@@ -79,8 +82,8 @@ export enum StakeType {
 const StakeDetails = {
   Governance: () => ({ type: StakeType.Governance as const }),
   IntegrityStaking: (publisherName: string) => ({
-    type: StakeType.IntegrityStaking as const,
     publisherName,
+    type: StakeType.IntegrityStaking as const,
   }),
 };
 
@@ -128,18 +131,18 @@ const loadDataNoStakeAccount = async (
 
   return {
     ...baseInfo,
-    lastSlash: undefined,
     availableRewards: 0n,
     expiringRewards: undefined,
-    total: 0n,
     governance: {
-      warmup: 0n,
-      staked: 0n,
       cooldown: 0n,
       cooldown2: 0n,
+      staked: 0n,
+      warmup: 0n,
     },
-    unlockSchedule: [],
     integrityStakingPublishers: publishers,
+    lastSlash: undefined,
+    total: 0n,
+    unlockSchedule: [],
   };
 };
 
@@ -166,10 +169,10 @@ const loadDataForStakeAccount = async (
 
   const filterGovernancePositions = (positionState: PositionState) =>
     getAmountByTargetAndState({
+      epoch: baseInfo.currentEpoch,
+      positionState,
       stakeAccountPositions,
       targetWithParameters: { voting: {} },
-      positionState,
-      epoch: baseInfo.currentEpoch,
     });
 
   const filterOISPositions = (
@@ -177,30 +180,25 @@ const loadDataForStakeAccount = async (
     positionState: PositionState,
   ) =>
     getAmountByTargetAndState({
+      epoch: baseInfo.currentEpoch,
+      positionState,
       stakeAccountPositions,
       targetWithParameters: { integrityPool: { publisher } },
-      positionState,
-      epoch: baseInfo.currentEpoch,
     });
 
   return {
     ...baseInfo,
-    lastSlash: undefined, // TODO
     availableRewards: claimableRewards.totalRewards,
     expiringRewards: claimableRewards.expiry,
-    total: stakeAccountCustody.amount,
     governance: {
-      warmup: filterGovernancePositions(PositionState.LOCKING),
-      staked: filterGovernancePositions(PositionState.LOCKED),
       cooldown: filterGovernancePositions(PositionState.PREUNLOCKING),
       cooldown2: filterGovernancePositions(PositionState.UNLOCKING),
+      staked: filterGovernancePositions(PositionState.LOCKED),
+      warmup: filterGovernancePositions(PositionState.LOCKING),
     },
-    unlockSchedule: unlockSchedule.schedule,
     integrityStakingPublishers: publishers.map((publisher) => ({
       ...publisher,
       positions: {
-        warmup: filterOISPositions(publisher.publicKey, PositionState.LOCKING),
-        staked: filterOISPositions(publisher.publicKey, PositionState.LOCKED),
         cooldown: filterOISPositions(
           publisher.publicKey,
           PositionState.PREUNLOCKING,
@@ -209,8 +207,13 @@ const loadDataForStakeAccount = async (
           publisher.publicKey,
           PositionState.UNLOCKING,
         ),
+        staked: filterOISPositions(publisher.publicKey, PositionState.LOCKED),
+        warmup: filterOISPositions(publisher.publicKey, PositionState.LOCKING),
       },
     })),
+    lastSlash: undefined, // TODO
+    total: stakeAccountCustody.amount,
+    unlockSchedule: unlockSchedule.schedule,
   };
 };
 
@@ -229,11 +232,11 @@ const loadBaseInfo = async (
     ]);
 
   return {
-    yieldRate: poolConfig.y,
-    walletAmount,
-    publishers,
     currentEpoch,
     m: parameters.m,
+    publishers,
+    walletAmount,
+    yieldRate: poolConfig.y,
     z: parameters.z,
   };
 };
@@ -260,13 +263,14 @@ const loadPublisherData = async (
     );
     const numberOfSymbols = publisherNumberOfSymbols[publisherPubkeyString];
     const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
-      date: epochToDate(epoch + 1n),
       apy,
+      date: epochToDate(epoch + 1n),
       selfApy,
     }));
 
     return {
       apyHistory,
+      delegationFee: publisher.delegationFee,
       identity: lookup(publisher.pubkey.toBase58()),
       numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
@@ -277,7 +281,6 @@ const loadPublisherData = async (
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
-      delegationFee: publisher.delegationFee,
     };
   });
 };

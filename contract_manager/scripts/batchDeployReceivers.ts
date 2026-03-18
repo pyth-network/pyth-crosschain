@@ -37,25 +37,25 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     contract: {
-      type: "string",
       demandOption: true,
       desc: "Path to the contract json file containing abi and bytecode",
+      type: "string",
     },
     network: {
-      type: "string",
-      demandOption: true,
       choices: ["testnet", "mainnet"],
-      desc: "The network to deploy the contract on",
-    },
-    "private-key": {
-      type: "string",
       demandOption: true,
-      desc: "Private key to sign the transactions. Hex format, without 0x prefix.",
+      desc: "The network to deploy the contract on",
+      type: "string",
     },
     "ops-wallet": {
-      type: "string",
       demandOption: true,
       desc: "Path to operations wallet json file",
+      type: "string",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions. Hex format, without 0x prefix.",
+      type: "string",
     },
   });
 
@@ -97,7 +97,6 @@ async function main() {
         wormholeGovernanceContract,
         wormholeInitialSigners,
       } = getDefaultConfig(chain.getId());
-      console.log(chain.getId());
       const address = await memoize(chain.getId(), async () => {
         const setupAddress = await chain.deploy(
           privateKey as PrivateKey,
@@ -105,14 +104,12 @@ async function main() {
           setupInfo.bytecode,
           [],
         );
-        console.log("setupAddress", setupAddress);
         const implementationAddress = await chain.deploy(
           privateKey as PrivateKey,
           implementationInfo.abi,
           implementationInfo.bytecode,
           [],
         );
-        console.log("implementationAddress", implementationAddress);
         const web3 = new Web3();
         const setup = new web3.eth.Contract(setupInfo.abi, setupAddress);
         const initData = setup.methods
@@ -133,9 +130,7 @@ async function main() {
           [setupAddress, initData],
         );
         const contract = new EvmWormholeContract(chain, receiverAddress);
-        console.log("receiverAddress", receiverAddress);
         await contract.syncMainnetGuardianSets(privateKey as PrivateKey);
-        console.log("synced");
         return contract.address;
       });
       const payload = chain.generateGovernanceSetWormholeAddressPayload(

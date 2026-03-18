@@ -17,25 +17,25 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path>",
   )
   .options({
-    testnet: {
-      type: "boolean",
-      default: false,
-      desc: "Accept for testnet contracts instead of mainnet",
-    },
     "all-chains": {
-      type: "boolean",
       default: false,
       desc: "Accept for contract on all chains. Use with --testnet flag to accept for all testnet contracts",
+      type: "boolean",
     },
     chain: {
-      type: "array",
-      string: true,
       desc: "Accept for contract on given chains",
+      string: true,
+      type: "array",
     },
     "ops-key-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the private key of the proposer to use for the operations multisig governance proposal",
+      type: "string",
+    },
+    testnet: {
+      default: false,
+      desc: "Accept for testnet contracts instead of mainnet",
+      type: "boolean",
     },
   });
 
@@ -74,7 +74,6 @@ async function main() {
   const payloads: Buffer[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
-      console.log("Creating payload for chain:", contract.chain.getId());
       const pendingOwner = await contract.getPendingOwner();
       const adminPayload = contract.generateAcceptAdminPayload(pendingOwner);
       const ownerPayload =
@@ -83,14 +82,10 @@ async function main() {
       payloads.push(adminPayload, ownerPayload);
     }
   }
-
-  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet", wallet.publicKey.toBase58());
   // eslint-disable-next-line @typescript-eslint/await-thenable
   await vault?.connect(wallet);
-  const proposal = await vault?.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal?.address.toBase58());
+  const _proposal = await vault?.proposeWormholeMessage(payloads);
 }
 
 main();

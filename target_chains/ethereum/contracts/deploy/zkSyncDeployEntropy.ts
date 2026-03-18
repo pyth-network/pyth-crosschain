@@ -1,24 +1,26 @@
+// biome-ignore-all lint/style/noProcessEnv: Deploy script uses env vars for configuration
+// biome-ignore lint/style/noCommonJs: dotenv requires CommonJS for immediate initialization
 require("dotenv").config({ path: ".env" });
-import { utils, Wallet } from "zksync-web3";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { CHAINS } from "@pythnetwork/xc-admin-common";
-import { assert } from "chai";
 import {
   DefaultStore,
-  EvmChain,
-  EvmEntropyContract,
-  EvmWormholeContract,
   ENTROPY_DEFAULT_PROVIDER,
+  EvmEntropyContract,
 } from "@pythnetwork/contract-manager";
+import { CHAINS } from "@pythnetwork/xc-admin-common";
+import { assert } from "chai";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Wallet } from "zksync-web3";
 import {
-  findWormholeContract,
   deployWormholeContract,
+  findWormholeContract,
 } from "./zkSyncDeployWormhole";
 
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
+// biome-ignore lint/style/noCommonJs: Dynamic import required for config resolution
 const { getDefaultConfig } = require("../scripts/contractManagerConfig");
 
 function envOrErr(name: string): string {
@@ -51,8 +53,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   let wormholeReceiverContractAddress = await findWormholeContract(chainName);
   if (!wormholeReceiverContractAddress) {
-    console.log(`Wormhole contract not found for chain ${chainName}`);
-    console.log("Deploying Wormhole contract...");
     wormholeReceiverContractAddress = await deployWormholeContract(
       deployer,
       chainName,
@@ -62,11 +62,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
       wormholeReceiverChainId,
     );
   }
-
-  console.log(
-    "WormholeReceiver contract address:",
-    wormholeReceiverContractAddress,
-  );
 
   // // TODO: Top up accounts if necessary
 
@@ -78,18 +73,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     governanceEmitter,
   );
 
-  console.log("Executor contract address:", executorContractAddress);
-
   const entropyContractAddress = await deployEntropyContract(
     deployer,
     executorContractAddress,
     wormholeReceiverChainId,
     isMainnet,
   );
-
-  console.log("Entropy contract address:", entropyContractAddress);
-
-  console.log("Saving the contract in the store...");
   const chain = DefaultStore.chains[chainName];
   const contract = new EvmEntropyContract(chain, entropyContractAddress);
   DefaultStore.entropy_contracts[contract.getId()] = contract;
@@ -106,10 +95,6 @@ async function deployExecutorContract(
   const executorImplArtifact =
     await deployer.loadArtifact("ExecutorUpgradable");
   const executorImplContract = await deployer.deploy(executorImplArtifact);
-  console.log(
-    "Deployed ExecutorImpl contract on",
-    executorImplContract.address,
-  );
 
   const executorInitData = executorImplContract.interface.encodeFunctionData(
     "initialize",
@@ -129,15 +114,13 @@ async function deployExecutorContract(
     executorInitData,
   ]);
 
-  console.log(`Deployed Executor contract on ${executorProxyContract.address}`);
-
   return executorProxyContract.address;
 }
 
 async function deployEntropyContract(
   deployer: Deployer,
   executorContractAddress: string,
-  chainId: number,
+  _chainId: number,
   isMainnet: boolean,
 ) {
   const entropyImplArtifact = await deployer.loadArtifact("EntropyUpgradable");

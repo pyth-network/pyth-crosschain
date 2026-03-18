@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const solc = require("solc");
 
 /**
@@ -11,7 +11,7 @@ function generateAbi(contracts) {
   var sources = {};
   var outputSelection = {};
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
     sources[contractFile] = {
       content: fs.readFileSync(contractFile).toString(),
@@ -22,7 +22,6 @@ function generateAbi(contracts) {
 
   var input = {
     language: "Solidity",
-    sources,
     settings: {
       outputSelection,
       remappings: [
@@ -30,6 +29,7 @@ function generateAbi(contracts) {
         "@pythnetwork/=./node_modules/@pythnetwork/",
       ],
     },
+    sources,
   };
 
   function findImports(path) {
@@ -51,15 +51,13 @@ function generateAbi(contracts) {
     // We can still generate ABIs with warnings, only throw for errors
     const errors = output.errors.filter((e) => e.severity === "error");
     if (errors.length > 0) {
-      console.error("Compilation errors:");
-      for (const error of errors) {
-        console.error(error.formattedMessage || error.message);
+      for (const _error of errors) {
       }
       throw new Error("Compilation failed due to errors");
     }
   }
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
 
     if (!output.contracts[contractFile]) {
@@ -71,7 +69,7 @@ function generateAbi(contracts) {
     const abi = output.contracts[contractFile][contract].abi;
     fs.writeFileSync(
       `abis/${contract}.json`,
-      JSON.stringify(abi, null, 2) + "\n",
+      `${JSON.stringify(abi, null, 2)}\n`,
     );
   }
 }

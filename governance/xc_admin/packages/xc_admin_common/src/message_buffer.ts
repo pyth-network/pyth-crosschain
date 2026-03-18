@@ -1,7 +1,5 @@
-import {
-  getPythProgramKeyForCluster,
-  type PythCluster,
-} from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client";
+import { getPythProgramKeyForCluster } from "@pythnetwork/client";
 import { PublicKey } from "@solana/web3.js";
 
 /**

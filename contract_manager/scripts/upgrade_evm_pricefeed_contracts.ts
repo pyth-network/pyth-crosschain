@@ -1,21 +1,15 @@
-/* eslint-disable @typescript-eslint/await-thenable */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable no-console */
 import { readFileSync } from "node:fs";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { toPrivateKey } from "../src/core/base";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { toPrivateKey } from "../src/core/base";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
 
 const CACHE_FILE = ".cache-upgrade-evm";
 const runIfNotCached = makeCacheFunction(CACHE_FILE);
@@ -37,16 +31,14 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
 
-  console.log("Using cache file", CACHE_FILE);
-  console.log(
-    "Upgrading on chains",
-    selectedChains.map((c) => c.getId()),
-  );
+  const stdOutput = argv["std-output"];
+  if (!stdOutput) {
+    throw new Error("--std-output is required");
+  }
 
   const payloads: Buffer[] = [];
   for (const chain of selectedChains) {
-    const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
-    console.log("Deploying contract to", chain.getId());
+    const artifact = JSON.parse(readFileSync(stdOutput, "utf8"));
     const address = await runIfNotCached(`deploy-${chain.getId()}`, () => {
       return chain.deploy(
         toPrivateKey(argv["private-key"]),
@@ -55,18 +47,13 @@ async function main() {
         [],
       );
     });
-    console.log(`Deployed contract at ${address} on ${chain.getId()}`);
     payloads.push(
       chain.generateGovernanceUpgradePayload(address.replace("0x", "")),
     );
   }
-
-  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet", wallet.publicKey.toBase58());
   await vault?.connect(wallet);
-  const proposal = await vault?.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal?.address.toBase58());
+  await vault?.proposeWormholeMessage(payloads);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

@@ -2,11 +2,11 @@ import { useLocalStorageValue } from "@react-hookz/web";
 import clsx from "clsx";
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import type { ComponentProps, ReactNode, FormEvent } from "react";
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { Tabs, TabList, TabPanel, Tab, Form } from "react-aria-components";
+import type { ComponentProps, FormEvent, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Form, Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
-import type { States, StateType as ApiStateType } from "../../hooks/use-api";
+import type { StateType as ApiStateType, States } from "../../hooks/use-api";
 import { AccountSummary } from "../AccountSummary";
 import { Button, LinkButton } from "../Button";
 import { Checkbox } from "../Checkbox";
@@ -127,8 +127,8 @@ export const Dashboard = ({
   );
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [tab]);
+    window.scrollTo({ behavior: "smooth", top: 0 });
+  }, []);
 
   return (
     <>
@@ -139,49 +139,49 @@ export const Dashboard = ({
       >
         <AccountSummary
           api={api}
-          locked={locked}
-          unlockSchedule={unlockSchedule}
-          lastSlash={lastSlash}
-          walletAmount={walletAmount}
-          total={total}
-          availableToWithdraw={availableToWithdraw}
           availableRewards={availableRewards}
-          expiringRewards={expiringRewards}
+          availableToWithdraw={availableToWithdraw}
+          currentEpoch={currentEpoch}
           enableGovernance={enableGovernance}
           enableOis={enableOis}
-          integrityStakingWarmup={integrityStakingWarmup}
-          integrityStakingStaked={integrityStakingStaked}
+          expiringRewards={expiringRewards}
           integrityStakingCooldown={integrityStakingCooldown}
           integrityStakingCooldown2={integrityStakingCooldown2}
-          currentEpoch={currentEpoch}
+          integrityStakingStaked={integrityStakingStaked}
+          integrityStakingWarmup={integrityStakingWarmup}
+          lastSlash={lastSlash}
+          locked={locked}
+          total={total}
+          unlockSchedule={unlockSchedule}
+          walletAmount={walletAmount}
         />
         {enableOis ? (
           <Tabs
-            selectedKey={tab}
-            onSelectionChange={setTab}
             className="group border-neutral-600/50 data-[empty]:my-[5dvh] data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 sm:p-4 data-[empty]:sm:my-0 data-[empty]:sm:border-0 data-[empty]:sm:bg-transparent data-[empty]:sm:p-0"
+            onSelectionChange={setTab}
+            selectedKey={tab}
             {...(tab === TabIds.Empty && { "data-empty": true })}
           >
             <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:mb-10 group-data-[empty]:block sm:mb-6 sm:text-3xl group-data-[empty]:sm:mb-6 lg:my-6 lg:text-5xl">
               Choose Your Journey
             </h1>
             <TabList className="sticky top-header-height z-10 flex flex-row items-stretch justify-center group-data-[empty]:mx-auto group-data-[empty]:max-w-7xl group-data-[empty]:flex-col group-data-[empty]:gap-8 group-data-[empty]:sm:flex-row group-data-[empty]:sm:gap-2">
-              <Tab id={TabIds.Empty} className="hidden" />
+              <Tab className="hidden" id={TabIds.Empty} />
               <Journey
+                id={TabIds.IntegrityStaking}
+                image={ois}
                 longText="Oracle Integrity Staking (OIS)"
                 shortText="OIS"
-                image={ois}
-                id={TabIds.IntegrityStaking}
               >
                 <span>Secure the Oracle</span>
                 <br />
                 <span className="font-semibold">to Earn Rewards</span>
               </Journey>
               <Journey
+                id={TabIds.Governance}
+                image={governanceImage}
                 longText="Pyth Governance"
                 shortText="Governance"
-                image={governanceImage}
-                id={TabIds.Governance}
               >
                 <span>Gain Voting Power</span>
                 <br />
@@ -192,40 +192,40 @@ export const Dashboard = ({
             <TabPanel id={TabIds.IntegrityStaking}>
               <OracleIntegrityStaking
                 api={api}
-                currentEpoch={currentEpoch}
                 availableToStake={availableToStakeIntegrity}
-                locked={locked}
-                warmup={integrityStakingWarmup}
-                staked={integrityStakingStaked}
                 cooldown={integrityStakingCooldown}
                 cooldown2={integrityStakingCooldown2}
+                currentEpoch={currentEpoch}
+                locked={locked}
                 publishers={integrityStakingPublishers}
+                staked={integrityStakingStaked}
+                warmup={integrityStakingWarmup}
                 yieldRate={yieldRate}
               />
             </TabPanel>
             <TabPanel id={TabIds.Governance}>
               <Governance
+                allowStaking={enableGovernance}
                 api={api}
-                currentEpoch={currentEpoch}
                 availableToStake={availableToStakeGovernance}
-                warmup={governance.warmup}
-                staked={governance.staked}
                 cooldown={governance.cooldown}
                 cooldown2={governance.cooldown2}
-                allowStaking={enableGovernance}
+                currentEpoch={currentEpoch}
+                staked={governance.staked}
+                warmup={governance.warmup}
               />
             </TabPanel>
           </Tabs>
         ) : (
           <Governance
+            allowStaking={enableGovernance}
             api={api}
-            currentEpoch={currentEpoch}
             availableToStake={availableToStakeGovernance}
-            warmup={governance.warmup}
-            staked={governance.staked}
             cooldown={governance.cooldown}
             cooldown2={governance.cooldown2}
-            allowStaking={enableGovernance}
+            currentEpoch={currentEpoch}
+            staked={governance.staked}
+            warmup={governance.warmup}
           />
         )}
       </main>
@@ -281,7 +281,7 @@ const Journey = ({
     </div>
     <div className="relative hidden w-4/5 flex-none overflow-hidden opacity-30 transition group-hover/tab:opacity-100 group-data-[empty]:sm:block">
       <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
-      <Image src={image} alt="" className="size-full object-cover object-top" />
+      <Image alt="" className="size-full object-cover object-top" src={image} />
       <div className="absolute inset-0 top-16 text-center text-xl text-pythpurple-800 md:text-2xl lg:text-3xl">
         {children}
       </div>
@@ -311,9 +311,9 @@ const Disclosure = () => {
 
   return (
     <ModalDialog
-      title="Legal Notice - Local Restrictions"
       isOpen={hasAcknowledgedLegal.value === null}
       noClose
+      title="Legal Notice - Local Restrictions"
     >
       <Form onSubmit={acknowledge}>
         <p className="max-w-prose text-sm opacity-60">
@@ -356,22 +356,22 @@ const Disclosure = () => {
           By checking the box and access the Services, you acknowledge and agree
           to the terms and conditions of our{" "}
           <Link
+            className="underline"
             href="https://www.pyth.network/terms-of-use"
             target="_blank"
-            className="underline"
           >
             Terms of Use
           </Link>{" "}
           ,{" "}
           <Link
+            className="underline"
             href="https://www.pyth.network/privacy-policy"
             target="_blank"
-            className="underline"
           >
             Privacy Policy
           </Link>
           , and{" "}
-          <Link href="/terms-of-service" className="underline">
+          <Link className="underline" href="/terms-of-service">
             Terms of Service
           </Link>
           .
@@ -380,16 +380,16 @@ const Disclosure = () => {
           <LinkButton
             className="w-full sm:w-auto"
             href="https://pyth.network/"
-            variant="secondary"
             size="noshrink"
+            variant="secondary"
           >
             Exit
           </LinkButton>
           <Button
             className="w-full sm:w-auto"
+            isDisabled={!understood || !agreed}
             size="noshrink"
             type="submit"
-            isDisabled={!understood || !agreed}
           >
             Confirm
           </Button>

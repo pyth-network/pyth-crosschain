@@ -4,13 +4,11 @@ import { z } from "zod";
 import { getHistoricalPrices } from "../../services/clickhouse";
 
 const queryParamsSchema = z.object({
-  symbol: z.string().transform(decodeURIComponent),
+  from: z.string().transform(Number),
   publisher: z
     .string()
     .nullable()
     .transform((value) => value ?? undefined),
-  from: z.string().transform(Number),
-  to: z.string().transform(Number),
   resolution: z.enum(["1s", "1m", "5m", "1H", "1D"]).transform((value) => {
     switch (value) {
       case "1s": {
@@ -30,6 +28,8 @@ const queryParamsSchema = z.object({
       }
     }
   }),
+  symbol: z.string().transform(decodeURIComponent),
+  to: z.string().transform(Number),
 });
 
 export async function GET(req: NextRequest) {
@@ -56,11 +56,11 @@ export async function GET(req: NextRequest) {
   }
 
   const res = await getHistoricalPrices({
-    symbol,
     from,
-    to,
     publisher,
     resolution,
+    symbol,
+    to,
   });
 
   return Response.json(res);
@@ -73,11 +73,11 @@ const ONE_MINUTE_IN_SECONDS = 60;
 const ONE_HOUR_IN_SECONDS = 60 * ONE_MINUTE_IN_SECONDS;
 
 const SECONDS_IN_ONE_PERIOD: Record<Resolution, number> = {
-  "1 SECOND": 1,
-  "1 MINUTE": ONE_MINUTE_IN_SECONDS,
-  "5 MINUTE": 5 * ONE_MINUTE_IN_SECONDS,
-  "1 HOUR": ONE_HOUR_IN_SECONDS,
   "1 DAY": 24 * ONE_HOUR_IN_SECONDS,
+  "1 HOUR": ONE_HOUR_IN_SECONDS,
+  "1 MINUTE": ONE_MINUTE_IN_SECONDS,
+  "1 SECOND": 1,
+  "5 MINUTE": 5 * ONE_MINUTE_IN_SECONDS,
 };
 
 const getNumDataPoints = (from: number, to: number, resolution: Resolution) =>

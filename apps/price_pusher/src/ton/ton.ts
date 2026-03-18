@@ -1,12 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
-  PythContract,
   calculateUpdatePriceFeedsFee,
+  PythContract,
 } from "@pythnetwork/pyth-ton-js";
 import { keyPairFromSeed } from "@ton/crypto";
-import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
-import { Address, TonClient, WalletContractV4 } from "@ton/ton";
+import type {
+  Address,
+  ContractProvider,
+  OpenedContract,
+  Sender,
+  TonClient,
+} from "@ton/ton";
+import { WalletContractV4 } from "@ton/ton";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -94,7 +100,7 @@ export class TonPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -115,7 +121,7 @@ export class TonPricePusher implements IPricePusher {
       }
 
       this.logger.info("updatePriceFeed successful");
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
     }
   }

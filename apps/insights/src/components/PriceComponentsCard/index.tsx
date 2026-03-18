@@ -10,39 +10,34 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import type {
-  RowConfig,
   ColumnConfig,
+  RowConfig,
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import {
-  useQueryState,
-  parseAsStringEnum,
   parseAsBoolean,
+  parseAsStringEnum,
+  useQueryState,
 } from "@pythnetwork/react-hooks/nuqs";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { Fragment, Suspense, useMemo, useCallback } from "react";
-import { useFilter, useCollator } from "react-aria";
-
-import styles from "./index.module.scss";
-import { Cluster } from "../../services/pyth";
-import type { StatusName } from "../../status";
-import {
-  STATUS_NAMES,
-  Status as StatusType,
-  statusNameToStatus,
-} from "../../status";
+import { Fragment, Suspense, useCallback, useMemo } from "react";
+import { useCollator, useFilter } from "react-aria";
+import type { Cluster } from "../../services/pyth";
+import type { StatusName, Status as StatusType } from "../../status";
+import { STATUS_NAMES, statusNameToStatus } from "../../status";
 import { Explain } from "../Explain";
 import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
-import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
+import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
+import styles from "./index.module.scss";
 
 const SCORE_WIDTH = 32;
 
@@ -206,20 +201,15 @@ export const ResolvedPriceComponentsCard = <
     },
     (items) => items,
     {
+      defaultDescending: false,
       defaultPageSize: 50,
       defaultSort: "name",
-      defaultDescending: false,
     },
   );
 
   const rows = useMemo(
     () =>
       paginatedItems.map((component) => ({
-        id: component.id,
-        nameAsString: component.nameAsString,
-        onAction: () => {
-          selectComponent(component);
-        },
         data: {
           name: component.name,
           ...Object.fromEntries(
@@ -228,50 +218,55 @@ export const ResolvedPriceComponentsCard = <
               component[column.id],
             ]) ?? [],
           ),
-          score: component.score !== undefined && (
-            <Score score={component.score} width={SCORE_WIDTH} />
-          ),
-          uptimeScore: component.uptimeScore !== undefined && (
-            <FormattedNumber
-              value={component.uptimeScore}
-              maximumSignificantDigits={5}
+          confidence: (
+            <LiveConfidence
+              cluster={component.cluster}
+              feedKey={component.feedKey}
+              publisherKey={component.publisherKey}
             />
           ),
           deviationScore: component.deviationScore !== undefined && (
             <FormattedNumber
+              maximumSignificantDigits={5}
               value={component.deviationScore}
-              maximumSignificantDigits={5}
-            />
-          ),
-          stalledScore: component.stalledScore !== undefined && (
-            <FormattedNumber
-              value={component.stalledScore}
-              maximumSignificantDigits={5}
-            />
-          ),
-          slot: (
-            <LiveComponentValue
-              feedKey={component.feedKey}
-              publisherKey={component.publisherKey}
-              field="publishSlot"
-              cluster={component.cluster}
             />
           ),
           price: (
             <LivePrice
+              cluster={component.cluster}
               feedKey={component.feedKey}
               publisherKey={component.publisherKey}
-              cluster={component.cluster}
             />
           ),
-          confidence: (
-            <LiveConfidence
-              feedKey={component.feedKey}
-              publisherKey={component.publisherKey}
+          score: component.score !== undefined && (
+            <Score score={component.score} width={SCORE_WIDTH} />
+          ),
+          slot: (
+            <LiveComponentValue
               cluster={component.cluster}
+              feedKey={component.feedKey}
+              field="publishSlot"
+              publisherKey={component.publisherKey}
+            />
+          ),
+          stalledScore: component.stalledScore !== undefined && (
+            <FormattedNumber
+              maximumSignificantDigits={5}
+              value={component.stalledScore}
             />
           ),
           status: <StatusComponent status={component.status} />,
+          uptimeScore: component.uptimeScore !== undefined && (
+            <FormattedNumber
+              maximumSignificantDigits={5}
+              value={component.uptimeScore}
+            />
+          ),
+        },
+        id: component.id,
+        nameAsString: component.nameAsString,
+        onAction: () => {
+          selectComponent(component);
         },
       })),
     [paginatedItems, props.extraColumns, selectComponent],
@@ -298,22 +293,22 @@ export const ResolvedPriceComponentsCard = <
 
   return (
     <PriceComponentsCardContents
-      numResults={numResults}
-      search={search}
-      sortDescriptor={sortDescriptor}
+      mkPageLink={mkPageLink}
       numPages={numPages}
-      page={page}
-      pageSize={pageSize}
+      numResults={numResults}
+      onPageChange={updatePage}
+      onPageSizeChange={updatePageSize}
       onSearchChange={updateSearch}
       onSortChange={updateSortDescriptor}
-      onPageSizeChange={updatePageSize}
-      onPageChange={updatePage}
-      mkPageLink={mkPageLink}
-      rows={rows}
-      status={status}
       onStatusChange={updateStatus}
-      showQuality={showQuality}
+      page={page}
+      pageSize={pageSize}
+      rows={rows}
+      search={search}
       setShowQuality={updateShowQuality}
+      showQuality={showQuality}
+      sortDescriptor={sortDescriptor}
+      status={status}
       {...props}
     />
   );
@@ -377,7 +372,7 @@ export const PriceComponentsCardContents = <
       title={
         <>
           <span>{label}</span>
-          <Badge style="filled" variant="neutral" size="md">
+          <Badge size="md" style="filled" variant="neutral">
             {!props.isLoading && props.numResults}
           </Badge>
         </>
@@ -385,60 +380,60 @@ export const PriceComponentsCardContents = <
       toolbar={
         <div className={styles.toolbar}>
           {toolbarExtra && (
-            <div data-section="extra" className={styles.toolbarSection}>
+            <div className={styles.toolbarSection} data-section="extra">
               {toolbarExtra}
             </div>
           )}
-          <div data-section="search" className={styles.toolbarSection}>
+          <div className={styles.toolbarSection} data-section="search">
             <Select<{ id: StatusName | "" }>
-              label="Status"
-              size="sm"
-              variant="outline"
               hideLabel
+              label="Status"
               options={[
                 { id: "" },
                 ...Object.values(STATUS_NAMES)
                   .toSorted((a, b) => collator.compare(a, b))
                   .map((id) => ({ id })),
               ]}
+              size="sm"
+              variant="outline"
               {...(props.isLoading
-                ? { isPending: true, buttonLabel: "Status" }
+                ? { buttonLabel: "Status", isPending: true }
                 : {
-                    show: ({ id }) => (id === "" ? "All" : id),
-                    placement: "bottom end",
                     buttonLabel: props.status === "" ? "Status" : props.status,
-                    selectedKey: props.status,
                     onSelectionChange: props.onStatusChange,
+                    placement: "bottom end",
+                    selectedKey: props.status,
+                    show: ({ id }) => (id === "" ? "All" : id),
                   })}
             />
             <SearchInput
+              className={styles.searchInput ?? ""}
+              placeholder={searchPlaceholder}
               size="sm"
               width={60}
-              placeholder={searchPlaceholder}
-              className={styles.searchInput ?? ""}
               {...(props.isLoading
-                ? { isPending: true, isDisabled: true }
+                ? { isDisabled: true, isPending: true }
                 : {
-                    value: props.search,
                     onChange: props.onSearchChange,
+                    value: props.search,
                   })}
             />
           </div>
-          <div data-section="mode" className={styles.toolbarSection}>
+          <div className={styles.toolbarSection} data-section="mode">
             <SingleToggleGroup
               className={styles.modeSelect ?? ""}
               {...(!props.isLoading && {
-                selectedKey: props.showQuality ? "quality" : "prices",
                 onSelectionChange: (newValue) => {
                   props.setShowQuality(newValue === "quality");
                 },
+                selectedKey: props.showQuality ? "quality" : "prices",
               })}
               items={[
                 {
-                  id: "prices",
                   children: <PriceName assetClass={props.assetClass} plural />,
+                  id: "prices",
                 },
-                { id: "quality", children: "Quality" },
+                { children: "Quality", id: "quality" },
               ]}
             />
           </div>
@@ -447,20 +442,18 @@ export const PriceComponentsCardContents = <
       {...(!props.isLoading && {
         footer: (
           <Paginator
-            numPages={props.numPages}
             currentPage={props.page}
-            onPageChange={props.onPageChange}
-            pageSize={props.pageSize}
-            onPageSizeChange={props.onPageSizeChange}
             mkPageLink={props.mkPageLink}
+            numPages={props.numPages}
+            onPageChange={props.onPageChange}
+            onPageSizeChange={props.onPageSizeChange}
+            pageSize={props.pageSize}
           />
         ),
       })}
     >
       <EntityList
-        label={label}
         className={styles.entityList ?? ""}
-        headerLoadingSkeleton={nameLoadingSkeleton}
         fields={[
           { id: "slot", name: "Slot" },
           { id: "price", name: "Price" },
@@ -471,13 +464,14 @@ export const PriceComponentsCardContents = <
           { id: "score", name: "Final Score" },
           { id: "status", name: "Status" },
         ]}
+        headerLoadingSkeleton={nameLoadingSkeleton}
         isLoading={props.isLoading}
+        label={label}
         rows={
           props.isLoading
             ? []
             : props.rows.map((row) => ({
                 ...row,
-                textValue: row.nameAsString,
                 header: (
                   <>
                     {row.data.name}
@@ -486,30 +480,28 @@ export const PriceComponentsCardContents = <
                     ))}
                   </>
                 ),
+                textValue: row.nameAsString,
               }))
         }
       />
       <Table
-        label={label}
-        fill
-        rounded
-        stickyHeader="appHeader"
         className={styles.table ?? ""}
         columns={[
           {
-            id: "name",
-            name: "NAME / ID",
             alignment: "left",
+            allowsSorting: true,
+            id: "name",
             isRowHeader: true,
             loadingSkeleton: nameLoadingSkeleton,
-            allowsSorting: true,
+            name: "NAME / ID",
             ...(nameWidth !== undefined && { width: nameWidth }),
           },
           ...(extraColumns ?? []),
           ...otherColumns(props),
           {
+            alignment: "right",
+            allowsSorting: true,
             id: "status",
-            width: 20,
             name: (
               <>
                 STATUS
@@ -534,25 +526,28 @@ export const PriceComponentsCardContents = <
                 </Explain>
               </>
             ),
-            alignment: "right",
-            allowsSorting: true,
+            width: 20,
           },
         ]}
+        fill
+        label={label}
+        rounded
+        stickyHeader="appHeader"
         {...(props.isLoading
           ? { isLoading: true }
           : {
-              rows: props.rows,
-              sortDescriptor: props.sortDescriptor,
-              onSortChange: props.onSortChange,
               emptyState: (
                 <NoResults
-                  query={props.search}
                   onClearSearch={() => {
                     props.onSearchChange("");
                     props.onStatusChange("");
                   }}
+                  query={props.search}
                 />
               ),
+              onSortChange: props.onSortChange,
+              rows: props.rows,
+              sortDescriptor: props.sortDescriptor,
             })}
       />
     </Card>
@@ -573,8 +568,9 @@ const otherColumns = ({
     return props.showQuality
       ? [
           {
+            alignment: "center" as const,
+            allowsSorting: true,
             id: "uptimeScore",
-            width: 20,
             name: (
               <>
                 UPTIME SCORE
@@ -587,20 +583,20 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#uptime-1"
                     size="xs"
-                    variant="solid"
                     target="_blank"
+                    variant="solid"
                   >
                     Read more
                   </Button>
                 </Explain>
               </>
             ),
-            alignment: "center" as const,
-            allowsSorting: true,
+            width: 20,
           },
           {
+            alignment: "center" as const,
+            allowsSorting: true,
             id: "deviationScore",
-            width: 20,
             name: (
               <>
                 DEVIATION SCORE
@@ -619,20 +615,20 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#price-deviation-1"
                     size="xs"
-                    variant="solid"
                     target="_blank"
+                    variant="solid"
                   >
                     Read more
                   </Button>
                 </Explain>
               </>
             ),
-            alignment: "center" as const,
-            allowsSorting: true,
+            width: 20,
           },
           {
+            alignment: "center" as const,
+            allowsSorting: true,
             id: "stalledScore",
-            width: 20,
             name: (
               <>
                 STALLED SCORE
@@ -652,19 +648,21 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#lack-of-stalled-prices-1"
                     size="xs"
-                    variant="solid"
                     target="_blank"
+                    variant="solid"
                   >
                     Read more
                   </Button>
                 </Explain>
               </>
             ),
-            alignment: "center" as const,
-            allowsSorting: true,
+            width: 20,
           },
           {
+            alignment: "left" as const,
+            allowsSorting: true,
             id: "score",
+            loadingSkeleton: <Score isLoading width={SCORE_WIDTH} />,
             name: (
               <>
                 FINAL SCORE
@@ -686,32 +684,29 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     size="xs"
-                    variant="solid"
                     target="_blank"
+                    variant="solid"
                   >
                     Read more
                   </Button>
                 </Explain>
               </>
             ),
-            alignment: "left" as const,
             width: SCORE_WIDTH,
-            loadingSkeleton: <Score isLoading width={SCORE_WIDTH} />,
-            allowsSorting: true,
           },
         ]
       : [
-          { id: "slot", name: "SLOT", alignment: "left" as const, width: 40 },
+          { alignment: "left" as const, id: "slot", name: "SLOT", width: 40 },
           {
+            alignment: "left" as const,
             id: "price",
             name: <PriceName assetClass={assetClass} uppercase />,
-            alignment: "left" as const,
             width: 40,
           },
           {
+            alignment: "left" as const,
             id: "confidence",
             name: "CONFIDENCE INTERVAL",
-            alignment: "left" as const,
             width: 50,
           },
         ];

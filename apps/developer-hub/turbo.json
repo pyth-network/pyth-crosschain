@@ -1,13 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "generate:docs"
-      ],
+      "dependsOn": ["generate:docs"],
       "env": [
         "VERCEL_ENV",
         "COOKIE_SIGNING_SECRET",
@@ -31,57 +27,30 @@
     },
     "fix:lint:eslint": {
       "cache": false,
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     },
     "fix:lint:stylelint": {
       "cache": false,
-      "dependsOn": [
-        "//#install:modules"
-      ]
+      "dependsOn": ["//#install:modules"]
     },
     "generate:docs": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ],
-      "outputs": [
-        "content/docs/api-reference/**"
-      ]
+      "dependsOn": ["//#install:modules", "^build"],
+      "outputs": ["content/docs/api-reference/**"]
     },
     "start:prod": {
-      "dependsOn": [
-        "//#install:modules",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "build"]
     },
     "test:lint": {
-      "dependsOn": [
-        "test:lint:eslint",
-        "test:lint:stylelint"
-      ]
+      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },
     "test:lint:eslint": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     },
     "test:lint:stylelint": {
-      "dependsOn": [
-        "//#install:modules"
-      ]
+      "dependsOn": ["//#install:modules"]
     },
     "test:types": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     }
   }
 }

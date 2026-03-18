@@ -1,8 +1,7 @@
 import cx from "clsx";
 import type { ComponentProps } from "react";
-
-import { classes } from "./Spinner.styles";
 import type { SpinnerSize } from "../../theme";
+import { classes } from "./Spinner.styles";
 
 export type SpinnerProps = ComponentProps<"div"> & {
   size?: SpinnerSize;
@@ -23,7 +22,7 @@ export function Spinner({
       data-size={size}
       role="status"
     >
-      <span className={classes.spinner} aria-hidden={Boolean(children)} />
+      <span aria-hidden={Boolean(children)} className={classes.spinner} />
       {children && <span className={classes.label}>{children}</span>}
     </div>
   );

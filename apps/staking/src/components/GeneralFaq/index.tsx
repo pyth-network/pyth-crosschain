@@ -12,7 +12,6 @@ export const GeneralFaq = (
       header="General"
       questions={[
         {
-          question: "What is Oracle Integrity Staking (OIS)?",
           answer: (
             <>
               <p>
@@ -37,8 +36,8 @@ export const GeneralFaq = (
                 Learn more by visiting the <strong>Help</strong> section on the
                 OIS dashboard or by checking out the{" "}
                 <Link
-                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   className="underline"
+                  href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   target="_blank"
                 >
                   official announcement
@@ -47,14 +46,14 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question: "What is Oracle Integrity Staking (OIS)?",
         },
         {
-          question: "Who can participate in OIS?",
           answer:
             "Anyone with PYTH tokens can participate in OIS and interact with its contract. Whether you are a publisher or just someone who wants to help secure the oracle network, you can stake your tokens and become part of the OIS program.",
+          question: "Who can participate in OIS?",
         },
         {
-          question: "What are the risks associated with OIS?",
           answer: (
             <>
               <p>
@@ -69,10 +68,9 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question: "What are the risks associated with OIS?",
         },
         {
-          question:
-            "How is OIS different from the previous Pyth staking program?",
           answer: (
             <>
               <p>
@@ -80,8 +78,8 @@ export const GeneralFaq = (
                 program, which enables PYTH holders to participate in the
                 governance of Pyth Network in accordance with the{" "}
                 <Link
-                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   className="underline"
+                  href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   target="_blank"
                 >
                   Pyth DAO Constitution
@@ -95,25 +93,26 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question:
+            "How is OIS different from the previous Pyth staking program?",
         },
         {
-          question:
-            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
           answer:
             "Yes. You can participate in OIS, PG, both, or neither programs. The same PYTH token can be staked simultaneously in OIS and PG in any order. To withdraw your tokens back to your wallet, the tokens must be unstaked from both OIS and PG.",
+          question:
+            "Can I participate in both Oracle Integrity Staking (OIS) and Pyth Governance (PG)?",
         },
         {
-          question: "Does participating in OIS affect my participation in PG?",
           answer:
             "No. The two programs are separate. Staking in OIS does not affect your participation in PG. For example, staking in OIS does not increase your voting power in PG. Staking to a publisher’s stake pool does not give that publisher additional voting power in PG.",
+          question: "Does participating in OIS affect my participation in PG?",
         },
         {
-          question: "Does slashing reduce voting weights?",
           answer:
             "If your tokens are slashed and these tokens were also staked in PG, then your voting power would be reduced by the slashing event",
+          question: "Does slashing reduce voting weights?",
         },
         {
-          question: "Can I stake tokens if my tokens have a lockup schedule?",
           answer: (
             <>
               <p>
@@ -127,6 +126,7 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question: "Can I stake tokens if my tokens have a lockup schedule?",
         },
       ]}
     />
@@ -134,13 +134,12 @@ export const GeneralFaq = (
       header="OIS Parameters"
       questions={[
         {
-          question: "Where do staking rewards come from?",
           answer:
             "The current reward pool is sponsored by the Pyth Data Association. In the future, the Pyth DAO can vote to decide on future sources for rewards such as, for example, oracle fees or other on-chain sources.",
+          question: "Where do staking rewards come from?",
         },
 
         {
-          question: "What is the expected rate of rewards?",
           answer: (
             <p>
               The reward rate is a function of the rewards available in the
@@ -148,38 +147,37 @@ export const GeneralFaq = (
               parameters of the OIS program. The Pyth DAO can vote to adjust
               these parameters. Use the{" "}
               <Link
+                className="underline"
                 href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
                 target="_blank"
-                className="underline"
               >
                 Reward Calculator
               </Link>{" "}
               to estimate your potential rewards based on your stake.
             </p>
           ),
+          question: "What is the expected rate of rewards?",
         },
 
         {
-          question: "What is the delegation fee?",
           answer:
             "OIS currently charges a delegation fee for publishers from participants who staked to their pool. The delegation fee is currently set universally at 20%. OIS currently does not support separate fees. The Pyth DAO can vote to change this parameter.",
+          question: "What is the delegation fee?",
         },
 
         {
-          question: "When do rewards begin accumulating?",
           answer:
             "Staked tokens which are eligible for programmatic rewards (or slashing) accumulates rewards at the end of each full epoch when the stake becomes effective (post-warmup and not subject to cooldown).",
+          question: "When do rewards begin accumulating?",
         },
 
         {
-          question:
-            "Are tokens in the Warmup Period eligible for rewards or slashing?",
           answer:
             "No. Tokens in warmup are not subject to rewards and slashing because they are not staked.",
+          question:
+            "Are tokens in the Warmup Period eligible for rewards or slashing?",
         },
         {
-          question:
-            "Are tokens in the Cooldown Period eligible for rewards or slashing?",
           answer: (
             <>
               <p>
@@ -192,16 +190,17 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question:
+            "Are tokens in the Cooldown Period eligible for rewards or slashing?",
         },
         {
-          question: "Where can I learn about data publishers?",
           answer: (
             <>
               <p>
                 You can see the full list of Pyth Network publishers{" "}
                 <Link
-                  href="https://pyth.network/publishers"
                   className="underline"
+                  href="https://pyth.network/publishers"
                   target="_blank"
                 >
                   here
@@ -209,8 +208,8 @@ export const GeneralFaq = (
                 . You can learn more about how Pyth Price Feeds work by visiting
                 the{" "}
                 <Link
-                  href="https://docs.pyth.network/price-feeds/how-pyth-works"
                   className="underline"
+                  href="https://docs.pyth.network/price-feeds/how-pyth-works"
                   target="_blank"
                 >
                   docs
@@ -219,9 +218,9 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question: "Where can I learn about data publishers?",
         },
         {
-          question: "How are publisher quality rankings calculated?",
           answer: (
             <>
               <p>
@@ -229,8 +228,8 @@ export const GeneralFaq = (
                 deviation, uptime, and price staleness. You can learn more about
                 quality ranking calculations{" "}
                 <Link
-                  href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                   className="underline"
+                  href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                   target="_blank"
                 >
                   here
@@ -239,11 +238,12 @@ export const GeneralFaq = (
               </p>
             </>
           ),
+          question: "How are publisher quality rankings calculated?",
         },
         {
-          question: "Can the Pyth DAO change the parameters of OIS?",
           answer:
             "Yes. Changes to important parameters such as stake cap inputs, delegation fees, slashing amounts, and more are subject to Operational Pyth Improvement Proposals that any PYTH token holder can raise for the consideration of the Pyth DAO.",
+          question: "Can the Pyth DAO change the parameters of OIS?",
         },
       ]}
     />

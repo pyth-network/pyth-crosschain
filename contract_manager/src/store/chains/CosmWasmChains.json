@@ -1,118 +1,118 @@
 [
   {
     "endpoint": "https://sentry.tm.injective.network:443",
+    "feeDenom": "inj",
     "id": "injective",
-    "wormholeChainName": "injective",
     "mainnet": true,
     "type": "CosmWasmChain",
-    "feeDenom": "inj"
+    "wormholeChainName": "injective"
   },
   {
     "endpoint": "https://rpc.atlantic-2.seinetwork.io/",
-    "id": "sei_testnet_atlantic_2",
-    "wormholeChainName": "sei_testnet_atlantic_2",
-    "mainnet": false,
-    "gasPrice": "0.10",
-    "prefix": "sei",
     "feeDenom": "usei",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.10",
+    "id": "sei_testnet_atlantic_2",
+    "mainnet": false,
+    "prefix": "sei",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "sei_testnet_atlantic_2"
   },
   {
     "endpoint": "https://rpc.osmosis.zone:443",
-    "id": "osmosis",
-    "wormholeChainName": "osmosis",
-    "mainnet": true,
-    "gasPrice": "0.035",
-    "prefix": "osmo",
     "feeDenom": "uosmo",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.035",
+    "id": "osmosis",
+    "mainnet": true,
+    "prefix": "osmo",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "osmosis"
   },
   {
     "endpoint": "https://testnet.sentry.tm.injective.network:443",
-    "id": "injective_testnet",
-    "wormholeChainName": "injective_testnet",
-    "mainnet": false,
     "feeDenom": "inj",
-    "type": "CosmWasmChain"
+    "id": "injective_testnet",
+    "mainnet": false,
+    "type": "CosmWasmChain",
+    "wormholeChainName": "injective_testnet"
   },
   {
     "endpoint": "https://rpc-palvus.pion-1.ntrn.tech/",
-    "id": "neutron_testnet_pion_1",
-    "wormholeChainName": "neutron_testnet_pion_1",
-    "mainnet": false,
-    "gasPrice": "0.05",
-    "prefix": "neutron",
     "feeDenom": "untrn",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.05",
+    "id": "neutron_testnet_pion_1",
+    "mainnet": false,
+    "prefix": "neutron",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "neutron_testnet_pion_1"
   },
   {
     "endpoint": "https://rpc.osmotest5.osmosis.zone/",
-    "id": "osmosis_testnet_5",
-    "wormholeChainName": "osmosis_testnet_5",
-    "mainnet": false,
-    "gasPrice": "0.025",
-    "prefix": "osmo",
     "feeDenom": "uosmo",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "osmosis_testnet_5",
+    "mainnet": false,
+    "prefix": "osmo",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "osmosis_testnet_5"
   },
   {
     "endpoint": "https://sei-rpc.polkachu.com",
-    "id": "sei_pacific_1",
-    "wormholeChainName": "sei_pacific_1",
-    "mainnet": true,
-    "gasPrice": "0.025",
-    "prefix": "sei",
     "feeDenom": "usei",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "sei_pacific_1",
+    "mainnet": true,
+    "prefix": "sei",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "sei_pacific_1"
   },
   {
     "endpoint": "https://rpc-kralum.neutron-1.neutron.org",
-    "id": "neutron",
-    "wormholeChainName": "neutron",
-    "mainnet": true,
-    "gasPrice": "0.025",
-    "prefix": "neutron",
     "feeDenom": "untrn",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "neutron",
+    "mainnet": true,
+    "prefix": "neutron",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "neutron"
   },
   {
     "endpoint": "https://juno-testnet-rpc.polkachu.com/",
-    "id": "juno_testnet",
-    "wormholeChainName": "juno_testnet",
-    "mainnet": false,
-    "gasPrice": "0.025",
-    "prefix": "juno",
     "feeDenom": "ujunox",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "juno_testnet",
+    "mainnet": false,
+    "prefix": "juno",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "juno_testnet"
   },
   {
     "endpoint": "http://18.199.53.161:26657",
-    "id": "rol_testnet",
-    "wormholeChainName": "rol_testnet",
-    "mainnet": false,
-    "gasPrice": "0.025",
-    "prefix": "rol",
     "feeDenom": "urax",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "rol_testnet",
+    "mainnet": false,
+    "prefix": "rol",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "rol_testnet"
   },
   {
     "endpoint": "https://rpc.xion-testnet-2.burnt.com:443",
-    "id": "xion_testnet_2",
-    "wormholeChainName": "xion_testnet",
-    "mainnet": false,
-    "gasPrice": "0.025",
-    "prefix": "xion",
     "feeDenom": "uxion",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "xion_testnet_2",
+    "mainnet": false,
+    "prefix": "xion",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "xion_testnet"
   },
   {
     "endpoint": "https://rpc.xion-mainnet-1.burnt.com:443",
-    "id": "xion",
-    "wormholeChainName": "xion",
-    "mainnet": true,
-    "gasPrice": "0.025",
-    "prefix": "xion",
     "feeDenom": "uxion",
-    "type": "CosmWasmChain"
+    "gasPrice": "0.025",
+    "id": "xion",
+    "mainnet": true,
+    "prefix": "xion",
+    "type": "CosmWasmChain",
+    "wormholeChainName": "xion"
   }
 ]

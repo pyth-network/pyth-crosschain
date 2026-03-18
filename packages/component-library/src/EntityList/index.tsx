@@ -2,10 +2,9 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Skeleton } from "../Skeleton/index.jsx";
 import { GridList, GridListItem } from "../unstyled/GridList";
+import styles from "./index.module.scss";
 
 type Props<T extends string> = ComponentProps<typeof GridList<RowConfig<T>>> & {
   headerLoadingSkeleton?: ReactNode | undefined;
@@ -46,9 +45,9 @@ export const EntityList = <T extends string>({
   ...props
 }: Props<T>) => (
   <GridList
+    aria-label={label}
     className={clsx(styles.entityList, className)}
     items={isLoading ? [] : rows}
-    aria-label={label}
     {...props}
   >
     {isLoading ? (
@@ -56,7 +55,7 @@ export const EntityList = <T extends string>({
         <div className={styles.itemHeader}>{headerLoadingSkeleton}</div>
         <dl className={styles.itemDetails}>
           {fields.map((field) => (
-            <div key={field.id} className={styles.itemDetailsItem}>
+            <div className={styles.itemDetailsItem} key={field.id}>
               <dt>{field.name}</dt>
               <dd>
                 {"loadingSkeleton" in field ? (
@@ -81,7 +80,7 @@ export const EntityList = <T extends string>({
           {header && <div className={styles.itemHeader}>{header}</div>}
           <dl className={styles.itemDetails}>
             {fields.map((field) => (
-              <div key={field.id} className={styles.itemDetailsItem}>
+              <div className={styles.itemDetailsItem} key={field.id}>
                 <dt>{field.name}</dt>
                 <dd>{data[field.id]}</dd>
               </div>

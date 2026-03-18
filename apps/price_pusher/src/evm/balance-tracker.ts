@@ -1,13 +1,12 @@
 import type { Logger } from "pino";
-
-import type { SuperWalletClient } from "./super-wallet.js";
 import type {
   BaseBalanceTrackerConfig,
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
+import type { SuperWalletClient } from "./super-wallet.js";
 
 /**
  * EVM-specific configuration for balance tracker
@@ -77,11 +76,11 @@ export function createEvmBalanceTracker(
   params: CreateEvmBalanceTrackerParams,
 ): IBalanceTracker {
   return new EvmBalanceTracker({
-    client: params.client,
     address: params.address,
+    client: params.client,
+    logger: params.logger,
+    metrics: params.metrics,
     network: params.network,
     updateInterval: params.updateInterval,
-    metrics: params.metrics,
-    logger: params.logger,
   });
 }

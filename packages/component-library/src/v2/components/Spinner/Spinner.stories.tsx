@@ -1,14 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { Spinner } from "./Spinner";
 import { ThemeV2 } from "../../theme";
+import { Spinner } from "./Spinner";
 
 const meta = {
-  title: "V2/Spinner",
-  component: Spinner,
   args: {
-    size: "md",
     children: "Loading...",
+    size: "md",
   },
   argTypes: {
     size: {
@@ -16,6 +13,8 @@ const meta = {
       options: Object.keys(ThemeV2.sizes.spinner),
     },
   },
+  component: Spinner,
+  title: "V2/Spinner",
 } satisfies Meta<typeof Spinner>;
 
 export default meta;

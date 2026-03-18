@@ -1,13 +1,11 @@
 "use client";
 
 import {
-  QuestionMarkCircleIcon,
   ChevronDownIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useCallback } from "react";
-import { MenuTrigger, Button } from "react-aria-components";
-
-import { ProgramParameters } from "./program-parameters";
+import { useCallback, useState } from "react";
+import { Button, MenuTrigger } from "react-aria-components";
 import { StateType, useApi } from "../../hooks/use-api";
 import { useChangelog } from "../../hooks/use-changelog";
 import { GeneralFaq } from "../GeneralFaq";
@@ -15,33 +13,34 @@ import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { PublisherFaq } from "../PublisherFaq";
+import { ProgramParameters } from "./program-parameters";
 
 export const HelpMenu = () => {
   const api = useApi();
   const [faqOpen, setFaqOpen] = useState(false);
   const openFaq = useCallback(() => {
     setFaqOpen(true);
-  }, [setFaqOpen]);
+  }, []);
 
   const [oisGuideOpen, setOisGuideOpen] = useState(false);
   const openOisGuide = useCallback(() => {
     setOisGuideOpen(true);
-  }, [setOisGuideOpen]);
+  }, []);
 
   const [governanceGuideOpen, setGovernanceGuideOpen] = useState(false);
   const openGovernanceGuide = useCallback(() => {
     setGovernanceGuideOpen(true);
-  }, [setGovernanceGuideOpen]);
+  }, []);
 
   const [publisherFaqOpen, setPublisherFaqOpen] = useState(false);
   const openPublisherFaq = useCallback(() => {
     setPublisherFaqOpen(true);
-  }, [setPublisherFaqOpen]);
+  }, []);
 
   const [parametersOpen, setParametersOpen] = useState(false);
   const openParameters = useCallback(() => {
     setParametersOpen(true);
-  }, [setParametersOpen]);
+  }, []);
   const { open: openChangelog } = useChangelog();
 
   return (

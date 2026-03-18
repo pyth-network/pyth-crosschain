@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable unicorn/prefer-top-level-await */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from "node:fs";
 import path from "node:path";
 
@@ -14,7 +6,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
-import { TonPriceFeedContract } from "../src/core/contracts";
+import type { TonPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
 // This script upgrades the Pyth contract on TON after the governance has authorized the upgrade
@@ -29,14 +21,14 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     contract: {
-      type: "string",
-      description: "Contract name",
       demandOption: true,
+      description: "Contract name",
+      type: "string",
     },
     "private-key": {
-      type: "string",
-      description: "Private key of the sender",
       demandOption: true,
+      description: "Private key of the sender",
+      type: "string",
     },
   });
 
@@ -54,16 +46,10 @@ async function main() {
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
   const newCode = Cell.fromHex(compiled.hex);
-  console.log(newCode);
 
-  const tx = await contract.upgradeContract(
-    toPrivateKey(argv["private-key"]),
-    newCode,
-  );
-  console.log("Upgrade transaction:", tx);
+  await contract.upgradeContract(toPrivateKey(argv["private-key"]), newCode);
 }
 
-main().catch((error) => {
-  console.error("Error during upgrade:", error);
+main().catch(() => {
   process.exit(1);
 });

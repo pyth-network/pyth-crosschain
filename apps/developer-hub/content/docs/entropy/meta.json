@@ -1,6 +1,4 @@
 {
-  "root": true,
-  "title": "Pyth Entropy",
   "description": "Random number Generator for Ethereum smart contracts",
   "icon": "DiceSix",
   "pages": [
@@ -24,5 +22,7 @@
     "---Understanding Entropy---",
     "protocol-design",
     "fees"
-  ]
+  ],
+  "root": true,
+  "title": "Pyth Entropy"
 }

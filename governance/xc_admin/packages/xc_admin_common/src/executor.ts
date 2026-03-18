@@ -1,31 +1,27 @@
-import { type TransactionAccount } from "@sqds/mesh/lib/types";
-import SquadsMesh, { getIxPDA } from "@sqds/mesh";
-import { type PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
-  type AccountMeta,
-  type Commitment,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
+  deriveFeeCollectorKey,
+  getWormholeBridgeData,
+} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
+import type { Wallet } from "@coral-xyz/anchor";
+import { AccountType, parseProductData } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+import {
+  sendTransactions,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import type { AccountMeta, Commitment, PublicKey } from "@solana/web3.js";
+import { SystemProgram, Transaction } from "@solana/web3.js";
+import type SquadsMesh from "@sqds/mesh";
+import { getIxPDA } from "@sqds/mesh";
+import type { TransactionAccount } from "@sqds/mesh/lib/types";
+import BN from "bn.js";
+import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import {
   MultisigParser,
   PythMultisigInstruction,
   WormholeMultisigInstruction,
 } from "./multisig_transaction";
-import BN from "bn.js";
-import {
-  deriveFeeCollectorKey,
-  getWormholeBridgeData,
-} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
-import { AccountType, parseProductData } from "@pythnetwork/client";
-import {
-  TransactionBuilder,
-  type PriorityFeeConfig,
-  sendTransactions,
-} from "@pythnetwork/solana-utils";
-import { Wallet } from "@coral-xyz/anchor";
 
 /**
  * Returns the instruction to pay the fee for a wormhole postMessage instruction
@@ -48,9 +44,9 @@ export async function getPostMessageFeeInstruction(
     : 0;
 
   return SystemProgram.transfer({
+    fromPubkey: squad.wallet.publicKey,
     lamports: wormholeFee,
     toPubkey: deriveFeeCollectorKey(wormholeBridgeAddress),
-    fromPubkey: squad.wallet.publicKey,
   });
 }
 
@@ -84,9 +80,9 @@ export async function executeProposal(
     )[0];
     const instruction = await squad.getInstruction(instructionPda);
     const parsedInstruction = multisigParser.parseInstruction({
-      programId: instruction.programId,
       data: instruction.data as Buffer,
       keys: instruction.keys as AccountMeta[],
+      programId: instruction.programId,
     });
     const transaction = new Transaction();
 
@@ -96,6 +92,7 @@ export async function executeProposal(
     ) {
       transaction.add(
         await getPostMessageFeeInstruction(
+          // biome-ignore lint/style/noNonNullAssertion: legacy assertion
           multisigParser.wormholeBridgeAddress!,
           squad,
         ),
@@ -119,21 +116,28 @@ export async function executeProposal(
       parsedInstruction.name == "addPrice"
     ) {
       /// Add price, fetch the symbol from the product account
-      const productAccount = await squad.connection.getAccountInfo(
-        parsedInstruction.accounts.named.productAccount!.pubkey,
-      );
+      const productAccountPubkey =
+        parsedInstruction.accounts.named.productAccount?.pubkey;
+      if (!productAccountPubkey) {
+        throw new Error(
+          "productAccount pubkey is required for addPrice instruction",
+        );
+      }
+      const productAccount =
+        await squad.connection.getAccountInfo(productAccountPubkey);
       if (productAccount) {
         transaction.add(
           await getCreateAccountWithSeedInstruction(
             squad.connection,
             cluster,
             squad.wallet.publicKey,
+            // biome-ignore lint/style/noNonNullAssertion: legacy assertion
             parseProductData(productAccount.data).product.symbol!,
             AccountType.Price,
           ),
         );
       } else {
-        throw Error("Product account not found");
+        throw new Error("Product account not found");
       }
     }
 
@@ -148,7 +152,7 @@ export async function executeProposal(
 
     signatures.push(
       ...(await sendTransactions(
-        [{ tx: transaction, signers: [] }],
+        [{ signers: [], tx: transaction }],
         squad.connection,
         squad.wallet as Wallet,
       )),

@@ -4,21 +4,20 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { Msgs, Account, TxResponse } from "@injectivelabs/sdk-ts";
+import type { Account, Msgs, TxResponse } from "@injectivelabs/sdk-ts";
 import {
-  PrivateKey,
-  TxGrpcApi,
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,
-  MsgExecuteContract,
   createTransactionFromMsg,
+  MsgExecuteContract,
+  PrivateKey,
+  TxGrpcApi,
 } from "@injectivelabs/sdk-ts";
 import { splitArrayToChunks } from "@injectivelabs/utils";
-import type { HexString } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
-import type { PriceItem, PriceInfo, IPricePusher } from "../interface.js";
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
 
@@ -143,12 +142,12 @@ export class InjectivePricePusher implements IPricePusher {
 
     try {
       const { signBytes, txRaw } = createTransactionFromMsg({
-        sequence: account.baseAccount.sequence,
         accountNumber: account.baseAccount.accountNumber,
-        message: msg,
         chainId: this.chainConfig.chainId,
         fee: await this.getStdFee(msg, index),
+        message: msg,
         pubKey: wallet.toPublicKey().toBase64(),
+        sequence: account.baseAccount.sequence,
       });
 
       // eslint-disable-next-line @typescript-eslint/await-thenable
@@ -165,7 +164,7 @@ export class InjectivePricePusher implements IPricePusher {
       account.baseAccount.sequence++;
 
       return txResponse;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // The sequence number was invalid and hence we will have to fetch it again
       if (/account sequence mismatch/.exec(JSON.stringify(error)) !== null) {
         this.accounts[injectiveAddress] = undefined;
@@ -214,10 +213,10 @@ export class InjectivePricePusher implements IPricePusher {
       const wallet = this.getWallet(chunkIndex);
 
       const msg = MsgExecuteContract.fromJSON({
-        sender: wallet.toAddress().toBech32(),
         contractAddress: this.pythContractAddress,
-        msg: priceFeedUpdateObject,
         funds: [updateFeeQueryResponse],
+        msg: priceFeedUpdateObject,
+        sender: wallet.toAddress().toBech32(),
       });
 
       const rs = await this.signAndBroadcastMsg(msg, chunkIndex);
@@ -226,7 +225,7 @@ export class InjectivePricePusher implements IPricePusher {
         { hash: rs.txHash },
         `Successfully broadcasted txHash for chunk ${chunkIndex}`,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
         this.logger.error(error, `Account not found for chunk ${chunkIndex}`);
 
@@ -264,11 +263,11 @@ export class InjectivePricePusher implements IPricePusher {
     }
 
     const { txRaw: simulateTxRaw } = createTransactionFromMsg({
-      sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
-      message: msg,
       chainId: this.chainConfig.chainId,
+      message: msg,
       pubKey: wallet.toPublicKey().toBase64(),
+      sequence: account.baseAccount.sequence,
     });
 
     try {
@@ -282,8 +281,8 @@ export class InjectivePricePusher implements IPricePusher {
       const fee = {
         amount: [
           {
-            denom: "inj",
             amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(0),
+            denom: "inj",
           },
         ],
         gas,

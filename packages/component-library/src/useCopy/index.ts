@@ -20,7 +20,7 @@ export const useCopy = (text: string, copyIndicatorTime = 1000) => {
 
   useEffect(() => {
     setIsCopied(false);
-  }, [text]);
+  }, []);
 
   useEffect(() => {
     if (isCopied) {
@@ -35,5 +35,5 @@ export const useCopy = (text: string, copyIndicatorTime = 1000) => {
     }
   }, [isCopied, copyIndicatorTime]);
 
-  return { isCopied, copy };
+  return { copy, isCopied };
 };

@@ -23,7 +23,7 @@ export function APICard({ href, title, method, description }: APICardProps) {
   const methodLower = method.toLowerCase();
 
   return (
-    <Link href={href} className={styles.card}>
+    <Link className={styles.card} href={href}>
       <div className={styles.title}>
         <span className={styles.name}>{title}</span>
         <span

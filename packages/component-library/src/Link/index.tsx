@@ -2,10 +2,9 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ElementType } from "react";
-
-import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.jsx";
 import { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   invert?: boolean | undefined;
@@ -31,6 +30,6 @@ const mkProps = ({
   ...otherProps
 }: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
   ...otherProps,
-  "data-invert": invert ? "" : undefined,
   className: clsx(styles.link, className),
+  "data-invert": invert ? "" : undefined,
 });

@@ -1,10 +1,10 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
+import { execSync } from "node:child_process";
+import type { SuiClient } from "@mysten/sui/client";
+import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-
-import { execSync } from "child_process";
-import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
+import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -18,11 +18,11 @@ export function buildForBytecodeAndDigest(packagePath: string) {
     ),
   );
   return {
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
   };
 }
 
@@ -46,33 +46,33 @@ export async function upgradePyth(
 
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
+    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
   });
 
   // Build and generate modules and dependencies for upgrade.
   const [upgradeReceipt] = tx.upgrade({
-    modules,
     dependencies,
+    modules,
     package: pythPackage,
     ticket: upgradeTicket!,
   });
 
   // Commit upgrade.
   tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
     arguments: [tx.object(contract.stateId), upgradeReceipt!],
+    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
   });
 
   tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI
 
   return provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    signer: keypair,
+    transaction: tx,
   });
 }
 
@@ -94,18 +94,18 @@ export async function migratePyth(
     signedUpgradeVaa,
   );
   tx.moveCall({
-    target: `${pythPackage}::migrate::migrate`,
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
+    target: `${pythPackage}::migrate::migrate`,
   });
 
   tx.setGasBudget(MIST_PER_SUI / 10n); //0.1 SUI
 
   return provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    signer: keypair,
+    transaction: tx,
   });
 }

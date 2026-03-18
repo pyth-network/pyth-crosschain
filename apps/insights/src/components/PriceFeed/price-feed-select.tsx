@@ -2,10 +2,6 @@
 
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
-import {
-  ListLayout,
-  Virtualizer,
-} from "@pythnetwork/component-library/Virtualizer";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import { Dialog } from "@pythnetwork/component-library/unstyled/Dialog";
 import {
@@ -16,6 +12,10 @@ import { Popover } from "@pythnetwork/component-library/unstyled/Popover";
 import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField";
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
+import {
+  ListLayout,
+  Virtualizer,
+} from "@pythnetwork/component-library/Virtualizer";
 import clsx from "clsx";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
@@ -77,15 +77,15 @@ const ResolvedPriceFeedSelect = ({
   return (
     <PriceFeedSelectImpl
       menu={
-        <Popover placement="bottom start" className={styles.popover ?? ""}>
+        <Popover className={styles.popover ?? ""} placement="bottom start">
           <Dialog aria-label="Price Feeds" className={styles.dialog ?? ""}>
             <SearchField
-              value={search}
-              onChange={setSearch}
+              aria-label="Search"
+              autoFocus
               className={styles.searchField ?? ""}
               // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              aria-label="Search"
+              onChange={setSearch}
+              value={search}
             >
               <Input
                 className={styles.searchInput ?? ""}
@@ -94,26 +94,26 @@ const ResolvedPriceFeedSelect = ({
             </SearchField>
             <Virtualizer layout={new ListLayout()}>
               <ListBox
-                items={filteredAndSortedFeeds}
+                autoFocus={false}
                 className={styles.listbox ?? ""}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
-                autoFocus={false}
+                items={filteredAndSortedFeeds}
               >
                 {({ symbol, displaySymbol, description, icon, assetClass }) => (
                   <ListBoxItem
-                    textValue={displaySymbol}
                     className={styles.priceFeed ?? ""}
-                    href={`/price-feeds/${encodeURIComponent(symbol)}`}
                     data-is-first={
                       symbol === filteredAndSortedFeeds[0]?.symbol
                         ? ""
                         : undefined
                     }
+                    href={`/price-feeds/${encodeURIComponent(symbol)}`}
                     prefetch={false}
+                    textValue={displaySymbol}
                   >
                     <SymbolPairTag
-                      displaySymbol={displaySymbol}
                       description={description}
+                      displaySymbol={displaySymbol}
                       icon={icon}
                     />
                     <AssetClassBadge>{assetClass}</AssetClassBadge>

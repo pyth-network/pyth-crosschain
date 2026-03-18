@@ -1,31 +1,30 @@
 "use client";
 
 import type { Idl } from "@coral-xyz/anchor";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { WalletIcon } from "@heroicons/react/24/outline";
 import type { PythStakingWallet } from "@pythnetwork/staking-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import type { Connection } from "@solana/web3.js";
 import {
   PublicKey,
-  Connection,
-  VersionedTransaction,
   TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
-
-import WalletTesterIDL from "./wallet-tester-idl.json";
 import { StateType as ApiStateType, useApi } from "../../hooks/use-api";
 import {
-  useAsync,
   StateType as UseAsyncStateType,
+  useAsync,
 } from "../../hooks/use-async";
-import { useData, StateType as UseDataStateType } from "../../hooks/use-data";
+import { StateType as UseDataStateType, useData } from "../../hooks/use-data";
 import { useNetwork } from "../../hooks/use-network";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
 import { Switch } from "../Switch";
+import WalletTesterIDL from "./wallet-tester-idl.json";
 
 export const WalletTester = () => (
   <div className="grid size-full place-content-center">
@@ -76,8 +75,8 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
       <div className="flex flex-col items-center gap-4">
         <Button
           className="px-10 py-4"
-          size="nopad"
           isLoading={isLoading}
+          size="nopad"
           {...(!isLoading && { onPress: showModal })}
         >
           {isLoading ? (
@@ -90,12 +89,12 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
           )}
         </Button>
         <Switch
+          className="px-4 py-1"
           isSelected={isMainnet}
+          onChange={toggleMainnet}
           postLabel="Mainnet"
           preLabel="Devnet"
-          className="px-4 py-1"
           size="small"
-          onChange={toggleMainnet}
         />
       </div>
     </>
@@ -222,9 +221,9 @@ const testWallet = async (
     });
     const transaction = new VersionedTransaction(
       new TransactionMessage({
+        instructions: [instruction],
         payerKey: wallet.publicKey,
         recentBlockhash: blockhash,
-        instructions: [instruction],
       }).compileToV0Message(),
     );
     await wallet.sendTransaction(transaction, connection);

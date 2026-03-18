@@ -1,12 +1,11 @@
 "use client";
 
-import { Copy, Check, Eye, OpenAiLogo } from "@phosphor-icons/react/dist/ssr";
+import { Check, Copy, Eye, OpenAiLogo } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
 import { useCopy } from "@pythnetwork/component-library/useCopy";
 import type { ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { ClaudeIcon } from "../../lib/icons";
+import styles from "./index.module.scss";
 
 type PageActionOption = {
   id: string;
@@ -23,24 +22,24 @@ type PageActionsProps = {
 
 const getPageActionOptions = (): PageActionOption[] => [
   {
+    icon: <Copy />,
     id: "copy-page",
     label: "Copy Page",
-    icon: <Copy />,
   },
   {
+    icon: <Eye />,
     id: "view-markdown",
     label: "View Markdown",
-    icon: <Eye />,
   },
   {
+    icon: <OpenAiLogo />,
     id: "ask-chatgpt",
     label: "Ask in ChatGPT",
-    icon: <OpenAiLogo />,
   },
   {
+    icon: <ClaudeIcon />,
     id: "ask-claude",
     label: "Ask in Claude",
-    icon: <ClaudeIcon />,
   },
 ];
 
@@ -114,14 +113,8 @@ export function PageActions({ content, title, url }: PageActionsProps) {
           const showCheckIcon = isCopyAction && isCopied;
 
           return (
-            <div key={option.id} className={styles.buttonWrapper}>
+            <div className={styles.buttonWrapper} key={option.id}>
               <Button
-                onPress={() => {
-                  handleActionClick(option);
-                }}
-                size="sm"
-                variant="ghost"
-                className={styles.button ?? ""}
                 aria-label={option.ariaLabel ?? option.label}
                 beforeIcon={
                   showCheckIcon ? (
@@ -130,17 +123,23 @@ export function PageActions({ content, title, url }: PageActionsProps) {
                     option.icon
                   )
                 }
+                className={styles.button ?? ""}
+                onPress={() => {
+                  handleActionClick(option);
+                }}
+                size="sm"
+                variant="ghost"
               >
                 {option.label}
               </Button>
               {!isLast && (
-                <div className={styles.verticalDivider} aria-hidden="true" />
+                <div aria-hidden="true" className={styles.verticalDivider} />
               )}
             </div>
           );
         })}
       </div>
-      <div className={styles.horizontalDivider} aria-hidden="true" />
+      <div aria-hidden="true" className={styles.horizontalDivider} />
     </div>
   );
 }

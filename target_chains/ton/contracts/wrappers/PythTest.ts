@@ -1,21 +1,13 @@
-import {
-  beginCell,
-  Cell,
-  contractAddress,
-  type ContractProvider,
-  type Sender,
-  SendMode,
-  toNano,
-  Address,
-} from "@ton/core";
-import { BaseWrapper } from "./BaseWrapper";
-import { type HexString, Price } from "@pythnetwork/price-service-sdk";
+import type { HexString, Price } from "@pythnetwork/price-service-sdk";
 import {
   createCellChain,
   parseDataSource,
   parseDataSources,
 } from "@pythnetwork/pyth-ton-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { Address, Cell, ContractProvider, Sender } from "@ton/core";
+import { beginCell, contractAddress, SendMode, toNano } from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
@@ -163,9 +155,9 @@ export class PythTest extends BaseWrapper {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -180,9 +172,9 @@ export class PythTest extends BaseWrapper {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -192,11 +184,11 @@ export class PythTest extends BaseWrapper {
   ) {
     const result = await provider.get("test_get_is_valid_data_source", [
       {
-        type: "cell",
         cell: beginCell()
           .storeUint(dataSource.emitterChain, 16)
-          .storeUint(BigInt("0x" + dataSource.emitterAddress), 256)
+          .storeUint(BigInt(`0x${dataSource.emitterAddress}`), 256)
           .endCell(),
+        type: "cell",
       },
     ]);
     return result.stack.readBoolean();
@@ -260,9 +252,9 @@ export class PythTest extends BaseWrapper {
     );
 
     await provider.internal(via, {
-      value: updateFee,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageCell,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: updateFee,
     });
   }
 
@@ -288,9 +280,9 @@ export class PythTest extends BaseWrapper {
     );
 
     await provider.internal(via, {
-      value: updateFee,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageCell,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: updateFee,
     });
   }
 

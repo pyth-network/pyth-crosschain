@@ -6,7 +6,7 @@ import type {
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
 
 /**
@@ -35,7 +35,7 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
       logger: config.logger.child({ module: "AptosBalanceTracker" }),
     });
     this.client = new Aptos(
-      new AptosConfig({ network: Network.CUSTOM, fullnode: config.endpoint }),
+      new AptosConfig({ fullnode: config.endpoint, network: Network.CUSTOM }),
     );
     this.aptosAddress = config.address;
     // APT has 8 decimal places by default
@@ -98,12 +98,12 @@ export function createAptosBalanceTracker(
   params: CreateAptosBalanceTrackerParams,
 ): IBalanceTracker {
   return new AptosBalanceTracker({
-    endpoint: params.endpoint,
     address: params.address,
+    decimals: params.decimals,
+    endpoint: params.endpoint,
+    logger: params.logger,
+    metrics: params.metrics,
     network: params.network,
     updateInterval: params.updateInterval,
-    metrics: params.metrics,
-    logger: params.logger,
-    decimals: params.decimals,
   } as AptosBalanceTrackerConfig);
 }

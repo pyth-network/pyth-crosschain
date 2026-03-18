@@ -7,17 +7,17 @@ import { source } from "../../../lib/source";
 // Define schemas for type safety
 const hermesSchema = z.array(
   z.object({
-    id: z.string(),
     attributes: z.object({ symbol: z.string() }),
+    id: z.string(),
   }),
 );
 
 const lazerSchema = z.array(
   z.object({
-    symbol: z.string(),
+    description: z.string(),
     name: z.string(),
     pyth_lazer_id: z.number(),
-    description: z.string(),
+    symbol: z.string(),
   }),
 );
 
@@ -25,18 +25,18 @@ function toAdvancedIndex(
   fee: z.infer<typeof hermesSchema>[number],
 ): AdvancedIndex {
   return {
-    title: `${fee.attributes.symbol} (Core)`,
     description: `Price Feed ID: ${fee.id}`,
-    url: `/price-feeds/core/price-feeds/price-feed-ids?search=${fee.attributes.symbol}`,
     id: fee.id,
-    tag: "price-feed-core",
     structuredData: {
-      headings: [],
       contents: [
-        { heading: "Symbol", content: fee.attributes.symbol },
-        { heading: "ID", content: fee.id },
+        { content: fee.attributes.symbol, heading: "Symbol" },
+        { content: fee.id, heading: "ID" },
       ],
+      headings: [],
     },
+    tag: "price-feed-core",
+    title: `${fee.attributes.symbol} (Core)`,
+    url: `/price-feeds/core/price-feeds/price-feed-ids?search=${fee.attributes.symbol}`,
   };
 }
 
@@ -75,20 +75,20 @@ async function getLazerFeeds(): Promise<AdvancedIndex[]> {
     }
 
     return parsed.data.map((feed) => ({
-      title: `${feed.name} (Pro)`,
       description: `${feed.symbol} - ${feed.description} (ID: ${String(feed.pyth_lazer_id)})`,
-      url: `/price-feeds/pro/price-feed-ids?search=${feed.symbol}`,
       id: `lazer-${String(feed.pyth_lazer_id)}`,
-      tag: "price-feed-pro",
       structuredData: {
-        headings: [],
         contents: [
-          { heading: "Symbol", content: feed.symbol },
-          { heading: "Name", content: feed.name },
-          { heading: "Description", content: feed.description },
-          { heading: "ID", content: String(feed.pyth_lazer_id) },
+          { content: feed.symbol, heading: "Symbol" },
+          { content: feed.name, heading: "Name" },
+          { content: feed.description, heading: "Description" },
+          { content: String(feed.pyth_lazer_id), heading: "ID" },
         ],
+        headings: [],
       },
+      tag: "price-feed-pro",
+      title: `${feed.name} (Pro)`,
+      url: `/price-feeds/pro/price-feed-ids?search=${feed.symbol}`,
     }));
   } catch (error: unknown) {
     throw new Error("Failed to fetch Lazer feeds", { cause: error });
@@ -98,11 +98,11 @@ async function getLazerFeeds(): Promise<AdvancedIndex[]> {
 export const { GET } = createSearchAPI("advanced", {
   indexes: async () => {
     const staticPages = source.getPages().map((page) => ({
-      title: page.data.title,
       description: page.data.description,
-      url: page.url,
       id: page.url,
       structuredData: page.data.structuredData,
+      title: page.data.title,
+      url: page.url,
     })) as AdvancedIndex[];
 
     // Added these two functions to get the price feeds from the Hermes and Pro APIs

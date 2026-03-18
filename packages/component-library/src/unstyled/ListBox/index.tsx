@@ -21,8 +21,8 @@ export const ListBoxItem = <T extends Element>({
 }: ListBoxItemProps<T>) => {
   const prefetchProps = usePrefetch({
     href: props.href,
-    prefetch,
     onHoverStart,
+    prefetch,
     ref,
   });
 

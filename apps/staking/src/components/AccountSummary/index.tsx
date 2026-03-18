@@ -3,23 +3,23 @@ import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
 import Image from "next/image";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   DialogTrigger,
   Button as ReactAriaButton,
 } from "react-aria-components";
-
-import background from "./background.png";
 import type { States } from "../../hooks/use-api";
 import { StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Date component intentionally shadows global Date
 import { Date } from "../Date";
 import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
+import background from "./background.png";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
@@ -68,9 +68,9 @@ export const AccountSummary = ({
 }: Props) => (
   <section className="relative w-full overflow-hidden sm:border sm:border-neutral-600/50 sm:bg-pythpurple-800">
     <Image
-      src={background}
       alt=""
       className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] sm:block"
+      src={background}
     />
     <div className="relative flex flex-col items-start justify-between gap-8 sm:p-4 md:flex-row md:items-center md:gap-16 xl:px-8 xl:py-2">
       <div>
@@ -99,8 +99,8 @@ export const AccountSummary = ({
                 Show Unlock Schedule
               </ReactAriaButton>
               <ModalDialog
-                title="Unlock Schedule"
                 description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
+                title="Unlock Schedule"
               >
                 <div className="border border-neutral-600/50 bg-pythpurple-100/10 p-4 sm:px-8 sm:py-6">
                   <table>
@@ -131,20 +131,20 @@ export const AccountSummary = ({
         <div className="mt-3 flex flex-row items-center gap-4 sm:mt-8">
           {(enableGovernance || enableOis) && (
             <TransferButton
-              actionName="Add tokens"
               actionDescription="Add funds to your balance"
+              actionName="Add tokens"
               max={walletAmount}
-              transfer={api.deposit}
               submitButtonText="Add tokens"
               successMessage="Your tokens have been added to your stake account"
+              transfer={api.deposit}
             />
           )}
           {availableToWithdraw === 0n ? (
             <DialogTrigger>
-              <Button variant="secondary" className="xl:hidden">
+              <Button className="xl:hidden" variant="secondary">
                 Withdraw
               </Button>
-              <ModalDialog title="No Withdrawable Tokens" closeButtonText="Ok">
+              <ModalDialog closeButtonText="Ok" title="No Withdrawable Tokens">
                 <p className="mb-8 font-semibold">
                   You have no tokens available for withdrawal
                 </p>
@@ -161,25 +161,25 @@ export const AccountSummary = ({
           ) : (
             <WithdrawButton
               api={api}
-              max={availableToWithdraw}
               className="xl:hidden"
+              max={availableToWithdraw}
             />
           )}
           {enableOis && (
             <DialogTrigger>
-              <Button variant="secondary" className="xl:hidden">
+              <Button className="xl:hidden" variant="secondary">
                 Claim
               </Button>
               {availableRewards === 0n ||
               api.type === ApiStateType.LoadedNoStakeAccount ? (
-                <ModalDialog title="No Rewards" closeButtonText="Ok">
+                <ModalDialog closeButtonText="Ok" title="No Rewards">
                   <p>You have no rewards available to be claimed</p>
                 </ModalDialog>
               ) : (
                 <ClaimDialog
-                  expiringRewards={expiringRewards}
-                  availableRewards={availableRewards}
                   api={api}
+                  availableRewards={availableRewards}
+                  expiringRewards={expiringRewards}
                 />
               )}
             </DialogTrigger>
@@ -190,51 +190,51 @@ export const AccountSummary = ({
         <OisUnstake
           api={api}
           className="max-w-sm xl:hidden"
-          warmup={integrityStakingWarmup}
-          staked={integrityStakingStaked}
           cooldown={integrityStakingCooldown}
           cooldown2={integrityStakingCooldown2}
           currentEpoch={currentEpoch}
+          staked={integrityStakingStaked}
+          warmup={integrityStakingWarmup}
         />
       )}
       <div className="hidden w-auto items-stretch gap-4 xl:flex">
         <BalanceCategory
-          name="Unlocked & Unstaked"
-          amount={availableToWithdraw}
-          description="The amount of unlocked tokens that are not staked in either program"
           action={
             <WithdrawButton api={api} max={availableToWithdraw} size="small" />
           }
+          amount={availableToWithdraw}
+          description="The amount of unlocked tokens that are not staked in either program"
+          name="Unlocked & Unstaked"
         />
         {!enableOis && api.type === ApiStateType.Loaded && (
           <OisUnstake
             api={api}
-            warmup={integrityStakingWarmup}
-            staked={integrityStakingStaked}
             cooldown={integrityStakingCooldown}
             cooldown2={integrityStakingCooldown2}
             currentEpoch={currentEpoch}
+            staked={integrityStakingStaked}
+            warmup={integrityStakingWarmup}
           />
         )}
         {enableOis && (
           <BalanceCategory
-            name="Available Rewards"
-            amount={availableRewards}
-            description="Rewards you have earned from OIS"
             action={
               api.type === ApiStateType.Loaded ? (
                 <ClaimButton
+                  api={api}
+                  isDisabled={availableRewards === 0n}
                   size="small"
                   variant="secondary"
-                  isDisabled={availableRewards === 0n}
-                  api={api}
                 />
               ) : (
-                <Button size="small" variant="secondary" isDisabled={true}>
+                <Button isDisabled={true} size="small" variant="secondary">
                   Claim
                 </Button>
               )
             }
+            amount={availableRewards}
+            description="Rewards you have earned from OIS"
+            name="Available Rewards"
             {...(expiringRewards !== undefined &&
               availableRewards > 0n && {
                 warning: (
@@ -298,9 +298,23 @@ const OisUnstake = ({
   // eslint-disable-next-line unicorn/no-null
   return total === 0n ? null : (
     <BalanceCategory
-      className={className}
-      name={stakedPlusWarmup === 0n ? "OIS Cooldown" : "OIS Unstake"}
+      action={
+        <>
+          {stakedPlusWarmup > 0n && (
+            <Button
+              isDisabled={state.type === StateType.Complete}
+              isLoading={state.type === StateType.Running}
+              onPress={doUnstakeAll}
+              size="small"
+              variant="secondary"
+            >
+              Unstake All
+            </Button>
+          )}
+        </>
+      }
       amount={stakedPlusWarmup === 0n ? totalCooldown : stakedPlusWarmup}
+      className={className}
       description={
         <>
           <p>
@@ -332,21 +346,7 @@ const OisUnstake = ({
           )}
         </>
       }
-      action={
-        <>
-          {stakedPlusWarmup > 0n && (
-            <Button
-              size="small"
-              variant="secondary"
-              onPress={doUnstakeAll}
-              isDisabled={state.type === StateType.Complete}
-              isLoading={state.type === StateType.Running}
-            >
-              Unstake All
-            </Button>
-          )}
-        </>
-      }
+      name={stakedPlusWarmup === 0n ? "OIS Cooldown" : "OIS Unstake"}
     />
   );
 };
@@ -360,10 +360,10 @@ type WithdrawButtonProps = Omit<
 
 const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
   <TransferButton
-    variant="secondary"
     actionDescription="Move funds from your account back to your wallet"
     actionName="Withdraw"
     successMessage="You have withdrawn tokens from your stake account to your wallet"
+    variant="secondary"
     {...(api.type === ApiStateType.Loaded && {
       transfer: api.withdraw,
     })}
@@ -432,13 +432,13 @@ const ClaimDialog = ({
   const [closeDisabled, setCloseDisabled] = useState(false);
 
   return (
-    <ModalDialog title="Claim" closeDisabled={closeDisabled}>
+    <ModalDialog closeDisabled={closeDisabled} title="Claim">
       {({ close }) => (
         <ClaimDialogContents
-          expiringRewards={expiringRewards}
-          availableRewards={availableRewards}
           api={api}
+          availableRewards={availableRewards}
           close={close}
+          expiringRewards={expiringRewards}
           setCloseDisabled={setCloseDisabled}
         />
       )}
@@ -501,19 +501,19 @@ const ClaimDialogContents = ({
       )}
       <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
         <Button
-          variant="secondary"
           className="w-full sm:w-auto"
-          size="noshrink"
           onPress={close}
+          size="noshrink"
+          variant="secondary"
         >
           Cancel
         </Button>
         <Button
           className="w-full sm:w-auto"
-          size="noshrink"
           isDisabled={state.type === StateType.Complete}
           isLoading={state.type === StateType.Running}
           onPress={doClaim}
+          size="noshrink"
         >
           Claim
         </Button>
@@ -546,9 +546,9 @@ const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
 
   return (
     <Button
-      onPress={doClaim}
       isDisabled={state.type === StateType.Complete}
       isLoading={state.type === StateType.Running}
+      onPress={doClaim}
       {...props}
     >
       Claim

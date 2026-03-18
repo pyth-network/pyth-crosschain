@@ -1,13 +1,3 @@
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable unicorn/prefer-top-level-await */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import fs from "node:fs";
 import path from "node:path";
 
@@ -28,21 +18,21 @@ const parser = yargs(hideBin(process.argv))
       "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet",
   )
   .options({
-    network: {
-      type: "string",
-      choices: ["mainnet", "testnet"],
-      description: "Network to deploy to",
-      demandOption: true,
-    },
     "contract-address": {
-      type: "string",
-      description: "Address of the contract to upgrade",
       demandOption: true,
+      description: "Address of the contract to upgrade",
+      type: "string",
+    },
+    network: {
+      choices: ["mainnet", "testnet"],
+      demandOption: true,
+      description: "Network to deploy to",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
-      description: "Path to operations key file",
       demandOption: true,
+      description: "Path to operations key file",
+      type: "string",
     },
   });
 
@@ -52,7 +42,7 @@ async function main() {
 
   // Get chain ID and name from CHAINS mapping
   const chainId = isMainnet ? CHAINS.ton_mainnet : CHAINS.ton_testnet;
-  const wormholeChainName = toChainName(chainId);
+  const _wormholeChainName = toChainName(chainId);
 
   // Get the TON chain instance from DefaultStore based on network
   const chain = DefaultStore.getChainOrThrow(
@@ -65,10 +55,6 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
 
-  console.log(
-    `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`,
-  );
-
   // Read the compiled contract from the build directory
   // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
@@ -76,23 +62,14 @@ async function main() {
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
   const newCodeHash = compiled.hash;
-  console.log("New code hash:", newCodeHash);
 
   // Generate governance payload for the upgrade
   const payload = chain.generateGovernanceUpgradePayload(newCodeHash);
-  console.log("Generated governance payload");
-  console.log("Payload:", payload);
-
-  // Create and submit governance proposal
-  console.log("Using vault for proposal:", vault?.getId());
   const keypair = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet:", keypair.publicKey.toBase58());
   vault?.connect(keypair);
-  const proposal = await vault?.proposeWormholeMessage([payload]);
-  console.log("Proposal address:", proposal?.address.toBase58());
+  await vault?.proposeWormholeMessage([payload]);
 }
 
-main().catch((error) => {
-  console.error("Error during upgrade:", error);
+main().catch(() => {
   process.exit(1);
 });

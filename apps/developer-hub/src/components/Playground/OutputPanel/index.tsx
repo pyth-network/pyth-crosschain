@@ -12,12 +12,11 @@ import {
   useRef,
   useState,
 } from "react";
-
-import styles from "./index.module.scss";
 import type {
   StreamMessage,
   StreamStatus,
 } from "../hooks/use-stream-execution";
+import styles from "./index.module.scss";
 
 type OutputPanelProps = {
   status: StreamStatus;
@@ -37,30 +36,30 @@ export type OutputPanelHandle = {
 };
 
 const STATUS_LABELS: Record<StreamStatus, string> = {
-  idle: "Ready",
-  connecting: "Connecting...",
-  connected: "Connected",
-  error: "Error",
   closed: "Closed",
+  connected: "Connected",
+  connecting: "Connecting...",
+  error: "Error",
+  idle: "Ready",
 };
 
 const STATUS_COLORS: Record<StreamStatus, string> = {
-  idle: styles.statusIdle ?? "",
-  connecting: styles.statusConnecting ?? "",
-  connected: styles.statusConnected ?? "",
-  error: styles.statusError ?? "",
   closed: styles.statusClosed ?? "",
+  connected: styles.statusConnected ?? "",
+  connecting: styles.statusConnecting ?? "",
+  error: styles.statusError ?? "",
+  idle: styles.statusIdle ?? "",
 };
 
 function formatTimestamp(timestamp: string): string {
   try {
     const date = new Date(timestamp);
     return date.toLocaleTimeString("en-US", {
-      hour12: false,
+      fractionalSecondDigits: 3,
       hour: "2-digit",
+      hour12: false,
       minute: "2-digit",
       second: "2-digit",
-      fractionalSecondDigits: 3,
     });
   } catch {
     return timestamp;
@@ -104,9 +103,9 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
     useImperativeHandle(
       ref,
       () => ({
-        scrollToBottom,
-        resetAutoScroll,
         isAutoScrollEnabled,
+        resetAutoScroll,
+        scrollToBottom,
       }),
       [scrollToBottom, resetAutoScroll, isAutoScrollEnabled],
     );
@@ -131,9 +130,9 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
 
           <div className={styles.headerActions}>
             <Button
-              variant="ghost"
-              size="sm"
-              onPress={handleToggleAutoScroll}
+              aria-label={
+                autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"
+              }
               beforeIcon={
                 autoScroll ? (
                   <Pause weight="bold" />
@@ -142,20 +141,20 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
                 )
               }
               hideText
-              aria-label={
-                autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"
-              }
+              onPress={handleToggleAutoScroll}
+              size="sm"
+              variant="ghost"
             >
               {autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"}
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              onPress={onClear}
-              isDisabled={messages.length === 0}
+              aria-label="Clear messages"
               beforeIcon={<Trash weight="bold" />}
               hideText
-              aria-label="Clear messages"
+              isDisabled={messages.length === 0}
+              onPress={onClear}
+              size="sm"
+              variant="ghost"
             >
               Clear
             </Button>
@@ -183,7 +182,6 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
             <div className={styles.messagesList}>
               {messages.map((message) => (
                 <div
-                  key={message.id}
                   className={clsx(styles.message, {
                     [styles.messageError ?? ""]: message.event === "error",
                     [styles.messageSystem ?? ""]:
@@ -191,6 +189,7 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
                       message.event === "subscribed" ||
                       message.event === "close",
                   })}
+                  key={message.id}
                 >
                   <div className={styles.messageHeader}>
                     <span className={styles.messageTime}>

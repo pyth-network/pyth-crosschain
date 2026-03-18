@@ -8,16 +8,15 @@ import { fileURLToPath } from "node:url";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { EvmLazerContract } from "../src/core/contracts";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
+import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { EvmLazerContract } from "../src/core/contracts";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
-import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 
 const LAZER_CACHE_FILE = ".cache-upgrade-evm-lazer-contract";
 
@@ -34,9 +33,9 @@ const parser = yargs(hideBin(process.argv))
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
 const RPCS = {
+  devnet: "https://api.devnet.solana.com",
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
-  devnet: "https://api.devnet.solana.com",
 } as Record<PythCluster, string>;
 
 function registry(cluster: PythCluster): string {
@@ -49,7 +48,7 @@ type UpgradeImplementationOutput = {
 };
 
 function deployLazerImplementation(
-  chain: string,
+  _chain: string,
   rpcUrl: string,
   privateKey: string,
   chainNetworkId: number,
@@ -68,55 +67,38 @@ function deployLazerImplementation(
   // Build forge command to deploy only the implementation
   const forgeCommand = `forge script script/PythLazerDeploy.s.sol --rpc-url ${rpcUrl} --private-key ${privateKey} --broadcast --sig "deployImplementationForUpgrade()"`;
 
-  try {
-    console.log(`Deploying PythLazer implementation to ${chain}...`);
-    console.log(`RPC URL: ${rpcUrl}`);
-
-    // Clean up any previous upgrade output
-    if (existsSync(upgradeOutputPath)) {
-      unlinkSync(upgradeOutputPath);
-    }
-
-    // Execute forge script
-    console.log("Running forge deployment script...");
-    const output = execSync(forgeCommand, {
-      cwd: lazerContractsDir,
-      encoding: "utf8",
-      stdio: "pipe",
-    });
-
-    console.log(output);
-
-    // Read upgrade output from JSON file written by the forge script
-    if (!existsSync(upgradeOutputPath)) {
-      throw new Error(
-        "Upgrade output file not found. Deployment may have failed.",
-      );
-    }
-
-    const upgradeOutput = JSON.parse(
-      readFileSync(upgradeOutputPath, "utf8"),
-    ) as UpgradeImplementationOutput;
-
-    // Verify chain ID matches
-    if (upgradeOutput.chainId !== chainNetworkId) {
-      throw new Error(
-        `Chain ID mismatch: expected ${chainNetworkId}, got ${upgradeOutput.chainId}`,
-      );
-    }
-
-    console.log(
-      `\nPythLazer implementation deployed at: ${upgradeOutput.implementationAddress}`,
-    );
-
-    // Clean up the output file
+  // Clean up any previous upgrade output
+  if (existsSync(upgradeOutputPath)) {
     unlinkSync(upgradeOutputPath);
-
-    return Promise.resolve(upgradeOutput.implementationAddress);
-  } catch (error) {
-    console.error("Deployment failed:", error);
-    throw error;
   }
+  execSync(forgeCommand, {
+    cwd: lazerContractsDir,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  // Read upgrade output from JSON file written by the forge script
+  if (!existsSync(upgradeOutputPath)) {
+    throw new Error(
+      "Upgrade output file not found. Deployment may have failed.",
+    );
+  }
+
+  const upgradeOutput = JSON.parse(
+    readFileSync(upgradeOutputPath, "utf8"),
+  ) as UpgradeImplementationOutput;
+
+  // Verify chain ID matches
+  if (upgradeOutput.chainId !== chainNetworkId) {
+    throw new Error(
+      `Chain ID mismatch: expected ${chainNetworkId}, got ${upgradeOutput.chainId}`,
+    );
+  }
+
+  // Clean up the output file
+  unlinkSync(upgradeOutputPath);
+
+  return Promise.resolve(upgradeOutput.implementationAddress);
 }
 
 async function main() {
@@ -135,8 +117,6 @@ async function main() {
   const vault =
     DefaultStore.vaults[`${mainnetVault.cluster}_${mainnetVault.key}`];
 
-  console.log("Using cache file", cacheFile);
-
   // Try to deploy on every chain, then collect any failures at the end. This logic makes it simpler to
   // identify deployment problems (e.g., not enough gas) on every chain where they occur.
   const payloads: Buffer[] = [];
@@ -148,7 +128,6 @@ async function main() {
     if (
       selectedChains.some((chain) => chain.getId() === contract.chain.getId())
     ) {
-      console.log("Deploying implementation to", contract.chain.getId());
       try {
         const address = await runIfNotCached(
           `deploy-${contract.chain.getId()}`,
@@ -161,16 +140,10 @@ async function main() {
             );
           },
         );
-        console.log(
-          `Deployed implementation at ${address} on ${contract.chain.getId()}`,
-        );
         const payload =
           await contract.generateUpgradeLazerContractPayload(address);
-
-        console.log(payload.toString("hex"));
         payloads.push(payload);
-      } catch (error) {
-        console.log(`error deploying: ${error}`);
+      } catch (_error) {
         failures.push(contract.chain.getId());
       }
     }
@@ -183,13 +156,9 @@ async function main() {
       )}. Scroll up to see the errors from each chain.`,
     );
   }
-
-  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet", wallet.publicKey.toBase58());
   vault?.connect(wallet, registry);
-  const proposal = await vault?.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal?.address.toBase58());
+  await vault?.proposeWormholeMessage(payloads);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

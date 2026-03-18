@@ -7,16 +7,14 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-
-import type { HexString } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 import { Account, Connection, KeyPair } from "near-api-js";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
 import type {
   ExecutionStatus,
+  ExecutionStatusBasic,
   FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
-import { ExecutionStatusBasic } from "near-api-js/lib/providers/provider";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -83,7 +81,7 @@ export class NearPricePusher implements IPricePusher {
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -93,7 +91,7 @@ export class NearPricePusher implements IPricePusher {
       try {
         updateFee = await this.account.getUpdateFeeEstimate(data);
         this.logger.debug(`Update fee: ${updateFee}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error(error, "getUpdateFeeEstimate failed");
         continue;
       }
@@ -103,12 +101,7 @@ export class NearPricePusher implements IPricePusher {
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
         const is_success = Object.values(outcome.receipts_outcome).reduce(
           (is_success, receipt) => {
-            if (
-              Object.prototype.hasOwnProperty.call(
-                receipt.outcome.status,
-                "Failure",
-              )
-            ) {
+            if (Object.hasOwn(receipt.outcome.status, "Failure")) {
               failureMessages.push(receipt.outcome.status);
               return false;
             }
@@ -124,7 +117,7 @@ export class NearPricePusher implements IPricePusher {
         } else {
           this.logger.error({ failureMessages }, "updatePriceFeeds failed");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error(error, "updatePriceFeeds failed");
       }
     }
@@ -162,21 +155,21 @@ export class NearAccount {
 
   async getPriceUnsafe(priceId: string): Promise<any> {
     return await this.account.viewFunction({
-      contractId: this.pythAccountId,
-      methodName: "get_price_unsafe",
       args: {
         price_identifier: priceId,
       },
+      contractId: this.pythAccountId,
+      methodName: "get_price_unsafe",
     });
   }
 
   async getUpdateFeeEstimate(data: string): Promise<any> {
     return await this.account.viewFunction({
-      contractId: this.pythAccountId,
-      methodName: "get_update_fee_estimate",
       args: {
         data,
       },
+      contractId: this.pythAccountId,
+      methodName: "get_update_fee_estimate",
     });
   }
 
@@ -185,13 +178,13 @@ export class NearAccount {
     updateFee: any,
   ): Promise<FinalExecutionOutcome> {
     return await this.account.functionCall({
-      contractId: this.pythAccountId,
-      methodName: "update_price_feeds",
       args: {
         data,
       },
-      gas: "300000000000000" as any,
       attachedDeposit: updateFee,
+      contractId: this.pythAccountId,
+      gas: "300000000000000" as any,
+      methodName: "update_price_feeds",
     });
   }
 
@@ -221,10 +214,10 @@ export class NearAccount {
       const keyStore = new InMemoryKeyStore();
       void keyStore.setKey(network, accountInfo.account_id, keyPair);
       return Connection.fromConfig({
-        networkId: network,
-        provider: { type: "JsonRpcProvider", args: { url: nodeUrl } },
-        signer: { type: "InMemorySigner", keyStore },
         jsvmAccountId: `jsvm.${network}`,
+        networkId: network,
+        provider: { args: { url: nodeUrl }, type: "JsonRpcProvider" },
+        signer: { keyStore, type: "InMemorySigner" },
       });
     } else {
       throw new Error("Invalid key file!");

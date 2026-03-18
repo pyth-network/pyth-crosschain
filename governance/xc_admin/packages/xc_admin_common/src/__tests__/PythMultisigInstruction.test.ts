@@ -1,20 +1,34 @@
-import crypto from "crypto";
+/** biome-ignore-all lint/style/noDoneCallback: test behavior was existing pre-biome */
+import crypto from "node:crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
+import type { AccountMeta } from "@solana/web3.js";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
 import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
 
+/**
+ * Helper function to safely get an account key from instruction keys array
+ */
+function getKeyAtIndex(keys: AccountMeta[], index: number): PublicKey {
+  const key = keys[index];
+  if (!key) {
+    throw new Error(`Expected key at index ${index} but found undefined`);
+  }
+  return key.pubkey;
+}
+
 test("Pyth multisig instruction parse: create price account", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
@@ -31,8 +45,8 @@ test("Pyth multisig instruction parse: create price account", (done) => {
     .addPrice(-8, 1)
     .accounts({
       fundingAccount: PublicKey.unique(),
-      productAccount: PublicKey.unique(),
       priceAccount: PublicKey.unique(),
+      productAccount: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {
@@ -44,49 +58,48 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         );
         expect(parsedInstruction.name).toBe("addPrice");
         expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.pubkey.equals(
-            instruction.keys[0]!.pubkey,
+          parsedInstruction.accounts.named.fundingAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
-        expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.isSigner,
-        ).toBe(instruction.keys[0]!.isSigner);
-        expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.isWritable,
-        ).toBe(instruction.keys[0]?.isWritable);
-        console.log(parsedInstruction.accounts.named["productAccount"]);
-        expect(
-          parsedInstruction.accounts.named["productAccount"]?.pubkey.equals(
-            instruction.keys[1]!.pubkey,
-          ),
-        ).toBeTruthy();
-        expect(
-          parsedInstruction.accounts.named["productAccount"]?.isSigner,
-        ).toBe(instruction.keys[1]?.isSigner);
-        expect(
-          parsedInstruction.accounts.named["productAccount"]?.isWritable,
-        ).toBe(instruction.keys[1]?.isWritable);
-        expect(
-          parsedInstruction.accounts.named["priceAccount"]?.pubkey.equals(
-            instruction.keys[2]!.pubkey,
-          ),
-        ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["priceAccount"]?.isSigner).toBe(
-          instruction.keys[2]?.isSigner,
+        expect(parsedInstruction.accounts.named.fundingAccount?.isSigner).toBe(
+          instruction.keys[0]?.isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["priceAccount"]?.isWritable,
-        ).toBe(instruction.keys[2]?.isWritable);
+          parsedInstruction.accounts.named.fundingAccount?.isWritable,
+        ).toBe(instruction.keys[0]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.pubkey.equals(
-            instruction.keys[3]!.pubkey,
+          parsedInstruction.accounts.named.productAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 1),
+          ),
+        ).toBeTruthy();
+        expect(parsedInstruction.accounts.named.productAccount?.isSigner).toBe(
+          instruction.keys[1]?.isSigner,
+        );
+        expect(
+          parsedInstruction.accounts.named.productAccount?.isWritable,
+        ).toBe(instruction.keys[1]?.isWritable);
+        expect(
+          parsedInstruction.accounts.named.priceAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 2),
+          ),
+        ).toBeTruthy();
+        expect(parsedInstruction.accounts.named.priceAccount?.isSigner).toBe(
+          instruction.keys[2]?.isSigner,
+        );
+        expect(parsedInstruction.accounts.named.priceAccount?.isWritable).toBe(
+          instruction.keys[2]?.isWritable,
+        );
+        expect(
+          parsedInstruction.accounts.named.permissionsAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.isSigner,
+          parsedInstruction.accounts.named.permissionsAccount?.isSigner,
         ).toBe(instruction.keys[3]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.isWritable,
+          parsedInstruction.accounts.named.permissionsAccount?.isWritable,
         ).toBe(instruction.keys[3]?.isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 
@@ -100,7 +113,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
 });
 
 test("Pyth multisig instruction parse: set minimum publishers", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
@@ -129,37 +142,37 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         );
         expect(parsedInstruction.name).toBe("setMinPub");
         expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.pubkey.equals(
-            instruction.keys[0]!.pubkey,
+          parsedInstruction.accounts.named.fundingAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
-        expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.isSigner,
-        ).toBe(instruction.keys[0]?.isSigner);
-        expect(
-          parsedInstruction.accounts.named["fundingAccount"]?.isWritable,
-        ).toBe(instruction.keys[0]?.isWritable);
-        expect(
-          parsedInstruction.accounts.named["priceAccount"]?.pubkey.equals(
-            instruction.keys[1]!.pubkey,
-          ),
-        ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["priceAccount"]?.isSigner).toBe(
-          instruction.keys[1]?.isSigner,
+        expect(parsedInstruction.accounts.named.fundingAccount?.isSigner).toBe(
+          instruction.keys[0]?.isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["priceAccount"]?.isWritable,
-        ).toBe(instruction.keys[1]?.isWritable);
+          parsedInstruction.accounts.named.fundingAccount?.isWritable,
+        ).toBe(instruction.keys[0]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.pubkey.equals(
-            instruction.keys[2]!.pubkey,
+          parsedInstruction.accounts.named.priceAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 1),
+          ),
+        ).toBeTruthy();
+        expect(parsedInstruction.accounts.named.priceAccount?.isSigner).toBe(
+          instruction.keys[1]?.isSigner,
+        );
+        expect(parsedInstruction.accounts.named.priceAccount?.isWritable).toBe(
+          instruction.keys[1]?.isWritable,
+        );
+        expect(
+          parsedInstruction.accounts.named.permissionsAccount?.pubkey.equals(
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.isSigner,
+          parsedInstruction.accounts.named.permissionsAccount?.isSigner,
         ).toBe(instruction.keys[2]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"]?.isWritable,
+          parsedInstruction.accounts.named.permissionsAccount?.isWritable,
         ).toBe(instruction.keys[2]?.isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
         expect(parsedInstruction.args.minPub).toBe(25);

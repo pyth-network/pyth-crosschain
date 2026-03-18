@@ -14,12 +14,12 @@ export const YouTubeEmbed = ({
   className,
 }: YouTubeEmbedProps) => (
   <iframe
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowFullScreen
     className={clsx(styles.iframe, className)}
+    referrerPolicy="strict-origin-when-cross-origin"
     src={`https://www.youtube.com/embed/${id}?enablejsapi=1`}
     title={title}
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    referrerPolicy="strict-origin-when-cross-origin"
-    allowFullScreen
   />
 );
 

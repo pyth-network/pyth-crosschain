@@ -1,17 +1,18 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Vendor script uses env vars for configuration
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { resolve } from "node:path";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
 import {
+  Ed25519Keypair,
+  fromB64,
+  JsonRpcProvider,
+  normalizeSuiObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
-  JsonRpcProvider,
-  Ed25519Keypair,
   testnetConnection,
 } from "@mysten/sui.js";
-import { execSync } from "child_process";
-import { resolve } from "path";
-import * as fs from "fs";
 
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
@@ -33,9 +34,9 @@ async function main() {
   const provider = new JsonRpcProvider(testnetConnection);
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(
-      Buffer.from(walletPrivateKey, "base64").subarray(1)
+      Buffer.from(walletPrivateKey, "base64").subarray(1),
     ),
-    provider
+    provider,
   );
 
   const srcWormholePath = resolve(`${__dirname}/../../wormhole`);
@@ -51,30 +52,25 @@ async function main() {
   // We will use the signed VAA when we execute the upgrade.
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
 
-  const timestamp = 12345678;
+  const timestamp = 12_345_678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex")
+    `0x${digest.toString("hex")}`,
   );
   published.writeUInt16BE(21, published.length - 34);
 
   const signedVaa = guardians.addSignatures(published, [0]);
-  console.log("Upgrade VAA:", signedVaa.toString("hex"));
 
   // And execute upgrade with governance VAA.
-  const upgradeResults = await buildAndUpgradeWormhole(
+  const _upgradeResults = await buildAndUpgradeWormhole(
     wallet,
     WORMHOLE_STATE_ID,
     modules,
     dependencies,
-    signedVaa
+    signedVaa,
   );
-
-  console.log("tx digest", upgradeResults.digest);
-  console.log("tx effects", JSON.stringify(upgradeResults.effects!));
-  console.log("tx events", JSON.stringify(upgradeResults.events!));
 
   // TODO: grab new package ID from the events above. Do not rely on the RPC
   // call because it may give you a stale package ID after the upgrade.
@@ -104,21 +100,21 @@ function buildForBytecodeAndDigest(packagePath: string) {
   } = JSON.parse(
     execSync(
       `sui move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
-      { encoding: "utf-8" }
-    )
+      { encoding: "utf-8" },
+    ),
   );
   return {
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeSuiObjectId(d)
+      normalizeSuiObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
   };
 }
 
 async function getPackageId(
   provider: JsonRpcProvider,
-  stateId: string
+  stateId: string,
 ): Promise<string> {
   const state = await provider
     .getObject({
@@ -128,7 +124,7 @@ async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 
@@ -147,48 +143,48 @@ async function buildAndUpgradeWormhole(
   wormholeStateId: string,
   modules: number[][],
   dependencies: string[],
-  signedVaa: Buffer
+  signedVaa: Buffer,
 ) {
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
   const tx = new TransactionBlock();
 
   const [verifiedVaa] = tx.moveCall({
-    target: `${wormholePackage}::vaa::parse_and_verify`,
     arguments: [
       tx.object(wormholeStateId),
       tx.pure(Array.from(signedVaa)),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
+    target: `${wormholePackage}::vaa::parse_and_verify`,
   });
   const [decreeTicket] = tx.moveCall({
-    target: `${wormholePackage}::upgrade_contract::authorize_governance`,
     arguments: [tx.object(wormholeStateId)],
+    target: `${wormholePackage}::upgrade_contract::authorize_governance`,
   });
   const [decreeReceipt] = tx.moveCall({
-    target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
+    target: `${wormholePackage}::governance_message::verify_vaa`,
     typeArguments: [`${wormholePackage}::upgrade_contract::GovernanceWitness`],
   });
 
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
-    target: `${wormholePackage}::upgrade_contract::authorize_upgrade`,
     arguments: [tx.object(wormholeStateId), decreeReceipt],
+    target: `${wormholePackage}::upgrade_contract::authorize_upgrade`,
   });
 
   // Build and generate modules and dependencies for upgrade.
   const [upgradeReceipt] = tx.upgrade({
-    modules,
     dependencies,
+    modules,
     packageId: wormholePackage,
     ticket: upgradeTicket,
   });
 
   // Commit upgrade.
   tx.moveCall({
-    target: `${wormholePackage}::upgrade_contract::commit_upgrade`,
     arguments: [tx.object(wormholeStateId), upgradeReceipt],
+    target: `${wormholePackage}::upgrade_contract::commit_upgrade`,
   });
 
   // Cannot auto compute gas budget, so we need to configure it manually.
@@ -196,43 +192,43 @@ async function buildAndUpgradeWormhole(
   //tx.setGasBudget(1_000_000_000n);
 
   return signer.signAndExecuteTransactionBlock({
-    transactionBlock: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    transactionBlock: tx,
   });
 }
 
-async function migrateWormhole(
+async function _migrateWormhole(
   signer: RawSigner,
   wormholeStateId: string,
-  signedUpgradeVaa: Buffer
+  signedUpgradeVaa: Buffer,
 ) {
   const contractPackage = await getPackageId(signer.provider, wormholeStateId);
 
   const tx = new TransactionBlock();
   tx.moveCall({
-    target: `${contractPackage}::migrate::migrate`,
     arguments: [
       tx.object(wormholeStateId),
       tx.pure(Array.from(signedUpgradeVaa)),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
+    target: `${contractPackage}::migrate::migrate`,
   });
 
   return signer.signAndExecuteTransactionBlock({
-    transactionBlock: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    transactionBlock: tx,
   });
 }
 
 function setUpWormholeDirectory(
   srcWormholePath: string,
-  dstWormholePath: string
+  dstWormholePath: string,
 ) {
   fs.cpSync(srcWormholePath, dstWormholePath, { recursive: true });
 
@@ -247,8 +243,8 @@ function setUpWormholeDirectory(
   ];
   for (const basename of removeThese) {
     fs.rmSync(`${dstWormholePath}/${basename}`, {
-      recursive: true,
       force: true,
+      recursive: true,
     });
   }
 
@@ -258,10 +254,10 @@ function setUpWormholeDirectory(
   fs.writeFileSync(
     moveTomlPath,
     moveToml.replace(`wormhole = "_"`, `wormhole = "0x0"`),
-    "utf-8"
+    "utf-8",
   );
 }
 
 function cleanUpPackageDirectory(packagePath: string) {
-  fs.rmSync(packagePath, { recursive: true, force: true });
+  fs.rmSync(packagePath, { force: true, recursive: true });
 }

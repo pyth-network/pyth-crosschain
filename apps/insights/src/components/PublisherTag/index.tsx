@@ -3,11 +3,10 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { omitKeys } from "../../omit-keys";
 import { Cluster } from "../../services/pyth";
 import { PublisherKey } from "../PublisherKey";
+import styles from "./index.module.scss";
 
 type Props = ComponentProps<"div"> & {
   compact?: boolean | undefined;
@@ -25,9 +24,9 @@ type Props = ComponentProps<"div"> & {
 
 export const PublisherTag = ({ className, ...props }: Props) => (
   <div
-    data-loading={props.isLoading ? "" : undefined}
-    data-compact={props.compact ? "" : undefined}
     className={clsx(styles.publisherTag, className)}
+    data-compact={props.compact ? "" : undefined}
+    data-loading={props.isLoading ? "" : undefined}
     {...omitKeys(props, [
       "compact",
       "isLoading",
@@ -37,17 +36,17 @@ export const PublisherTag = ({ className, ...props }: Props) => (
     ])}
   >
     {props.isLoading ? (
-      <Skeleton fill className={styles.icon} />
+      <Skeleton className={styles.icon} fill />
     ) : (
       <div className={styles.icon}>{props.icon ?? <UndisclosedIcon />}</div>
     )}
     <Contents {...props} />
     {props.cluster === Cluster.PythtestConformance && (
       <Badge
-        variant="muted"
-        style="filled"
-        size="xs"
         className={styles.testBadge}
+        size="xs"
+        style="filled"
+        variant="muted"
       >
         test
       </Badge>

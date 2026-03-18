@@ -2,6 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    "build": {
+      "dependsOn": ["build:typescript", "build:schemas"]
+    },
     "build:schemas": {
       "dependsOn": ["//#install:modules", "pull:schema"],
       "inputs": ["schema.json"],
@@ -11,17 +14,14 @@
       "dependsOn": ["//#install:modules", "build:schemas", "^build"],
       "outputs": ["lib/**"]
     },
-    "build": {
-      "dependsOn": ["build:typescript", "build:schemas"]
-    },
     "example": {
-      "dependsOn": ["//#install:modules", "build"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["//#install:modules", "build"]
     },
     "pull:schema": {
+      "cache": false,
       "dependsOn": ["//#install:modules"],
-      "outputs": ["schema.json"],
-      "cache": false
+      "outputs": ["schema.json"]
     }
   }
 }

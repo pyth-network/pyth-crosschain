@@ -6,9 +6,9 @@ import { Row as BaseRow } from "react-aria-components";
 import { usePrefetch } from "../../use-prefetch.js";
 
 export {
-  type SortDescriptor,
   Cell,
   Column,
+  type SortDescriptor,
   Table,
   TableBody,
   TableHeader,
@@ -26,8 +26,8 @@ export const Row = <T extends object>({
 }: RowProps<T>) => {
   const prefetchProps = usePrefetch({
     href: props.href,
-    prefetch,
     onHoverStart,
+    prefetch,
     ref,
   });
 

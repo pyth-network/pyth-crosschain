@@ -5,8 +5,8 @@ import "./globals.scss";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "{{packageNameWithoutOrg}}",
   description: "{{description}}",
+  title: "{{packageNameWithoutOrg}}",
 };
 
 export default function RootLayout({

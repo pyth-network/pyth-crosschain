@@ -3,7 +3,7 @@
  * Example: `{ 'data': (payload: string) => void; 'error': (err: Error) => void; }`
  */
 export abstract class IsomorphicEventEmitter<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: Generic event emitter requires any[] for callback args
   T extends Record<string, (...args: any[]) => void>,
 > {
   private listeners = new Map<keyof T, T[keyof T][]>();

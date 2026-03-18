@@ -27,8 +27,8 @@ export const CurrentStakeAccount = ({
     >
       <div className="font-semibold">Stake account:</div>
       <CopyButton
-        text={api.account.toBase58()}
         className="text-pythpurple-400 2xl:ml-2 2xl:mr-0"
+        text={api.account.toBase58()}
       >
         <TruncatedKey>{api.account}</TruncatedKey>
       </CopyButton>

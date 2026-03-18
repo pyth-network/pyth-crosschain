@@ -10,8 +10,8 @@ function deserializeCommitmentMetadata(data: Buffer) {
   const chainLength = data.readBigInt64LE(32);
 
   return {
-    seed,
     chainLength,
+    seed,
   };
 }
 
@@ -19,9 +19,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch the provider registration data for the testnet contracts.",
+      type: "boolean",
     },
   });
 
@@ -35,8 +35,7 @@ async function main() {
     try {
       provider = await contract.getDefaultProvider();
       providerInfo = await contract.getProviderInfo(provider);
-    } catch (error) {
-      console.error(`Error fetching info for ${contract.getId()}`, error);
+    } catch (_error) {
       continue;
     }
 
@@ -46,20 +45,8 @@ async function main() {
     );
 
     // const binaryData = hexToBytes(commitmentMetadata);
-    const metadata = deserializeCommitmentMetadata(
+    const _metadata = deserializeCommitmentMetadata(
       Buffer.from(commitmentMetadata, "hex"),
-    );
-    console.log("=".repeat(100));
-    console.log(`Fetched info for ${contract.getId()}`);
-
-    console.log(`chain             : ${contract.getChain().getId()}`);
-    console.log(`contract          : ${contract.address}`);
-    console.log(`provider          : ${provider}`);
-    console.log(`commitment data   : ${commitmentMetadata}`);
-    console.log(`chainLength       : ${metadata.chainLength}`);
-    console.log(`seed              : [${metadata.seed}]`);
-    console.log(
-      `original seq no   : ${providerInfo.originalCommitmentSequenceNumber}`,
     );
   }
 }

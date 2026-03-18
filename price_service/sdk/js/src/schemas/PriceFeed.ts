@@ -93,6 +93,7 @@ export type PriceFeedMetadata = {
 
 // Converts JSON types to/from your types
 // and asserts the results at runtime
+// biome-ignore lint/complexity/noStaticOnlyClass: legacy API
 export class Convert {
   public static toPriceFeed(json: any): PriceFeed {
     return cast(json, r("PriceFeed"));
@@ -201,13 +202,11 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
     const result: any = {};
     for (const key of Object.getOwnPropertyNames(props)) {
       const prop = props[key];
-      const v = Object.prototype.hasOwnProperty.call(val, key)
-        ? val[key]
-        : undefined;
+      const v = Object.hasOwn(val, key) ? val[key] : undefined;
       result[prop.key] = transform(v, prop.typ, getProps, prop.key);
     }
     for (const key of Object.getOwnPropertyNames(val)) {
-      if (!Object.prototype.hasOwnProperty.call(props, key)) {
+      if (!Object.hasOwn(props, key)) {
         result[key] = transform(val[key], additional, getProps, key);
       }
     }
@@ -225,11 +224,11 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
   }
   if (Array.isArray(typ)) return transformEnum(typ, val);
   if (typeof typ === "object") {
-    return typ.hasOwnProperty("unionMembers")
+    return Object.hasOwn(typ, "unionMembers")
       ? transformUnion(typ.unionMembers, val)
-      : typ.hasOwnProperty("arrayItems")
+      : Object.hasOwn(typ, "arrayItems")
         ? transformArray(typ.arrayItems, val)
-        : typ.hasOwnProperty("props")
+        : Object.hasOwn(typ, "props")
           ? transformObject(getProps(typ), typ.additional, val)
           : invalidValue(typ, val);
   }
@@ -251,7 +250,7 @@ function u(...typs: any[]) {
 }
 
 function o(props: any[], additional: any) {
-  return { props, additional };
+  return { additional, props };
 }
 
 function r(name: string) {
@@ -259,49 +258,49 @@ function r(name: string) {
 }
 
 const typeMap: any = {
-  PriceFeed: o(
+  Price: o(
     [
-      { json: "ema_price", js: "ema_price", typ: r("Price") },
-      { json: "id", js: "id", typ: "" },
-      {
-        json: "metadata",
-        js: "metadata",
-        typ: u(undefined, r("PriceFeedMetadata")),
-      },
-      { json: "price", js: "price", typ: r("Price") },
-      { json: "vaa", js: "vaa", typ: u(undefined, "") },
+      { js: "conf", json: "conf", typ: "" },
+      { js: "expo", json: "expo", typ: 0 },
+      { js: "price", json: "price", typ: "" },
+      { js: "publish_time", json: "publish_time", typ: 0 },
     ],
     "any",
   ),
-  Price: o(
+  PriceFeed: o(
     [
-      { json: "conf", js: "conf", typ: "" },
-      { json: "expo", js: "expo", typ: 0 },
-      { json: "price", js: "price", typ: "" },
-      { json: "publish_time", js: "publish_time", typ: 0 },
+      { js: "ema_price", json: "ema_price", typ: r("Price") },
+      { js: "id", json: "id", typ: "" },
+      {
+        js: "metadata",
+        json: "metadata",
+        typ: u(undefined, r("PriceFeedMetadata")),
+      },
+      { js: "price", json: "price", typ: r("Price") },
+      { js: "vaa", json: "vaa", typ: u(undefined, "") },
     ],
     "any",
   ),
   PriceFeedMetadata: o(
     [
       {
-        json: "attestation_time",
         js: "attestation_time",
+        json: "attestation_time",
         typ: u(undefined, 0),
       },
-      { json: "emitter_chain", js: "emitter_chain", typ: 0 },
+      { js: "emitter_chain", json: "emitter_chain", typ: 0 },
       {
-        json: "prev_publish_time",
         js: "prev_publish_time",
+        json: "prev_publish_time",
         typ: u(undefined, 0),
       },
       {
-        json: "price_service_receive_time",
         js: "price_service_receive_time",
+        json: "price_service_receive_time",
         typ: u(undefined, 0),
       },
-      { json: "sequence_number", js: "sequence_number", typ: u(undefined, 0) },
-      { json: "slot", js: "slot", typ: u(undefined, 0) },
+      { js: "sequence_number", json: "sequence_number", typ: u(undefined, 0) },
+      { js: "slot", json: "slot", typ: u(undefined, 0) },
     ],
     "any",
   ),

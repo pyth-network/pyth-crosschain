@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync } from "fs";
-import { rimrafSync } from "rimraf";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import AdmZip from "adm-zip";
-import path from "path";
 import { DownloaderHelper } from "node-downloader-helper";
+import { rimrafSync } from "rimraf";
 
 export type DeploymentType = "stable" | "beta";
 
@@ -33,20 +33,17 @@ export async function getContractBytesDict(
     uniqueArtifactsZipName.map(async (artifactZipName) => {
       return new Promise<void>((resolve, reject) => {
         const dl = new DownloaderHelper(
-          githubArtifactsLink + artifactZipName + ".zip",
+          `${githubArtifactsLink + artifactZipName}.zip`,
           tmpCodeStorageDir,
         );
 
         dl.on("end", () => {
-          console.log("Download Completed");
           resolve();
         });
         dl.on("error", (err) => {
-          console.log("Download Failed", err);
           reject(err);
         });
         dl.start().catch((err) => {
-          console.error(err);
           reject(err);
         });
       });
@@ -56,15 +53,15 @@ export async function getContractBytesDict(
   // extract zip files
   uniqueArtifactsZipName.map(async (artifactZipName) => {
     const zip = new AdmZip(
-      path.resolve(tmpCodeStorageDir + "/" + artifactZipName + ".zip"),
+      path.resolve(`${tmpCodeStorageDir}/${artifactZipName}.zip`),
     );
     zip.extractAllTo(path.resolve(tmpCodeStorageDir));
   });
 
-  let contractBytesDict: { [fileName: string]: Buffer } = {};
-  for (let uniqueArtifactZipName of uniqueArtifactsZipName) {
+  const contractBytesDict: { [fileName: string]: Buffer } = {};
+  for (const uniqueArtifactZipName of uniqueArtifactsZipName) {
     const contractBytes = readFileSync(
-      tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm",
+      `${tmpCodeStorageDir}/${uniqueArtifactZipName}/pyth_cosmwasm.wasm`,
     );
     contractBytesDict[uniqueArtifactZipName] = contractBytes;
   }

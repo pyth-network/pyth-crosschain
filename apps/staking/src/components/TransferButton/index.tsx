@@ -1,12 +1,12 @@
-import type { ComponentProps, ReactNode, FormEvent } from "react";
+import type { ComponentProps, FormEvent, ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
   DialogTrigger,
-  TextField,
-  Label,
-  Input,
   Form,
   Group,
+  Input,
+  Label,
+  TextField,
 } from "react-aria-components";
 
 import { StateType, useAsync } from "../../hooks/use-async";
@@ -57,12 +57,12 @@ export const TransferButton = ({
     <DialogTrigger>
       <Button {...props}>{actionName}</Button>
       <TransferDialog
-        title={title ?? actionName}
         description={actionDescription}
         max={max}
-        transfer={transfer}
         submitButtonText={submitButtonText ?? actionName}
         successMessage={successMessage}
+        title={title ?? actionName}
+        transfer={transfer}
       >
         {children}
       </TransferDialog>
@@ -99,12 +99,12 @@ const TransferDialog = ({
     <ModalDialog closeDisabled={closeDisabled} {...props}>
       {({ close }) => (
         <DialogContents
+          close={close}
           max={max}
-          transfer={transfer}
           setCloseDisabled={setCloseDisabled}
           submitButtonText={submitButtonText}
-          close={close}
           successMessage={successMessage}
+          transfer={transfer}
         >
           {children}
         </DialogContents>
@@ -189,12 +189,12 @@ const DialogContents = ({
       <TextField
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
+        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
         isInvalid={validationError !== undefined}
-        value={stringValue}
+        name="amount"
         onChange={setAmount}
         validationBehavior="aria"
-        name="amount"
-        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
+        value={stringValue}
       >
         <div className="flex flex-row items-center justify-between">
           <Label className="text-sm">Amount</Label>
@@ -205,18 +205,18 @@ const DialogContents = ({
         </div>
         <Group className="relative w-full">
           <Input
-            required
             className="focused:outline-none focused:ring-0 focused:border-pythpurple-400 w-full truncate border border-neutral-600/50 bg-transparent py-3 pl-12 pr-24 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0"
             placeholder="0.00"
+            required
           />
           <div className="pointer-events-none absolute inset-y-0 flex w-full items-center justify-between px-4">
             <PythTokensIcon className="size-6" />
             <Button
+              className="pointer-events-auto"
+              isDisabled={state.type === StateType.Running}
+              onPress={setMax}
               size="small"
               variant="secondary"
-              className="pointer-events-auto"
-              onPress={setMax}
-              isDisabled={state.type === StateType.Running}
             >
               max
             </Button>
@@ -233,11 +233,11 @@ const DialogContents = ({
       )}
       <Button
         className="mt-6 w-full"
-        type="submit"
-        isLoading={state.type === StateType.Running}
         isDisabled={
           amount.type !== AmountType.Valid || state.type === StateType.Complete
         }
+        isLoading={state.type === StateType.Running}
+        type="submit"
       >
         {validationError ?? submitButtonText}
       </Button>
@@ -249,14 +249,6 @@ const useAmountInput = (max: bigint) => {
   const [stringValue, setAmount] = useState<string>("");
 
   return {
-    stringValue,
-
-    setAmount,
-
-    setMax: useCallback(() => {
-      setAmount(tokensToString(max));
-    }, [setAmount, max]),
-
     amount: useMemo((): Amount => {
       if (stringValue === "") {
         return Amount.Empty();
@@ -273,6 +265,13 @@ const useAmountInput = (max: bigint) => {
         }
       }
     }, [stringValue, max]),
+
+    setAmount,
+
+    setMax: useCallback(() => {
+      setAmount(tokensToString(max));
+    }, [max]),
+    stringValue,
   };
 };
 
@@ -285,17 +284,17 @@ export enum AmountType {
 }
 
 const Amount = {
-  Empty: () => ({ type: AmountType.Empty as const }),
-  NotPositive: (amount: bigint) => ({
-    type: AmountType.NotPositive as const,
-    amount,
-  }),
-  Valid: (amount: bigint) => ({ type: AmountType.Valid as const, amount }),
-  Invalid: () => ({ type: AmountType.Invalid as const }),
   AboveMax: (amount: bigint) => ({
-    type: AmountType.AboveMax as const,
     amount,
+    type: AmountType.AboveMax as const,
   }),
+  Empty: () => ({ type: AmountType.Empty as const }),
+  Invalid: () => ({ type: AmountType.Invalid as const }),
+  NotPositive: (amount: bigint) => ({
+    amount,
+    type: AmountType.NotPositive as const,
+  }),
+  Valid: (amount: bigint) => ({ amount, type: AmountType.Valid as const }),
 };
 
 type Amount = ReturnType<(typeof Amount)[keyof typeof Amount]>;

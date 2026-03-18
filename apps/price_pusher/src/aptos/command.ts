@@ -15,32 +15,30 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
 import {
+  APTOS_ACCOUNT_HD_PATH,
   AptosPriceListener,
   AptosPricePusher,
-  APTOS_ACCOUNT_HD_PATH,
 } from "./aptos.js";
-import { filterInvalidPriceItems } from "../utils.js";
 import { createAptosBalanceTracker } from "./balance-tracker.js";
 
 export default {
-  command: "aptos",
-  describe: "run price pusher for aptos",
   builder: {
     endpoint: {
       description:
         "RPC endpoint endpoint URL for aptos. The pusher will periodically" +
         "poll for updates. The polling interval is configurable via the " +
         "`polling-frequency` command-line argument.",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
     "override-gas-price-multiplier": {
+      default: 2,
       description:
         "Multiply the gas price by this number if the transaction is not landing to override it. Default 2",
-      type: "number",
       required: false,
-      default: 2,
+      type: "number",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -53,7 +51,10 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
-  handler: async function (argv: any) {
+  command: "aptos",
+  describe: "run price pusher for aptos",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       endpoint,
@@ -90,7 +91,7 @@ export default {
     );
     logger.info(`Pushing from account address: ${account.address()}`);
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =
@@ -136,8 +137,8 @@ export default {
       aptosPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
-        pushingFrequency,
         metrics: metrics!,
+        pushingFrequency,
       },
     );
 
@@ -146,10 +147,10 @@ export default {
       const balanceTracker = createAptosBalanceTracker({
         address: account.address().toString(),
         endpoint,
+        logger: logger.child({ module: "AptosBalanceTracker" }),
+        metrics,
         network: "aptos",
         updateInterval: pushingFrequency,
-        metrics,
-        logger: logger.child({ module: "AptosBalanceTracker" }),
       });
 
       // Start the balance tracker

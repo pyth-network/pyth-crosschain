@@ -1,7 +1,7 @@
 // eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer as IsomorphicBuffer } from "buffer";
 
 import { PublicKey } from "@solana/web3.js";
+import { Buffer as IsomorphicBuffer } from "buffer";
 
 /**
  * The default Pyth Solana Receiver program ID.

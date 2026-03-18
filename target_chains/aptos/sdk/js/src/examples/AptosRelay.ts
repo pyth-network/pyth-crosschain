@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Example file uses env vars for configuration
 import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -9,24 +10,24 @@ const argv = yargs(hideBin(process.argv))
     description:
       "Space separated price feed ids (in hex) to fetch" +
       " e.g: 0xf9c0172ba10dfa4d19088d...",
-    type: "array",
     required: true,
+    type: "array",
   })
   .option("price-service", {
     description:
       "Endpoint URL for the price service. e.g: https://endpoint/example",
-    type: "string",
     required: true,
+    type: "string",
   })
   .option("full-node", {
     description: "URL of the full Aptos node RPC endpoint.",
-    type: "string",
     required: true,
+    type: "string",
   })
   .option("pyth-contract", {
     description: "Pyth contract address.",
-    type: "string",
     required: true,
+    type: "string",
   })
   .help()
   .alias("help", "h")
@@ -49,19 +50,17 @@ async function run() {
 
   const sender = new AptosAccount(Buffer.from(process.env.APTOS_KEY, "hex"));
   const client = new AptosClient(argv.fullNode);
-  const result = await client.generateSignSubmitWaitForTransaction(
+  const _result = await client.generateSignSubmitWaitForTransaction(
     sender,
     new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
-        argv.pythContract + "::pyth",
+        `${argv.pythContract}::pyth`,
         "update_price_feeds_with_funder",
         [],
         [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)],
       ),
     ),
   );
-
-  console.dir(result, { depth: null });
 }
 
 run();

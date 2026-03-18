@@ -22,8 +22,8 @@ export const BodyProviders = ({ theme, ...props }: TabRootProps) => {
         <AlertProvider>
           <DrawerProvider setMainContentOffset={setOffset}>
             <div
-              style={{ "--offset": offset / 100 } as CSSProperties}
               data-overlay-visible={overlayVisibleState[0] ? "" : undefined}
+              style={{ "--offset": offset / 100 } as CSSProperties}
               {...props}
             />
           </DrawerProvider>

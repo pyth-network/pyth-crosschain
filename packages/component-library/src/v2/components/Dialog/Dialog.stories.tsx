@@ -1,19 +1,16 @@
 import { NOOP } from "@pythnetwork/shared-lib/constants";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { Dialog } from "./Dialog";
 import { Avatar } from "../Avatar";
 import { Button } from "../Button";
 import { Text } from "../Text";
+import { Dialog } from "./Dialog";
 
 const meta = {
-  title: "V2/Dialog",
-  component: Dialog,
   args: {
-    open: true,
     onClose: NOOP,
-    title: "Update profile",
+    open: true,
     saveAction: <Button variant="primary">Save changes</Button>,
+    title: "Update profile",
   },
   argTypes: {
     children: { control: false },
@@ -21,6 +18,7 @@ const meta = {
     onOpen: { action: "onOpen" },
     saveAction: { control: false },
   },
+  component: Dialog,
   parameters: {
     layout: "fullscreen",
   },
@@ -31,7 +29,7 @@ const meta = {
           Keep your profile up to date to make sure account notifications reach
           the right inbox.
         </Text>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ alignItems: "center", display: "flex", gap: "0.75rem" }}>
           <Avatar
             user={{
               avatarUrl: "https://i.pravatar.cc/120?img=24",
@@ -48,6 +46,7 @@ const meta = {
       </div>
     </Dialog>
   ),
+  title: "V2/Dialog",
 } satisfies Meta<typeof Dialog>;
 
 export default meta;

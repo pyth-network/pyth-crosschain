@@ -67,7 +67,7 @@ export class SystemProgramMultisigInstruction implements MultisigInstruction {
           data = SystemInstruction.decodeNonceWithdraw(instruction);
           break;
         case "UpgradeNonceAccount": // I couldn't find the decode function for this
-          throw Error("UpgradeNonceAccount not implemented");
+          throw new Error("UpgradeNonceAccount not implemented");
       }
       return new SystemProgramMultisigInstruction(instructionType, data, {
         named: {},

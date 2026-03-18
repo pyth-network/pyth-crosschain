@@ -1,14 +1,3 @@
-/* eslint-disable tsdoc/syntax */
-/* eslint-disable @typescript-eslint/await-thenable */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/require-await */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
@@ -64,7 +53,7 @@ export class EvmWormholeContract extends WormholeContract {
     return EvmWormholeContract.type;
   }
 
-  async getVersion(): Promise<string> {
+  getVersion(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.version().call();
   }
@@ -194,7 +183,7 @@ export class EvmEntropyContract extends Storable {
     return EvmEntropyContract.type;
   }
 
-  async getVersion(): Promise<string> {
+  getVersion(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.version().call();
   }
@@ -258,7 +247,7 @@ export class EvmEntropyContract extends Storable {
     return this.chain.generateExecutorPayload(executorAddr, executorAddr, data);
   }
 
-  async getOwner(): Promise<string> {
+  getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
   }
@@ -268,7 +257,7 @@ export class EvmEntropyContract extends Storable {
     return new EvmExecutorContract(this.chain, owner);
   }
 
-  async getPendingOwner(): Promise<string> {
+  getPendingOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.pendingOwner().call();
   }
@@ -308,7 +297,7 @@ export class EvmEntropyContract extends Storable {
    * @param provider - The entropy provider address
    * @param sequenceNumber - The sequence number of the request for the provider
    */
-  async getRequest(
+  getRequest(
     provider: string,
     sequenceNumber: number,
   ): Promise<EntropyRequest> {
@@ -350,7 +339,7 @@ export class EvmEntropyContract extends Storable {
    * @param sequenceNumber - The sequence number of the request for the provider
    * @param senderPrivateKey - The private key to use for submitting the transaction on-chain
    */
-  async revealWithCallback(
+  revealWithCallback(
     userRandomNumber: string,
     providerRevelation: string,
     provider: string,
@@ -415,7 +404,7 @@ export class EvmEntropyContract extends Storable {
     });
   }
 
-  async revealRandomness(
+  revealRandomness(
     userRevelation: string,
     providerRevelation: string,
     provider: string,
@@ -514,7 +503,7 @@ export class EvmExecutorContract extends Storable {
   /**
    * Returns the owner of the executor contract, this should always be the contract address itself
    */
-  async getOwner(): Promise<string> {
+  getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
   }
@@ -581,7 +570,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   /**
    * Returns the bytecode of the contract in hex format
    */
-  async getCode(): Promise<string> {
+  getCode(): Promise<string> {
     // TODO: handle proxy contracts
     const web3 = this.chain.getWeb3();
     return web3.eth.getCode(this.address);
@@ -600,7 +589,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   /**
    * Returns the keccak256 digest of the contract bytecode
    */
-  async getCodeDigestWithoutAddress(): Promise<string> {
+  getCodeDigestWithoutAddress(): Promise<string> {
     return getCodeDigestWithoutAddress(this.chain.getWeb3(), this.address);
   }
 
@@ -611,9 +600,6 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       web3 = this.chain.getWeb3();
       amount = BigInt(await web3.eth.getBalance(this.address));
     } catch {
-      console.error(
-        "Error getting balance with given RPC, moving to viem default RPC",
-      );
       web3 = this.chain.getViemDefaultWeb3();
       amount = BigInt(await web3.eth.getBalance(this.address));
     }
@@ -806,7 +792,7 @@ export class EvmPulseContract extends Storable {
     };
   }
 
-  async getOwner(): Promise<string> {
+  getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
   }
@@ -816,22 +802,22 @@ export class EvmPulseContract extends Storable {
     return new EvmExecutorContract(this.chain, owner);
   }
 
-  async getPythFeeInWei(): Promise<string> {
+  getPythFeeInWei(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.getPythFeeInWei().call();
   }
 
-  async getFee(callbackGasLimit: number): Promise<string> {
+  getFee(callbackGasLimit: number): Promise<string> {
     const contract = this.getContract();
     return contract.methods.getFee(callbackGasLimit).call();
   }
 
-  async getAccruedFees(): Promise<string> {
+  getAccruedFees(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.getAccruedFees().call();
   }
 
-  async getRequest(sequenceNumber: number): Promise<{
+  getRequest(sequenceNumber: number): Promise<{
     provider: string;
     publishTime: string;
     priceIds: string[];
@@ -842,12 +828,12 @@ export class EvmPulseContract extends Storable {
     return contract.methods.getRequest(sequenceNumber).call();
   }
 
-  async getDefaultProvider(): Promise<string> {
+  getDefaultProvider(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.getDefaultProvider().call();
   }
 
-  async getProviderInfo(provider: string): Promise<{
+  getProviderInfo(provider: string): Promise<{
     feeInWei: string;
     accruedFeesInWei: string;
   }> {
@@ -855,12 +841,12 @@ export class EvmPulseContract extends Storable {
     return contract.methods.getProviderInfo(provider).call();
   }
 
-  async getExclusivityPeriod(): Promise<string> {
+  getExclusivityPeriod(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.getExclusivityPeriod().call();
   }
 
-  async getFirstActiveRequests(count: number): Promise<{
+  getFirstActiveRequests(count: number): Promise<{
     requests: {
       provider: string;
       publishTime: string;
@@ -1003,7 +989,7 @@ export class EvmLazerContract extends Storable {
     return await contract.methods.version().call();
   }
 
-  async getOwner(): Promise<string> {
+  getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
   }
@@ -1068,30 +1054,22 @@ export class EvmLazerContract extends Storable {
         from: account.address,
         to: this.address,
       });
-      const tx = await web3.eth.sendTransaction({
+      await web3.eth.sendTransaction({
         data,
         from: account.address,
         gas: Math.ceil(Number(gasEstimate) * 1.2).toString(),
         to: this.address,
       });
-      console.log(
-        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
-      );
-      console.log(`Transaction hash: ${tx.transactionHash}`);
     } else {
       const gasEstimate = await contract.methods
         .updateTrustedSigner(trustedSigner, expiresAt)
         .estimateGas({ from: account.address });
-      const tx = await contract.methods
+      await contract.methods
         .updateTrustedSigner(trustedSigner, expiresAt)
         .send({
           from: account.address,
           gas: Math.floor(gasEstimate * 1.2), // 20% buffer
         });
-      console.log(
-        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
-      );
-      console.log(`Transaction hash: ${tx.transactionHash}`);
     }
   }
 }

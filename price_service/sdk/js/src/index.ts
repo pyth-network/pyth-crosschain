@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
@@ -12,12 +13,12 @@ export type DurationInSeconds = number;
 export type HexString = string;
 
 export {
-  isAccumulatorUpdateData,
-  sliceAccumulatorUpdateData,
-  parseAccumulatorUpdateData,
   type AccumulatorUpdateData,
+  isAccumulatorUpdateData,
+  parseAccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
+  sliceAccumulatorUpdateData,
 } from "./AccumulatorUpdateData.js";
 
 /**
@@ -140,10 +141,10 @@ export class PriceFeedMetadata {
     return new PriceFeedMetadata({
       attestationTime: jsonFeed.attestation_time,
       emitterChain: jsonFeed.emitter_chain,
+      prevPublishTime: jsonFeed.prev_publish_time,
       receiveTime: jsonFeed.price_service_receive_time,
       sequenceNumber: jsonFeed.sequence_number,
       slot: jsonFeed.slot,
-      prevPublishTime: jsonFeed.prev_publish_time,
     });
   }
 
@@ -151,10 +152,10 @@ export class PriceFeedMetadata {
     const jsonFeed: JsonPriceFeedMetadata = {
       attestation_time: this.attestationTime,
       emitter_chain: this.emitterChain,
+      prev_publish_time: this.prevPublishTime,
       price_service_receive_time: this.priceServiceReceiveTime,
       sequence_number: this.sequenceNumber,
       slot: this.slot,
-      prev_publish_time: this.prevPublishTime,
     };
     // this is done to avoid sending undefined values to the server
     return Convert.priceFeedMetadataToJson(jsonFeed);
@@ -209,8 +210,8 @@ export class PriceFeed {
       emaPrice: Price.fromJson(jsonFeed.ema_price),
       id: jsonFeed.id,
       metadata: PriceFeedMetadata.fromJson(jsonFeed.metadata),
-      vaa: jsonFeed.vaa,
       price: Price.fromJson(jsonFeed.price),
+      vaa: jsonFeed.vaa,
     });
   }
 

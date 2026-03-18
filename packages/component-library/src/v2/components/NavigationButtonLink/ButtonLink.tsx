@@ -31,9 +31,9 @@ export function ButtonLink({
   return (
     <Button
       {...rest}
+      className={cx(classes.root, className)}
       data-active={active}
       data-leftnavlink
-      className={cx(classes.root, className)}
       nativeButton={false}
       render={<Link href={href} prefetch={false} />}
     />

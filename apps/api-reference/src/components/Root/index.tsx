@@ -1,13 +1,13 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
-import { Red_Hat_Text, Red_Hat_Mono } from "next/font/google";
+import { Red_Hat_Mono, Red_Hat_Text } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 
 import {
-  IS_PRODUCTION_SERVER,
-  GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
+  GOOGLE_ANALYTICS_ID,
+  IS_PRODUCTION_SERVER,
   WALLETCONNECT_PROJECT_ID,
 } from "../../server-config";
 import { PriceFeedListProvider } from "../../use-price-feed-list";
@@ -34,9 +34,9 @@ type Props = {
 
 export const Root = ({ children }: Props) => (
   <html
-    lang="en"
-    dir="ltr"
     className={clsx("h-dvh", redHatText.variable, redHatMono.variable)}
+    dir="ltr"
+    lang="en"
     // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
     suppressHydrationWarning
   >

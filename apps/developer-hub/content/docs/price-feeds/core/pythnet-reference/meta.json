@@ -1,5 +1,5 @@
 {
-  "title": "Pythnet Reference",
+  "defaultOpen": false,
   "pages": ["account-structure", "product-metadata", "schedule-format"],
-  "defaultOpen": false
+  "title": "Pythnet Reference"
 }

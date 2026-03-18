@@ -10,8 +10,8 @@ export function setupHelloWorldCommand(yargs: Argv) {
         description: "your name",
         type: "string",
       }),
-    async ({ name }) => {
-      console.info("hello, world!", name || "");
+    (_args) => {
+      // TODO: Implement hello-world command
     },
   );
 }

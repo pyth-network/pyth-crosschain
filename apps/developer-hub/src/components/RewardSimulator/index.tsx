@@ -3,7 +3,7 @@
 import { Card } from "@pythnetwork/component-library/Card";
 import { Label } from "@pythnetwork/component-library/unstyled/Label";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import styles from "./index.module.scss";
 
@@ -23,11 +23,11 @@ const Sup = ({ children }: { children: React.ReactNode }) => (
 
 const RewardSimulator: React.FC = () => {
   const [rewards, setRewards] = useState({
+    delegator: 24,
+    delegatorRate: 8,
     // These are the initial values for the reward simulator based on default values
     publisher: 26,
-    delegator: 24,
     publisherRate: 13,
-    delegatorRate: 8,
   });
 
   const doSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
@@ -59,13 +59,13 @@ const RewardSimulator: React.FC = () => {
       const finalPublisherReward = publisherRewardBase + delegatorFeeAmount;
 
       setRewards({
-        publisher: Number(finalPublisherReward.toFixed(2)),
         delegator: Number(finalDelegatorReward.toFixed(2)),
-        publisherRate: Number(
-          ((finalPublisherReward * 100) / publisherStake).toFixed(2),
-        ),
         delegatorRate: Number(
           ((finalDelegatorReward * 100) / delegatorStake).toFixed(2),
+        ),
+        publisher: Number(finalPublisherReward.toFixed(2)),
+        publisherRate: Number(
+          ((finalPublisherReward * 100) / publisherStake).toFixed(2),
         ),
       });
     },
@@ -74,12 +74,12 @@ const RewardSimulator: React.FC = () => {
 
   return (
     <Card
-      variant="secondary"
-      title="Reward Simulator"
-      nonInteractive
       className={styles.card}
+      nonInteractive
+      title="Reward Simulator"
+      variant="secondary"
     >
-      <form onSubmit={recalculateRewards} onChange={doSubmit}>
+      <form onChange={doSubmit} onSubmit={recalculateRewards}>
         <div className={styles.inputGrid}>
           <div className={styles.inputGroup}>
             <Label htmlFor="publisher-stake">
@@ -91,12 +91,12 @@ const RewardSimulator: React.FC = () => {
               ):
             </Label>
             <Input
+              className={styles.input ?? ""}
+              defaultValue={200}
               id="publisher-stake"
+              min="0"
               name="publisherStake"
               type="number"
-              defaultValue={200}
-              className={styles.input ?? ""}
-              min="0"
             />
           </div>
 
@@ -110,12 +110,12 @@ const RewardSimulator: React.FC = () => {
               ):
             </Label>
             <Input
+              className={styles.input ?? ""}
+              defaultValue={300}
               id="delegator-stake"
+              min="0"
               name="delegatorStake"
               type="number"
-              defaultValue={300}
-              className={styles.input ?? ""}
-              min="0"
             />
           </div>
 
@@ -128,12 +128,12 @@ const RewardSimulator: React.FC = () => {
               ):
             </Label>
             <Input
+              className={styles.input ?? ""}
+              defaultValue={500}
               id="max-cap"
+              min="0"
               name="maxCap"
               type="number"
-              defaultValue={500}
-              className={styles.input ?? ""}
-              min="0"
             />
           </div>
 
@@ -142,14 +142,14 @@ const RewardSimulator: React.FC = () => {
               Delegator Fee (<MathExpression>f</MathExpression>) (%):
             </Label>
             <Input
-              id="delegator-fee"
-              name="delegatorFee"
-              type="number"
-              defaultValue={20}
               className={styles.input ?? ""}
-              min="0"
+              defaultValue={20}
+              id="delegator-fee"
               max="100"
+              min="0"
+              name="delegatorFee"
               step="0.1"
+              type="number"
             />
           </div>
 
@@ -158,14 +158,14 @@ const RewardSimulator: React.FC = () => {
               Reward Rate (<MathExpression>r</MathExpression>) (%):
             </Label>
             <Input
-              id="reward-rate"
-              name="rewardRate"
-              type="number"
-              defaultValue={10}
               className={styles.input ?? ""}
-              min="0"
+              defaultValue={10}
+              id="reward-rate"
               max="100"
+              min="0"
+              name="rewardRate"
               step="0.1"
+              type="number"
             />
           </div>
         </div>

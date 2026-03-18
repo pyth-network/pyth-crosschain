@@ -9,22 +9,23 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type {
-  PriceFeedOutput,
   DataSourceOutput,
+  PriceFeedOutput,
 } from "@pythnetwork/pyth-fuel-js";
 import {
-  PYTH_CONTRACT_ABI as FuelContractAbi,
   FUEL_ETH_ASSET_ID,
+  PYTH_CONTRACT_ABI as FuelContractAbi,
 } from "@pythnetwork/pyth-fuel-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
-import type { DryRunResult } from "fuels";
-import { Account, Contract, Wallet, arrayify, hexlify } from "fuels";
+import type { Account, DryRunResult, Wallet } from "fuels";
+import { arrayify, Contract, hexlify } from "fuels";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
-import { Chain, FuelChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract } from "../base";
+import type { Chain } from "../chains";
+import { FuelChain } from "../chains";
 import type { TokenQty } from "../token";
+import { WormholeContract } from "./wormhole";
 
 export class FuelWormholeContract extends WormholeContract {
   static type = "FuelWormholeContract";
@@ -39,8 +40,8 @@ export class FuelWormholeContract extends WormholeContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: FuelWormholeContract.type,
     };
   }
@@ -90,7 +91,7 @@ export class FuelWormholeContract extends WormholeContract {
 
   async getChainId(): Promise<number> {
     const contract = await this.getContract();
-    const chainId = ((await contract.functions.chain_id?.().get()) ?? {}).value;
+    const chainId = (await contract.functions.chain_id?.().get())?.value;
     return chainId;
   }
 
@@ -98,8 +99,8 @@ export class FuelWormholeContract extends WormholeContract {
     const contract = await this.getContract();
     const guardianSetIndex = await this.getCurrentGuardianSetIndex();
     const guardianSet = (
-      (await contract.functions.guardian_set?.(guardianSetIndex).get()) ?? {}
-    ).value;
+      await contract.functions.guardian_set?.(guardianSetIndex).get()
+    )?.value;
     return guardianSet;
   }
 
@@ -182,11 +183,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getLastExecutedGovernanceSequence() {
     const pythContract = await this.getContract();
     return Number(
-      (
-        (await pythContract.functions
-          .last_executed_governance_sequence?.()
-          .get()) ?? {}
-      ).value,
+      (await pythContract.functions.last_executed_governance_sequence?.().get())
+        ?.value,
     );
   }
 
@@ -194,27 +192,26 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const pythContract = await this.getContract();
     const feed = "0x" + feedId;
     const exists = (
-      (await pythContract.functions.price_feed_exists?.(hexlify(feed)).get()) ??
-      {}
-    ).value;
+      await pythContract.functions.price_feed_exists?.(hexlify(feed)).get()
+    )?.value;
     if (!exists) {
       return undefined;
     }
     const priceFeed: PriceFeedOutput = (
-      (await pythContract.functions.price_feed_unsafe?.(feed).get()) ?? {}
-    ).value;
+      await pythContract.functions.price_feed_unsafe?.(feed).get()
+    )?.value;
     return {
-      price: {
-        price: priceFeed.price.price.toString(),
-        conf: priceFeed.price.confidence.toString(),
-        expo: priceFeed.price.exponent.toString(),
-        publishTime: priceFeed.price.publish_time.toString(),
-      },
       emaPrice: {
-        price: priceFeed.ema_price.price.toString(),
         conf: priceFeed.ema_price.confidence.toString(),
         expo: priceFeed.ema_price.exponent.toString(),
+        price: priceFeed.ema_price.price.toString(),
         publishTime: priceFeed.ema_price.publish_time.toString(),
+      },
+      price: {
+        conf: priceFeed.price.confidence.toString(),
+        expo: priceFeed.price.exponent.toString(),
+        price: priceFeed.price.price.toString(),
+        publishTime: priceFeed.price.publish_time.toString(),
       },
     };
   }
@@ -222,8 +219,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getValidTimePeriod() {
     const pythContract = await this.getContract();
     const validTimePeriod = (
-      (await pythContract.functions.valid_time_period?.().get()) ?? {}
-    ).value;
+      await pythContract.functions.valid_time_period?.().get()
+    )?.value;
     return Number(validTimePeriod);
   }
 
@@ -237,9 +234,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const pythContract = await this.getContract();
-    const amount = (
-      (await pythContract.functions.single_update_fee?.().get()) ?? {}
-    ).value;
+    const amount = (await pythContract.functions.single_update_fee?.().get())
+      ?.value;
     return {
       amount: amount.toString(),
       denom: this.chain.getNativeToken() ?? "",
@@ -260,8 +256,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
           emitter_address: string;
         }) => {
           return {
-            emitterChain: chain_id,
             emitterAddress: emitter_address.replace("0x", ""),
+            emitterChain: chain_id,
           };
         },
       ) ?? []
@@ -278,8 +274,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     }
 
     return {
-      emitterChain: result.value.chain_id,
       emitterAddress: result.value.emitter_address.replace("0x", ""),
+      emitterChain: result.value.chain_id,
     };
   }
 
@@ -291,8 +287,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const contract = await this.getContract(wallet);
     const priceFeedUpdateData = vaas.map((vaa) => new Uint8Array(vaa));
     const updateFee: number = (
-      (await contract.functions.update_fee?.(priceFeedUpdateData).get()) ?? {}
-    ).value;
+      await contract.functions.update_fee?.(priceFeedUpdateData).get()
+    )?.value;
     const tx = await contract.functions
       .update_price_feeds?.(priceFeedUpdateData)
       .callParams({
@@ -342,8 +338,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: FuelPriceFeedContract.type,
     };
   }

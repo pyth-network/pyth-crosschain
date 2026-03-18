@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
@@ -23,7 +24,7 @@ it("Unit test compressed u16 size", async () => {
   expect(getSizeOfCompressedU16(16_384)).toBe(3);
 });
 
-it("Unit test for getSizeOfTransaction", async () => {
+it("Unit test for getSizeOfTransaction", () => {
   jest.setTimeout(60_000);
 
   const payer = new Keypair();
@@ -33,30 +34,30 @@ it("Unit test for getSizeOfTransaction", async () => {
   ixsToSend.push(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
-      newAccountPubkey: PublicKey.unique(),
-      space: 100,
       lamports: 1_000_000_000,
+      newAccountPubkey: PublicKey.unique(),
       programId: SystemProgram.programId,
+      space: 100,
     }),
   );
 
   ixsToSend.push(
     SystemProgram.createAccountWithSeed({
-      fromPubkey: PublicKey.unique(),
       basePubkey: PublicKey.unique(),
-      seed: "seed",
-      newAccountPubkey: PublicKey.unique(),
-      space: 100,
+      fromPubkey: PublicKey.unique(),
       lamports: 1_000_000_000,
+      newAccountPubkey: PublicKey.unique(),
       programId: SystemProgram.programId,
+      seed: "seed",
+      space: 100,
     }),
   );
 
   ixsToSend.push(
     new TransactionInstruction({
-      keys: [{ pubkey: PublicKey.unique(), isSigner: true, isWritable: true }],
-      programId: PublicKey.unique(),
       data: Buffer.from([1, 2, 3]),
+      keys: [{ isSigner: true, isWritable: true, pubkey: PublicKey.unique() }],
+      programId: PublicKey.unique(),
     }),
   );
 
@@ -79,9 +80,9 @@ it("Unit test for getSizeOfTransaction", async () => {
 
   const versionedTransaction = new VersionedTransaction(
     new TransactionMessage({
-      recentBlockhash: transaction.recentBlockhash,
-      payerKey: payer.publicKey,
       instructions: ixsToSend,
+      payerKey: payer.publicKey,
+      recentBlockhash: transaction.recentBlockhash,
     }).compileToV0Message(),
   );
   expect(versionedTransaction.serialize()).toHaveLength(
@@ -92,24 +93,24 @@ it("Unit test for getSizeOfTransaction", async () => {
     new AddressLookupTableAccount({
       key: PublicKey.unique(),
       state: {
-        lastExtendedSlot: 0,
-        lastExtendedSlotStartIndex: 0,
-        deactivationSlot: BigInt(0),
         addresses: [
           SystemProgram.programId,
           ComputeBudgetProgram.programId,
-          ...ixsToSend[0]!.keys.map((key) => key.pubkey),
-          ...ixsToSend[1]!.keys.map((key) => key.pubkey),
-          ...ixsToSend[2]!.keys.map((key) => key.pubkey),
+          ...(ixsToSend?.[0]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[1]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[2]?.keys.map((key) => key.pubkey) ?? []),
         ],
+        deactivationSlot: BigInt(0),
+        lastExtendedSlot: 0,
+        lastExtendedSlotStartIndex: 0,
       },
     });
 
   const versionedTransactionWithAlt = new VersionedTransaction(
     new TransactionMessage({
-      recentBlockhash: transaction.recentBlockhash,
-      payerKey: payer.publicKey,
       instructions: ixsToSend,
+      payerKey: payer.publicKey,
+      recentBlockhash: transaction.recentBlockhash,
     }).compileToV0Message([addressLookupTable]),
   );
 

@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import type { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   sendTransactions,
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
-import { AddressLookupTableAccount, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import type { AddressLookupTableAccount } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -44,8 +45,7 @@ export class SolanaPriceListener extends ChainPriceListener {
       ) {
         this.logger.info(
           `Solana connection is behind by ${(
-            Date.now() / 1000 -
-            blockTime
+            Date.now() / 1000 - blockTime
           ).toString()} seconds`,
         );
       }
@@ -122,7 +122,7 @@ export class SolanaPricePusher implements IPricePusher {
         },
       );
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed:");
       return;
     }
@@ -150,7 +150,7 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.wallet,
       );
       this.logger.info({ signatures }, "updatePriceFeed successful");
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
       return;
     }
@@ -189,7 +189,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       return Math.floor(
         Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.logger.error({ err: error }, "getRecentJitoTips failed");
       return undefined;
@@ -212,7 +212,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         encoding: "base64",
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }

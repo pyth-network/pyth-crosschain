@@ -14,14 +14,14 @@ export function ClaudeIcon({
   return createElement(
     "svg",
     {
-      role: "img",
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      xmlns: "http://www.w3.org/2000/svg",
-      fill: color,
       className,
+      fill: color,
+      height: size,
+      role: "img",
       style,
+      viewBox: "0 0 24 24",
+      width: size,
+      xmlns: "http://www.w3.org/2000/svg",
       ...props,
     },
     createElement("path", {

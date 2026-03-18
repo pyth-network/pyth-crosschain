@@ -1,17 +1,21 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable no-console */
 /* eslint-disable unicorn/no-null */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import type { SignatureResult, Signer } from "@solana/web3.js";
-import {
+import type {
   AddressLookupTableAccount,
+  SignatureResult,
+  Signer,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import {
   ComputeBudgetProgram,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
   Transaction,
-  TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -183,9 +187,9 @@ export class TransactionBuilder {
     const { instruction, signers, computeUnits } = args;
     if (this.transactionInstructions.length === 0) {
       this.transactionInstructions.push({
+        computeUnits: computeUnits ?? 0,
         instructions: [instruction],
         signers: signers,
-        computeUnits: computeUnits ?? 0,
       });
     } else {
       const sizeWithComputeUnits = getSizeOfTransaction(
@@ -208,9 +212,9 @@ export class TransactionBuilder {
         this.transactionInstructions.at(-1)!.computeUnits += computeUnits ?? 0;
       } else
         this.transactionInstructions.push({
+          computeUnits: computeUnits ?? 0,
           instructions: [instruction],
           signers: signers,
-          computeUnits: computeUnits ?? 0,
         });
     }
   }
@@ -220,7 +224,7 @@ export class TransactionBuilder {
    */
   addInstructions(instructions: InstructionWithEphemeralSigners[]) {
     for (const { instruction, signers, computeUnits } of instructions) {
-      this.addInstruction({ instruction, signers, computeUnits });
+      this.addInstruction({ computeUnits, instruction, signers });
     }
   }
 
@@ -274,16 +278,16 @@ export class TransactionBuilder {
         }
 
         return {
+          signers: signers,
           tx: new VersionedTransaction(
             new TransactionMessage({
-              recentBlockhash: blockhash,
               instructions: instructionsToSend,
               payerKey: this.payer,
+              recentBlockhash: blockhash,
             }).compileToV0Message(
               this.addressLookupTable ? [this.addressLookupTable] : [],
             ),
           ),
-          signers: signers,
         };
       },
     );
@@ -340,8 +344,8 @@ export class TransactionBuilder {
         }
 
         return {
-          tx: new Transaction().add(...instructionsToSend),
           signers: signers,
+          tx: new Transaction().add(...instructionsToSend),
         };
       },
     );
@@ -431,7 +435,7 @@ export async function sendTransactions(
   const signatures: string[] = [];
 
   // Signing logic for versioned transactions is different from legacy transactions
-  for (const [index, transaction] of transactions.entries()) {
+  for (const [_index, transaction] of transactions.entries()) {
     const signers = transaction.signers;
     let tx = transaction.tx;
 
@@ -467,9 +471,9 @@ export async function sendTransactions(
 
     const confirmTransactionPromise = connection.confirmTransaction(
       {
-        signature: txSignature,
         blockhash: blockhashResult.value.blockhash,
         lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
+        signature: txSignature,
       },
       "confirmed",
     );
@@ -495,26 +499,16 @@ export async function sendTransactions(
       if (maxRetries && maxRetries < retryCount) {
         break;
       }
-      console.log(
-        "Retrying transaction",
-        index,
-        "of",
-        transactions.length - 1,
-        "with signature:",
-        txSignature,
-        "Retry count:",
-        retryCount,
-      );
       retryCount++;
 
       await connection.sendRawTransaction(tx.serialize(), {
-        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-        skipPreflight: true,
         // Setting max retries to 0 as we are handling retries manually
         // Set this manually so that the default is skipped
         maxRetries: 0,
         preflightCommitment: "confirmed",
+        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+        skipPreflight: true,
       });
     }
     if (confirmedTx?.err) {

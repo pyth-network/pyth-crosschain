@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-      "types": ["mocha", "chai"],
-      "typeRoots": ["./node_modules/@types"],
-      "lib": ["es2020"],
-      "module": "commonjs",
-      "target": "es2020",
-      "strict": true,
-      "resolveJsonModule": true,
-      "esModuleInterop": true
-    }
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "lib": ["es2020"],
+    "module": "commonjs",
+    "resolveJsonModule": true,
+    "strict": true,
+    "target": "es2020",
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["mocha", "chai"]
   }
+}

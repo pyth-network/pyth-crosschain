@@ -2,9 +2,8 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Meter as MeterComponent } from "../unstyled/Meter";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   label: string;
@@ -27,7 +26,7 @@ export const Meter = ({
 }: Props) => (
   <MeterComponent aria-label={label} {...props}>
     {({ percentage }) => (
-      <div data-variant={variant} className={clsx(styles.meter, className)}>
+      <div className={clsx(styles.meter, className)} data-variant={variant}>
         {(startLabel !== undefined || endLabel !== undefined) && (
           <div className={styles.labels}>
             <div className={labelClassName}>{startLabel}</div>

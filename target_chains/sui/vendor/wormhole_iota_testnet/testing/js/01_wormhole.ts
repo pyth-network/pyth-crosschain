@@ -1,14 +1,12 @@
-import { expect } from "chai";
-
-import { WALLET_PRIVATE_KEY, WORMHOLE_STATE_ID } from "./helpers/consts";
 import {
   Ed25519Keypair,
   JsonRpcProvider,
   localnetConnection,
   RawSigner,
-  SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
+import { expect } from "chai";
+import { WALLET_PRIVATE_KEY, WORMHOLE_STATE_ID } from "./helpers/consts";
 import { getPackageId } from "./helpers/utils";
 import { addPrepareMessageAndPublishMessage } from "./helpers/wormhole/testPublishMessage";
 
@@ -18,14 +16,14 @@ describe(" 1. Wormhole", () => {
   // User wallet.
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(WALLET_PRIVATE_KEY),
-    provider
+    provider,
   );
 
   describe("Publish Message", () => {
     it("Check `WormholeMessage` Event", async () => {
       const wormholePackage = await getPackageId(
         wallet.provider,
-        WORMHOLE_STATE_ID
+        WORMHOLE_STATE_ID,
       );
 
       const owner = await wallet.getAddress();
@@ -34,24 +32,24 @@ describe(" 1. Wormhole", () => {
       const emitterCapId = await (async () => {
         const tx = new TransactionBlock();
         const [emitterCap] = tx.moveCall({
-          target: `${wormholePackage}::emitter::new`,
           arguments: [tx.object(WORMHOLE_STATE_ID)],
+          target: `${wormholePackage}::emitter::new`,
         });
         tx.transferObjects([emitterCap], tx.pure(owner));
 
         // Execute and fetch created Emitter cap.
         return wallet
           .signAndExecuteTransactionBlock({
-            transactionBlock: tx,
             options: {
               showObjectChanges: true,
             },
+            transactionBlock: tx,
           })
           .then((result) => {
             const found = result.objectChanges?.filter(
-              (item) => "created" === item.type!
+              (item) => "created" === item.type!,
             );
-            if (found?.length == 1 && "objectId" in found[0]) {
+            if (found?.length === 1 && "objectId" in found[0]) {
               return found[0].objectId;
             }
 
@@ -71,7 +69,7 @@ describe(" 1. Wormhole", () => {
         // Construct transaction block to send multiple messages.
         for (let i = 0; i < numMessages; ++i) {
           // Make a unique message.
-          const payload = basePayload + `... ${i}`;
+          const payload = `${basePayload}... ${i}`;
           payloads.push(payload);
 
           addPrepareMessageAndPublishMessage(
@@ -80,16 +78,16 @@ describe(" 1. Wormhole", () => {
             WORMHOLE_STATE_ID,
             emitterCapId,
             nonce,
-            payload
+            payload,
           );
         }
 
         const events = await wallet
           .signAndExecuteTransactionBlock({
-            transactionBlock: tx,
             options: {
               showEvents: true,
             },
+            transactionBlock: tx,
           })
           .then((result) => result.events!);
         expect(events).has.length(numMessages);

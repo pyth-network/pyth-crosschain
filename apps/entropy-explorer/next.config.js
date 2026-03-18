@@ -3,45 +3,8 @@ const config = {
     reactCompiler: true,
   },
 
-  reactStrictMode: true,
-
-  pageExtensions: ["ts", "tsx", "mdx"],
-
-  images: {
-    remotePatterns: [
-      new URL("https://icons.llamao.fi/icons/chains/*?w=20&h=20"),
-      new URL("https://www.tabichain.com/images/new2/tabi.svg"),
-    ],
-  },
-
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-
-  turbopack: {
-    resolveExtensions: [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".mts",
-      ".mjs",
-      ".cts",
-      ".cjs",
-    ],
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
-  },
-
   headers: async () => [
     {
-      source: "/:path*",
       headers: [
         {
           key: "X-XSS-Protection",
@@ -65,7 +28,44 @@ const config = {
             "vibrate=(), geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=self",
         },
       ],
+      source: "/:path*",
     },
   ],
+
+  images: {
+    remotePatterns: [
+      new URL("https://icons.llamao.fi/icons/chains/*?w=20&h=20"),
+      new URL("https://www.tabichain.com/images/new2/tabi.svg"),
+    ],
+  },
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+
+  pageExtensions: ["ts", "tsx", "mdx"],
+
+  reactStrictMode: true,
+
+  turbopack: {
+    resolveExtensions: [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
+    ],
+    rules: {
+      "*.svg": {
+        as: "*.js",
+        loaders: ["@svgr/webpack"],
+      },
+    },
+  },
 };
 export default config;

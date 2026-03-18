@@ -1,22 +1,23 @@
-import express, { type Request, type Response } from "express";
-import cors from "cors";
-import {
-  type Cluster,
-  Connection,
-  Keypair,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import * as fs from "node:fs";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import type { PythCluster } from "@pythnetwork/client";
+import { getPythClusterApiUrl } from "@pythnetwork/client";
 import {
   envOrErr,
   getMultisigCluster,
   MultisigVault,
   PRICE_FEED_MULTISIG,
 } from "@pythnetwork/xc-admin-common";
-import * as fs from "fs";
-import { getPythClusterApiUrl, type PythCluster } from "@pythnetwork/client";
+import type { Cluster } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import cors from "cors";
+import express, { type Request, type Response } from "express";
 
 const PORT: number = Number(process.env.PORT ?? "4000");
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
@@ -32,10 +33,10 @@ const LOCALNET_RPC: string =
   process.env.LOCALNET_RPC ?? getPythClusterApiUrl("localnet");
 
 const RPC_URLS: Record<Cluster | "localnet", string> = {
-  "mainnet-beta": MAINNET_RPC,
   devnet: DEVNET_RPC,
-  testnet: TESTNET_RPC,
   localnet: LOCALNET_RPC,
+  "mainnet-beta": MAINNET_RPC,
+  testnet: TESTNET_RPC,
 };
 
 const COMPUTE_UNIT_PRICE_MICROLAMPORTS: number | undefined = process.env
@@ -55,7 +56,6 @@ app.post("/api/propose", async (req: Request, res: Response) => {
       (ix: any) =>
         new TransactionInstruction({
           data: Buffer.from(ix.data),
-          programId: new PublicKey(ix.programId),
           keys: ix.keys.map((key: any) => {
             return {
               isSigner: key.isSigner,
@@ -63,6 +63,7 @@ app.post("/api/propose", async (req: Request, res: Response) => {
               pubkey: new PublicKey(key.pubkey),
             };
           }),
+          programId: new PublicKey(ix.programId),
         }),
     );
 

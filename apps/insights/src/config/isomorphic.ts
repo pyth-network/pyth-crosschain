@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv: This file is the intended place to declare and load all env variables
 /* eslint-disable n/no-process-env */
 
 import { getPythClusterApiUrl } from "@pythnetwork/client";

@@ -1,50 +1,39 @@
-/* eslint-disable no-empty */
-/* eslint-disable tsdoc/syntax */
-/* eslint-disable unicorn/no-array-for-each */
-/* eslint-disable unicorn/no-array-push-push */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-
-import { Vault } from "./governance";
-import { PriceFeedContract, Storable } from "../../core/base";
+import type { PriceFeedContract, Storable } from "../../core/base";
+import type { Chain } from "../../core/chains";
 import {
   AptosChain,
-  Chain,
   CosmWasmChain,
-  StarknetChain,
   EvmChain,
   FuelChain,
   GlobalChain,
+  IotaChain,
+  NearChain,
+  StarknetChain,
   SuiChain,
   TonChain,
-  NearChain,
-  IotaChain,
 } from "../../core/chains";
+import type { EvmPulseContract } from "../../core/contracts";
 import {
   AptosPriceFeedContract,
   AptosWormholeContract,
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  EvmWormholeContract,
-  SuiPriceFeedContract,
-  SuiWormholeContract,
-  FuelWormholeContract,
-  WormholeContract,
-  FuelPriceFeedContract,
-  TonPriceFeedContract,
-  TonWormholeContract,
-  IotaWormholeContract,
-  IotaPriceFeedContract,
-  EvmPulseContract,
   EvmExecutorContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  EvmWormholeContract,
+  FuelPriceFeedContract,
+  FuelWormholeContract,
+  IotaPriceFeedContract,
+  IotaWormholeContract,
   SuiLazerContract,
+  SuiPriceFeedContract,
+  SuiWormholeContract,
+  TonPriceFeedContract,
+  TonWormholeContract,
+  WormholeContract,
 } from "../../core/contracts";
 import {
   NearPriceFeedContract,
@@ -55,6 +44,7 @@ import {
   StarknetWormholeContract,
 } from "../../core/contracts/starknet";
 import { Token } from "../../core/token";
+import { Vault } from "./governance";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
@@ -80,7 +70,7 @@ export class Store {
   }
 
   getJsonFiles(path: string) {
-    const walk = function (dir: string) {
+    const walk = (dir: string) => {
       let results: string[] = [];
       const list = readdirSync(dir);
       for (let file of list) {
@@ -126,6 +116,7 @@ export class Store {
         if (this.chains[id]) {
           throw new Error(`Multiple chains with id ${id} found`);
         }
+        // biome-ignore lint/style/noNonNullAssertion: legacy assertion
         this.chains[id] = chain!;
       }
     }
@@ -201,17 +192,19 @@ export class Store {
       [EvmLazerContract.type]: EvmLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
     };
-    this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
+    for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (allContractClasses[parsed.type] === undefined) return;
         if (!this.chains[parsed.chain])
           throw new Error(`Chain ${parsed.chain} not found`);
         const chain = this.chains[parsed.chain];
-        const chainContract = allContractClasses[parsed.type]!.fromJson(
-          chain!,
-          parsed,
-        );
+        const contractClass = allContractClasses[parsed.type];
+        if (!contractClass) {
+          throw new Error(`Unknown contract type: ${parsed.type}`);
+        }
+        // biome-ignore lint/style/noNonNullAssertion: legacy assertion
+        const chainContract = contractClass.fromJson(chain!, parsed);
         if (
           this.contracts[chainContract.getId()] ||
           this.entropy_contracts[chainContract.getId()] ||
@@ -237,11 +230,11 @@ export class Store {
           this.contracts[chainContract.getId()] = chainContract;
         }
       }
-    });
+    }
   }
 
   loadAllTokens() {
-    this.getJsonFiles(`${this.path}/tokens/`).forEach((jsonFile) => {
+    for (const jsonFile of this.getJsonFiles(`${this.path}/tokens/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
@@ -251,11 +244,11 @@ export class Store {
           throw new Error(`Multiple tokens with id ${token.getId()} found`);
         this.tokens[token.getId()] = token;
       }
-    });
+    }
   }
 
   loadAllVaults() {
-    this.getJsonFiles(`${this.path}/vaults/`).forEach((jsonFile) => {
+    for (const jsonFile of this.getJsonFiles(`${this.path}/vaults/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Vault.type) return;
@@ -265,7 +258,7 @@ export class Store {
           throw new Error(`Multiple vaults with id ${vault.getId()} found`);
         this.vaults[vault.getId()] = vault;
       }
-    });
+    }
   }
 
   /**
@@ -278,7 +271,8 @@ export class Store {
    */
   getChainOrThrow<T extends Chain>(
     chainId: string,
-    ChainClass?: { new (...args: any[]): T; type: string }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: legacy assertion
+    ChainClass?: { new (...args: any[]): T; type: string },
   ): T {
     const chain = this.chains[chainId];
     if (!chain) {
@@ -297,10 +291,14 @@ const getDirname = () => {
   let out = "";
   try {
     out = __dirname;
-  } catch {}
+  } catch {
+    /* no-op */
+  }
   try {
     out = import.meta.dirname;
-  } catch {}
+  } catch {
+    /* no-op */
+  }
   return out;
 };
 

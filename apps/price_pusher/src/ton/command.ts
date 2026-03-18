@@ -7,33 +7,30 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import { Address, TonClient } from "@ton/ton";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
 import type { IPriceListener } from "../interface.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { TonPriceListener, TonPricePusher } from "./ton.js";
-import { Controller } from "../controller.js";
 import { filterInvalidPriceItems } from "../utils.js";
+import { TonPriceListener, TonPricePusher } from "./ton.js";
 
 export default {
-  command: "ton",
-  describe: "run price pusher for TON",
   builder: {
     endpoint: {
       description: "TON RPC API endpoint",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
     "private-key-file": {
       description: "Path to the private key file",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
     "pyth-contract-address": {
       description: "Pyth contract address on TON",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -42,7 +39,10 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  command: "ton",
+  describe: "run price pusher for TON",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     const {
       endpoint,
       privateKeyFile,
@@ -61,7 +61,7 @@ export default {
 
     const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =

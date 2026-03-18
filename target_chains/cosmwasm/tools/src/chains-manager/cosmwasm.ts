@@ -1,9 +1,22 @@
+import assert from "node:assert";
+import type {
+  DeliverTxResponse,
+  MsgExecuteContractEncodeObject,
+  MsgInstantiateContractEncodeObject,
+  MsgMigrateContractEncodeObject,
+  MsgStoreCodeEncodeObject,
+  MsgUpdateAdminEncodeObject,
+} from "@cosmjs/cosmwasm-stargate";
+import {
+  CosmWasmClient,
+  SigningCosmWasmClient,
+} from "@cosmjs/cosmwasm-stargate";
+import type { EncodeObject, OfflineSigner } from "@cosmjs/proto-signing";
 import {
   DirectSecp256k1HdWallet,
   DirectSecp256k1Wallet,
-  type EncodeObject,
-  type OfflineSigner,
 } from "@cosmjs/proto-signing";
+import { GasPrice } from "@cosmjs/stargate";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -17,18 +30,6 @@ import type {
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
 } from "./chain-executor.js";
-import {
-  CosmWasmClient,
-  type DeliverTxResponse,
-  type MsgExecuteContractEncodeObject,
-  type MsgInstantiateContractEncodeObject,
-  type MsgMigrateContractEncodeObject,
-  type MsgStoreCodeEncodeObject,
-  type MsgUpdateAdminEncodeObject,
-  SigningCosmWasmClient,
-} from "@cosmjs/cosmwasm-stargate";
-import { GasPrice } from "@cosmjs/stargate";
-import assert from "assert";
 
 export class CosmwasmExecutor implements ChainExecutor {
   constructor(
@@ -64,7 +65,12 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getBalance(): Promise<number> {
-    const address = (await this.signer.getAccounts())[0]!.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    const address = firstAccount.address;
     const cosmwasmClient = await CosmWasmClient.connect(this.endpoint);
 
     // We are interested only in the coin that we pay gas fees in.
@@ -77,13 +83,23 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getAddress(): Promise<string> {
-    return (await this.signer.getAccounts())[0]!.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    return firstAccount.address;
   }
 
   private async signAndBroadcastMsg(
     encodedMsgObject: EncodeObject,
   ): Promise<DeliverTxResponse> {
-    const address = (await this.signer.getAccounts())[0]!.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    const address = firstAccount.address;
 
     const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
       this.endpoint,
@@ -92,29 +108,19 @@ export class CosmwasmExecutor implements ChainExecutor {
         gasPrice: GasPrice.fromString(this.gasPrice),
       },
     );
+    const txResponse = await cosmwasmClient.signAndBroadcast(
+      address,
+      [encodedMsgObject],
+      2,
+    );
 
-    try {
-      const txResponse = await cosmwasmClient.signAndBroadcast(
-        address,
-        [encodedMsgObject],
-        2,
-      );
-
-      if (txResponse.code !== 0) {
-        throw new Error(`Transaction failed: ${txResponse.rawLog}`);
-      } else {
-        console.log(
-          `Broadcasted transaction hash: ${JSON.stringify(
-            txResponse.transactionHash,
-          )}`,
-        );
-      }
-
-      return txResponse;
-    } catch (e) {
-      console.log(e);
-      throw e;
+    if (txResponse.code !== 0) {
+      throw new Error(`Transaction failed: ${txResponse.rawLog}`);
+    } else {
+      /* no-op */
     }
+
+    return txResponse;
   }
 
   async storeCode(req: StoreCodeRequest): Promise<StoreCodeResponse> {
@@ -132,7 +138,10 @@ export class CosmwasmExecutor implements ChainExecutor {
     if (txResponse.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
-    const codeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
+    const codeId = Number.parseInt(
+      extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
+    );
 
     return {
       codeId,
@@ -151,12 +160,12 @@ export class CosmwasmExecutor implements ChainExecutor {
       {
         typeUrl: "/cosmwasm.wasm.v1.MsgInstantiateContract",
         value: {
-          sender: accAddress,
           admin: accAddress,
           codeId: BigInt(codeId),
+          funds: [],
           label,
           msg: Buffer.from(JSON.stringify(instMsg)),
-          funds: [],
+          sender: accAddress,
         },
       };
 
@@ -183,10 +192,10 @@ export class CosmwasmExecutor implements ChainExecutor {
   ): Promise<ExecuteContractResponse> {
     const { contractAddr, funds, msg } = req;
     const msgExecuteContact = {
-      sender: await this.getAddress(),
       contract: contractAddr,
-      msg: Buffer.from(JSON.stringify(msg)),
       funds,
+      msg: Buffer.from(JSON.stringify(msg)),
+      sender: await this.getAddress(),
     };
 
     const msgExecuteContractEncodeObject = {
@@ -210,10 +219,10 @@ export class CosmwasmExecutor implements ChainExecutor {
     const msgMigrateContractEncodeObject: MsgMigrateContractEncodeObject = {
       typeUrl: "/cosmwasm.wasm.v1.MsgMigrateContract",
       value: {
-        sender: await this.getAddress(),
-        contract: contractAddr,
         codeId: BigInt(newCodeId),
+        contract: contractAddr,
         msg: Buffer.from(JSON.stringify(migrateMsg)),
+        sender: await this.getAddress(),
       },
     };
 
@@ -224,8 +233,9 @@ export class CosmwasmExecutor implements ChainExecutor {
     if (txResponse.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
-    let resultCodeId = parseInt(
+    const resultCodeId = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     assert.strictEqual(newCodeId, resultCodeId);
@@ -244,9 +254,9 @@ export class CosmwasmExecutor implements ChainExecutor {
     const msgUpdateAdminEncodeObject: MsgUpdateAdminEncodeObject = {
       typeUrl: "/cosmwasm.wasm.v1.MsgUpdateAdmin",
       value: {
-        sender: currAdminAddr,
-        newAdmin: newAdminAddr,
         contract: contractAddr,
+        newAdmin: newAdminAddr,
+        sender: currAdminAddr,
       },
     };
 
@@ -262,14 +272,6 @@ export class CosmwasmExecutor implements ChainExecutor {
 
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
-  try {
-    const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
-    return rx.exec(rawLog)![1] ?? "";
-  } catch (e) {
-    console.error(
-      "Encountered an error in parsing tx result. Printing raw log",
-    );
-    console.error(rawLog);
-    throw e;
-  }
+  const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
+  return rx.exec(rawLog)?.[1] ?? "";
 }

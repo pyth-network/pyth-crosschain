@@ -1,14 +1,14 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
+import { execSync } from "node:child_process";
+import type { IotaClient } from "@iota/iota-sdk/client";
+import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import {
   fromB64,
   NANOS_PER_IOTA,
   normalizeIotaObjectId,
 } from "@iota/iota-sdk/utils";
-import { IotaClient } from "@iota/iota-sdk/client";
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-
-import { execSync } from "child_process";
-import { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
+import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -22,11 +22,11 @@ export function buildForBytecodeAndDigest(packagePath: string) {
     ),
   );
   return {
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeIotaObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
   };
 }
 
@@ -50,33 +50,33 @@ export async function upgradePyth(
 
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
+    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
   });
 
   // Build and generate modules and dependencies for upgrade.
   const [upgradeReceipt] = tx.upgrade({
-    modules,
     dependencies,
+    modules,
     package: pythPackage,
     ticket: upgradeTicket!,
   });
 
   // Commit upgrade.
   tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
     arguments: [tx.object(contract.stateId), upgradeReceipt!],
+    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
   });
 
   tx.setGasBudget(NANOS_PER_IOTA / 4n); // 0.25 IOTA
 
   return provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    signer: keypair,
+    transaction: tx,
   });
 }
 
@@ -98,18 +98,18 @@ export async function migratePyth(
     signedUpgradeVaa,
   );
   tx.moveCall({
-    target: `${pythPackage}::migrate::migrate`,
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
+    target: `${pythPackage}::migrate::migrate`,
   });
 
   tx.setGasBudget(NANOS_PER_IOTA / 10n); //0.1 IOTA
 
   return provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    signer: keypair,
+    transaction: tx,
   });
 }

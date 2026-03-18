@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable unicorn/prefer-top-level-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
@@ -13,34 +14,33 @@ import path from "node:path";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { findEntropyContract } from "./common";
 import { EvmChain } from "../src/core/chains";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
+import { findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.json>")
   .options({
     "config-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the config file",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the ops key file",
-    },
-    vault: {
       type: "string",
-      default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
-      desc: "Vault ID",
     },
     "rpc-url": {
-      type: "string",
-      desc: "Solana RPC URL",
       default: process.env.SOLANA_RPC_URL,
+      desc: "Solana RPC URL",
+      type: "string",
+    },
+    vault: {
+      default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
+      desc: "Vault ID",
+      type: "string",
     },
   });
 
@@ -63,10 +63,6 @@ async function main() {
       entry.feeInWei,
     );
     updatePayloads.push(payload);
-    console.log(
-      `Generated payload for chain ${entry.chainName}:`,
-      payload.toString("hex"),
-    );
   }
 
   const vault = DefaultStore.vaults[vaultId];
@@ -77,8 +73,7 @@ async function main() {
 
   const keypair = await loadHotWallet(opsKeyPath);
   vault.connect(keypair, rpcUrl ? () => rpcUrl : undefined);
-  const proposal = await vault.proposeWormholeMessage(updatePayloads);
-  console.log("Proposal address:", proposal.address.toBase58());
+  const _proposal = await vault.proposeWormholeMessage(updatePayloads);
 }
 
 main();

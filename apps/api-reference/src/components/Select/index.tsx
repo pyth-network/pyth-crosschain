@@ -7,12 +7,12 @@ import {
 } from "@headlessui/react";
 import {
   ChevronDownIcon,
-  MagnifyingGlassIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import type { ReactNode, ChangeEvent } from "react";
-import { useState, useCallback, useMemo } from "react";
+import type { ChangeEvent, ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Accordion, AccordionButton, AccordionPanel } from "../Accordion";
 
@@ -44,20 +44,17 @@ export const Select = <T,>({
   ...props
 }: Props<T>) => {
   const [filterValue, setFilter] = useState("");
-  const updateFilter = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      event.stopPropagation();
-      setFilter(event.target.value);
-    },
-    [setFilter],
-  );
+  const updateFilter = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    setFilter(event.target.value);
+  }, []);
 
   return (
     <Listbox
-      value={value}
-      onChange={onChange}
       as="div"
       className={clsx("relative", className)}
+      onChange={onChange}
+      value={value}
     >
       {renderButton ? (
         renderButton(value)
@@ -82,13 +79,13 @@ export const Select = <T,>({
             {filter && (
               <div className="sticky top-0 z-20 h-10 w-full bg-neutral-100 p-2 dark:bg-neutral-800">
                 <Input
-                  placeholder="Find a network"
                   className="peer size-full rounded bg-white pl-6 pr-2 text-sm transition-colors focus-visible:border-pythpurple-600 focus-visible:ring-transparent dark:bg-neutral-900 dark:focus-visible:border-pythpurple-400"
-                  value={filterValue}
                   onChange={updateFilter}
                   onKeyDown={(e) => {
                     e.stopPropagation();
                   }}
+                  placeholder="Find a network"
+                  value={filterValue}
                 />
                 <div className="pointer-events-none absolute inset-y-0 left-4 grid place-content-center transition-colors peer-focus-visible:text-pythpurple-600 dark:peer-focus-visible:text-pythpurple-400">
                   <MagnifyingGlassIcon className="size-3" />
@@ -107,11 +104,11 @@ export const Select = <T,>({
             ) : (
               props.optionGroups.map((group, i) => (
                 <OptionGroup
-                  key={i}
                   filter={filter}
                   filterValue={filterValue}
-                  options={group.options}
+                  key={i}
                   name={group.name}
+                  options={group.options}
                   renderOption={renderOption}
                 />
               ))
@@ -171,9 +168,9 @@ type OptionsProps<T> = {
 const Options = <T,>({ options, renderOption }: OptionsProps<T>) =>
   options.map((option, i) => (
     <ListboxOption
+      className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 px-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
       key={i}
       value={option}
-      className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 px-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
     >
       {renderOption(option)}
     </ListboxOption>

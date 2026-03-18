@@ -20,8 +20,8 @@ import type { InferredOptionType } from "yargs";
 import type { PrivateKey } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import {
-  EvmEntropyContract,
   EvmExecutorContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
@@ -74,8 +74,6 @@ export async function deployIfNotCached(
     if (!bytecode.startsWith("0x")) {
       bytecode = `0x${bytecode}`;
     }
-
-    console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
     const addr = await chain.deploy(
       config.privateKey,
       artifact.abi,
@@ -84,7 +82,6 @@ export async function deployIfNotCached(
       config.gasMultiplier,
       config.gasPriceMultiplier,
     );
-    console.log(`✅ Deployed ${artifactName} on ${chain.getId()} at ${addr}`);
 
     return addr;
   });
@@ -106,77 +103,77 @@ export function getWeb3Contract(
 }
 
 export const COMMON_DEPLOY_OPTIONS = {
-  "std-output-dir": {
-    type: "string",
-    demandOption: true,
-    desc: "Path to the Foundry output directory (typically 'out/' directory, contains Contract.sol/Contract.json structure)",
-  },
-  "private-key": {
-    type: "string",
-    demandOption: true,
-    desc: "Private key to sign the transactions with",
-  },
   chain: {
-    type: "array",
-    string: true,
     demandOption: true,
     desc: "Chains to upload the contract on. Must be one of the chains available in the store",
+    string: true,
+    type: "array",
   },
   "deployment-type": {
-    type: "string",
-    demandOption: false,
     default: "stable",
+    demandOption: false,
     desc: "Deployment type to use. Can be 'stable' or 'beta'",
+    type: "string",
   },
   "gas-multiplier": {
-    type: "number",
-    demandOption: false,
     // Proxy (ERC1967) contract gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
     default: 2,
+    demandOption: false,
     desc: "Gas multiplier to use for the deployment. This is useful when gas estimates are not accurate",
+    type: "number",
   },
   "gas-price-multiplier": {
-    type: "number",
-    demandOption: false,
     default: 1,
+    demandOption: false,
     desc: "Gas price multiplier to use for the deployment. This is useful when gas price estimates are not accurate",
+    type: "number",
+  },
+  "private-key": {
+    demandOption: true,
+    desc: "Private key to sign the transactions with",
+    type: "string",
   },
   "save-contract": {
-    type: "boolean",
-    demandOption: false,
     default: true,
+    demandOption: false,
     desc: "Save the contract to the store",
+    type: "boolean",
+  },
+  "std-output-dir": {
+    demandOption: true,
+    desc: "Path to the Foundry output directory (typically 'out/' directory, contains Contract.sol/Contract.json structure)",
+    type: "string",
   },
 } as const;
 export const CHAIN_SELECTION_OPTIONS = {
-  testnet: {
-    type: "boolean",
-    default: false,
-    desc: "Upgrade testnet contracts instead of mainnet",
-  },
   "all-chains": {
-    type: "boolean",
     default: false,
     desc: "Upgrade the contract on all chains. Use with --testnet flag to upgrade all testnet contracts",
+    type: "boolean",
   },
   chain: {
-    type: "array",
-    string: true,
     desc: "Chains to upgrade the contract on",
+    string: true,
+    type: "array",
+  },
+  testnet: {
+    default: false,
+    desc: "Upgrade testnet contracts instead of mainnet",
+    type: "boolean",
   },
 } as const;
 export const COMMON_UPGRADE_OPTIONS = {
   ...CHAIN_SELECTION_OPTIONS,
-  "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   "ops-key-path": {
-    type: "string",
     demandOption: true,
     desc: "Path to the private key of the proposer to use for the operations multisig governance proposal",
-  },
-  "std-output": {
     type: "string",
+  },
+  "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+  "std-output": {
     demandOption: false,
     desc: "Path to the standard JSON output of the pyth contract (build artifact)",
+    type: "string",
   },
 } as const;
 
@@ -280,9 +277,6 @@ export function findExecutorContract(
       contract instanceof EvmExecutorContract &&
       contract.chain.getId() === chain.getId()
     ) {
-      console.log(
-        `Found executor contract for ${chain.getId()} at ${contract.address}`,
-      );
       return contract;
     }
   }
@@ -351,10 +345,8 @@ export async function deployWormholeContract(
   const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
 
   if (config.type === "stable") {
-    console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
     // TODO: Add a way to pass gas configs to this
     await wormholeContract.syncMainnetGuardianSets(config.privateKey);
-    console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
   if (config.saveContract) {
@@ -396,7 +388,7 @@ export async function topupAccountsIfNecessary(
   accounts: [string, DefaultAddresses][],
   minBalance = 0.01,
 ) {
-  for (const [accountName, defaultAddresses] of accounts) {
+  for (const [_accountName, defaultAddresses] of accounts) {
     const accountAddress = chain.isMainnet()
       ? defaultAddresses.mainnet
       : defaultAddresses.testnet;
@@ -404,11 +396,7 @@ export async function topupAccountsIfNecessary(
     const balance = Number(
       web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether"),
     );
-    console.log(`${accountName} balance: ${balance} ETH`);
     if (balance < minBalance) {
-      console.log(
-        `Balance is less than ${minBalance}. Topping up the ${accountName} address...`,
-      );
       const signer = web3.eth.accounts.privateKeyToAccount(
         deploymentConfig.privateKey,
       );
@@ -419,7 +407,6 @@ export async function topupAccountsIfNecessary(
         signer.address,
         "pending",
       );
-      console.log(`Using nonce: ${nonce}`);
 
       // Get gas price and apply multiplier
       const baseGasPrice = await chain.getGasPrice();
@@ -433,22 +420,17 @@ export async function topupAccountsIfNecessary(
         value: web3.utils.toWei(`${minBalance}`, "ether"),
       });
 
-      const tx = await web3.eth.sendTransaction({
+      const _tx = await web3.eth.sendTransaction({
         from: signer.address,
-        to: accountAddress,
         gas: estimatedGas * deploymentConfig.gasMultiplier,
         gasPrice: gasPrice.toString(),
         nonce: nonce,
+        to: accountAddress,
         value: web3.utils.toWei(`${minBalance}`, "ether"),
         // // Uncomment this if your tx are getting stuck in the mempool. Or if you get this error:
         // // "An existing transaction had higher priority"
         // maxPriorityFeePerGas: gasPrice.toString(),
       });
-
-      console.log(
-        `Topped up the ${accountName} address. Tx:`,
-        tx.transactionHash,
-      );
     }
   }
 }

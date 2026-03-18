@@ -1,10 +1,10 @@
+// biome-ignore-all lint/style/noProcessEnv: Deploy script uses env vars for configuration
+// biome-ignore lint/style/noCommonJs: dotenv requires CommonJS for immediate initialization
 require("dotenv").config({ path: ".env" });
-import { utils, Wallet } from "zksync-web3";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { assert } from "chai";
-import { writeFileSync } from "fs";
-import { ethers } from "ethers";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Wallet } from "zksync-web3";
 
 function envOrErr(name: string): string {
   const res = process.env[name];
@@ -34,12 +34,5 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // await depositHandle.wait();
 
   const entropyImplArtifact = await deployer.loadArtifact("EntropyUpgradable");
-  const entropyImplContract = await deployer.deploy(entropyImplArtifact);
-
-  console.log(
-    `Deployed Entropy implementation contract on ${entropyImplContract.address}`,
-  );
-  console.log(
-    "Please use this address as the candidate new implementation in the deployment script.",
-  );
+  const _entropyImplContract = await deployer.deploy(entropyImplArtifact);
 }

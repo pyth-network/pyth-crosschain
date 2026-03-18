@@ -13,18 +13,18 @@ import {
   createContext,
   use,
   useCallback,
-  useState,
   useEffect,
-  useRef,
   useMemo,
   useReducer,
+  useRef,
+  useState,
 } from "react";
 import type { ModalRenderProps } from "react-aria-components";
 import {
-  Modal,
-  ModalOverlay,
   Dialog,
   DialogTrigger,
+  Modal,
+  ModalOverlay,
   Select,
 } from "react-aria-components";
 
@@ -57,12 +57,9 @@ export const ModalDialogTrigger = (
 ) => {
   const [animation, setAnimation] = useState<AnimationState>("unmounted");
 
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      setAnimation(isOpen ? "visible" : "hidden");
-    },
-    [setAnimation],
-  );
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    setAnimation(isOpen ? "visible" : "hidden");
+  }, []);
 
   useEffect(() => {
     if (props.defaultOpen) {
@@ -80,12 +77,9 @@ export const ModalDialogTrigger = (
 export const ModalSelect = (props: ComponentProps<typeof DialogTrigger>) => {
   const [animation, setAnimation] = useState<AnimationState>("unmounted");
 
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      setAnimation(isOpen ? "visible" : "hidden");
-    },
-    [setAnimation],
-  );
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    setAnimation(isOpen ? "visible" : "hidden");
+  }, []);
 
   return (
     <ModalAnimationContext value={[animation, setAnimation]}>
@@ -171,12 +165,12 @@ export const ModalDialog = ({
 
   return (
     <MotionModalOverlay
+      animate={animation}
+      initial="unmounted"
       isDismissable
       isExiting={animation === "hidden"}
-      onAnimationStart={startAnimation}
       onAnimationComplete={endAnimation}
-      initial="unmounted"
-      animate={animation}
+      onAnimationStart={startAnimation}
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}
       {...(overlayClassName && { className: overlayClassName })}
@@ -224,22 +218,22 @@ export const createModalDialogContext = <
   }
   const State = {
     Closed: () => ({ type: StateType.Closed as const }),
-    Opening: (props: ModalDialogProps<T, U>) => ({
-      type: StateType.Opening as const,
+    Closing: (props: ModalDialogProps<T, U>) => ({
       props,
+      type: StateType.Closing as const,
     }),
     Open: (props: ModalDialogProps<T, U>) => ({
+      props,
       type: StateType.Open as const,
-      props,
     }),
-    Closing: (props: ModalDialogProps<T, U>) => ({
-      type: StateType.Closing as const,
+    Opening: (props: ModalDialogProps<T, U>) => ({
       props,
+      type: StateType.Opening as const,
     }),
     Replacing: (
       oldProps: ModalDialogProps<T, U>,
       newProps: ModalDialogProps<T, U>,
-    ) => ({ type: StateType.Replacing as const, oldProps, newProps }),
+    ) => ({ newProps, oldProps, type: StateType.Replacing as const }),
   };
   type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -250,18 +244,19 @@ export const createModalDialogContext = <
     CloseFinish,
   }
   const Action = {
-    Open: (props: ModalDialogProps<T, U>) => ({
-      type: ActionType.Open as const,
-      props,
-    }),
-    OpenFinish: () => ({ type: ActionType.OpenFinish as const }),
     Close: () => ({ type: ActionType.Close as const }),
     CloseFinish: () => ({ type: ActionType.CloseFinish as const }),
+    Open: (props: ModalDialogProps<T, U>) => ({
+      props,
+      type: ActionType.Open as const,
+    }),
+    OpenFinish: () => ({ type: ActionType.OpenFinish as const }),
   };
   type Action = ReturnType<(typeof Action)[keyof typeof Action]>;
 
   const reducer = (state: State, action: Action) => {
     switch (action.type) {
+      // biome-ignore lint/suspicious/noFallthroughSwitchClause: TypeScript ensures exhaustive matching - break would cause unreachable code error
       case ActionType.Open: {
         switch (state.type) {
           case StateType.Closed: {
@@ -277,10 +272,7 @@ export const createModalDialogContext = <
           }
         }
       }
-      // This rule is a false positive because typescript ensures we never
-      // fallthough, and adding a `break` above triggers an unreachable code
-      // error
-      // eslint-disable-next-line no-fallthrough
+      // biome-ignore lint/suspicious/noFallthroughSwitchClause: TypeScript ensures exhaustive matching - break would cause unreachable code error
       case ActionType.OpenFinish: {
         switch (state.type) {
           case StateType.Opening: {
@@ -294,10 +286,7 @@ export const createModalDialogContext = <
           }
         }
       }
-      // This rule is a false positive because typescript ensures we never
-      // fallthough, and adding a `break` above triggers an unreachable code
-      // error
-      // eslint-disable-next-line no-fallthrough
+      // biome-ignore lint/suspicious/noFallthroughSwitchClause: TypeScript ensures exhaustive matching - break would cause unreachable code error
       case ActionType.Close: {
         switch (state.type) {
           case StateType.Open:
@@ -313,10 +302,6 @@ export const createModalDialogContext = <
           }
         }
       }
-      // This rule is a false positive because typescript ensures we never
-      // fallthough, and adding a `break` above triggers an unreachable code
-      // error
-      // eslint-disable-next-line no-fallthrough
       case ActionType.CloseFinish: {
         switch (state.type) {
           case StateType.Closing: {
@@ -342,22 +327,19 @@ export const createModalDialogContext = <
         reducer,
         State.Closed(),
       );
-      const open = useCallback(
-        (props: ModalDialogProps<T, U>) => {
-          dispatch(Action.Open(props));
-        },
-        [dispatch],
-      );
+      const open = useCallback((props: ModalDialogProps<T, U>) => {
+        dispatch(Action.Open(props));
+      }, []);
       const close = useCallback(() => {
         dispatch(Action.Close());
         return new Promise<void>((resolve) =>
           closeResolvers.current.push(resolve),
         );
-      }, [dispatch]);
-      const value = useMemo(() => ({ open, close }), [open, close]);
+      }, []);
+      const value = useMemo(() => ({ close, open }), [open, close]);
       const handleOpenFinish = useCallback(() => {
         dispatch(Action.OpenFinish());
-      }, [dispatch]);
+      }, []);
       const handleCloseFinish = useCallback(() => {
         let onCloseFinished;
         if (state.type === StateType.Closing) {
@@ -369,15 +351,12 @@ export const createModalDialogContext = <
           resolver();
         }
         closeResolvers.current = [];
-      }, [dispatch, state]);
-      const handleOpenChange = useCallback(
-        (isOpen: boolean) => {
-          if (!isOpen) {
-            dispatch(Action.Close());
-          }
-        },
-        [dispatch],
-      );
+      }, [state]);
+      const handleOpenChange = useCallback((isOpen: boolean) => {
+        if (!isOpen) {
+          dispatch(Action.Close());
+        }
+      }, []);
 
       return (
         <Context value={value}>
@@ -393,9 +372,9 @@ export const createModalDialogContext = <
                 state.type === StateType.Open ||
                 state.type === StateType.Opening
               }
+              onCloseFinish={handleCloseFinish}
               onOpenChange={handleOpenChange}
               onOpenFinish={handleOpenFinish}
-              onCloseFinish={handleCloseFinish}
               {...ctxProps}
               {...(state.type === StateType.Replacing
                 ? state.oldProps

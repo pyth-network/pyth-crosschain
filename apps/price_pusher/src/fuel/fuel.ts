@@ -5,12 +5,13 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-console */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
-  PYTH_CONTRACT_ABI,
   FUEL_ETH_ASSET_ID,
+  PYTH_CONTRACT_ABI,
 } from "@pythnetwork/pyth-fuel-js";
-import { Provider, Contract, hexlify, arrayify, Wallet, BN } from "fuels";
+import type { BN, Provider, Wallet } from "fuels";
+import { arrayify, Contract, hexlify } from "fuels";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -52,12 +53,6 @@ export class FuelPriceListener extends ChainPriceListener {
       const priceInfo = await this.contract.functions
         .price_unsafe?.(formattedPriceId)
         .get();
-
-      console.log({
-        conf: priceInfo?.value.confidence.toString(),
-        price: priceInfo?.value.price.toString(),
-        publishTime: tai64ToUnix(priceInfo?.value.publish_time),
-      });
 
       this.logger.debug(
         `Polled a Fuel on chain price for feed ${this.priceIdToAlias.get(
@@ -109,7 +104,7 @@ export class FuelPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -132,7 +127,7 @@ export class FuelPricePusher implements IPricePusher {
         { transactionId: result?.transactionId },
         "updatePriceFeed successful",
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
     }
   }
