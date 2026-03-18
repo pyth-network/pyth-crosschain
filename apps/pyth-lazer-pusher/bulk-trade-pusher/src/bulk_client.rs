@@ -117,10 +117,11 @@ impl BulkClient {
 
     /// Returns false if queue is full.
     pub fn push(&self, tx: SignedTransaction) -> bool {
+        self.queue_depth.fetch_add(1, Ordering::Relaxed);
         if self.tx.try_send(tx).is_ok() {
-            self.queue_depth.fetch_add(1, Ordering::Relaxed);
             true
         } else {
+            self.queue_depth.fetch_sub(1, Ordering::Relaxed);
             false
         }
     }
