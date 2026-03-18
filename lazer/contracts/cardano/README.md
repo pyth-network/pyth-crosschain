@@ -6,7 +6,7 @@ See [`DESIGN`](./DESIGN.md) for description of contract architecture.
 
 ## Setup
 
-Prepare `./sdk/js/.env` file using [`.env.example`](./sdk/js/.env.example) as
+Prepare `./cli/js/.env` file using [`.env.example`](./cli/js/.env.example) as
 a template. Make sure to install [Aiken](https://aiken-lang.org), e.g. through
 `aikup`:
 
@@ -19,7 +19,7 @@ aikup install
 
 Contract can be built and checked separately using `aiken build` and
 `aiken check` commands, but to correctly generate off-chain bindings, switch to
-`./sdk/js` directory and use `pnpm cli build` command.
+`./cli/js` directory and use `pnpm cli build` command.
 
 For debugging purposes, it is useful to pass `--trace-level=verbose` to `build`
 commands - this will generate friendly traces from `except` and `?` syntax shown
@@ -40,7 +40,7 @@ set -euo pipefail
 
 REPO=$(git rev-parse --show-toplevel)
 
-cd "$REPO/lazer/contracts/cardano/sdk/js"
+cd "$REPO/lazer/contracts/cardano/cli/js"
 
 # Environment can be "default" | "preprod" | "preview"
 pnpm cli build --env preview
@@ -97,7 +97,7 @@ pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
 and execute VAA provided in the output:
 
 ```bash
-cd "$REPO/lazer/contracts/cardano/sdk/js"
+cd "$REPO/lazer/contracts/cardano/cli/js"
 
 pnpm cli execute --network "$CARDANO_NETWORK" \
   --state "$PYTH_ID" \
@@ -111,7 +111,7 @@ pnpm cli execute --network "$CARDANO_NETWORK" \
 First get the withdraw script hash:
 
 ```bash
-cd "$REPO/lazer/contracts/cardano/sdk/js"
+cd "$REPO/lazer/contracts/cardano/cli/js"
 
 pnpm cli withdraw-script-hash --state "$PYTH_ID"
 ```
@@ -148,7 +148,7 @@ pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
 Finally, execute the proposal with:
 
 ```bash
-cd "$REPO/lazer/contracts/cardano/sdk/js"
+cd "$REPO/lazer/contracts/cardano/cli/js"
 
 pnpm cli execute --network "$CARDANO_NETWORK" \
   --state "$PYTH_ID" \
@@ -158,7 +158,7 @@ pnpm cli execute --network "$CARDANO_NETWORK" \
 Spend script upgrades use the same flow. First get the spend script hash:
 
 ```bash
-cd "$REPO/lazer/contracts/cardano/sdk/js"
+cd "$REPO/lazer/contracts/cardano/cli/js"
 
 pnpm cli spend-script-hash
 ```
