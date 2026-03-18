@@ -239,7 +239,7 @@ export class IotaPythClient {
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
       const result = await this.provider.getDynamicFieldObject({
-        parentId: tableId,
+        parentObjectId: tableId,
         name: {
           type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: {
@@ -271,7 +271,7 @@ export class IotaPythClient {
   async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
     if (this.priceTableInfo === undefined) {
       const result = await this.provider.getDynamicFieldObject({
-        parentId: this.pythStateId,
+        parentObjectId: this.pythStateId,
         name: {
           type: "vector<u8>",
           value: "price_info",
