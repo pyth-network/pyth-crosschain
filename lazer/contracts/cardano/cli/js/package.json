@@ -26,7 +26,7 @@
   "files": [
     "dist/**"
   ],
-  "name": "@pythnetwork/pyth-lazer-cardano-js",
+  "name": "@pythnetwork/pyth-lazer-cardano-cli",
   "private": false,
   "publishConfig": {
     "access": "public"

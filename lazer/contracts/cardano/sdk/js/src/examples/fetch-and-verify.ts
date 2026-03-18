@@ -47,23 +47,6 @@ const {
   .help()
   .parseAsync();
 
-/////////////////////////////////////////////////////////////////////////////////////////
-
-// Steps for fetching and verifying the price update:
-
-// 1. Fetch the price update from Pyth Lazer in "solana" format:
-const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
-const latestPrice = await lazer.getLatestPrice({
-  channel: "fixed_rate@200ms",
-  formats: ["solana"],
-  jsonBinaryEncoding: "hex",
-  priceFeedIds: [1],
-  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
-});
-const update = Buffer.from(latestPrice.solana?.data ?? "", "hex");
-
-console.log("Fetched update bytes:", update.toString("hex"));
-
 let provider: Provider;
 switch (providerType) {
   case "blockfrost": {
@@ -94,6 +77,23 @@ switch (providerType) {
     break;
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+// Steps for fetching and verifying the price update:
+
+// 1. Fetch the price update from Pyth Lazer in "solana" format:
+const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
+const latestPrice = await lazer.getLatestPrice({
+  channel: "fixed_rate@200ms",
+  formats: ["solana"],
+  jsonBinaryEncoding: "hex",
+  priceFeedIds: [1],
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+});
+const update = Buffer.from(latestPrice.solana?.data ?? "", "hex");
+
+console.log("Fetched update bytes:", update.toString("hex"));
 
 // 2. Resolve the active Pyth State UTxO and withdraw script hash from
 // on-chain state. Evolution SDK is used under the hood by `getPythScriptHash`.

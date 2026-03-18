@@ -32,7 +32,7 @@
   ],
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
-  "name": "@pythnetwork/pyth-lazer-cardano-sdk",
+  "name": "@pythnetwork/pyth-lazer-cardano-js",
   "private": false,
   "publishConfig": {
     "access": "public"
