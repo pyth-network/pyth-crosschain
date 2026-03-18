@@ -735,7 +735,9 @@ async fn scrape_pusher_metrics(endpoint: &str) -> Result<PusherMetrics> {
                 "lazer_pusher_bulk_push_results_total" if line.contains("deduplicated") => {
                     metrics.push_deduplicated += value
                 }
-                "lazer_pusher_bulk_push_results_total" if line.contains("error") => metrics.push_error += value,
+                "lazer_pusher_bulk_push_results_total" if line.contains("error") => {
+                    metrics.push_error += value
+                }
                 "lazer_pusher_updates_received_total" => metrics.lazer_updates += value,
                 "lazer_pusher_bulk_connections_active" => metrics.bulk_connections = value,
                 "lazer_pusher_batch_size" => metrics.batch_size = value,

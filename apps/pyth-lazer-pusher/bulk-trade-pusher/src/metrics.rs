@@ -33,8 +33,7 @@ impl BulkMetrics {
             ws: DeliveryMetrics::new("bulk-trade"),
 
             bulk_pushes_total: Counter::with_opts(
-                Opts::new("bulk_pushes_total", "Push responses received")
-                    .namespace("lazer_pusher"),
+                Opts::new("bulk_pushes_total", "Push responses received").namespace("lazer_pusher"),
             )
             .expect("failed to create metric"),
 
