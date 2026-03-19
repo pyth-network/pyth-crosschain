@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "module": "Preserve",
+    "moduleResolution": "bundler"
+  },
+  "exclude": ["node_modules"],
+  "extends": "@cprussin/tsconfig/base.json",
+  "include": ["src"]
+}

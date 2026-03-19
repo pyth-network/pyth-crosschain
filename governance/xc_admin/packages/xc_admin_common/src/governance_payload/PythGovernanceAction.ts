@@ -9,16 +9,17 @@ export const ExecutorAction = {
   ExecutePostedVaa: 0,
 } as const;
 
+// biome-ignore assist/source/useSortedKeys: ordered by ID
 export const TargetAction = {
+  UpgradeContract: 0,
   AuthorizeGovernanceDataSourceTransfer: 1,
-  RequestGovernanceDataSourceTransfer: 5,
   SetDataSources: 2,
   SetFee: 3,
+  SetValidPeriod: 4,
+  RequestGovernanceDataSourceTransfer: 5,
+  SetWormholeAddress: 6,
   SetFeeInToken: 7,
   SetTransactionFee: 8,
-  SetValidPeriod: 4,
-  SetWormholeAddress: 6,
-  UpgradeContract: 0,
   WithdrawFee: 9,
 } as const;
 
@@ -26,10 +27,13 @@ export const EvmExecutorAction = {
   Execute: 0,
 } as const;
 
+// biome-ignore assist/source/useSortedKeys: ordered by ID
 export const LazerAction = {
-  UpdateTrustedSigner: 1,
   UpgradeSuiLazerContract: 0,
-};
+  UpdateTrustedSigner: 1,
+  UpgradeCardanoSpendScript: 2,
+  UpgradeCardanoWithdrawScript: 3,
+} as const;
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
@@ -71,6 +75,10 @@ export function toActionName(
         return "UpgradeSuiLazerContract";
       case 1:
         return "UpdateTrustedSigner";
+      case 2:
+        return "UpgradeCardanoSpendScript";
+      case 3:
+        return "UpgradeCardanoWithdrawScript";
     }
   }
   return undefined;

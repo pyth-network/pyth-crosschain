@@ -36,8 +36,79 @@ export class UpgradeSuiLazerContract extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(UpgradeSuiLazerContract.layout, {
-      version: this.version,
       hash: this.hash,
+      version: this.version,
+    });
+  }
+}
+
+export class UpgradeCardanoSpendScript extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(28, "hash")]);
+
+  constructor(
+    targetChainId: ChainName,
+    readonly hash: string,
+  ) {
+    super(targetChainId, "UpgradeCardanoSpendScript");
+  }
+
+  static decode(data: Buffer): UpgradeCardanoSpendScript | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeCardanoSpendScript",
+      this.layout,
+    );
+    if (!decoded) return undefined;
+
+    return new UpgradeCardanoSpendScript(
+      decoded[0].targetChainId,
+      decoded[1].hash,
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(UpgradeCardanoSpendScript.layout, {
+      hash: this.hash,
+    });
+  }
+}
+
+export class UpgradeCardanoWithdrawScript extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<
+    Readonly<{ hash: string; previousExpiresAt: bigint }>
+  > = BufferLayout.struct([
+    BufferLayoutExt.hexBytes(28, "hash"),
+    BufferLayoutExt.u64be("previousExpiresAt"),
+  ]);
+
+  constructor(
+    targetChainId: ChainName,
+    readonly hash: string,
+    readonly previousExpiresAt: bigint,
+  ) {
+    super(targetChainId, "UpgradeCardanoWithdrawScript");
+  }
+
+  static decode(data: Buffer): UpgradeCardanoWithdrawScript | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeCardanoWithdrawScript",
+      this.layout,
+    );
+    if (!decoded) return undefined;
+
+    return new UpgradeCardanoWithdrawScript(
+      decoded[0].targetChainId,
+      decoded[1].hash,
+      decoded[1].previousExpiresAt,
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(UpgradeCardanoWithdrawScript.layout, {
+      hash: this.hash,
+      previousExpiresAt: this.previousExpiresAt,
     });
   }
 }

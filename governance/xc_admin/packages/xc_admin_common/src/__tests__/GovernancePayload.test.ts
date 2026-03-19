@@ -1,43 +1,45 @@
+/** biome-ignore-all lint/suspicious/noConsole: test values logged for debugging */
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-  PythGovernanceHeader,
-  ExecutePostedVaa,
-  TargetAction,
-  ExecutorAction,
-  type ActionName,
-  type PythGovernanceAction,
-  decodeGovernancePayload,
-  EvmSetWormholeAddress,
-  EvmExecutorAction,
-  EvmExecute,
-  StarknetSetWormholeAddress,
-  LazerAction,
-  UpgradeSuiLazerContract,
-  UpdateTrustedSigner264Bit,
-} from "..";
+import type { Arbitrary, IntArrayConstraints } from "fast-check";
 import * as fc from "fast-check";
-import { type ChainName, CHAINS } from "../chains";
-import { Arbitrary, type IntArrayConstraints } from "fast-check";
+import type { ActionName, PythGovernanceAction } from "..";
+import {
+  decodeGovernancePayload,
+  EvmExecute,
+  EvmExecutorAction,
+  EvmSetWormholeAddress,
+  ExecutePostedVaa,
+  ExecutorAction,
+  LazerAction,
+  PythGovernanceHeader,
+  StarknetSetWormholeAddress,
+  TargetAction,
+  UpdateTrustedSigner256Bit,
+  UpdateTrustedSigner264Bit,
+  UpgradeCardanoSpendScript,
+  UpgradeCardanoWithdrawScript,
+  UpgradeSuiLazerContract,
+} from "..";
+import type { ChainName } from "../chains";
+import { CHAINS } from "../chains";
+import {
+  AuthorizeGovernanceDataSourceTransfer,
+  RequestGovernanceDataSourceTransfer,
+} from "../governance_payload/GovernanceDataSourceTransfer";
+import type { DataSource } from "../governance_payload/SetDataSources";
+import { SetDataSources } from "../governance_payload/SetDataSources";
+import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
+import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
+import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
 import {
   CosmosUpgradeContract,
   EvmUpgradeContract,
   UpgradeContract256Bit,
 } from "../governance_payload/UpgradeContract";
-import {
-  AuthorizeGovernanceDataSourceTransfer,
-  RequestGovernanceDataSourceTransfer,
-} from "../governance_payload/GovernanceDataSourceTransfer";
-import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
-import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
-import {
-  type DataSource,
-  SetDataSources,
-} from "../governance_payload/SetDataSources";
-import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 import { WithdrawFee } from "../governance_payload/WithdrawFee";
 
-test("GovernancePayload ser/de", (done) => {
-  jest.setTimeout(60000);
+test("GovernancePayload ser/de", () => {
+  jest.setTimeout(60_000);
 
   // Valid header 1
   let expectedGovernanceHeader = new PythGovernanceHeader(
@@ -114,8 +116,8 @@ test("GovernancePayload ser/de", (done) => {
   expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", [
     SystemProgram.transfer({
       fromPubkey: new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"),
+      lamports: 890_880,
       toPubkey: new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
-      lamports: 890880,
     }),
   ]);
 
@@ -138,7 +140,7 @@ test("GovernancePayload ser/de", (done) => {
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
-    executePostedVaaArgs?.instructions[0]!.programId.equals(
+    executePostedVaaArgs?.instructions[0]?.programId.equals(
       SystemProgram.programId,
     ),
   ).toBeTruthy();
@@ -229,14 +231,14 @@ test("GovernancePayload ser/de", (done) => {
 
   const setDataSources = new SetDataSources("starknet", [
     {
-      emitterChain: 1,
       emitterAddress:
         "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+      emitterChain: 1,
     },
     {
-      emitterChain: 3,
       emitterAddress:
         "000000000000000000000000000000000000000000000000000000000000012d",
+      emitterChain: 3,
     },
   ]);
   const setDataSourcesBuffer = setDataSources.encode();
@@ -302,15 +304,49 @@ test("GovernancePayload ser/de", (done) => {
     ),
   ).toBeTruthy();
 
-  const updateTrustedSigner = new UpdateTrustedSigner264Bit(
+  const upgradeCardanoSpendScript = new UpgradeCardanoSpendScript(
+    "cardano_mainnet",
+    "34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+  );
+  const upgradeCardanoSpendScriptBuffer = upgradeCardanoSpendScript.encode();
+  console.log(upgradeCardanoSpendScriptBuffer.toJSON());
+  expect(
+    upgradeCardanoSpendScriptBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 2, 234, 192, 52, 175, 120, 123, 102, 232, 177, 8,
+        165, 215, 221, 127, 145, 34, 48, 22, 96, 121, 217, 245, 179, 11, 104,
+        207, 2, 15, 37, 242,
+      ]),
+    ),
+  ).toBeTruthy();
+
+  const upgradeCardanoWithdrawScript = new UpgradeCardanoWithdrawScript(
+    "cardano_mainnet",
+    "34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+    1234n,
+  );
+  const upgradeCardanoWithdrawScriptBuffer =
+    upgradeCardanoWithdrawScript.encode();
+  console.log(upgradeCardanoWithdrawScriptBuffer.toJSON());
+  expect(
+    upgradeCardanoWithdrawScriptBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 3, 234, 192, 52, 175, 120, 123, 102, 232, 177, 8,
+        165, 215, 221, 127, 145, 34, 48, 22, 96, 121, 217, 245, 179, 11, 104,
+        207, 2, 15, 37, 242, 0, 0, 0, 0, 0, 0, 4, 210,
+      ]),
+    ),
+  ).toBeTruthy();
+
+  const updateTrustedSigner264Bit = new UpdateTrustedSigner264Bit(
     "sui",
     "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b",
     10794n,
   );
-  const updateTrustedSignerBuffer = updateTrustedSigner.encode();
-  console.log(updateTrustedSignerBuffer.toJSON());
+  const updateTrustedSigner264BitBuffer = updateTrustedSigner264Bit.encode();
+  console.log(updateTrustedSigner264BitBuffer.toJSON());
   expect(
-    updateTrustedSignerBuffer.equals(
+    updateTrustedSigner264BitBuffer.equals(
       Buffer.from([
         80, 84, 71, 77, 3, 1, 0, 21, 3, 164, 56, 15, 1, 19, 110, 178, 100, 15,
         144, 193, 126, 30, 49, 158, 2, 187, 175, 190, 239, 46, 110, 103, 220,
@@ -319,7 +355,22 @@ test("GovernancePayload ser/de", (done) => {
     ),
   ).toBeTruthy();
 
-  done();
+  const updateTrustedSigner256Bit = new UpdateTrustedSigner256Bit(
+    "cardano_mainnet",
+    "74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+    10794n,
+  );
+  const updateTrustedSigner256BitBuffer = updateTrustedSigner256Bit.encode();
+  console.log(updateTrustedSigner256BitBuffer.toJSON());
+  expect(
+    updateTrustedSigner256BitBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 1, 234, 192, 116, 49, 58, 101, 37, 237, 249, 153, 54,
+        170, 20, 119, 233, 76, 114, 188, 92, 198, 23, 178, 23, 69, 245, 240, 50,
+        150, 243, 21, 68, 97, 242, 20, 0, 0, 0, 0, 0, 0, 42, 42,
+      ]),
+    ),
+  ).toBeTruthy();
 });
 
 /** Fastcheck generator for arbitrary PythGovernanceHeaders */
@@ -359,8 +410,8 @@ function hexBytesArb(constraints?: IntArrayConstraints): Arbitrary<string> {
 
 function dataSourceArb(): Arbitrary<DataSource> {
   return fc.record({
+    emitterAddress: hexBytesArb({ maxLength: 32, minLength: 32 }),
     emitterChain: uintArb(16),
-    emitterAddress: hexBytesArb({ minLength: 32, maxLength: 32 }),
   });
 }
 
@@ -379,13 +430,13 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       const cosmosArb = fc.bigUintN(64).map((codeId) => {
         return new CosmosUpgradeContract(header.targetChainId, codeId);
       });
-      const arb256bit = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+      const arb256bit = hexBytesArb({ maxLength: 32, minLength: 32 }).map(
         (buffer) => {
           return new UpgradeContract256Bit(header.targetChainId, buffer);
         },
       );
 
-      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+      const evmArb = hexBytesArb({ maxLength: 20, minLength: 20 }).map(
         (address) => {
           return new EvmUpgradeContract(header.targetChainId, address);
         },
@@ -405,7 +456,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       });
     } else if (header.action === "SetFee") {
       return fc
-        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .record({ e: fc.bigUintN(64), v: fc.bigUintN(64) })
         .map(({ v, e }) => {
           return new SetFee(header.targetChainId, v, e);
         });
@@ -417,16 +468,16 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return fc.bigUintN(32).map((index) => {
         return new RequestGovernanceDataSourceTransfer(
           header.targetChainId,
-          parseInt(index.toString()),
+          Number.parseInt(index.toString()),
         );
       });
     } else if (header.action === "SetWormholeAddress") {
-      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+      const evmArb = hexBytesArb({ maxLength: 20, minLength: 20 }).map(
         (address) => {
           return new EvmSetWormholeAddress(header.targetChainId, address);
         },
       );
-      const starknetArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+      const starknetArb = hexBytesArb({ maxLength: 32, minLength: 32 }).map(
         (address) => {
           return new StarknetSetWormholeAddress(header.targetChainId, address);
         },
@@ -435,10 +486,10 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "Execute") {
       return fc
         .record({
-          executerAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          callAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          value: fc.bigUintN(256),
+          callAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
           callData: bufferArb(),
+          executerAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
+          value: fc.bigUintN(256),
         })
         .map(
           ({ executerAddress, callAddress, value, callData }) =>
@@ -453,12 +504,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "SetFeeInToken") {
       return fc
         .record({
-          value: fc.bigUintN(64),
           expo: fc.bigUintN(64),
-          token: fc.array(fc.integer({ min: 0, max: 255 }), {
-            minLength: 0,
+          token: fc.array(fc.integer({ max: 255, min: 0 }), {
             maxLength: 128,
+            minLength: 0,
           }),
+          value: fc.bigUintN(64),
         })
         .map(({ value, expo, token }) => {
           return new SetFeeInToken(
@@ -470,16 +521,16 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         });
     } else if (header.action === "SetTransactionFee") {
       return fc
-        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .record({ e: fc.bigUintN(64), v: fc.bigUintN(64) })
         .map(({ v, e }) => {
           return new SetTransactionFee(header.targetChainId, v, e);
         });
     } else if (header.action === "WithdrawFee") {
       return fc
         .record({
-          targetAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          value: fc.bigUintN(64),
           expo: fc.bigUintN(64),
+          targetAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
+          value: fc.bigUintN(64),
         })
         .map(({ targetAddress, value, expo }) => {
           return new WithdrawFee(
@@ -492,8 +543,8 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "UpgradeSuiLazerContract") {
       return fc
         .record({
-          version: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
-          buffer: hexBytesArb({ minLength: 32, maxLength: 32 }),
+          buffer: hexBytesArb({ maxLength: 32, minLength: 32 }),
+          version: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
         })
         .map(({ version, buffer }) => {
           return new UpgradeSuiLazerContract(
@@ -502,11 +553,29 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             buffer,
           );
         });
-    } else if (header.action === "UpdateTrustedSigner") {
+    } else if (header.action === "UpgradeCardanoSpendScript") {
+      return hexBytesArb({ maxLength: 28, minLength: 28 }).map(
+        (buffer) => new UpgradeCardanoSpendScript(header.targetChainId, buffer),
+      );
+    } else if (header.action === "UpgradeCardanoWithdrawScript") {
       return fc
         .record({
-          publicKey: hexBytesArb({ minLength: 33, maxLength: 33 }),
-          expiresAt: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
+          buffer: hexBytesArb({ maxLength: 28, minLength: 28 }),
+          previousExpiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
+        })
+        .map(
+          ({ buffer, previousExpiresAt }) =>
+            new UpgradeCardanoWithdrawScript(
+              header.targetChainId,
+              buffer,
+              previousExpiresAt,
+            ),
+        );
+    } else if (header.action === "UpdateTrustedSigner") {
+      const arb264Bit = fc
+        .record({
+          expiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
+          publicKey: hexBytesArb({ maxLength: 33, minLength: 33 }),
         })
         .map(({ publicKey, expiresAt }) => {
           return new UpdateTrustedSigner264Bit(
@@ -515,13 +584,26 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             expiresAt,
           );
         });
+      const arb256Bit = fc
+        .record({
+          expiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
+          publicKey: hexBytesArb({ maxLength: 32, minLength: 32 }),
+        })
+        .map(({ publicKey, expiresAt }) => {
+          return new UpdateTrustedSigner256Bit(
+            header.targetChainId,
+            publicKey,
+            expiresAt,
+          );
+        });
+      return fc.oneof(arb264Bit, arb256Bit);
     } else {
       throw new Error("Unsupported action type");
     }
   });
 }
 
-test("Header serialization round-trip test", (done) => {
+test("Header serialization round-trip test", () => {
   fc.assert(
     fc.property(governanceHeaderArb(), (original) => {
       const decoded = PythGovernanceHeader.decode(original.encode());
@@ -535,11 +617,9 @@ test("Header serialization round-trip test", (done) => {
       );
     }),
   );
-
-  done();
 });
 
-test("Governance action serialization round-trip test", (done) => {
+test("Governance action serialization round-trip test", () => {
   fc.assert(
     fc.property(governanceActionArb(), (original) => {
       const encoded = original.encode();
@@ -552,6 +632,4 @@ test("Governance action serialization round-trip test", (done) => {
       return decoded.encode().equals(original.encode());
     }),
   );
-
-  done();
 });

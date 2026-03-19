@@ -1,0 +1,101 @@
+use aiken/crypto.{ScriptHash, VerificationKey}
+use aiken/interval
+use cardano/transaction.{ValidityRange}
+use env
+use parser.{Parser, parse}
+use pyth.{Governance}
+use types/u16
+use types/u64
+use types/u8.{U8}
+use wormhole.{Guardians}
+use wormhole/vaa.{PreparedVAA, VAA}
+
+const governance_action_magic: ByteArray = "PTGM"
+
+const governance_action_module: U8 = u8.from_int(3)
+
+pub type GovernanceAction {
+  UpdateTrustedSigner(VerificationKey, Option<ValidityRange>)
+  UpgradeSpendScript(ScriptHash)
+  UpgradeWithdrawScript {
+    new_script: ScriptHash,
+    previous_validity: ValidityRange,
+  }
+}
+
+/// Parse and verify governance action VAA against current governance and
+/// guardians. Returns action and updated governance.
+pub fn parse_and_verify_action(
+  vaa: PreparedVAA,
+  governance: Governance,
+  guardians: Guardians,
+) -> (GovernanceAction, Governance) {
+  let VAA { body, .. } = vaa.parse_and_verify_prepared(vaa, guardians)
+  expect u16.as_int(body.emitter_chain) == governance.emitter_chain
+  expect body.emitter_address == governance.emitter_address
+  let seen_sequence = u64.as_int(body.sequence)
+  expect governance.seen_sequence < seen_sequence
+  (
+    parser.run(governance_action(), body.payload),
+    Governance { ..governance, seen_sequence },
+  )
+}
+
+fn governance_action() -> Parser<GovernanceAction> {
+  let magic <- parse(parser.bytes(4))
+  expect magic == governance_action_magic
+  let module <- parse(u8.from)
+  expect module == governance_action_module
+  let action <- parse(u8.from)
+  let chain <- parse(u16.from_be)
+  expect u16.as_int(chain) == env.chain_id
+  when u8.as_int(action) is {
+    1 -> {
+      let key <- parse(parser.bytes(32))
+      let expires_at <- parse(u64.from_be)
+      UpdateTrustedSigner(
+        key,
+        when u64.as_int(expires_at) * 1000 is {
+          0 -> None
+          n -> Some(interval.before(n))
+        },
+      )
+        |> parser.return
+    }
+    2 -> {
+      let hash <- parse(parser.bytes(28))
+      UpgradeSpendScript(hash) |> parser.return
+    }
+    3 -> {
+      let new_script <- parse(parser.bytes(28))
+      let previous_expires_at <- parse(u64.from_be)
+      let previous_validity =
+        interval.before(u64.as_int(previous_expires_at) * 1000)
+      UpgradeWithdrawScript { new_script, previous_validity } |> parser.return
+    }
+    _ -> fail @"unsupported action ID"
+  }
+}
+
+test can_parse_upgrade_spend_script() {
+  let action =
+    parser.run(
+      governance_action(),
+      #"5054474d0302eac034af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+    )
+  action == UpgradeSpendScript(
+    #"34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+  )
+}
+
+test can_parse_update_trusted_signer() {
+  let action =
+    parser.run(
+      governance_action(),
+      #"5054474d0301eac074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2140000000000002a2a",
+    )
+  action == UpdateTrustedSigner(
+    #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+    Some(interval.before(10794 * 1000)),
+  )
+}
