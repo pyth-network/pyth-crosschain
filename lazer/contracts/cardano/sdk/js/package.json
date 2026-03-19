@@ -1,0 +1,64 @@
+{
+  "dependencies": {
+    "@evolution-sdk/evolution": "^0.3.29"
+  },
+  "description": "User-facing SDK for the Pyth Lazer Cardano integration",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "tsx": "catalog:",
+    "yargs": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./examples/fetch-and-verify": {
+      "import": {
+        "default": "./dist/esm/examples/fetch-and-verify.mjs",
+        "types": "./dist/esm/examples/fetch-and-verify.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/fetch-and-verify.cjs",
+        "types": "./dist/cjs/examples/fetch-and-verify.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-lazer-cardano-js",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "lazer/contracts/cardano/sdk/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "example:fetch-and-verify": "tsx src/examples/fetch-and-verify.ts",
+    "test:types": "tsc"
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "0.1.0"
+}
