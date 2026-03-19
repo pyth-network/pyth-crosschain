@@ -31,7 +31,6 @@ packages:
   - target_chains/ton/sdk/js
   - contract_manager
   - lazer/contracts/cardano/cli/js
-  - lazer/contracts/cardano/sdk/js
   - lazer/contracts/sui/sdk/js
 
 catalog:
