@@ -38,9 +38,7 @@ Futures contracts use single-letter codes to represent expiration months:
 | X    | November  |
 | Z    | December  |
 
-:::tip[Why these letters?]
-The letters skip I, L, O, P, R, S, W, and Y to avoid confusion with numbers (1, 0) and other abbreviations commonly used in trading.
-:::
+**Why these letters?** The letters skip I, L, O, P, R, S, W, and Y to avoid confusion with numbers (1, 0) and other abbreviations commonly used in trading.
 
 ## Year Codes
 
@@ -59,6 +57,14 @@ The year is represented by the **last digit** of the year:
 | WTIK6  | WTI May 2026 | May 19, 2026 |
 | WTIM6  | WTI June 2026 | Jun 22, 2026 |
 
+### Brent Crude Oil
+
+| Symbol  | Contract | Expiration |
+| ------- | -------- | ---------- |
+| BRENTK6 | Brent May 2026 | Mar 31, 2026 |
+| BRENTM6 | Brent June 2026 | Apr 30, 2026 |
+| BRENTN6 | Brent July 2026 | May 29, 2026 |
+
 ### Copper
 
 | Symbol | Contract | Expiration |
@@ -74,6 +80,13 @@ The year is represented by the **last digit** of the year:
 | NGDJ6  | HH Natural Gas April 2026 | Apr 28, 2026 |
 | NGDK6  | HH Natural Gas May 2026 | May 27, 2026 |
 | NGDM6  | HH Natural Gas June 2026 | Jun 26, 2026 |
+
+### LS Gasoil
+
+| Symbol | Contract | Expiration |
+| ------ | -------- | ---------- |
+| GOJ6   | LS Gasoil April 2026 | Apr 10, 2026 |
+| GOK6   | LS Gasoil May 2026 | May 12, 2026 |
 
 ### Corn
 
@@ -92,7 +105,9 @@ On Pyth, futures symbols include the asset class prefix. The table below lists a
 | Asset | Symbol Root | Example Symbol |
 | ----- | ----------- | -------------- |
 | WTI Crude Oil | WTI | `Commodities.WTIJ6/USD` |
+| Brent Crude Oil | BRENT | `Commodities.BRENTK6/USD` |
 | HH Natural Gas | NGD | `Commodities.NGDJ6/USD` |
+| LS Gasoil | GO | `Commodities.GOJ6/USD` |
 | Copper | CC | `Commodities.CCH6/USD` |
 | Palladium | PD | `Commodities.PDH6/USD` |
 | Platinum | PT | `Commodities.PTJ6/USD` |
@@ -119,9 +134,7 @@ Futures contracts expire on specific dates. When a contract approaches expiratio
 2. **Price feeds transition** to the new front-month contract
 3. **Rollover dates** vary by commodity — check the [Symbols List API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols) for exact expiration dates
 
-:::caution[Expiration Handling]
-Ensure your application handles contract rollovers gracefully. Monitor for feed transitions as contracts approach expiration.
-:::
+**Expiration Handling:** Ensure your application handles contract rollovers gracefully. Monitor for feed transitions as contracts approach expiration.
 
 ## Additional Resources
 

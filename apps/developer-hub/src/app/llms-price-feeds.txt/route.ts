@@ -58,6 +58,12 @@ console.log(priceUpdates.parsed[0].price);
 // Use priceUpdates.binary.data to submit on-chain
 \`\`\`
 
+## MCP for AI Assistants
+
+Pyth Pro includes an MCP server that lets AI assistants discover feeds, fetch prices, and run pre-built workflows (price alerts, portfolio tracking, FX conversion, and more) through tool calls.
+- MCP setup and tools: https://docs.pyth.network/price-feeds/pro/mcp.mdx
+- Skills catalog: https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
+
 ## AI Agent Playbook
 
 For an opinionated, step-by-step integration guide:

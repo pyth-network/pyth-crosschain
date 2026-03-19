@@ -204,6 +204,13 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "USDSUI/USD",
+      "id": "d510fcdb3a63f35d3bb118d5db3afc5815a3f13bc55d48abb893b63f0315902a",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "USDY/USD",
       "id": "e393449f6aff8a4b6d3e1165a7c9ebec103685f3b41e60db4277b5b6d10e7326",
       "time_difference": 60,

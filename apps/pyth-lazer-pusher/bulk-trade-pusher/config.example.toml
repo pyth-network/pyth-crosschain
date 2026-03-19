@@ -47,6 +47,7 @@ signing_key_base58 = "your-base58-encoded-private-key"
 # Oracle account public key (base58 encoded)
 # This is the "account" field in the transaction - SHARED by all pushers.
 # The signing key must be approved/whitelisted for this account on Bulk's side.
+# Must be a valid base58-encoded Ed25519 public key.
 oracle_account_pubkey_base58 = "your-base58-encoded-oracle-account-pubkey"
 
 # Feed Configuration

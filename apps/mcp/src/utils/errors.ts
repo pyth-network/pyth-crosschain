@@ -15,6 +15,4 @@ export const ErrorMessages = {
     "Your Pyth Pro access token is invalid or expired. Check your `access_token` value.",
   MISSING_TOKEN:
     "This tool requires a Pyth Pro access token. Provide an `access_token` parameter. Get a token at https://pyth.network/pricing",
-  NO_DATA:
-    "No candlestick data available for the requested range. Try a different time range or symbol.",
 } as const;

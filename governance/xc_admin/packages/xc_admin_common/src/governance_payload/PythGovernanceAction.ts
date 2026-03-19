@@ -2,6 +2,7 @@ import * as BufferLayout from "@solana/buffer-layout";
 import { PACKET_DATA_SIZE } from "@solana/web3.js";
 import type { ChainId, ChainName } from "../chains";
 import { toChainId, toChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
 
 /** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
@@ -187,11 +188,11 @@ export const MODULES = [
   MODULE_LAZER,
 ];
 
-export interface PythGovernanceAction {
+export type PythGovernanceAction = {
   readonly targetChainId: ChainName;
 
   encode(): Buffer;
-}
+};
 
 /** Helper class for implementing PythGovernanceAction using a BufferLayout.Layout for the payload. */
 export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
@@ -219,7 +220,7 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
     const payloadBuffer = Buffer.alloc(payloadLayout.span);
     payloadLayout.encode(payload, payloadBuffer);
 
-    return Buffer.concat([headerBuffer, payloadBuffer]);
+    return safeBufferConcat([headerBuffer, payloadBuffer]);
   }
 
   /** Decode this action from a buffer using the given layout for the payload. */

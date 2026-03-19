@@ -224,10 +224,12 @@ describe("get_latest_price tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data).toHaveLength(1);
-    expect(data[0].price_feed_id).toBe(1);
-    expect(data[0].display_price).toBeCloseTo(97_423.5, 2);
-    expect(data[0].evm).toBeUndefined();
-    expect(data[0].solana).toBeUndefined();
+    expect(data.prices).toHaveLength(1);
+    expect(data.server_time_utc).toBeDefined();
+    expect(data.server_unix_seconds).toBeDefined();
+    expect(data.prices[0].price_feed_id).toBe(1);
+    expect(data.prices[0].display_price).toBeCloseTo(97_423.5, 2);
+    expect(data.prices[0].evm).toBeUndefined();
+    expect(data.prices[0].solana).toBeUndefined();
   });
 });

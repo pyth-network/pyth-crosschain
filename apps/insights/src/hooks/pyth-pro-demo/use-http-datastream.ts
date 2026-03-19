@@ -9,12 +9,6 @@ import { usePrevious } from "@react-hookz/web";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import type {
-  UseDataStreamReturnType,
-  UseHttpDataStreamOpts,
-  UseHttpDataStreamReturnType,
-} from "./types";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
@@ -30,6 +24,11 @@ import {
 import type { GetPythHistoricalPricesReturnType } from "../../services/clickhouse-schema";
 import { GetPythHistoricalPricesReturnTypeSchema } from "../../services/clickhouse-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
+import type {
+  UseDataStreamReturnType,
+  UseHttpDataStreamOpts,
+  UseHttpDataStreamReturnType,
+} from "./types";
 
 dayjs.extend(utc);
 
@@ -73,7 +72,9 @@ export async function fetchHistoricalData(
     const textResponse = await response.text();
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.statusText}: ${textResponse}`);
+      throw new Error(
+        `HTTP ${response.statusText}: ${errorToString(textResponse)}`,
+      );
     }
 
     if (textResponse.length === 0) {
@@ -271,7 +272,7 @@ export function useHttpDataStream({
     }
 
     isMountedRef.current = true;
-    void doFetch(selectedReplayDate, signal);
+    void doFetch(selectedReplayDate, signal).catch(handleError);
 
     return () => {
       // This ensures that when the date changes, the signal

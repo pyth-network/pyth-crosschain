@@ -4,6 +4,8 @@ description: On-demand price queries via REST
 slug: /price-feeds/pro/api/rest
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Base URL
 
 ```
@@ -21,6 +23,18 @@ https://pyth-lazer.dourolabs.app
 
 Returns the most recent price data for the requested feeds. The request body follows the same schema as the WebSocket subscribe message — see the [Payload Reference](/price-feeds/pro/payload-reference) for full details.
 
+**Request Body**
+
+| Field     | Type     | Required | Description                                                                                                             |
+| --------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `channel` | `string` | Yes      | Subscription channel. One of: `real_time`, `fixed_rate@1ms`, `fixed_rate@50ms`, `fixed_rate@200ms`, `fixed_rate@1000ms` |
+
+<Callout type="info">
+  Each feed has a minimum supported channel (`min_channel`), discoverable via
+  [`/v1/symbols`](https://pyth-lazer-0.dourolabs.app/docs). You must use a
+  channel at or above the feed's `min_channel`.
+</Callout>
+
 ### POST /v1/price
 
 Returns price data at a specific historical timestamp.
@@ -29,9 +43,9 @@ Returns price data at a specific historical timestamp.
 
 All fields from `/v1/latest_price`, plus:
 
-| Field       | Type     | Required | Description                    |
-| ----------- | -------- | -------- | ------------------------------ |
-| `timestamp` | `string` | Yes      | Unix timestamp in microseconds |
+| Field       | Type  | Required | Description                                                              |
+| ----------- | ----- | -------- | ------------------------------------------------------------------------ |
+| `timestamp` | `u64` | Yes      | Unix timestamp in microseconds. Must be a raw integer — do not quote it. |
 
 For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
 

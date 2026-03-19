@@ -5,6 +5,8 @@
     "acquire-access-token",
     "subscribe-to-prices",
     "integrate-as-consumer",
+    "mcp",
+    "mcp-skills",
 
     "---Resources---",
     "api",

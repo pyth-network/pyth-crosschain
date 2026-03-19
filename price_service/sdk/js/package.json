@@ -46,6 +46,16 @@
         "default": "./dist/cjs/schemas/PriceFeed.cjs",
         "types": "./dist/cjs/schemas/PriceFeed.d.ts"
       }
+    },
+    "./utils/buffer": {
+      "import": {
+        "default": "./dist/esm/utils/buffer.mjs",
+        "types": "./dist/esm/utils/buffer.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/buffer.cjs",
+        "types": "./dist/cjs/utils/buffer.d.ts"
+      }
     }
   },
   "files": [

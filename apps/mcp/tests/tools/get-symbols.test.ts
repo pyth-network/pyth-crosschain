@@ -119,6 +119,8 @@ describe("get_symbols tool", () => {
     expect(data.has_more).toBe(true);
     expect(data.offset).toBe(0);
     expect(data.next_offset).toBe(50);
+    expect(data.server_time_utc).toBeDefined();
+    expect(data.server_unix_seconds).toBeDefined();
   });
 
   it("filters by query", async () => {

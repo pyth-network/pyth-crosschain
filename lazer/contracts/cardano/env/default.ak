@@ -1,4 +1,4 @@
-pub const chain_id: Int = 60096
+pub const chain_id: Int = 60097
 
 // Certus One:
 // https://github.com/wormhole-foundation/wormhole/blob/fe93c28401ea42bc4e62450ddaf5083110802e78/guardianset/mainnetv2/v1.prototxt#L7

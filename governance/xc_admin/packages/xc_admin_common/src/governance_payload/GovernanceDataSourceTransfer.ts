@@ -1,11 +1,11 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
+import type { ActionName, PythGovernanceAction } from "./PythGovernanceAction";
 import {
-  type ActionName,
-  type PythGovernanceAction,
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import * as BufferLayout from "@solana/buffer-layout";
-import type { ChainName } from "../chains";
 
 /**
  * Authorize transferring the governance data source from the sender's emitter address to another emitter.
@@ -46,7 +46,7 @@ export class AuthorizeGovernanceDataSourceTransfer
       this.targetChainId,
       this.actionName,
     ).encode();
-    return Buffer.concat([headerBuffer, this.claimVaa]);
+    return safeBufferConcat([headerBuffer, this.claimVaa]);
   }
 }
 

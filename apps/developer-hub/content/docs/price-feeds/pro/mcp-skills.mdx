@@ -1,0 +1,288 @@
+---
+title: MCP Skills
+description: Pre-built AI workflows for the Pyth MCP server
+slug: /price-feeds/pro/mcp-skills
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+MCP Skills are pre-built prompt templates that teach AI assistants specific workflows using the [Pyth MCP server](/price-feeds/pro/mcp). Instead of figuring out which tools to call and how to combine them, you can describe what you want in natural language and the skill handles the rest.
+
+Skills work with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and are installed alongside the MCP server. Each skill listed below includes example prompts you can try directly in your AI assistant.
+
+<Callout type="warning">
+  Skills require the [Pyth MCP server](/price-feeds/pro/mcp#setup) to be configured first. Some skills also require a [Pyth Pro access token](./acquire-access-token).
+</Callout>
+
+## Installation
+
+Skills are Claude Code slash commands that live in your project's `.claude/skills/` directory. Each skill is a folder containing a `SKILL.md` file.
+
+### Prerequisites
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
+- [Pyth MCP server](/price-feeds/pro/mcp) configured (at minimum, `claude mcp add pyth --transport http https://mcp.pyth.network/mcp`)
+
+### Setup
+
+<Steps>
+  <Step>
+    ### Clone the repository
+
+    ```bash copy
+    git clone https://github.com/pyth-network/pyth-crosschain.git
+    ```
+  </Step>
+  <Step>
+    ### Copy skills to your project
+
+    Copy the skills directory into your project's `.claude/` folder:
+
+    ```bash copy
+    cp -r pyth-crosschain/apps/mcp/skills/ your-project/.claude/skills/
+    ```
+
+    Your project structure should look like:
+
+    ```
+    your-project/
+    └── .claude/
+        └── skills/
+            ├── pyth-alert-conditions/
+            │   └── SKILL.md
+            ├── pyth-cross-asset-comparison/
+            │   └── SKILL.md
+            ├── pyth-fx-converter/
+            │   └── SKILL.md
+            └── ... (9 skills total)
+    ```
+  </Step>
+  <Step>
+    ### Use a skill
+
+    In Claude Code, invoke any skill with a slash command:
+
+    ```
+    /pyth-alert-conditions Is BTC above $100k?
+    /pyth-fx-converter Convert 1000 EUR to JPY
+    /pyth-portfolio-tracker I hold 2 BTC and 50 ETH
+    ```
+
+    Or simply describe what you want — Claude Code will automatically select the appropriate skill based on your question.
+  </Step>
+</Steps>
+
+<Callout type="info">
+  You can also install individual skills by copying only the specific skill folders you need.
+</Callout>
+
+## Available Skills
+
+| Skill | Category | Description | Token Required |
+| --- | --- | --- | --- |
+| [Price Alerts](#price-alerts) | Market Data | One-time price threshold and percentage change checks | Depends on query |
+| [Cross-Asset Comparison](#cross-asset-comparison) | Market Data | Compare performance across assets via normalization | No |
+| [Volatility Analysis](#volatility-analysis) | Market Data | Annualized volatility, ATR, and risk comparison | No |
+| [FX Converter](#fx-converter) | Financial | Currency conversion through USD cross rates | Depends on query |
+| [Portfolio Tracker](#portfolio-tracker) | Financial | Portfolio value, allocation, and P&L tracking | Yes |
+| [Funding Rate Monitor](#funding-rate-monitor) | Financial | Perpetual futures funding rates and sentiment | Depends on query |
+| [Data Export](#data-export) | Data & Integration | Export price data as CSV, JSON, or Markdown | Depends on data |
+| [Time-Series Snapshots](#time-series-snapshots) | Data & Integration | Historical prices at specific dates | No |
+| [Integration Helper](#integration-helper) | Data & Integration | Developer onboarding for Pyth feeds and IDs | No |
+
+---
+
+## Market Data
+
+### Price Alerts
+
+Evaluates one-time price conditions — checks if prices are above or below thresholds, if assets have moved by a percentage, or if prices are near period highs or lows. These are point-in-time checks, not persistent alerts.
+
+**How it works:** Decomposes your question into the data needed, fetches it, evaluates the condition, and answers YES or NO with supporting numbers.
+
+**What you can ask:**
+
+- "Is BTC above $100k?"
+- "Has ETH dropped 5% today?"
+- "Is gold near its weekly high?"
+- "Has SOL changed more than 10% since June 1?"
+- "Is the BTC bid-ask spread above $10?"
+
+**Try it:**
+
+> "Is gold near its weekly high?"
+>
+> The assistant fetches this week's daily candles and the current price, computes the weekly high from the candle data, and tells you how close the current price is as a percentage.
+
+---
+
+### Cross-Asset Comparison
+
+Compares price performance across multiple assets by normalizing OHLC data to a common baseline. Converts absolute prices to relative performance so you can compare assets at different price scales (e.g., BTC at $97k vs Gold at $2k).
+
+**How it works:** Fetches candlestick data for each asset over the same time range, divides each close by the first close (1.0 = starting point), and computes period returns.
+
+**What you can ask:**
+
+- "Compare Bitcoin vs Gold this quarter"
+- "ETH vs SOL performance over the last 30 days"
+- "EUR/USD vs GBP/USD over the past week"
+- "Which performed better this month: BTC, ETH, or SOL?"
+
+**Try it:**
+
+> "Compare Bitcoin vs Gold this quarter"
+>
+> The assistant fetches daily candles for both assets, normalizes each series, and presents a side-by-side table showing that, for example, BTC returned +12.4% while Gold returned +4.2%.
+
+---
+
+### Volatility Analysis
+
+Analyzes price volatility using candlestick data. Computes annualized volatility from close-to-close returns, average true range (ATR), and daily range metrics.
+
+**How it works:** Fetches candlestick data, calculates daily returns, then computes standard deviation and annualizes it (using 365 days for crypto, 252 for equities/FX).
+
+**What you can ask:**
+
+- "How volatile is SOL?"
+- "Compare the volatility of BTC, ETH, and AAPL"
+- "What's the average daily range of gold?"
+- "Is ETH more volatile than BTC?"
+
+**Try it:**
+
+> "Compare the volatility of BTC, ETH, and AAPL"
+>
+> The assistant fetches 30 days of daily candles for each, computes annualized volatility and ATR, and presents a comparison table showing relative risk levels.
+
+---
+
+## Financial Workflows
+
+### FX Converter
+
+Converts currencies using Pyth FX and crypto price feeds. Supports fiat-to-fiat, crypto-to-fiat, and historical rate conversions.
+
+**How it works:** All conversions go through USD. For cross rates (e.g., EUR to JPY), the assistant fetches both USD-based rates and computes the cross rate by dividing them.
+
+**What you can ask:**
+
+- "Convert 1000 EUR to JPY"
+- "How much is 5 BTC in EUR?"
+- "What was the GBP/JPY rate last Friday?"
+- "Convert 500 USD to GBP"
+
+**Try it:**
+
+> "Convert 1000 EUR to JPY"
+>
+> The assistant fetches EUR/USD and JPY/USD rates, computes the cross rate (e.g., 1.08 / 0.0067 = 161.19), and returns: 1000 EUR = 161,194 JPY.
+
+---
+
+### Portfolio Tracker
+
+Tracks a portfolio of assets with current prices, allocation percentages, and P&L calculations. Supports cost-basis and date-based P&L.
+
+**How it works:** Discovers feeds, batches all assets into a single price call (up to 100 feeds), then computes value, allocation, and optionally compares against historical reference prices.
+
+**What you can ask:**
+
+- "What's my portfolio worth? I hold 2 BTC, 50 ETH, and 1000 SOL"
+- "Show gold, silver, and platinum prices"
+- "How has my portfolio performed since last month?"
+- "What's the allocation breakdown of my crypto holdings?"
+
+**Try it:**
+
+> "What's my portfolio worth? I hold 2 BTC, 50 ETH, and 1000 SOL"
+>
+> The assistant fetches all three prices in one call and returns a table with each asset's value and your total portfolio value with allocation percentages.
+
+---
+
+### Funding Rate Monitor
+
+Monitors perpetual futures funding rates to gauge market sentiment. Positive rates indicate long-biased (bullish) markets, negative rates indicate short-biased (bearish) markets.
+
+**How it works:** Discovers funding rate feeds using the `funding-rate` asset type, fetches current rates, and can analyze historical rate trends via candlestick data.
+
+**What you can ask:**
+
+- "What are the current BTC and ETH funding rates?"
+- "Show me all funding rates sorted by magnitude"
+- "How has the BTC funding rate changed this week?"
+- "Which assets have the highest funding rates right now?"
+
+**Try it:**
+
+> "What are the current BTC and ETH funding rates?"
+>
+> The assistant fetches both rates and presents them with sentiment labels — for example, BTC at +0.012% (slightly long-biased) and ETH at +0.035% (moderately long-biased).
+
+---
+
+## Data & Integration
+
+### Data Export
+
+Exports Pyth price data in CSV, JSON, or Markdown table format. Handles OHLC exports, feed catalog dumps, historical snapshots, and current price tables.
+
+**How it works:** Fetches all requested data first (with pagination if needed), then formats the complete dataset. Caps exports at 1000 rows.
+
+**What you can ask:**
+
+- "Export BTC daily OHLC for the last 30 days as CSV"
+- "Give me all crypto feeds as JSON"
+- "Show current prices for BTC, ETH, and gold as a Markdown table"
+- "Export the full feed catalog"
+
+**Try it:**
+
+> "Export BTC daily OHLC for the last 30 days as CSV"
+>
+> The assistant fetches daily candlestick data and formats it with headers: `timestamp,open,high,low,close,volume` followed by one row per day.
+
+---
+
+### Time-Series Snapshots
+
+Fetches price snapshots at specific historical timestamps. Generates timestamp series (monthly, weekly, quarterly) and retrieves prices for each date.
+
+**How it works:** Generates Unix timestamps for your requested dates, then calls the historical price API once per timestamp with up to 50 feeds per call. For continuous data (more than ~20 points), suggests candlestick data instead.
+
+**What you can ask:**
+
+- "What was BTC at the start of each month this year?"
+- "Show me ETH and SOL prices every Monday for the last 4 weeks"
+- "Get quarterly gold prices since April 2025"
+
+**Try it:**
+
+> "What was BTC at the start of each month this year?"
+>
+> The assistant generates timestamps for April 1, May 1, June 1, etc. (data starts April 2025), fetches each snapshot, and presents a table of monthly prices.
+
+---
+
+### Integration Helper
+
+Guides developers on integrating Pyth price feeds. Explains feed discovery, symbol formats, ID types, price exponents, and data channels.
+
+**How it works:** Understands your integration context (language, chain, use case), uses feed discovery to find specific feeds, and explains the symbol/ID/exponent/channel system.
+
+**What you can ask:**
+
+- "How do I use Pyth in my trading bot?"
+- "What's the feed ID for AAPL?"
+- "What asset types does Pyth support?"
+- "How does Pyth Pro work?"
+- "How do pricing channels work?"
+
+**Try it:**
+
+> "What's the feed ID for AAPL?"
+>
+> The assistant searches for AAPL and returns the symbol (`Equity.US.AAPL`), the Pyth Pro numeric feed ID, and the exponent for price conversion.

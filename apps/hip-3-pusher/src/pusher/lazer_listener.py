@@ -4,12 +4,12 @@ from typing import Any
 
 import websockets
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, wait_fixed
 from websockets import ClientConnection
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
+from pusher.retry import run_with_listener_retry
 
 
 class LazerListener:
@@ -52,18 +52,12 @@ class LazerListener:
 
     async def subscribe_single(self, router_url: str) -> None:
         logger.info("Starting Lazer listener loop: {}", router_url)
-
-        @retry(
-            retry=retry_if_exception_type(Exception),
-            wait=wait_fixed(1),
-            # For now, disable stop_after_attempt to avoid killing process.
-            # stop=stop_after_attempt(self.stop_after_attempt),
-            reraise=True,
+        await run_with_listener_retry(
+            operation=lambda: self.subscribe_single_inner(router_url),
+            listener_name="LazerListener",
+            endpoint=router_url,
+            stop_after_attempt_count=self.stop_after_attempt,
         )
-        async def _run() -> None:
-            return await self.subscribe_single_inner(router_url)
-
-        return await _run()
 
     async def subscribe_single_inner(self, router_url: str) -> None:
         headers = self.get_auth_headers()
@@ -108,7 +102,7 @@ class LazerListener:
             self.parse_lazer_message(data)
             return True
         except TimeoutError:
-            logger.warning(
+            logger.info(
                 "LazerListener: No messages in {} seconds, reconnecting...",
                 timeout,
             )
@@ -116,14 +110,16 @@ class LazerListener:
                 f"No messages in {timeout} seconds, reconnecting"
             ) from None
         except websockets.ConnectionClosed:
-            logger.warning("LazerListener: Connection closed, reconnecting...")
+            logger.info("LazerListener: Connection closed, reconnecting...")
             raise
         except json.JSONDecodeError as e:
             logger.exception("Failed to decode JSON message: {}", repr(e))
-            return False
+            raise StaleConnectionError(
+                "Failed to decode JSON message, reconnecting"
+            ) from e
         except Exception as e:
             logger.exception("Unexpected exception: {}", repr(e))
-            return False
+            raise
 
     def parse_lazer_message(self, data: dict[str, Any]) -> None:
         """

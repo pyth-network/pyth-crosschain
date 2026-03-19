@@ -126,9 +126,10 @@ export const RECEIVER_CHAINS = {
   orange: 60093,
   tempo: 60094,
   megaeth: 60095,
-  cardano_mainnet: 60096,
-  cardano_preprod: 60097,
-  cardano_preview: 60098,
+  fluent: 60096,
+  cardano_mainnet: 60097,
+  cardano_preprod: 60098,
+  cardano_preview: 60099,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

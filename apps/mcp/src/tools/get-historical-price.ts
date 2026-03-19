@@ -10,8 +10,12 @@ import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
 import {
+  DATA_AVAILABLE_FROM_ISO,
+  DATA_AVAILABLE_FROM_UNIX,
   alignTimestampToChannel,
+  getServerTime,
   normalizeTimestampToMicroseconds,
+  unixSecondsToISO,
 } from "../utils/timestamp.js";
 
 const GetHistoricalPriceInput = {
@@ -55,10 +59,16 @@ export function registerGetHistoricalPrice(
   server.registerTool(
     "get_historical_price",
     {
-      annotations: { destructiveHint: false, readOnlyHint: true },
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: true,
+      },
       description:
-        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
+        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetHistoricalPriceInput,
+      title: "Get Historical Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
@@ -140,13 +150,36 @@ export function registerGetHistoricalPrice(
         const enriched = prices.map((p) => addDisplayPrices(p));
 
         if (enriched.length === 0) {
-          const hint =
+          const requestedSeconds = Math.floor(normalizedUs / 1_000_000);
+          const requestedISO = unixSecondsToISO(requestedSeconds);
+          const nowSeconds = Math.floor(Date.now() / 1000);
+
+          const direction =
             normalizedUs > nowUs
-              ? "The requested timestamp is in the future. Historical data is only available for past timestamps."
-              : "No price data found for these feeds at the requested timestamp. Data is available from April 2025 onward. Try a more recent timestamp — some feeds may have started publishing after April 2025.";
+              ? ("too_late" as const)
+              : requestedSeconds < DATA_AVAILABLE_FROM_UNIX
+                ? ("too_early" as const)
+                : ("in_range_no_data" as const);
+
+          const hintByDirection = {
+            in_range_no_data: `No price data found at ${requestedISO} for these feeds. The timestamp is within the valid range but these specific feeds may not have data at this time. Try a slightly different timestamp or verify the feed IDs.`,
+            too_early: `Requested date ${requestedISO} is before the valid range (${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}). Try a timestamp after ${DATA_AVAILABLE_FROM_ISO}.`,
+            too_late: `Requested date ${requestedISO} is in the future. Latest available: ${unixSecondsToISO(nowSeconds)}.`,
+          };
+
           const responseText = JSON.stringify({
-            hint,
+            direction,
+            hint: hintByDirection[direction],
             prices: [],
+            requested_timestamp_iso: requestedISO,
+            requested_timestamp_unix: requestedSeconds,
+            valid_range: {
+              from_iso: DATA_AVAILABLE_FROM_ISO,
+              from_unix: DATA_AVAILABLE_FROM_UNIX,
+              to_iso: unixSecondsToISO(nowSeconds),
+              to_unix: nowSeconds,
+            },
+            ...getServerTime(),
           });
           logToolCall(logger, {
             ...baseMetrics,
@@ -161,7 +194,10 @@ export function registerGetHistoricalPrice(
           };
         }
 
-        const responseText = JSON.stringify(enriched);
+        const responseText = JSON.stringify({
+          prices: enriched,
+          ...getServerTime(),
+        });
         logToolCall(logger, {
           ...baseMetrics,
           latencyMs: Date.now() - start,
@@ -182,6 +218,9 @@ export function registerGetHistoricalPrice(
         ) {
           const idSnippet = ids.slice(0, 5).join(", ");
           const suffix = ids.length > 5 ? ` and ${ids.length - 5} more` : "";
+          const requestedSeconds = Math.floor(
+            normalizeTimestampToMicroseconds(params.timestamp) / 1_000_000,
+          );
           logToolCall(logger, {
             ...baseMetrics,
             errorType: "not_found",
@@ -189,7 +228,7 @@ export function registerGetHistoricalPrice(
             status: "error",
           });
           return toolError(
-            `No data found for the requested feeds (IDs: ${idSnippet}${suffix}). Verify feed IDs with get_symbols.`,
+            `No data found for feeds (IDs: ${idSnippet}${suffix}) at ${unixSecondsToISO(requestedSeconds)} (unix: ${requestedSeconds}). Verify feed IDs with get_symbols.`,
           );
         }
 

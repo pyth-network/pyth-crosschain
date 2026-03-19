@@ -938,5 +938,15 @@
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "megaeth",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "chain": "iota",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "chain": "fluent",
+    "type": "EvmPriceFeedContract"
   }
 ]

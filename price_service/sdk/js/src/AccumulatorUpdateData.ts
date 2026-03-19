@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { safeBufferConcat } from "./utils/buffer.js";
 
 const ACCUMULATOR_MAGIC = "504e4155";
 const MAJOR_VERSION = 1;
@@ -65,14 +66,14 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   const emaConf = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    price,
     confidence,
-    exponent,
-    publishTime,
-    prevPublishTime,
-    emaPrice,
     emaConf,
+    emaPrice,
+    exponent,
+    feedId,
+    prevPublishTime,
+    price,
+    publishTime,
   };
 }
 
@@ -100,14 +101,14 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
   const publishSlot = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    cumulativePrice,
     cumulativeConf,
-    numDownSlots,
+    cumulativePrice,
     exponent,
-    publishTime,
+    feedId,
+    numDownSlots,
     prevPublishTime,
     publishSlot,
+    publishTime,
   };
 }
 
@@ -157,10 +158,10 @@ export function sliceAccumulatorUpdateData(
   }
 
   const sliceUpdates = updates.slice(start, end);
-  return Buffer.concat([
+  return safeBufferConcat([
     data.subarray(0, endOfVaa),
     Buffer.from([sliceUpdates.length]),
-    ...updates.slice(start, end),
+    ...sliceUpdates,
   ]);
 }
 
@@ -209,5 +210,5 @@ export function parseAccumulatorUpdateData(
     throw new Error("Didn't reach the end of the message");
   }
 
-  return { vaa, updates };
+  return { updates, vaa };
 }

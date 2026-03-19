@@ -430,7 +430,7 @@ export async function getPythProPriceFeedMetadataForSymbol(symbol: string) {
     f.min_channel as minChannel
 FROM feeds_metadata_latest f
 PREWHERE
-    f.state = 'stable'
+    lower(f.state) = 'stable'
         AND f.description not like '%deprecated%'
 WHERE name = {name: String}
 LIMIT 10

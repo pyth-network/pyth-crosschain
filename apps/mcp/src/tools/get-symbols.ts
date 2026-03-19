@@ -7,6 +7,7 @@ import { ASSET_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
+import { getServerTime } from "../utils/timestamp.js";
 
 const GetSymbolsInput = {
   asset_type: z
@@ -44,10 +45,16 @@ export function registerGetSymbols(
   server.registerTool(
     "get_symbols",
     {
-      annotations: { destructiveHint: false, readOnlyHint: true },
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: true,
+      },
       description:
         "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (crypto, equity, fx, metal, rates, commodity, funding-rate) or search by name/symbol. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, and exponent.",
       inputSchema: GetSymbolsInput,
+      title: "List Pyth Price Feeds",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
@@ -91,6 +98,7 @@ export function registerGetSymbols(
           next_offset: hasMore ? offset + limit : null,
           offset,
           total_available: totalAvailable,
+          ...getServerTime(),
         };
 
         const responseText = JSON.stringify(result);

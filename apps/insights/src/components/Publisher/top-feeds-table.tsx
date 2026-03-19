@@ -6,13 +6,12 @@ import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-
-import styles from "./top-feeds-table.module.scss";
 import type { Cluster } from "../../services/pyth";
 import type { Status } from "../../status";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { Score } from "../Score";
+import styles from "./top-feeds-table.module.scss";
 
 type Props =
   | LoadingTopFeedsTableImplProps
@@ -52,16 +51,17 @@ const ResolvedTopFeedsTable = ({
   const drawerComponents = useMemo(
     () =>
       feeds.map((feed) => ({
+        cluster,
+        feedKey: feed.key,
         name: (
           <SymbolPairTag
-            displaySymbol={feed.displaySymbol}
+            className={styles.symbol}
             description={feed.description}
+            displaySymbol={feed.displaySymbol}
             icon={feed.icon}
           />
         ),
         publisherKey,
-        feedKey: feed.key,
-        cluster,
         ...feed,
       })),
     [feeds, cluster, publisherKey],
@@ -74,17 +74,17 @@ const ResolvedTopFeedsTable = ({
   const rows = useMemo(
     () =>
       drawerComponents.map((feed) => ({
-        id: feed.symbol,
-        textValue: feed.symbol,
-        header: feed.name,
         data: {
           asset: feed.name,
           assetClass: <AssetClassBadge>{feed.assetClass}</AssetClassBadge>,
-          score: <Score width={props.publisherScoreWidth} score={feed.score} />,
+          score: <Score score={feed.score} width={props.publisherScoreWidth} />,
         },
+        header: feed.name,
+        id: feed.symbol,
         onAction: () => {
           selectComponent(feed);
         },
+        textValue: feed.symbol,
       })),
     [drawerComponents, props.publisherScoreWidth, selectComponent],
   );
@@ -119,41 +119,41 @@ const TopFeedsTableImpl = ({
 }: TopFeedsTableImplProps) => (
   <>
     <EntityList
-      label={label}
       className={styles.list ?? ""}
-      headerLoadingSkeleton={nameLoadingSkeleton}
       fields={[
         { id: "score", name: "Score" },
         { id: "assetClass", name: "Asset Class" },
       ]}
+      headerLoadingSkeleton={nameLoadingSkeleton}
+      label={label}
       {...(props.isLoading ? { isLoading: true } : { rows: props.rows })}
     />
     <Table
-      label={label}
-      rounded
-      fill
       className={styles.table ?? ""}
       columns={[
         {
+          alignment: "left",
           id: "score",
           name: "SCORE",
-          alignment: "left",
           width: publisherScoreWidth,
         },
         {
-          id: "asset",
-          name: "ASSET",
-          isRowHeader: true,
           alignment: "left",
+          id: "asset",
+          isRowHeader: true,
           loadingSkeleton: nameLoadingSkeleton,
+          name: "ASSET",
         },
         {
+          alignment: "right",
           id: "assetClass",
           name: "ASSET CLASS",
-          alignment: "right",
           width: 40,
         },
       ]}
+      fill
+      label={label}
+      rounded
       {...(props.isLoading ? { isLoading: true } : { rows: props.rows })}
     />
   </>

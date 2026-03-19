@@ -212,7 +212,7 @@
     "mainnet": true,
     "nativeToken": "BNB",
     "networkId": 56,
-    "rpcUrl": "https://rpc.ankr.com/bsc",
+    "rpcUrl": "https://public-bsc-mainnet.fastnode.io",
     "type": "EvmChain"
   },
   {
@@ -246,9 +246,9 @@
   {
     "id": "polygon",
     "mainnet": true,
-    "nativeToken": "MATIC",
+    "nativeToken": "POL",
     "networkId": 137,
-    "rpcUrl": "https://polygon-rpc.com",
+    "rpcUrl": "https://poly.api.pocket.network",
     "type": "EvmChain"
   },
   {
@@ -1418,6 +1418,13 @@
     "mainnet": true,
     "networkId": 4326,
     "rpcUrl": "https://mainnet.megaeth.com/rpc",
+    "type": "EvmChain"
+  },
+  {
+    "id": "fluent",
+    "mainnet": true,
+    "networkId": 25363,
+    "rpcUrl": "https://rpc.fluent.xyz",
     "type": "EvmChain"
   }
 ]

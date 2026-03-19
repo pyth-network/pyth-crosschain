@@ -100,6 +100,8 @@ describe("get_candlestick_data tool", () => {
     );
     expect(data.s).toBe("ok");
     expect(data.t).toHaveLength(2);
+    expect(data.server_time_utc).toBeDefined();
+    expect(data.server_unix_seconds).toBeDefined();
   });
 
   it("returns tool error for no_data response", async () => {
@@ -131,6 +133,9 @@ describe("get_candlestick_data tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
     expect(text).toContain("No candlestick data");
+    expect(text).toContain("BTC/USD");
+    // ISO echo should be present
+    expect(text).toMatch(/\d{4}-\d{2}-\d{2}T/);
   });
 
   it("truncates results beyond 500 candles", async () => {

@@ -1,17 +1,15 @@
-import {
-  type ActionName,
-  type PythGovernanceAction,
-  PythGovernanceHeader,
-} from "./PythGovernanceAction";
-import type { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import type { ActionName, PythGovernanceAction } from "./PythGovernanceAction";
+import { PythGovernanceHeader } from "./PythGovernanceAction";
 
 /** A data source is a wormhole emitter, i.e., a specific contract on a specific chain. */
-export interface DataSource {
+export type DataSource = {
   emitterChain: number;
   emitterAddress: string;
-}
+};
 const DataSourceLayout: BufferLayout.Structure<DataSource> =
   BufferLayout.struct([
     BufferLayout.u16be("emitterChain"),
@@ -62,6 +60,6 @@ export class SetDataSources implements PythGovernanceAction {
       return buf;
     });
 
-    return Buffer.concat([headerBuffer, numSourcesBuf, ...dataSourceBufs]);
+    return safeBufferConcat([headerBuffer, numSourcesBuf, ...dataSourceBufs]);
   }
 }

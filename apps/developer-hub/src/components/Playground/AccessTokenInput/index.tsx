@@ -5,9 +5,8 @@ import { Key } from "@phosphor-icons/react/dist/ssr/Key";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Input } from "@pythnetwork/component-library/Input";
 import clsx from "clsx";
-
-import styles from "./index.module.scss";
 import { usePlaygroundContext } from "../PlaygroundContext";
+import styles from "./index.module.scss";
 
 type AccessTokenInputProps = {
   className?: string;
@@ -25,8 +24,7 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
           <span className={styles.label}>Access Token</span>
         </div>
         <Button
-          variant="secondary"
-          size="sm"
+          beforeIcon={<ArrowSquareOut weight="regular" />}
           onPress={() => {
             window.open(
               "https://docs.pyth.network/price-feeds/pro/acquire-access-token#request-access-token",
@@ -34,7 +32,8 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
               "noopener,noreferrer",
             );
           }}
-          beforeIcon={<ArrowSquareOut weight="regular" />}
+          size="sm"
+          variant="secondary"
         >
           Get your Access Token
         </Button>
@@ -43,15 +42,15 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
       <div className={styles.content}>
         <div className={styles.inputWrapper}>
           <Input
-            type="password"
-            placeholder="Leave empty to use demo token (rate limited)"
-            value={config.accessToken}
+            aria-label="Access Token"
+            className={styles.input ?? ""}
+            fullWidth
             onChange={(event) => {
               updateConfig({ accessToken: event.target.value });
             }}
-            fullWidth
-            className={styles.input ?? ""}
-            aria-label="Access Token"
+            placeholder="Leave empty to use demo token (rate limited)"
+            type="password"
+            value={config.accessToken}
           />
         </div>
 

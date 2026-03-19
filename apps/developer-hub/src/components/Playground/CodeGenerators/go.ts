@@ -41,6 +41,7 @@ type SubscribeRequest struct {
 	DeliveryFormat     string   \`json:"deliveryFormat"\`
 	JsonBinaryEncoding string   \`json:"jsonBinaryEncoding"\`
 	Parsed             bool     \`json:"parsed"\`
+	// IgnoreInvalidFeeds bool  \`json:"ignoreInvalidFeeds,omitempty"\` // Ignore invalid feed IDs instead of failing
 }
 
 // StreamUpdate represents the response from the server

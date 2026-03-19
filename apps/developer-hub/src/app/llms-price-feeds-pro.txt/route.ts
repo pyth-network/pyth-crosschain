@@ -147,6 +147,16 @@ You MUST connect to all three endpoints simultaneously. Any single endpoint may 
 - GET /symbols — List available symbols (no auth required)
 - Supports TradingView UDF specification
 
+## MCP for AI Assistants
+
+Pyth Pro also provides an MCP server so agents can discover feeds and fetch prices through tool calls.
+
+- MCP endpoint: https://mcp.pyth.network/mcp
+- Tool workflow: \`get_symbols\` -> \`get_latest_price\` / \`get_historical_price\` -> \`get_candlestick_data\`
+- Token behavior: only \`get_latest_price\` requires \`access_token\`
+- 9 pre-built skills for Claude Code: price alerts, cross-asset comparison, volatility analysis, FX conversion, portfolio tracking, funding rate monitoring, data export, time-series snapshots, and integration guidance
+- Skills docs: https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
+
 ## Contract Addresses
 
 ### EVM (same address on all supported networks)
@@ -229,6 +239,8 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/svm.mdx — Solana/Fogo on-chain verification
 - https://docs.pyth.network/price-feeds/pro/contract-addresses.mdx — Deployment addresses
 - https://docs.pyth.network/price-feeds/pro/price-feed-ids.mdx — Available price feeds
+- https://docs.pyth.network/price-feeds/pro/mcp.mdx — MCP server overview
+- https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx — MCP skills catalog (price alerts, portfolio tracking, FX conversion, etc.)
 `;
 
 export function GET() {
