@@ -2,6 +2,7 @@ import argparse
 
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
+from hyperliquid.utils.types import Meta, SpotMeta
 
 
 def main() -> None:
@@ -30,7 +31,12 @@ def main() -> None:
     print(f"Using {network_name} URL: {base_url}")
     print("address:", args.address)
 
-    info = Info(base_url=base_url, skip_ws=True)
+    info = Info(
+        base_url=base_url,
+        skip_ws=True,
+        meta=Meta(universe=[]),
+        spot_meta=SpotMeta(universe=[], tokens=[]),
+    )
     print("calling clearinghouseState...")
     print(info.user_state(args.address))
     print("calling spotClearinghouseState...")
