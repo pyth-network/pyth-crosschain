@@ -82,7 +82,9 @@ switch (providerType) {
 
 // Steps for fetching and verifying the price update:
 
-// 1. Fetch the price update from Pyth Lazer in "solana" format:
+// 1. Fetch the price update from Pyth Lazer in the "solana" format - this is a
+// little-endian format signed by an Ed25519 key, which we use for both Cardano and
+// Solana integrations:
 const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
 const latestPrice = await lazer.getLatestPrice({
   channel: "fixed_rate@200ms",
@@ -91,7 +93,12 @@ const latestPrice = await lazer.getLatestPrice({
   priceFeedIds: [1],
   properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
 });
-const update = Buffer.from(latestPrice.solana?.data ?? "", "hex");
+
+if (!latestPrice.solana?.data) {
+  throw new Error("Missing update payload");
+}
+
+const update = Buffer.from(latestPrice.solana.data, "hex");
 
 console.log("Fetched update bytes:", update.toString("hex"));
 
