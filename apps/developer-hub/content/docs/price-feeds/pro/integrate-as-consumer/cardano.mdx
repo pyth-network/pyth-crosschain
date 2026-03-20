@@ -96,7 +96,11 @@ const latestPrice = await lazer.getLatestPrice({
   properties: ["price", "exponent"],
 });
 
-const update = Buffer.from(latestPrice.solana?.data ?? "", "hex");
+if (!latestPrice.solana?.data) {
+  throw new Error("Missing update payload");
+}
+
+const update = Buffer.from(latestPrice.solana.data, "hex");
 ```
 
 If you need a streaming integration instead of a one-shot fetch, consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices). Regardless of transport, the transaction must receive the signed update as raw bytes.
@@ -179,6 +183,7 @@ Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/pri
 
 ### Contract Sources
 
+// TODO: change once merged into `main`
 The Cardano contract implementation lives in [`lazer/contracts/cardano`](https://github.com/pyth-network/pyth-crosschain/tree/matej/cardano-governance/lazer/contracts/cardano).
 
 The off-chain flow shown above comes from [`fetch-and-verify.ts`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/cardano/sdk/js/src/examples/fetch-and-verify.ts).
