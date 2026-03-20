@@ -124,12 +124,11 @@ The `pyth_id` below is the Pyth deployment policy ID for your network. The Pyth 
 ```typescript copy
 import { ScriptHash } from "@evolution-sdk/evolution";
 import {
-  createEvolutionClient,
   getPythScriptHash,
   getPythState,
 } from "@pythnetwork/pyth-lazer-cardano-js";
 
-const client = createEvolutionClient(CARDANO_NETWORK, CARDANO_PROVIDER);
+const client = createClient({ network, provider });
 
 const pythState = await getPythState(POLICY_ID, client);
 const pythScript = getPythScriptHash(pythState);
