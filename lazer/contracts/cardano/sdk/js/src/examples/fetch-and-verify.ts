@@ -1,16 +1,71 @@
 /** biome-ignore-all lint/suspicious/noConsole: code example */
 
 import process from "node:process";
-import { ScriptHash, TransactionHash } from "@evolution-sdk/evolution";
+import type { ProviderOnlyClient } from "@evolution-sdk/evolution";
+import {
+  createClient,
+  ScriptHash,
+  TransactionHash,
+} from "@evolution-sdk/evolution";
+import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import type { Provider } from "../index.js";
-import {
-  createEvolutionClient,
-  getPythScriptHash,
-  getPythState,
-} from "../index.js";
+import { getPythScriptHash, getPythState } from "../index.js";
+
+/** Cardano network identifier. */
+export type Network = Exclude<NetworkId, number>;
+
+/** Provider configuration for connecting to a Cardano node. */
+export type Provider =
+  | {
+      type: "blockfrost";
+      projectId: string;
+    }
+  | {
+      type: "koios";
+      token?: string;
+    }
+  | {
+      type: "maestro";
+      apiKey: string;
+    };
+
+function resolveBaseUrl(network: Network, provider: Provider): string {
+  switch (provider.type) {
+    case "blockfrost": {
+      return `https://cardano-${network}.blockfrost.io/api/v0`;
+    }
+    case "koios": {
+      return `https://${
+        {
+          mainnet: "api",
+          preprod: "preprod",
+          preview: "preview",
+        }[network]
+      }.koios.rest/api/v1`;
+    }
+    case "maestro": {
+      return `https://${network}.gomaestro-api.org/v1`;
+    }
+  }
+}
+
+/**
+ * Create Cardano client using Evolution SDK.
+ * @param network public network to use
+ * @param provider API provider and token
+ * @returns
+ */
+export function createEvolutionClient(
+  network: Network,
+  provider: Provider,
+): ProviderOnlyClient {
+  return createClient({
+    network,
+    provider: { ...provider, baseUrl: resolveBaseUrl(network, provider) },
+  });
+}
 
 const {
   network,

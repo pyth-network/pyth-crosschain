@@ -1,70 +1,12 @@
 import type { UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
-  createClient,
   Data,
   DatumOption,
   Schema,
   TSchema,
 } from "@evolution-sdk/evolution";
-import type {
-  NetworkId,
-  ProviderOnlyClient,
-} from "@evolution-sdk/evolution/sdk/client/Client";
-
-/** Cardano network identifier. */
-export type Network = Exclude<NetworkId, number>;
-
-/** Provider configuration for connecting to a Cardano node. */
-export type Provider =
-  | {
-      type: "blockfrost";
-      projectId: string;
-    }
-  | {
-      type: "koios";
-      token?: string;
-    }
-  | {
-      type: "maestro";
-      apiKey: string;
-    };
-
-/**
- * Create Cardano client using Evolution SDK.
- * @param network public network to use
- * @param provider API provider and token
- * @returns
- */
-export function createEvolutionClient(
-  network: Network,
-  provider: Provider,
-): ProviderOnlyClient {
-  return createClient({
-    network,
-    provider: { ...provider, baseUrl: resolveBaseUrl(network, provider) },
-  });
-}
-
-function resolveBaseUrl(network: Network, provider: Provider): string {
-  switch (provider.type) {
-    case "blockfrost": {
-      return `https://cardano-${network}.blockfrost.io/api/v0`;
-    }
-    case "koios": {
-      return `https://${
-        {
-          mainnet: "api",
-          preprod: "preprod",
-          preview: "preview",
-        }[network]
-      }.koios.rest/api/v1`;
-    }
-    case "maestro": {
-      return `https://${network}.gomaestro-api.org/v1`;
-    }
-  }
-}
+import type { ProviderOnlyClient } from "@evolution-sdk/evolution/sdk/client/Client";
 
 const PYTH_STATE_NFT = AssetName.fromBytes(Buffer.from("Pyth State", "utf-8"));
 
