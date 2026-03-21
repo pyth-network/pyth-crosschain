@@ -8,5 +8,5 @@
   },
   },
   "exclude": ["dist/", "node_modules/"],
-  "extends": "./tsconfig"
+  "extends": "./tsconfig.json"
 }
