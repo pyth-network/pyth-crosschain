@@ -213,6 +213,7 @@ onlyBuiltDependencies:
   - esbuild
   - keccak
   - leveldown
+  - msgpackr-extract
   - msw
   - node-hid
   - nx
