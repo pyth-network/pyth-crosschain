@@ -41,7 +41,7 @@ export function getDb(): Database.Database {
        SET status = 'failed',
            error_msg = 'Server restarted during export. Please retry.',
            updated_at = datetime('now')
-       WHERE status = 'processing'`,
+       WHERE status IN ('processing', 'queued')`
       )
       .run();
   }
