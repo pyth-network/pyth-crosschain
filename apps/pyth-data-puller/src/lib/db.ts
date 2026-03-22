@@ -6,7 +6,10 @@ let _db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!_db) {
-    _db = new Database(resolve(process.cwd(), "data", "exports.db"));
+    const dbDir = resolve(process.cwd(), "data");
+    const { mkdirSync, existsSync } = require("node:fs");
+    if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
+    _db = new Database(resolve(dbDir, "exports.db"));
     _db.pragma("journal_mode = WAL");
     _db.exec(`
       CREATE TABLE IF NOT EXISTS exports (
