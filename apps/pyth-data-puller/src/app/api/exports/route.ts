@@ -9,7 +9,10 @@ export function GET(request: Request) {
       url.searchParams.get("offset") ?? "0",
       10,
     );
-    const limit = Math.min(Number.isNaN(rawLimit) ? 20 : rawLimit, 100);
+    const limit = Math.max(
+      Math.min(Number.isNaN(rawLimit) ? 20 : rawLimit, 100),
+      1,
+    );
     const offset = Math.max(Number.isNaN(rawOffset) ? 0 : rawOffset, 0);
 
     const result = listExports(limit, offset);

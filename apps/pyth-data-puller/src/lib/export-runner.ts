@@ -76,11 +76,12 @@ function buildEnvConfig(config: ExportConfig): string {
     `EXPORT_FEED_LABELS="${sanitizeForEnv(feedLabels)}"`,
   ];
 
-  // Columns config — compare against VALID_COLUMNS.length, not a magic number
-  if (config.columns.length === VALID_COLUMNS.length) {
+  // Columns config — deduplicate and compare against VALID_COLUMNS.length
+  const uniqueColumns = [...new Set(config.columns)];
+  if (uniqueColumns.length === VALID_COLUMNS.length) {
     lines.push(`EXPORT_COLUMNS="all"`);
   } else {
-    lines.push(`EXPORT_COLUMNS="${config.columns.join(",")}"`);
+    lines.push(`EXPORT_COLUMNS="${uniqueColumns.join(",")}"`);
   }
 
   // Channel-to-interval mapping
@@ -148,7 +149,7 @@ function parseExportOutput(logPath: string): {
   try {
     const tail = execSync(`tail -50 "${logPath}"`, { encoding: "utf-8" });
 
-    const fileCountMatch = tail.match(/Exported (\d+) batch file/);
+    const fileCountMatch = tail.match(/Exported (\d+) (?:batch )?file/);
     const fileCount = fileCountMatch?.[1]
       ? Number.parseInt(fileCountMatch[1], 10)
       : null;

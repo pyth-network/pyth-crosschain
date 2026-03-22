@@ -118,7 +118,9 @@ export function insertExportIfUnderLimit(
   const db = getDb();
   const txn = db.transaction(() => {
     const { c } = db
-      .prepare("SELECT count(*) as c FROM exports WHERE status = 'processing'")
+      .prepare(
+        "SELECT count(*) as c FROM exports WHERE status IN ('queued', 'processing')",
+      )
       .get() as { c: number };
     if (c >= maxConcurrent) return null;
     insertExport(row);

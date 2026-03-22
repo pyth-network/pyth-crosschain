@@ -550,6 +550,8 @@ if [[ "${BATCH_MODE,,}" == "none" ]]; then
     run_insert "$START_DATETIME" "$END_DATETIME" "$S3_URL" "$feed_group_csv"
     EXPORTED_FILE_KEYS+=("$S3_KEY")
   done
+
+  echo "Exported ${#EXPORTED_FILE_KEYS[@]} file(s)."
 else
   mapfile -t ranges < <(
     python3 - <<'PY' "$START_DATETIME" "$END_DATETIME" "${BATCH_MODE,,}" "$BATCH_DAYS" "$BATCH_MINUTES"
