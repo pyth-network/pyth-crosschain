@@ -8,14 +8,18 @@ import {
 } from "node:fs";
 import { resolve } from "node:path";
 import type { SplitConfig } from "./auto-split";
+import { CHANNEL_DISPLAY } from "./channels";
 import { updateExport } from "./db";
+import { VALID_COLUMNS } from "./validate";
 
 const TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SIGKILL_DELAY_MS = 30_000; // 30 seconds after SIGTERM
 
 type ExportConfig = {
   id: string;
+  clientName: string;
   feedIds: number[];
+  feedSymbols: Record<number, string>;
   channel: number;
   columns: string[];
   startDt: string;
@@ -39,7 +43,19 @@ function getTmpEnvPath(id: string): string {
   return resolve("/tmp", `export_${id}.env`);
 }
 
+/** Strip characters that are dangerous in bash double-quoted strings */
+function sanitizeForEnv(value: string): string {
+  return value.replace(/["`$\\()!\n\r]/g, "");
+}
+
 function buildEnvConfig(config: ExportConfig): string {
+  const feedLabels = config.feedIds
+    .map(
+      (feedId) =>
+        `${feedId} (${sanitizeForEnv(config.feedSymbols[feedId] ?? "unknown")})`,
+    )
+    .join(", ");
+
   const lines: string[] = [
     `PRICE_FEED_IDS="${config.feedIds.join(",")}"`,
     `START_DATETIME="${config.startDt}"`,
@@ -54,10 +70,14 @@ function buildEnvConfig(config: ExportConfig): string {
     `OUTPUT_DEFAULT="export.csv"`,
     `GENERATE_INDEX_HTML=1`,
     `S3_OVERWRITE_ON_INSERT=0`,
+    // Metadata for index.html (sanitized for bash safety)
+    `EXPORT_NAME="${sanitizeForEnv(config.clientName)}"`,
+    `EXPORT_CHANNEL_LABEL="${sanitizeForEnv(CHANNEL_DISPLAY[config.channel] ?? String(config.channel))}"`,
+    `EXPORT_FEED_LABELS="${sanitizeForEnv(feedLabels)}"`,
   ];
 
-  // Columns config
-  if (config.columns.length === 6) {
+  // Columns config — compare against VALID_COLUMNS.length, not a magic number
+  if (config.columns.length === VALID_COLUMNS.length) {
     lines.push(`EXPORT_COLUMNS="all"`);
   } else {
     lines.push(`EXPORT_COLUMNS="${config.columns.join(",")}"`);
@@ -84,6 +104,14 @@ function buildEnvConfig(config: ExportConfig): string {
   return lines.join("\n") + "\n";
 }
 
+/** Redact potential credentials from error output */
+function sanitizeErrorMsg(msg: string): string {
+  return msg
+    .replace(/password[=:]\S+/gi, "password=***")
+    .replace(/arn:aws:iam::\d+:\S+/g, "arn:aws:iam::***:***")
+    .replace(/https?:\/\/\S+:\S+@/g, "https://***@");
+}
+
 function finalizeExport(
   id: string,
   status: "completed" | "failed",
@@ -96,7 +124,8 @@ function finalizeExport(
 ): void {
   const fields: Record<string, string | number | null> = { status };
 
-  if (opts?.errorMsg !== undefined) fields.error_msg = opts.errorMsg;
+  if (opts?.errorMsg !== undefined)
+    fields.error_msg = sanitizeErrorMsg(opts.errorMsg);
   if (opts?.fileCount !== undefined) fields.file_count = opts.fileCount;
   if (opts?.s3Url !== undefined) fields.s3_url = opts.s3Url;
   if (opts?.s3Manifest !== undefined) fields.s3_manifest = opts.s3Manifest;
@@ -139,21 +168,24 @@ function parseExportOutput(logPath: string): {
 export function spawnExport(config: ExportConfig): { pid: number | null } {
   const { id } = config;
 
-  // Ensure logs directory exists
   const logsDir = getLogsDir();
   if (!existsSync(logsDir)) {
     mkdirSync(logsDir, { recursive: true });
   }
 
-  // Write temp .env config
+  // Write temp .env config with restrictive permissions
   const tmpEnvPath = getTmpEnvPath(id);
-  writeFileSync(tmpEnvPath, buildEnvConfig(config), "utf-8");
+  writeFileSync(tmpEnvPath, buildEnvConfig(config), {
+    encoding: "utf-8",
+    mode: 0o600,
+  });
 
-  // Open log file
   const logPath = getLogPath(id);
   const logStream = createWriteStream(logPath);
 
-  // Spawn the export script
+  // biome-ignore lint/style/noProcessEnv: Constructing minimal env for child process
+  const parentEnv = process.env;
+
   const scriptPath = getScriptPath();
   const child = spawn(
     "bash",
@@ -168,27 +200,42 @@ export function spawnExport(config: ExportConfig): { pid: number | null } {
     ],
     {
       detached: false,
-      // biome-ignore lint/style/noProcessEnv: Passing credentials to child process
-      env: { ...process.env },
+      env: {
+        HOME: parentEnv.HOME ?? "",
+        HOST: parentEnv.HOST ?? "",
+        NODE_ENV: parentEnv.NODE_ENV ?? "production",
+        PASSWORD: parentEnv.PASSWORD ?? "",
+        PATH: parentEnv.PATH ?? "",
+        USER: parentEnv.USER ?? "",
+      },
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
 
   const pid = child.pid ?? null;
+  let finalized = false;
 
-  // Pipe stdout and stderr to the log file
   if (child.stdout) child.stdout.pipe(logStream);
   if (child.stderr) child.stderr.pipe(logStream);
 
-  // Update DB with pid
   updateExport(id, { pid, status: "processing" });
 
-  // Set 24h timeout
+  // Guard to ensure finalizeExport is called only once
+  function doFinalize(
+    st: "completed" | "failed",
+    opts?: Parameters<typeof finalizeExport>[2],
+  ) {
+    if (finalized) return;
+    finalized = true;
+    finalizeExport(id, st, opts);
+  }
+
+  let sigkillTimer: ReturnType<typeof setTimeout> | null = null;
+
   const timeoutTimer = setTimeout(() => {
     child.kill("SIGTERM");
 
-    // Force kill after 30s if still alive
-    setTimeout(() => {
+    sigkillTimer = setTimeout(() => {
       if (pid !== null) {
         try {
           process.kill(pid, 0);
@@ -199,28 +246,31 @@ export function spawnExport(config: ExportConfig): { pid: number | null } {
       }
     }, SIGKILL_DELAY_MS);
 
-    finalizeExport(id, "failed", {
+    doFinalize("failed", {
       errorMsg: "Export timed out after 24 hours",
     });
   }, TIMEOUT_MS);
 
-  // Handle spawn error (e.g., script not found)
+  // Prevent the 24h timer from keeping Node alive on shutdown
+  timeoutTimer.unref();
+
   child.on("error", (err) => {
     clearTimeout(timeoutTimer);
+    if (sigkillTimer) clearTimeout(sigkillTimer);
     logStream.end();
-    finalizeExport(id, "failed", { errorMsg: err.message });
+    doFinalize("failed", { errorMsg: err.message });
   });
 
-  // Handle exit
   child.on("exit", (code) => {
     clearTimeout(timeoutTimer);
+    if (sigkillTimer) clearTimeout(sigkillTimer);
     logStream.end();
 
     if (code === 0) {
       const { fileCount, s3Prefix, s3Index } = parseExportOutput(logPath);
       const hasData = fileCount !== null && fileCount > 0;
 
-      finalizeExport(id, "completed", {
+      doFinalize("completed", {
         ...(hasData
           ? {}
           : { errorMsg: "Warning: no data found for the given parameters" }),
@@ -239,7 +289,7 @@ export function spawnExport(config: ExportConfig): { pid: number | null } {
         // Use default error message
       }
 
-      finalizeExport(id, "failed", { errorMsg });
+      doFinalize("failed", { errorMsg });
     }
   });
 

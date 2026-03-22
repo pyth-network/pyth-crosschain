@@ -2,32 +2,71 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-
-type Feed = {
-  pyth_lazer_id: number;
-  symbol: string;
-  name: string;
-  asset_type: string;
-  min_channel?: number;
-};
-
-const CHANNELS = [
-  { label: "Channel 1 — Real-time (~1ms)", value: 1 },
-  { label: "Channel 2 — fixed_rate@50ms", value: 2 },
-  { label: "Channel 3 — fixed_rate@200ms", value: 3 },
-  { label: "Channel 4 — fixed_rate@1000ms (1s)", value: 4 },
-];
+import {
+  CHANNEL_RATES,
+  CHANNELS,
+  MIN_CHANNEL_TO_NUMBER,
+  ROW_SIZE_ESTIMATE,
+} from "../../lib/channels";
+import type { Feed } from "../../lib/validate";
 
 const ALL_COLUMNS = [
-  { default: true, label: "Price", value: "price" },
-  { default: true, label: "Best Bid", value: "best_bid_price" },
-  { default: true, label: "Best Ask", value: "best_ask_price" },
-  { default: false, label: "Publisher Count", value: "publisher_count" },
-  { default: false, label: "Confidence", value: "confidence" },
-  { default: false, label: "Market Session", value: "market_session" },
+  { default: true, group: "Price", label: "Price", value: "price" },
+  { default: true, group: "Price", label: "Best Bid", value: "best_bid_price" },
+  { default: true, group: "Price", label: "Best Ask", value: "best_ask_price" },
+  { default: false, group: "Price", label: "EMA Price", value: "ema_price" },
+  {
+    default: false,
+    group: "Price",
+    label: "EMA Confidence",
+    value: "ema_confidence",
+  },
+  {
+    default: false,
+    group: "Metadata",
+    label: "Confidence",
+    value: "confidence",
+  },
+  {
+    default: false,
+    group: "Metadata",
+    label: "Publisher Count",
+    value: "publisher_count",
+  },
+  { default: false, group: "Metadata", label: "Exponent", value: "exponent" },
+  {
+    default: false,
+    group: "Metadata",
+    label: "Market Session",
+    value: "market_session",
+  },
+  { default: false, group: "Metadata", label: "State", value: "state" },
+  {
+    default: false,
+    group: "Funding",
+    label: "Funding Rate",
+    value: "funding_rate",
+  },
+  {
+    default: false,
+    group: "Funding",
+    label: "Funding Timestamp",
+    value: "funding_timestamp",
+  },
+  {
+    default: false,
+    group: "Funding",
+    label: "Funding Interval (μs)",
+    value: "funding_rate_interval_us",
+  },
 ];
 
-const CHANNEL_RATES: Record<number, number> = { 1: 1000, 2: 20, 3: 5, 4: 1 };
+function feedSupportsChannel(feed: Feed, channel: number): boolean {
+  if (!feed.min_channel) return true;
+  const minChannelNum = MIN_CHANNEL_TO_NUMBER[feed.min_channel];
+  if (minChannelNum === undefined) return true;
+  return channel >= minChannelNum;
+}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -55,6 +94,7 @@ export default function NewExport() {
   const [columns, setColumns] = useState<Set<string>>(
     new Set(ALL_COLUMNS.filter((c) => c.default).map((c) => c.value)),
   );
+  const [splitByFeed, setSplitByFeed] = useState(false);
   const [startDt, setStartDt] = useState("");
   const [endDt, setEndDt] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -83,6 +123,20 @@ export default function NewExport() {
       .slice(0, 50);
   }, [feeds, feedSearch]);
 
+  // O(1) feed lookup by ID
+  const feedMap = useMemo(
+    () => new Map(feeds.map((f) => [f.pyth_lazer_id, f])),
+    [feeds],
+  );
+
+  // Check which selected feeds don't support the chosen channel
+  const incompatibleFeeds = useMemo(() => {
+    if (selectedFeedIds.size === 0) return [];
+    return [...selectedFeedIds]
+      .map((id) => feedMap.get(id))
+      .filter((f): f is Feed => !!f && !feedSupportsChannel(f, channel));
+  }, [feedMap, selectedFeedIds, channel]);
+
   const estimate = useMemo(() => {
     if (!startDt || !endDt || selectedFeedIds.size === 0) return null;
     const start = new Date(startDt);
@@ -97,7 +151,7 @@ export default function NewExport() {
     const rangeSec = (end.getTime() - start.getTime()) / 1000;
     const rate = CHANNEL_RATES[channel] ?? 1;
     const rows = rangeSec * rate * selectedFeedIds.size;
-    const bytes = rows * 55;
+    const bytes = rows * ROW_SIZE_ESTIMATE;
 
     return { bytes, rows };
   }, [startDt, endDt, channel, selectedFeedIds]);
@@ -134,6 +188,7 @@ export default function NewExport() {
           columns: [...columns],
           end_dt: endDt.replace("T", " ") + (endDt.includes(":") ? ":00" : ""),
           feed_ids: [...selectedFeedIds],
+          split_by_feed: splitByFeed,
           start_dt:
             startDt.replace("T", " ") + (startDt.includes(":") ? ":00" : ""),
         }),
@@ -296,10 +351,77 @@ export default function NewExport() {
           </div>
 
           {selectedFeedIds.size > 0 && (
-            <p style={{ color: "#888", fontSize: 12, marginTop: 4 }}>
-              Selected IDs:{" "}
-              {[...selectedFeedIds].sort((a, b) => a - b).join(", ")}
-            </p>
+            <div style={{ marginTop: 8 }}>
+              <p style={{ color: "#888", fontSize: 12, marginBottom: 6 }}>
+                Selected ({selectedFeedIds.size}):
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {[...selectedFeedIds]
+                  .sort((a, b) => a - b)
+                  .map((id) => {
+                    const feed = feedMap.get(id);
+                    return (
+                      <span
+                        key={id}
+                        style={{
+                          alignItems: "center",
+                          backgroundColor: "#1a2a3a",
+                          border: "1px solid #334155",
+                          borderRadius: 4,
+                          color: "#93c5fd",
+                          display: "inline-flex",
+                          fontSize: 13,
+                          gap: 6,
+                          padding: "4px 8px",
+                        }}
+                      >
+                        <strong>{id}</strong>
+                        {feed ? ` ${feed.symbol}` : ""}
+                        <button
+                          onClick={() => toggleFeed(id)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#64748b",
+                            cursor: "pointer",
+                            fontSize: 14,
+                            lineHeight: 1,
+                            padding: 0,
+                          }}
+                          title="Remove"
+                          type="button"
+                        >
+                          x
+                        </button>
+                      </span>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {incompatibleFeeds.length > 0 && (
+            <div
+              style={{
+                backgroundColor: "#3a2a1a",
+                border: "1px solid #f59e0b",
+                borderRadius: 6,
+                color: "#fbbf24",
+                fontSize: 13,
+                marginTop: 8,
+                padding: 10,
+              }}
+            >
+              <strong>Channel not supported:</strong>{" "}
+              {incompatibleFeeds.map((f) => (
+                <span key={f.pyth_lazer_id}>
+                  {f.name ?? f.symbol} (ID {f.pyth_lazer_id}, min:{" "}
+                  {f.min_channel}){", "}
+                </span>
+              ))}
+              <br />
+              Switch to a slower channel or remove these feeds.
+            </div>
           )}
         </div>
 
@@ -327,55 +449,120 @@ export default function NewExport() {
           <legend style={labelStyle}>
             Columns to Export <span style={{ color: "#f87171" }}>*</span>
           </legend>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            {ALL_COLUMNS.map((col) => (
-              <label
-                key={col.value}
-                style={{
-                  alignItems: "center",
-                  cursor: "pointer",
-                  display: "flex",
-                  fontSize: 14,
-                  gap: 4,
-                }}
-              >
-                <input
-                  checked={columns.has(col.value)}
-                  onChange={() => toggleColumn(col.value)}
-                  type="checkbox"
-                />
-                {col.label}
-              </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {["Price", "Metadata", "Funding"].map((group) => (
+              <div key={group}>
+                <p style={{ color: "#888", fontSize: 12, margin: "0 0 4px 0" }}>
+                  {group}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                  {ALL_COLUMNS.filter((c) => c.group === group).map((col) => (
+                    <label
+                      key={col.value}
+                      style={{
+                        alignItems: "center",
+                        cursor: "pointer",
+                        display: "flex",
+                        fontSize: 14,
+                        gap: 4,
+                      }}
+                    >
+                      <input
+                        checked={columns.has(col.value)}
+                        onChange={() => toggleColumn(col.value)}
+                        type="checkbox"
+                      />
+                      {col.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </fieldset>
 
-        {/* Date Range */}
+        {/* Split by Feed */}
+        <div style={{ marginBottom: 20 }}>
+          <label
+            style={{
+              alignItems: "center",
+              cursor: "pointer",
+              display: "flex",
+              fontSize: 14,
+              gap: 8,
+            }}
+          >
+            <input
+              checked={splitByFeed}
+              onChange={(e) => setSplitByFeed(e.target.checked)}
+              type="checkbox"
+            />
+            Split by feed
+            <span style={{ color: "#888", fontWeight: 400 }}>
+              — one S3 subfolder per feed ID
+            </span>
+          </label>
+        </div>
+
+        {/* Date Range (UTC) */}
+        <p style={{ color: "#888", fontSize: 12, marginBottom: 8 }}>
+          All times are in UTC
+        </p>
         <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
           <div style={{ flex: 1 }}>
-            <label htmlFor="start-dt" style={labelStyle}>
-              Start Date & Time <span style={{ color: "#f87171" }}>*</span>
+            <label htmlFor="start-date" style={labelStyle}>
+              Start Date (UTC) <span style={{ color: "#f87171" }}>*</span>
             </label>
             <input
-              id="start-dt"
-              onChange={(e) => setStartDt(e.target.value)}
+              id="start-date"
+              onChange={(e) =>
+                setStartDt(
+                  `${e.target.value}T${startDt.split("T")[1] ?? "00:00"}`,
+                )
+              }
               required
-              style={inputStyle}
-              type="datetime-local"
-              value={startDt}
+              style={{ ...inputStyle, colorScheme: "dark" }}
+              type="date"
+              value={startDt.split("T")[0] ?? ""}
+            />
+            <label htmlFor="start-time" style={{ ...labelStyle, marginTop: 8 }}>
+              Start Time (UTC)
+            </label>
+            <input
+              id="start-time"
+              onChange={(e) =>
+                setStartDt(`${startDt.split("T")[0] ?? ""}T${e.target.value}`)
+              }
+              style={{ ...inputStyle, colorScheme: "dark" }}
+              type="time"
+              value={startDt.split("T")[1] ?? "00:00"}
             />
           </div>
           <div style={{ flex: 1 }}>
-            <label htmlFor="end-dt" style={labelStyle}>
-              End Date & Time <span style={{ color: "#f87171" }}>*</span>
+            <label htmlFor="end-date" style={labelStyle}>
+              End Date (UTC) <span style={{ color: "#f87171" }}>*</span>
             </label>
             <input
-              id="end-dt"
-              onChange={(e) => setEndDt(e.target.value)}
+              id="end-date"
+              onChange={(e) =>
+                setEndDt(`${e.target.value}T${endDt.split("T")[1] ?? "23:59"}`)
+              }
               required
-              style={inputStyle}
-              type="datetime-local"
-              value={endDt}
+              style={{ ...inputStyle, colorScheme: "dark" }}
+              type="date"
+              value={endDt.split("T")[0] ?? ""}
+            />
+            <label htmlFor="end-time" style={{ ...labelStyle, marginTop: 8 }}>
+              End Time (UTC)
+            </label>
+            <input
+              id="end-time"
+              onChange={(e) =>
+                setEndDt(`${endDt.split("T")[0] ?? ""}T${e.target.value}`)
+              }
+              style={{ ...inputStyle, colorScheme: "dark" }}
+              type="time"
+              value={endDt.split("T")[1] ?? "23:59"}
             />
           </div>
         </div>
@@ -434,14 +621,21 @@ export default function NewExport() {
           </button>
           <button
             disabled={
-              submitting || selectedFeedIds.size === 0 || columns.size === 0
+              submitting ||
+              selectedFeedIds.size === 0 ||
+              columns.size === 0 ||
+              incompatibleFeeds.length > 0
             }
             style={{
-              backgroundColor: submitting ? "#444" : "#6366f1",
+              backgroundColor:
+                submitting || incompatibleFeeds.length > 0 ? "#444" : "#6366f1",
               border: "none",
               borderRadius: 6,
               color: "#fff",
-              cursor: submitting ? "not-allowed" : "pointer",
+              cursor:
+                submitting || incompatibleFeeds.length > 0
+                  ? "not-allowed"
+                  : "pointer",
               fontSize: 14,
               fontWeight: 500,
               padding: "10px 20px",

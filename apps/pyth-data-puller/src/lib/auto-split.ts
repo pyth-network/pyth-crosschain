@@ -1,12 +1,11 @@
-import { CHANNEL_RATES } from "./validate";
+import { CHANNEL_RATES, ROW_SIZE_ESTIMATE } from "./channels";
 
 const TARGET_FILE_BYTES = 500 * 1024 * 1024; // 500MB
-const ROW_SIZE_ESTIMATE = 55; // avg bytes per CSV row
 const TARGET_ROWS = Math.floor(TARGET_FILE_BYTES / ROW_SIZE_ESTIMATE);
 
 export type SplitConfig = {
   feedGroupSize: number;
-  batchMode: "none" | "day" | "minute" | "month";
+  batchMode: "none" | "day" | "minute";
   batchDays: number;
   batchMinutes: number;
 };
@@ -16,7 +15,7 @@ export type SplitConfig = {
  *
  * autoSplit(channel, numFeeds, rangeSec)
  * │
- * ├─ FEED SPLIT: numFeeds > 10 → feedGroupSize=1 (per feed)
+ * ├─ FEED SPLIT: numFeeds > 10 or user flag → feedGroupSize=1 (per feed)
  * │
  * ├─ TIME SPLIT: progressively smaller windows until file < 500MB
  * │   ├─ Total fits in one file → batchMode="none"
@@ -30,27 +29,24 @@ export function autoSplit(
   channel: number,
   numFeeds: number,
   rangeSec: number,
+  splitByFeed = false,
 ): SplitConfig {
   const ratePerSec = CHANNEL_RATES[channel] ?? 1;
 
-  // Feed split decision
-  const feedGroupSize = numFeeds > 10 ? 1 : 0;
+  const feedGroupSize = splitByFeed || numFeeds > 10 ? 1 : 0;
   const effectiveFeeds = feedGroupSize === 1 ? 1 : numFeeds;
 
-  // Total rows for one feed group over the full range
   const rowsPerGroup = rangeSec * ratePerSec * effectiveFeeds;
 
   if (rowsPerGroup <= TARGET_ROWS) {
     return { batchDays: 1, batchMinutes: 60, batchMode: "none", feedGroupSize };
   }
 
-  // Try daily batches
   const dailyRows = 86_400 * ratePerSec * effectiveFeeds;
   if (dailyRows <= TARGET_ROWS) {
     return { batchDays: 1, batchMinutes: 60, batchMode: "day", feedGroupSize };
   }
 
-  // Try hourly batches
   const hourlyRows = 3600 * ratePerSec * effectiveFeeds;
   if (hourlyRows <= TARGET_ROWS) {
     return {
@@ -61,7 +57,6 @@ export function autoSplit(
     };
   }
 
-  // Fallback: 1-minute batches
   return { batchDays: 1, batchMinutes: 1, batchMode: "minute", feedGroupSize };
 }
 
@@ -82,9 +77,6 @@ export function estimateFiles(
       break;
     case "minute":
       timeBatches = Math.ceil(rangeSec / (config.batchMinutes * 60));
-      break;
-    case "month":
-      timeBatches = Math.ceil(rangeSec / (30 * 86_400));
       break;
   }
 

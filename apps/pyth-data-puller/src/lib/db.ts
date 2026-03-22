@@ -1,15 +1,12 @@
 import { resolve } from "node:path";
 import Database from "better-sqlite3";
+import type { ExportStatus } from "./validate";
 
 let _db: Database.Database | null = null;
 
-function getDbPath(): string {
-  return resolve(process.cwd(), "data", "exports.db");
-}
-
 export function getDb(): Database.Database {
   if (!_db) {
-    _db = new Database(getDbPath());
+    _db = new Database(resolve(process.cwd(), "data", "exports.db"));
     _db.pragma("journal_mode = WAL");
     _db.exec(`
       CREATE TABLE IF NOT EXISTS exports (
@@ -32,28 +29,23 @@ export function getDb(): Database.Database {
         file_count      INTEGER,
         created_at      TEXT NOT NULL,
         updated_at      TEXT NOT NULL
-      )
+      );
+      CREATE INDEX IF NOT EXISTS idx_exports_status ON exports(status);
+      CREATE INDEX IF NOT EXISTS idx_exports_created_at ON exports(created_at DESC);
     `);
+
+    // Startup sweep: mark any exports stuck in "processing" as failed
+    _db
+      .prepare(
+        `UPDATE exports
+       SET status = 'failed',
+           error_msg = 'Server restarted during export. Please retry.',
+           updated_at = datetime('now')
+       WHERE status = 'processing'`,
+      )
+      .run();
   }
   return _db;
-}
-
-export function initDb(): void {
-  getDb();
-}
-
-export function markStuckAsFailed(): number {
-  const db = getDb();
-  const result = db
-    .prepare(
-      `UPDATE exports
-     SET status = 'failed',
-         error_msg = 'Server restarted during export. Please retry.',
-         updated_at = datetime('now')
-     WHERE status = 'processing'`,
-    )
-    .run();
-  return result.changes;
 }
 
 export type ExportRow = {
@@ -68,7 +60,7 @@ export type ExportRow = {
   batch_days: number | null;
   batch_minutes: number | null;
   feed_group_size: number;
-  status: string;
+  status: ExportStatus;
   s3_url: string | null;
   s3_manifest: string | null;
   error_msg: string | null;
@@ -114,6 +106,27 @@ export function insertExport(row: Omit<ExportRow, "updated_at">): void {
   );
 }
 
+/**
+ * Atomically check the concurrent export limit and insert a new export.
+ * Returns the export ID if inserted, or null if the limit was reached.
+ * Uses a better-sqlite3 transaction (exclusive lock) to prevent TOCTOU races.
+ */
+export function insertExportIfUnderLimit(
+  row: Omit<ExportRow, "updated_at">,
+  maxConcurrent: number,
+): string | null {
+  const db = getDb();
+  const txn = db.transaction(() => {
+    const { c } = db
+      .prepare("SELECT count(*) as c FROM exports WHERE status = 'processing'")
+      .get() as { c: number };
+    if (c >= maxConcurrent) return null;
+    insertExport(row);
+    return row.id;
+  });
+  return txn();
+}
+
 const UPDATABLE_COLUMNS = new Set([
   "status",
   "s3_url",
@@ -135,6 +148,7 @@ export function updateExport(
     if (!UPDATABLE_COLUMNS.has(key)) {
       throw new Error(`updateExport: invalid column "${key}"`);
     }
+    // SAFETY: column names are validated against UPDATABLE_COLUMNS allowlist above
     sets.push(`${key} = ?`);
     values.push(value ?? null);
   }
@@ -164,12 +178,4 @@ export function listExports(
     total: number;
   };
   return { exports, total: row.total };
-}
-
-export function countProcessing(): number {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT count(*) as c FROM exports WHERE status = 'processing'")
-    .get() as { c: number };
-  return row.c;
 }

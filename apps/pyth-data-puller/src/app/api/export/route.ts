@@ -5,14 +5,12 @@ import {
   estimateFiles,
   estimateSize,
 } from "../../../lib/auto-split";
-import { countProcessing, insertExport } from "../../../lib/db";
+import { insertExportIfUnderLimit } from "../../../lib/db";
 import { spawnExport } from "../../../lib/export-runner";
-import { fetchFeeds } from "../../../lib/feeds";
-import type { Feed } from "../../../lib/validate";
+import { buildFeedMap, fetchFeeds } from "../../../lib/feeds";
 import {
   estimateRowCount,
   exportRequestSchema,
-  getRangeSeconds,
   validateDateRange,
   validateMinChannel,
 } from "../../../lib/validate";
@@ -20,10 +18,18 @@ import {
 const MAX_CONCURRENT = 3;
 
 export async function POST(request: Request) {
+  // Parse JSON body — return 400 for malformed input, not 500
+  let body: unknown;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON in request body" },
+      { status: 400 },
+    );
+  }
 
-    // Validate schema
+  try {
     const parsed = exportRequestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -32,19 +38,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const { client_name, feed_ids, channel, columns, start_dt, end_dt } =
-      parsed.data;
+    const {
+      client_name,
+      feed_ids,
+      channel,
+      columns,
+      split_by_feed,
+      start_dt,
+      end_dt,
+    } = parsed.data;
 
-    // Validate date range
     const dateError = validateDateRange(start_dt, end_dt);
     if (dateError) {
       return NextResponse.json({ error: dateError }, { status: 400 });
     }
 
-    // Validate min_channel
-    let feeds: Feed[];
+    // Fetch feed catalog + build Map for O(1) lookups
+    let feedMap: ReturnType<typeof buildFeedMap>;
     try {
-      feeds = await fetchFeeds();
+      const feeds = await fetchFeeds();
+      feedMap = buildFeedMap(feeds);
     } catch {
       return NextResponse.json(
         { error: "Feed catalog temporarily unavailable. Try again." },
@@ -52,68 +65,73 @@ export async function POST(request: Request) {
       );
     }
 
-    const channelError = validateMinChannel(feed_ids, channel, feeds);
+    const channelError = validateMinChannel(feed_ids, channel, feedMap);
     if (channelError) {
       return NextResponse.json({ error: channelError }, { status: 400 });
     }
 
-    // Check row estimate
-    const { rows, error: rowError } = estimateRowCount(
-      channel,
-      feed_ids.length,
-      start_dt,
-      end_dt,
-    );
+    const {
+      rows,
+      rangeSec,
+      error: rowError,
+    } = estimateRowCount(channel, feed_ids.length, start_dt, end_dt);
     if (rowError) {
       return NextResponse.json({ error: rowError }, { status: 400 });
     }
 
-    // Check concurrent limit
-    const processing = countProcessing();
-    if (processing >= MAX_CONCURRENT) {
+    const split = autoSplit(channel, feed_ids.length, rangeSec, split_by_feed);
+    const estFiles = estimateFiles(split, feed_ids.length, rangeSec);
+    const estSize = estimateSize(channel, feed_ids.length, rangeSec);
+
+    const id = randomUUID();
+    const now = new Date().toISOString();
+
+    // Atomic: check concurrent limit + insert in a single transaction
+    const inserted = insertExportIfUnderLimit(
+      {
+        batch_days: split.batchDays,
+        batch_minutes: split.batchMinutes,
+        batch_mode: split.batchMode,
+        channel,
+        client_name,
+        columns: JSON.stringify(columns),
+        created_at: now,
+        end_dt,
+        error_msg: null,
+        feed_group_size: split.feedGroupSize,
+        feed_ids: JSON.stringify(feed_ids),
+        file_count: null,
+        id,
+        pid: null,
+        s3_manifest: null,
+        s3_url: null,
+        start_dt,
+        status: "queued",
+      },
+      MAX_CONCURRENT,
+    );
+
+    if (!inserted) {
       return NextResponse.json(
         { error: `Max ${MAX_CONCURRENT} concurrent exports. Try again later.` },
         { status: 429 },
       );
     }
 
-    // Auto-split
-    const rangeSec = getRangeSeconds(start_dt, end_dt);
-    const split = autoSplit(channel, feed_ids.length, rangeSec);
-    const estFiles = estimateFiles(split, feed_ids.length, rangeSec);
-    const estSize = estimateSize(channel, feed_ids.length, rangeSec);
+    // Build feed symbol lookup using the Map (O(n), not O(n*m))
+    const feedSymbols: Record<number, string> = {};
+    for (const feedId of feed_ids) {
+      const feed = feedMap.get(feedId);
+      if (feed) feedSymbols[feedId] = feed.symbol;
+    }
 
-    // Create export record
-    const id = randomUUID();
-    const now = new Date().toISOString();
-
-    insertExport({
-      batch_days: split.batchDays,
-      batch_minutes: split.batchMinutes,
-      batch_mode: split.batchMode,
-      channel,
-      client_name,
-      columns: JSON.stringify(columns),
-      created_at: now,
-      end_dt,
-      error_msg: null,
-      feed_group_size: split.feedGroupSize,
-      feed_ids: JSON.stringify(feed_ids),
-      file_count: null,
-      id,
-      pid: null,
-      s3_manifest: null,
-      s3_url: null,
-      start_dt,
-      status: "queued",
-    });
-
-    // Spawn export process
     const { pid } = spawnExport({
       channel,
+      clientName: client_name,
       columns,
       endDt: end_dt,
       feedIds: feed_ids,
+      feedSymbols,
       id,
       split,
       startDt: start_dt,
@@ -131,7 +149,7 @@ export async function POST(request: Request) {
       },
       { status: 202 },
     );
-  } catch (_err) {
+  } catch {
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

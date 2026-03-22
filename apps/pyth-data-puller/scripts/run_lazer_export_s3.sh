@@ -102,6 +102,11 @@ S3_OVERWRITE_ON_INSERT="${S3_OVERWRITE_ON_INSERT:-0}"
 INDEX_CONTENT_TYPE="${INDEX_CONTENT_TYPE:-text/html; charset=utf-8}"
 INDEX_CONTENT_TYPE_FIX_WITH_AWSCLI="${INDEX_CONTENT_TYPE_FIX_WITH_AWSCLI:-0}"
 
+# Metadata for index.html (passed from web app)
+EXPORT_NAME="${EXPORT_NAME:-}"
+EXPORT_CHANNEL_LABEL="${EXPORT_CHANNEL_LABEL:-}"
+EXPORT_FEED_LABELS="${EXPORT_FEED_LABELS:-}"
+
 # Channel-to-interval mapping (Retool validates compatibility and sends CHANNEL)
 : "${CHANNEL_REAL_TIME_ID:=1}"
 : "${CHANNEL_FIXED_50MS_ID:=2}"
@@ -260,26 +265,47 @@ build_select_columns() {
     argMax(price, publish_time) AS price,
     argMax(best_bid_price, publish_time) AS best_bid_price,
     argMax(best_ask_price, publish_time) AS best_ask_price,
-    argMax(publisher_count, publish_time) AS publisher_count,
+    argMax(ema_price, publish_time) AS ema_price,
+    argMax(ema_confidence, publish_time) AS ema_confidence,
     argMax(confidence, publish_time) AS confidence,
-    argMax(market_session, publish_time) AS market_session"
+    argMax(publisher_count, publish_time) AS publisher_count,
+    argMax(exponent, publish_time) AS exponent,
+    argMax(market_session, publish_time) AS market_session,
+    argMax(state, publish_time) AS state,
+    argMax(funding_rate, publish_time) AS funding_rate,
+    argMax(funding_timestamp, publish_time) AS funding_timestamp,
+    argMax(funding_rate_interval_us, publish_time) AS funding_rate_interval_us"
   else
     IFS=',' read -ra COL_ARRAY <<< "$EXPORT_COLUMNS"
     for col in "${COL_ARRAY[@]}"; do
       col="$(echo "$col" | xargs)"
       case "$col" in
-        price)             cols="$cols,
+        price)                     cols="$cols,
     argMax(price, publish_time) AS price" ;;
-        best_bid_price)    cols="$cols,
+        best_bid_price)            cols="$cols,
     argMax(best_bid_price, publish_time) AS best_bid_price" ;;
-        best_ask_price)    cols="$cols,
+        best_ask_price)            cols="$cols,
     argMax(best_ask_price, publish_time) AS best_ask_price" ;;
-        publisher_count)   cols="$cols,
-    argMax(publisher_count, publish_time) AS publisher_count" ;;
-        confidence)        cols="$cols,
+        ema_price)                 cols="$cols,
+    argMax(ema_price, publish_time) AS ema_price" ;;
+        ema_confidence)            cols="$cols,
+    argMax(ema_confidence, publish_time) AS ema_confidence" ;;
+        confidence)                cols="$cols,
     argMax(confidence, publish_time) AS confidence" ;;
-        market_session)    cols="$cols,
+        publisher_count)           cols="$cols,
+    argMax(publisher_count, publish_time) AS publisher_count" ;;
+        exponent)                  cols="$cols,
+    argMax(exponent, publish_time) AS exponent" ;;
+        market_session)            cols="$cols,
     argMax(market_session, publish_time) AS market_session" ;;
+        state)                     cols="$cols,
+    argMax(state, publish_time) AS state" ;;
+        funding_rate)              cols="$cols,
+    argMax(funding_rate, publish_time) AS funding_rate" ;;
+        funding_timestamp)         cols="$cols,
+    argMax(funding_timestamp, publish_time) AS funding_timestamp" ;;
+        funding_rate_interval_us)  cols="$cols,
+    argMax(funding_rate_interval_us, publish_time) AS funding_rate_interval_us" ;;
         *)
           echo "Unknown column: $col" >&2
           exit 1 ;;
@@ -316,6 +342,7 @@ WHERE price_feed_id IN selected_price_feeds
     AND publish_time >= toDateTime('${start_dt}')
     AND publish_time < toDateTime('${end_dt}')
 GROUP BY price_feed_id, timestamp
+ORDER BY price_feed_id, timestamp
 ${S3_INSERT_SETTINGS}
 SQL
 )
@@ -368,238 +395,10 @@ write_index_html() {
   keys_file="$(mktemp)"
   printf '%s\n' "${EXPORTED_FILE_KEYS[@]}" > "$keys_file"
 
-  upload_index_html() {
-    local index_key="$1"
-    local local_html_path="$2"
-    local index_url="https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${index_key}"
-    local index_b64
-    index_b64="$(
-      python3 - <<'PY' "$local_html_path"
-import base64
-from pathlib import Path
-import sys
-
-print(base64.b64encode(Path(sys.argv[1]).read_bytes()).decode("ascii"))
-PY
-    )"
-
-    local query_with_header
-    query_with_header=$(cat <<SQL
-INSERT INTO FUNCTION s3(
-  '${index_url}',
-  'RawBLOB',
-  headers('Content-Type'='${INDEX_CONTENT_TYPE}'),
-  extra_credentials(role_arn = '${S3_ROLE_ARN}')
-)
-SELECT base64Decode('${index_b64}')
-${S3_INSERT_SETTINGS}
-SQL
-)
-
-    if ! run_clickhouse_query "$query_with_header"; then
-      INDEX_HEADER_SET_OK=0
-      echo "⚠️ Could not set Content-Type metadata via ClickHouse headers(...) for ${index_key}. Retrying without header."
-      local query_plain
-      query_plain=$(cat <<SQL
-INSERT INTO FUNCTION s3(
-  '${index_url}',
-  'RawBLOB',
-  extra_credentials(role_arn = '${S3_ROLE_ARN}')
-)
-SELECT base64Decode('${index_b64}')
-${S3_INSERT_SETTINGS}
-SQL
-)
-      run_clickhouse_query "$query_plain"
-
-      if [[ "$INDEX_CONTENT_TYPE_FIX_WITH_AWSCLI" == "1" ]]; then
-        if command -v aws >/dev/null 2>&1; then
-          if aws s3api copy-object \
-            --region "$S3_REGION" \
-            --bucket "$S3_BUCKET" \
-            --copy-source "${S3_BUCKET}/${index_key}" \
-            --key "$index_key" \
-            --metadata-directive REPLACE \
-            --content-type "$INDEX_CONTENT_TYPE" \
-            >/dev/null; then
-            INDEX_HEADER_SET_OK=1
-            echo "✅ Fixed ${index_key} Content-Type via aws s3api copy-object"
-          else
-            echo "⚠️ aws s3api content-type fix failed for ${index_key}. Browsers may download it."
-          fi
-        else
-          echo "⚠️ aws CLI not found. Cannot apply metadata fix fallback for ${index_key}."
-        fi
-      fi
-    fi
-  }
-
-  local index_dir
-  index_dir="$(mktemp -d)"
-  local manifest_file
-  manifest_file="${index_dir}/manifest.tsv"
-
-  if python3 - <<'PY' "$S3_BUCKET" "$S3_REGION" "$keys_file" "$S3_PREFIX_CLEAN" "$S3_EXPORT_ID" "$index_dir" "$manifest_file" "$SCRIPT_DIR/pyth_symbols.json"
-from collections import defaultdict
-from datetime import datetime, timezone
-from html import escape
-from pathlib import Path
-from urllib.parse import quote
-import json
-import sys
-
-bucket = sys.argv[1]
-region = sys.argv[2]
-keys_file = Path(sys.argv[3])
-prefix_clean = sys.argv[4].strip("/")
-export_id = sys.argv[5]
-index_dir = Path(sys.argv[6])
-manifest_path = Path(sys.argv[7])
-symbols_path = Path(sys.argv[8])
-
-prefix = f"{prefix_clean}/{export_id}/"
-keys = [line.strip() for line in keys_file.read_text(encoding="utf-8").splitlines() if line.strip()]
-grouped_keys = defaultdict(list)
-
-symbols_by_id = {}
-if symbols_path.exists():
-    raw = json.loads(symbols_path.read_text(encoding="utf-8"))
-    if isinstance(raw, list):
-        for item in raw:
-            pid = item.get("pyth_lazer_id")
-            if pid is not None:
-                symbols_by_id[str(pid)] = item
-
-def feed_ids_for_group(group_label):
-    if group_label.startswith("feed="):
-        return [group_label.split("=", 1)[1]]
-    if group_label.startswith("feeds="):
-        return [part for part in group_label.split("=", 1)[1].split("_") if part]
-    return []
-
-def display_symbol(feed_id):
-    item = symbols_by_id.get(str(feed_id), {})
-    return (
-        item.get("symbol")
-        or item.get("name")
-        or item.get("description")
-        or str(feed_id)
-    )
-
-for key in keys:
-    if not key.startswith(prefix):
-        raise SystemExit(f"Key does not match export prefix: {key}")
-    relative = key[len(prefix):]
-    parts = relative.split("/", 1)
-    if len(parts) < 2 or not parts[0].startswith(("feed=", "feeds=")):
-        raise SystemExit(1)
-    group_label, group_relative = parts
-    url = f"https://{bucket}.s3.{region}.amazonaws.com/" + quote(key, safe="/-_.~")
-    grouped_keys[group_label].append((group_relative, key, url))
-
-generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-manifest_rows = []
-
-root_rows = []
-for group_label in sorted(grouped_keys):
-    feed_ids = feed_ids_for_group(group_label)
-    symbol_labels = [display_symbol(feed_id) for feed_id in feed_ids]
-    symbol_display = ", ".join(symbol_labels) if symbol_labels else group_label
-    feed_ids_display = ", ".join(feed_ids) if feed_ids else "n/a"
-    rows = []
-    group_entries = sorted(grouped_keys[group_label], key=lambda item: item[0])
-    for group_relative, key, url in group_entries:
-        rows.append(
-            "<tr>"
-            f"<td>{escape(group_relative)}</td>"
-            f"<td>{escape(key)}</td>"
-            f"<td><a href=\"{escape(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">download</a></td>"
-            "</tr>"
-        )
-
-    group_html = (
-        "<!doctype html><html><head><meta charset=\"utf-8\">"
-        f"<title>Pyth Export Index - {escape(symbol_display)}</title>"
-        "<style>"
-        "body{font-family:Arial,sans-serif;padding:24px;}"
-        "table{border-collapse:collapse;width:100%;}"
-        "th,td{border:1px solid #ddd;padding:8px;text-align:left;}"
-        "th{background:#f5f5f5;}"
-        "a{color:#0b57d0;text-decoration:none;}"
-        "a:hover{text-decoration:underline;}"
-        "</style></head><body>"
-        "<p><a href=\"../index.html\">&larr; Back to export index</a></p>"
-        f"<h1>{escape(symbol_display)}</h1>"
-        f"<p>Generated: {escape(generated)}</p>"
-        f"<p>Feed IDs: {escape(feed_ids_display)}</p>"
-        f"<p>Folder: {escape(group_label)}</p>"
-        f"<p>Total files: {len(group_entries)}</p>"
-        "<table><thead><tr><th>Relative Path</th><th>S3 Key</th><th>URL</th></tr></thead><tbody>"
-        + "".join(rows) +
-        "</tbody></table></body></html>"
-    )
-
-    group_dir = index_dir / group_label
-    group_dir.mkdir(parents=True, exist_ok=True)
-    group_html_path = group_dir / "index.html"
-    group_html_path.write_text(group_html, encoding="utf-8")
-    manifest_rows.append((f"{prefix}{group_label}/index.html", str(group_html_path)))
-
-    group_index_url = f"https://{bucket}.s3.{region}.amazonaws.com/" + quote(f"{prefix}{group_label}/index.html", safe="/-_.~")
-    root_rows.append(
-        "<tr>"
-        f"<td>{escape(symbol_display)}</td>"
-        f"<td>{escape(feed_ids_display)}</td>"
-        f"<td>{escape(group_label)}</td>"
-        f"<td>{len(group_entries)}</td>"
-        f"<td><a href=\"{escape(group_index_url)}\" target=\"_blank\" rel=\"noopener noreferrer\">open index</a></td>"
-        "</tr>"
-    )
-
-root_html = (
-    "<!doctype html><html><head><meta charset=\"utf-8\">"
-    "<title>Pyth Export Index</title>"
-    "<style>"
-    "body{font-family:Arial,sans-serif;padding:24px;}"
-    "table{border-collapse:collapse;width:100%;}"
-    "th,td{border:1px solid #ddd;padding:8px;text-align:left;}"
-    "th{background:#f5f5f5;}"
-    "a{color:#0b57d0;text-decoration:none;}"
-    "a:hover{text-decoration:underline;}"
-    "</style></head><body>"
-    "<h1>Pyth Export Index</h1>"
-    f"<p>Generated: {escape(generated)}</p>"
-    f"<p>Total files: {len(keys)}</p>"
-    f"<p>Total groups: {len(grouped_keys)}</p>"
-    "<table><thead><tr><th>Symbol</th><th>Feed IDs</th><th>Folder</th><th>Files</th><th>Index</th></tr></thead><tbody>"
-    + "".join(root_rows) +
-    "</tbody></table></body></html>"
-)
-
-root_html_path = index_dir / "index.html"
-root_html_path.write_text(root_html, encoding="utf-8")
-manifest_rows.append((f"{prefix}index.html", str(root_html_path)))
-
-manifest_path.write_text(
-    "".join(f"{target_key}\t{html_path}\n" for target_key, html_path in manifest_rows),
-    encoding="utf-8",
-)
-PY
-  then
-    while IFS=$'\t' read -r index_key html_path; do
-      [[ -z "$index_key" ]] && continue
-      upload_index_html "$index_key" "$html_path"
-    done < "$manifest_file"
-    rm -f "$keys_file"
-    rm -rf "$index_dir"
-    return 0
-  fi
-
-  rm -rf "$index_dir"
-
+  # Generate a single root-level index.html listing all exported files
   local index_b64
   index_b64="$(
-    python3 - <<'PY' "$S3_BUCKET" "$S3_REGION" "$keys_file"
+    python3 - <<'PY' "$S3_BUCKET" "$S3_REGION" "$keys_file" "$EXPORT_NAME" "$EXPORT_CHANNEL_LABEL" "$EXPORT_FEED_LABELS" "$START_DATETIME" "$END_DATETIME"
 import base64
 from datetime import datetime, timezone
 from html import escape
@@ -609,41 +408,72 @@ import sys
 bucket = sys.argv[1]
 region = sys.argv[2]
 keys_file = sys.argv[3]
+export_name = sys.argv[4] or "Pyth Data Export"
+channel_label = sys.argv[5] or "N/A"
+feed_labels = sys.argv[6] or "N/A"
+start_dt = sys.argv[7] or "N/A"
+end_dt = sys.argv[8] or "N/A"
+
 with open(keys_file, "r", encoding="utf-8") as f:
     keys = [line.strip() for line in f if line.strip()]
 
 rows = []
-for key in keys:
+for i, key in enumerate(keys, 1):
+    fname = key.rsplit("/", 1)[-1] if "/" in key else key
     url = f"https://{bucket}.s3.{region}.amazonaws.com/" + quote(key, safe="/-_.~")
     rows.append(
         "<tr>"
-        f"<td>{escape(key)}</td>"
-        f"<td><a href=\"{escape(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">download</a></td>"
+        f"<td>{i}</td>"
+        f"<td>{escape(fname)}</td>"
+        f"<td style=\"font-size:12px;color:#666\">{escape(key)}</td>"
+        f"<td><a href=\"{escape(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">Download</a></td>"
         "</tr>"
     )
 
 generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
 html = (
     "<!doctype html><html><head><meta charset=\"utf-8\">"
-    "<title>Pyth Export Index</title>"
+    f"<title>{escape(export_name)} - Pyth Data Export</title>"
     "<style>"
-    "body{font-family:Arial,sans-serif;padding:24px;}"
-    "table{border-collapse:collapse;width:100%;}"
-    "th,td{border:1px solid #ddd;padding:8px;text-align:left;}"
-    "th{background:#f5f5f5;}"
+    "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:32px 40px;color:#1a1a1a;max-width:1200px;margin:0 auto;}"
+    "h1{font-size:28px;margin-bottom:8px;}"
+    ".subtitle{color:#666;font-size:14px;margin-bottom:24px;}"
+    ".meta{background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:16px 20px;margin-bottom:24px;}"
+    ".meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}"
+    ".meta-item{font-size:14px;}"
+    ".meta-label{font-weight:600;color:#495057;}"
+    ".meta-value{color:#212529;}"
+    "table{border-collapse:collapse;width:100%;margin-top:16px;}"
+    "th{background:#f1f3f5;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;}"
+    "th,td{border:1px solid #dee2e6;padding:10px 12px;text-align:left;}"
+    "tr:nth-child(even){background:#f8f9fa;}"
+    "a{color:#0066cc;text-decoration:none;font-weight:500;}"
+    "a:hover{text-decoration:underline;}"
+    ".footer{margin-top:24px;padding-top:16px;border-top:1px solid #e9ecef;font-size:12px;color:#999;}"
     "</style></head><body>"
-    "<h1>Pyth Export Index</h1>"
-    f"<p>Generated: {escape(generated)}</p>"
-    f"<p>Total files: {len(keys)}</p>"
-    "<table><thead><tr><th>S3 Key</th><th>URL</th></tr></thead><tbody>"
-    + "".join(rows) +
-    "</tbody></table></body></html>"
+    f"<h1>{escape(export_name)}</h1>"
+    "<p class=\"subtitle\">Pyth Lazer Historical Price Data Export</p>"
+    "<div class=\"meta\"><div class=\"meta-grid\">"
+    f"<div class=\"meta-item\"><span class=\"meta-label\">Price Feeds:</span><br><span class=\"meta-value\">{escape(feed_labels)}</span></div>"
+    f"<div class=\"meta-item\"><span class=\"meta-label\">Channel:</span><br><span class=\"meta-value\">{escape(channel_label)}</span></div>"
+    f"<div class=\"meta-item\"><span class=\"meta-label\">Date Range (UTC):</span><br><span class=\"meta-value\">{escape(start_dt)} &rarr; {escape(end_dt)}</span></div>"
+    f"<div class=\"meta-item\"><span class=\"meta-label\">Total Files:</span><br><span class=\"meta-value\">{len(keys)}</span></div>"
+    "</div></div>"
+    "<table><thead><tr><th>#</th><th>File</th><th>S3 Key</th><th>Download</th></tr></thead><tbody>"
+    + "".join(rows)
+    + "</tbody></table>"
+    f"<div class=\"footer\">Generated: {escape(generated)} &bull; <a href=\"https://pyth.network\">pyth.network</a></div>"
+    "</body></html>"
 )
 print(base64.b64encode(html.encode("utf-8")).decode("ascii"))
 PY
   )"
   rm -f "$keys_file"
 
+  # Always use s3_truncate_on_insert=1 for index.html to skip the
+  # HeadObject existence check (which fails with 403 when the IAM role
+  # only has PutObject permission).
   local query_with_header
   query_with_header=$(cat <<SQL
 INSERT INTO FUNCTION s3(
@@ -653,13 +483,13 @@ INSERT INTO FUNCTION s3(
   extra_credentials(role_arn = '${S3_ROLE_ARN}')
 )
 SELECT base64Decode('${index_b64}')
-${S3_INSERT_SETTINGS}
+SETTINGS s3_truncate_on_insert = 1
 SQL
 )
 
   if ! run_clickhouse_query "$query_with_header"; then
     INDEX_HEADER_SET_OK=0
-    echo "⚠️ Could not set Content-Type metadata via ClickHouse headers(...). Retrying index upload without header."
+    echo "⚠️ Could not set Content-Type via headers(...). Retrying without header."
     local query_plain
     query_plain=$(cat <<SQL
 INSERT INTO FUNCTION s3(
@@ -668,7 +498,7 @@ INSERT INTO FUNCTION s3(
   extra_credentials(role_arn = '${S3_ROLE_ARN}')
 )
 SELECT base64Decode('${index_b64}')
-${S3_INSERT_SETTINGS}
+SETTINGS s3_truncate_on_insert = 1
 SQL
 )
     run_clickhouse_query "$query_plain"
@@ -695,8 +525,6 @@ SQL
       fi
     fi
   fi
-
-  rm -f "$keys_file"
 }
 
 case "${BATCH_MODE,,}" in
