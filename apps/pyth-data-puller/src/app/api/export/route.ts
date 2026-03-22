@@ -5,7 +5,7 @@ import {
   estimateFiles,
   estimateSize,
 } from "../../../lib/auto-split";
-import { insertExportIfUnderLimit } from "../../../lib/db";
+import { insertExportIfUnderLimit, updateExport } from "../../../lib/db";
 import { spawnExport } from "../../../lib/export-runner";
 import { buildFeedMap, fetchFeeds } from "../../../lib/feeds";
 import {
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  let exportId: string | null = null;
 
   try {
     const parsed = exportRequestSchema.safeParse(body);
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
     const estSize = estimateSize(channel, feed_ids.length, rangeSec);
 
     const id = randomUUID();
+    exportId = id;
     const now = new Date().toISOString();
 
     // Atomic: check concurrent limit + insert in a single transaction
@@ -150,6 +153,18 @@ export async function POST(request: Request) {
       { status: 202 },
     );
   } catch {
+    // If spawnExport failed after DB insert, mark the export as failed
+    // so it doesn't permanently consume a concurrency slot
+    if (exportId) {
+      try {
+        updateExport(exportId, {
+          error_msg: "Failed to start export process",
+          status: "failed",
+        });
+      } catch {
+        // Best-effort cleanup
+      }
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
