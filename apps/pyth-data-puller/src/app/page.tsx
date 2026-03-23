@@ -13,6 +13,7 @@ type Export = {
   start_dt: string;
   end_dt: string;
   status: ExportStatus;
+  s3_url: string | null;
   s3_manifest: string | null;
   error_msg: string | null;
   file_count: number | null;
@@ -250,9 +251,9 @@ export default function Dashboard() {
                   </td>
                   <td style={{ padding: "10px 12px" }}>
                     <div style={{ display: "flex", gap: 8 }}>
-                      {exp.s3_manifest && (
+                      {(exp.s3_url ?? exp.s3_manifest) && (
                         <a
-                          href={exp.s3_manifest}
+                          href={(exp.s3_url ?? exp.s3_manifest)!}
                           rel="noopener noreferrer"
                           style={{ color: "#60a5fa", fontSize: 13 }}
                           target="_blank"
