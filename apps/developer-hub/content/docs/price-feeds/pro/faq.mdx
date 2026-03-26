@@ -92,13 +92,13 @@ Contract addresses for Pyth Pro on **Solana, Fogo, and EVM networks (including B
 Use the History API for OHLC candlestick data and TradingView-style integration. Base URL:
 
 ```
-https://history.pyth-lazer.dourolabs.app/v1/
+https://pyth.dourolabs.app/v1/
 ```
 
 For OHLC history, use `GET /{channel}/history`. Example for BTC/USD in the last year with the `fixed_rate@200ms` channel:
 
 ```
-https://history.pyth-lazer.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
+https://pyth.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
 ```
 
 See the [History API](/price-feeds/pro/api/history) for full endpoint details, query parameters, and resolutions.

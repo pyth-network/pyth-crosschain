@@ -341,7 +341,7 @@ type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 const getPythProFeeds = async () => {
   const result: Response = await fetch(
-    "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
+    "https://pyth.dourolabs.app/v1/symbols",
   );
   const data = pythProSchema.parse(await result.json());
   return data.toSorted(

@@ -65,7 +65,7 @@ async function getHermesFeeds(): Promise<AdvancedIndex[]> {
 async function getLazerFeeds(): Promise<AdvancedIndex[]> {
   try {
     const res = await fetch(
-      "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
+      "https://pyth.dourolabs.app/v1/symbols",
       { next: { revalidate: 3600 } },
     );
     const parsed = lazerSchema.safeParse(await res.json());

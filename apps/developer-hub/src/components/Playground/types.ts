@@ -186,4 +186,4 @@ export const PYTH_PRO_ENDPOINTS = [
 
 // API endpoint for symbols
 export const SYMBOLS_API_URL =
-  "https://history.pyth-lazer.dourolabs.app/history/v1/symbols";
+  "https://pyth.dourolabs.app/v1/symbols";
