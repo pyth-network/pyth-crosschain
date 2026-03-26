@@ -501,7 +501,9 @@ SELECT base64Decode('${index_b64}')
 SETTINGS s3_truncate_on_insert = 1
 SQL
 )
-    run_clickhouse_query "$query_plain"
+    if ! run_clickhouse_query "$query_plain"; then
+      echo "⚠️ index.html upload failed. CSV exports completed successfully."
+    fi
 
     if [[ "$INDEX_CONTENT_TYPE_FIX_WITH_AWSCLI" == "1" ]]; then
       if command -v aws >/dev/null 2>&1; then
