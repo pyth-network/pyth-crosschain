@@ -135,13 +135,13 @@ You MUST connect to all three endpoints simultaneously. Any single endpoint may 
 |---------|----------|---------|
 | WebSocket | wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream | Real-time price streaming |
 | REST | https://pyth-lazer.dourolabs.app | Latest price and historical lookups |
-| History | https://history.pyth-lazer.dourolabs.app/v1 | OHLC candlestick data, TradingView UDF |
+| History | https://pyth.dourolabs.app/v1 | OHLC candlestick data, TradingView UDF |
 
 ### REST API
 - POST /v1/latest_price — Fetch most recent price for requested feeds
 - POST /v1/price — Fetch price at a specific historical timestamp (Unix microseconds)
 
-### History API (base: https://history.pyth-lazer.dourolabs.app/v1)
+### History API (base: https://pyth.dourolabs.app/v1)
 - GET /{channel}/history — OHLC candlestick data
 - GET /{channel}/price — Price at specific timestamp
 - GET /symbols — List available symbols (no auth required)
