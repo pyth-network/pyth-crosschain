@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { resolve } from "node:path";
 import type { SplitConfig } from "./auto-split";
+import { CHANNEL_DISPLAY } from "./channels";
 import { updateExport } from "./db";
 import { VALID_COLUMNS } from "./validate";
 
@@ -42,7 +43,19 @@ function getTmpEnvPath(id: string): string {
   return resolve("/tmp", `export_${id}.env`);
 }
 
+/** Strip characters that are dangerous in bash double-quoted strings */
+function sanitizeForEnv(value: string): string {
+  return value.replace(/["`$\\()!\n\r]/g, "");
+}
+
 function buildEnvConfig(config: ExportConfig): string {
+  const feedLabels = config.feedIds
+    .map(
+      (feedId) =>
+        `${feedId} (${sanitizeForEnv(config.feedSymbols[feedId] ?? "unknown")})`,
+    )
+    .join(", ");
+
   const lines: string[] = [
     `PRICE_FEED_IDS="${config.feedIds.join(",")}"`,
     `START_DATETIME="${config.startDt}"`,
@@ -55,8 +68,12 @@ function buildEnvConfig(config: ExportConfig): string {
     `BATCH_OUTPUT_MODE="split"`,
     `FEED_GROUP_SIZE=${config.split.feedGroupSize}`,
     `OUTPUT_DEFAULT="export.csv"`,
-    `GENERATE_INDEX_HTML=0`,
+    `GENERATE_INDEX_HTML=1`,
     `S3_OVERWRITE_ON_INSERT=0`,
+    // Metadata for index.html (sanitized for bash safety)
+    `EXPORT_NAME="${sanitizeForEnv(config.clientName)}"`,
+    `EXPORT_CHANNEL_LABEL="${sanitizeForEnv(CHANNEL_DISPLAY[config.channel] ?? String(config.channel))}"`,
+    `EXPORT_FEED_LABELS="${sanitizeForEnv(feedLabels)}"`,
   ];
 
   // Columns config — deduplicate and compare against VALID_COLUMNS.length
@@ -167,9 +184,6 @@ export function spawnExport(config: ExportConfig): { pid: number | null } {
   const logPath = getLogPath(id);
   const logStream = createWriteStream(logPath);
 
-  // biome-ignore lint/style/noProcessEnv: Constructing minimal env for child process
-  const parentEnv = process.env;
-
   const scriptPath = getScriptPath();
   const child = spawn(
     "bash",
@@ -184,14 +198,8 @@ export function spawnExport(config: ExportConfig): { pid: number | null } {
     ],
     {
       detached: false,
-      env: {
-        HOME: parentEnv.HOME ?? "",
-        HOST: parentEnv.HOST ?? "",
-        NODE_ENV: parentEnv.NODE_ENV ?? "production",
-        PASSWORD: parentEnv.PASSWORD ?? "",
-        PATH: parentEnv.PATH ?? "",
-        USER: parentEnv.USER ?? "",
-      },
+      // biome-ignore lint/style/noProcessEnv: Child needs full env for ClickHouse CLI + Python
+      env: { ...process.env },
       stdio: ["ignore", "pipe", "pipe"],
     },
   );

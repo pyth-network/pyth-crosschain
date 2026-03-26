@@ -253,7 +253,7 @@ export default function Dashboard() {
                     <div style={{ display: "flex", gap: 8 }}>
                       {(exp.s3_url ?? exp.s3_manifest) && (
                         <a
-                          href={(exp.s3_url ?? exp.s3_manifest)!}
+                          href={exp.s3_url ?? exp.s3_manifest ?? ""}
                           rel="noopener noreferrer"
                           style={{ color: "#60a5fa", fontSize: 13 }}
                           target="_blank"

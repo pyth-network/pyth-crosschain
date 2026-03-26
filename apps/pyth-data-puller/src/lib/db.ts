@@ -1,3 +1,4 @@
+import { existsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import Database from "better-sqlite3";
 import type { ExportStatus } from "./validate";
@@ -7,7 +8,6 @@ let _db: Database.Database | null = null;
 export function getDb(): Database.Database {
   if (!_db) {
     const dbDir = resolve(process.cwd(), "data");
-    const { mkdirSync, existsSync } = require("node:fs");
     if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
     _db = new Database(resolve(dbDir, "exports.db"));
     _db.pragma("journal_mode = WAL");
@@ -44,7 +44,7 @@ export function getDb(): Database.Database {
        SET status = 'failed',
            error_msg = 'Server restarted during export. Please retry.',
            updated_at = datetime('now')
-       WHERE status IN ('processing', 'queued')`
+       WHERE status IN ('processing', 'queued')`,
       )
       .run();
   }
