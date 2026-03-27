@@ -3,10 +3,32 @@ import type { Logger } from "pino";
 import { pino } from "pino";
 import type { Config } from "../config.js";
 import { recordToolCallMetrics } from "../metrics.js";
+import { redactSecrets, safeForLog } from "./redact.js";
 
 export function createLogger(config: Config): Logger {
   return pino({
     level: config.logLevel,
+    serializers: {
+      err: (err: Error | undefined) => {
+        if (!err) return err;
+        return {
+          message: safeForLog(err.message) as string,
+          name: err.name,
+          stack: err.stack,
+        };
+      },
+      params: redactSecrets as (v: unknown) => unknown,
+      body: redactSecrets as (v: unknown) => unknown,
+      headers: (h: unknown) =>
+        typeof h === "object" && h != null
+          ? redactSecrets({
+              ...(h as Record<string, unknown>),
+              ...((h as Record<string, unknown>).authorization && {
+                authorization: "[REDACTED]",
+              }),
+            })
+          : {},
+    },
     transport: {
       options: { destination: 2 }, // stderr
       target: "pino/file",
