@@ -1,0 +1,35 @@
+# -*- mode: Python -*-
+
+load("ext://dotenv", "dotenv")
+
+dotenv()
+
+docker_compose("docker-compose.local.yml")
+
+dc_resource(
+    "clickhouse-local",
+)
+
+dc_resource(
+    "hyperliquid-recorder",
+    resource_deps=["clickhouse-local"],
+)
+
+dc_resource(
+    "prometheus",
+    resource_deps=["hyperliquid-recorder"],
+)
+
+dc_resource(
+    "grafana",
+    resource_deps=["prometheus"],
+)
+
+local_resource(
+    "local-e2e-check",
+    cmd="bash scripts/local_e2e_check.sh",
+    deps=["scripts/local_e2e_check.sh"],
+    labels=["checks"],
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+)

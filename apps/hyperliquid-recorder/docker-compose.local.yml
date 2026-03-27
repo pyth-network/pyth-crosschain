@@ -1,0 +1,65 @@
+services:
+  clickhouse-local:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: hyperliquid-recorder-clickhouse-local
+    environment:
+      CLICKHOUSE_USER: recorder
+      CLICKHOUSE_PASSWORD: recorder
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8223:8123"
+      - "9100:9000"
+    volumes:
+      - clickhouse-local-data:/var/lib/clickhouse
+      - ./sql/init-local.sql:/docker-entrypoint-initdb.d/init-local.sql:ro
+
+  hyperliquid-recorder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hyperliquid-recorder
+    env_file:
+      - .env
+    environment:
+      HYPERLIQUID_RECORDER__CLICKHOUSE__URL: "http://clickhouse-local:8123"
+      HYPERLIQUID_RECORDER__CLICKHOUSE__USER: "recorder"
+      HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD: "recorder"
+      HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE: "pyth_analytics"
+      HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE: "hyperliquid_l2_snapshots"
+      HYPERLIQUID_RECORDER__METRICS_PORT: "9092"
+      HYPERLIQUID_RECORDER__HEALTH_PORT: "8082"
+    depends_on:
+      - clickhouse-local
+    ports:
+      - "9092:9092"
+      - "8082:8082"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hyperliquid-recorder-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./prometheus.sample.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.sample.yml:/etc/prometheus/alerts.sample.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    depends_on:
+      - hyperliquid-recorder
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hyperliquid-recorder-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  clickhouse-local-data:
