@@ -13,6 +13,7 @@ import { matchSorter } from "match-sorter";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
+import { errorToString } from "../../lib/error-to-string";
 import CopyAddress from "../CopyAddress";
 import styles from "./index.module.scss";
 
@@ -121,15 +122,6 @@ export const PriceFeedIdsCoreTable = () => {
   );
 };
 
-const errorToString = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  } else if (typeof error === "string") {
-    return error;
-  } else {
-    return "An error occurred, please try again";
-  }
-};
 
 enum StateType {
   NotLoaded,
