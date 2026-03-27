@@ -4,6 +4,7 @@ from pathlib import Path
 from eth_account import Account
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
+from hyperliquid.utils.types import Meta, SpotMeta
 
 
 def main() -> None:
@@ -51,7 +52,12 @@ def main() -> None:
     print(f"Using {network_name} URL: {base_url}")
 
     account = Account.from_key(Path(args.private_key_file).read_text().strip())
-    exchange = Exchange(wallet=account, base_url=base_url)
+    exchange = Exchange(
+        wallet=account,
+        base_url=base_url,
+        meta=Meta(universe=[]),
+        spot_meta=SpotMeta(universe=[], tokens=[]),
+    )
     print("address:", account.address)
     print("amount:", args.amount)
     print("to_perp:", args.to_perp)
