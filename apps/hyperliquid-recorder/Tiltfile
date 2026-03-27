@@ -20,10 +20,15 @@ dc_resource(
     resource_deps=["hyperliquid-recorder"],
 )
 
+dc_resource(
+    "grafana",
+    resource_deps=["prometheus"],
+)
+
 local_resource(
     "local-e2e-check",
-    cmd="python scripts/local_e2e_check.py",
-    deps=["scripts/local_e2e_check.py"],
+    cmd="bash scripts/local_e2e_check.sh",
+    deps=["scripts/local_e2e_check.sh"],
     labels=["checks"],
     auto_init=False,
     trigger_mode=TRIGGER_MODE_MANUAL,

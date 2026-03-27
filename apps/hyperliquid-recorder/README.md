@@ -1,26 +1,26 @@
-# Hyperliquid Recorder
+# Hyperliquid Recorder (Rust)
 
 `hyperliquid-recorder` continuously ingests Hyperliquid `StreamL2Book` snapshots
 from QuickNode gRPC and writes them into ClickHouse for market analysis.
 
 ## Features
 
-- 24/7 multi-market stream workers with reconnect/backoff.
-- Append-only ClickHouse ingestion with local best-effort dedupe.
-- `ReplacingMergeTree(ingested_at)` table design keyed by
+- Multi-market stream workers with reconnect/backoff.
+- Batched ClickHouse ingestion with in-batch dedupe.
+- `ReplacingMergeTree(ingested_at)` table keyed by
   `(coin, block_time, block_number, n_levels, n_sig_figs, mantissa)`.
-- Prometheus metrics plus `/live` and `/ready` endpoints.
-- Tilt-based local stack (recorder + local ClickHouse + Prometheus).
+- Prometheus metrics and `/live` + `/ready` endpoints.
+- Tilt-based local stack (recorder + local ClickHouse + Prometheus + Grafana).
 
-## Local E2E with Tilt (primary workflow)
+## Local E2E with Tilt
 
 1. Copy local env:
 
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env
    ```
 
-2. Put your QuickNode token/endpoint in `.env.local`.
+2. Put your QuickNode token and endpoint in `.env`.
 
 3. Start local stack:
 
@@ -28,53 +28,80 @@ from QuickNode gRPC and writes them into ClickHouse for market analysis.
    tilt up
    ```
 
-4. Verify health and metrics:
+4. Verify health and observability:
 
-   - `http://localhost:8080/live`
-   - `http://localhost:8080/ready`
-   - `http://localhost:9091/metrics`
-   - Prometheus UI: `http://localhost:9090`
+   - `http://localhost:8082/live`
+   - `http://localhost:8082/ready`
+   - `http://localhost:9092/metrics`
+   - Prometheus UI: `http://localhost:9093`
+   - Grafana UI: `http://localhost:3000` (default login: `admin` / `admin`)
+   - Dashboard: `Hyperliquid Recorder Overview` (auto-provisioned)
 
-5. Run the local E2E data check:
+5. Verify persisted data from inside ClickHouse container:
 
    ```bash
-   python scripts/local_e2e_check.py
+   docker exec hyperliquid-recorder-clickhouse-local \
+     clickhouse-client --user recorder --password recorder \
+     -q "SELECT count() FROM pyth_analytics.hyperliquid_l2_snapshots"
    ```
+
+6. Run the local E2E check:
+
+   ```bash
+   bash scripts/local_e2e_check.sh
+   ```
+
+7. Validate Grafana datasource and dashboard:
+
+   - In Grafana, open **Connections -> Data sources** and confirm `Prometheus` is healthy.
+   - Open **Dashboards -> Hyperliquid Recorder Overview** and confirm panels show live values.
 
 ## Manual run (without Tilt)
 
 ```bash
-pip install -e .
-python -m hyperliquid_recorder.main
+cargo run
+```
+
+With a YAML file:
+
+```bash
+cargo run -- --config config.sample.yml
 ```
 
 ## Configuration
 
 Required:
 
-- `QUICKNODE_GRPC_ENDPOINT`
-- `QUICKNODE_GRPC_AUTH_TOKEN`
+- `HYPERLIQUID_RECORDER__QUICKNODE__ENDPOINT`
+- `HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN`
+
+YAML config file (optional):
+
+- Pass `--config /path/to/config.yml` to load config from YAML.
+- You can also set `APP_CONFIG_FILE=/path/to/config.yml`.
+- See `config.sample.yml` for the schema.
+- Environment variables are loaded with prefix `HYPERLIQUID_RECORDER` and `__` path separators.
+- Environment variables still override YAML values.
 
 Market configuration:
 
-- `HYPERLIQUID_MARKETS_JSON` (recommended), for example:
+- Use the `markets` list in YAML (recommended), for example:
 
-  ```json
-  [{"coin":"BTC","n_levels":20},{"coin":"@142","n_levels":20,"n_sig_figs":3,"mantissa":1}]
+  ```yaml
+  markets:
+    - coin: "BTC"
+      n_levels: 20
+    - coin: "@142"
+      n_levels: 20
+      n_sig_figs: 3
+      mantissa: 1
   ```
+- If omitted, the default market set is `BTC`.
 
 ClickHouse configuration:
 
-- local mode: `USE_LOCAL_CLICKHOUSE=true` with `CLICKHOUSE_LOCAL_*`
-- remote mode: `CLICKHOUSE_PYTH_ANALYTICS_URL`,
-  `CLICKHOUSE_PYTH_ANALYTICS_USERNAME`,
-  `CLICKHOUSE_PYTH_ANALYTICS_PASSWORD`
-
-## Table schema
-
-The recorder creates:
-
-- database: `pyth_analytics`
-- table: `hyperliquid_l2_snapshots`
-
-See `sql/init-local.sql` for the exact DDL.
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__URL` (required unless provided in YAML)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__USER` (default `default`)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD` (default empty)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE` (default `pyth_analytics`)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE` (default `hyperliquid_l2_snapshots`)

@@ -1,14 +1,21 @@
-FROM python:3.13-slim
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+FROM rust:1.86-slim AS builder
 
 WORKDIR /app
-
-COPY pyproject.toml README.md ./
-COPY src ./src
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+COPY Cargo.toml build.rs ./
 COPY proto ./proto
+COPY src ./src
+RUN cargo build --release
 
-RUN pip install --no-cache-dir .
+FROM debian:bookworm-slim
 
-CMD ["python", "-m", "hyperliquid_recorder.main"]
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /app/target/release/hyperliquid-recorder /usr/local/bin/hyperliquid-recorder
+
+CMD ["hyperliquid-recorder"]

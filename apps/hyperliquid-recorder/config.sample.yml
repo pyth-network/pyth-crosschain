@@ -1,0 +1,26 @@
+quicknode:
+  endpoint: "dry-serene-field.hype-mainnet.quiknode.pro:10000"
+  auth_token: "replace-me"
+
+markets:
+  - coin: "BTC"
+    n_levels: 20
+  - coin: "ETH"
+    n_levels: 20
+
+clickhouse:
+  url: "http://clickhouse-local:8123"
+  user: "recorder"
+  password: "recorder"
+  database: "pyth_analytics"
+  table: "hyperliquid_l2_snapshots"
+
+metrics_port: 9092
+health_port: 8082
+ready_stale_seconds: 30
+queue_max_rows: 50000
+batch_max_rows: 10000
+batch_flush_seconds: 2.0
+retention_days: 90
+insert_async: true
+reconnect_max_backoff_seconds: 60
