@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/suspicious/noConsole: e2e test script */
 
 import { execSync } from "node:child_process";
-import { resolve } from "node:path";
 import process from "node:process";
 
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
@@ -18,11 +17,19 @@ const CHANNEL_NAMES: Record<number, string> = {
   4: "FixedRate1000ms",
 };
 
-const { secret } = await yargs(hideBin(process.argv))
+const { secret, "contract-id": contractIdArg } = await yargs(
+  hideBin(process.argv),
+)
   .option("secret", {
     description:
       "Stellar secret key (S...). If omitted, a new keypair is generated and funded.",
     type: "string",
+  })
+  .option("contract-id", {
+    description:
+      "Lazer contract ID to test against. Deploy separately using deploy.sh first.",
+    type: "string",
+    demandOption: true,
   })
   .help()
   .parseAsync();
@@ -40,16 +47,6 @@ function stellarCmd(args: string): string {
   const out = execSync(cmd, {
     encoding: "utf-8",
     timeout: 120_000,
-  }).trim();
-  if (out) console.log(`  ${out}`);
-  return out;
-}
-
-function runCmd(cmd: string): string {
-  console.log(`  $ ${cmd}`);
-  const out = execSync(cmd, {
-    encoding: "utf-8",
-    timeout: 600_000,
   }).trim();
   if (out) console.log(`  ${out}`);
   return out;
@@ -285,24 +282,9 @@ if (secret) {
   }
 }
 
-// --- Step 2: Deploy fresh contracts using deploy.sh ---
-console.log("\n=== Deploying fresh contracts via deploy.sh ===");
-const deployScript = resolve(
-  import.meta.dirname ?? ".",
-  "../../deploy.sh",
-);
-const deployOutput = runCmd(
-  `bash ${deployScript} --secret ${stellarSecret} --network ${NETWORK} --fund`,
-);
-
-// Extract the Lazer contract ID from deploy.sh output
-const lazerIdMatch = deployOutput.match(/Lazer contract ID:\s+(\S+)/);
-if (!lazerIdMatch) {
-  console.error("ERROR: Could not find Lazer contract ID in deploy output");
-  process.exit(1);
-}
-const contractId = lazerIdMatch[1];
-console.log(`\n  Deployed Lazer contract: ${contractId}`);
+// --- Step 2: Use the provided contract ID ---
+const contractId = contractIdArg;
+console.log(`\n=== Using Lazer contract: ${contractId} ===`);
 
 // --- Step 3: Fetch real price update from Pyth Lazer ---
 console.log("\n=== Fetching real price update from Pyth Lazer ===");
