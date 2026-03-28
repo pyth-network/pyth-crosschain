@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "contracts/wormhole-executor-stellar",
     "contracts/pyth-lazer-stellar",
+    "contracts/integration-tests",
 ]
 
 [workspace.dependencies]
