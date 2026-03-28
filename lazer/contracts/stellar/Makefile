@@ -1,4 +1,4 @@
-.PHONY: build optimize test clean
+.PHONY: build optimize test clean fmt fmt-check clippy check deploy-testnet
 
 WASM_DIR = $(CURDIR)/target/wasm32-unknown-unknown/release
 
@@ -18,3 +18,14 @@ test:
 
 clean:
 	cd $(CURDIR) && cargo clean
+
+fmt:
+	cd $(CURDIR) && cargo fmt --all
+
+fmt-check:
+	cd $(CURDIR) && cargo fmt --all -- --check
+
+clippy:
+	cd $(CURDIR) && cargo clippy --all-targets -- -D warnings
+
+check: fmt-check clippy test
