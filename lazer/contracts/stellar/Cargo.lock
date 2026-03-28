@@ -910,6 +910,7 @@ dependencies = [
 name = "pyth-lazer-stellar"
 version = "0.1.0"
 dependencies = [
+ "hex-literal",
  "soroban-sdk",
 ]
 
