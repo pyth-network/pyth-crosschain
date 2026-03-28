@@ -19,11 +19,22 @@ pub struct PythLazerContract;
 impl PythLazerContract {
     /// One-time initialization. Stores the executor address (the Wormhole executor
     /// contract authorized for governance operations).
-    pub fn initialize(env: Env, executor: Address) -> Result<(), ContractError> {
+    ///
+    /// Optionally accepts an initial trusted signer and expiry. This avoids
+    /// needing a governance VAA for the very first signer during deployment.
+    pub fn initialize(
+        env: Env,
+        executor: Address,
+        initial_signer: Option<BytesN<33>>,
+        initial_signer_expires_at: Option<u64>,
+    ) -> Result<(), ContractError> {
         if state::has_executor(&env) {
             return Err(ContractError::AlreadyInitialized);
         }
         state::set_executor(&env, &executor);
+        if let (Some(pubkey), Some(expires_at)) = (initial_signer, initial_signer_expires_at) {
+            state::set_trusted_signer(&env, &pubkey, expires_at);
+        }
         state::extend_instance_ttl(&env);
         Ok(())
     }
