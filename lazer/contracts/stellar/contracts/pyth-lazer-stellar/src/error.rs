@@ -12,4 +12,8 @@ pub enum ContractError {
     SignerNotTrusted = 6,
     SignerExpired = 7,
     Unauthorized = 8,
+    InvalidPayloadMagic = 9,
+    InvalidChannel = 10,
+    InvalidProperty = 11,
+    InvalidMarketSession = 12,
 }
