@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test:e2e": {
-      "env": ["PYTH_LAZER_TOKEN", "STELLAR_SECRET"]
+      "env": ["PYTH_LAZER_TOKEN"]
     }
   }
 }

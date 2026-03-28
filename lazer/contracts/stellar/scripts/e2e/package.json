@@ -7,8 +7,6 @@
     "node": "^24.0.0"
   },
   "dependencies": {
-    "@noble/curves": "^1.4.0",
-    "@noble/hashes": "^1.4.0",
     "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@stellar/stellar-sdk": "^13.0.0"
   },
