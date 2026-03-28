@@ -1,6 +1,7 @@
 use soroban_sdk::{contracttype, Bytes, BytesN, Env, Vec};
 
 use crate::error::ContractError;
+use crate::guardian;
 
 /// Size of a single guardian signature entry in the VAA:
 /// 1 (guardian_index) + 64 (signature r||s) + 1 (recovery_id) = 66 bytes
@@ -164,6 +165,83 @@ pub fn parse_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
         },
         body_bytes,
     })
+}
+
+/// Verify a parsed VAA against the stored guardian set.
+///
+/// This function:
+/// 1. Checks the guardian_set_index matches the stored index.
+/// 2. Computes the Wormhole double-hash: `keccak256(keccak256(body))`.
+/// 3. For each signature, recovers the signer via `secp256k1_recover`.
+/// 4. Derives the Ethereum address from the recovered public key.
+/// 5. Checks the address matches the stored guardian at the given index.
+/// 6. Verifies quorum (2/3 + 1 of guardians have valid signatures).
+/// 7. Checks for duplicate guardian indices.
+pub fn verify_vaa(env: &Env, vaa: &Vaa) -> Result<(), ContractError> {
+    let stored_index = guardian::get_guardian_set_index(env);
+    if vaa.guardian_set_index != stored_index {
+        return Err(ContractError::InvalidGuardianSetIndex);
+    }
+
+    let guardian_set = guardian::get_guardian_set(env);
+    let num_guardians = guardian_set.len();
+    let required = guardian::quorum(num_guardians);
+
+    let num_sigs = vaa.signatures.len();
+    if num_sigs < required {
+        return Err(ContractError::NoQuorum);
+    }
+
+    // Wormhole double-hash: keccak256(keccak256(body_bytes))
+    let body_hash = env.crypto().keccak256(&vaa.body_bytes);
+    let digest = env.crypto().keccak256(&Bytes::from_slice(env, &body_hash.to_array()));
+
+    // Track which guardian indices have been seen to detect duplicates.
+    // Use a simple approach: check ascending order (same as EVM).
+    let mut last_index: Option<u32> = None;
+
+    for i in 0..num_sigs {
+        let sig = vaa.signatures.get(i).unwrap();
+        let gi = sig.guardian_index;
+
+        // Check ascending order (also prevents duplicates).
+        if let Some(prev) = last_index {
+            if gi <= prev {
+                return Err(ContractError::DuplicateGuardianSignature);
+            }
+        }
+        last_index = Some(gi);
+
+        // Check guardian index is in bounds.
+        if gi >= num_guardians {
+            return Err(ContractError::InvalidGuardianIndex);
+        }
+
+        // Recover the public key from the signature.
+        let recovered_pubkey = env.crypto().secp256k1_recover(
+            &digest,
+            &sig.signature,
+            sig.recovery_id,
+        );
+
+        // Derive Ethereum address from the recovered uncompressed public key.
+        let recovered_addr = guardian::eth_address_from_pubkey(env, &recovered_pubkey);
+
+        // Check against stored guardian address.
+        let expected_addr = guardian_set.get(gi).unwrap();
+        if recovered_addr != expected_addr {
+            return Err(ContractError::GuardianSignatureMismatch);
+        }
+    }
+
+    Ok(())
+}
+
+/// Parse and verify a VAA in one step.
+pub fn parse_and_verify_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
+    let vaa = parse_vaa(env, data)?;
+    verify_vaa(env, &vaa)?;
+    Ok(vaa)
 }
 
 #[cfg(test)]

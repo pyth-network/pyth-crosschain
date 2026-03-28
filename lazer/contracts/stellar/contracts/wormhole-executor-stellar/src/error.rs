@@ -28,4 +28,10 @@ pub enum ContractError {
     NotInitialized = 10,
     /// Duplicate guardian signature index in the VAA.
     DuplicateGuardianSignature = 11,
+    /// The VAA's guardian_set_index does not match the stored index.
+    InvalidGuardianSetIndex = 12,
+    /// The new guardian set index is not current + 1.
+    InvalidGuardianSetUpgrade = 13,
+    /// The new guardian set is empty.
+    EmptyGuardianSet = 14,
 }
