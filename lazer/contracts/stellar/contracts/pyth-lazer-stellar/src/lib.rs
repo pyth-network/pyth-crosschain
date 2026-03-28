@@ -3,7 +3,6 @@
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
 
 mod error;
-#[cfg(any(test, not(target_arch = "wasm32")))]
 pub mod payload;
 mod state;
 mod verify;
