@@ -35,6 +35,10 @@ FUND=false
 TESTNET_GUARDIAN="13947bd48b18e53fdaeee77f3473391ac727c638"
 TESTNET_EMITTER_ADDRESS="63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385"
 
+# Pyth Lazer trusted signer public key (compressed secp256k1, hex)
+LAZER_SIGNER_PUBKEY="03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b"
+FAR_FUTURE_EXPIRY=9999999999
+
 SECRET=""
 GUARDIAN_SET=""
 EMITTER_ADDRESS=""
@@ -197,6 +201,19 @@ stellar contract invoke \
 echo "Lazer contract initialized."
 echo ""
 
+# Step 6: Add Pyth Lazer trusted signer
+echo "=== Adding Pyth Lazer trusted signer ==="
+stellar contract invoke \
+    --id "$LAZER_ID" \
+    $COMMON_ARGS \
+    -- \
+    update_trusted_signer \
+    --pubkey "$LAZER_SIGNER_PUBKEY" \
+    --expires_at "$FAR_FUTURE_EXPIRY"
+
+echo "Trusted signer added: $LAZER_SIGNER_PUBKEY (expires: $FAR_FUTURE_EXPIRY)"
+echo ""
+
 # Output summary
 echo "========================================="
 echo "=== Deployment Complete ==="
@@ -210,14 +227,12 @@ echo ""
 echo "Executor Contract ID:   $EXECUTOR_ID"
 echo "Lazer Contract ID:      $LAZER_ID"
 echo ""
-echo "Next steps:"
-echo "  1. Add a trusted signer via governance VAA through the executor"
-echo "  2. Call verify_update on the Lazer contract with a signed price update"
+echo "Lazer Signer Pubkey: $LAZER_SIGNER_PUBKEY"
+echo "Signer Expiry:      $FAR_FUTURE_EXPIRY"
 echo ""
-echo "Example - add trusted signer via governance:"
-echo "  stellar contract invoke --id $EXECUTOR_ID --network $NETWORK --source <SECRET> -- \\"
-echo "    execute_governance_action --vaa_bytes <GOV_VAA_HEX> --target_contract $LAZER_ID"
+echo "Next steps:"
+echo "  1. Call verify_update on the Lazer contract with a signed price update"
 echo ""
 echo "Example - verify update:"
 echo "  stellar contract invoke --id $LAZER_ID --network $NETWORK --source <SECRET> -- \\"
-echo "    verify_update --data-file-path <SIGNED_UPDATE_BIN>"
+echo "    verify_update --data <SIGNED_UPDATE_HEX>"

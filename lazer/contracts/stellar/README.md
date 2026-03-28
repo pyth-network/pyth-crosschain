@@ -68,6 +68,18 @@ Runs all unit tests and integration tests. The integration test suite (`contract
 - Guardian set upgrades followed by governance actions
 - Negative cases: expired signers, wrong emitter, replayed VAAs, unauthorized calls, invalid PTGM
 
+## End-to-End Test
+
+Run the E2E test against the testnet deployment:
+
+```bash
+cd scripts/e2e
+PYTH_LAZER_TOKEN=<your-token> npx tsx src/test_real_update.ts \
+  --contract-id CCE62RN3NUTNMD2SQ2EGWRJ6XHL7RUYQBNCEK7LVGFRLPCW7U7FGACM5
+```
+
+This fetches a real signed price update from the Pyth Lazer service and verifies it on-chain.
+
 ## Code Quality
 
 ```bash
@@ -103,6 +115,14 @@ lazer/contracts/stellar/
 │       └── src/
 │           └── test.rs
 ```
+
+## Testnet Deployment
+
+| Contract | Address |
+|----------|---------|
+| Pyth Lazer | `CCE62RN3NUTNMD2SQ2EGWRJ6XHL7RUYQBNCEK7LVGFRLPCW7U7FGACM5` |
+
+The testnet contract is initialized with the Pyth Lazer trusted signer and ready for use.
 
 ## Deployment
 
