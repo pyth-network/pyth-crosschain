@@ -54,10 +54,10 @@ RUN curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
     && rm -rf /var/lib/apt/lists/*
 RUN op --version
 
-# Install metis CLI binary (always pulls the current release)
-RUN curl -fsSL https://github.com/dourolabs/metis-releases/releases/download/latest/metis-x86_64-unknown-linux-gnu \
-      -o /usr/local/bin/metis \
-    && chmod +x /usr/local/bin/metis
+# Install hydra CLI binary
+RUN curl -fsSL https://github.com/dourolabs/metis-releases/releases/download/v0.9.0/hydra-x86_64-unknown-linux-gnu \
+      -o /usr/local/bin/hydra \
+    && chmod +x /usr/local/bin/hydra
 
 # Create non-root worker user
 RUN useradd -m -s /bin/bash -u 1000 worker
