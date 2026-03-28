@@ -28,4 +28,18 @@ pub enum ContractError {
     NotInitialized = 10,
     /// Duplicate guardian signature index in the VAA.
     DuplicateGuardianSignature = 11,
+    /// The VAA's guardian_set_index does not match the stored index.
+    InvalidGuardianSetIndex = 12,
+    /// The new guardian set index is not current + 1.
+    InvalidGuardianSetUpgrade = 13,
+    /// The new guardian set is empty.
+    EmptyGuardianSet = 14,
+    /// The PTGM magic bytes are not "PTGM" (0x5054474d).
+    InvalidPtgmMagic = 15,
+    /// The PTGM module is not Lazer (3).
+    InvalidPtgmModule = 16,
+    /// The PTGM target chain ID does not match this chain.
+    InvalidTargetChain = 17,
+    /// The PTGM action is not recognized.
+    InvalidGovernanceAction = 18,
 }
