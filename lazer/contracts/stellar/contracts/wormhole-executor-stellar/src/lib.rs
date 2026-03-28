@@ -1,15 +1,17 @@
 #![no_std]
 
 pub mod error;
+pub mod governance;
 pub mod guardian;
 pub mod vaa;
 
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, Bytes, BytesN, Env, Vec};
+use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, IntoVal, Symbol, Vec};
 
 use crate::error::ContractError;
+use crate::governance::{parse_ptgm, GovernanceAction};
 use crate::vaa::{parse_vaa, verify_vaa};
 
 /// Wormhole core governance module identifier ("Core" right-aligned in 32 bytes).
@@ -136,6 +138,74 @@ impl WormholeExecutor {
 
         // Store the new guardian set.
         guardian::store_guardian_set(&env, new_guardian_set, new_index);
+
+        Ok(())
+    }
+
+    /// Execute a governance action from a Wormhole VAA containing a PTGM payload.
+    ///
+    /// This verifies the VAA, validates the emitter matches the stored owner,
+    /// enforces replay protection via strictly increasing sequence numbers,
+    /// parses the PTGM governance instruction, and dispatches a cross-contract
+    /// call to the target contract.
+    pub fn execute_governance_action(
+        env: Env,
+        vaa_bytes: Bytes,
+        target_contract: Address,
+    ) -> Result<(), ContractError> {
+        guardian::require_initialized(&env)?;
+        guardian::extend_instance_ttl(&env);
+
+        // Parse and verify the VAA with current guardian set.
+        let vaa = parse_vaa(&env, &vaa_bytes)?;
+        verify_vaa(&env, &vaa)?;
+
+        // Validate emitter chain matches stored owner.
+        let owner_chain = guardian::get_owner_emitter_chain(&env);
+        if vaa.body.emitter_chain as u32 != owner_chain {
+            return Err(ContractError::InvalidEmitterChain);
+        }
+
+        // Validate emitter address matches stored owner.
+        let owner_address = guardian::get_owner_emitter_address(&env);
+        if vaa.body.emitter_address != owner_address {
+            return Err(ContractError::InvalidEmitterAddress);
+        }
+
+        // Replay protection: sequence must be strictly increasing.
+        let last_sequence = guardian::get_last_executed_sequence(&env);
+        if vaa.body.sequence <= last_sequence {
+            return Err(ContractError::StaleSequence);
+        }
+
+        // Update last executed sequence.
+        guardian::set_last_executed_sequence(&env, vaa.body.sequence);
+
+        // Parse the PTGM governance instruction.
+        let our_chain = guardian::get_chain_id(&env);
+        let action = parse_ptgm(&vaa.body.payload, our_chain)?;
+
+        // Dispatch cross-contract call to the target.
+        match action {
+            GovernanceAction::UpdateTrustedSigner(payload) => {
+                let pubkey = BytesN::from_array(&env, &payload.pubkey);
+                let args = (pubkey, payload.expires_at).into_val(&env);
+                env.invoke_contract::<()>(
+                    &target_contract,
+                    &Symbol::new(&env, "update_trusted_signer"),
+                    args,
+                );
+            }
+            GovernanceAction::Upgrade(payload) => {
+                let wasm_hash = BytesN::from_array(&env, &payload.wasm_digest);
+                let args = (wasm_hash,).into_val(&env);
+                env.invoke_contract::<()>(
+                    &target_contract,
+                    &Symbol::new(&env, "upgrade"),
+                    args,
+                );
+            }
+        }
 
         Ok(())
     }
