@@ -11,4 +11,5 @@ pub enum ContractError {
     InvalidPayloadLength = 5,
     SignerNotTrusted = 6,
     SignerExpired = 7,
+    Unauthorized = 8,
 }
