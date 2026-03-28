@@ -1,7 +1,10 @@
 #![no_std]
+extern crate alloc;
+
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
 
 mod error;
+pub mod payload;
 mod state;
 mod verify;
 
