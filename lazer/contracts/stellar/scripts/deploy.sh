@@ -110,7 +110,7 @@ fi
 # Step 1: Build contracts
 echo "=== Building contracts ==="
 cd "$WORKSPACE_DIR"
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32-unknown-unknown -p wormhole-executor-stellar -p pyth-lazer-stellar
 echo "Build complete."
 echo ""
 
@@ -189,29 +189,19 @@ stellar contract invoke \
 echo "Executor initialized."
 echo ""
 
-# Step 5: Initialize pyth-lazer-stellar
+# Step 5: Initialize pyth-lazer-stellar with initial trusted signer
 echo "=== Initializing pyth-lazer-stellar ==="
 stellar contract invoke \
     --id "$LAZER_ID" \
     $COMMON_ARGS \
     -- \
     initialize \
-    --executor "$EXECUTOR_ID"
+    --executor "$EXECUTOR_ID" \
+    --initial_signer "\"$LAZER_SIGNER_PUBKEY\"" \
+    --initial_signer_expires_at "$FAR_FUTURE_EXPIRY"
 
-echo "Lazer contract initialized."
-echo ""
-
-# Step 6: Add Pyth Lazer trusted signer
-echo "=== Adding Pyth Lazer trusted signer ==="
-stellar contract invoke \
-    --id "$LAZER_ID" \
-    $COMMON_ARGS \
-    -- \
-    update_trusted_signer \
-    --pubkey "$LAZER_SIGNER_PUBKEY" \
-    --expires_at "$FAR_FUTURE_EXPIRY"
-
-echo "Trusted signer added: $LAZER_SIGNER_PUBKEY (expires: $FAR_FUTURE_EXPIRY)"
+echo "Lazer contract initialized with trusted signer."
+echo "Trusted signer: $LAZER_SIGNER_PUBKEY (expires: $FAR_FUTURE_EXPIRY)"
 echo ""
 
 # Output summary

@@ -227,7 +227,7 @@ fn setup(num_guardians: u8) -> TestEnv<'static> {
     // Deploy Lazer contract, initialized with executor as its governance authority.
     let lazer_id = env.register(PythLazerContract, ());
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id);
+    lazer_client.initialize(&executor_id, &None, &None);
 
     TestEnv {
         env,
@@ -652,7 +652,7 @@ fn test_unauthorized_direct_signer_update() {
     let executor_id = env.register(WormholeExecutor, ());
     let lazer_id = env.register(PythLazerContract, ());
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id);
+    lazer_client.initialize(&executor_id, &None, &None);
 
     let unauthorized = Address::generate(&env);
     let pubkey = BytesN::from_array(&env, &test_trusted_signer_pubkey());
@@ -679,7 +679,7 @@ fn test_unauthorized_direct_upgrade() {
     let executor_id = env.register(WormholeExecutor, ());
     let lazer_id = env.register(PythLazerContract, ());
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id);
+    lazer_client.initialize(&executor_id, &None, &None);
 
     let unauthorized = Address::generate(&env);
     let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
