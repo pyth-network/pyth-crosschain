@@ -1,9 +1,5 @@
 # -*- mode: Python -*-
 
-load("ext://dotenv", "dotenv")
-
-dotenv()
-
 docker_compose("docker-compose.local.yml")
 
 dc_resource(

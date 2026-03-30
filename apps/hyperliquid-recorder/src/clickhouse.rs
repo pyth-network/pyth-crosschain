@@ -59,7 +59,11 @@ impl ClickHouseClient {
         }
     }
 
-    pub async fn insert_batch(&self, snapshots: &[L2Snapshot], insert_async: bool) -> Result<(usize, f64)> {
+    pub async fn insert_batch(
+        &self,
+        snapshots: &[L2Snapshot],
+        insert_async: bool,
+    ) -> Result<(usize, f64)> {
         if snapshots.is_empty() {
             return Ok((0, 0.0));
         }

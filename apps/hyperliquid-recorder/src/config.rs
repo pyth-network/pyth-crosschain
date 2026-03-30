@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::path::Path;
 
 use config::{Environment, File};
 use serde::{de::DeserializeOwned, Deserialize};
@@ -73,12 +73,10 @@ struct ClickHouseConfig {
 }
 
 impl AppConfig {
-    pub fn from_env() -> Result<Self, ConfigError> {
+    pub fn from_sources(config_path: Option<&Path>) -> Result<Self, ConfigError> {
         let mut builder = config::Config::builder();
-        if let Ok(path) = env::var("APP_CONFIG_FILE") {
-            if !path.trim().is_empty() {
-                builder = builder.add_source(File::from(PathBuf::from(path)));
-            }
+        if let Some(path) = config_path {
+            builder = builder.add_source(File::from(path.to_path_buf()));
         }
         let loaded = builder
             .add_source(
@@ -88,9 +86,9 @@ impl AppConfig {
             )
             .build()
             .map_err(|err| ConfigError::Invalid(err.to_string()))?;
-        let quicknode: QuicknodeConfig = get_or_default(&loaded, "quicknode", QuicknodeConfig::default)?;
-        let markets_input: Vec<MarketInput> =
-            get_or_default(&loaded, "markets", default_markets)?;
+        let quicknode: QuicknodeConfig =
+            get_or_default(&loaded, "quicknode", QuicknodeConfig::default)?;
+        let markets_input: Vec<MarketInput> = get_or_default(&loaded, "markets", default_markets)?;
         let clickhouse_input: ClickHouseConfig =
             get_or_default(&loaded, "clickhouse", ClickHouseConfig::default)?;
         let quicknode_endpoint = required_string(
@@ -130,6 +128,10 @@ impl AppConfig {
                 default_reconnect_max_backoff_seconds,
             )?,
         })
+    }
+
+    pub fn from_env() -> Result<Self, ConfigError> {
+        Self::from_sources(None)
     }
 }
 
@@ -171,7 +173,9 @@ fn validate_market(market: &MarketInput) -> Result<(), ConfigError> {
         ));
     }
     if !(1..=100).contains(&market.n_levels) {
-        return Err(ConfigError::Invalid("n_levels must be in [1, 100]".to_string()));
+        return Err(ConfigError::Invalid(
+            "n_levels must be in [1, 100]".to_string(),
+        ));
     }
     if let Some(value) = market.n_sig_figs {
         if !(2..=5).contains(&value) {
@@ -182,7 +186,9 @@ fn validate_market(market: &MarketInput) -> Result<(), ConfigError> {
     }
     if let Some(value) = market.mantissa {
         if !(1..=5).contains(&value) {
-            return Err(ConfigError::Invalid("mantissa must be in [1, 5]".to_string()));
+            return Err(ConfigError::Invalid(
+                "mantissa must be in [1, 5]".to_string(),
+            ));
         }
     }
     Ok(())

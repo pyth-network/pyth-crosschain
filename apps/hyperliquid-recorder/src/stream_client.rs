@@ -1,4 +1,7 @@
-use std::{str::FromStr, time::Duration};
+use std::{
+    str::FromStr,
+    time::{Duration, Instant},
+};
 
 use anyhow::Result;
 use rust_decimal::Decimal;
@@ -89,10 +92,9 @@ async fn stream_once(
     stop_token: CancellationToken,
     metrics: std::sync::Arc<RecorderMetrics>,
 ) -> std::result::Result<(), StreamError> {
-    let channel = build_channel(endpoint)
-        .await
-        .map_err(StreamError::Other)?;
-    let mut client = OrderBookStreamingClient::new(channel).max_decoding_message_size(100 * 1024 * 1024);
+    let channel = build_channel(endpoint).await.map_err(StreamError::Other)?;
+    let mut client =
+        OrderBookStreamingClient::new(channel).max_decoding_message_size(100 * 1024 * 1024);
 
     let request = L2BookRequest {
         coin: market.coin.clone(),
@@ -110,6 +112,9 @@ async fn stream_once(
         .map_err(StreamError::Grpc)?;
 
     let mut stream = response.into_inner();
+    let mut total_rows_streamed: u64 = 0;
+    let mut interval_rows_streamed: u64 = 0;
+    let mut last_stream_report = Instant::now();
     while let Some(update) = stream.message().await.map_err(StreamError::Grpc)? {
         if stop_token.is_cancelled() {
             break;
@@ -143,6 +148,32 @@ async fn stream_once(
         {
             metrics.queue_drops.with_label_values(&[&coin]).inc();
         }
+
+        total_rows_streamed = total_rows_streamed.saturating_add(1);
+        interval_rows_streamed = interval_rows_streamed.saturating_add(1);
+        let elapsed = last_stream_report.elapsed();
+        if elapsed >= Duration::from_secs(5) {
+            tracing::info!(
+                coin = %market.coin,
+                interval_rows = interval_rows_streamed,
+                total_rows = total_rows_streamed,
+                rows_per_second = interval_rows_streamed as f64 / elapsed.as_secs_f64().max(1e-9),
+                "stream row throughput"
+            );
+            interval_rows_streamed = 0;
+            last_stream_report = Instant::now();
+        }
+    }
+
+    if interval_rows_streamed > 0 {
+        let elapsed = last_stream_report.elapsed();
+        tracing::info!(
+            coin = %market.coin,
+            interval_rows = interval_rows_streamed,
+            total_rows = total_rows_streamed,
+            rows_per_second = interval_rows_streamed as f64 / elapsed.as_secs_f64().max(1e-9),
+            "stream row throughput (final interval)"
+        );
     }
 
     Ok(())

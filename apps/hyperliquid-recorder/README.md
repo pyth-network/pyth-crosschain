@@ -78,7 +78,6 @@ Required:
 YAML config file (optional):
 
 - Pass `--config /path/to/config.yml` to load config from YAML.
-- You can also set `APP_CONFIG_FILE=/path/to/config.yml`.
 - See `config.sample.yml` for the schema.
 - Environment variables are loaded with prefix `HYPERLIQUID_RECORDER` and `__` path separators.
 - Environment variables still override YAML values.

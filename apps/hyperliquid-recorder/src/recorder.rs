@@ -118,7 +118,9 @@ impl RecorderRuntime {
                 }
                 let elapsed = last_flush.elapsed().as_secs_f64();
                 let wait_seconds = (batch_flush_seconds - elapsed).max(0.1);
-                match tokio::time::timeout(Duration::from_secs_f64(wait_seconds), receiver.recv()).await {
+                match tokio::time::timeout(Duration::from_secs_f64(wait_seconds), receiver.recv())
+                    .await
+                {
                     Ok(Some(snapshot)) => {
                         health.set_market_seen(&snapshot.coin);
                         dedupe.insert(snapshot.dedupe_key(), snapshot);
@@ -202,7 +204,10 @@ async fn flush_with_retry(
         }
         match writer.insert_batch(&batch, insert_async).await {
             Ok((rows, latency)) => {
-                metrics.insert_attempts.with_label_values(&["success"]).inc();
+                metrics
+                    .insert_attempts
+                    .with_label_values(&["success"])
+                    .inc();
                 metrics.insert_rows.inc_by(rows as f64);
                 metrics.insert_latency_seconds.observe(latency);
                 tracing::info!("inserted {} rows into ClickHouse", rows);

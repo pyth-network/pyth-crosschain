@@ -18,16 +18,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: hyperliquid-recorder
-    env_file:
-      - .env
-    environment:
-      HYPERLIQUID_RECORDER__CLICKHOUSE__URL: "http://clickhouse-local:8123"
-      HYPERLIQUID_RECORDER__CLICKHOUSE__USER: "recorder"
-      HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD: "recorder"
-      HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE: "pyth_analytics"
-      HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE: "hyperliquid_l2_snapshots"
-      HYPERLIQUID_RECORDER__METRICS_PORT: "9092"
-      HYPERLIQUID_RECORDER__HEALTH_PORT: "8082"
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+    command: ["hyperliquid-recorder", "--config", "/app/config.yml"]
     depends_on:
       - clickhouse-local
     ports:

@@ -12,7 +12,6 @@ static ENV_LOCK: Mutex<()> = Mutex::new(());
 fn test_config_parses_yaml_file() {
     let _lock = ENV_LOCK.lock().expect("env lock poisoned");
     clear_env_vars([
-        "APP_CONFIG_FILE",
         "HYPERLIQUID_RECORDER__QUICKNODE__ENDPOINT",
         "HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__URL",
@@ -46,9 +45,7 @@ metrics_port: 9092
 health_port: 8082
 "#;
     fs::write(&config_file, yaml).expect("write yaml config");
-    std::env::set_var("APP_CONFIG_FILE", &config_file);
-
-    let config = AppConfig::from_env().expect("yaml config should parse");
+    let config = AppConfig::from_sources(Some(&config_file)).expect("yaml config should parse");
     assert_eq!(config.markets.len(), 2);
     assert_eq!(config.markets[0].coin, "BTC");
     assert_eq!(config.markets[1].coin, "@142");
@@ -59,7 +56,6 @@ health_port: 8082
     assert_eq!(config.health_port, 8082);
     assert_eq!(config.clickhouse.host, "127.0.0.1");
 
-    clear_env_vars(["APP_CONFIG_FILE"]);
     let _ = fs::remove_file(config_file);
 }
 
@@ -67,7 +63,6 @@ health_port: 8082
 fn test_env_overrides_yaml_values() {
     let _lock = ENV_LOCK.lock().expect("env lock poisoned");
     clear_env_vars([
-        "APP_CONFIG_FILE",
         "HYPERLIQUID_RECORDER__QUICKNODE__ENDPOINT",
         "HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__URL",
@@ -95,19 +90,14 @@ clickhouse:
 metrics_port: 9092
 "#;
     fs::write(&config_file, yaml).expect("write yaml config");
-    std::env::set_var("APP_CONFIG_FILE", &config_file);
-    std::env::set_var(
-        "HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN",
-        "env-token",
-    );
+    std::env::set_var("HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN", "env-token");
     std::env::set_var("HYPERLIQUID_RECORDER__METRICS_PORT", "9191");
 
-    let config = AppConfig::from_env().expect("config should parse");
+    let config = AppConfig::from_sources(Some(&config_file)).expect("config should parse");
     assert_eq!(config.quicknode_auth_token, "env-token");
     assert_eq!(config.metrics_port, 9191);
 
     clear_env_vars([
-        "APP_CONFIG_FILE",
         "HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN",
         "HYPERLIQUID_RECORDER__METRICS_PORT",
     ]);
@@ -117,7 +107,6 @@ metrics_port: 9092
 #[test]
 fn test_invalid_market_configuration_fails() {
     let _lock = ENV_LOCK.lock().expect("env lock poisoned");
-    clear_env_vars(["APP_CONFIG_FILE"]);
     let config_file = temp_yaml_path("hrec-config-invalid-market");
     let yaml = r#"
 quicknode:
@@ -130,9 +119,7 @@ clickhouse:
   url: "http://127.0.0.1:8123"
 "#;
     fs::write(&config_file, yaml).expect("write yaml config");
-    std::env::set_var("APP_CONFIG_FILE", &config_file);
-
-    let result = AppConfig::from_env();
+    let result = AppConfig::from_sources(Some(&config_file));
     assert!(result.is_err(), "invalid n_levels should fail");
     let message = result.err().map(|err| err.to_string()).unwrap_or_default();
     assert!(
@@ -140,7 +127,6 @@ clickhouse:
         "unexpected error: {message}"
     );
 
-    clear_env_vars(["APP_CONFIG_FILE"]);
     let _ = fs::remove_file(config_file);
 }
 

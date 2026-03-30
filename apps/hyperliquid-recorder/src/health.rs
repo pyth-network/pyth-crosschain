@@ -5,13 +5,7 @@ use std::{
 };
 
 use anyhow::Result;
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use serde::Serialize;
 use tokio::task::JoinHandle;
 
@@ -139,7 +133,10 @@ async fn run_metrics_server(port: u16, metrics: Arc<RecorderMetrics>) -> Result<
 }
 
 async fn live_handler() -> impl IntoResponse {
-    (StatusCode::OK, Json(serde_json::json!({ "status": "live" })))
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({ "status": "live" })),
+    )
 }
 
 async fn ready_handler(State(app): State<HealthAppState>) -> impl IntoResponse {

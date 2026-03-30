@@ -1,6 +1,7 @@
-use std::{env, process::ExitCode, sync::Arc, time::Duration};
+use std::{path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
+use clap::Parser;
 use hyperliquid_recorder::{
     clickhouse::ClickHouseClient,
     config::AppConfig,
@@ -24,8 +25,8 @@ async fn main() -> ExitCode {
 }
 
 async fn run() -> Result<()> {
-    apply_cli_config_arg()?;
-    let config = AppConfig::from_env()?;
+    let cli = Cli::parse();
+    let config = AppConfig::from_sources(cli.config.as_deref())?;
 
     let writer_client = create_client_with_retry(config.clone(), 30).await?;
     writer_client.ensure_schema(config.retention_days).await?;
@@ -36,8 +37,12 @@ async fn run() -> Result<()> {
         config.markets.iter().map(|m| m.coin.clone()).collect(),
         config.ready_stale_seconds,
     );
-    let (health_server, metrics_server) =
-        start_http_servers(config.health_port, config.metrics_port, metrics.clone(), health.clone());
+    let (health_server, metrics_server) = start_http_servers(
+        config.health_port,
+        config.metrics_port,
+        metrics.clone(),
+        health.clone(),
+    );
 
     let mut runtime = RecorderRuntime::new(
         config.quicknode_endpoint,
@@ -71,42 +76,24 @@ async fn run() -> Result<()> {
     Ok(())
 }
 
-fn apply_cli_config_arg() -> Result<()> {
-    let mut args = env::args().skip(1);
-    while let Some(arg) = args.next() {
-        if let Some(path) = arg.strip_prefix("--config=") {
-            if path.trim().is_empty() {
-                return Err(anyhow!("--config value cannot be empty"));
-            }
-            env::set_var("APP_CONFIG_FILE", path);
-            continue;
-        }
-
-        if arg == "--config" {
-            let path = args
-                .next()
-                .ok_or_else(|| anyhow!("--config requires a path argument"))?;
-            if path.trim().is_empty() {
-                return Err(anyhow!("--config value cannot be empty"));
-            }
-            env::set_var("APP_CONFIG_FILE", path);
-            continue;
-        }
-
-        anyhow::bail!("unknown argument: {arg}. Supported arguments: --config <path>");
-    }
-    Ok(())
+#[derive(Debug, Parser)]
+#[command(name = "hyperliquid-recorder")]
+struct Cli {
+    /// Path to a YAML config file. Environment variables still override values from this file.
+    #[arg(long, value_name = "PATH")]
+    config: Option<PathBuf>,
 }
 
-async fn create_client_with_retry(config: AppConfig, max_attempts: usize) -> Result<ClickHouseClient> {
+async fn create_client_with_retry(
+    config: AppConfig,
+    max_attempts: usize,
+) -> Result<ClickHouseClient> {
     for attempt in 1..=max_attempts {
         let client = ClickHouseClient::new(config.clickhouse.clone());
         if client.ping().await {
             return Ok(client);
         }
-        tracing::warn!(
-            "clickhouse connection attempt {attempt}/{max_attempts} failed"
-        );
+        tracing::warn!("clickhouse connection attempt {attempt}/{max_attempts} failed");
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
     anyhow::bail!("failed to connect to ClickHouse after startup retries")
