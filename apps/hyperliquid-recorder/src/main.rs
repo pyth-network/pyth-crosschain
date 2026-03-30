@@ -29,7 +29,6 @@ async fn run() -> Result<()> {
     let config = AppConfig::from_sources(cli.config.as_deref())?;
 
     let writer_client = create_client_with_retry(config.clone(), 30).await?;
-    writer_client.ensure_schema(config.retention_days).await?;
     let ping_client = create_client_with_retry(config.clone(), 30).await?;
 
     let metrics = Arc::new(RecorderMetrics::new()?);
