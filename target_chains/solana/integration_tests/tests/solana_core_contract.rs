@@ -12,6 +12,7 @@
 use {
     borsh::{BorshDeserialize, BorshSerialize},
     litesvm::LiteSVM,
+    pda_helpers::{pyth_solana_receiver as pyth_pda, wormhole_core_bridge_solana as wormhole_pda},
     pythnet_sdk::wire::v1::{AccumulatorUpdateData, MerklePriceUpdate, Proof},
     sha2::{Digest, Sha256},
     solana_sdk::{
@@ -39,14 +40,6 @@ const WORMHOLE_PROGRAM_ID: &str = "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ"
 const PYTH_RECEIVER_ID: &str = "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ";
 /// Pyth Push Oracle program (needed by pyth receiver).
 const PYTH_PUSH_ORACLE_ID: &str = "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT";
-
-// ---------------------------------------------------------------------------
-// Seeds & constants
-// ---------------------------------------------------------------------------
-
-const GUARDIAN_SET_SEED: &[u8] = b"GuardianSet";
-const CONFIG_SEED: &[u8] = b"config";
-const TREASURY_SEED: &[u8] = b"treasury";
 
 // ---------------------------------------------------------------------------
 // Mainnet guardian data (from cli/src/main.rs)
@@ -172,21 +165,6 @@ fn anchor_account_discriminator(name: &str) -> [u8; 8] {
     disc
 }
 
-/// Derive the guardian set PDA address.
-fn get_guardian_set_address(wormhole: &Pubkey, index: u32) -> Pubkey {
-    Pubkey::find_program_address(&[GUARDIAN_SET_SEED, &index.to_be_bytes()], wormhole).0
-}
-
-/// Derive the pyth receiver config PDA address.
-fn get_config_address(program_id: &Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&[CONFIG_SEED], program_id).0
-}
-
-/// Derive a treasury PDA address.
-fn get_treasury_address(program_id: &Pubkey, treasury_id: u8) -> Pubkey {
-    Pubkey::find_program_address(&[TREASURY_SEED, &[treasury_id]], program_id).0
-}
-
 /// Parse a wormhole VAA binary to extract the guardian_set_index (bytes 1..5, big-endian).
 fn vaa_guardian_set_index(vaa: &[u8]) -> u32 {
     u32::from_be_bytes([vaa[1], vaa[2], vaa[3], vaa[4]])
@@ -283,7 +261,7 @@ fn create_guardian_set_account(
     data.extend_from_slice(&discriminator);
     data.extend_from_slice(&guardian_set.try_to_vec().unwrap());
 
-    let pda = get_guardian_set_address(wormhole, index);
+    let pda = wormhole_pda::find_guardian_set_pda(wormhole, index).0;
 
     let account = Account {
         lamports: Rent::default().minimum_balance(data.len()),
@@ -302,7 +280,7 @@ fn build_initialize_instruction(
     payer: &Pubkey,
     config: Config,
 ) -> Instruction {
-    let config_pda = get_config_address(program_id);
+    let config_pda = pyth_pda::find_config_pda(program_id).0;
     let discriminator = anchor_instruction_discriminator("initialize");
 
     let mut data = Vec::new();
@@ -333,9 +311,9 @@ fn build_post_update_atomic_instruction(
     merkle_price_update: MerklePriceUpdate,
     treasury_id: u8,
 ) -> Instruction {
-    let config_pda = get_config_address(program_id);
-    let treasury_pda = get_treasury_address(program_id, treasury_id);
-    let guardian_set_pda = get_guardian_set_address(wormhole, guardian_set_index);
+    let config_pda = pyth_pda::find_config_pda(program_id).0;
+    let treasury_pda = pyth_pda::find_treasury_pda(program_id, treasury_id).0;
+    let guardian_set_pda = wormhole_pda::find_guardian_set_pda(wormhole, guardian_set_index).0;
 
     let discriminator = anchor_instruction_discriminator("post_update_atomic");
     let params = PostUpdateAtomicParams {

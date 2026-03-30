@@ -1,0 +1,17 @@
+{
+  "name": "solana-integration-tests-generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "codama": "^1.5.1",
+    "@codama/nodes-from-anchor": "^1.4.0",
+    "@codama/renderers-rust": "^3.0.0",
+    "@codama/visitors": "^1.5.1",
+    "@codama/visitors-core": "^1.5.1",
+    "@codama/nodes": "^1.5.1"
+  }
+}

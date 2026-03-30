@@ -2042,6 +2042,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pda-helpers"
+version = "0.1.0"
+dependencies = [
+ "solana-sdk",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2900,6 +2907,7 @@ dependencies = [
  "borsh 0.10.4",
  "hex",
  "litesvm",
+ "pda-helpers",
  "pythnet-sdk",
  "reqwest",
  "serde",

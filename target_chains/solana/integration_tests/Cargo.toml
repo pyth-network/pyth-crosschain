@@ -11,6 +11,7 @@ publish = false
 [dev-dependencies]
 litesvm = "0.1.0"
 solana-sdk = "1.18.0"
+pda-helpers = { path = "generated/pda_helpers" }
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 serde = { version = "1", features = ["derive"] }
