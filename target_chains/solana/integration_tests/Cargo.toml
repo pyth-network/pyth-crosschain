@@ -1,0 +1,21 @@
+[package]
+name = "solana-integration-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# This crate is intentionally excluded from the main workspace because it uses
+# litesvm which requires solana-sdk 1.18+, while the workspace uses solana 1.16.20.
+# It has its own Cargo.lock.
+
+[dev-dependencies]
+litesvm = "0.1.0"
+solana-sdk = "1.18.0"
+pythnet-sdk = { path = "../../../pythnet/pythnet_sdk" }
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.21"
+borsh = "0.10"
+sha2 = "0.10"
+hex = "0.4"

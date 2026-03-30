@@ -4,7 +4,9 @@ members = ["programs/*", "cli/", "program_simulator/", "common_test_utils"]
 exclude = [
     "programs/pyth-price-store",
     "pyth_solana_receiver_sdk",
+    "integration_tests",
 ] # pyth_solana_receiver_sdk is excluded because it uses a later anchor-lang version than the contract
+# integration_tests is excluded because it uses litesvm which requires solana-sdk 1.18+
 
 [profile.release]
 overflow-checks = true
