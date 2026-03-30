@@ -24,7 +24,8 @@ pub struct ClickHouseTarget {
     pub password: String,
     pub secure: bool,
     pub database: String,
-    pub table: String,
+    pub l2_snapshots_table: String,
+    pub trades_table: String,
 }
 
 #[derive(Clone, Debug)]
@@ -68,8 +69,10 @@ struct ClickHouseConfig {
     password: String,
     #[serde(default = "default_clickhouse_database")]
     database: String,
-    #[serde(default = "default_clickhouse_table")]
-    table: String,
+    #[serde(default = "default_clickhouse_l2_snapshots_table")]
+    l2_snapshots_table: String,
+    #[serde(default = "default_clickhouse_trades_table")]
+    trades_table: String,
 }
 
 impl AppConfig {
@@ -212,7 +215,8 @@ fn parse_clickhouse_target(input: ClickHouseConfig) -> Result<ClickHouseTarget, 
         password: input.password,
         secure: parsed.scheme() == "https",
         database: input.database,
-        table: input.table,
+        l2_snapshots_table: input.l2_snapshots_table,
+        trades_table: input.trades_table,
     })
 }
 
@@ -280,6 +284,10 @@ fn default_clickhouse_database() -> String {
     "pyth_analytics".to_string()
 }
 
-fn default_clickhouse_table() -> String {
+fn default_clickhouse_l2_snapshots_table() -> String {
     "hyperliquid_l2_snapshots".to_string()
+}
+
+fn default_clickhouse_trades_table() -> String {
+    "hyperliquid_trades".to_string()
 }

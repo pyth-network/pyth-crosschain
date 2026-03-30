@@ -11,7 +11,7 @@ services:
       - "9100:9000"
     volumes:
       - clickhouse-local-data:/var/lib/clickhouse
-      - ./sql/init-local.sql:/docker-entrypoint-initdb.d/init-local.sql:ro
+      - ./sql/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
 
   hyperliquid-recorder:
     build:

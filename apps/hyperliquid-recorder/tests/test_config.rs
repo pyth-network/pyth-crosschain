@@ -18,7 +18,8 @@ fn test_config_parses_yaml_file() {
         "HYPERLIQUID_RECORDER__CLICKHOUSE__USER",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE",
-        "HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__L2_SNAPSHOTS_TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__TRADES_TABLE",
         "HYPERLIQUID_RECORDER__METRICS_PORT",
         "HYPERLIQUID_RECORDER__HEALTH_PORT",
     ]);
@@ -40,7 +41,8 @@ clickhouse:
   user: "recorder"
   password: "recorder"
   database: "pyth_analytics"
-  table: "hyperliquid_l2_snapshots"
+  l2_snapshots_table: "hyperliquid_l2_snapshots"
+  trades_table: "hyperliquid_trades"
 metrics_port: 9092
 health_port: 8082
 "#;
@@ -55,6 +57,7 @@ health_port: 8082
     assert_eq!(config.metrics_port, 9092);
     assert_eq!(config.health_port, 8082);
     assert_eq!(config.clickhouse.host, "127.0.0.1");
+    assert_eq!(config.clickhouse.trades_table, "hyperliquid_trades");
 
     let _ = fs::remove_file(config_file);
 }
@@ -69,7 +72,8 @@ fn test_env_overrides_yaml_values() {
         "HYPERLIQUID_RECORDER__CLICKHOUSE__USER",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD",
         "HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE",
-        "HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__L2_SNAPSHOTS_TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__TRADES_TABLE",
         "HYPERLIQUID_RECORDER__METRICS_PORT",
     ]);
 
@@ -86,7 +90,8 @@ clickhouse:
   user: "recorder"
   password: "recorder"
   database: "pyth_analytics"
-  table: "hyperliquid_l2_snapshots"
+  l2_snapshots_table: "hyperliquid_l2_snapshots"
+  trades_table: "hyperliquid_trades"
 metrics_port: 9092
 "#;
     fs::write(&config_file, yaml).expect("write yaml config");

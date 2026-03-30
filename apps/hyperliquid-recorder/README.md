@@ -1,7 +1,8 @@
 # Hyperliquid Recorder (Rust)
 
 `hyperliquid-recorder` continuously ingests Hyperliquid `StreamL2Book` snapshots
-from QuickNode gRPC and writes them into ClickHouse for market analysis.
+and `StreamData` trades from QuickNode gRPC, then writes them into ClickHouse
+for market analysis.
 
 ## Features
 
@@ -103,4 +104,5 @@ ClickHouse configuration:
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__USER` (default `default`)
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD` (default empty)
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE` (default `pyth_analytics`)
-- `HYPERLIQUID_RECORDER__CLICKHOUSE__TABLE` (default `hyperliquid_l2_snapshots`)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__L2_SNAPSHOTS_TABLE` (default `hyperliquid_l2_snapshots`)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__TRADES_TABLE` (default `hyperliquid_trades`)

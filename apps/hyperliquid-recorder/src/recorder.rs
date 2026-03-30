@@ -11,8 +11,8 @@ use crate::{
     clickhouse::ClickHouseClient,
     health::HealthState,
     metrics::RecorderMetrics,
-    models::{L2Snapshot, MarketSubscription},
-    stream_client::run_stream_worker,
+    models::{L2Snapshot, MarketSubscription, TradeRecord},
+    stream_client::{run_stream_worker, run_trades_stream_worker},
 };
 
 #[derive(Clone, Debug)]
@@ -69,8 +69,10 @@ impl RecorderRuntime {
     }
 
     pub fn start(&mut self) {
-        let (tx, rx) = mpsc::channel::<L2Snapshot>(self.writer_config.queue_max_rows);
-        self.spawn_writer_loop(rx);
+        let (l2_tx, l2_rx) = mpsc::channel::<L2Snapshot>(self.writer_config.queue_max_rows);
+        let (trade_tx, trade_rx) = mpsc::channel::<TradeRecord>(self.writer_config.queue_max_rows);
+        self.spawn_l2_writer_loop(l2_rx);
+        self.spawn_trade_writer_loop(trade_rx);
 
         for market in self.markets.clone() {
             let handle = tokio::spawn(run_stream_worker(
@@ -78,12 +80,23 @@ impl RecorderRuntime {
                 self.auth_token.clone(),
                 market,
                 self.reconnect_max_backoff_seconds,
-                tx.clone(),
+                l2_tx.clone(),
                 self.metrics.clone(),
                 self.stop_token.clone(),
             ));
             self.handles.push(handle);
         }
+
+        let trade_handle = tokio::spawn(run_trades_stream_worker(
+            self.endpoint.clone(),
+            self.auth_token.clone(),
+            self.markets.clone(),
+            self.reconnect_max_backoff_seconds,
+            trade_tx,
+            self.metrics.clone(),
+            self.stop_token.clone(),
+        ));
+        self.handles.push(trade_handle);
 
         self.spawn_health_probe_loop();
     }
@@ -98,7 +111,7 @@ impl RecorderRuntime {
         }
     }
 
-    fn spawn_writer_loop(&mut self, mut receiver: mpsc::Receiver<L2Snapshot>) {
+    fn spawn_l2_writer_loop(&mut self, mut receiver: mpsc::Receiver<L2Snapshot>) {
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
         let health = self.health.clone();
@@ -165,6 +178,74 @@ impl RecorderRuntime {
         self.handles.push(handle);
     }
 
+    fn spawn_trade_writer_loop(&mut self, mut receiver: mpsc::Receiver<TradeRecord>) {
+        let writer = self.writer.clone();
+        let metrics = self.metrics.clone();
+        let health = self.health.clone();
+        let batch_max_rows = self.writer_config.batch_max_rows;
+        let batch_flush_seconds = self.writer_config.batch_flush_seconds;
+        let queue_max_rows = self.writer_config.queue_max_rows;
+        let stop_token = self.stop_token.clone();
+        let insert_async = self.insert_async;
+
+        let handle = tokio::spawn(async move {
+            let mut dedupe: HashMap<(String, u64, String, String, u64, u64, String), TradeRecord> =
+                HashMap::new();
+            let mut last_flush = Instant::now();
+
+            loop {
+                if stop_token.is_cancelled() && receiver.is_empty() {
+                    break;
+                }
+                let elapsed = last_flush.elapsed().as_secs_f64();
+                let wait_seconds = (batch_flush_seconds - elapsed).max(0.1);
+                match tokio::time::timeout(Duration::from_secs_f64(wait_seconds), receiver.recv())
+                    .await
+                {
+                    Ok(Some(trade)) => {
+                        health.set_market_seen(&trade.coin);
+                        dedupe.insert(trade.dedupe_key(), trade);
+                        let size = receiver.len();
+                        metrics.trades_queue_depth.set(size as f64);
+                        metrics
+                            .trades_queue_fill_ratio
+                            .set(size as f64 / queue_max_rows.max(1) as f64);
+                    }
+                    Ok(None) => break,
+                    Err(_) => {}
+                }
+
+                let should_flush = dedupe.len() >= batch_max_rows
+                    || (!dedupe.is_empty()
+                        && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
+                if should_flush {
+                    flush_trades_with_retry(
+                        &writer,
+                        &metrics,
+                        dedupe.values().cloned().collect::<Vec<_>>(),
+                        stop_token.clone(),
+                        insert_async,
+                    )
+                    .await;
+                    dedupe.clear();
+                    last_flush = Instant::now();
+                }
+            }
+
+            if !dedupe.is_empty() {
+                flush_trades_with_retry(
+                    &writer,
+                    &metrics,
+                    dedupe.values().cloned().collect::<Vec<_>>(),
+                    stop_token,
+                    insert_async,
+                )
+                .await;
+            }
+        });
+        self.handles.push(handle);
+    }
+
     fn spawn_health_probe_loop(&mut self) {
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
@@ -210,7 +291,7 @@ async fn flush_with_retry(
                     .inc();
                 metrics.insert_rows.inc_by(rows as f64);
                 metrics.insert_latency_seconds.observe(latency);
-                tracing::info!("inserted {} rows into ClickHouse", rows);
+                tracing::info!("inserted {} L2 rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
@@ -218,7 +299,48 @@ async fn flush_with_retry(
                 tracing::error!(
                     rows = batch.len(),
                     error = ?err,
-                    "failed to insert batch"
+                    "failed to insert L2 batch"
+                );
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+}
+
+async fn flush_trades_with_retry(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    batch: Vec<TradeRecord>,
+    stop_token: CancellationToken,
+    insert_async: bool,
+) {
+    if batch.is_empty() {
+        return;
+    }
+    loop {
+        if stop_token.is_cancelled() {
+            return;
+        }
+        match writer.insert_trades_batch(&batch, insert_async).await {
+            Ok((rows, latency)) => {
+                metrics
+                    .insert_trades_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.insert_trades_rows.inc_by(rows as f64);
+                metrics.insert_trades_latency_seconds.observe(latency);
+                tracing::info!("inserted {} trade rows into ClickHouse", rows);
+                return;
+            }
+            Err(err) => {
+                metrics
+                    .insert_trades_attempts
+                    .with_label_values(&["error"])
+                    .inc();
+                tracing::error!(
+                    rows = batch.len(),
+                    error = ?err,
+                    "failed to insert trade batch"
                 );
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }

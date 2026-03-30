@@ -13,7 +13,8 @@ clickhouse:
   user: "recorder"
   password: "recorder"
   database: "pyth_analytics"
-  table: "hyperliquid_l2_snapshots"
+  l2_snapshots_table: "hyperliquid_l2_snapshots"
+  trades_table: "hyperliquid_trades"
 
 metrics_port: 9092
 health_port: 8082

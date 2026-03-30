@@ -6,7 +6,7 @@ use prometheus::{
     TextEncoder,
 };
 
-use crate::models::L2Snapshot;
+use crate::models::{L2Snapshot, TradeRecord};
 
 #[derive(Clone)]
 pub struct RecorderMetrics {
@@ -26,6 +26,17 @@ pub struct RecorderMetrics {
     pub insert_latency_seconds: Histogram,
     pub clickhouse_up: Gauge,
     pub ready_state: Gauge,
+    pub trades_stream_messages: CounterVec,
+    pub trades_stream_reconnects: CounterVec,
+    pub trades_stream_errors: CounterVec,
+    pub trades_rows_parsed: CounterVec,
+    pub trades_payload_errors: Counter,
+    pub trades_queue_depth: Gauge,
+    pub trades_queue_fill_ratio: Gauge,
+    pub trades_queue_drops: CounterVec,
+    pub insert_trades_attempts: CounterVec,
+    pub insert_trades_rows: Counter,
+    pub insert_trades_latency_seconds: Histogram,
 }
 
 impl RecorderMetrics {
@@ -122,6 +133,71 @@ impl RecorderMetrics {
             "hyperliquid_recorder_ready",
             "Readiness status (1=ready, 0=not ready)",
         ))?;
+        let trades_stream_messages = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_trades_stream_messages_total",
+                "Total trade rows received from StreamData",
+            ),
+            &["coin"],
+        )?;
+        let trades_stream_reconnects = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_trades_stream_reconnects_total",
+                "Total reconnect attempts for StreamData trades stream",
+            ),
+            &["reason"],
+        )?;
+        let trades_stream_errors = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_trades_stream_errors_total",
+                "Total StreamData trades stream errors",
+            ),
+            &["code"],
+        )?;
+        let trades_rows_parsed = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_trades_rows_parsed_total",
+                "Total parsed trade rows by coin",
+            ),
+            &["coin"],
+        )?;
+        let trades_payload_errors = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_trades_payload_errors_total",
+            "Total malformed trades payloads",
+        ))?;
+        let trades_queue_depth = Gauge::with_opts(Opts::new(
+            "hyperliquid_recorder_trades_queue_depth",
+            "Current in-memory queue depth for trades",
+        ))?;
+        let trades_queue_fill_ratio = Gauge::with_opts(Opts::new(
+            "hyperliquid_recorder_trades_queue_fill_ratio",
+            "Current in-memory queue fill ratio for trades",
+        ))?;
+        let trades_queue_drops = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_trades_queue_drops_total",
+                "Total dropped trade rows due to queue saturation",
+            ),
+            &["coin"],
+        )?;
+        let insert_trades_attempts = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_insert_trades_attempts_total",
+                "Total ClickHouse insert attempts for trade batches",
+            ),
+            &["status"],
+        )?;
+        let insert_trades_rows = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_insert_trades_rows_total",
+            "Total trade rows inserted into ClickHouse",
+        ))?;
+        let insert_trades_latency_seconds = Histogram::with_opts(
+            HistogramOpts::new(
+                "hyperliquid_recorder_insert_trades_latency_seconds",
+                "ClickHouse trade insert latency in seconds",
+            )
+            .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
+        )?;
 
         registry.register(Box::new(stream_messages.clone()))?;
         registry.register(Box::new(stream_reconnects.clone()))?;
@@ -138,6 +214,17 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_latency_seconds.clone()))?;
         registry.register(Box::new(clickhouse_up.clone()))?;
         registry.register(Box::new(ready_state.clone()))?;
+        registry.register(Box::new(trades_stream_messages.clone()))?;
+        registry.register(Box::new(trades_stream_reconnects.clone()))?;
+        registry.register(Box::new(trades_stream_errors.clone()))?;
+        registry.register(Box::new(trades_rows_parsed.clone()))?;
+        registry.register(Box::new(trades_payload_errors.clone()))?;
+        registry.register(Box::new(trades_queue_depth.clone()))?;
+        registry.register(Box::new(trades_queue_fill_ratio.clone()))?;
+        registry.register(Box::new(trades_queue_drops.clone()))?;
+        registry.register(Box::new(insert_trades_attempts.clone()))?;
+        registry.register(Box::new(insert_trades_rows.clone()))?;
+        registry.register(Box::new(insert_trades_latency_seconds.clone()))?;
 
         Ok(Self {
             registry,
@@ -156,6 +243,17 @@ impl RecorderMetrics {
             insert_latency_seconds,
             clickhouse_up,
             ready_state,
+            trades_stream_messages,
+            trades_stream_reconnects,
+            trades_stream_errors,
+            trades_rows_parsed,
+            trades_payload_errors,
+            trades_queue_depth,
+            trades_queue_fill_ratio,
+            trades_queue_drops,
+            insert_trades_attempts,
+            insert_trades_rows,
+            insert_trades_latency_seconds,
         })
     }
 
@@ -185,6 +283,24 @@ impl RecorderMetrics {
         let mut buffer = Vec::new();
         TextEncoder::new().encode(&metric_families, &mut buffer)?;
         Ok(buffer)
+    }
+
+    pub fn record_trade(&self, trade: &TradeRecord) {
+        self.trades_stream_messages
+            .with_label_values(&[&trade.coin])
+            .inc();
+        self.trades_rows_parsed
+            .with_label_values(&[&trade.coin])
+            .inc();
+        self.market_last_message_unix_seconds
+            .with_label_values(&[&trade.coin])
+            .set(unix_seconds_now());
+        self.market_last_block_number
+            .with_label_values(&[&trade.coin])
+            .set(trade.block_number as f64);
+        self.market_last_block_time_ms
+            .with_label_values(&[&trade.coin])
+            .set(trade.time_ms as f64);
     }
 }
 
