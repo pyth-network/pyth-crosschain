@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "hyperliquid_recorder"
+    static_configs:
+      - targets: ["hyperliquid-recorder:9092"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "hyperliquid_recorder"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - "alerts.sample.yml"

@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package hyperliquid;
+
+service Streaming {
+  rpc StreamData (stream SubscribeRequest) returns (stream SubscribeUpdate);
+  rpc Ping (PingRequest) returns (PingResponse);
+}
+
+service BlockStreaming {
+  rpc StreamBlocks (Timestamp) returns (stream Block);
+}
+
+message SubscribeRequest {
+  oneof request {
+    StreamSubscribe subscribe = 1;
+    Ping ping = 3;
+  }
+  reserved 2;
+}
+
+message StreamSubscribe {
+  StreamType stream_type = 1;
+  map<string, FilterValues> filters = 3;
+  string filter_name = 4;
+}
+
+message FilterValues {
+  repeated string values = 1;
+}
+
+message Ping {
+  int64 timestamp = 1;
+}
+
+message SubscribeUpdate {
+  oneof update {
+    StreamResponse data = 1;
+    Pong pong = 2;
+  }
+}
+
+message StreamResponse {
+  uint64 block_number = 1;
+  uint64 timestamp = 2;
+  string data = 3;
+}
+
+enum StreamType {
+  UNKNOWN = 0;
+  TRADES = 1;
+  ORDERS = 2;
+  BOOK_UPDATES = 3;
+  TWAP = 4;
+  EVENTS = 5;
+  BLOCKS = 6;
+  WRITER_ACTIONS = 7;
+}
+
+message Block {
+  string data_json = 1;
+}
+
+message Pong {
+  int64 timestamp = 1;
+}
+
+message Timestamp {
+  int64 timestamp = 1;
+}
+
+message PingRequest {
+  int32 count = 1;
+}
+
+message PingResponse {
+  int32 count = 1;
+}

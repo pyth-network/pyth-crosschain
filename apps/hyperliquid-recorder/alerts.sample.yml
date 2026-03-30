@@ -1,0 +1,56 @@
+groups:
+  - name: hyperliquid_recorder_alerts
+    rules:
+      - alert: HyperliquidRecorderDown
+        expr: up{job="hyperliquid_recorder"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Hyperliquid recorder is down"
+          description: "Recorder instance {{ $labels.instance }} is not scrapeable."
+
+      - alert: HyperliquidRecorderNotReady
+        expr: hyperliquid_recorder_ready == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hyperliquid recorder is not ready"
+          description: "Recorder has been unready for at least 2 minutes."
+
+      - alert: HyperliquidRecorderInsertErrors
+        expr: sum(increase(hyperliquid_recorder_insert_attempts_total{status="error"}[10m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ClickHouse insert errors detected"
+          description: "Recorder observed ClickHouse insert errors in the last 10 minutes."
+
+      - alert: HyperliquidRecorderNoSuccessfulInserts
+        expr: sum(increase(hyperliquid_recorder_insert_attempts_total{status="success"}[15m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No successful snapshot inserts"
+          description: "No successful snapshot inserts have occurred for 15 minutes."
+
+      - alert: HyperliquidRecorderQueueSaturated
+        expr: hyperliquid_recorder_queue_fill_ratio > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Recorder queue near saturation"
+          description: "In-memory queue usage is above 90%."
+
+      - alert: HyperliquidRecorderMarketStale
+        expr: time() - hyperliquid_recorder_market_last_message_unix_seconds > 60
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Market stream is stale"
+          description: "No messages for market {{ $labels.coin }} in over 60 seconds."
