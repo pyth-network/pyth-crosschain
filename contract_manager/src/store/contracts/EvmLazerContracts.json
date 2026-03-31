@@ -86,6 +86,16 @@
   },
   {
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "monad",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "monad_testnet",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "polygon",
     "type": "EvmLazerContract"
   },
