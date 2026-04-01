@@ -8,7 +8,8 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Steps, Step } from "fumadocs-ui/components/steps";
 
-**Pyth Pro** (formerly Pyth Lazer) delivers the same first-party publisher data as **Pyth Core**, but through standard WebSocket and REST APIs with configurable update speeds and a streamlined on-chain verification path. This guide covers everything you need to migrate an existing Pyth Core integration.
+**Pyth Pro** delivers the same first-party publisher data as **Pyth Core**, but through standard WebSocket and REST APIs with configurable update speeds and a streamlined on-chain verification path.
+This guide covers everything you need to migrate an existing Pyth Core integration.
 
 <Callout type="info">
   **Pyth Pro was previously known as Pyth Lazer.** SDK package names still use
@@ -27,9 +28,10 @@ Before diving into what changes, here's what doesn't:
 
 ## Architecture Changes
 
-**Data delivery** changes from pull to push. With Core, you fetch price updates from **Hermes** (an off-chain relay for Pythnet data) and submit them on-chain in the same transaction. With Pro, prices stream directly from publishers via WebSocket. On-demand queries are also available via REST.
+**Data delivery** remains similar. With Core, you fetch price updates from **Hermes** (an off-chain relay for Pythnet data) and submit them on-chain in the same transaction.
+With Pro, prices stream directly from publishers via WebSocket. On-demand queries are also available via REST.
 
-**Update frequency** becomes configurable. Core updates every 400ms (fixed). Pro lets you choose per subscription: `real_time`, `fixed_rate@200ms`, or `fixed_rate@50ms`.
+**Update frequency** becomes configurable. Core updates every 400ms (fixed). Pro lets you choose per subscription: `real_time`, `fixed_rate@50`, `fixed_rate@200ms` or `fixed_rate@1000ms`.
 
 **On-chain verification** uses a different signature scheme. Core verifies data using **Wormhole VAA** (guardian multi-sig) through the Pyth Receiver contract. Pro uses **Ed25519 signature verification** through the Pyth Lazer verifier contract.
 
@@ -41,15 +43,16 @@ Core and Pro aggregate publisher data differently. These differences affect how 
 
 | Aspect                       | Core                                                                                          | Pro                                                                                       |
 | ---------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **Confidence calculation**   | Each publisher contributes 3 votes (price, price + conf, price − conf). Confidence is the IQR of these 3N points. | IQR computed directly on all publisher prices, bids, and asks.                            |
+| **Confidence calculation**   | Each publisher contributes 3 votes (price, price + conf, price - conf). Confidence is the IQR of these 3N points. | IQR computed directly on all publisher prices, bids, and asks.                            |
 | **Price aggregation**        | Weighted median of 3N votes — confident publishers have more influence.                       | Simple median across publishers.                                                          |
 | **Timestamps**               | `publish_time` in Unix seconds.                                                               | `timestampUs` and `feedUpdateTimestamp` in microseconds (μs).                             |
 | **Staleness handling**       | `getPriceNoOlderThan()` reverts if data exceeds max age.                                      | Carries forward the last known price. Compare `feedUpdateTimestamp` against `timestampUs` to detect stale data. |
-| **Best bid/ask**             | Not available.                                                                                | Available via `bestBidPrice` and `bestAskPrice` properties.                               |
+| **Best bid/ask**             | Not available.                                                                                | Available via `bestBidPrice` and `bestAskPrice` properties. (Experimental)                             |
 | **EMA price**                | Available (slot-weighted, inverse confidence-weighted, ~1 hour period).                       | Available (`emaPrice`, `emaConfidence`).                                                  |
 
 <Callout type="warning">
-  Pro does **not** revert on stale prices. You must check `feedUpdateTimestamp`
+  Pyth Pro EVM contracts don't store the prices on-chain. The prices are parsed from the payload and verified on-chain.
+  That's why Pyth Pro does **not** revert on stale prices. You must check `feedUpdateTimestamp`
   yourself to determine whether a price is fresh or carried forward. See
   [Payload Reference — Price Availability
   Semantics](/price-feeds/pro/payload-reference#core-price-properties) for
@@ -71,7 +74,7 @@ Core and Pro aggregate publisher data differently. These differences affect how 
     | ---------------- | ------------------------------------------------------------------- |
     | Streaming        | `wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream`                  |
     | REST (latest)    | `POST https://pyth-lazer.dourolabs.app/v1/latest_price`             |
-    | REST (historical)| `GET https://history.pyth-lazer.dourolabs.app/{channel}/history`     |
+    | REST (historical)| `GET https://pyth.dourolabs.app/v1/{channel}/history`     |
     | Authentication   | Bearer token in `Authorization` header                              |
     | TypeScript SDK   | `@pythnetwork/pyth-lazer-sdk`                                       |
   </Tab>
@@ -227,11 +230,7 @@ See the [full SVM integration guide](./integrate-as-consumer/svm) and the [pyth-
   </Step>
   <Step>
     ### Update price feed IDs
-    Change from `bytes32` to `uint32` numeric IDs. Consult the [Price Feed IDs](./price-feed-ids) page for the complete mapping.
-  </Step>
-  <Step>
-    ### Update staleness checks
-    Pro carries forward the last known price instead of reverting. Replace `getPriceNoOlderThan()` with a check on `feedUpdateTimestamp` to determine if the price is fresh.
+    Pyth Pro Price Feed IDs are different from Pyth Core Price Feed IDs. You can find the complete list of Price Feed IDs in the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page.
   </Step>
   <Step>
     ### Configure your subscription
