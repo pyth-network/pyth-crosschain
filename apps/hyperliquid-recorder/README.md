@@ -74,6 +74,30 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
    bash scripts/backfill_tradexyz_march_2026.she
    ```
 
+   The script processes one day at a time (March 1..31 by default) to keep
+   memory usage bounded.
+
+   Useful overrides:
+
+   ```bash
+   BACKFILL_START_DATE=2026-03-10 BACKFILL_END_DATE=2026-03-12 \
+   bash scripts/backfill_tradexyz_march_2026.sh
+   ```
+
+   For ClickHouse Cloud (native TLS):
+
+   ```bash
+   USE_DOCKER_EXEC=false \
+   CH_HOST="<cluster>.aws.clickhouse.cloud" \
+   CH_PORT=9440 \
+   CH_SECURE=true \
+   CH_USER="<user>" \
+   CH_PASSWORD="<password>" \
+   CH_DATABASE="pyth_analytics" \
+   CH_TRADES_TABLE="hyperliquid_trades" \
+   bash scripts/backfill_tradexyz_march_2026.sh
+   ```
+
 3. Verify total March rows for `xyz:*` markets:
 
    ```bash
