@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SQL_FILE="${SCRIPT_DIR}/../sql/backfill-tradexyz-march-2026.sql"
 
-AWS_PROFILE_NAME="${AWS_PROFILE_NAME:-DouroClickhouseS3Admin-084828603540}"
+AWS_PROFILE_NAME="${AWS_PROFILE_NAME}"
 S3_URL="${S3_URL:-https://hydromancer-reservoir.s3.ap-northeast-1.amazonaws.com/by_dex/xyz/fills/perp/all/date=2026-03-*/fills.parquet}"
 
 CH_HOST="${CH_HOST:-localhost}"
