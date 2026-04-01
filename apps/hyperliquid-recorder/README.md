@@ -71,7 +71,7 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
 2. Run the backfill script:
 
    ```bash
-   bash scripts/backfill_tradexyz_march_2026.she
+   bash scripts/backfill_fills_from_reservoir.sh
    ```
 
    The script processes one day at a time (March 1..31 by default) to keep
@@ -81,7 +81,7 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
 
    ```bash
    BACKFILL_START_DATE=2026-03-10 BACKFILL_END_DATE=2026-03-12 \
-   bash scripts/backfill_tradexyz_march_2026.sh
+   bash scripts/backfill_fills_from_reservoir.sh
    ```
 
    For ClickHouse Cloud (native TLS):
@@ -95,7 +95,7 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
    CH_PASSWORD="<password>" \
    CH_DATABASE="pyth_analytics" \
    CH_TRADES_TABLE="hyperliquid_trades" \
-   bash scripts/backfill_tradexyz_march_2026.sh
+   bash scripts/backfill_fills_from_reservoir.sh
    ```
 
 3. Verify total March rows for `xyz:*` markets:
@@ -142,7 +142,7 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
 6. Idempotency check (re-run should insert 0 additional rows):
 
    ```bash
-   bash scripts/backfill_tradexyz_march_2026.sh
+   bash scripts/backfill_fills_from_reservoir.sh
    ```
 
 ## Manual run (without Tilt)
