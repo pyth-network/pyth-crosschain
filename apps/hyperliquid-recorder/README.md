@@ -68,11 +68,10 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
    tilt up
    ```
 
-2. Run the backfill script (uses AWS profile
-   `DouroClickhouseS3Admin-084828603540` by default):
+2. Run the backfill script:
 
    ```bash
-   bash scripts/backfill_tradexyz_march_2026.sh
+   bash scripts/backfill_tradexyz_march_2026.she
    ```
 
 3. Verify total March rows for `xyz:*` markets:
