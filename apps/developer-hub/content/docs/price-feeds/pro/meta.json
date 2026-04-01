@@ -1,6 +1,7 @@
 {
   "pages": [
     "getting-started",
+    "pyth-terminal",
     "---How-To Guides---",
     "acquire-access-token",
     "subscribe-to-prices",
