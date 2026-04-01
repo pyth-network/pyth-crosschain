@@ -57,6 +57,71 @@ for market analysis.
    - In Grafana, open **Connections -> Data sources** and confirm `Prometheus` is healthy.
    - Open **Dashboards -> Hyperliquid Recorder Overview** and confirm panels show live values.
 
+## Backfill Trade[XYZ] March 2026
+
+Run this backfill to load Trade[XYZ] perp fills (including liquidation fills) from
+Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
+
+1. Start local stack:
+
+   ```bash
+   tilt up
+   ```
+
+2. Run the backfill script (uses AWS profile
+   `DouroClickhouseS3Admin-084828603540` by default):
+
+   ```bash
+   bash scripts/backfill_tradexyz_march_2026.sh
+   ```
+
+3. Verify total March rows for `xyz:*` markets:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT count()
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')"
+   ```
+
+4. Verify daily counts:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT toDate(trade_time) AS day, count() AS rows
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')
+   GROUP BY day
+   ORDER BY day"
+   ```
+
+5. Spot-check liquidation rows:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT trade_time, coin, user, liquidated_user, liquidation_mark_px, liquidation_method
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')
+     AND liquidation_mark_px IS NOT NULL
+   ORDER BY trade_time DESC
+   LIMIT 20"
+   ```
+
+6. Idempotency check (re-run should insert 0 additional rows):
+
+   ```bash
+   bash scripts/backfill_tradexyz_march_2026.sh
+   ```
+
 ## Manual run (without Tilt)
 
 ```bash
