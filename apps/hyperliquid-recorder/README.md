@@ -57,9 +57,9 @@ for market analysis.
    - In Grafana, open **Connections -> Data sources** and confirm `Prometheus` is healthy.
    - Open **Dashboards -> Hyperliquid Recorder Overview** and confirm panels show live values.
 
-## Backfill Trade[XYZ] March 2026
+## Backfill Trade Data
 
-Run this backfill to load Trade[XYZ] perp fills (including liquidation fills) from
+Run this backfill to load all perp fills (including liquidation fills) from
 Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
 
 1. Start local stack:
