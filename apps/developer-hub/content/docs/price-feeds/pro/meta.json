@@ -1,6 +1,7 @@
 {
   "pages": [
     "getting-started",
+    "pyth-terminal",
     "---How-To Guides---",
     "acquire-api-key",
     "subscribe-to-prices",
