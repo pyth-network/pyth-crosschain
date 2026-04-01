@@ -57,6 +57,94 @@ for market analysis.
    - In Grafana, open **Connections -> Data sources** and confirm `Prometheus` is healthy.
    - Open **Dashboards -> Hyperliquid Recorder Overview** and confirm panels show live values.
 
+## Backfill Trade Data
+
+Run this backfill to load all perp fills (including liquidation fills) from
+Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
+
+1. Start local stack:
+
+   ```bash
+   tilt up
+   ```
+
+2. Run the backfill script:
+
+   ```bash
+   bash scripts/backfill_fills_from_reservoir.sh
+   ```
+
+   The script processes one day at a time (March 1..31 by default) to keep
+   memory usage bounded.
+
+   Useful overrides:
+
+   ```bash
+   BACKFILL_START_DATE=2026-03-10 BACKFILL_END_DATE=2026-03-12 \
+   bash scripts/backfill_fills_from_reservoir.sh
+   ```
+
+   For ClickHouse Cloud (native TLS):
+
+   ```bash
+   USE_DOCKER_EXEC=false \
+   CH_HOST="<cluster>.aws.clickhouse.cloud" \
+   CH_PORT=9440 \
+   CH_SECURE=true \
+   CH_USER="<user>" \
+   CH_PASSWORD="<password>" \
+   CH_DATABASE="pyth_analytics" \
+   CH_TRADES_TABLE="hyperliquid_trades" \
+   bash scripts/backfill_fills_from_reservoir.sh
+   ```
+
+3. Verify total March rows for `xyz:*` markets:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT count()
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')"
+   ```
+
+4. Verify daily counts:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT toDate(trade_time) AS day, count() AS rows
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')
+   GROUP BY day
+   ORDER BY day"
+   ```
+
+5. Spot-check liquidation rows:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+   clickhouse-client --user recorder --password recorder -q "
+   SELECT trade_time, coin, user, liquidated_user, liquidation_mark_px, liquidation_method
+   FROM pyth_analytics.hyperliquid_trades
+   WHERE coin LIKE 'xyz:%'
+     AND trade_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND trade_time <  toDateTime64('2026-04-01 00:00:00', 3, 'UTC')
+     AND liquidation_mark_px IS NOT NULL
+   ORDER BY trade_time DESC
+   LIMIT 20"
+   ```
+
+6. Idempotency check (re-run should insert 0 additional rows):
+
+   ```bash
+   bash scripts/backfill_fills_from_reservoir.sh
+   ```
+
 ## Manual run (without Tilt)
 
 ```bash
