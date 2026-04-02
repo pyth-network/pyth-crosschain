@@ -44,6 +44,10 @@ Follow established patterns in the codebase. New types should use existing ID ty
 
 New functionality should have tests. Refactoring should not break existing tests. If tests are removed, there should be a clear reason.
 
+### Reusable logic identification
+
+Check whether the change introduces logic that already exists elsewhere in the codebase or that could benefit other services/packages. If the new code duplicates existing functionality, suggest using the existing implementation. If the new code solves a general problem that other parts of the monorepo could use, suggest extracting it into a shared package (e.g., `packages/shared-lib`) or a common Rust crate, and flag it as a follow-up.
+
 ### Follow-up awareness
 
 If you notice tangential improvements that are out of scope for this PR, suggest the author create follow-up issues rather than expanding the current change.
