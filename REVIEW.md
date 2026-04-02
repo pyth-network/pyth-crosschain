@@ -10,13 +10,13 @@ The patch must apply cleanly to main. If there are merge conflicts, request the 
 
 All existing tests must pass. If the patch description mentions test failures or if the diff introduces obvious test breakage, flag it.
 
-### cargo fmt / clippy clean
+### Formatting and linting clean
 
-For Rust repos, verify the changes follow formatting and lint standards. If the diff shows obvious formatting issues, flag them.
+For Rust code, verify changes follow `rustfmt` and `clippy` standards (with the project's strict clippy configuration). For TypeScript/JavaScript code, verify changes follow Biome linting and formatting standards. If the diff shows obvious formatting or lint issues, flag them.
 
 ### No accidental file commits
 
-Check for files that should not be in the repo (e.g., documents/, generated files, .env files, credentials). Flag any suspicious additions.
+Check for files that should not be in the repo (e.g., generated files, .env files, credentials, documents/). Flag any suspicious additions.
 
 ### No serious performance problems
 
@@ -30,15 +30,15 @@ The change should do one thing well. Flag if the PR tries to do too many things 
 
 ### Use existing infrastructure
 
-Prefer extending existing types, endpoints, and patterns over creating new ones. If the codebase already has a mechanism for something (e.g., a query object for filtering), the patch should use it rather than adding a parallel approach.
+Prefer extending existing types, endpoints, and patterns over creating new ones. If the codebase already has a mechanism for something, the patch should use it rather than adding a parallel approach. For TypeScript dependencies, prefer using `catalog:` versions over declaring package-specific dependency versions.
 
 ### Proper code organization
 
-Shared logic should live in shared modules (e.g., hydra-common). Duplicated code across crates should be flagged. String formatting and helper logic should be extracted to dedicated files when substantial.
+Shared logic should live in shared packages (e.g., `packages/shared-lib`, `packages/component-library`). Duplicated code across packages or crates should be flagged. Avoid catch-all modules like `types/` or `utils/`. Keep types and functions close to where they are used; only lift them to a common parent when they are reused. Follow layered architecture (separate API processing, business logic, and data logic).
 
 ### API design consistency
 
-Parameters should go in query/search objects, not as separate route parameters. New types should use existing ID types rather than raw strings. Follow established patterns in the codebase.
+Follow established patterns in the codebase. New types should use existing ID types rather than raw strings.
 
 ### Test coverage
 
@@ -52,27 +52,25 @@ If you notice tangential improvements that are out of scope for this PR, suggest
 
 Consider the performance implications of changes. Frontend code should minimize the number of requests to the backend — batch where possible, use caching, and avoid unnecessary re-fetches. Backend code should use efficient queries and avoid loading more data than needed. If a change increases the number of API calls or database queries significantly, flag it and suggest optimization.
 
-### Architectural anti-patterns
+### Rust-specific checks
 
-Check for common architectural anti-patterns, referencing the AGENTS.md architectural principles section where available:
+When reviewing Rust code, pay attention to:
 
-- Using placeholder/sentinel values like 'unknown' or empty strings for mandatory fields
-- Adding tokens/secrets to API types or WorkerContext instead of using environment variables
-- Implementing reactive behavior as background workers instead of Automations
-- Using builder/setter patterns (with_X methods) when constructor parameters would suffice
-- Adding Default implementations for types that should always be explicitly set
+- Avoid panics: flag uses of `.unwrap()`, `.expect()`, `panic!()`, indexing with `[]` where `.get()` could be used. Prefer `Result`-based handling with `anyhow`/`thiserror`.
+- Avoid unchecked arithmetic: flag `+`, `-`, `*` on integers that could overflow. Prefer `.checked_*()` or `.saturating_*()` methods.
+- Avoid implicit truncation with `as`: prefer `.into()`, `T::from()`, or `.try_into()` for numeric conversions.
+- Use the project's essential crates (`tracing`, `anyhow`, `thiserror`, `axum`, `tokio`, etc.) rather than introducing alternatives.
+- Error messages should contain relevant context using `.with_context()`.
+- Preserve error sources — avoid converting errors to strings with `to_string()` or `{}` formatting.
+- No unsafe code unless absolutely necessary.
 
 ## Cross-Service Impact
 
-Check whether this change affects other services and they should be updated. Examples include services that reuse the same table or the same type. This is important and we shouldn't miss anything.
-
-## Architecture Quality
-
-Check whether the code change is architecturally good with high cohesion and low coupling. Avoid unnecessary abstractions and aim for simplicity. Raise it as a warning if it's bad.
+Check whether this change affects other services and they should be updated. Examples include services that reuse the same table or the same type. This is a monorepo with many interconnected services (Hermes, Fortuna, Argus, etc.) and smart contracts across multiple chains — cross-service impact is easy to miss.
 
 ## Language Best Practices
 
-Check whether the code is written with the best practices of that language.
+Check whether the code is written with the best practices of that language. Refer to the project's code guidelines in `doc/code-guidelines.md`, `doc/rust-code-guidelines.md`, and `doc/js-code-guidelines.md`.
 
 ## Version Bumps
 
