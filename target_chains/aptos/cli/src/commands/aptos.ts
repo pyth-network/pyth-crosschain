@@ -1,6 +1,13 @@
 import type { Argv } from "yargs";
 import { spawnSync } from "child_process";
-import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
+import {
+  Account,
+  Aptos,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network,
+  Serializer,
+} from "@aptos-labs/ts-sdk";
 import fs from "fs";
 import sha3 from "js-sha3";
 import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
@@ -68,16 +75,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const artefact = serializePackage(
           buildPackage(argv["package-dir"]!, argv["named-addresses"]),
         );
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            "0x1::code",
-            "publish_package_txn",
-            [],
-            [artefact.meta, artefact.bytecodes],
-          ),
-        );
 
-        await executeTransaction(argv.network, txPayload);
+        await executeTransaction(argv.network, {
+          function: "0x1::code::publish_package_txn",
+          functionArguments: [artefact.meta, artefact.bytecodes],
+        });
       },
     )
     .command(
@@ -93,7 +95,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       async (argv) => {
         const sender = getSender();
         const derivedAddress = generateDerivedAddress(
-          sender.address().toString(),
+          sender.accountAddress.toString(),
           argv.seed!,
         );
 
@@ -125,7 +127,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       async (argv) => {
         const sender = getSender();
         const derivedAddress = generateDerivedAddress(
-          sender.address().toString(),
+          sender.accountAddress.toString(),
           argv.seed!,
         );
 
@@ -155,7 +157,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       async (argv) => {
         console.log(
           generateDerivedAddress(
-            argv.signer || getSender().address().toString(),
+            argv.signer || getSender().accountAddress.toString(),
             argv.seed,
           ),
         );
@@ -177,33 +179,34 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const governance_chain_id = config.governanceChainId;
         const guardian_address = config.initialGuardianSet[0]; // assuming only one guardian for now
 
-        const guardian_addresses_serializer = new BCS.Serializer();
+        const guardian_addresses_serializer = new Serializer();
         guardian_addresses_serializer.serializeU32AsUleb128(1);
         guardian_addresses_serializer.serializeBytes(
           Buffer.from(guardian_address!, "hex"),
         );
 
-        const args = [
-          BCS.bcsSerializeUint64(chain_id),
-          BCS.bcsSerializeUint64(governance_chain_id),
-          BCS.bcsSerializeBytes(Buffer.from(governance_contract, "hex")),
-          guardian_addresses_serializer.getBytes(),
-        ];
+        const chainIdSerializer = new Serializer();
+        chainIdSerializer.serializeU64(chain_id);
+        const govChainIdSerializer = new Serializer();
+        govChainIdSerializer.serializeU64(governance_chain_id);
+        const govContractSerializer = new Serializer();
+        govContractSerializer.serializeBytes(Buffer.from(governance_contract, "hex"));
+
         const sender = getSender();
         const wormholeAddress = generateDerivedAddress(
-          sender.address().hex(),
+          sender.accountAddress.toString(),
           "wormhole",
         );
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            `${wormholeAddress}::wormhole`,
-            "init",
-            [],
-            args,
-          ),
-        );
 
-        await executeTransaction(argv.network, txPayload);
+        await executeTransaction(argv.network, {
+          function: `${wormholeAddress}::wormhole::init`,
+          functionArguments: [
+            chainIdSerializer.toUint8Array(),
+            govChainIdSerializer.toUint8Array(),
+            govContractSerializer.toUint8Array(),
+            guardian_addresses_serializer.toUint8Array(),
+          ],
+        });
       },
     )
     .command(
@@ -235,11 +238,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const governance_emitter_address =
           config.governanceDataSource.emitterAddress;
 
-        const dataSourceChainIdsSerializer = new BCS.Serializer();
+        const dataSourceChainIdsSerializer = new Serializer();
         dataSourceChainIdsSerializer.serializeU32AsUleb128(
           config.dataSources.length,
         );
-        const dataSourceEmitterAddressesSerializer = new BCS.Serializer();
+        const dataSourceEmitterAddressesSerializer = new Serializer();
         dataSourceEmitterAddressesSerializer.serializeU32AsUleb128(
           config.dataSources.length,
         );
@@ -250,29 +253,32 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           );
         });
 
-        const args = [
-          BCS.bcsSerializeUint64(stale_price_threshold),
-          BCS.bcsSerializeUint64(governance_emitter_chain_id),
-          BCS.bcsSerializeBytes(Buffer.from(governance_emitter_address, "hex")),
-          dataSourceChainIdsSerializer.getBytes(),
-          dataSourceEmitterAddressesSerializer.getBytes(),
-          BCS.bcsSerializeUint64(update_fee),
-        ];
+        const stalePriceSerializer = new Serializer();
+        stalePriceSerializer.serializeU64(stale_price_threshold);
+        const govEmitterChainSerializer = new Serializer();
+        govEmitterChainSerializer.serializeU64(governance_emitter_chain_id);
+        const govEmitterAddrSerializer = new Serializer();
+        govEmitterAddrSerializer.serializeBytes(Buffer.from(governance_emitter_address, "hex"));
+        const updateFeeSerializer = new Serializer();
+        updateFeeSerializer.serializeU64(update_fee);
+
         const sender = getSender();
         const pythAddress = generateDerivedAddress(
-          sender.address().hex(),
+          sender.accountAddress.toString(),
           argv.seed,
         );
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            `${pythAddress}::pyth`,
-            "init",
-            [],
-            args,
-          ),
-        );
 
-        await executeTransaction(argv.network, txPayload);
+        await executeTransaction(argv.network, {
+          function: `${pythAddress}::pyth::init`,
+          functionArguments: [
+            stalePriceSerializer.toUint8Array(),
+            govEmitterChainSerializer.toUint8Array(),
+            govEmitterAddrSerializer.toUint8Array(),
+            dataSourceChainIdsSerializer.toUint8Array(),
+            dataSourceEmitterAddressesSerializer.toUint8Array(),
+            updateFeeSerializer.toUint8Array(),
+          ],
+        });
       },
     )
     .command(
@@ -316,16 +322,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         );
 
         let pythAddress = argv.pyth;
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            `${pythAddress}::contract_upgrade`,
-            "do_contract_upgrade",
-            [],
-            [artefact.meta, artefact.bytecodes],
-          ),
-        );
 
-        await executeTransaction(argv.network, txPayload);
+        await executeTransaction(argv.network, {
+          function: `${pythAddress}::contract_upgrade::do_contract_upgrade`,
+          functionArguments: [artefact.meta, artefact.bytecodes],
+        });
       },
     )
     .command(
@@ -386,21 +387,36 @@ function getSender() {
       `Please set the APTOS_PRIVATE_KEY environment variable to the private key of the sender in hex format`,
     );
   }
-  return new AptosAccount(new Uint8Array(Buffer.from(key, "hex")));
+  return Account.fromPrivateKey({
+    privateKey: new Ed25519PrivateKey(key),
+  });
 }
 
 async function executeTransaction(
   network: string,
-  txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
+  txPayload: {
+    function: `${string}::${string}::${string}`;
+    functionArguments: any[];
+  },
 ) {
   const endpoint = (DefaultStore.chains[network] as AptosChain).rpcUrl;
-  const client = new AptosClient(endpoint);
-  const sender = getSender();
-  console.log(
-    await client.generateSignSubmitWaitForTransaction(sender, txPayload, {
-      maxGasAmount: BigInt(30000),
-    }),
+  const client = new Aptos(
+    new AptosConfig({ network: Network.CUSTOM, fullnode: endpoint }),
   );
+  const sender = getSender();
+  const transaction = await client.transaction.build.simple({
+    sender: sender.accountAddress,
+    data: txPayload,
+    options: { maxGasAmount: 30000 },
+  });
+  const pending = await client.signAndSubmitTransaction({
+    signer: sender,
+    transaction,
+  });
+  const result = await client.waitForTransaction({
+    transactionHash: pending.hash,
+  });
+  console.log(result);
 }
 
 function hexStringToByteArray(hexString: string) {
@@ -470,15 +486,15 @@ function buildPackage(dir: string, addrs?: string): Package {
 
 function serializePackage(p: Package): PackageBCS {
   const metaBytes = fs.readFileSync(p.meta_file);
-  const packageMetadataSerializer = new BCS.Serializer();
+  const packageMetadataSerializer = new Serializer();
   packageMetadataSerializer.serializeBytes(metaBytes);
-  const serializedPackageMetadata = packageMetadataSerializer.getBytes();
+  const serializedPackageMetadata = packageMetadataSerializer.toUint8Array();
 
   const modules = p.mv_files.map((file) => fs.readFileSync(file));
-  const serializer = new BCS.Serializer();
+  const serializer = new Serializer();
   serializer.serializeU32AsUleb128(modules.length);
   modules.forEach((module) => serializer.serializeBytes(module));
-  const serializedModules = serializer.getBytes();
+  const serializedModules = serializer.toUint8Array();
 
   const hashes = [metaBytes]
     .concat(modules)
@@ -499,17 +515,15 @@ function createDeployDerivedTransaction(
   namedAddresses: string,
 ) {
   const artifact = serializePackage(buildPackage(packageDir, namedAddresses));
+  const seedSerializer = new Serializer();
+  seedSerializer.serializeBytes(Buffer.from(seed, "ascii"));
 
-  return new TxnBuilderTypes.TransactionPayloadEntryFunction(
-    TxnBuilderTypes.EntryFunction.natural(
-      deployer + "::deployer",
-      "deploy_derived",
-      [],
-      [
-        artifact.meta,
-        artifact.bytecodes,
-        BCS.bcsSerializeBytes(Buffer.from(seed, "ascii")),
-      ],
-    ),
-  );
+  return {
+    function: `${deployer}::deployer::deploy_derived` as `${string}::${string}::${string}`,
+    functionArguments: [
+      artifact.meta,
+      artifact.bytecodes,
+      seedSerializer.toUint8Array(),
+    ],
+  };
 }

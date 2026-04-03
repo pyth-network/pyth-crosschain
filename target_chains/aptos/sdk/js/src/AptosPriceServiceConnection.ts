@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 
 import type { HexString } from "@pythnetwork/price-service-client";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { BCS } from "aptos";
+import { Serializer } from "@aptos-labs/ts-sdk";
 
 export class AptosPriceServiceConnection extends PriceServiceConnection {
   /**
@@ -24,9 +24,9 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
    * if necessary.
    */
   static serializeUpdateData(updateData: number[][]): Uint8Array {
-    const serializer = new BCS.Serializer();
+    const serializer = new Serializer();
     serializer.serializeU32AsUleb128(updateData.length);
-    for (const vaa of updateData) serializer.serializeBytes(Buffer.from(vaa));
-    return serializer.getBytes();
+    for (const vaa of updateData) serializer.serializeBytes(new Uint8Array(vaa));
+    return serializer.toUint8Array();
   }
 }

@@ -42,18 +42,21 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 
 // Create a transaction and submit to your contract using the price update data
-const client = new AptosClient(endpoint);
-let result = await client.generateSignSubmitWaitForTransaction(
-  sender,
-  new TxnBuilderTypes.TransactionPayloadEntryFunction(
-    TxnBuilderTypes.EntryFunction.natural(
-      "0x..::your_module",
-      "do_something",
-      [],
-      [priceUpdateData]
-    )
-  )
-);
+const client = new Aptos(new AptosConfig({ network: Network.TESTNET }));
+const transaction = await client.transaction.build.simple({
+  sender: sender.accountAddress,
+  data: {
+    function: "0x..::your_module::do_something",
+    functionArguments: [priceUpdateData],
+  },
+});
+const pending = await client.signAndSubmitTransaction({
+  signer: sender,
+  transaction,
+});
+const result = await client.waitForTransaction({
+  transactionHash: pending.hash,
+});
 ```
 
 `your_module::do_something` should then call `pyth::update_price_feeds` before querying the data using `pyth::get_price`:

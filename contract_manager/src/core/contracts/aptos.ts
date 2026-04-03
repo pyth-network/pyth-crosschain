@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
-import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
+import { Serializer } from "@aptos-labs/ts-sdk";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract } from "../base";
@@ -66,14 +66,10 @@ export class AptosWormholeContract extends WormholeContract {
 
   async getState(): Promise<WormholeState> {
     const client = this.chain.getClient();
-    const resources = await client.getAccountResources(this.address);
-    const type = "WormholeState";
-    for (const resource of resources) {
-      if (resource.type === `${this.address}::state::${type}`) {
-        return resource.data as WormholeState;
-      }
-    }
-    throw new Error(`${type} resource not found in account ${this.address}`);
+    return client.getAccountResource<WormholeState>({
+      accountAddress: this.address,
+      resourceType: `${this.address}::state::WormholeState`,
+    });
   }
 
   async getCurrentGuardianSetIndex(): Promise<number> {
@@ -93,11 +89,14 @@ export class AptosWormholeContract extends WormholeContract {
   async getGuardianSet(): Promise<string[]> {
     const data = await this.getState();
     const client = this.chain.getClient();
-    const result = (await client.getTableItem(data.guardian_sets.handle, {
-      key_type: `u64`,
-      value_type: `${this.address}::structs::GuardianSet`,
-      key: data.guardian_set_index.number.toString(),
-    })) as GuardianSet;
+    const result = await client.getTableItem<GuardianSet>({
+      handle: data.guardian_sets.handle,
+      data: {
+        key_type: `u64`,
+        value_type: `${this.address}::structs::GuardianSet`,
+        key: data.guardian_set_index.number.toString(),
+      },
+    });
     return result.guardians.map((guardian) => guardian.address.bytes);
   }
 
@@ -105,15 +104,10 @@ export class AptosWormholeContract extends WormholeContract {
     senderPrivateKey: PrivateKey,
     vaa: Buffer,
   ): Promise<TxResult> {
-    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-      TxnBuilderTypes.EntryFunction.natural(
-        `${this.address}::guardian_set_upgrade`,
-        "submit_vaa_entry",
-        [],
-        [BCS.bcsSerializeBytes(vaa)],
-      ),
-    );
-    return this.chain.sendTransaction(senderPrivateKey, txPayload);
+    return this.chain.sendTransaction(senderPrivateKey, {
+      function: `${this.address}::guardian_set_upgrade::submit_vaa_entry`,
+      functionArguments: [vaa],
+    });
   }
 }
 
@@ -159,15 +153,10 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     senderPrivateKey: PrivateKey,
     vaa: Buffer,
   ): Promise<TxResult> {
-    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-      TxnBuilderTypes.EntryFunction.natural(
-        `${this.stateId}::governance`,
-        "execute_governance_instruction",
-        [],
-        [BCS.bcsSerializeBytes(vaa)],
-      ),
-    );
-    return this.chain.sendTransaction(senderPrivateKey, txPayload);
+    return this.chain.sendTransaction(senderPrivateKey, {
+      function: `${this.stateId}::governance::execute_governance_instruction`,
+      functionArguments: [vaa],
+    });
   }
 
   public getWormholeContract(): AptosWormholeContract {
@@ -178,34 +167,25 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     senderPrivateKey: PrivateKey,
     vaas: Buffer[],
   ): Promise<TxResult> {
-    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-      TxnBuilderTypes.EntryFunction.natural(
-        `${this.stateId}::pyth`,
-        "update_price_feeds_with_funder",
-        [],
-        [BCS.serializeVectorWithFunc(vaas, "serializeBytes")],
-      ),
-    );
-    return this.chain.sendTransaction(senderPrivateKey, txPayload);
-  }
-
-  getStateResources() {
-    const client = this.chain.getClient();
-    return client.getAccountResources(this.stateId);
+    const serializer = new Serializer();
+    serializer.serializeU32AsUleb128(vaas.length);
+    for (const vaa of vaas) serializer.serializeBytes(vaa);
+    return this.chain.sendTransaction(senderPrivateKey, {
+      function: `${this.stateId}::pyth::update_price_feeds_with_funder`,
+      functionArguments: [serializer.toUint8Array()],
+    });
   }
 
   /**
    * Returns the first occurrence of a resource with the given type in the pyth package state
    * @param type - the type of resource to find
    */
-  async findResource(type: string) {
-    const resources = await this.getStateResources();
-    for (const resource of resources) {
-      if (resource.type === `${this.stateId}::state::${type}`) {
-        return resource.data;
-      }
-    }
-    throw new Error(`${type} resource not found in state ${this.stateId}`);
+  async findResource<T extends {} = any>(type: string): Promise<T> {
+    const client = this.chain.getClient();
+    return client.getAccountResource<T>({
+      accountAddress: this.stateId,
+      resourceType: `${this.stateId}::state::${type}`,
+    });
   }
 
   async getBaseUpdateFee() {
@@ -237,27 +217,27 @@ export class AptosPriceFeedContract extends PriceFeedContract {
 
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const client = this.chain.getClient();
-    const res = (await this.findResource("LatestPriceInfo")) as {
-      info: { handle: string };
-    };
+    const res = await this.findResource<{ info: { handle: string } }>(
+      "LatestPriceInfo",
+    );
     const handle = res.info.handle;
     try {
-      const priceItemRes = await client.getTableItem(handle, {
-        key_type: `${this.stateId}::price_identifier::PriceIdentifier`,
-        value_type: `${this.stateId}::price_info::PriceInfo`,
-        key: {
-          bytes: feedId,
+      const priceItemRes = await client.getTableItem<any>({
+        handle,
+        data: {
+          key_type: `${this.stateId}::price_identifier::PriceIdentifier`,
+          value_type: `${this.stateId}::price_info::PriceInfo`,
+          key: {
+            bytes: feedId,
+          },
         },
       });
       return {
         price: this.parsePrice(priceItemRes.price_feed.price),
         emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
       };
-    } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.errorCode === "table_item_not_found"
-      )
+    } catch (error: any) {
+      if (error?.status === 404 || error?.message?.includes("table_item_not_found"))
         return undefined;
       throw error;
     }
@@ -315,10 +295,12 @@ export class AptosPriceFeedContract extends PriceFeedContract {
   }
 
   async getTotalFee(): Promise<TokenQty> {
-    const client = new CoinClient(this.chain.getClient());
-    const amount = await client.checkBalance(this.stateId);
+    const client = this.chain.getClient();
+    const amount = await client.getAccountAPTAmount({
+      accountAddress: this.stateId,
+    });
     return {
-      amount,
+      amount: BigInt(amount),
       denom: this.chain.getNativeToken(),
     };
   }
