@@ -8,24 +8,16 @@
 }
 
 .sectionHero {
-  position: relative;
-  border-bottom: 1px solid theme.color("border");
-  background: linear-gradient(
-    180deg,
-    theme.color("background", "primary") 0%,
-    color-mix(in srgb, theme.color("background", "secondary") 70%, transparent)
-      100%
-  );
+  border-bottom: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
 }
 
 .sectionHeroContent {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(10);
+  gap: theme.spacing(4);
   padding-top: theme.spacing(18);
   padding-bottom: theme.spacing(18);
-
-  @include theme.max-width;
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
@@ -37,10 +29,9 @@
 .heroCopy {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(6);
   flex: 1;
   max-width: 34rem;
-  color: theme.color("foreground");
+  color: var(--color-fd-foreground);
 
   @include theme.breakpoint("lg") {
     max-width: 28rem;
@@ -52,7 +43,6 @@
 
   line-height: 115%;
   letter-spacing: theme.letter-spacing("tight");
-  color: theme.color("heading");
   margin: 0;
 }
 
@@ -60,7 +50,7 @@
   @include theme.text("2xl", "normal");
 
   line-height: 140%;
-  color: theme.color("paragraph");
+  opacity: 0.7;
   margin: 0;
 }
 
@@ -78,12 +68,7 @@
 .sectionHeaderSubtitle {
   @include theme.text("xl", "normal");
 
-  color: light-dark(
-    theme.pallette-color("stone", 500),
-    theme.pallette-color("steel", 400)
-  );
-  margin-top: theme.spacing(4);
-  margin-bottom: theme.spacing(12);
+  opacity: 0.7;
 }
 
 .productsGrid {
