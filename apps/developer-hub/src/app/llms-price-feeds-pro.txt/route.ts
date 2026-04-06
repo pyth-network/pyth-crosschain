@@ -26,7 +26,7 @@ Access requires an API token from an authorized Pyth Data Distributor. Apply at 
 - \`fixed_rate@1ms\` — Updates every 1ms (ultra-low latency)
 - \`fixed_rate@1000ms\` — Updates every 1 second
 
-**API Keys**: Required for authentication. Pass as \`Authorization: Bearer {token}\` header. Tokens are permissioned for specific asset types and minimum channel rates. Never expose tokens in frontend code.
+**API Keys**: Required for authentication. Pass as \`Authorization: Bearer {key}\` header. Keys are permissioned for specific asset types and minimum channel rates. Never expose keys in frontend code.
 
 **Price Feed IDs**: Pro uses numeric IDs (not hex strings). BTC/USD = 1, ETH/USD = 2, SOL/USD = 5.
 
