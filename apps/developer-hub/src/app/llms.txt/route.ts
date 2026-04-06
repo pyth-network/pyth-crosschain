@@ -20,7 +20,7 @@ Chains: EVM, Solana, Sui, Aptos, CosmWasm, NEAR, Starknet, and more.
 > https://docs.pyth.network/llms-price-feeds-core.txt
 
 ### Pyth Pro — Low-Latency Price Streaming
-Enterprise WebSocket streaming with configurable update channels (1ms–1s). Requires access token.
+Enterprise WebSocket streaming with configurable update channels (1ms–1s). Requires API key.
 Best for: HFT, MEV strategies, market making, risk management.
 SDK: \`@pythnetwork/pyth-lazer-sdk\` (TypeScript)
 > https://docs.pyth.network/llms-price-feeds-pro.txt

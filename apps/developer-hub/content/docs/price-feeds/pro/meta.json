@@ -2,7 +2,7 @@
   "pages": [
     "getting-started",
     "---How-To Guides---",
-    "acquire-access-token",
+    "acquire-api-key",
     "subscribe-to-prices",
     "integrate-as-consumer",
     "mcp",

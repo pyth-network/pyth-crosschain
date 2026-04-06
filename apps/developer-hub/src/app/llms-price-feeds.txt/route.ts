@@ -22,7 +22,7 @@ Full quick-start with code examples and contract addresses:
 
 Enterprise WebSocket streaming for institutional and latency-sensitive applications. Real-time price delivery with configurable update channels (1ms to 1s intervals).
 
-- **Access token required** — contact Pyth team at https://pyth.network/pro
+- **API key required** — contact Pyth team at https://pyth.network/pro
 - **Channels**: \`real_time\`, \`fixed_rate@200ms\`, \`fixed_rate@50ms\`, \`fixed_rate@1ms\`
 - **SDK**: TypeScript (\`@pythnetwork/pyth-lazer-sdk\` / \`PythLazerClient\`)
 - **On-chain verification**: EVM (ECDSA) and Solana (Ed25519) signed payloads
