@@ -13,7 +13,7 @@ This guide will also explain various properties and configuration options to cus
 
 Subscribing to prices is a three-step process:
 
-1. **Acquire** an access token.
+1. **Acquire** an API key.
 2. **Configure** subscription parameters.
 3. **Subscribe** to the prices via [websocket API](https://pyth-lazer.dourolabs.app/docs).
 
@@ -32,18 +32,16 @@ The websocket servers are available at:
 
 <Steps>
   <Step>
-  ### 1. Acquire an access token
-  
-<a href="https://pythdata.app" target="_blank">Sign up for a free Pyth Terminal account.</a>
+  ### 1. Acquire an API key
 
-Once you have logged in, click on the **🔑 View your API key** button to obtain your API key.
+  Follow the steps we've outlined in the [Acquire an API key section](./acquire-api-key).
 
-Use the access token to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {token}{:bash}`.
+Use the API key to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {key}{:bash}`.
 
 <Callout type="warning">
-  **Security Warning**: Never expose your access token in frontend applications
-  or client-side code. Access tokens should only be used in secure backend
-  environments. Exposing tokens in frontend code makes them publicly accessible
+  **Security Warning**: Never expose your API key in frontend applications
+  or client-side code. API keys should only be used in secure backend
+  environments. Exposing keys in frontend code makes them publicly accessible
   and is a violation of our terms of service.
 </Callout>
 
@@ -108,7 +106,7 @@ To subscribe to the prices, send a request to the websocket server. The server w
 npm install --save @pythnetwork/pyth-lazer-sdk
 ```
 
-2. Then create a `PythLazerClient` object using both endpoint URLs and the access token obtained in the first step:
+2. Then create a `PythLazerClient` object using both endpoint URLs and the API key obtained in the first step:
 
 ```js copy
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
@@ -119,7 +117,7 @@ const client = await PythLazerClient.create(
     "wss://pyth-lazer-1.dourolabs.app/v1/stream",
     "wss://pyth-lazer-2.dourolabs.app/v1/stream",
   ],
-  "YOUR_ACCESS_TOKEN",
+  "YOUR_API_KEY",
 );
 ```
 

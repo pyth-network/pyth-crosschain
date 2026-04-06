@@ -26,7 +26,7 @@ Access requires an API token from an authorized Pyth Data Distributor. Apply at 
 - \`fixed_rate@1ms\` — Updates every 1ms (ultra-low latency)
 - \`fixed_rate@1000ms\` — Updates every 1 second
 
-**Access Tokens**: Required for authentication. Pass as \`Authorization: Bearer {token}\` header. Tokens are permissioned for specific asset types and minimum channel rates. Never expose tokens in frontend code.
+**API Keys**: Required for authentication. Pass as \`Authorization: Bearer {token}\` header. Tokens are permissioned for specific asset types and minimum channel rates. Never expose tokens in frontend code.
 
 **Price Feed IDs**: Pro uses numeric IDs (not hex strings). BTC/USD = 1, ETH/USD = 2, SOL/USD = 5.
 
@@ -229,7 +229,7 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/payload-reference.mdx — Complete payload structure and properties
 - https://docs.pyth.network/price-feeds/pro/how-lazer-works.mdx — Architecture and system components
 - https://docs.pyth.network/price-feeds/pro/understanding-price-data.mdx — Confidence intervals, best bid/ask
-- https://docs.pyth.network/price-feeds/pro/acquire-access-token.mdx — Token acquisition and permissions
+- https://docs.pyth.network/price-feeds/pro/acquire-api-key.mdx — Token acquisition and permissions
 - https://docs.pyth.network/price-feeds/pro/error-codes.mdx — Error responses and handling
 - https://docs.pyth.network/price-feeds/pro/faq.mdx — Common questions and solutions
 - https://docs.pyth.network/price-feeds/pro/api/websocket.mdx — WebSocket API reference

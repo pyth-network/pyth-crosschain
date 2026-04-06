@@ -1,0 +1,43 @@
+---
+title: Acquire an API Key
+description: Request and manage API keys for Pyth Pro
+slug: /price-feeds/pro/acquire-api-key
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This guide explains how to acquire an API key for Pyth Pro, which is required to authenticate websocket connections and subscribe to price updates.
+
+## Request API Key
+
+<a href="https://pythdata.app" target="_blank">Sign up for a free Pyth Terminal account.</a>
+
+Once you have logged in, click on the **🔑 View your API key** button to obtain your API key.
+
+<Callout type="info">
+  API keys are required for all Pyth Pro websocket connections. Make sure
+  to keep your key secure and do not share it publicly.
+</Callout>
+
+## Using the API Key
+
+Once you receive your API key, use it to authenticate the websocket connection by passing it as an `Authorization` header with the value `Bearer {key}`.
+
+### Example Usage
+
+```js copy
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+  ],
+  "YOUR_API_KEY",
+);
+```
+
+## Next Steps
+
+After acquiring your API key, you can proceed to [subscribe to price feeds](./subscribe-to-prices) using the Pyth Pro websocket API.

@@ -116,11 +116,11 @@ https://pyth-lazer.dourolabs.app
 
 See the [REST API](/price-feeds/pro/api/rest) for request/response schemas and examples.
 
-## Access Tokens & Permissions
+## API Keys & Permissions
 
-#### Q. How are access tokens permissioned for different asset classes?
+#### Q. How are API keys permissioned for different asset classes?
 
-Each access token is permissioned for a specific set of:
+Each API key is permissioned for a specific set of:
 
 - **Asset types** (e.g., crypto, equity, fx, metals, rates)
 - **Minimum channel** (e.g., `fixed_rate@200ms`, `real_time`)
@@ -133,7 +133,7 @@ One customer might have access to all asset types; another might be restricted t
 Common causes:
 
 1. **Wrong endpoint:** Ensure you are using the correct WebSocket or REST endpoint for your token.
-2. **Asset class restriction:** Your access token may not be entitled to the requested feed types.
+2. **Asset class restriction:** Your API key may not be entitled to the requested feed types.
 3. **Expired token:** Demo tokens expire; request a production token for long-term use.
 
 ## Troubleshooting
