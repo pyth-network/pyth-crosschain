@@ -27,7 +27,7 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
           beforeIcon={<ArrowSquareOut weight="regular" />}
           onPress={() => {
             window.open(
-              "https://docs.pyth.network/price-feeds/pro/acquire-api-key#request-access-token",
+              "https://docs.pyth.network/price-feeds/pro/acquire-api-key#request-api-key",
               "_blank",
               "noopener,noreferrer",
             );
