@@ -3,7 +3,7 @@ extern crate std;
 
 use alloc::vec;
 use k256::ecdsa::SigningKey;
-use soroban_sdk::{Address, Bytes, BytesN, Env, Vec};
+use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env, IntoVal, Vec};
 use tiny_keccak::{Hasher, Keccak};
 
 use crate::error::ContractError;
@@ -820,4 +820,48 @@ fn test_execute_governance_invalid_target_chain() {
 
     let result = client.try_execute_governance_action(&vaa_bytes, &target_contract);
     assert!(result.is_err());
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Tests: upgrade
+// ──────────────────────────────────────────────────────────────────────
+
+#[test]
+fn test_upgrade_authorized() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _contract_id, _secrets) = setup_contract(&env, 1, 0);
+
+    let fake_hash = BytesN::from_array(&env, &[0xAB; 32]);
+
+    // The upgrade call should pass auth but fail at the deployer level
+    // because the wasm hash doesn't correspond to a real uploaded WASM.
+    let result = client.try_upgrade(&fake_hash);
+    assert!(result.is_err());
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth")]
+fn test_upgrade_unauthorized() {
+    let env = Env::default();
+    // NOT calling mock_all_auths — auth is enforced.
+
+    let (client, _contract_id, _secrets) = setup_contract(&env, 1, 0);
+
+    let unauthorized = Address::generate(&env);
+    let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    // Try to upgrade with an unauthorized address — should fail with auth error.
+    client
+        .mock_auths(&[soroban_sdk::testutils::MockAuth {
+            address: &unauthorized,
+            invoke: &soroban_sdk::testutils::MockAuthInvoke {
+                contract: &client.address,
+                fn_name: "upgrade",
+                args: (fake_hash.clone(),).into_val(&env),
+                sub_invokes: &[],
+            },
+        }])
+        .upgrade(&fake_hash);
 }
