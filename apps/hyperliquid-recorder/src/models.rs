@@ -4,12 +4,15 @@ use anyhow::{Context, Result};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
+use crate::config::FeedConfig;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MarketSubscription {
     pub coin: String,
     pub n_levels: u32,
     pub n_sig_figs: Option<u32>,
     pub mantissa: Option<u64>,
+    pub feed: Option<FeedConfig>,
 }
 
 impl MarketSubscription {

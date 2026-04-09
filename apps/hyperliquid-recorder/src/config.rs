@@ -1,8 +1,10 @@
 use std::path::Path;
 
 use config::{Environment, File};
+use pyth_lazer_protocol::PriceFeedId;
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
+use url::Url;
 
 use crate::models::MarketSubscription;
 
@@ -43,6 +45,7 @@ pub struct AppConfig {
     pub retention_days: u16,
     pub insert_async: bool,
     pub reconnect_max_backoff_seconds: u64,
+    pub lazer_agent_url: Option<Url>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -58,6 +61,13 @@ struct MarketInput {
     n_levels: u32,
     n_sig_figs: Option<u32>,
     mantissa: Option<u64>,
+    feed: Option<FeedConfig>,
+}
+
+#[derive(Debug, Clone, Deserialize, Eq, PartialEq)]
+pub struct FeedConfig {
+    pub id: PriceFeedId,
+    pub exponent: i8,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -130,6 +140,12 @@ impl AppConfig {
                 "reconnect_max_backoff_seconds",
                 default_reconnect_max_backoff_seconds,
             )?,
+            lazer_agent_url: get_or_default(&loaded, "lazer_agent_url", default_lazer_agent_url)?
+                .map(|s| Url::parse(&s))
+                .transpose()
+                .map_err(|e| {
+                    ConfigError::Invalid(format!("could not parse Lazer Agent URL: {e}"))
+                })?,
         })
     }
 
@@ -164,6 +180,7 @@ fn parse_markets(markets_input: Vec<MarketInput>) -> Result<Vec<MarketSubscripti
             n_levels: market.n_levels,
             n_sig_figs: market.n_sig_figs,
             mantissa: market.mantissa,
+            feed: market.feed,
         });
     }
     Ok(markets)
@@ -237,6 +254,7 @@ fn default_markets() -> Vec<MarketInput> {
         n_levels: default_n_levels(),
         n_sig_figs: None,
         mantissa: None,
+        feed: None,
     }]
 }
 
@@ -290,4 +308,8 @@ fn default_clickhouse_l2_snapshots_table() -> String {
 
 fn default_clickhouse_trades_table() -> String {
     "hyperliquid_trades".to_string()
+}
+
+fn default_lazer_agent_url() -> Option<String> {
+    None
 }

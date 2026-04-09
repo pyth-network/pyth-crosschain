@@ -5,11 +5,20 @@ use clap::Parser;
 use hyperliquid_recorder::{
     clickhouse::ClickHouseClient,
     config::AppConfig,
-    health::{start_http_servers, HealthState},
+    health::{HealthState, start_http_servers},
     metrics::RecorderMetrics,
+    publisher::Publisher,
     recorder::{RecorderRuntime, WriterRuntimeConfig},
 };
-use tokio::signal::unix::{signal, SignalKind};
+use pyth_lazer_protocol::publisher::PriceFeedDataV2;
+use tokio::{
+    signal::unix::{SignalKind, signal},
+    sync::mpsc,
+};
+use tracing::{error, warn};
+use url::Url;
+
+const PUBLISHER_CHANNEL_SIZE: usize = 64;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -43,6 +52,8 @@ async fn run() -> Result<()> {
         health.clone(),
     );
 
+    let (publisher_sender, publisher_receiver) = mpsc::channel(PUBLISHER_CHANNEL_SIZE);
+
     let mut runtime = RecorderRuntime::new(
         config.quicknode_endpoint,
         config.quicknode_auth_token,
@@ -53,12 +64,18 @@ async fn run() -> Result<()> {
             batch_flush_seconds: config.batch_flush_seconds,
             queue_max_rows: config.queue_max_rows,
         },
+        publisher_sender,
         metrics.clone(),
         health.clone(),
         config.reconnect_max_backoff_seconds,
         config.insert_async,
     );
     runtime.start();
+
+    let publisher_task = tokio::spawn(start_publisher_task(
+        config.lazer_agent_url,
+        publisher_receiver,
+    ));
 
     let mut sigint = signal(SignalKind::interrupt())?;
     let mut sigterm = signal(SignalKind::terminate())?;
@@ -71,6 +88,7 @@ async fn run() -> Result<()> {
     runtime.wait_forever().await;
     health_server.abort();
     metrics_server.abort();
+    publisher_task.abort();
     drop(ping_client);
     Ok(())
 }
@@ -106,4 +124,21 @@ fn init_logging() {
         .with_target(false)
         .compact()
         .init();
+}
+
+async fn start_publisher_task(url: Option<Url>, mut receiver: mpsc::Receiver<PriceFeedDataV2>) {
+    if url.is_none() {
+        warn!("publisher in dry-run mode, no actual publishing will happen");
+    }
+
+    match Publisher::start(url.clone()).await {
+        Ok(mut publisher) => {
+            while let Some(d) = receiver.recv().await {
+                if let Err(e) = publisher.publish(&d).await {
+                    error!(agent = ?url, error = e.to_string());
+                }
+            }
+        }
+        Err(err) => error!(%err, "could not start publisher"),
+    }
 }

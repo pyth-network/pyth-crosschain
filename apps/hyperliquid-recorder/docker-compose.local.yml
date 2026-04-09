@@ -1,4 +1,14 @@
 services:
+  lazer-agent:
+    image: ghcr.io/pyth-network/pyth-lazer-agent:latest
+    container_name: lazer-agent
+    command: ["--config", "/config/config.toml"]
+    ports:
+      - "8910:8910"
+    volumes:
+      - ${PWD}/agent.config.toml:/config/config.toml:ro
+      - ${PWD}/publisher.local.json:/keystore/publisher.json
+
   clickhouse-local:
     image: clickhouse/clickhouse-server:24.12
     container_name: hyperliquid-recorder-clickhouse-local
@@ -11,7 +21,7 @@ services:
       - "9100:9000"
     volumes:
       - clickhouse-local-data:/var/lib/clickhouse
-      - ./sql/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+      - ${PWD}/sql/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
 
   hyperliquid-recorder:
     build:
@@ -19,7 +29,7 @@ services:
       dockerfile: Dockerfile
     container_name: hyperliquid-recorder
     volumes:
-      - ./config.yml:/app/config.yml:ro
+      - ${PWD}/config.yml:/app/config.yml:ro
     command: ["hyperliquid-recorder", "--config", "/app/config.yml"]
     depends_on:
       - clickhouse-local
@@ -33,8 +43,8 @@ services:
     ports:
       - "9093:9090"
     volumes:
-      - ./prometheus.sample.yml:/etc/prometheus/prometheus.yml:ro
-      - ./alerts.sample.yml:/etc/prometheus/alerts.sample.yml:ro
+      - ${PWD}/prometheus.sample.yml:/etc/prometheus/prometheus.yml:ro
+      - ${PWD}/alerts.sample.yml:/etc/prometheus/alerts.sample.yml:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -49,8 +59,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ${PWD}/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ${PWD}/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
 

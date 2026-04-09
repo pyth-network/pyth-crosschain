@@ -15,13 +15,14 @@ for market analysis.
 
 ## Local E2E with Tilt
 
-1. Copy local env:
+1. Copy config samples:
 
    ```bash
-   cp .env.example .env
+   cp config.sample.yml config.yml
+   cp agent.config.sample.toml agent.config.toml
    ```
 
-2. Put your QuickNode token and endpoint in `.env`.
+2. Put your QuickNode token and endpoint in `config.yml`.
 
 3. Start local stack:
 

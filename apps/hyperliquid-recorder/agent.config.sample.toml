@@ -1,0 +1,8 @@
+relayer_urls = [
+    "wss://relayer-0.pyth-lazer.dourolabs.app/v1/transaction",
+    "wss://relayer-1.pyth-lazer.dourolabs.app/v1/transaction"
+]
+publish_keypair_path = "/keystore/publisher.json"
+listen_address = "0.0.0.0:8910"
+publish_interval_duration = "1s"
+enable_update_deduplication = true

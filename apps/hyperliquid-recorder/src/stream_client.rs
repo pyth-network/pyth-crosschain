@@ -5,23 +5,26 @@ use std::{
 };
 
 use anyhow::Result;
+use pyth_lazer_protocol::{Price, publisher::PriceFeedDataV2, time::TimestampUs};
 use rust_decimal::Decimal;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 use tonic::{
+    Request, Status,
     metadata::MetadataValue,
     transport::{Channel, ClientTlsConfig, Endpoint},
-    Request, Status,
 };
+use tracing::error;
 
 use crate::{
+    config::FeedConfig,
     metrics::RecorderMetrics,
-    models::{parse_trades_payload, L2Level, L2Snapshot, MarketSubscription, TradeRecord},
+    models::{L2Level, L2Snapshot, MarketSubscription, TradeRecord, parse_trades_payload},
     proto::hyperliquid::{
+        FilterValues, L2BookRequest, Ping, StreamSubscribe, StreamType, SubscribeRequest,
         order_book_streaming_client::OrderBookStreamingClient, streaming_client::StreamingClient,
-        subscribe_request, subscribe_update, FilterValues, L2BookRequest, Ping, StreamSubscribe,
-        StreamType, SubscribeRequest,
+        subscribe_request, subscribe_update,
     },
 };
 
@@ -33,6 +36,7 @@ pub async fn run_stream_worker(
     sender: mpsc::Sender<L2Snapshot>,
     metrics: std::sync::Arc<RecorderMetrics>,
     stop_token: CancellationToken,
+    publisher: mpsc::Sender<PriceFeedDataV2>,
 ) {
     let mut delay_seconds = 1_u64;
     while !stop_token.is_cancelled() {
@@ -43,6 +47,7 @@ pub async fn run_stream_worker(
             sender.clone(),
             stop_token.clone(),
             metrics.clone(),
+            &publisher,
         )
         .await
         {
@@ -153,6 +158,12 @@ enum StreamError {
     Other(anyhow::Error),
 }
 
+impl From<anyhow::Error> for StreamError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Other(value)
+    }
+}
+
 async fn stream_once(
     endpoint: &str,
     auth_token: &str,
@@ -160,8 +171,9 @@ async fn stream_once(
     sender: mpsc::Sender<L2Snapshot>,
     stop_token: CancellationToken,
     metrics: std::sync::Arc<RecorderMetrics>,
+    publisher: &mpsc::Sender<PriceFeedDataV2>,
 ) -> std::result::Result<(), StreamError> {
-    let channel = build_channel(endpoint).await.map_err(StreamError::Other)?;
+    let channel = build_channel(endpoint).await?;
     let mut client =
         OrderBookStreamingClient::new(channel).max_decoding_message_size(100 * 1024 * 1024);
 
@@ -172,7 +184,7 @@ async fn stream_once(
         mantissa: market.mantissa,
     };
     let mut request = Request::new(request);
-    let token = MetadataValue::try_from(auth_token).map_err(|e| StreamError::Other(e.into()))?;
+    let token = MetadataValue::try_from(auth_token).map_err(anyhow::Error::from)?;
     request.metadata_mut().insert("x-token", token);
 
     let response = client
@@ -209,6 +221,14 @@ async fn stream_once(
         };
 
         metrics.record_snapshot(&snapshot);
+
+        if let Some(feed) = &market.feed {
+            if !publisher.is_closed() {
+                if let Err(err) = publisher.try_send(l2_snapshot_to_feed_update(feed, &snapshot)?) {
+                    error!(%market.coin, ?err, "publisher channel error");
+                }
+            }
+        }
 
         let coin = snapshot.coin.clone();
         if tokio::time::timeout(Duration::from_secs(1), sender.send(snapshot))
@@ -248,6 +268,28 @@ async fn stream_once(
     Ok(())
 }
 
+fn l2_snapshot_to_feed_update(feed: &FeedConfig, snapshot: &L2Snapshot) -> Result<PriceFeedDataV2> {
+    Ok(PriceFeedDataV2 {
+        price_feed_id: feed.id,
+        source_timestamp_us: TimestampUs::from_millis(snapshot.block_time_ms)?,
+        publisher_timestamp_us: TimestampUs::now(),
+        // TODO
+        price: None,
+        // TODO: would be better served by some new `Price::from_decimal` function
+        best_bid_price: snapshot
+            .bids
+            .first()
+            .map(|b| Price::parse_str(&b.px.to_string(), feed.exponent.into()))
+            .transpose()?,
+        best_ask_price: snapshot
+            .asks
+            .first()
+            .map(|b| Price::parse_str(&b.px.to_string(), feed.exponent.into()))
+            .transpose()?,
+        funding_rate: None,
+    })
+}
+
 async fn stream_trades_once(
     endpoint: &str,
     auth_token: &str,
@@ -256,7 +298,7 @@ async fn stream_trades_once(
     stop_token: CancellationToken,
     metrics: std::sync::Arc<RecorderMetrics>,
 ) -> std::result::Result<(), StreamError> {
-    let channel = build_channel(endpoint).await.map_err(StreamError::Other)?;
+    let channel = build_channel(endpoint).await?;
     let mut client = StreamingClient::new(channel).max_decoding_message_size(100 * 1024 * 1024);
 
     let (request_sender, request_receiver) = mpsc::channel::<SubscribeRequest>(16);

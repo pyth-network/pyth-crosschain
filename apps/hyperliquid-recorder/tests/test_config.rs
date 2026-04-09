@@ -95,8 +95,10 @@ clickhouse:
 metrics_port: 9092
 "#;
     fs::write(&config_file, yaml).expect("write yaml config");
-    std::env::set_var("HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN", "env-token");
-    std::env::set_var("HYPERLIQUID_RECORDER__METRICS_PORT", "9191");
+    unsafe {
+        std::env::set_var("HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN", "env-token");
+        std::env::set_var("HYPERLIQUID_RECORDER__METRICS_PORT", "9191");
+    }
 
     let config = AppConfig::from_sources(Some(&config_file)).expect("config should parse");
     assert_eq!(config.quicknode_auth_token, "env-token");
@@ -137,7 +139,7 @@ clickhouse:
 
 fn clear_env_vars<'a>(keys: impl IntoIterator<Item = &'a str>) {
     for key in keys {
-        std::env::remove_var(key);
+        unsafe { std::env::remove_var(key) };
     }
 }
 

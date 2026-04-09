@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
+use pyth_lazer_protocol::publisher::PriceFeedDataV2;
 use tokio::{
     sync::mpsc,
     task::JoinHandle,
@@ -28,6 +29,7 @@ pub struct RecorderRuntime {
     markets: Vec<MarketSubscription>,
     writer: ClickHouseClient,
     writer_config: WriterRuntimeConfig,
+    publisher: mpsc::Sender<PriceFeedDataV2>,
     metrics: Arc<RecorderMetrics>,
     health: HealthState,
     reconnect_max_backoff_seconds: u64,
@@ -44,6 +46,7 @@ impl RecorderRuntime {
         markets: Vec<MarketSubscription>,
         writer: ClickHouseClient,
         writer_config: WriterRuntimeConfig,
+        publisher: mpsc::Sender<PriceFeedDataV2>,
         metrics: Arc<RecorderMetrics>,
         health: HealthState,
         reconnect_max_backoff_seconds: u64,
@@ -55,6 +58,7 @@ impl RecorderRuntime {
             markets,
             writer,
             writer_config,
+            publisher,
             metrics,
             health,
             reconnect_max_backoff_seconds,
@@ -83,6 +87,7 @@ impl RecorderRuntime {
                 l2_tx.clone(),
                 self.metrics.clone(),
                 self.stop_token.clone(),
+                self.publisher.clone(),
             ));
             self.handles.push(handle);
         }

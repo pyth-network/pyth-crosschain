@@ -4,5 +4,6 @@ pub mod health;
 pub mod metrics;
 pub mod models;
 pub mod proto;
+pub mod publisher;
 pub mod recorder;
 pub mod stream_client;

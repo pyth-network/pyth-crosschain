@@ -5,8 +5,10 @@ quicknode:
 markets:
   - coin: "BTC"
     n_levels: 20
+    # feed: { id: 1, exponent: -8 }
   - coin: "ETH"
     n_levels: 20
+    # feed: { id: 2, exponent: -8 }
 
 clickhouse:
   url: "http://clickhouse-local:8123"
@@ -25,3 +27,4 @@ batch_flush_seconds: 2.0
 retention_days: 90
 insert_async: true
 reconnect_max_backoff_seconds: 60
+lazer_agent_url: "ws://pyth-indices-lazer-agent:8910/v2/publisher"
