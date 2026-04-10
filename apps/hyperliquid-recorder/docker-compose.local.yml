@@ -33,6 +33,7 @@ services:
     command: ["hyperliquid-recorder", "--config", "/app/config.yml"]
     depends_on:
       - clickhouse-local
+      - lazer-agent
     ports:
       - "9092:9092"
       - "8082:8082"

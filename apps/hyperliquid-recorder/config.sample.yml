@@ -27,4 +27,4 @@ batch_flush_seconds: 2.0
 retention_days: 90
 insert_async: true
 reconnect_max_backoff_seconds: 60
-lazer_agent_url: "ws://pyth-indices-lazer-agent:8910/v2/publisher"
+lazer_agent_url: "ws://lazer-agent:8910/v2/publisher"
