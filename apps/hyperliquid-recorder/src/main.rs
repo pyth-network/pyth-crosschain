@@ -145,7 +145,7 @@ async fn start_publisher_task(url: Option<Url>, mut receiver: mpsc::Receiver<Pri
                                 .max(old.source_timestamp_us),
                             publisher_timestamp_us: update
                                 .publisher_timestamp_us
-                                .max(old.source_timestamp_us),
+                                .max(old.publisher_timestamp_us),
                             price: update.price.or(old.price),
                             best_bid_price: update.best_bid_price.or(old.best_bid_price),
                             best_ask_price: update.best_ask_price.or(old.best_ask_price),
