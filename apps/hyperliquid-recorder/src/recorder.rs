@@ -98,6 +98,7 @@ impl RecorderRuntime {
             self.markets.clone(),
             self.reconnect_max_backoff_seconds,
             trade_tx,
+            self.publisher.clone(),
             self.metrics.clone(),
             self.stop_token.clone(),
         ));

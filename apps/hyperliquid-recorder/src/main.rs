@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
@@ -10,7 +10,7 @@ use hyperliquid_recorder::{
     publisher::Publisher,
     recorder::{RecorderRuntime, WriterRuntimeConfig},
 };
-use pyth_lazer_protocol::publisher::PriceFeedDataV2;
+use pyth_lazer_protocol::{PriceFeedId, publisher::PriceFeedDataV2};
 use tokio::{
     signal::unix::{SignalKind, signal},
     sync::mpsc,
@@ -133,8 +133,27 @@ async fn start_publisher_task(url: Option<Url>, mut receiver: mpsc::Receiver<Pri
 
     match Publisher::start(url.clone()).await {
         Ok(mut publisher) => {
-            while let Some(d) = receiver.recv().await {
-                if let Err(e) = publisher.publish(&d).await {
+            let mut cached = HashMap::<PriceFeedId, PriceFeedDataV2>::new();
+            while let Some(update) = receiver.recv().await {
+                let merged = cached
+                    .entry(update.price_feed_id)
+                    .and_modify(|old| {
+                        *old = PriceFeedDataV2 {
+                            price_feed_id: update.price_feed_id,
+                            source_timestamp_us: update
+                                .source_timestamp_us
+                                .max(old.source_timestamp_us),
+                            publisher_timestamp_us: update
+                                .publisher_timestamp_us
+                                .max(old.source_timestamp_us),
+                            price: update.price.or(old.price),
+                            best_bid_price: update.best_bid_price.or(old.best_bid_price),
+                            best_ask_price: update.best_ask_price.or(old.best_ask_price),
+                            funding_rate: update.funding_rate.or(old.funding_rate),
+                        };
+                    })
+                    .or_insert(update);
+                if let Err(e) = publisher.publish(merged).await {
                     error!(agent = ?url, error = e.to_string());
                 }
             }

@@ -96,20 +96,21 @@ pub async fn run_trades_stream_worker(
     markets: Vec<MarketSubscription>,
     max_backoff_seconds: u64,
     sender: mpsc::Sender<TradeRecord>,
+    publisher: mpsc::Sender<PriceFeedDataV2>,
     metrics: std::sync::Arc<RecorderMetrics>,
     stop_token: CancellationToken,
 ) {
-    let coins = markets
-        .into_iter()
-        .map(|market| market.coin)
-        .collect::<Vec<_>>();
     let mut delay_seconds = 1_u64;
+    let coin_markets = HashMap::<String, MarketSubscription>::from_iter(
+        markets.into_iter().map(|m| (m.coin.clone(), m)),
+    );
     while !stop_token.is_cancelled() {
         match stream_trades_once(
             &endpoint,
             &auth_token,
-            &coins,
+            &coin_markets,
             sender.clone(),
+            &publisher,
             stop_token.clone(),
             metrics.clone(),
         )
@@ -222,11 +223,16 @@ async fn stream_once(
 
         metrics.record_snapshot(&snapshot);
 
-        if let Some(feed) = &market.feed {
-            if !publisher.is_closed() {
-                if let Err(err) = publisher.try_send(l2_snapshot_to_feed_update(feed, &snapshot)?) {
-                    error!(%market.coin, ?err, "publisher channel error");
+        if let Some(feed) = &market.feed
+            && !publisher.is_closed()
+        {
+            match l2_snapshot_to_feed_update(feed, &snapshot) {
+                Ok(update) => {
+                    if let Err(err) = publisher.try_send(update) {
+                        error!(%market.coin, ?err, "publisher channel error");
+                    }
                 }
+                Err(err) => error!(%err, "feed update creation error"),
             }
         }
 
@@ -273,7 +279,6 @@ fn l2_snapshot_to_feed_update(feed: &FeedConfig, snapshot: &L2Snapshot) -> Resul
         price_feed_id: feed.id,
         source_timestamp_us: TimestampUs::from_millis(snapshot.block_time_ms)?,
         publisher_timestamp_us: TimestampUs::now(),
-        // TODO
         price: None,
         // TODO: would be better served by some new `Price::from_decimal` function
         best_bid_price: snapshot
@@ -293,8 +298,9 @@ fn l2_snapshot_to_feed_update(feed: &FeedConfig, snapshot: &L2Snapshot) -> Resul
 async fn stream_trades_once(
     endpoint: &str,
     auth_token: &str,
-    coins: &[String],
+    coin_markets: &HashMap<String, MarketSubscription>,
     sender: mpsc::Sender<TradeRecord>,
+    publisher: &mpsc::Sender<PriceFeedDataV2>,
     stop_token: CancellationToken,
     metrics: std::sync::Arc<RecorderMetrics>,
 ) -> std::result::Result<(), StreamError> {
@@ -304,9 +310,9 @@ async fn stream_trades_once(
     let (request_sender, request_receiver) = mpsc::channel::<SubscribeRequest>(16);
     let mut filters = HashMap::new();
     filters.insert(
-        "coin".to_string(),
+        "coin".to_owned(),
         FilterValues {
-            values: coins.to_vec(),
+            values: coin_markets.keys().cloned().collect(),
         },
     );
     request_sender
@@ -361,6 +367,27 @@ async fn stream_trades_once(
                 match parse_trades_payload(&data.data, data.block_number, endpoint) {
                     Ok(trades) => {
                         let trade_count = trades.len() as u64;
+
+                        // TODO: some averaging?
+                        if let Some(trade) = trades.last() {
+                            if let Some(market) = coin_markets.get(&trade.coin) {
+                                if let Some(feed) = &market.feed
+                                    && !publisher.is_closed()
+                                {
+                                    match trade_record_to_feed_update(feed, trade) {
+                                        Ok(update) => {
+                                            if let Err(err) = publisher.send(update).await {
+                                                error!(%market.coin, ?err, "publisher channel error");
+                                            }
+                                        }
+                                        Err(err) => error!(%err, "feed update creation error"),
+                                    }
+                                }
+                            } else {
+                                error!("could not find coin '{}' in markets", trade.coin);
+                            }
+                        }
+
                         for trade in trades {
                             metrics.record_trade(&trade);
                             let coin = trade.coin.clone();
@@ -409,6 +436,22 @@ async fn stream_trades_once(
 
     ping_handle.abort();
     Ok(())
+}
+
+fn trade_record_to_feed_update(feed: &FeedConfig, trade: &TradeRecord) -> Result<PriceFeedDataV2> {
+    Ok(PriceFeedDataV2 {
+        price_feed_id: feed.id,
+        source_timestamp_us: TimestampUs::from_millis(trade.time_ms)?,
+        publisher_timestamp_us: TimestampUs::now(),
+        // TODO: would be better served by some new `Price::from_decimal` function
+        price: Some(Price::parse_str(
+            &trade.px.to_string(),
+            feed.exponent.into(),
+        )?),
+        best_bid_price: None,
+        best_ask_price: None,
+        funding_rate: None,
+    })
 }
 
 fn to_level(level: &crate::proto::hyperliquid::L2Level) -> Result<L2Level> {
