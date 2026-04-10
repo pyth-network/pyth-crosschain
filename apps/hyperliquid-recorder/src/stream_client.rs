@@ -376,7 +376,7 @@ async fn stream_trades_once(
                                 {
                                     match trade_record_to_feed_update(feed, trade) {
                                         Ok(update) => {
-                                            if let Err(err) = publisher.send(update).await {
+                                            if let Err(err) = publisher.try_send(update) {
                                                 error!(%market.coin, ?err, "publisher channel error");
                                             }
                                         }
