@@ -153,8 +153,8 @@ async fn start_publisher_task(url: Option<Url>, mut receiver: mpsc::Receiver<Pri
                         };
                     })
                     .or_insert(update);
-                if let Err(e) = publisher.publish(merged).await {
-                    error!(agent = ?url, error = e.to_string());
+                if let Err(error) = publisher.publish(merged).await {
+                    error!(agent = ?url, %error);
                 }
             }
         }
