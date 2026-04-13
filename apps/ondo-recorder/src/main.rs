@@ -29,7 +29,6 @@ async fn run() -> Result<()> {
     let config = AppConfig::from_sources(cli.config.as_deref())?;
 
     let writer_client = create_client_with_retry(config.clone(), 30).await?;
-    let ping_client = create_client_with_retry(config.clone(), 30).await?;
 
     let metrics = Arc::new(RecorderMetrics::new()?);
     let health = HealthState::new(
@@ -73,7 +72,6 @@ async fn run() -> Result<()> {
     runtime.wait_forever().await;
     health_server.abort();
     metrics_server.abort();
-    drop(ping_client);
     Ok(())
 }
 
