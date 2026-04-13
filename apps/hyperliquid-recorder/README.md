@@ -145,6 +145,107 @@ Hydromancer Reservoir into `pyth_analytics.hyperliquid_trades`.
    bash scripts/backfill_fills_from_reservoir.sh
    ```
 
+## Backfill L2 Snapshots From Local Dump
+
+Use this to load local compressed NDJSON snapshots into
+`pyth_analytics.hyperliquid_l2_snapshots`.
+
+Source layout expected:
+
+- `<SOURCE_DIR>/<YYYYMMDD>/<hour>.ndjson.zst`
+- Each file contains NDJSON lines with `t`, `h`, and `books[]`.
+- Each line is exploded to one target row per `books[]` coin entry.
+
+1. Start local stack:
+
+   ```bash
+   tilt up
+   ```
+
+2. Run one-day dry run:
+
+   ```bash
+   cp .env.sample .env
+   BACKFILL_START_DATE=2026-03-01 BACKFILL_END_DATE=2026-03-01 \
+   uv run scripts/backfill_l2_snapshots_from_local.py
+   ```
+
+3. Run full range:
+
+   ```bash
+   BACKFILL_START_DATE=2026-03-01 BACKFILL_END_DATE=2026-03-29 \
+   uv run scripts/backfill_l2_snapshots_from_local.py
+   ```
+
+4. Useful overrides:
+
+   ```bash
+   SOURCE_DIR=~/dev/hydromancer-data-dump/l2_snapshots \
+   SOURCE_ENDPOINT=hydromancer:ap-northeast-1:dump \
+   BACKFILL_MAX_PARALLELISM=8 \
+   N_LEVELS=20 N_SIG_FIGS=0 MANTISSA=0 \
+   CH_HOST=localhost CH_PORT=8123 CH_SECURE=false \
+   CH_DATABASE=pyth_analytics \
+   CH_L2_SNAPSHOTS_TABLE=hyperliquid_l2_snapshots \
+   uv run scripts/backfill_l2_snapshots_from_local.py
+   ```
+
+5. Verify total rows for window:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+     clickhouse-client --user recorder --password recorder -q "
+   SELECT count()
+   FROM pyth_analytics.hyperliquid_l2_snapshots
+   WHERE block_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND block_time <  toDateTime64('2026-03-30 00:00:00', 3, 'UTC')"
+   ```
+
+6. Verify daily counts:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+     clickhouse-client --user recorder --password recorder -q "
+   SELECT toDate(block_time) AS day, count() AS rows
+   FROM pyth_analytics.hyperliquid_l2_snapshots
+   WHERE block_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND block_time <  toDateTime64('2026-03-30 00:00:00', 3, 'UTC')
+   GROUP BY day
+   ORDER BY day"
+   ```
+
+7. Verify hourly cadence and coin distribution:
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+     clickhouse-client --user recorder --password recorder -q "
+   SELECT toStartOfHour(block_time) AS hour, count() AS rows
+   FROM pyth_analytics.hyperliquid_l2_snapshots
+   WHERE block_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND block_time <  toDateTime64('2026-03-02 00:00:00', 3, 'UTC')
+   GROUP BY hour
+   ORDER BY hour"
+   ```
+
+   ```bash
+   docker exec hyperliquid-recorder-clickhouse-local \
+     clickhouse-client --user recorder --password recorder -q "
+   SELECT coin, count() AS rows
+   FROM pyth_analytics.hyperliquid_l2_snapshots
+   WHERE block_time >= toDateTime64('2026-03-01 00:00:00', 3, 'UTC')
+     AND block_time <  toDateTime64('2026-03-02 00:00:00', 3, 'UTC')
+   GROUP BY coin
+   ORDER BY rows DESC
+   LIMIT 20"
+   ```
+
+8. Idempotency check (same date range should insert 0 net additional rows):
+
+   ```bash
+   BACKFILL_START_DATE=2026-03-01 BACKFILL_END_DATE=2026-03-01 \
+   uv run scripts/backfill_l2_snapshots_from_local.py
+   ```
+
 ## Manual run (without Tilt)
 
 ```bash
