@@ -1,6 +1,6 @@
 ondo:
   api_url: "https://api.gm.ondo.finance/v1/attestations/soft"
-  api_key: "replace-me"
+  api_key: "replace-me" # overriden by env var ONDO_RECORDER__ONDO__API_KEY
   chain_id: "ethereum-1"
   duration: "short"
 
