@@ -1,0 +1,56 @@
+groups:
+  - name: ondo_recorder
+    rules:
+      - alert: OndoRecorderDown
+        expr: up{job="ondo_recorder"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ondo recorder is down"
+          description: "Prometheus cannot scrape the ondo-recorder instance."
+
+      - alert: OndoRecorderNotReady
+        expr: ondo_recorder_ready == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ondo recorder is not ready"
+          description: "The recorder reports not-ready (ClickHouse unreachable or tokens stale)."
+
+      - alert: OndoRecorderInsertErrors
+        expr: sum(increase(ondo_recorder_insert_attempts_total{status="error"}[10m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ondo recorder ClickHouse insert errors"
+          description: "Insert errors detected in the last 10 minutes."
+
+      - alert: OndoRecorderNoSuccessfulInserts
+        expr: sum(increase(ondo_recorder_insert_attempts_total{status="success"}[15m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ondo recorder has no successful inserts"
+          description: "No successful ClickHouse inserts in the last 15 minutes."
+
+      - alert: OndoRecorderQueueSaturated
+        expr: ondo_recorder_queue_fill_ratio > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ondo recorder queue is saturated"
+          description: "Queue fill ratio is above 90%."
+
+      - alert: OndoRecorderTokenStale
+        expr: time() - ondo_recorder_token_last_poll_unix_seconds > 60
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ondo recorder token is stale"
+          description: "A token has not been polled for over 60 seconds."
