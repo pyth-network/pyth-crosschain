@@ -162,6 +162,7 @@ async fn poll_once(
     let response = http_client
         .post(&api_url)
         .header("x-api-key", &api_key)
+        .timeout(Duration::from_secs(5))
         .json(&request)
         .send()
         .await
