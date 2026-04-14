@@ -45,6 +45,10 @@ Configuration is loaded from a YAML file (`--config` flag) with environment vari
 
 See [config.sample.yml](config.sample.yml) for all options.
 
+## Rate limits
+
+Ondo's API rate limit sits somewhere around **~100 req/sec**. The recorder's total request rate is `sum(sizes_per_token) * 2 (buy+sell) / poll_interval_seconds` — keep this under the limit or you will see 429 Too Many Requests responses. The default config (9 tokens × 4 sizes × 2 sides / 1s = 72 req/sec) is well under.
+
 ## Schema management
 
 ClickHouse schema is in `migrations/001-init.sql`. For local dev, this is automatically loaded into ClickHouse via the Docker entrypoint. For production, apply migrations manually.

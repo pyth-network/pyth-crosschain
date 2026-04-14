@@ -1,28 +1,44 @@
 use std::time::Instant;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
+use clickhouse::{Client, Row};
+use rust_decimal::Decimal;
+use serde::Serialize;
 
 use crate::{config::ClickHouseTarget, models::OndoQuote};
 
 #[derive(Clone)]
 pub struct ClickHouseClient {
-    http_client: reqwest::Client,
-    target: ClickHouseTarget,
+    client: Client,
+    table: String,
 }
 
 impl ClickHouseClient {
     pub fn new(target: ClickHouseTarget) -> Self {
+        let scheme = if target.secure { "https" } else { "http" };
+        let url = format!("{scheme}://{}:{}", target.host, target.port);
+
+        let mut client = Client::default()
+            .with_url(url)
+            .with_user(&target.username)
+            .with_database(&target.database);
+        if !target.password.is_empty() {
+            client = client.with_password(&target.password);
+        }
+
         Self {
-            http_client: reqwest::Client::new(),
-            target,
+            client,
+            table: format!("{}.{}", target.database, target.table),
         }
     }
 
     pub async fn ping(&self) -> bool {
-        match self.command("SELECT 1").await {
-            Ok(result) => result.trim() == "1",
-            Err(_) => false,
-        }
+        self.client
+            .query("SELECT 1")
+            .fetch_one::<u8>()
+            .await
+            .map(|v| v == 1)
+            .unwrap_or(false)
     }
 
     pub async fn insert_quotes_batch(
@@ -33,70 +49,60 @@ impl ClickHouseClient {
         if quotes.is_empty() {
             return Ok((0, 0.0));
         }
+
         let start = Instant::now();
+        let mut client = self.client.clone();
+        if insert_async {
+            client = client
+                .with_option("async_insert", "1")
+                .with_option("wait_for_async_insert", "1");
+        }
 
-        let rows = quotes
-            .iter()
-            .map(quote_to_values)
-            .collect::<Vec<_>>()
-            .join(",");
+        let mut insert = client.insert(&self.table)?;
+        for quote in quotes {
+            let row = OndoQuoteRow::try_from(quote)
+                .with_context(|| format!("encode row for {}", quote.symbol))?;
+            insert.write(&row).await?;
+        }
+        insert.end().await?;
 
-        let settings = if insert_async {
-            " SETTINGS async_insert=1,wait_for_async_insert=1"
-        } else {
-            ""
-        };
-
-        let query = format!(
-            "INSERT INTO {}.{} (symbol,ticker,chain_id,side,token_amount,price,asset_address,polled_at){settings} VALUES {rows}",
-            self.target.database, self.target.table
-        );
-        self.command(&query).await?;
         Ok((quotes.len(), start.elapsed().as_secs_f64()))
     }
+}
 
-    async fn command(&self, sql: &str) -> Result<String> {
-        let mut request = self
-            .http_client
-            .post(format!(
-                "{}://{}:{}/?database={}",
-                if self.target.secure { "https" } else { "http" },
-                self.target.host,
-                self.target.port,
-                self.target.database
-            ))
-            .basic_auth(&self.target.username, Some(&self.target.password))
-            .body(sql.to_string());
+#[derive(Row, Serialize)]
+struct OndoQuoteRow<'a> {
+    symbol: &'a str,
+    ticker: &'a str,
+    chain_id: &'a str,
+    side: &'a str,
+    token_amount: i128,
+    price: i128,
+    asset_address: &'a str,
+    polled_at: i64,
+}
 
-        if self.target.password.is_empty() {
-            request = request.basic_auth(&self.target.username, Option::<String>::None);
-        }
+impl<'a> TryFrom<&'a OndoQuote> for OndoQuoteRow<'a> {
+    type Error = anyhow::Error;
 
-        let response = request.send().await?;
-        let status = response.status();
-        let body = response.text().await?;
-        if !status.is_success() {
-            return Err(anyhow!("clickhouse query failed ({status}): {body}"));
-        }
-        Ok(body)
+    fn try_from(q: &'a OndoQuote) -> Result<Self> {
+        Ok(Self {
+            symbol: &q.symbol,
+            ticker: &q.ticker,
+            chain_id: &q.chain_id,
+            side: &q.side,
+            token_amount: decimal_to_scaled_i128(q.token_amount, 18)?,
+            price: decimal_to_scaled_i128(q.price, 18)?,
+            asset_address: &q.asset_address,
+            polled_at: q.polled_at.timestamp_millis(),
+        })
     }
 }
 
-fn quote_to_values(quote: &OndoQuote) -> String {
-    let polled_at = quote.polled_at.format("%Y-%m-%d %H:%M:%S%.3f");
-    format!(
-        "('{}','{}','{}','{}',toDecimal128('{}',18),toDecimal128('{}',18),'{}','{}')",
-        escape(&quote.symbol),
-        escape(&quote.ticker),
-        escape(&quote.chain_id),
-        escape(&quote.side),
-        quote.token_amount.normalize(),
-        quote.price.normalize(),
-        escape(&quote.asset_address),
-        polled_at,
-    )
-}
-
-fn escape(value: &str) -> String {
-    value.replace('\'', "\\'")
+fn decimal_to_scaled_i128(mut d: Decimal, scale: u32) -> Result<i128> {
+    d.rescale(scale);
+    if d.scale() != scale {
+        anyhow::bail!("decimal {d} cannot rescale to {scale}");
+    }
+    Ok(d.mantissa())
 }

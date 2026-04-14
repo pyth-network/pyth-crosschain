@@ -4,6 +4,9 @@ ondo:
   chain_id: "ethereum-1"
   duration: "short"
 
+# Ondo's API rate limit sits somewhere around ~100 req/sec. Total rate =
+# sum(len(sizes) for each token) * 2 (buy+sell) / poll_interval_seconds.
+# Keep the overall rate under this or you will see 429 Too Many Requests.
 tokens:
   - symbol: "NVDAon"
     sizes: [1, 10, 50, 100]

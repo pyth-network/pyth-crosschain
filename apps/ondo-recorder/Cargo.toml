@@ -8,6 +8,7 @@ anyhow = "1.0.75"
 axum = { version = "0.6.20", features = ["json"] }
 chrono = { version = "0.4.38", features = ["clock"] }
 clap = { version = "4.5.38", features = ["derive"] }
+clickhouse = { version = "0.12.2", default-features = false, features = ["rustls-tls", "lz4"] }
 config = { version = "0.14.1", default-features = false, features = ["yaml"] }
 futures = "0.3.31"
 prometheus = "0.13.4"
