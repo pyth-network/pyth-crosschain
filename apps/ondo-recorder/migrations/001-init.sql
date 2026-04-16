@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS pyth_analytics.ondo_quotes
 )
 ENGINE = ReplacingMergeTree(ingested_at)
 PARTITION BY toYYYYMM(polled_at)
-ORDER BY (symbol, side, token_amount, polled_at)
+ORDER BY (symbol, side, token_amount, polled_at, chain_id)
 TTL toDateTime(polled_at) + INTERVAL 90 DAY DELETE;
