@@ -415,20 +415,18 @@ fn test_full_verification_and_payload_parsing() {
 fn test_governance_upgrade_dispatched_to_lazer() {
     let te = setup(1);
 
-    let wasm_digest = [0xAB; 32];
+    // Upload the Lazer contract WASM and use its real hash in the PTGM.
+    let lazer_wasm: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/pyth_lazer_stellar.optimized.wasm");
+    let wasm_hash = te.env.deployer().upload_contract_wasm(Bytes::from_slice(&te.env, lazer_wasm));
+    let wasm_digest: [u8; 32] = wasm_hash.to_array();
+
     let ptgm = build_ptgm_upgrade(CHAIN_ID as u16, 1, &wasm_digest);
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
 
-    // The upgrade call will fail because the wasm_digest doesn't correspond to
-    // a real uploaded WASM, but it should fail at the deployer level, not at
-    // auth or governance parsing. This verifies the full dispatch path works.
-    let result = te
-        .executor_client
-        .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
-    assert!(result.is_err());
-    // The error comes from the Soroban runtime (invalid wasm hash), not from
-    // our contract logic — this confirms governance parsing and dispatch succeeded.
+    // Full governance flow: VAA -> executor -> lazer.upgrade(wasm_hash) should succeed.
+    te.executor_client
+        .execute_governance_action(&vaa_bytes, &te.lazer_client.address);
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -713,6 +711,29 @@ fn test_governance_invalid_ptgm_magic() {
         &Bytes::from_slice(&te.env, &vaa_raw),
         &te.lazer_client.address,
     );
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_governance_upgrade_dispatched_to_executor() {
+    let te = setup(1);
+
+    // Upload the executor contract WASM and use its real hash in the PTGM.
+    let executor_wasm: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/wormhole_executor_stellar.optimized.wasm");
+    let wasm_hash = te.env.deployer().upload_contract_wasm(Bytes::from_slice(&te.env, executor_wasm));
+    let wasm_digest: [u8; 32] = wasm_hash.to_array();
+
+    let ptgm = build_ptgm_upgrade(CHAIN_ID as u16, 1, &wasm_digest);
+    let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
+    let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
+
+    // Self-upgrade via governance dispatch fails because Soroban does not allow
+    // contract re-entry: execute_governance_action invokes upgrade on the same
+    // contract address. The governance parsing and dispatch logic is correct,
+    // but the Soroban runtime blocks the re-entrant call.
+    let result = te
+        .executor_client
+        .try_execute_governance_action(&vaa_bytes, &te.executor_client.address);
     assert!(result.is_err());
 }
 
