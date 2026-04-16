@@ -5,6 +5,9 @@ use soroban_sdk::Bytes;
 
 use crate::error::ContractError;
 
+// TODO: this payload parsing code needs to be a library or something that users can integrate
+// in their contract.
+
 /// Payload magic number (LE u32 = 0x93C7D375 = 2479346549).
 const PAYLOAD_MAGIC: u32 = 2_479_346_549;
 
