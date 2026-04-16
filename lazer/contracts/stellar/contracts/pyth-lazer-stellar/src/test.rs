@@ -39,8 +39,10 @@ fn setup(env: &Env) -> (PythLazerContractClient, Address) {
     let contract_id = env.register(PythLazerContract, ());
     let client = PythLazerContractClient::new(env, &contract_id);
     let executor = Address::generate(env);
+    let initial_signer: Option<BytesN<33>> = None;
+    let initial_signer_expires_at: Option<u64> = None;
 
-    client.initialize(&executor);
+    client.initialize(&executor, &initial_signer, &initial_signer_expires_at);
     (client, executor)
 }
 
@@ -91,23 +93,7 @@ fn test_verify_update_invalid_magic() {
     add_trusted_signer(&env, &client, &executor, &pubkey, 2_000_000_000);
 
     // Corrupt the magic bytes
-    let mut update_raw = hex_literal::hex!(
-        "e4bd474d73a7e70a8e2b8de236b55dcc6a771b4a8a1533fe"
-        "492f424fae162369fa14103e04c1c93302cef8a052110a95"
-        "0da031f9dc5eade9e6099e95668aff2592ec1f7900fe0075"
-        "d3c7934067e9c7f14a06000303010000000b00e1637ad535"
-        "060000015a2507d335060000027f8bfdf53506000004f8ff"
-        "0600070008000900000a601299cd3e0600000bc07595c73e"
-        "0600000c014067e9c7f14a0600020000000b00971b209c2d"
-        "0000000144056b9b2d0000000298fb6b9c2d00000004f8ff"
-        "0600070008000900000a284444f92d0000000b480c07f92d"
-        "0000000c014067e9c7f14a0600700000000b0020d85dd2d7"
-        "8df30001000000000000000002000000000000000004f4ff"
-        "060130f80bfeffffffff0701b8ab7057ec4a060008010020"
-        "9db4060000000900000a00000000000000000b0000000000"
-        "0000000c014067e9c7f14a0600"
-    )
-    .to_vec();
+    let mut update_raw = test_lazer_update_bytes(&env).to_alloc_vec();
     update_raw[0] = 0xFF; // Corrupt magic
     let update = Bytes::from_slice(&env, &update_raw);
 
@@ -213,12 +199,14 @@ fn test_initialize_prevents_reinitialization() {
 
     let executor1 = Address::generate(&env);
     let executor2 = Address::generate(&env);
+    let initial_signer: Option<BytesN<33>> = None;
+    let initial_signer_expires_at: Option<u64> = None;
 
     // First initialization should succeed
-    client.initialize(&executor1);
+    client.initialize(&executor1, &initial_signer, &initial_signer_expires_at);
 
     // Second initialization should fail
-    let result = client.try_initialize(&executor2);
+    let result = client.try_initialize(&executor2, &initial_signer, &initial_signer_expires_at);
     assert_eq!(
         result.err().unwrap(),
         Ok(ContractError::AlreadyInitialized)
@@ -234,23 +222,7 @@ fn test_verify_update_invalid_payload_length() {
     add_trusted_signer(&env, &client, &executor, &pubkey, 2_000_000_000);
 
     // Take the valid update and corrupt the payload length field (bytes 69-70)
-    let mut update_raw = hex_literal::hex!(
-        "e4bd474d73a7e70a8e2b8de236b55dcc6a771b4a8a1533fe"
-        "492f424fae162369fa14103e04c1c93302cef8a052110a95"
-        "0da031f9dc5eade9e6099e95668aff2592ec1f7900fe0075"
-        "d3c7934067e9c7f14a06000303010000000b00e1637ad535"
-        "060000015a2507d335060000027f8bfdf53506000004f8ff"
-        "0600070008000900000a601299cd3e0600000bc07595c73e"
-        "0600000c014067e9c7f14a0600020000000b00971b209c2d"
-        "0000000144056b9b2d0000000298fb6b9c2d00000004f8ff"
-        "0600070008000900000a284444f92d0000000b480c07f92d"
-        "0000000c014067e9c7f14a0600700000000b0020d85dd2d7"
-        "8df30001000000000000000002000000000000000004f4ff"
-        "060130f80bfeffffffff0701b8ab7057ec4a060008010020"
-        "9db4060000000900000a00000000000000000b0000000000"
-        "0000000c014067e9c7f14a0600"
-    )
-    .to_vec();
+    let mut update_raw = test_lazer_update_bytes(&env).to_alloc_vec();
     // Set payload length to 0xFF (wrong)
     update_raw[69] = 0xFF;
     let update = Bytes::from_slice(&env, &update_raw);
