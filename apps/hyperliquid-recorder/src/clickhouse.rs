@@ -209,6 +209,9 @@ fn snapshot_to_values(snapshot: &L2Snapshot) -> String {
 }
 
 fn levels_to_ch_array(levels: &[crate::models::L2Level]) -> String {
+    if levels.is_empty() {
+        return "CAST([] AS Array(Tuple(Decimal64(12), Decimal64(12), UInt32)))".to_string();
+    }
     let tuples = levels
         .iter()
         .map(|level| {
