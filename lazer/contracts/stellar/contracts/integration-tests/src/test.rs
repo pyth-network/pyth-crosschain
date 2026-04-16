@@ -276,6 +276,11 @@ fn test_full_governance_add_trusted_signer() {
 
     let pubkey = test_trusted_signer_pubkey();
     let expires_at = 2_000_000_000u64;
+    let update = test_lazer_update_bytes(&te.env);
+
+    // Before governance, signer is not trusted and verification must fail.
+    let pre_result = te.lazer_client.try_verify_update(&update);
+    assert_eq!(pre_result.err().unwrap(), Ok(LazerError::SignerNotTrusted));
 
     // Build PTGM to add a trusted signer.
     let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, expires_at);
@@ -287,7 +292,6 @@ fn test_full_governance_add_trusted_signer() {
         .execute_governance_action(&vaa_bytes, &te.lazer_client.address);
 
     // Verify the signer was added by submitting a signed Lazer update.
-    let update = test_lazer_update_bytes(&te.env);
     let payload = te.lazer_client.verify_update(&update);
     assert!(payload.len() > 0);
 }
@@ -415,20 +419,17 @@ fn test_full_verification_and_payload_parsing() {
 fn test_governance_upgrade_dispatched_to_lazer() {
     let te = setup(1);
 
-    let wasm_digest = [0xAB; 32];
+    // Upload a real wasm blob so the dispatched upgrade can succeed.
+    let wasm_hash = te.env.deployer().upload_contract_wasm(Bytes::new(&te.env));
+    let wasm_digest: [u8; 32] = wasm_hash.into();
     let ptgm = build_ptgm_upgrade(CHAIN_ID as u16, 1, &wasm_digest);
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
 
-    // The upgrade call will fail because the wasm_digest doesn't correspond to
-    // a real uploaded WASM, but it should fail at the deployer level, not at
-    // auth or governance parsing. This verifies the full dispatch path works.
     let result = te
         .executor_client
         .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
-    assert!(result.is_err());
-    // The error comes from the Soroban runtime (invalid wasm hash), not from
-    // our contract logic — this confirms governance parsing and dispatch succeeded.
+    assert!(result.is_ok());
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -613,6 +614,23 @@ fn test_governance_replayed_vaa() {
         .executor_client
         .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
     assert!(result.is_err());
+
+    // Earlier sequence (never executed, but now below last_executed) should fail.
+    let ptgm_earlier = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 3_000_000_000);
+    let vaa_earlier = build_governance_vaa(&te, 0, &ptgm_earlier);
+    let result = te.executor_client.try_execute_governance_action(
+        &Bytes::from_slice(&te.env, &vaa_earlier),
+        &te.lazer_client.address,
+    );
+    assert!(result.is_err());
+
+    // Next sequence succeeds.
+    let ptgm_next = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 3_000_000_000);
+    let vaa_next = build_governance_vaa(&te, 2, &ptgm_next);
+    te.executor_client.execute_governance_action(
+        &Bytes::from_slice(&te.env, &vaa_next),
+        &te.lazer_client.address,
+    );
 }
 
 #[test]

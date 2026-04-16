@@ -241,18 +241,18 @@ fn test_governance_add_new_signer() {
     let env = Env::default();
     let (client, executor) = setup(&env);
 
-    let pubkey = BytesN::from_array(
-        &env,
-        &hex_literal::hex!("030102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"),
-    );
+    let pubkey = test_trusted_signer_pubkey(&env);
     let expires_at = 5_000u64;
+    let update = test_lazer_update_bytes(&env);
 
+    // Before adding signer, verification should fail as signer is not trusted.
+    let result = client.try_verify_update(&update);
+    assert_eq!(result.err().unwrap(), Ok(ContractError::SignerNotTrusted));
+
+    // Add signer and verify the same update now succeeds.
     add_trusted_signer(&env, &client, &executor, &pubkey, expires_at);
-
-    // Verify signer was added by checking it can be used in verification context.
-    // The signer should be present in persistent storage.
-    // We confirm by adding the test pubkey and checking no error on a second add (update).
-    add_trusted_signer(&env, &client, &executor, &pubkey, expires_at + 1000);
+    let payload = client.verify_update(&update);
+    assert!(payload.len() > 0);
 }
 
 #[test]
@@ -261,21 +261,45 @@ fn test_governance_update_signer_expiry() {
     let (client, executor) = setup(&env);
 
     let pubkey = test_trusted_signer_pubkey(&env);
+    let update = test_lazer_update_bytes(&env);
 
-    // Add signer with short expiry
+    // Before adding signer, verification should fail.
+    let result = client.try_verify_update(&update);
+    assert_eq!(result.err().unwrap(), Ok(ContractError::SignerNotTrusted));
+
+    // Add signer with short expiry.
     add_trusted_signer(&env, &client, &executor, &pubkey, 1_000);
 
-    // Update signer with longer expiry
+    // Before expiry, verification should succeed.
+    env.ledger().with_mut(|li| {
+        li.timestamp = 999;
+    });
+    let payload = client.verify_update(&update);
+    assert!(payload.len() > 0);
+
+    // At expiry, verification should fail.
+    env.ledger().with_mut(|li| {
+        li.timestamp = 1_000;
+    });
+    let result = client.try_verify_update(&update);
+    assert_eq!(result.err().unwrap(), Ok(ContractError::SignerExpired));
+
+    // Update signer with longer expiry.
     add_trusted_signer(&env, &client, &executor, &pubkey, 2_000_000_000);
 
-    // Ledger timestamp past old expiry but before new expiry should succeed
+    // Past old expiry but before new expiry should now succeed.
     env.ledger().with_mut(|li| {
         li.timestamp = 5_000;
     });
-
-    let update = test_lazer_update_bytes(&env);
     let payload = client.verify_update(&update);
     assert!(payload.len() > 0);
+
+    // At the updated expiry boundary, verification should fail again.
+    env.ledger().with_mut(|li| {
+        li.timestamp = 2_000_000_000;
+    });
+    let result = client.try_verify_update(&update);
+    assert_eq!(result.err().unwrap(), Ok(ContractError::SignerExpired));
 }
 
 #[test]
@@ -331,7 +355,8 @@ fn test_governance_unauthorized_upgrade() {
     let (client, _executor) = setup(&env);
 
     let unauthorized = Address::generate(&env);
-    let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
+    // Upload a real wasm blob so failure can only be due to auth.
+    let uploaded_hash = env.deployer().upload_contract_wasm(Bytes::new(&env));
 
     // Try to upgrade with a non-executor address
     client
@@ -340,11 +365,11 @@ fn test_governance_unauthorized_upgrade() {
             invoke: &soroban_sdk::testutils::MockAuthInvoke {
                 contract: &client.address,
                 fn_name: "upgrade",
-                args: (fake_hash.clone(),).into_val(&env),
+                args: (uploaded_hash.clone(),).into_val(&env),
                 sub_invokes: &[],
             },
         }])
-        .upgrade(&fake_hash);
+        .upgrade(&uploaded_hash);
 }
 
 #[test]
@@ -352,22 +377,20 @@ fn test_governance_upgrade_with_executor() {
     let env = Env::default();
     let (client, executor) = setup(&env);
 
-    let fake_hash = BytesN::from_array(&env, &[1u8; 32]);
+    // Upload a real wasm blob so the hash is resolvable by the host.
+    let uploaded_hash = env.deployer().upload_contract_wasm(Bytes::new(&env));
 
-    // The upgrade call itself will fail because fake_hash isn't a real WASM hash,
-    // but we can verify executor auth is accepted by checking the error is NOT auth-related.
     let result = client
         .mock_auths(&[soroban_sdk::testutils::MockAuth {
             address: &executor,
             invoke: &soroban_sdk::testutils::MockAuthInvoke {
                 contract: &client.address,
                 fn_name: "upgrade",
-                args: (fake_hash.clone(),).into_val(&env),
+                args: (uploaded_hash.clone(),).into_val(&env),
                 sub_invokes: &[],
             },
         }])
-        .try_upgrade(&fake_hash);
+        .try_upgrade(&uploaded_hash);
 
-    // Should fail with a deployer/wasm error, NOT an auth error
-    assert!(result.is_err());
+    assert!(result.is_ok());
 }

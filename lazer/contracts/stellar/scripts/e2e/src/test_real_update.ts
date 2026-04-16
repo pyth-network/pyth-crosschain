@@ -8,7 +8,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 const NETWORK = "testnet";
-const PAYLOAD_MAGIC = 0x93c7d375;
+const PAYLOAD_MAGIC = 0x93_c7_d3_75;
 
 const CHANNEL_NAMES: Record<number, string> = {
   1: "RealTime",
@@ -26,10 +26,10 @@ const { secret, "contract-id": contractIdArg } = await yargs(
     type: "string",
   })
   .option("contract-id", {
+    demandOption: true,
     description:
       "Lazer contract ID to test against. Deploy separately using deploy.sh first.",
     type: "string",
-    demandOption: true,
   })
   .help()
   .parseAsync();
@@ -213,9 +213,7 @@ function parseAndPrintPayload(hexPayload: string): void {
             "OverNight",
             "Closed",
           ];
-          console.log(
-            `    [${propId}] MarketSession: ${sessions[val] ?? val}`,
-          );
+          console.log(`    [${propId}] MarketSession: ${sessions[val] ?? val}`);
           break;
         }
         case 10: {

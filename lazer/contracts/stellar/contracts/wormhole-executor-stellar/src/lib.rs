@@ -62,6 +62,10 @@ impl WormholeExecutor {
     /// For each guardian:
     ///   [20 bytes] Ethereum address
     /// ```
+    ///
+    /// FIXME: the handling of the guardian sets here is wrong. It needs to expire the current guardian set
+    /// and update to the next guardian set, creating the 24h period where both guardian sets are accepted.
+    /// Look at the ethereum wormhole contract implementation for a guide to how this should work.
     pub fn update_guardian_set(env: Env, vaa_bytes: Bytes) -> Result<(), ContractError> {
         guardian::require_initialized(&env)?;
         guardian::extend_instance_ttl(&env);
@@ -183,6 +187,10 @@ impl WormholeExecutor {
 
         // Parse the PTGM governance instruction.
         let our_chain = guardian::get_chain_id(&env);
+        // TODO: we should use a more generic encoding of function calls so we're not hardcoding the
+        // target function names here. The result of parse_ptgm should enable us to call *any* function
+        // on the contract. I.e., we have something like the string name of the function and a generic
+        // arg encoding in the payload.
         let action = parse_ptgm(&vaa.body.payload, our_chain)?;
 
         // Dispatch cross-contract call to the target.
@@ -209,4 +217,6 @@ impl WormholeExecutor {
 
         Ok(())
     }
+
+    // TODO: this contract needs upgradability
 }

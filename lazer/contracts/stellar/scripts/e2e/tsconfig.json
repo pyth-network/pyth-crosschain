@@ -1,7 +1,7 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
-  "include": ["src"],
   "compilerOptions": {
     "lib": ["ESNext"]
-  }
+  },
+  "extends": "@cprussin/tsconfig/base.json",
+  "include": ["src"]
 }
