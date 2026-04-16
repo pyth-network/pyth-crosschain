@@ -34,7 +34,7 @@ impl RecorderMetrics {
                 "ondo_recorder_poll_requests_total",
                 "Total API poll requests",
             ),
-            &["symbol", "side", "size", "status"],
+            &["symbol", "chain", "side", "size", "status"],
         )?;
         let poll_latency_seconds = Histogram::with_opts(
             HistogramOpts::new(
@@ -44,18 +44,15 @@ impl RecorderMetrics {
             .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
         )?;
         let poll_errors = CounterVec::new(
-            Opts::new(
-                "ondo_recorder_poll_errors_total",
-                "Total API poll errors",
-            ),
-            &["symbol", "error_type"],
+            Opts::new("ondo_recorder_poll_errors_total", "Total API poll errors"),
+            &["symbol", "chain", "error_type"],
         )?;
         let token_last_poll_unix_seconds = GaugeVec::new(
             Opts::new(
                 "ondo_recorder_token_last_poll_unix_seconds",
                 "Unix timestamp of last successful poll per token",
             ),
-            &["symbol"],
+            &["symbol", "chain"],
         )?;
         let queue_depth = Gauge::with_opts(Opts::new(
             "ondo_recorder_queue_depth",
@@ -70,7 +67,7 @@ impl RecorderMetrics {
                 "ondo_recorder_queue_drops_total",
                 "Total dropped quotes due to queue saturation",
             ),
-            &["symbol"],
+            &["symbol", "chain"],
         )?;
         let insert_attempts = CounterVec::new(
             Opts::new(
@@ -133,13 +130,14 @@ impl RecorderMetrics {
         self.poll_requests
             .with_label_values(&[
                 &quote.symbol,
+                &quote.chain_id,
                 &quote.side,
                 &quote.token_amount.normalize().to_string(),
                 "success",
             ])
             .inc();
         self.token_last_poll_unix_seconds
-            .with_label_values(&[&quote.symbol])
+            .with_label_values(&[&quote.symbol, &quote.chain_id])
             .set(unix_seconds_now());
     }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use tokio::{
     sync::mpsc,
@@ -8,12 +8,8 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    clickhouse::ClickHouseClient,
-    config::TokenConfig,
-    health::HealthState,
-    metrics::RecorderMetrics,
-    models::OndoQuote,
-    poller::run_poller_for_token,
+    clickhouse::ClickHouseClient, config::TokenConfig, health::HealthState,
+    metrics::RecorderMetrics, models::OndoQuote, poller::run_poller_for_token,
 };
 
 #[derive(Clone, Debug)]
@@ -26,7 +22,6 @@ pub struct WriterRuntimeConfig {
 pub struct RecorderRuntime {
     api_url: String,
     api_key: String,
-    chain_id: String,
     duration: String,
     tokens: Vec<TokenConfig>,
     poll_interval: Duration,
@@ -44,7 +39,6 @@ impl RecorderRuntime {
     pub fn new(
         api_url: String,
         api_key: String,
-        chain_id: String,
         duration: String,
         tokens: Vec<TokenConfig>,
         poll_interval: Duration,
@@ -57,7 +51,6 @@ impl RecorderRuntime {
         Self {
             api_url,
             api_key,
-            chain_id,
             duration,
             tokens,
             poll_interval,
@@ -81,7 +74,6 @@ impl RecorderRuntime {
                 http_client.clone(),
                 self.api_url.clone(),
                 self.api_key.clone(),
-                self.chain_id.clone(),
                 self.duration.clone(),
                 token,
                 self.poll_interval,
@@ -116,7 +108,7 @@ impl RecorderRuntime {
         let insert_async = self.insert_async;
 
         let handle = tokio::spawn(async move {
-            let mut dedupe: HashMap<(String, String, String, i64), OndoQuote> = HashMap::new();
+            let mut buffer: Vec<OndoQuote> = Vec::with_capacity(batch_max_rows);
             let mut last_flush = Instant::now();
 
             loop {
@@ -129,7 +121,7 @@ impl RecorderRuntime {
                     .await
                 {
                     Ok(Some(quote)) => {
-                        dedupe.insert(quote.dedupe_key(), quote);
+                        buffer.push(quote);
                         let size = receiver.len();
                         metrics.queue_depth.set(size as f64);
                         metrics
@@ -140,32 +132,19 @@ impl RecorderRuntime {
                     Err(_) => {}
                 }
 
-                let should_flush = dedupe.len() >= batch_max_rows
-                    || (!dedupe.is_empty()
+                let should_flush = buffer.len() >= batch_max_rows
+                    || (!buffer.is_empty()
                         && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
                 if should_flush {
-                    flush_with_retry(
-                        &writer,
-                        &metrics,
-                        dedupe.values().cloned().collect::<Vec<_>>(),
-                        stop_token.clone(),
-                        insert_async,
-                    )
-                    .await;
-                    dedupe.clear();
+                    let batch = std::mem::take(&mut buffer);
+                    flush_with_retry(&writer, &metrics, batch, stop_token.clone(), insert_async)
+                        .await;
                     last_flush = Instant::now();
                 }
             }
 
-            if !dedupe.is_empty() {
-                flush_with_retry(
-                    &writer,
-                    &metrics,
-                    dedupe.values().cloned().collect::<Vec<_>>(),
-                    stop_token,
-                    insert_async,
-                )
-                .await;
+            if !buffer.is_empty() {
+                flush_with_retry(&writer, &metrics, buffer, stop_token, insert_async).await;
             }
         });
         self.handles.push(handle);

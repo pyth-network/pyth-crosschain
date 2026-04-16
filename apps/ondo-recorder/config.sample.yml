@@ -1,31 +1,96 @@
 ondo:
   api_url: "https://api.gm.ondo.finance/v1/attestations/soft"
   api_key: "replace-me" # overriden by env var ONDO_RECORDER__ONDO__API_KEY
-  chain_id: "ethereum-1"
   duration: "short"
 
 # Ondo's API rate limit sits somewhere around ~100 req/sec. Total rate =
 # sum(len(sizes) for each token) * 2 (buy+sell) / poll_interval_seconds.
 # Keep the overall rate under this or you will see 429 Too Many Requests.
+#
+# Each token is scoped to a specific chain. Supported chains: ethereum-1,
+# bsc-56, solana-900. The same symbol may appear on multiple chains.
 tokens:
   - symbol: "NVDAon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "NVDAon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "NVDAon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "TSLAon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "TSLAon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "TSLAon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "GOOGLon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "GOOGLon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "GOOGLon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "MSFTon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "MSFTon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "MSFTon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "HOODon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "HOODon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "HOODon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "AAPLon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "AAPLon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "AAPLon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "COINon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "COINon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "COINon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "CRCLon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "CRCLon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "CRCLon"
+    chain_id: "solana-900"
+    sizes: [1]
   - symbol: "MSTRon"
-    sizes: [1, 10, 50, 100]
+    chain_id: "ethereum-1"
+    sizes: [1]
+  - symbol: "MSTRon"
+    chain_id: "bsc-56"
+    sizes: [1]
+  - symbol: "MSTRon"
+    chain_id: "solana-900"
+    sizes: [1]
 
 clickhouse:
   url: "http://clickhouse-local:8123"
