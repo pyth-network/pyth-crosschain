@@ -826,6 +826,12 @@ fn test_execute_governance_invalid_target_chain() {
 // Tests: upgrade
 // ──────────────────────────────────────────────────────────────────────
 
+/// Upload the contract's own WASM to the test environment and return its hash.
+fn upload_wasm(env: &Env) -> BytesN<32> {
+    let wasm_bytes: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/wormhole_executor_stellar.optimized.wasm");
+    env.deployer().upload_contract_wasm(Bytes::from_slice(env, wasm_bytes))
+}
+
 #[test]
 fn test_upgrade_authorized() {
     let env = Env::default();
@@ -833,16 +839,13 @@ fn test_upgrade_authorized() {
 
     let (client, _contract_id, _secrets) = setup_contract(&env, 1, 0);
 
-    let fake_hash = BytesN::from_array(&env, &[0xAB; 32]);
+    let wasm_hash = upload_wasm(&env);
 
-    // The upgrade call should pass auth but fail at the deployer level
-    // because the wasm hash doesn't correspond to a real uploaded WASM.
-    let result = client.try_upgrade(&fake_hash);
-    assert!(result.is_err());
+    // Upgrade should succeed: auth is mocked and the WASM hash is valid.
+    client.upgrade(&wasm_hash);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Auth")]
 fn test_upgrade_unauthorized() {
     let env = Env::default();
     // NOT calling mock_all_auths — auth is enforced.
@@ -850,18 +853,33 @@ fn test_upgrade_unauthorized() {
     let (client, _contract_id, _secrets) = setup_contract(&env, 1, 0);
 
     let unauthorized = Address::generate(&env);
-    let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
+    let wasm_hash = upload_wasm(&env);
 
     // Try to upgrade with an unauthorized address — should fail with auth error.
-    client
+    let result = client
         .mock_auths(&[soroban_sdk::testutils::MockAuth {
             address: &unauthorized,
             invoke: &soroban_sdk::testutils::MockAuthInvoke {
                 contract: &client.address,
                 fn_name: "upgrade",
-                args: (fake_hash.clone(),).into_val(&env),
+                args: (wasm_hash.clone(),).into_val(&env),
                 sub_invokes: &[],
             },
         }])
-        .upgrade(&fake_hash);
+        .try_upgrade(&wasm_hash);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_upgrade_invalid_wasm_hash() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, _contract_id, _secrets) = setup_contract(&env, 1, 0);
+
+    let fake_hash = BytesN::from_array(&env, &[0xAB; 32]);
+
+    // Auth passes (mock_all_auths) but the wasm hash is not valid — should error.
+    let result = client.try_upgrade(&fake_hash);
+    assert!(result.is_err());
 }
