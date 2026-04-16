@@ -19,7 +19,6 @@ pub async fn run_poller_for_token(
     http_client: reqwest::Client,
     api_url: String,
     api_key: String,
-    chain_id: String,
     duration: String,
     token: TokenConfig,
     poll_interval: Duration,
@@ -36,7 +35,7 @@ pub async fn run_poller_for_token(
     let mut interval_rows: u64 = 0;
     let mut last_log = Instant::now();
 
-    tracing::info!(symbol = %token.symbol, "starting poller");
+    tracing::info!(symbol = %token.symbol, chain_id = %token.chain_id, "starting poller");
 
     while !stop_token.is_cancelled() {
         interval.tick().await;
@@ -51,7 +50,7 @@ pub async fn run_poller_for_token(
         for &size in &token.sizes {
             for side in &sides {
                 let request = OndoApiRequest {
-                    chain_id: chain_id.clone(),
+                    chain_id: token.chain_id.clone(),
                     symbol: token.symbol.clone(),
                     side: side.to_string(),
                     token_amount: size.to_string(),
@@ -74,7 +73,12 @@ pub async fn run_poller_for_token(
         for result in results {
             match result {
                 Ok((response, req_side, req_chain_id)) => {
-                    match OndoQuote::from_api_response(response, &req_side, &req_chain_id, polled_at) {
+                    match OndoQuote::from_api_response(
+                        response,
+                        &req_side,
+                        &req_chain_id,
+                        polled_at,
+                    ) {
                         Ok(quote) => {
                             metrics.record_quote(&quote);
                             if sender
@@ -84,7 +88,7 @@ pub async fn run_poller_for_token(
                             {
                                 metrics
                                     .queue_drops
-                                    .with_label_values(&[&token.symbol])
+                                    .with_label_values(&[&token.symbol, &token.chain_id])
                                     .inc();
                             } else {
                                 total_rows += 1;
@@ -95,10 +99,11 @@ pub async fn run_poller_for_token(
                         Err(err) => {
                             metrics
                                 .poll_errors
-                                .with_label_values(&[&token.symbol, "parse"])
+                                .with_label_values(&[&token.symbol, &token.chain_id, "parse"])
                                 .inc();
                             tracing::warn!(
                                 symbol = %token.symbol,
+                                chain_id = %token.chain_id,
                                 error = ?err,
                                 "failed to parse API response"
                             );
@@ -108,14 +113,15 @@ pub async fn run_poller_for_token(
                 Err((symbol, side, size, err)) => {
                     metrics
                         .poll_requests
-                        .with_label_values(&[&symbol, &side, &size, "error"])
+                        .with_label_values(&[&symbol, &token.chain_id, &side, &size, "error"])
                         .inc();
                     metrics
                         .poll_errors
-                        .with_label_values(&[&symbol, "http"])
+                        .with_label_values(&[&symbol, &token.chain_id, "http"])
                         .inc();
                     tracing::warn!(
                         symbol = %symbol,
+                        chain_id = %token.chain_id,
                         side = %side,
                         size = %size,
                         error = ?err,
@@ -126,12 +132,13 @@ pub async fn run_poller_for_token(
         }
 
         if cycle_success {
-            health.set_market_seen(&token.symbol);
+            health.set_market_seen(&token.symbol, &token.chain_id);
         }
 
         if last_log.elapsed() >= Duration::from_secs(5) {
             tracing::info!(
                 symbol = %token.symbol,
+                chain_id = %token.chain_id,
                 interval_rows = interval_rows,
                 total_rows = total_rows,
                 rows_per_second = interval_rows as f64 / last_log.elapsed().as_secs_f64().max(1e-9),
@@ -142,7 +149,12 @@ pub async fn run_poller_for_token(
         }
     }
 
-    tracing::info!(symbol = %token.symbol, total_rows = total_rows, "poller stopped");
+    tracing::info!(
+        symbol = %token.symbol,
+        chain_id = %token.chain_id,
+        total_rows = total_rows,
+        "poller stopped"
+    );
 }
 
 /// Returns (response, request_side, request_chain_id) on success,

@@ -5,7 +5,7 @@ use clap::Parser;
 use ondo_recorder::{
     clickhouse::ClickHouseClient,
     config::AppConfig,
-    health::{start_http_servers, HealthState},
+    health::{start_http_servers, HealthState, Market},
     metrics::RecorderMetrics,
     recorder::{RecorderRuntime, WriterRuntimeConfig},
 };
@@ -32,7 +32,11 @@ async fn run() -> Result<()> {
 
     let metrics = Arc::new(RecorderMetrics::new()?);
     let health = HealthState::new(
-        config.tokens.iter().map(|t| t.symbol.clone()).collect(),
+        config
+            .tokens
+            .iter()
+            .map(|t| Market::new(t.symbol.clone(), t.chain_id.clone()))
+            .collect(),
         config.ready_stale_seconds,
     );
     let (health_server, metrics_server) = start_http_servers(
@@ -45,7 +49,6 @@ async fn run() -> Result<()> {
     let mut runtime = RecorderRuntime::new(
         config.api_url,
         config.api_key,
-        config.chain_id,
         config.duration,
         config.tokens,
         Duration::from_secs_f64(config.poll_interval_seconds),

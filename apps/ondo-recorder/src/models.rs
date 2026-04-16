@@ -71,15 +71,6 @@ impl OndoQuote {
             polled_at,
         })
     }
-
-    pub fn dedupe_key(&self) -> (String, String, String, i64) {
-        (
-            self.symbol.clone(),
-            self.side.clone(),
-            self.token_amount.normalize().to_string(),
-            self.polled_at.timestamp_millis(),
-        )
-    }
 }
 
 fn parse_decimal(value: &str, field: &str) -> Result<Decimal> {

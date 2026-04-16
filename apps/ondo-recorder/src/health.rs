@@ -11,16 +11,31 @@ use tokio::task::JoinHandle;
 
 use crate::metrics::RecorderMetrics;
 
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize)]
+pub struct Market {
+    pub symbol: String,
+    pub chain_id: String,
+}
+
+impl Market {
+    pub fn new(symbol: impl Into<String>, chain_id: impl Into<String>) -> Self {
+        Self {
+            symbol: symbol.into(),
+            chain_id: chain_id.into(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct HealthState {
-    expected_symbols: Vec<String>,
+    expected_markets: Vec<Market>,
     stale_seconds: u64,
     inner: Arc<Mutex<HealthInner>>,
 }
 
 #[derive(Default)]
 struct HealthInner {
-    token_last_poll: HashMap<String, f64>,
+    market_last_poll: HashMap<Market, f64>,
     clickhouse_ok: bool,
 }
 
@@ -28,23 +43,23 @@ struct HealthInner {
 struct ReadyResponse {
     ready: bool,
     clickhouse_ok: bool,
-    stale_tokens: Vec<String>,
+    stale_markets: Vec<Market>,
 }
 
 impl HealthState {
-    pub fn new(expected_symbols: Vec<String>, stale_seconds: u64) -> Self {
+    pub fn new(expected_markets: Vec<Market>, stale_seconds: u64) -> Self {
         Self {
-            expected_symbols,
+            expected_markets,
             stale_seconds,
             inner: Arc::new(Mutex::new(HealthInner::default())),
         }
     }
 
-    pub fn set_market_seen(&self, symbol: &str) {
+    pub fn set_market_seen(&self, symbol: &str, chain_id: &str) {
         let mut inner = self.inner.lock().expect("health mutex poisoned");
         inner
-            .token_last_poll
-            .insert(symbol.to_string(), unix_seconds_now());
+            .market_last_poll
+            .insert(Market::new(symbol, chain_id), unix_seconds_now());
     }
 
     pub fn set_clickhouse_ok(&self, healthy: bool) {
@@ -59,13 +74,13 @@ impl HealthState {
     fn to_ready_response(&self) -> ReadyResponse {
         let inner = self.inner.lock().expect("health mutex poisoned");
         let now = unix_seconds_now();
-        let stale_tokens = self
-            .expected_symbols
+        let stale_markets = self
+            .expected_markets
             .iter()
-            .filter(|symbol| {
+            .filter(|market| {
                 inner
-                    .token_last_poll
-                    .get(*symbol)
+                    .market_last_poll
+                    .get(*market)
                     .map(|seen| now - *seen > self.stale_seconds as f64)
                     .unwrap_or(true)
             })
@@ -73,9 +88,9 @@ impl HealthState {
             .collect::<Vec<_>>();
 
         ReadyResponse {
-            ready: inner.clickhouse_ok && stale_tokens.is_empty(),
+            ready: inner.clickhouse_ok && stale_markets.is_empty(),
             clickhouse_ok: inner.clickhouse_ok,
-            stale_tokens,
+            stale_markets,
         }
     }
 }

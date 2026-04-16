@@ -28,6 +28,7 @@ pub struct ClickHouseTarget {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TokenConfig {
     pub symbol: String,
+    pub chain_id: String,
     pub sizes: Vec<u32>,
 }
 
@@ -35,7 +36,6 @@ pub struct TokenConfig {
 pub struct AppConfig {
     pub api_url: String,
     pub api_key: String,
-    pub chain_id: String,
     pub duration: String,
     pub tokens: Vec<TokenConfig>,
     pub clickhouse: ClickHouseTarget,
@@ -54,13 +54,13 @@ pub struct AppConfig {
 struct OndoConfig {
     api_url: Option<String>,
     api_key: Option<String>,
-    chain_id: Option<String>,
     duration: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct TokenInput {
     symbol: String,
+    chain_id: String,
     #[serde(default = "default_sizes")]
     sizes: Vec<u32>,
 }
@@ -103,10 +103,6 @@ impl AppConfig {
             .filter(|s| !s.trim().is_empty())
             .unwrap_or_else(|| default_api_url().to_string());
         let api_key = required_string(ondo.api_key, "ONDO_RECORDER__ONDO__API_KEY")?;
-        let chain_id = ondo
-            .chain_id
-            .filter(|s| !s.trim().is_empty())
-            .unwrap_or_else(|| "ethereum-1".to_string());
         let duration = ondo
             .duration
             .filter(|s| !s.trim().is_empty())
@@ -118,7 +114,6 @@ impl AppConfig {
         Ok(AppConfig {
             api_url,
             api_key,
-            chain_id,
             duration,
             tokens,
             clickhouse,
@@ -170,10 +165,19 @@ fn parse_tokens(tokens_input: Vec<TokenInput>) -> Result<Vec<TokenConfig>, Confi
         ));
     }
     let mut tokens = Vec::with_capacity(tokens_input.len());
+    let mut seen = std::collections::HashSet::with_capacity(tokens_input.len());
     for token in tokens_input {
         validate_token(&token)?;
+        let key = (token.symbol.clone(), token.chain_id.clone());
+        if !seen.insert(key) {
+            return Err(ConfigError::Invalid(format!(
+                "duplicate token entry for symbol '{}' on chain '{}'",
+                token.symbol, token.chain_id
+            )));
+        }
         tokens.push(TokenConfig {
             symbol: token.symbol,
+            chain_id: token.chain_id,
             sizes: token.sizes,
         });
     }
@@ -185,6 +189,12 @@ fn validate_token(token: &TokenInput) -> Result<(), ConfigError> {
         return Err(ConfigError::Invalid(
             "token symbol cannot be empty".to_string(),
         ));
+    }
+    if token.chain_id.trim().is_empty() {
+        return Err(ConfigError::Invalid(format!(
+            "token '{}' has empty chain_id",
+            token.symbol
+        )));
     }
     if token.sizes.is_empty() {
         return Err(ConfigError::Invalid(format!(
@@ -243,6 +253,7 @@ fn default_sizes() -> Vec<u32> {
 fn default_tokens() -> Vec<TokenInput> {
     vec![TokenInput {
         symbol: "AAPLon".to_string(),
+        chain_id: "ethereum-1".to_string(),
         sizes: default_sizes(),
     }]
 }
