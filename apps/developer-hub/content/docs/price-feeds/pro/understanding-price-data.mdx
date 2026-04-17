@@ -8,6 +8,22 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 This page explains the key metrics in Pyth Pro price feeds and what they represent. Understanding these concepts is essential for properly interpreting price data and building robust applications. For technical field specifications and API details, see [Payload Reference](/price-feeds/pro/payload-reference).
 
+## Publisher Contributions
+
+Each publisher contributes up to **three prices** in every update:
+
+- **Best bid price**: the highest price at which the publisher is willing to buy.
+- **Price**: the publisher's view of the mid/market price.
+- **Best ask price**: the lowest price at which the publisher is willing to sell.
+
+All three values are **optional** — a publisher may submit any subset of them in a given update depending on what its data sources provide. The aggregate metrics (`price`, `confidence`, `bestBidPrice`, `bestAskPrice`) are derived from whichever values publishers have contributed.
+
+## Price
+
+The aggregate `price` is the **median of all publisher prices** when at least `min_pub` publishers have contributed a price in the current aggregation window.
+
+If fewer than `min_pub` publishers have contributed a price, **no new aggregate is produced**: the `price` value remains the same as the previous update, and `feedUpdateTimestamp` does **not** advance. Consumers can detect this case by comparing `feedUpdateTimestamp` against the update's `timestampUs` — if they differ, the price is carried forward from a prior update rather than freshly generated. See [Payload Reference](/price-feeds/pro/payload-reference) for details on these fields.
+
 ## Confidence Interval
 
 <Callout type="warning" title="Experimental">
@@ -52,12 +68,12 @@ This approach ensures the confidence interval reflects the full range of what pu
   See [Payload Reference](/price-feeds/pro/payload-reference) for details.
 </Callout>
 
-Best Bid and Best Ask represent the **tightest bid and ask prices** across all contributing publishers.
+Best Bid and Best Ask represent the **tightest non-overlapping bid and ask** across all contributing publishers. The aggregation selects the highest bid and lowest ask such that `bestBidPrice < bestAskPrice` — publisher quotes that would cross the book are excluded so the resulting top-of-book is always well-formed.
 
-| Field          | Description                                              |
-| -------------- | -------------------------------------------------------- |
-| `bestBidPrice` | The highest bid price across all contributing publishers |
-| `bestAskPrice` | The lowest ask price across all contributing publishers  |
+| Field          | Description                                                                    |
+| -------------- | ------------------------------------------------------------------------------ |
+| `bestBidPrice` | The highest bid price across publishers that does not cross any publisher ask  |
+| `bestAskPrice` | The lowest ask price across publishers that does not cross any publisher bid   |
 
 ### How Best Bid/Ask Differ from Confidence
 
