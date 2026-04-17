@@ -20,6 +20,10 @@ Integrating with Pyth Pro in Cardano smart contracts as a consumer is a three-st
 2. **Subscribe** to Pyth Pro websocket to receive signed price updates.
 3. **Include** those updates in a Cardano transaction by doing a zero withdrawal from the Pyth withdraw script.
 
+<Callout type="warning">
+  Purpose of the Pyth withdraw script is to verify signature validity of a provided price update payload. It does not enforce freshness of the update, nor does it disallow verifying the same update multiple times. If your contract puts constraints on a validity window of an update, make sure to enforce this directly in your contract implementation, e.g. by checking `timestamp_us` field.
+</Callout>
+
 <Steps>
 <Step>
 ### Use the Aiken library in your on-chain code
