@@ -83,7 +83,7 @@
           "type": "u64"
         }
       ],
-      "name": "update_y"
+      "name": "updateY"
     }
   ],
   "name": "integrity-pool",
