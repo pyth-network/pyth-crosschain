@@ -1,32 +1,29 @@
 {
-  "version": "1.0.0",
-  "name": "integrity-pool",
   "instructions": [
     {
-      "name": "setPublisherStakeAccount",
       "accounts": [
         {
-          "name": "signer",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "name": "signer"
         },
         {
-          "name": "publisher",
-          "isMut": false,
-          "isSigner": false,
           "docs": [
             "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "poolData",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolConfig",
+          ],
           "isMut": false,
           "isSigner": false,
+          "name": "publisher"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "poolData"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "poolConfig",
           "pda": {
             "seeds": [
               {
@@ -38,19 +35,57 @@
           }
         },
         {
-          "name": "newStakeAccountPositionsOption",
           "isMut": false,
+          "isOptional": true,
           "isSigner": false,
-          "isOptional": true
+          "name": "newStakeAccountPositionsOption"
         },
         {
-          "name": "currentStakeAccountPositionsOption",
           "isMut": false,
+          "isOptional": true,
           "isSigner": false,
-          "isOptional": true
+          "name": "currentStakeAccountPositionsOption"
         }
       ],
-      "args": []
+      "args": [],
+      "name": "setPublisherStakeAccount"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": false,
+          "isSigner": true,
+          "name": "signer"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "poolConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool_config"
+              }
+            ]
+          }
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "y",
+          "type": "u64"
+        }
+      ],
+      "name": "update_y"
     }
-  ]
+  ],
+  "name": "integrity-pool",
+  "version": "1.0.0"
 }
