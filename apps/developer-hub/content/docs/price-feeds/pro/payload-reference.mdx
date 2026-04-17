@@ -30,7 +30,7 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `exponent`            | `i16`    | All         | Decimal exponent: `actual_price = mantissa × 10^exponent`.               |
 | `marketSession`       | `string` | All         | Session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`.    |
 | `price`               | `i64`    | Spot        | Aggregate market price (mantissa). Use with `exponent` for actual price. |
-| `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement. (Experimental)            |
+| `confidence`          | `i64`    | Spot        | Price uncertainty across publishers; higher = more disagreement.         |
 | `bestBidPrice`        | `i64`    | Spot        | Tightest non-overlapping bid across publishers. (Experimental)           |
 | `bestAskPrice`        | `i64`    | Spot        | Tightest non-overlapping ask across publishers. (Experimental)           |
 | `emaPrice`            | `i64`    | Spot        | Exponential moving average of the price.                                 |
@@ -42,11 +42,9 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 **Scope:** _All_ = every feed type; _Spot_ = spot price feeds; _Derivatives_ = funding rate feeds.
 
 <Callout type="warning" title="Experimental">
-  The `confidence`, `bestBidPrice`, and `bestAskPrice` fields are **experimental**.
-  These fields are not yet covered by automated data quality assurance, so their
-  accuracy and reliability may vary. The current quality and uptime focus is on
-  the aggregated `price` field. Use experimental fields with caution in
-  production systems.
+  The `bestBidPrice` and `bestAskPrice` fields are **experimental**. These
+  fields are not yet covered by automated data quality assurance, so their
+  accuracy and reliability may vary. Use with caution in production systems.
 </Callout>
 
 <Callout type="info">
@@ -161,14 +159,14 @@ Based on the protocol specification, here are the technical details for each pro
       name: "confidence",
       type: "optional i64",
       description:
-        "**Experimental:** Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined. Represented as mantissa. This field is not yet covered by automated data quality assurance.",
+        "Confidence interval representing the uncertainty of publisher-reported prices, calculated from all publisher prices, bids, and asks combined. Represented as mantissa.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
       invariants: ["Positive when present"],
       usage:
         "Risk management and price quality assessment. A high confidence value means high uncertainty (publishers disagree more).",
-      note: "A high confidence value means high uncertainty (publishers disagree more). See [Understanding Price Data](/price-feeds/pro/understanding-price-data) for how confidence differs from best bid/ask and when to use each metric.",
+      note: "Confidence reflects publisher disagreement, which may or may not track market volatility. See [Understanding Price Data](/price-feeds/pro/understanding-price-data) for the algorithm, how it differs from best bid/ask, and when to use each metric.",
     },
     {
       name: "emaPrice",
