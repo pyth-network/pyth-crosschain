@@ -16,7 +16,7 @@ Each publisher contributes up to **three prices** in every update:
 - **Price**: the publisher's view of the mid/market price.
 - **Best ask price**: the lowest price at which the publisher is willing to sell.
 
-All three values are **optional** — a publisher may submit any subset of them in a given update depending on what its data sources provide. The aggregate metrics (`price`, `confidence`, `bestBidPrice`, `bestAskPrice`) are derived from whichever values publishers have contributed.
+All three values are **optional** — a publisher may submit any subset of them in a given update depending on what its data sources provide. An update that contains none of the three is rejected and does not contribute to the aggregate. The aggregate metrics (`price`, `confidence`, `bestBidPrice`, `bestAskPrice`) are derived from whichever values publishers have contributed.
 
 ## Price
 
@@ -37,7 +37,7 @@ When the number of contributing publishers is low, non-optimal behavior from a s
 
 ### What High Confidence Means
 
-A **high confidence value** indicates **high uncertainty** — publishers are deviating from the aggregate more than usual. This could happen when:
+A **high confidence value** indicates **high measurement uncertainty** — publishers are deviating from the aggregate more than usual. This could happen when:
 
 - Market conditions are volatile.
 - Publishers have varying views on the current price.
@@ -49,7 +49,7 @@ A **low confidence value** indicates **low uncertainty** — publishers are in c
 
 Confidence is the **maximum distance** from the aggregate `price` to the 25th and 75th percentiles of the combined publisher dataset:
 
-1. **Pool all publisher quotes**: For each publisher, collect their `price`, `bestBid`, and `bestAsk` into a single combined dataset across all publishers (missing fields are imputed first — see below).
+1. **Pool all publisher quotes**: For each publisher, collect their `price`, `bestBidPrice`, and `bestAskPrice` into a single combined dataset across all publishers (missing fields are imputed first — see below).
 2. **Compute percentiles**: Calculate the 25th percentile (`p25`) and 75th percentile (`p75`) of the combined dataset.
 3. **Take the maximum distance**: `confidence = max(price − p25, p75 − price)`, where `price` is the aggregate price.
 
@@ -57,11 +57,11 @@ This approach uses the interquartile range of all publisher quotes, so the confi
 
 #### Imputing Missing Fields
 
-Publishers may submit any subset of `price`, `bestBid`, and `bestAsk` (see [Publisher Contributions](#publisher-contributions)). Before a publisher's quotes are added to the pool, missing fields are imputed from what they did provide:
+Publishers may submit any subset of `price`, `bestBidPrice`, and `bestAskPrice` (see [Publisher Contributions](#publisher-contributions)). Before a publisher's quotes are added to the pool, missing fields are imputed from what they did provide:
 
 - **Only one field provided**: the other two are set equal to it.
-- **`price` missing, both `bestBid` and `bestAsk` provided**: `price` is set to the average of `bestBid` and `bestAsk`.
-- **`price` provided, `bestBid` or `bestAsk` missing**: the missing bid/ask is set equal to `price`.
+- **`price` missing, both `bestBidPrice` and `bestAskPrice` provided**: `price` is set to the average of `bestBidPrice` and `bestAskPrice`.
+- **`price` provided, `bestBidPrice` or `bestAskPrice` missing**: the missing bid/ask is set equal to `price`.
 
 This ensures every publisher contributes three values to the confidence calculation regardless of which fields they submitted.
 
@@ -72,7 +72,7 @@ This ensures every publisher contributes three values to the confidence calculat
   See [Payload Reference](/price-feeds/pro/payload-reference) for details.
 </Callout>
 
-Best Bid and Best Ask represent the **tightest non-overlapping bid and ask** across all contributing publishers. The aggregation selects the highest bid and lowest ask such that `bestBidPrice < bestAskPrice` — publisher quotes that would cross the book are excluded so the resulting top-of-book is always well-formed.
+Best Bid and Best Ask represent the **tightest non-overlapping bid and ask** across all contributing publishers. The aggregation selects the highest bid and lowest ask such that `bestBidPrice < bestAskPrice` — publisher quotes that would cross are excluded so the resulting spread is always well-formed.
 
 | Field          | Description                                                                    |
 | -------------- | ------------------------------------------------------------------------------ |
@@ -133,6 +133,6 @@ The aggregator applies **circuit breakers** to reject publisher updates that are
 When a US equity undergoes a **stock split** or **reverse split**:
 
 - The previous **`overNight` session is closed** on the execution date — there is no overnight aggregation spanning the corporate action boundary.
-- The split or reverse split is **applied at the start of the next `preMarket` session**. From that point forward, all aggregate prices reflect the adjusted share count.
+- The split or reverse split is **applied at the start of the next `preMarket` session** for feeds enabled for 24/5 trading, and at the start of the next `regular` session for feeds enabled only for the regular session. From that point forward, all aggregate prices reflect the adjusted share count.
 
 Publishers ingesting prices from upstream venues may not immediately pick up the corporate action and could briefly continue to publish **non-adjusted (pre-split) prices** after it takes effect. To keep these stale prices out of the aggregate, the aggregator rejects publisher updates whose price deviates beyond a **threshold from the adjusted last price** (for example, ~10%) for a **protection window after the action is applied** (for example, ~10 minutes into the new `preMarket` session). Once the window ends, aggregation returns to normal behavior.

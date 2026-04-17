@@ -238,7 +238,7 @@ freshness and origin of the price.
 
 ### Market Depth Properties
 
-Best bid and best ask represent the tightest **non-overlapping** top-of-book across publishers — the highest publisher bid and the lowest publisher ask selected such that `bestBidPrice < bestAskPrice`, with crossing quotes excluded. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
+Best bid and best ask represent the tightest **non-overlapping spread** across publishers — the highest publisher bid and the lowest publisher ask selected such that `bestBidPrice < bestAskPrice`, with crossing quotes excluded. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
 
 <Callout type="warning" title="Experimental">
   The `bestBidPrice` and `bestAskPrice` fields are **experimental**. These fields
@@ -252,7 +252,7 @@ Best bid and best ask represent the tightest **non-overlapping** top-of-book acr
       name: "bestBidPrice",
       type: "optional non-zero i64",
       description:
-        "Highest publisher bid that does not cross any publisher ask (tightest non-overlapping top-of-book bid), represented as mantissa.",
+        "Highest publisher bid that does not cross any publisher ask; together with `bestAskPrice`, forms the tightest non-overlapping spread across publishers. Represented as mantissa.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
@@ -266,7 +266,7 @@ Best bid and best ask represent the tightest **non-overlapping** top-of-book acr
       name: "bestAskPrice",
       type: "optional non-zero i64",
       description:
-        "Lowest publisher ask that does not cross any publisher bid (tightest non-overlapping top-of-book ask), represented as mantissa.",
+        "Lowest publisher ask that does not cross any publisher bid; together with `bestBidPrice`, forms the tightest non-overlapping spread across publishers. Represented as mantissa.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
