@@ -22,7 +22,9 @@ All three values are **optional** — a publisher may submit any subset of them 
 
 The aggregate `price` is the **median of all publisher prices** when at least `min_pub` publishers have contributed a price in the current aggregation window.
 
-If fewer than `min_pub` publishers have contributed a price, **no new aggregate is produced**: the `price` value remains the same as the previous update, and `feedUpdateTimestamp` does **not** advance. Consumers can detect this case by comparing `feedUpdateTimestamp` against the update's `timestampUs` — if they differ, the price is carried forward from a prior update rather than freshly generated. See [Payload Reference](/price-feeds/pro/payload-reference) for details on these fields.
+If fewer than `min_pub` publishers have contributed a price, **no new aggregate is produced**. In this case **none of the price properties update** — `price`, `confidence`, `bestBidPrice`, `bestAskPrice`, `emaPrice`, `emaConfidence`, and `feedUpdateTimestamp` are all carried forward from the previous update. The only property that still updates is `marketSession`, which reflects the current trading session regardless of whether a fresh aggregate was produced.
+
+Consumers can detect this case by comparing `feedUpdateTimestamp` against the update's `timestampUs` — if they differ, the price data is carried forward from a prior update rather than freshly generated. See [Payload Reference](/price-feeds/pro/payload-reference) for details on these fields.
 
 ## Confidence Interval
 
