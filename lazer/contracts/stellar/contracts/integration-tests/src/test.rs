@@ -2,7 +2,7 @@ extern crate alloc;
 extern crate std;
 
 use k256::ecdsa::SigningKey;
-use soroban_sdk::{testutils::Address as _, testutils::Ledger, Address, Bytes, BytesN, Env, IntoVal, Vec};
+use soroban_sdk::{testutils::Address as _, testutils::Ledger, Address, Bytes, BytesN, Env, Vec};
 use tiny_keccak::{Hasher, Keccak};
 
 use pyth_lazer_stellar::{payload, ContractError as LazerError, PythLazerContract, PythLazerContractClient};
@@ -221,7 +221,6 @@ struct TestEnv<'a> {
 /// Deploy and initialize both contracts with a shared guardian set.
 fn setup(num_guardians: u8) -> TestEnv<'static> {
     let env = Env::default();
-    env.mock_all_auths();
 
     // Deploy executor contract.
     let executor_id = env.register(WormholeExecutor, ());
@@ -799,28 +798,16 @@ fn test_governance_stale_sequence() {
 #[should_panic(expected = "HostError: Error(Auth")]
 fn test_unauthorized_direct_signer_update() {
     let env = Env::default();
-    // Note: NOT calling mock_all_auths here — auth is enforced.
 
     let executor_id = env.register(WormholeExecutor, ());
     let lazer_id = env.register(PythLazerContract, ());
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
     lazer_client.initialize(&executor_id, &None, &None);
 
-    let unauthorized = Address::generate(&env);
     let pubkey = BytesN::from_array(&env, &test_trusted_signer_pubkey());
 
-    // Try to add a signer directly without executor auth — should fail.
-    lazer_client
-        .mock_auths(&[soroban_sdk::testutils::MockAuth {
-            address: &unauthorized,
-            invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                contract: &lazer_client.address,
-                fn_name: "update_trusted_signer",
-                args: (pubkey.clone(), 2_000_000_000u64).into_val(&env),
-                sub_invokes: &[],
-            },
-        }])
-        .update_trusted_signer(&pubkey, &2_000_000_000u64);
+    // Direct invocation without executor authorization must fail.
+    lazer_client.update_trusted_signer(&pubkey, &2_000_000_000u64);
 }
 
 #[test]
@@ -833,20 +820,10 @@ fn test_unauthorized_direct_upgrade() {
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
     lazer_client.initialize(&executor_id, &None, &None);
 
-    let unauthorized = Address::generate(&env);
     let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
 
-    lazer_client
-        .mock_auths(&[soroban_sdk::testutils::MockAuth {
-            address: &unauthorized,
-            invoke: &soroban_sdk::testutils::MockAuthInvoke {
-                contract: &lazer_client.address,
-                fn_name: "upgrade",
-                args: (fake_hash.clone(),).into_val(&env),
-                sub_invokes: &[],
-            },
-        }])
-        .upgrade(&fake_hash);
+    // Direct invocation without executor authorization must fail.
+    lazer_client.upgrade(&fake_hash);
 }
 
 // ──────────────────────────────────────────────────────────────────────
