@@ -8,7 +8,7 @@ pub mod vaa;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, IntoVal, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, Bytes, BytesN, Env, IntoVal, Symbol, Vec};
 
 use crate::error::ContractError;
 use crate::governance::{parse_ptgm, GovernanceAction};
@@ -155,7 +155,6 @@ impl WormholeExecutor {
     pub fn execute_governance_action(
         env: Env,
         vaa_bytes: Bytes,
-        target_contract: Address,
     ) -> Result<(), ContractError> {
         guardian::require_initialized(&env)?;
         guardian::extend_instance_ttl(&env);
@@ -191,7 +190,7 @@ impl WormholeExecutor {
         // target function names here. The result of parse_ptgm should enable us to call *any* function
         // on the contract. I.e., we have something like the string name of the function and a generic
         // arg encoding in the payload.
-        let action = parse_ptgm(&vaa.body.payload, our_chain)?;
+        let action = parse_ptgm(&vaa.body.payload, our_chain, &env.current_contract_address())?;
 
         // Dispatch cross-contract call to the target.
         match action {
@@ -199,7 +198,7 @@ impl WormholeExecutor {
                 let pubkey = BytesN::from_array(&env, &payload.pubkey);
                 let args = (pubkey, payload.expires_at).into_val(&env);
                 env.invoke_contract::<()>(
-                    &target_contract,
+                    &payload.target_contract,
                     &Symbol::new(&env, "update_trusted_signer"),
                     args,
                 );
@@ -208,7 +207,7 @@ impl WormholeExecutor {
                 let wasm_hash = BytesN::from_array(&env, &payload.wasm_digest);
                 let args = (wasm_hash,).into_val(&env);
                 env.invoke_contract::<()>(
-                    &target_contract,
+                    &payload.target_contract,
                     &Symbol::new(&env, "upgrade"),
                     args,
                 );

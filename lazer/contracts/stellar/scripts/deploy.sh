@@ -26,7 +26,7 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Defaults
 NETWORK="testnet"
-CHAIN_ID=28
+CHAIN_ID=30
 GUARDIAN_INDEX=0
 EMITTER_CHAIN=1
 FUND=false

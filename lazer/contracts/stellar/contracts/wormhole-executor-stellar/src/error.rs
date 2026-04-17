@@ -42,4 +42,6 @@ pub enum ContractError {
     InvalidTargetChain = 17,
     /// The PTGM action is not recognized.
     InvalidGovernanceAction = 18,
+    /// The PTGM executor contract does not match this contract.
+    InvalidExecutorAddress = 19,
 }

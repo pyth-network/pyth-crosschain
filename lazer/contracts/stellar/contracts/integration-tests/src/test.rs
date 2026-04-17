@@ -107,6 +107,8 @@ const PTGM_MAGIC: [u8; 4] = [0x50, 0x54, 0x47, 0x4d]; // "PTGM"
 
 fn build_ptgm_update_signer(
     chain_id: u16,
+    executor_contract: &Address,
+    target_contract: &Address,
     pubkey: &[u8; 33],
     expires_at: u64,
 ) -> alloc::vec::Vec<u8> {
@@ -115,6 +117,12 @@ fn build_ptgm_update_signer(
     data.push(3); // module = Lazer
     data.push(1); // action = update_trusted_signer
     data.extend_from_slice(&chain_id.to_be_bytes());
+    let executor = address_to_payload_bytes(executor_contract);
+    data.push(executor.len() as u8);
+    data.extend_from_slice(&executor);
+    let target = address_to_payload_bytes(target_contract);
+    data.push(target.len() as u8);
+    data.extend_from_slice(&target);
     data.extend_from_slice(pubkey);
     data.extend_from_slice(&expires_at.to_be_bytes());
     data
@@ -122,6 +130,8 @@ fn build_ptgm_update_signer(
 
 fn build_ptgm_upgrade(
     chain_id: u16,
+    executor_contract: &Address,
+    target_contract: &Address,
     version: u64,
     wasm_digest: &[u8; 32],
 ) -> alloc::vec::Vec<u8> {
@@ -130,9 +140,22 @@ fn build_ptgm_upgrade(
     data.push(3); // module = Lazer
     data.push(0); // action = upgrade
     data.extend_from_slice(&chain_id.to_be_bytes());
+    let executor = address_to_payload_bytes(executor_contract);
+    data.push(executor.len() as u8);
+    data.extend_from_slice(&executor);
+    let target = address_to_payload_bytes(target_contract);
+    data.push(target.len() as u8);
+    data.extend_from_slice(&target);
     data.extend_from_slice(&version.to_be_bytes());
     data.extend_from_slice(wasm_digest);
     data
+}
+
+fn address_to_payload_bytes(address: &Address) -> alloc::vec::Vec<u8> {
+    let strkey = address.to_string();
+    let mut out = alloc::vec![0u8; strkey.len() as usize];
+    strkey.copy_into_slice(&mut out);
+    out
 }
 
 fn build_guardian_set_upgrade_payload(
@@ -283,13 +306,19 @@ fn test_full_governance_add_trusted_signer() {
     assert_eq!(pre_result.err().unwrap(), Ok(LazerError::SignerNotTrusted));
 
     // Build PTGM to add a trusted signer.
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, expires_at);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        expires_at,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
 
     // Execute governance action: executor verifies VAA and dispatches to Lazer.
     te.executor_client
-        .execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .execute_governance_action(&vaa_bytes);
 
     // Verify the signer was added by submitting a signed Lazer update.
     let payload = te.lazer_client.verify_update(&update);
@@ -303,19 +332,29 @@ fn test_full_governance_update_signer_expiry() {
     let pubkey = test_trusted_signer_pubkey();
 
     // Add signer with short expiry.
-    let ptgm1 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 1_000);
+    let ptgm1 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        1_000,
+    );
     let vaa1 = build_governance_vaa(&te, 1, &ptgm1);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa1),
-        &te.lazer_client.address,
     );
 
     // Update signer with longer expiry via a second governance action.
-    let ptgm2 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm2 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let vaa2 = build_governance_vaa(&te, 2, &ptgm2);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa2),
-        &te.lazer_client.address,
     );
 
     // Set ledger past the old expiry but before the new one.
@@ -336,11 +375,16 @@ fn test_full_governance_remove_signer() {
     let pubkey = test_trusted_signer_pubkey();
 
     // Add signer.
-    let ptgm1 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm1 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let vaa1 = build_governance_vaa(&te, 1, &ptgm1);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa1),
-        &te.lazer_client.address,
     );
 
     // Verify signer works.
@@ -348,11 +392,16 @@ fn test_full_governance_remove_signer() {
     assert!(te.lazer_client.verify_update(&update).len() > 0);
 
     // Remove signer via governance (expires_at = 0).
-    let ptgm2 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 0);
+    let ptgm2 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        0,
+    );
     let vaa2 = build_governance_vaa(&te, 2, &ptgm2);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa2),
-        &te.lazer_client.address,
     );
 
     // Verification should now fail.
@@ -371,11 +420,16 @@ fn test_full_verification_and_payload_parsing() {
     let pubkey = test_trusted_signer_pubkey();
 
     // Add trusted signer via governance.
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_raw),
-        &te.lazer_client.address,
     );
 
     // Submit a signed Lazer update and get verified payload.
@@ -422,13 +476,19 @@ fn test_governance_upgrade_dispatched_to_lazer() {
     // Upload a real wasm blob so the dispatched upgrade can succeed.
     let wasm_hash = te.env.deployer().upload_contract_wasm(Bytes::new(&te.env));
     let wasm_digest: [u8; 32] = wasm_hash.into();
-    let ptgm = build_ptgm_upgrade(CHAIN_ID as u16, 1, &wasm_digest);
+    let ptgm = build_ptgm_upgrade(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        1,
+        &wasm_digest,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
 
     let result = te
         .executor_client
-        .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .try_execute_governance_action(&vaa_bytes);
     assert!(result.is_ok());
 }
 
@@ -451,7 +511,13 @@ fn test_guardian_set_upgrade_then_governance() {
 
     // Now use the new guardian set to execute a governance action.
     let pubkey = test_trusted_signer_pubkey();
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let gov_body = build_body(
         2000,
         0,
@@ -464,7 +530,6 @@ fn test_guardian_set_upgrade_then_governance() {
     let gov_vaa = build_signed_vaa(1, &[(0u8, new_secret)], &gov_body);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &gov_vaa),
-        &te.lazer_client.address,
     );
 
     // Verify the signer was added.
@@ -499,7 +564,13 @@ fn test_sequential_guardian_upgrades_then_governance() {
 
     // Execute governance with the new 2-guardian set.
     let pubkey = test_trusted_signer_pubkey();
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let gov_body = build_body(
         3000,
         0,
@@ -512,7 +583,6 @@ fn test_sequential_guardian_upgrades_then_governance() {
     let gov_vaa = build_signed_vaa(2, &[(0u8, secret_2a), (1u8, secret_2b)], &gov_body);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &gov_vaa),
-        &te.lazer_client.address,
     );
 
     // Verify signer was added.
@@ -531,11 +601,16 @@ fn test_expired_signer_after_governance() {
     let pubkey = test_trusted_signer_pubkey();
 
     // Add signer with short expiry via governance.
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 1_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        1_000,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_raw),
-        &te.lazer_client.address,
     );
 
     // Set ledger past expiry.
@@ -556,7 +631,13 @@ fn test_expired_signer_after_governance() {
 fn test_governance_wrong_emitter_chain() {
     let te = setup(1);
 
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &[0xAA; 33], 1000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &[0xAA; 33],
+        1000,
+    );
     // Use emitter_chain = 2 instead of 1.
     let body = build_body(1000, 0, 2, &te.owner_emitter_address, 1, 0, &ptgm);
     let vaa_raw = build_signed_vaa(0, &[(0u8, te.guardian_secrets[0])], &body);
@@ -564,7 +645,7 @@ fn test_governance_wrong_emitter_chain() {
 
     let result = te
         .executor_client
-        .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .try_execute_governance_action(&vaa_bytes);
     assert!(result.is_err());
 }
 
@@ -572,7 +653,13 @@ fn test_governance_wrong_emitter_chain() {
 fn test_governance_wrong_emitter_address() {
     let te = setup(1);
 
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &[0xAA; 33], 1000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &[0xAA; 33],
+        1000,
+    );
     let wrong_address = [0x99u8; 32];
     let body = build_body(
         1000,
@@ -588,7 +675,28 @@ fn test_governance_wrong_emitter_address() {
 
     let result = te
         .executor_client
-        .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .try_execute_governance_action(&vaa_bytes);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_governance_wrong_executor_address_in_payload() {
+    let te = setup(1);
+
+    let wrong_executor = Address::generate(&te.env);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &wrong_executor,
+        &te.lazer_client.address,
+        &[0xAA; 33],
+        1000,
+    );
+    let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
+    let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
+
+    let result = te
+        .executor_client
+        .try_execute_governance_action(&vaa_bytes);
     assert!(result.is_err());
 }
 
@@ -601,35 +709,51 @@ fn test_governance_replayed_vaa() {
     let te = setup(1);
 
     let pubkey = test_trusted_signer_pubkey();
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let vaa_bytes = Bytes::from_slice(&te.env, &vaa_raw);
 
     // First execution succeeds.
     te.executor_client
-        .execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .execute_governance_action(&vaa_bytes);
 
     // Replay with the same sequence should fail.
     let result = te
         .executor_client
-        .try_execute_governance_action(&vaa_bytes, &te.lazer_client.address);
+        .try_execute_governance_action(&vaa_bytes);
     assert!(result.is_err());
 
     // Earlier sequence (never executed, but now below last_executed) should fail.
-    let ptgm_earlier = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 3_000_000_000);
+    let ptgm_earlier = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        3_000_000_000,
+    );
     let vaa_earlier = build_governance_vaa(&te, 0, &ptgm_earlier);
     let result = te.executor_client.try_execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_earlier),
-        &te.lazer_client.address,
     );
     assert!(result.is_err());
 
     // Next sequence succeeds.
-    let ptgm_next = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 3_000_000_000);
+    let ptgm_next = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        3_000_000_000,
+    );
     let vaa_next = build_governance_vaa(&te, 2, &ptgm_next);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_next),
-        &te.lazer_client.address,
     );
 }
 
@@ -640,19 +764,29 @@ fn test_governance_stale_sequence() {
     let pubkey = test_trusted_signer_pubkey();
 
     // Execute sequence 5.
-    let ptgm1 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm1 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
     let vaa1 = build_governance_vaa(&te, 5, &ptgm1);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa1),
-        &te.lazer_client.address,
     );
 
     // Try sequence 3 (stale).
-    let ptgm2 = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 3_000_000_000);
+    let ptgm2 = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        3_000_000_000,
+    );
     let vaa2 = build_governance_vaa(&te, 3, &ptgm2);
     let result = te.executor_client.try_execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa2),
-        &te.lazer_client.address,
     );
     assert!(result.is_err());
 }
@@ -723,13 +857,18 @@ fn test_unauthorized_direct_upgrade() {
 fn test_governance_invalid_ptgm_magic() {
     let te = setup(1);
 
-    let mut ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &[0xAA; 33], 1000);
+    let mut ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &[0xAA; 33],
+        1000,
+    );
     ptgm[0] = 0xFF; // corrupt PTGM magic
 
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let result = te.executor_client.try_execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_raw),
-        &te.lazer_client.address,
     );
     assert!(result.is_err());
 }
@@ -739,11 +878,16 @@ fn test_governance_wrong_target_chain() {
     let te = setup(1);
 
     // PTGM targets chain 99, but executor is on chain 30.
-    let ptgm = build_ptgm_update_signer(99, &[0xAA; 33], 1000);
+    let ptgm = build_ptgm_update_signer(
+        99,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &[0xAA; 33],
+        1000,
+    );
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     let result = te.executor_client.try_execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_raw),
-        &te.lazer_client.address,
     );
     assert!(result.is_err());
 }
@@ -758,13 +902,18 @@ fn test_governance_with_quorum() {
     let te = setup(3);
 
     let pubkey = test_trusted_signer_pubkey();
-    let ptgm = build_ptgm_update_signer(CHAIN_ID as u16, &pubkey, 2_000_000_000);
+    let ptgm = build_ptgm_update_signer(
+        CHAIN_ID as u16,
+        &te.executor_client.address,
+        &te.lazer_client.address,
+        &pubkey,
+        2_000_000_000,
+    );
 
     // All 3 guardians sign.
     let vaa_raw = build_governance_vaa(&te, 1, &ptgm);
     te.executor_client.execute_governance_action(
         &Bytes::from_slice(&te.env, &vaa_raw),
-        &te.lazer_client.address,
     );
 
     let update = test_lazer_update_bytes(&te.env);
