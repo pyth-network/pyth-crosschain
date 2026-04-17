@@ -31,8 +31,8 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `marketSession`       | `string` | All         | Session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`.    |
 | `price`               | `i64`    | Spot        | Aggregate market price (mantissa). Use with `exponent` for actual price. |
 | `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement. (Experimental)            |
-| `bestBidPrice`        | `i64`    | Spot        | Highest bid across publishers. (Experimental)                            |
-| `bestAskPrice`        | `i64`    | Spot        | Lowest ask across publishers. (Experimental)                             |
+| `bestBidPrice`        | `i64`    | Spot        | Tightest non-overlapping bid across publishers. (Experimental)           |
+| `bestAskPrice`        | `i64`    | Spot        | Tightest non-overlapping ask across publishers. (Experimental)           |
 | `emaPrice`            | `i64`    | Spot        | Exponential moving average of the price.                                 |
 | `emaConfidence`       | `i64`    | Spot        | Exponential moving average of the confidence.                            |
 | `fundingRate`         | `i64`    | Derivatives | Funding rate (perpetual futures).                                        |
@@ -240,7 +240,7 @@ freshness and origin of the price.
 
 ### Market Depth Properties
 
-Best bid and best ask represent the tightest prices across publishers. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
+Best bid and best ask represent the tightest **non-overlapping** top-of-book across publishers — the highest publisher bid and the lowest publisher ask selected such that `bestBidPrice < bestAskPrice`, with crossing quotes excluded. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
 
 <Callout type="warning" title="Experimental">
   The `bestBidPrice` and `bestAskPrice` fields are **experimental**. These fields
@@ -254,21 +254,29 @@ Best bid and best ask represent the tightest prices across publishers. For a det
       name: "bestBidPrice",
       type: "optional non-zero i64",
       description:
-        "Highest bid price across all contributing publishers, represented as mantissa.",
+        "Highest publisher bid that does not cross any publisher ask (tightest non-overlapping top-of-book bid), represented as mantissa.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
-      invariants: ["Non-zero when present", "Typically ≤ current price"],
+      invariants: [
+        "Non-zero when present",
+        "Strictly less than bestAskPrice when both are present",
+        "Typically ≤ current price",
+      ],
     },
     {
       name: "bestAskPrice",
       type: "optional non-zero i64",
       description:
-        "Lowest ask price across all contributing publishers, represented as mantissa.",
+        "Lowest publisher ask that does not cross any publisher bid (tightest non-overlapping top-of-book ask), represented as mantissa.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
-      invariants: ["Non-zero when present", "Typically ≥ current price"],
+      invariants: [
+        "Non-zero when present",
+        "Strictly greater than bestBidPrice when both are present",
+        "Typically ≥ current price",
+      ],
     },
   ]}
 />
