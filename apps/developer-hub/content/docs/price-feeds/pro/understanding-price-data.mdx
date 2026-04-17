@@ -123,3 +123,16 @@ For a deeper explanation of the algorithm and its motivation, see [EMA Price Agg
   alone. Consumers doing session-specific analysis should keep this in
   mind — the EMA is a rolling 1-hour average, not a per-session average.
 </Callout>
+
+## Circuit Breakers
+
+The aggregator applies **circuit breakers** to reject publisher updates that are clearly out of line with the expected price. When a circuit breaker trips, the offending publisher update is excluded from the aggregation window rather than being counted toward the median. This protects the aggregate from stale, mis-scaled, or otherwise anomalous inputs during known sensitive periods.
+
+### Split / Reverse-Split Corporate Actions (US Equities)
+
+When a US equity undergoes a **stock split** or **reverse split**:
+
+- The previous **`overNight` session is closed** on the execution date — there is no overnight aggregation spanning the corporate action boundary.
+- The split or reverse split is **applied at the start of the next `preMarket` session**. From that point forward, all aggregate prices reflect the adjusted share count.
+
+Publishers ingesting prices from upstream venues may not immediately pick up the corporate action and could briefly continue to publish **non-adjusted (pre-split) prices** after it takes effect. To keep these stale prices out of the aggregate, the aggregator rejects publisher updates whose price deviates beyond a **threshold from the adjusted last price** (for example, ~10%) for a **protection window after the action is applied** (for example, ~10 minutes into the new `preMarket` session). Once the window ends, aggregation returns to normal behavior.
