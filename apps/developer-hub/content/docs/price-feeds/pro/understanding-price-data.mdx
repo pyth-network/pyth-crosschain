@@ -28,22 +28,12 @@ Consumers can detect this case by comparing `feedUpdateTimestamp` against the up
 
 ## Confidence Interval
 
-**Confidence reflects the uncertainty of the prices reported among publishers.** **This may or may not reflect the uncertainty (volatility) of the underlying market price.**
+**Confidence reflects the measurement uncertainty of the prices reported among publishers.** **This may or may not reflect the uncertainty (volatility) of the underlying market price.** A high confidence value means publishers are deviating from the aggregate more than usual — whether because market conditions are volatile, publishers hold varying views on the current price, or there is less agreement across data sources. A low confidence value means publishers are in closer agreement about the price.
 
-When the number of contributing publishers is low, non-optimal behavior from a single publisher — for example, being slow to update or serving stale data — can move confidence in ways unrelated to market volatility. We recommend:
+Because confidence captures publisher disagreement rather than market volatility directly, a low publisher count can distort it: non-optimal behavior from a single publisher — for example, being slow to update or serving stale data — can move confidence in ways unrelated to the market. We recommend:
 
 - Using `publisherCount` to filter out updates with too few contributors for your use case.
 - Using `emaConfidence` rather than raw `confidence` to smooth out short-term noise.
-
-### What High Confidence Means
-
-A **high confidence value** indicates **high measurement uncertainty** — publishers are deviating from the aggregate more than usual. This could happen when:
-
-- Market conditions are volatile.
-- Publishers have varying views on the current price.
-- There is less agreement among data sources.
-
-A **low confidence value** indicates **low uncertainty** — publishers are in closer agreement about the price.
 
 ### How Confidence Is Calculated
 
