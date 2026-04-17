@@ -28,40 +28,42 @@ Consumers can detect this case by comparing `feedUpdateTimestamp` against the up
 
 ## Confidence Interval
 
-<Callout type="warning" title="Experimental">
-  This field is **experimental** and not yet covered by automated data quality assurance.
-  See [Payload Reference](/price-feeds/pro/payload-reference) for details.
-</Callout>
+**Confidence reflects the uncertainty of the prices reported among publishers.** This may or may not reflect the uncertainty (volatility) of the underlying market price.
 
-The confidence interval measures **the spread of price observations across publishers**. It measures how much individual publishers deviate from the aggregate price.
+When the number of contributing publishers is low, non-optimal behavior from a single publisher — for example, being slow to update or serving stale data — can move confidence in ways unrelated to market volatility. We recommend:
 
-<Callout type="warning">
-  **Important Distinction**: The confidence interval does NOT represent price
-  dislocation between trading venues. It reflects publisher uncertainty, which
-  does not always equal the market uncertainty.
-</Callout>
+- Using `publisherCount` to filter out updates with too few contributors for your use case.
+- Using `emaConfidence` rather than raw `confidence` to smooth out short-term noise.
 
 ### What High Confidence Means
 
-A **high confidence value** indicates **high uncertainty** - publishers are deviating from the aggregate more than usual. This could happen when:
+A **high confidence value** indicates **high uncertainty** — publishers are deviating from the aggregate more than usual. This could happen when:
 
 - Market conditions are volatile.
 - Publishers have varying views on the current price.
 - There is less agreement among data sources.
 
-A **low confidence value** indicates **low uncertainty** - publishers are in closer agreement about the price.
+A **low confidence value** indicates **low uncertainty** — publishers are in closer agreement about the price.
 
 ### How Confidence Is Calculated
 
-The confidence interval is computed using the interquartile range of publisher data. Importantly, the calculation combines **all prices, bids, and asks** from publishers — not just mid-prices.
+Confidence is the **maximum distance** from the aggregate `price` to the 25th and 75th percentiles of the combined publisher dataset:
 
-1. **Combine All Data**: The system pools all publisher prices, bids, and asks into a single dataset.
-2. **Calculate Percentiles**: The 25th percentile (price25) and 75th percentile (price75) are computed from this combined dataset.
-3. **Left Confidence**: Calculated as `median_price - price25`.
-4. **Right Confidence**: Calculated as `price75 - median_price`.
-5. **Final Confidence**: The larger of left confidence and right confidence is used as the reported confidence value.
+1. **Pool all publisher quotes**: For each publisher, collect their `price`, `bestBid`, and `bestAsk` into a single combined dataset across all publishers (missing fields are imputed first — see below).
+2. **Compute percentiles**: Calculate the 25th percentile (`p25`) and 75th percentile (`p75`) of the combined dataset.
+3. **Take the maximum distance**: `confidence = max(price − p25, p75 − price)`, where `price` is the aggregate price.
 
-This approach ensures the confidence interval reflects the full range of what publishers are reporting, including their view of market depth.
+This approach uses the interquartile range of all publisher quotes, so the confidence reflects both price disagreement and publishers' view of market depth.
+
+#### Imputing Missing Fields
+
+Publishers may submit any subset of `price`, `bestBid`, and `bestAsk` (see [Publisher Contributions](#publisher-contributions)). Before a publisher's quotes are added to the pool, missing fields are imputed from what they did provide:
+
+- **Only one field provided**: the other two are set equal to it.
+- **`price` missing, both `bestBid` and `bestAsk` provided**: `price` is set to the average of `bestBid` and `bestAsk`.
+- **`price` provided, `bestBid` or `bestAsk` missing**: the missing bid/ask is set equal to `price`.
+
+This ensures every publisher contributes three values to the confidence calculation regardless of which fields they submitted.
 
 ## Best Bid and Best Ask
 
