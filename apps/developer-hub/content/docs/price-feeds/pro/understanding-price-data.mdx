@@ -103,3 +103,23 @@ Best bid and ask are useful for:
   market uncertainty. Use both confidence intervals and best bid/ask data
   together for a more complete picture of market conditions.
 </Callout>
+
+## EMA Price and EMA Confidence
+
+`emaPrice` and `emaConfidence` are **exponentially-weighted moving averages** of the aggregate `price` and `confidence`, with an averaging window of approximately **1 hour**.
+
+In an EMA, the most recent samples receive the most weight and older samples decay exponentially. For a 1-hour window, samples roughly 1 hour in the past contribute about 50% of the weighting, samples 2 hours back contribute ~25%, 3 hours back contribute ~12.5%, and so on. This produces a smoothed view of the price that is resilient to short-term noise while still tracking sustained moves.
+
+The averaging is also **inverse-confidence weighted**: samples with a tight confidence interval contribute more weight than samples with a wide confidence. This dampens the influence of outlier aggregates published with high uncertainty, so transient publisher disagreement does not pull the EMA around.
+
+For a deeper explanation of the algorithm and its motivation, see [EMA Price Aggregation](/price-feeds/core/how-pyth-works/ema-price-aggregation).
+
+<Callout type="warning" title="EMA does not reset on market session boundaries">
+  `emaPrice` and `emaConfidence` continue averaging across session
+  transitions (for example, from `regular` to `postMarket` to `overNight`,
+  or back to `regular`). The EMA observed early in a new session still
+  carries contributions from the prior session's aggregates, so it may
+  reflect overnight or pre-market activity rather than the current session
+  alone. Consumers doing session-specific analysis should keep this in
+  mind — the EMA is a rolling 1-hour average, not a per-session average.
+</Callout>
