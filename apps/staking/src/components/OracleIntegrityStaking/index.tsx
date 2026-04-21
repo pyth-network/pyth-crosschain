@@ -95,9 +95,17 @@ export const OracleIntegrityStaking = ({
     [publishers, self],
   );
 
+  const activePublishers = useMemo(
+    () =>
+      otherPublishers.filter((publisher) =>
+        hasAnyNonCooldownPositions(publisher),
+      ),
+    [otherPublishers],
+  );
+
   return (
     <ProgramSection
-      className="pb-0 sm:pb-0"
+      className={activePublishers.length > 0 ? "pb-0 sm:pb-0" : ""}
       collapseTokenOverview
       description="OIS allows anyone to help secure Pyth and protect DeFi. Through decentralized staking rewards and slashing, OIS incentivizes Pyth publishers to maintain high-quality data contributions. PYTH holders can stake to publishers to further reinforce oracle security."
       name="Oracle Integrity Staking (OIS)"
@@ -127,22 +135,24 @@ export const OracleIntegrityStaking = ({
           yieldRate={yieldRate}
         />
       )}
-      <div
-        className={clsx(
-          "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 lg:mt-10",
-          { "mt-6 sm:mt-12": self === undefined },
-        )}
-      >
-        <PublisherList
-          api={api}
-          availableToStake={availableToStake}
-          currentEpoch={currentEpoch}
-          publishers={otherPublishers}
-          title={self ? "Other Publishers" : "Publishers"}
-          totalStaked={staked}
-          yieldRate={yieldRate}
-        />
-      </div>
+      {activePublishers.length > 0 && (
+        <div
+          className={clsx(
+            "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 lg:mt-10",
+            { "mt-6 sm:mt-12": self === undefined },
+          )}
+        >
+          <PublisherList
+            api={api}
+            availableToStake={availableToStake}
+            currentEpoch={currentEpoch}
+            publishers={activePublishers}
+            title={self ? "Other Publishers" : "Publishers"}
+            totalStaked={staked}
+            yieldRate={yieldRate}
+          />
+        </div>
+      )}
     </ProgramSection>
   );
 };
@@ -602,13 +612,9 @@ const PublisherList = ({
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
-  const activePublishers = useMemo(
-    () => publishers.filter((publisher) => hasAnyPositions(publisher)),
-    [publishers],
-  );
   const filteredSortedPublishers = useMemo(
     () =>
-      activePublishers
+      publishers
         .filter(
           (publisher) =>
             filter.contains(publisher.publicKey.toBase58(), search) ||
@@ -618,7 +624,7 @@ const PublisherList = ({
         .sort((a, b) => {
           return compare(collator, a, b, yieldRate, sort);
         }),
-    [activePublishers, search, sort, filter, yieldRate, collator],
+    [publishers, search, sort, filter, yieldRate, collator],
   );
 
   const paginatedPublishers = useMemo(
@@ -1593,6 +1599,14 @@ const useTransferActionForPublisher = (
         ? undefined
         : (amount: bigint) => action(publisher, amount),
     [action, publisher],
+  );
+
+const hasAnyNonCooldownPositions = ({
+  positions,
+}: PublisherProps["publisher"]) =>
+  positions !== undefined &&
+  [positions.warmup, positions.staked].some(
+    (value) => value !== undefined && value > 0n,
   );
 
 const hasAnyPositions = ({ positions }: PublisherProps["publisher"]) =>
