@@ -1,33 +1,17 @@
 "use client";
 
 import {
-  QuestionMarkCircleIcon,
   ChevronDownIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useCallback } from "react";
-import { MenuTrigger, Button } from "react-aria-components";
+import { useCallback, useState } from "react";
+import { Button, MenuTrigger } from "react-aria-components";
 
-import { ProgramParameters } from "./program-parameters";
-import { StateType, useApi } from "../../hooks/use-api";
-import { useChangelog } from "../../hooks/use-changelog";
-import { GeneralFaq } from "../GeneralFaq";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
-import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { PublisherFaq } from "../PublisherFaq";
 
 export const HelpMenu = () => {
-  const api = useApi();
-  const [faqOpen, setFaqOpen] = useState(false);
-  const openFaq = useCallback(() => {
-    setFaqOpen(true);
-  }, [setFaqOpen]);
-
-  const [oisGuideOpen, setOisGuideOpen] = useState(false);
-  const openOisGuide = useCallback(() => {
-    setOisGuideOpen(true);
-  }, [setOisGuideOpen]);
-
   const [governanceGuideOpen, setGovernanceGuideOpen] = useState(false);
   const openGovernanceGuide = useCallback(() => {
     setGovernanceGuideOpen(true);
@@ -37,12 +21,6 @@ export const HelpMenu = () => {
   const openPublisherFaq = useCallback(() => {
     setPublisherFaqOpen(true);
   }, [setPublisherFaqOpen]);
-
-  const [parametersOpen, setParametersOpen] = useState(false);
-  const openParameters = useCallback(() => {
-    setParametersOpen(true);
-  }, [setParametersOpen]);
-  const { open: openChangelog } = useChangelog();
 
   return (
     <>
@@ -54,13 +32,6 @@ export const HelpMenu = () => {
         </Button>
         <Menu placement="bottom end">
           <Section>
-            <MenuItem onAction={openFaq}>FAQ</MenuItem>
-          </Section>
-          <Separator />
-          <Section>
-            <MenuItem onAction={openOisGuide}>
-              Oracle Integrity Staking (OIS) Guide
-            </MenuItem>
             <MenuItem onAction={openGovernanceGuide}>
               Pyth Governance Guide
             </MenuItem>
@@ -75,32 +46,8 @@ export const HelpMenu = () => {
               Data Publisher Guide
             </MenuItem>
           </Section>
-          <Separator />
-          <Section>
-            <MenuItem
-              href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
-              target="_blank"
-            >
-              Reward Calculator
-            </MenuItem>
-          </Section>
-          <Separator />
-          <Section>
-            {(api.type === StateType.Loaded ||
-              api.type === StateType.LoadedNoStakeAccount) && (
-              <MenuItem onAction={openParameters}>
-                Current Program Parameters
-              </MenuItem>
-            )}
-            <MenuItem onAction={openChangelog}>Changelog</MenuItem>
-          </Section>
         </Menu>
       </MenuTrigger>
-      <GeneralFaq isOpen={faqOpen} onOpenChange={setFaqOpen} />
-      <OracleIntegrityStakingGuide
-        isOpen={oisGuideOpen}
-        onOpenChange={setOisGuideOpen}
-      />
       <GovernanceGuide
         isOpen={governanceGuideOpen}
         onOpenChange={setGovernanceGuideOpen}
@@ -109,14 +56,6 @@ export const HelpMenu = () => {
         isOpen={publisherFaqOpen}
         onOpenChange={setPublisherFaqOpen}
       />
-      {(api.type === StateType.Loaded ||
-        api.type === StateType.LoadedNoStakeAccount) && (
-        <ProgramParameters
-          api={api}
-          isOpen={parametersOpen}
-          onOpenChange={setParametersOpen}
-        />
-      )}
     </>
   );
 };

@@ -1,11 +1,11 @@
 import {
-  ChevronUpIcon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
   Bars3Icon,
-  ChevronDownIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { lookup } from "@pythnetwork/known-publishers";
 import { calculateApy } from "@pythnetwork/staking-sdk";
@@ -14,21 +14,20 @@ import clsx from "clsx";
 import type {
   ComponentProps,
   Dispatch,
-  SetStateAction,
-  HTMLAttributes,
   FormEvent,
+  SetStateAction,
 } from "react";
-import { useMemo, useCallback, useState, useRef, createElement } from "react";
-import { useFilter, useCollator } from "react-aria";
+import { createElement, useCallback, useMemo, useRef, useState } from "react";
+import { useCollator, useFilter } from "react-aria";
 import {
-  SearchField,
-  Input,
   Button as BaseButton,
-  Meter,
-  Label,
-  TextField,
   Form,
+  Input,
+  Label,
   MenuTrigger,
+  Meter,
+  SearchField,
+  TextField,
 } from "react-aria-components";
 
 import type { States } from "../../hooks/use-api";
@@ -43,16 +42,14 @@ import { CopyButton } from "../CopyButton";
 import { ErrorMessage } from "../ErrorMessage";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { ModalDialog } from "../ModalDialog";
-import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { ProgramSection } from "../ProgramSection";
 import { PublisherFaq } from "../PublisherFaq";
 import { Select } from "../Select";
 import { SparkChart } from "../SparkChart";
 import { StakingTimeline } from "../StakingTimeline";
 import { Styled } from "../Styled";
-import { Switch } from "../Switch";
 import { Tokens } from "../Tokens";
-import { AmountType, TransferButton } from "../TransferButton";
+import { TransferButton } from "../TransferButton";
 import { TruncatedKey } from "../TruncatedKey";
 
 type Props = {
@@ -100,19 +97,18 @@ export const OracleIntegrityStaking = ({
 
   return (
     <ProgramSection
-      name="Oracle Integrity Staking (OIS)"
-      tagline="Protect DeFi"
-      description="OIS allows anyone to help secure Pyth and protect DeFi. Through decentralized staking rewards and slashing, OIS incentivizes Pyth publishers to maintain high-quality data contributions. PYTH holders can stake to publishers to further reinforce oracle security. Rewards are programmatically distributed to high quality publishers and the stakers supporting them to strengthen oracle integrity."
-      helpDialog={<OracleIntegrityStakingGuide />}
       className="pb-0 sm:pb-0"
       collapseTokenOverview
+      description="OIS allows anyone to help secure Pyth and protect DeFi. Through decentralized staking rewards and slashing, OIS incentivizes Pyth publishers to maintain high-quality data contributions. PYTH holders can stake to publishers to further reinforce oracle security."
+      name="Oracle Integrity Staking (OIS)"
+      tagline="Protect DeFi"
       tokenOverview={{
-        currentEpoch,
         available: availableToStake,
-        warmup,
-        staked,
         cooldown,
         cooldown2,
+        currentEpoch,
+        staked,
+        warmup,
         ...(locked > 0n && {
           availableToStakeDetails: (
             <div className="mt-2 text-xs text-red-600">
@@ -125,9 +121,9 @@ export const OracleIntegrityStaking = ({
       {self && api.type == ApiStateType.Loaded && (
         <SelfStaking
           api={api}
-          self={self}
-          currentEpoch={currentEpoch}
           availableToStake={availableToStake}
+          currentEpoch={currentEpoch}
+          self={self}
           yieldRate={yieldRate}
         />
       )}
@@ -139,10 +135,10 @@ export const OracleIntegrityStaking = ({
       >
         <PublisherList
           api={api}
-          currentEpoch={currentEpoch}
-          title={self ? "Other Publishers" : "Publishers"}
           availableToStake={availableToStake}
+          currentEpoch={currentEpoch}
           publishers={otherPublishers}
+          title={self ? "Other Publishers" : "Publishers"}
           totalStaked={staked}
           yieldRate={yieldRate}
         />
@@ -190,16 +186,16 @@ const SelfStaking = ({
             <div>
               <h3 className="text-2xl font-light">Self Staking</h3>
               <PublisherIdentity
-                truncatedClassName="2xl:hidden"
-                fullClassName="hidden 2xl:inline"
                 className="opacity-60"
+                fullClassName="hidden 2xl:inline"
+                truncatedClassName="2xl:hidden"
               >
                 {self}
               </PublisherIdentity>
             </div>
             <div className="flex flex-row items-center gap-4">
               <MenuTrigger>
-                <Button variant="secondary" className="group lg:hidden">
+                <Button className="group lg:hidden" variant="secondary">
                   <Bars3Icon className="size-6 flex-none" />
                   <span className="sr-only">Publisher Menu</span>
                   <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
@@ -228,33 +224,33 @@ const SelfStaking = ({
                 </Menu>
               </MenuTrigger>
               <LinkButton
-                href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
-                target="_blank"
-                size="small"
                 className="hidden lg:block"
+                href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
+                size="small"
+                target="_blank"
               >
                 Publisher Guide
               </LinkButton>
               <Button
-                size="small"
-                onPress={openPublisherFaq}
                 className="hidden lg:block"
+                onPress={openPublisherFaq}
+                size="small"
               >
                 Publisher FAQ
               </Button>
               <Button
-                variant="secondary"
-                size="small"
-                onPress={openReassignStakeAccount}
                 className="hidden lg:block"
+                onPress={openReassignStakeAccount}
+                size="small"
+                variant="secondary"
               >
                 Reassign Stake Account
               </Button>
               <Button
-                variant="secondary"
-                size="small"
-                onPress={openOptOut}
                 className="hidden lg:block"
+                onPress={openOptOut}
+                size="small"
+                variant="secondary"
               >
                 Opt Out of Rewards
               </Button>
@@ -264,13 +260,13 @@ const SelfStaking = ({
           <div className="border-neutral-600/50 bg-pythpurple-400/10 sm:mx-12 sm:mb-4 sm:border sm:border-t-0 md:mx-20 xl:hidden">
             <Publisher
               api={api}
-              currentEpoch={currentEpoch}
               availableToStake={availableToStake}
+              compact
+              currentEpoch={currentEpoch}
+              isSelf
               publisher={self}
               totalStaked={self.positions?.staked ?? 0n}
               yieldRate={yieldRate}
-              isSelf
-              compact
             />
           </div>
 
@@ -282,15 +278,14 @@ const SelfStaking = ({
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
                 <PublisherTableHeader>Number of feeds</PublisherTableHeader>
                 <PublisherTableHeader>Quality ranking</PublisherTableHeader>
-                <PublisherTableHeader />
               </tr>
             </thead>
             <tbody className="bg-pythpurple-400/10">
               <Publisher
                 api={api}
-                isSelf
-                currentEpoch={currentEpoch}
                 availableToStake={availableToStake}
+                currentEpoch={currentEpoch}
+                isSelf
                 publisher={self}
                 totalStaked={self.positions?.staked ?? 0n}
                 yieldRate={yieldRate}
@@ -305,15 +300,15 @@ const SelfStaking = ({
       />
       <ReassignStakeAccount
         api={api}
-        self={self}
         isOpen={reassignStakeAccountOpen}
         onOpenChange={setReassignStakeAccountOpen}
+        self={self}
       />
       <OptOut
         api={api}
-        self={self}
         isOpen={optOutOpen}
         onOpenChange={setOptOutOpen}
+        self={self}
       />
     </>
   );
@@ -335,7 +330,7 @@ const ReassignStakeAccount = ({
   const [closeDisabled, setCloseDisabled] = useState(false);
 
   return hasAnyPositions(self) ? (
-    <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
+    <ModalDialog closeButtonText="Ok" title="You must unstake first" {...props}>
       <div className="flex max-w-prose flex-col gap-4">
         <p className="font-semibold">
           You cannot designate another account while self-staked.
@@ -348,7 +343,6 @@ const ReassignStakeAccount = ({
     </ModalDialog>
   ) : (
     <ModalDialog
-      title="Reassign Stake Account"
       closeDisabled={closeDisabled}
       description={
         <>
@@ -360,13 +354,14 @@ const ReassignStakeAccount = ({
           </PublisherIdentity>
         </>
       }
+      title="Reassign Stake Account"
       {...props}
     >
       {({ close }) => (
         <ReassignStakeAccountForm
           api={api}
-          publisherPubkey={self.publicKey}
           close={close}
+          publisherPubkey={self.publicKey}
           setCloseDisabled={setCloseDisabled}
         />
       )}
@@ -433,20 +428,20 @@ const ReassignStakeAccountForm = ({
       <TextField
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
+        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
         isInvalid={key === undefined}
-        value={value}
+        name="publicKey"
         onChange={setValue}
         validationBehavior="aria"
-        name="publicKey"
-        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
+        value={value}
       >
         <div className="flex flex-row items-center justify-between">
           <Label>New stake account public key</Label>
         </div>
         <Input
-          required
           className="focused:outline-none focused:ring-0 focused:border-pythpurple-400 w-full truncate border border-neutral-600/50 bg-transparent p-3 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0"
           placeholder={PublicKey.default.toBase58()}
+          required
         />
         {state.type === UseAsyncStateType.Error && (
           <div className="mt-4 max-w-sm">
@@ -456,13 +451,13 @@ const ReassignStakeAccountForm = ({
       </TextField>
       <Button
         className="mt-6 w-full"
-        type="submit"
-        isLoading={state.type === UseAsyncStateType.Running}
         isDisabled={
           key === undefined || state.type === UseAsyncStateType.Complete
         }
+        isLoading={state.type === UseAsyncStateType.Running}
+        type="submit"
       >
-        <ReassignStakeAccountButtonContents value={value} publicKey={key} />
+        <ReassignStakeAccountButtonContents publicKey={key} value={value} />
       </Button>
     </Form>
   );
@@ -496,7 +491,7 @@ type OptOut = Omit<
 
 const OptOut = ({ api, self, ...props }: OptOut) => {
   return hasAnyPositions(self) ? (
-    <ModalDialog title="You must unstake first" closeButtonText="Ok" {...props}>
+    <ModalDialog closeButtonText="Ok" title="You must unstake first" {...props}>
       <div className="flex max-w-prose flex-col gap-4">
         <p className="font-semibold">
           You cannot opt out of rewards while self-staked.
@@ -510,7 +505,7 @@ const OptOut = ({ api, self, ...props }: OptOut) => {
   ) : (
     <ModalDialog title="Are you sure?" {...props}>
       {({ close }) => (
-        <OptOutModalContents api={api} self={self} close={close} />
+        <OptOutModalContents api={api} close={close} self={self} />
       )}
     </ModalDialog>
   );
@@ -561,16 +556,16 @@ const OptOutModalContents = ({
         </div>
       )}
       <div className="mt-14 flex flex-col gap-8 sm:flex-row sm:justify-between">
-        <Button className="w-full sm:w-auto" size="noshrink" onPress={close}>
+        <Button className="w-full sm:w-auto" onPress={close} size="noshrink">
           No, I want rewards!
         </Button>
         <Button
           className="w-full sm:w-auto"
-          variant="secondary"
-          size="noshrink"
-          isLoading={state.type === UseAsyncStateType.Running}
           isDisabled={state.type === UseAsyncStateType.Complete}
+          isLoading={state.type === UseAsyncStateType.Running}
           onPress={doOptOut}
+          size="noshrink"
+          variant="secondary"
         >
           Yes, opt me out
         </Button>
@@ -603,17 +598,12 @@ const PublisherList = ({
   );
   const scrollTarget = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
-  const [yoursFirst, setYoursFirst] = useState(true);
   const [sort, setSort] = useState(SortOption.SelfStakeDescending);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
   const activePublishers = useMemo(
-    () =>
-      publishers.filter(
-        (publisher) =>
-          publisher.poolCapacity > 0n || hasAnyPositions(publisher),
-      ),
+    () => publishers.filter((publisher) => hasAnyPositions(publisher)),
     [publishers],
   );
   const filteredSortedPublishers = useMemo(
@@ -626,18 +616,9 @@ const PublisherList = ({
               filter.contains(publisher.identity.name, search)),
         )
         .sort((a, b) => {
-          if (yoursFirst) {
-            const aHasPositions = hasAnyPositions(a);
-            const bHasPositions = hasAnyPositions(b);
-            if (aHasPositions && !bHasPositions) {
-              return -1;
-            } else if (bHasPositions && !aHasPositions) {
-              return 1;
-            }
-          }
           return compare(collator, a, b, yieldRate, sort);
         }),
-    [activePublishers, search, sort, filter, yieldRate, yoursFirst, collator],
+    [activePublishers, search, sort, filter, yieldRate, collator],
   );
 
   const paginatedPublishers = useMemo(
@@ -675,14 +656,6 @@ const PublisherList = ({
     [setSort, updatePage],
   );
 
-  const updateYoursFirst = useCallback<typeof setYoursFirst>(
-    (newYoursFirst) => {
-      setYoursFirst(newYoursFirst);
-      updatePage(1);
-    },
-    [setYoursFirst, updatePage],
-  );
-
   const updatePageSize = useCallback<typeof setPageSize>(
     (newPageSize) => {
       setPageSize(newPageSize);
@@ -704,10 +677,10 @@ const PublisherList = ({
 
         <div className="flex flex-none grow flex-col items-end gap-2 xl:flex-row-reverse xl:items-center xl:justify-start xl:gap-8 2xl:gap-16">
           <SearchField
-            value={search}
-            onChange={updateSearch}
             aria-label="Search"
             className="group relative w-full md:max-w-96 xl:max-w-64 2xl:max-w-96"
+            onChange={updateSearch}
+            value={search}
           >
             <Input
               className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
@@ -725,6 +698,7 @@ const PublisherList = ({
           <Select
             className="2xl:hidden"
             label="Sort by"
+            onSelectionChange={updateSort}
             options={[
               SortOption.PublisherNameDescending,
               SortOption.PublisherNameAscending,
@@ -740,13 +714,7 @@ const PublisherList = ({
               SortOption.QualityRankingAscending,
             ]}
             selectedKey={sort}
-            onSelectionChange={updateSort}
             show={getSortName}
-          />
-          <Switch
-            isSelected={yoursFirst}
-            onChange={updateYoursFirst}
-            preLabel="Show your positions first"
           />
         </div>
       </div>
@@ -758,12 +726,12 @@ const PublisherList = ({
               <li key={publisher.publicKey.toBase58()}>
                 <Publisher
                   api={api}
-                  currentEpoch={currentEpoch}
                   availableToStake={availableToStake}
+                  compact
+                  currentEpoch={currentEpoch}
                   publisher={publisher}
                   totalStaked={totalStaked}
                   yieldRate={yieldRate}
-                  compact
                 />
               </li>
             ))}
@@ -772,36 +740,36 @@ const PublisherList = ({
             <thead className="bg-pythpurple-100/30 font-light">
               <tr>
                 <SortablePublisherTableHeader
-                  asc={SortOption.PublisherNameAscending}
-                  desc={SortOption.PublisherNameDescending}
-                  sort={sort}
-                  setSort={updateSort}
                   alignment="left"
+                  asc={SortOption.PublisherNameAscending}
                   className="pl-4 sm:pl-10"
+                  desc={SortOption.PublisherNameDescending}
+                  setSort={updateSort}
+                  sort={sort}
                 >
                   Publisher
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.SelfStakeAscending}
                   desc={SortOption.SelfStakeDescending}
-                  sort={sort}
                   setSort={updateSort}
+                  sort={sort}
                 >
                   {"Publisher's stake"}
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.RemainingPoolAscending}
                   desc={SortOption.RemainingPoolDescending}
-                  sort={sort}
                   setSort={updateSort}
+                  sort={sort}
                 >
                   Pool
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.ApyAscending}
                   desc={SortOption.ApyDescending}
-                  sort={sort}
                   setSort={updateSort}
+                  sort={sort}
                 >
                   Estimated next APY
                 </SortablePublisherTableHeader>
@@ -809,20 +777,19 @@ const PublisherList = ({
                 <SortablePublisherTableHeader
                   asc={SortOption.NumberOfFeedsAscending}
                   desc={SortOption.NumberOfFeedsDescending}
-                  sort={sort}
                   setSort={updateSort}
+                  sort={sort}
                 >
                   Number of feeds
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.QualityRankingAscending}
                   desc={SortOption.QualityRankingDescending}
-                  sort={sort}
                   setSort={updateSort}
+                  sort={sort}
                 >
                   Quality ranking
                 </SortablePublisherTableHeader>
-                <PublisherTableHeader className="pr-4 sm:pr-10" />
               </tr>
             </thead>
 
@@ -830,9 +797,9 @@ const PublisherList = ({
               {paginatedPublishers.map((publisher) => (
                 <Publisher
                   api={api}
+                  availableToStake={availableToStake}
                   currentEpoch={currentEpoch}
                   key={publisher.publicKey.toBase58()}
-                  availableToStake={availableToStake}
                   publisher={publisher}
                   totalStaked={totalStaked}
                   yieldRate={yieldRate}
@@ -851,9 +818,9 @@ const PublisherList = ({
         <div className="flex flex-col items-center justify-between gap-4 border-t border-neutral-600/50 p-4 sm:flex-row">
           <Select
             label="Page size"
+            onSelectionChange={updatePageSize}
             options={PageSize}
             selectedKey={pageSize}
-            onSelectionChange={updatePageSize}
           />
           <Paginator
             currentPage={currentPage}
@@ -883,12 +850,12 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
       {currentPage > 1 && (
         <li>
           <Button
+            className="size-8"
             onPress={() => {
               onPageChange(1);
             }}
             size="nopad"
             variant="secondary"
-            className="size-8"
           >
             <ChevronDoubleLeftIcon className="size-4" />
           </Button>
@@ -897,21 +864,21 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
       {pages.map((page) =>
         page === currentPage ? (
           <li
-            key={page}
             className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600"
+            key={page}
           >
             {page}
           </li>
         ) : (
           <li key={page}>
             <Button
+              className="size-8"
               key={page}
               onPress={() => {
                 onPageChange(page);
               }}
               size="nopad"
               variant="secondary"
-              className="size-8"
             >
               {page}
             </Button>
@@ -921,12 +888,12 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
       {currentPage < numPages && (
         <li>
           <Button
+            className="size-8"
             onPress={() => {
               onPageChange(numPages);
             }}
             size="nopad"
             variant="secondary"
-            className="size-8"
           >
             <ChevronDoubleRightIcon className="size-4" />
           </Button>
@@ -944,7 +911,7 @@ const getPageRange = (
     page <= 3 || numPages <= 5
       ? 1
       : page - 2 - Math.max(2 - (numPages - page), 0);
-  return { first, count: Math.min(numPages - first + 1, 5) };
+  return { count: Math.min(numPages - first + 1, 5), first };
 };
 
 const compare = (
@@ -1048,20 +1015,20 @@ const compareApy = (
 ) =>
   (reverse ? -1 : 1) *
   (calculateApy({
+    delegationFee: b.delegationFee,
     isSelf: false,
-    selfStake: b.selfStake + b.selfStakeDelta,
     poolCapacity: b.poolCapacity,
     poolUtilization: b.poolUtilization + b.poolUtilizationDelta,
+    selfStake: b.selfStake + b.selfStakeDelta,
     yieldRate,
-    delegationFee: b.delegationFee,
   }) -
     calculateApy({
+      delegationFee: a.delegationFee,
       isSelf: false,
-      selfStake: a.selfStake + a.selfStakeDelta,
       poolCapacity: a.poolCapacity,
       poolUtilization: a.poolUtilization + a.poolUtilizationDelta,
+      selfStake: a.selfStake + a.selfStakeDelta,
       yieldRate,
-      delegationFee: a.delegationFee,
     }));
 
 const comparePoolCapacity = (
@@ -1204,7 +1171,6 @@ const Publisher = ({
   api,
   currentEpoch,
   publisher,
-  availableToStake,
   totalStaked,
   isSelf,
   yieldRate,
@@ -1241,13 +1207,13 @@ const Publisher = ({
   const estimatedNextApy = useMemo(
     () =>
       calculateApy({
+        delegationFee: publisher.delegationFee,
         isSelf: isSelf ?? false,
-        selfStake: publisher.selfStake + publisher.selfStakeDelta,
         poolCapacity: publisher.poolCapacity,
         poolUtilization:
           publisher.poolUtilization + publisher.poolUtilizationDelta,
+        selfStake: publisher.selfStake + publisher.selfStakeDelta,
         yieldRate,
-        delegationFee: publisher.delegationFee,
       }).toFixed(2),
     [
       isSelf,
@@ -1267,20 +1233,12 @@ const Publisher = ({
         <div className="flex flex-row items-center justify-between">
           <PublisherIdentity
             className="font-semibold"
-            truncatedClassName="md:hidden"
             fullClassName="hidden md:inline"
+            truncatedClassName="md:hidden"
             withNameClassName="flex flex-col items-start"
           >
             {publisher}
           </PublisherIdentity>
-          <StakeToPublisherButton
-            api={api}
-            currentEpoch={currentEpoch}
-            availableToStake={availableToStake}
-            publisher={publisher}
-            yieldRate={yieldRate}
-            isSelf={isSelf ?? false}
-          />
         </div>
       )}
       <div
@@ -1294,20 +1252,10 @@ const Publisher = ({
         {!isSelf && (
           <div className="flex grow flex-col gap-2 xs:items-end">
             <UtilizationMeter
-              publisher={publisher}
               className="mx-auto my-4 w-full grow xs:mx-0 sm:w-auto sm:flex-none"
+              publisher={publisher}
             />
           </div>
-        )}
-        {isSelf && (
-          <StakeToPublisherButton
-            api={api}
-            currentEpoch={currentEpoch}
-            availableToStake={availableToStake}
-            publisher={publisher}
-            yieldRate={yieldRate}
-            isSelf
-          />
         )}
         <dl
           className={clsx(
@@ -1345,19 +1293,19 @@ const Publisher = ({
       </div>
       {isSelf && (
         <UtilizationMeter
-          publisher={publisher}
           className="mx-auto my-4 w-full grow xs:mx-0"
+          publisher={publisher}
         />
       )}
       {(warmup !== undefined || staked !== undefined) && (
         <YourPositionsTable
-          publisher={publisher}
-          warmup={warmup}
           cancelWarmup={cancelWarmup}
+          currentEpoch={currentEpoch}
+          publisher={publisher}
           staked={staked}
           totalStaked={totalStaked}
           unstake={unstake}
-          currentEpoch={currentEpoch}
+          warmup={warmup}
         />
       )}
     </div>
@@ -1368,8 +1316,8 @@ const Publisher = ({
           <>
             <PublisherTableCell className="truncate py-4 pl-4 font-medium sm:pl-10">
               <PublisherIdentity
-                truncatedClassName="3xl:hidden"
                 fullClassName="hidden 3xl:inline"
+                truncatedClassName="3xl:hidden"
                 withNameClassName="flex flex-col items-start"
               >
                 {publisher}
@@ -1402,30 +1350,18 @@ const Publisher = ({
         <PublisherTableCell className="text-center">
           {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
         </PublisherTableCell>
-        <PublisherTableCell
-          className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
-        >
-          <StakeToPublisherButton
-            api={api}
-            currentEpoch={currentEpoch}
-            availableToStake={availableToStake}
-            publisher={publisher}
-            yieldRate={yieldRate}
-            isSelf={isSelf ?? false}
-          />
-        </PublisherTableCell>
       </tr>
       {(warmup !== undefined || staked !== undefined) && (
         <tr>
-          <td colSpan={8} className="border-separate border-spacing-8">
+          <td className="border-separate border-spacing-8" colSpan={7}>
             <YourPositionsTable
-              publisher={publisher}
-              warmup={warmup}
               cancelWarmup={cancelWarmup}
+              currentEpoch={currentEpoch}
+              publisher={publisher}
               staked={staked}
               totalStaked={totalStaked}
               unstake={unstake}
-              currentEpoch={currentEpoch}
+              warmup={warmup}
             />
           </td>
         </tr>
@@ -1461,13 +1397,13 @@ const UtilizationMeter = ({ publisher, ...props }: UtilizationMeterProps) => {
         <>
           <div className="relative mx-auto grid h-5 w-full place-content-center border border-black bg-pythpurple-600/20 sm:w-52">
             <div
-              style={{
-                width: `${percentage.toString()}%`,
-              }}
               className={clsx(
                 "absolute inset-0 max-w-full",
                 percentage < 100 ? "bg-pythpurple-400" : "bg-red-800",
               )}
+              style={{
+                width: `${percentage.toString()}%`,
+              }}
             />
             <div
               className={clsx("isolate text-sm font-medium", {
@@ -1533,9 +1469,6 @@ const YourPositionsTable = ({
               })}
             >
               <TransferButton
-                size="small"
-                variant="secondary"
-                className="w-28"
                 actionDescription={
                   <>
                     <span className="mr-[0.5em]">
@@ -1547,11 +1480,14 @@ const YourPositionsTable = ({
                   </>
                 }
                 actionName="Cancel"
-                submitButtonText="Cancel Warmup"
-                title="Cancel Warmup"
-                successMessage="Your tokens are no longer in warmup for staking"
+                className="w-28"
                 max={warmup}
+                size="small"
+                submitButtonText="Cancel Warmup"
+                successMessage="Your tokens are no longer in warmup for staking"
+                title="Cancel Warmup"
                 transfer={cancelWarmup}
+                variant="secondary"
               />
             </td>
           </tr>
@@ -1570,9 +1506,6 @@ const YourPositionsTable = ({
             </td>
             <td className="py-0.5 text-right">
               <TransferButton
-                size="small"
-                variant="secondary"
-                className="md:w-28"
                 actionDescription={
                   <>
                     <span className="mr-[0.5em]">Unstake tokens from</span>
@@ -1582,9 +1515,12 @@ const YourPositionsTable = ({
                   </>
                 }
                 actionName="Unstake"
-                successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
+                className="md:w-28"
                 max={staked}
+                size="small"
+                successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
                 transfer={unstake}
+                variant="secondary"
               >
                 <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
               </TransferButton>
@@ -1597,120 +1533,6 @@ const YourPositionsTable = ({
 );
 
 const PublisherTableCell = Styled("td", "py-4 px-5 whitespace-nowrap");
-
-type StakeToPublisherButtonProps = {
-  api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
-  publisher: PublisherProps["publisher"];
-  currentEpoch: bigint;
-  availableToStake: bigint;
-  yieldRate: bigint;
-  isSelf: boolean;
-};
-
-const StakeToPublisherButton = ({
-  api,
-  currentEpoch,
-  availableToStake,
-  publisher,
-  yieldRate,
-  isSelf,
-}: StakeToPublisherButtonProps) => {
-  const delegate = useTransferActionForPublisher(
-    api.type === ApiStateType.Loaded ? api.delegateIntegrityStaking : undefined,
-    publisher.publicKey,
-  );
-
-  return publisher.poolCapacity === 0n ? (
-    <></>
-  ) : (
-    <TransferButton
-      size="small"
-      actionDescription={
-        <>
-          <span className="mr-[0.5em]">Stake to</span>
-          <PublisherIdentity className="font-semibold">
-            {publisher}
-          </PublisherIdentity>
-        </>
-      }
-      actionName="Stake"
-      max={availableToStake}
-      transfer={delegate}
-      successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
-    >
-      {(amount) => (
-        <>
-          <div className="mb-8 flex flex-row items-center justify-between text-sm">
-            <div>APY after staking</div>
-            <NewApy
-              className="font-medium"
-              isSelf={isSelf}
-              publisher={publisher}
-              yieldRate={yieldRate}
-            >
-              {amount.type === AmountType.Valid ||
-              amount.type === AmountType.AboveMax
-                ? amount.amount
-                : 0n}
-            </NewApy>
-          </div>
-          <StakingTimeline currentEpoch={currentEpoch} />
-        </>
-      )}
-    </TransferButton>
-  );
-};
-
-type NewApyProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
-  isSelf: boolean;
-  publisher: PublisherProps["publisher"];
-  yieldRate: bigint;
-  children: bigint;
-};
-
-const NewApy = ({
-  isSelf,
-  publisher,
-  yieldRate,
-  children,
-  ...props
-}: NewApyProps) => {
-  const apy = useMemo(
-    () =>
-      calculateApy({
-        poolCapacity: publisher.poolCapacity,
-        yieldRate,
-        delegationFee: publisher.delegationFee,
-        ...(isSelf
-          ? {
-              isSelf: true,
-              selfStake:
-                publisher.selfStake + publisher.selfStakeDelta + children,
-            }
-          : {
-              isSelf: false,
-              selfStake: publisher.selfStake + publisher.selfStakeDelta,
-              poolUtilization:
-                publisher.poolUtilization +
-                publisher.poolUtilizationDelta +
-                children,
-            }),
-      }),
-    [
-      publisher.poolCapacity,
-      yieldRate,
-      isSelf,
-      publisher.selfStake,
-      publisher.selfStakeDelta,
-      publisher.poolUtilization,
-      publisher.poolUtilizationDelta,
-      publisher.delegationFee,
-      children,
-    ],
-  );
-
-  return <div {...props}>{apy}%</div>;
-};
 
 type PublisherIdentityProps = PublisherKeyProps & {
   withNameClassName?: string | undefined;
