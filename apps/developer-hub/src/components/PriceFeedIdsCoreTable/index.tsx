@@ -150,10 +150,18 @@ const State = {
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 const getFeeds = async () => {
-  const [pythnet, pythtest] = await Promise.all([
+  const [pythnetResult, pythtestResult] = await Promise.allSettled([
     getFeedsFromHermes("https://hermes.pyth.network"),
     getFeedsFromHermes("https://hermes-beta.pyth.network"),
   ]);
+
+  if (pythnetResult.status === "rejected") {
+    throw pythnetResult.reason;
+  }
+
+  const pythnet = pythnetResult.value;
+  const pythtest =
+    pythtestResult.status === "fulfilled" ? pythtestResult.value : [];
 
   const feeds = new Map<
     string,
