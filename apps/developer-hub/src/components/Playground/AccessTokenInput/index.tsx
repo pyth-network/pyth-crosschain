@@ -48,17 +48,17 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
             onChange={(event) => {
               updateConfig({ accessToken: event.target.value });
             }}
-            placeholder="Leave empty to use demo token (rate limited)"
+            placeholder="Paste your API key for unlimited streams (optional)"
             type="password"
             value={config.accessToken}
           />
         </div>
 
-        {isUsingDemoToken && (
-          <span className={styles.hint}>
-            Using demo token (rate limited for testing)
-          </span>
-        )}
+        <span className={styles.hint}>
+          {isUsingDemoToken
+            ? "Using a shared demo token — rate-limited for fair use. Paste your own API key for unlimited streams."
+            : "Using your API key — no rate limits. Sent only to authorize your stream; never stored."}
+        </span>
       </div>
     </div>
   );

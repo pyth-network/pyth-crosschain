@@ -26,7 +26,11 @@ export type PriceFeedProperty =
   | "feedUpdateTimestamp";
 
 // Update channel options
-export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
+export type Channel =
+  | "real_time"
+  | "fixed_rate@50ms"
+  | "fixed_rate@200ms"
+  | "fixed_rate@1000ms";
 
 // Price feed data from the symbols API
 export type PriceFeed = {
@@ -144,6 +148,11 @@ export const CHANNEL_OPTIONS: {
     id: "fixed_rate@200ms",
     label: "Fixed 200ms",
   },
+  {
+    description: "Updates every 1 second",
+    id: "fixed_rate@1000ms",
+    label: "Fixed 1000ms",
+  },
 ];
 
 // Code language options for the code preview
@@ -186,4 +195,4 @@ export const PYTH_PRO_ENDPOINTS = [
 
 // API endpoint for symbols
 export const SYMBOLS_API_URL =
-  "https://pyth.dourolabs.app/v1/symbols";
+  "https://history.pyth-lazer.dourolabs.app/history/v1/symbols";
