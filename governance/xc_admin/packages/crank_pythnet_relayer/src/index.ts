@@ -228,6 +228,6 @@ async function run() {
     await run();
   } catch (err) {
     console.error(err);
-    throw new Error();
+    throw err;
   }
 })();
