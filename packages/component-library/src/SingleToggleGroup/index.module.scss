@@ -7,6 +7,7 @@
 
   .toggleButton {
     position: relative;
+    isolation: isolate;
 
     .bubble {
       position: absolute;
