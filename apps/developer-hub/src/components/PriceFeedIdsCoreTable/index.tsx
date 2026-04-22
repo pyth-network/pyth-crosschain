@@ -150,18 +150,14 @@ const State = {
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 const getFeeds = async () => {
-  const [pythnetResult, pythtestResult] = await Promise.allSettled([
+  const [pythnet, pythtest] = await Promise.all([
     getFeedsFromHermes("https://hermes.pyth.network"),
     getFeedsFromHermes("https://hermes-beta.pyth.network"),
   ]);
 
-  if (pythnetResult.status === "rejected") {
-    throw pythnetResult.reason;
+  if (pythnet === undefined && pythtest === undefined) {
+    throw new Error("Unable to fetch price feeds from Hermes");
   }
-
-  const pythnet = pythnetResult.value;
-  const pythtest =
-    pythtestResult.status === "fulfilled" ? pythtestResult.value : [];
 
   const feeds = new Map<
     string,
@@ -172,7 +168,7 @@ const getFeeds = async () => {
     }
   >();
 
-  for (const feed of pythnet) {
+  for (const feed of pythnet ?? []) {
     feeds.set(feed.attributes.symbol, {
       stableFeedId: `0x${feed.id}`,
       solanaPriceFeedAccount: getPriceFeedAccountForProgram(
@@ -181,7 +177,7 @@ const getFeeds = async () => {
       ).toBase58(),
     });
   }
-  for (const feed of pythtest) {
+  for (const feed of pythtest ?? []) {
     feeds.set(feed.attributes.symbol, {
       ...feeds.get(feed.attributes.symbol),
       betaFeedId: `0x${feed.id}`,
@@ -193,9 +189,16 @@ const getFeeds = async () => {
     .map(([symbol, attrs]) => ({ symbol, ...attrs }));
 };
 
-const getFeedsFromHermes = async (hermesUrl: string) => {
-  const result = await fetch(new URL("/v2/price_feeds", hermesUrl));
-  return hermesSchema.parse(await result.json());
+const getFeedsFromHermes = async (
+  hermesUrl: string,
+): Promise<z.infer<typeof hermesSchema> | undefined> => {
+  try {
+    const result = await fetch(new URL("/v2/price_feeds", hermesUrl));
+    if (!result.ok) return undefined;
+    return hermesSchema.parse(await result.json());
+  } catch {
+    return undefined;
+  }
 };
 
 const hermesSchema = z.array(
