@@ -4,8 +4,6 @@ import type { PlaygroundConfig } from "../types";
  * Generates Go code using gorilla/websocket for WebSocket connections
  */
 export function generateGoCode(config: PlaygroundConfig): string {
-  // If accessToken is empty, use demo token placeholder
-  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds =
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
@@ -82,7 +80,11 @@ func main() {
 		"wss://pyth-lazer-2.dourolabs.app/v1/stream",
 	}
 
-	token := "${token}"
+	// Read your API key from the environment (never hard-code it)
+	token := os.Getenv("LAZER_TOKEN")
+	if token == "" {
+		log.Fatal("Set LAZER_TOKEN in your environment")
+	}
 
 	// Set up interrupt handler
 	interrupt := make(chan os.Signal, 1)

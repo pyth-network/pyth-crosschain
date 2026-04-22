@@ -4,8 +4,6 @@ import type { PlaygroundConfig } from "../types";
  * Generates Python code using websockets library
  */
 export function generatePythonCode(config: PlaygroundConfig): string {
-  // If accessToken is empty, use demo token placeholder
-  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds =
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
@@ -32,6 +30,7 @@ Usage:
 
 import asyncio
 import json
+import os
 import signal
 from typing import Any
 
@@ -42,8 +41,8 @@ except ImportError:
     exit(1)
 
 
-# Configuration
-TOKEN = "${token}"
+# Read your API key from the environment (never hard-code it)
+TOKEN = os.environ["LAZER_TOKEN"]
 ENDPOINTS = [
     "wss://pyth-lazer-0.dourolabs.app/v1/stream",
     "wss://pyth-lazer-1.dourolabs.app/v1/stream",
