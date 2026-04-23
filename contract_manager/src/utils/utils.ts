@@ -1,10 +1,18 @@
 import * as chains from "viem/chains";
 
 import evmChainsData from "../store/chains/EvmChains.json" with { type: "json" };
+import evmLazerContractsData from "../store/contracts/EvmLazerContracts.json" with { type: "json" };
 import evmPriceFeedContractsData from "../store/contracts/EvmPriceFeedContracts.json" with { type: "json" };
 import evmWormholeContractsData from "../store/contracts/EvmWormholeContracts.json" with { type: "json" };
 
 export const allEvmChainIds: number[] = evmChainsData.map((c) => c.networkId);
+
+export type EvmChainEntry = (typeof evmChainsData)[number];
+export type EvmLazerContractEntry = (typeof evmLazerContractsData)[number];
+
+export const evmChains: readonly EvmChainEntry[] = evmChainsData;
+export const evmLazerContracts: readonly EvmLazerContractEntry[] =
+  evmLazerContractsData;
 
 export const getEvmPriceFeedContractAddress = (
   chainId: number,
