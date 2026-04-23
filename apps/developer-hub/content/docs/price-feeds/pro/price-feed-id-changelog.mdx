@@ -1,0 +1,22 @@
+---
+title: Price Feed ID Changelog
+description: Daily UTC changelog for Pyth Pro Price Feed ID updates
+slug: /price-feeds/pro/price-feed-id-changelog
+---
+
+import { Suspense } from "react";
+import { PriceFeedIdsProChangelog } from "../../../../src/components/PriceFeedIdsProChangelog";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="info">
+  This page is derived from governance proposals in the Pyth Pro feed registry,
+  grouped by UTC date.
+
+  The default view focuses on status transitions (including `Coming Soon ->
+  Stable`). Turn on `Include all property changes` to inspect every detected
+  field diff.
+</Callout>
+
+<Suspense>
+  <PriceFeedIdsProChangelog />
+</Suspense>

@@ -1,0 +1,68 @@
+name: Generate Pro Price Feed Changelog
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+    inputs:
+      full_rebuild:
+        type: boolean
+        default: false
+
+concurrency:
+  group: pro-changelog
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/developer-hub
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: pyth-network/pyth-lazer-governance
+          token: ${{ secrets.GOVERNANCE_REPO_TOKEN }}
+          path: .governance-repo
+          fetch-depth: 1
+          sparse-checkout: |
+            */after.json
+          sparse-checkout-cone-mode: false
+
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate changelog
+        env:
+          GOVERNANCE_REPO_PATH: ${{ github.workspace }}/.governance-repo
+          FULL_REBUILD: ${{ github.event.inputs.full_rebuild || 'false' }}
+        run: pnpm run generate:pro-price-feed-changelog
+
+      - name: Validate output
+        run: pnpm tsx ./scripts/validate-pro-changelog-output.ts
+
+      - name: Commit and push
+        run: |
+          cd ${{ github.workspace }}
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add apps/developer-hub/public/data/pro-price-feed-changelog/daily-rollups.json
+          if git diff --staged --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'chore(developer-hub): update Pro price feed changelog'
+            git push
+          fi

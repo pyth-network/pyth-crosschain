@@ -1,0 +1,42 @@
+@use "@pythnetwork/component-library/theme";
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.switch {
+  width: fit-content;
+}
+
+.dayList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  margin-bottom: theme.spacing(8);
+}
+
+.dayCard {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
