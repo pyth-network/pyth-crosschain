@@ -106,7 +106,7 @@ fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
 
         // Check if this pubkey is a duplicate of any already added.
         require!(
-            !keys.iter().any(|key| *key == guardian),
+            !keys.contains(&guardian),
             CoreBridgeError::DuplicateGuardianAddress
         );
         keys.push(guardian);

@@ -16,22 +16,6 @@ pub struct PrepareMessage<'info> {
     pub message: AccountInfo<'info>,
 }
 
-/// Trait for invoking the Core Bridge program's [init_message_v1](crate::cpi::init_message_v1),
-/// [write_message_v1](crate::cpi::write_message_v1) and
-/// [finalize_message_v1](crate::cpi::finalize_message_v1) instructions. These instructions are used
-/// in concert with each other to prepare a message, which can be posted either within a program via
-/// CPI or within the same transaction block as an instruction following your program's instruction.
-// pub trait PrepareMessage<'info> {
-//     fn core_bridge_program(&self) -> AccountInfo<'info>;
-
-//     /// Core Bridge Emitter Authority (read-only signer). This emitter authority acts as the signer
-//     /// for preparing a message before it is posted.
-//     fn core_emitter_authority(&self) -> AccountInfo<'info>;
-
-//     /// Core Bridge Message (mut).
-//     fn core_message(&self) -> AccountInfo<'info>;
-// }
-
 /// SDK method for preparing a new Core Bridge message. It is assumed that the emitter authority is
 /// your program's PDA, so emitter authority seeds are required to sign for these Core Bridge
 /// Program instructions.
