@@ -1,6 +1,5 @@
 [workspace]
 members = ["programs/*", "cli/", "program_simulator/", "common_test_utils"]
-
 exclude = [
     "programs/pyth-price-store",
     "pyth_solana_receiver_sdk",
@@ -16,11 +15,19 @@ incremental = false
 codegen-units = 1
 
 [workspace.dependencies]
-wormhole-core-bridge-solana = { git = "https://github.com/wormhole-foundation/wormhole", rev = "7bd40b595e22c5512dfaa2ed8e6d7441df743a69" }
+wormhole-core-bridge-solana = { path = "./programs/core-bridge" }
 wormhole-vaas-serde = "0.1.0"
+wormhole-raw-vaas = { version = "0.1.3", features = [
+    "ruint",
+    "on-chain",
+], default-features = false }
 serde_wormhole = "0.1.0"
 anchor-lang = "0.28.0"
 anchor-client = "0.28.0"
+wormhole-io = "0.1.0"
+cfg-if = "1.0"
+hex = "0.4.3"
+ruint = "1.9.0"
 solana-program = "1.16.20"
 solana-program-test = "1.16.20"
 solana-sdk = "1.16.20"

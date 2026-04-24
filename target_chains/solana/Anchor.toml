@@ -2,6 +2,7 @@
 members = [
     "programs/pyth-push-oracle",
     "programs/pyth-solana-receiver",
+    "programs/core-bridge",
 ]
 
 [features]
