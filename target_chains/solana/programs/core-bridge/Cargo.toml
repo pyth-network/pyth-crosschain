@@ -13,6 +13,7 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = ["mainnet", "cpi", "no-idl"]
+anchor-debug = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
