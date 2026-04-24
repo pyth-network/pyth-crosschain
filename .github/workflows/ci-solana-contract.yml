@@ -32,7 +32,7 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --all-targets -- --deny warnings
+        run: cargo clippy --locked --all-targets -- --deny warnings
         if: success() || failure()
       - name: Build
         run: cargo-build-sbf
