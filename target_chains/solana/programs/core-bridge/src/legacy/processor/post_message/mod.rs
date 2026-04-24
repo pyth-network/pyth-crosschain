@@ -128,7 +128,7 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, PostMessageArg
 /// Because the legacy implementation did not require specifying where the System program should be,
 /// we ensure that it is account #8 because the Anchor account context requires it to be in this
 /// position.
- fn order_post_message_account_infos<'info>(
+fn order_post_message_account_infos<'info>(
     account_infos: &[AccountInfo<'info>],
 ) -> Result<Vec<AccountInfo<'info>>> {
     const NUM_ACCOUNTS: usize = 8;
@@ -379,7 +379,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
 }
 
 /// If there is a fee, check the fee collector account to ensure that the fee has been paid.
- fn handle_message_fee<'info>(
+fn handle_message_fee<'info>(
     config: &Account<'info, LegacyAnchorized<Config>>,
     payer: &AccountInfo<'info>,
     fee_collector: &Option<AccountInfo<'info>>,
@@ -413,7 +413,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
     }
 }
 
- fn create_or_realloc_emitter_sequence<'info>(
+fn create_or_realloc_emitter_sequence<'info>(
     emitter_sequence: &AccountInfo<'info>,
     payer: &AccountInfo<'info>,
     system_program: &Program<'info, System>,
