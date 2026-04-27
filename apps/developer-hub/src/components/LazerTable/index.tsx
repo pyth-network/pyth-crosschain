@@ -2,10 +2,15 @@ import {
   evmChains,
   evmLazerContracts,
 } from "@pythnetwork/contract-manager/utils/utils";
-import * as chains from "viem/chains";
 
 import CopyAddress from "../CopyAddress";
 import { LazerDeploymentsConfig } from "./lazer-deployments-config";
+
+type UpstreamChain = {
+  chainId: number;
+  name: string;
+  explorers?: { url: string }[];
+};
 
 type LazerDeployment = {
   chainId: string;
@@ -18,8 +23,10 @@ type LazerDeployment = {
 // Chains we never want to show in the docs (e.g. internal devnets).
 const HIDDEN_CHAIN_IDS = new Set<string>(["ethereal_devnet"]);
 
-const getViemChain = (networkId: number) =>
-  Object.values(chains).find((chain) => chain.id === networkId);
+// Community-maintained EVM chain registry (https://github.com/ethereum-lists/chains).
+// Same data source as chainlist.org. Re-fetched at most once per day per build.
+const CHAIN_REGISTRY_URL = "https://chainid.network/chains.json";
+const CHAIN_REGISTRY_REVALIDATE_SECONDS = 60 * 60 * 24;
 
 const humanize = (chainId: string): string =>
   chainId
@@ -27,7 +34,24 @@ const humanize = (chainId: string): string =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
-const buildDeployments = (isMainnet: boolean): LazerDeployment[] => {
+const fetchChainRegistry = async (): Promise<Map<number, UpstreamChain>> => {
+  try {
+    const response = await fetch(CHAIN_REGISTRY_URL, {
+      next: { revalidate: CHAIN_REGISTRY_REVALIDATE_SECONDS },
+    });
+    if (!response.ok) return new Map();
+    const chains = (await response.json()) as UpstreamChain[];
+    return new Map(chains.map((c) => [c.chainId, c]));
+  } catch {
+    // Upstream unavailable — fall back to overrides + humanized chain ids.
+    return new Map();
+  }
+};
+
+const buildDeployments = (
+  isMainnet: boolean,
+  registry: Map<number, UpstreamChain>,
+): LazerDeployment[] => {
   const deployments: LazerDeployment[] = [];
 
   for (const contract of evmLazerContracts) {
@@ -36,15 +60,15 @@ const buildDeployments = (isMainnet: boolean): LazerDeployment[] => {
     const chain = evmChains.find((c) => c.id === contract.chain);
     if (!chain || chain.mainnet !== isMainnet) continue;
 
-    const viemChain = getViemChain(chain.networkId);
+    const upstream = registry.get(chain.networkId);
     const override = LazerDeploymentsConfig[String(chain.networkId)];
     const explorer =
-      override?.explorer ?? viemChain?.blockExplorers?.default.url;
+      override?.explorer ?? upstream?.explorers?.[0]?.url;
 
     deployments.push({
       address: contract.address,
       chainId: chain.id,
-      name: override?.name ?? viemChain?.name ?? humanize(chain.id),
+      name: override?.name ?? upstream?.name ?? humanize(chain.id),
       networkId: chain.networkId,
       ...(explorer ? { explorer } : {}),
     });
@@ -53,8 +77,9 @@ const buildDeployments = (isMainnet: boolean): LazerDeployment[] => {
   return deployments.sort((a, b) => a.name.localeCompare(b.name));
 };
 
-const LazerTable = ({ isMainnet }: { isMainnet: boolean }) => {
-  const deployments = buildDeployments(isMainnet);
+const LazerTable = async ({ isMainnet }: { isMainnet: boolean }) => {
+  const registry = await fetchChainRegistry();
+  const deployments = buildDeployments(isMainnet, registry);
 
   return (
     <table>
