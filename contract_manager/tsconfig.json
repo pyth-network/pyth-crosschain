@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    // "dom" is needed because transitive dep `ox` ships raw .ts source files
-    // (e.g. webauthn/*.ts) that reference browser globals; tsc walks them when
-    // emitting declarations. No runtime impact — this is a node-only package.
-    "lib": ["esnext", "dom"],
     "module": "preserve",
     "moduleResolution": "node",
     "target": "ES2020",
