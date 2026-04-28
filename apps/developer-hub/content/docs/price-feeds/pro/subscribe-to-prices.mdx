@@ -81,7 +81,22 @@ The most significant parameters are:
 </Callout>
 
 - `formats`(formerly known as `chains`) specifies the binary encoding format for the payload. This field is mandatory, but can be set to an empty array (e.g., `formats: []`) if no binary payload is needed. Use **evm** or **solana** to receive a signed payload for onchain verification, or **leUnsigned** for offchain-only use without signatures. See [Binary Formats & Signature Schemes](/price-feeds/pro/payload-reference#binary-formats--signature-schemes) for all options.
-- `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
+- `channel` determines the update rate. Pyth Pro offers the following channels:
+
+  | Channel             | Description                                                                                    | Use Cases                                   |
+  | ------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------- |
+  | `real_time`         | Updates sent immediately when new price is available (no faster than 1ms, no slower than 50ms) | High-frequency trading, real-time analytics |
+  | `fixed_rate@1ms`    | Updates every 1 millisecond                                                                    | Ultra-low latency applications              |
+  | `fixed_rate@50ms`   | Updates every 50 milliseconds                                                                  | Low-latency trading systems                 |
+  | `fixed_rate@200ms`  | Updates every 200 milliseconds                                                                 | Standard trading applications               |
+  | `fixed_rate@1000ms` | Updates every 1 second                                                                         | General applications, dashboards            |
+
+  <Callout type="info" title="Per-Feed Channel Availability">
+    Not every feed supports every channel. Each feed has a minimum channel
+    (`min_channel`) — it supports that channel and all slower channels. Check the
+    [Price Feed IDs](/price-feeds/pro/price-feed-ids) page to see which channels
+    are available for each feed.
+  </Callout>
 - `ignoreInvalidFeeds` (optional, default: `false`) — if `true`, the subscription will ignore invalid feed IDs and subscribe to any valid feeds. The response will include details about which feeds were ignored and why. If all feeds are invalid, the subscription will still fail with a `subscriptionError`. See [Error Codes](/price-feeds/pro/error-codes) for the response format.
 
 There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
