@@ -17,7 +17,7 @@ pub mod sdk;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "lazer")] {
-        declare_id!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
+        declare_id!("pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou");
     } else {
         declare_id!(PYTH_PUSH_ORACLE_ID);
     }
