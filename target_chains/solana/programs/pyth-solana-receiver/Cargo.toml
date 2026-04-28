@@ -14,7 +14,8 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
-lazer = []
+lazer = ["wormhole-core-bridge-solana/lazer"]
+
 
 [dependencies]
 anchor-lang = { workspace = true }
