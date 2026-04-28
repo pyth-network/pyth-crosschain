@@ -17,6 +17,7 @@
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-iota-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
+    "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/pyth-starknet-js": "^0.2.1",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/pyth-ton": "workspace:*",
@@ -155,6 +156,16 @@
       "require": {
         "default": "./dist/cjs/core/contracts/near.cjs",
         "types": "./dist/cjs/core/contracts/near.d.ts"
+      }
+    },
+    "./core/contracts/solana": {
+      "import": {
+        "default": "./dist/esm/core/contracts/solana.mjs",
+        "types": "./dist/esm/core/contracts/solana.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/solana.cjs",
+        "types": "./dist/cjs/core/contracts/solana.d.ts"
       }
     },
     "./core/contracts/starknet": {

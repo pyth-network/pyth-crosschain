@@ -23,6 +23,7 @@ import {
   TonChain,
   NearChain,
   IotaChain,
+  SolanaChain,
 } from "../../core/chains";
 import {
   AptosPriceFeedContract,
@@ -50,6 +51,10 @@ import {
   NearPriceFeedContract,
   NearWormholeContract,
 } from "../../core/contracts/near";
+import {
+  SolanaPriceFeedContract,
+  SolanaWormholeContract,
+} from "../../core/contracts/solana";
 import {
   StarknetPriceFeedContract,
   StarknetWormholeContract,
@@ -111,6 +116,7 @@ export class Store {
       [NearChain.type]: NearChain,
       [SuiChain.type]: SuiChain,
       [IotaChain.type]: IotaChain,
+      [SolanaChain.type]: SolanaChain,
     };
 
     for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
@@ -196,6 +202,8 @@ export class Store {
       [TonWormholeContract.type]: TonWormholeContract,
       [NearPriceFeedContract.type]: NearPriceFeedContract,
       [NearWormholeContract.type]: NearWormholeContract,
+      [SolanaPriceFeedContract.type]: SolanaPriceFeedContract,
+      [SolanaWormholeContract.type]: SolanaWormholeContract,
       [IotaPriceFeedContract.type]: IotaPriceFeedContract,
       [IotaWormholeContract.type]: IotaWormholeContract,
       [EvmLazerContract.type]: EvmLazerContract,

@@ -53,6 +53,7 @@ import type { BN, WalletUnlocked } from "fuels";
 import { Provider, Wallet } from "fuels";
 import * as micromustache from "micromustache";
 import * as nearAPI from "near-api-js";
+import { Connection, Keypair } from "@solana/web3.js";
 import { Contract, ec, RpcProvider, Signer, shortString } from "starknet";
 import * as chains from "viem/chains";
 import Web3 from "web3";
@@ -1563,5 +1564,68 @@ export class NearChain extends Chain {
     };
     const nearConnection = await nearAPI.connect(connectionConfig);
     return await nearConnection.account(accountId);
+  }
+}
+
+export class SolanaChain extends Chain {
+  static override type = "SolanaChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    private rpcUrl: string,
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): SolanaChain {
+    if (parsed.type !== SolanaChain.type) throw new Error("Invalid type");
+    return new SolanaChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName ?? "",
+      parsed.nativeToken,
+      parsed.rpcUrl ?? "",
+    );
+  }
+
+  getType(): string {
+    return SolanaChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: SolanaChain.type,
+      wormholeChainName: this.wormholeChainName,
+    };
+  }
+
+  generateGovernanceUpgradePayload(codeHash: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, codeHash).encode();
+  }
+
+  getConnection(): Connection {
+    return new Connection(parseRpcUrl(this.rpcUrl));
+  }
+
+  getKeyPair(privateKey: PrivateKey): Keypair {
+    return Keypair.fromSeed(Buffer.from(privateKey, "hex"));
+  }
+
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const keypair = this.getKeyPair(privateKey);
+    return Promise.resolve(keypair.publicKey.toBase58());
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const keypair = this.getKeyPair(privateKey);
+    const connection = this.getConnection();
+    const lamports = await connection.getBalance(keypair.publicKey);
+    return lamports / 1e9;
   }
 }
