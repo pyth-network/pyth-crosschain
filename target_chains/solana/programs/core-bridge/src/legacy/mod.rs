@@ -24,7 +24,7 @@ pub mod cpi {
     use anchor_lang::prelude::*;
     use solana_program::program::invoke_signed;
 
-    use super::*;
+    use crate::legacy::instruction as legacy_ix;
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
     /// Guardian observation.
@@ -33,10 +33,10 @@ pub mod cpi {
     /// or is created at this point.
     pub fn post_message<'info>(
         ctx: CpiContext<'_, '_, '_, 'info, PostMessage<'info>>,
-        args: instruction::PostMessageArgs,
+        args: legacy_ix::PostMessageArgs,
     ) -> Result<()> {
         invoke_signed(
-            &instruction::post_message(
+            &legacy_ix::post_message(
                 crate::legacy::accounts::PostMessage {
                     config: *ctx.accounts.config.key,
                     message: *ctx.accounts.message.key,
@@ -62,10 +62,10 @@ pub mod cpi {
     /// the message and the payload must be the same size.
     pub fn post_message_unreliable<'info>(
         ctx: CpiContext<'_, '_, '_, 'info, PostMessageUnreliable<'info>>,
-        args: instruction::PostMessageArgs,
+        args: legacy_ix::PostMessageArgs,
     ) -> Result<()> {
         invoke_signed(
-            &instruction::post_message_unreliable(
+            &legacy_ix::post_message_unreliable(
                 crate::legacy::accounts::PostMessageUnreliable {
                     config: *ctx.accounts.config.key,
                     message: *ctx.accounts.message.key,

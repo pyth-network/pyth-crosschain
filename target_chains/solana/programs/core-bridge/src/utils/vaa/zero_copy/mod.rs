@@ -108,7 +108,9 @@ impl<'a> VaaAccount<'a> {
         require!(data.len() > 8, ErrorCode::AccountDidNotDeserialize);
 
         match <[u8; 8]>::try_from(&data[..8]).unwrap() {
-            ENCODED_VAA_DISCRIMINATOR => Ok(Self::EncodedVaa(EncodedVaa::new(acc_info)?)),
+            d if d == encoded_vaa_discriminator() => {
+                Ok(Self::EncodedVaa(EncodedVaa::new(acc_info)?))
+            }
             [118, 97, 97, 1, _, _, _, _] => Ok(Self::PostedVaaV1(PostedVaaV1::new(acc_info)?)),
             _ => err!(ErrorCode::AccountDidNotDeserialize),
         }

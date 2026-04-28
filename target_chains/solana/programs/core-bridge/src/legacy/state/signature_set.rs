@@ -26,7 +26,7 @@ pub struct SignatureSet {
 }
 
 impl LegacyAccount for SignatureSet {
-    const DISCRIMINATOR: &'static [u8] = &[];
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &[];
 
     fn program_id() -> Pubkey {
         crate::ID

@@ -192,7 +192,7 @@ fn handle_post_new_message(ctx: Context<PostMessage>, args: PostMessageArgs) -> 
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &emitter.key(),
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     require!(
@@ -297,7 +297,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &info.emitter,
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     // If the emitter is the same as the emitter authority, this message's emitter is a legacy
@@ -371,7 +371,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
     let msg_acc_data: &mut [_] = &mut ctx.accounts.message.data.borrow_mut();
     let mut writer = std::io::Cursor::new(msg_acc_data);
 
-    std::io::Write::write_all(&mut writer, PostedMessageV1::DISCRIMINATOR)?;
+    std::io::Write::write_all(&mut writer, PostedMessageV1::LEGACY_DISCRIMINATOR)?;
     info.serialize(&mut writer)?;
 
     // Done.
@@ -468,6 +468,7 @@ fn create_or_realloc_emitter_sequence<'info>(
             lamports_diff,
         )?;
 
+        #[allow(deprecated)]
         emitter_sequence.realloc(EmitterSequence::INIT_SPACE, false)?;
 
         // Because this account already existed, this account must have been created with the old

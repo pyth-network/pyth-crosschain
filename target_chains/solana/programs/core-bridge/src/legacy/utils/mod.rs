@@ -1,7 +1,7 @@
 //! Utilities for the Core Bridge Program. These utilities are used to convert the legacy program to
 //! use the Anchor framework.
 
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, Bumps};
 
 /// Trait for account schemas of legacy programs (intended for Core Bridge and Token Bridge, but can
 /// be used for any legacy program). A legacy account requires a defined discriminator (if there is
@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 /// `crate::ID` (defined using [declare_id](anchor_lang::prelude::declare_id)).
 pub trait LegacyAccount: AnchorSerialize + AnchorDeserialize + Clone {
     /// Account discriminator. If there is none, use an empty slice.
-    const DISCRIMINATOR: &'static [u8];
+    const LEGACY_DISCRIMINATOR: &'static [u8];
 
     /// Owner of the account.
     fn program_id() -> Pubkey;
@@ -73,7 +73,7 @@ where
 {
     fn try_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<()> {
         writer
-            .write_all(T::DISCRIMINATOR)
+            .write_all(T::LEGACY_DISCRIMINATOR)
             .and_then(|_| self.0.serialize(writer))
             .map_err(|_| error!(ErrorCode::AccountDidNotSerialize))
     }
@@ -84,18 +84,18 @@ where
     T: LegacyAccount,
 {
     fn try_deserialize(buf: &mut &[u8]) -> Result<Self> {
-        let disc_len = T::DISCRIMINATOR.len();
+        let disc_len = T::LEGACY_DISCRIMINATOR.len();
         if buf.len() < disc_len {
             return err!(ErrorCode::AccountDidNotDeserialize);
         };
-        if *T::DISCRIMINATOR != buf[..disc_len] {
+        if *T::LEGACY_DISCRIMINATOR != buf[..disc_len] {
             return err!(ErrorCode::AccountDidNotDeserialize);
         }
         Self::try_deserialize_unchecked(buf)
     }
 
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        let mut data = &buf[T::DISCRIMINATOR.len()..];
+        let mut data = &buf[T::LEGACY_DISCRIMINATOR.len()..];
         Ok(Self(T::deserialize(&mut data)?))
     }
 }
@@ -134,7 +134,7 @@ where
 {
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
         require!(buf.len() >= 8, ErrorCode::AccountDidNotDeserialize);
-        if buf[..8] == <T as anchor_lang::Discriminator>::DISCRIMINATOR {
+        if buf[..8] == *<T as anchor_lang::Discriminator>::DISCRIMINATOR {
             AccountDeserialize::try_deserialize_unchecked(buf).map(Self::Anchor)
         } else {
             LegacyAnchorized::try_deserialize(buf)
@@ -152,7 +152,7 @@ where
         match self {
             Self::Anchor(inner) => AccountSerialize::try_serialize(inner, writer),
             Self::Legacy(inner) => writer
-                .write_all(<T as LegacyAccount>::DISCRIMINATOR)
+                .write_all(<T as LegacyAccount>::LEGACY_DISCRIMINATOR)
                 .and_then(|_| inner.serialize(writer))
                 .map_err(|_| error!(ErrorCode::AccountDidNotSerialize)),
         }
@@ -162,7 +162,7 @@ where
 /// Trait used for legacy instruction handlers. It is used to process instructions from
 /// legacy programs, where an enum defines the instruction type (one byte selector).
 pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
-    Accounts<'info> + AccountsExit<'info> + ToAccountInfos<'info>
+    Bumps + Accounts<'info, <Self as Bumps>::Bumps> + AccountsExit<'info> + ToAccountInfos<'info>
 {
     /// This name is what gets written to in a program log similar to how Anchor instructions are
     /// logged. This name is logged in the process instruction method.
@@ -222,13 +222,21 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
         program_id: &Pubkey,
         account_infos: &[AccountInfo<'info>],
         mut ix_data: &[u8],
-    ) -> Result<()> {
+    ) -> Result<()>
+    where
+        <Self as Bumps>::Bumps: Default,
+    {
         #[cfg(not(feature = "no-log-ix-name"))]
         msg!("Instruction: {}", Self::LOG_IX_NAME);
 
-        let mut bumps = std::collections::BTreeMap::new();
+        let mut bumps = <Self as Bumps>::Bumps::default();
 
-        let mut account_infos: &[_] = &Self::order_account_infos(account_infos)?;
+        // Leak the Vec to extend its lifetime to 'info. This is safe because process_instruction
+        // is called once per transaction and the program's heap is freed after execution.
+        let ordered_infos = Self::order_account_infos(account_infos)?;
+        let ordered_infos: &'info [AccountInfo<'info>] =
+            Box::leak(ordered_infos.into_boxed_slice());
+        let mut account_infos: &[_] = ordered_infos;
 
         // Generate accounts struct. This checks account constraints, including PDAs.
         let mut accounts = Self::try_accounts(

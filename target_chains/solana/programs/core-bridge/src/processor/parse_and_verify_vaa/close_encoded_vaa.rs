@@ -23,7 +23,7 @@ impl<'info> CloseEncodedVaa<'info> {
         let acc_data = ctx.accounts.encoded_vaa.try_borrow_data()?;
         require!(
             acc_data.len() > 8
-                && acc_data[..8] == <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
+                && acc_data[..8] == *<EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
             ErrorCode::AccountDidNotDeserialize
         );
 

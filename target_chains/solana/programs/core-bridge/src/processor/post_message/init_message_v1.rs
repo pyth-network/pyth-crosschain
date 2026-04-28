@@ -111,7 +111,7 @@ pub fn init_message_v1(ctx: Context<InitMessageV1>, args: InitMessageV1Args) -> 
 
     // Finally initialize the draft message account by serializing the discriminator, header and
     // payload length.
-    std::io::Write::write_all(&mut writer, PostedMessageV1::DISCRIMINATOR)?;
+    std::io::Write::write_all(&mut writer, PostedMessageV1::LEGACY_DISCRIMINATOR)?;
     (
         PostedMessageV1Info {
             consistency_level: commitment.into(),

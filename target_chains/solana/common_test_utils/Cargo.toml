@@ -9,7 +9,7 @@ name = "common_test_utils"
 
 [dependencies]
 pyth-sdk = "0.8.0"
-pyth-sdk-solana = "0.8.0"
+pyth-sdk-solana = "0.10.6"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 tokio = "1.14.1"
@@ -25,4 +25,4 @@ anchor-lang = { workspace = true }
 solana-program = { workspace = true }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
 wormhole-core-bridge-solana = {workspace = true}
-pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
+pyth-solana-receiver-sdk = { workspace = true }

@@ -30,7 +30,7 @@ pub struct GuardianSet {
 }
 
 impl LegacyAccount for GuardianSet {
-    const DISCRIMINATOR: &'static [u8] = &[];
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &[];
 
     fn program_id() -> Pubkey {
         crate::ID

@@ -93,7 +93,7 @@ impl EncodedVaa {
     ) -> Result<bool> {
         let data = acc_info.try_borrow_data()?;
         require!(
-            data.len() > 8 && data[..8] == <Self as anchor_lang::Discriminator>::DISCRIMINATOR,
+            data.len() > 8 && data[..8] == *<Self as anchor_lang::Discriminator>::DISCRIMINATOR,
             ErrorCode::AccountDidNotDeserialize
         );
 
@@ -130,7 +130,7 @@ impl EncodedVaa {
     pub(crate) fn try_deserialize_header(acc_info: &AccountInfo) -> Result<Header> {
         let data = acc_info.try_borrow_data()?;
         require!(
-            data.len() > 8 && data[..8] == <Self as anchor_lang::Discriminator>::DISCRIMINATOR,
+            data.len() > 8 && data[..8] == *<Self as anchor_lang::Discriminator>::DISCRIMINATOR,
             ErrorCode::AccountDidNotDeserialize
         );
 

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 pub mod cli;
 
 use {

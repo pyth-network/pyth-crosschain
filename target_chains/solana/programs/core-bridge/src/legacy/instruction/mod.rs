@@ -105,8 +105,16 @@ pub struct EmptyArgs {}
 #[cfg(feature = "no-entrypoint")]
 mod __no_entrypoint {
     use crate::legacy::instruction::{LegacyInstruction, PostMessageArgs};
-    use anchor_lang::ToAccountMetas;
+    use anchor_lang::{prelude::AnchorSerialize, ToAccountMetas};
     use solana_program::instruction::Instruction;
+
+    /// Serialize a tuple of (LegacyInstruction, PostMessageArgs) using borsh 0.10 (AnchorSerialize).
+    fn serialize_ix_data(ix: &LegacyInstruction, args: &PostMessageArgs) -> Vec<u8> {
+        let mut data = Vec::new();
+        ix.serialize(&mut data).unwrap();
+        args.serialize(&mut data).unwrap();
+        data
+    }
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
     /// Guardian observation.
@@ -118,9 +126,10 @@ mod __no_entrypoint {
         args: PostMessageArgs,
     ) -> Instruction {
         let message_is_signer = !args.payload.is_empty();
-        Instruction::new_with_borsh(
+        let data = serialize_ix_data(&LegacyInstruction::PostMessage, &args);
+        Instruction::new_with_bytes(
             crate::ID,
-            &(LegacyInstruction::PostMessage, args),
+            &data,
             accounts.to_account_metas(Some(message_is_signer)),
         )
     }
@@ -135,11 +144,8 @@ mod __no_entrypoint {
         accounts: crate::legacy::accounts::PostMessageUnreliable,
         args: PostMessageArgs,
     ) -> Instruction {
-        Instruction::new_with_borsh(
-            crate::ID,
-            &(LegacyInstruction::PostMessageUnreliable, args),
-            accounts.to_account_metas(None),
-        )
+        let data = serialize_ix_data(&LegacyInstruction::PostMessageUnreliable, &args);
+        Instruction::new_with_bytes(crate::ID, &data, accounts.to_account_metas(None))
     }
 }
 

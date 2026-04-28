@@ -6,8 +6,10 @@ use crate::{
     utils::{self, vaa::VaaAccount},
 };
 use anchor_lang::prelude::*;
+#[allow(deprecated)]
 use solana_program::{bpf_loader_upgradeable, program::invoke_signed};
 
+#[allow(deprecated)]
 #[derive(Accounts)]
 pub struct UpgradeContract<'info> {
     #[account(mut)]
@@ -140,6 +142,7 @@ impl<'info> UpgradeContract<'info> {
 
 /// Processor for contract upgrade governance decrees. This instruction handler invokes the BPF
 /// Loader Upgradeable program to upgrade this program's executable to the provided buffer.
+#[allow(deprecated)]
 #[access_control(UpgradeContract::constraints(&ctx))]
 fn upgrade_contract(ctx: Context<UpgradeContract>, _args: EmptyArgs) -> Result<()> {
     let vaa = VaaAccount::load(&ctx.accounts.vaa).unwrap();
@@ -169,7 +172,7 @@ fn upgrade_contract(ctx: Context<UpgradeContract>, _args: EmptyArgs) -> Result<(
             &ctx.accounts.spill.key(),
         ),
         &ctx.accounts.to_account_infos(),
-        &[&[UPGRADE_SEED_PREFIX, &[ctx.bumps["upgrade_authority"]]]],
+        &[&[UPGRADE_SEED_PREFIX, &[ctx.bumps.upgrade_authority]]],
     )
     .map_err(Into::into)
 }

@@ -110,12 +110,11 @@ pub fn verify_encoded_vaa_v1(ctx: Context<VerifyEncodedVaaV1>) -> Result<()> {
     // Finally serialize.
     let acc_data: &mut [_] = &mut ctx.accounts.draft_vaa.data.borrow_mut();
     let mut writer = std::io::Cursor::new(acc_data);
-    (
+    std::io::Write::write_all(
+        &mut writer,
         <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
-        header,
-    )
-        .serialize(&mut writer)
-        .map_err(Into::into)
+    )?;
+    header.serialize(&mut writer).map_err(Into::into)
 }
 
 fn verify_guardian_signature(

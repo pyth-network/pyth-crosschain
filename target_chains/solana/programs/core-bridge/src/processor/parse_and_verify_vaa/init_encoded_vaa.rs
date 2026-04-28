@@ -52,8 +52,11 @@ pub fn init_encoded_vaa(ctx: Context<InitEncodedVaa>) -> Result<()> {
 
     // Finally initialize the encoded VAA account by serializing the discriminator, header and
     // expected VAA length.
-    (
+    std::io::Write::write_all(
+        &mut writer,
         <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
+    )?;
+    (
         Header {
             status: ProcessingStatus::Writing,
             write_authority: ctx.accounts.write_authority.key(),

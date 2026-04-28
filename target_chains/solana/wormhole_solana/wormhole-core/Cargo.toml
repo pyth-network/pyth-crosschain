@@ -1,0 +1,34 @@
+[package]
+name    = "wormhole-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "wormhole"
+
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+
+
+[dependencies]
+borsh = "0.9.3"
+bstr = "0.2.17"
+byteorder = "1.4.3"
+hex = "0.4.3"
+hex-literal = "0.3.4"
+nom = { version="7", default-features=false, features=["alloc"] }
+primitive-types = { version="0.11", default-features=false }
+sha3 = "0.10.4"
+thiserror = "1.0.34"
+
+[features]
+bench = []
+
+[dev-dependencies]
+base64 = "0.13.0"
+byteorder = "*"
+hex = "*"
+strum = "*"
+strum_macros = "*"

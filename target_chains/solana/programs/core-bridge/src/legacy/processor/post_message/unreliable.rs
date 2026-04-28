@@ -148,7 +148,7 @@ fn post_message_unreliable(
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &ctx.accounts.emitter.key(),
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     let PostMessageArgs {

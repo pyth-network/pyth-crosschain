@@ -5,8 +5,11 @@ use anchor_lang::prelude::*;
 use solana_program::keccak;
 use wormhole_raw_vaas::Vaa;
 
-pub(super) const ENCODED_VAA_DISCRIMINATOR: [u8; 8] =
-    <state::EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR;
+pub(super) fn encoded_vaa_discriminator() -> [u8; 8] {
+    <state::EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR
+        .try_into()
+        .unwrap()
+}
 pub const VAA_START: usize = state::EncodedVaa::VAA_START;
 
 /// Account used to warehouse VAA buffer.

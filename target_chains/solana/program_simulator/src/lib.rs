@@ -1,5 +1,7 @@
+#![allow(deprecated)]
+
 use {
-    borsh::BorshDeserialize,
+    anchor_lang::AnchorDeserialize,
     solana_program::{
         hash::Hash,
         instruction::{Instruction, InstructionError},
@@ -80,7 +82,7 @@ impl ProgramSimulator {
         Ok(keypair)
     }
 
-    pub async fn get_anchor_account_data<T: BorshDeserialize>(
+    pub async fn get_anchor_account_data<T: AnchorDeserialize>(
         &mut self,
         pubkey: Pubkey,
     ) -> Result<T, BanksClientError> {
