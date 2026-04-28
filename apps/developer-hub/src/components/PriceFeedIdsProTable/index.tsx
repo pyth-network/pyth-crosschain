@@ -14,6 +14,20 @@ import { z } from "zod";
 
 import styles from "./index.module.scss";
 
+const CHANNEL_ORDER = [
+  "real_time",
+  "fixed_rate@1ms",
+  "fixed_rate@50ms",
+  "fixed_rate@200ms",
+  "fixed_rate@1000ms",
+] as const;
+
+const getSupportedChannels = (minChannel: string): string[] => {
+  const idx = CHANNEL_ORDER.indexOf(minChannel as (typeof CHANNEL_ORDER)[number]);
+  if (idx === -1) return [minChannel];
+  return [...CHANNEL_ORDER.slice(idx)];
+};
+
 const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
 type FeedState = (typeof FEED_STATES)[number];
 
@@ -71,6 +85,7 @@ export const PriceFeedIdsProTable = () => {
     { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
     { id: "exponent", name: "Exponent" },
     { id: "state", name: "Status" },
+    { id: "channels", name: "Channels" },
   ];
 
   const {
@@ -236,6 +251,7 @@ export const PriceFeedIdsProTable = () => {
           {FEED_STATE_LABELS[feed.state]}
         </Badge>
       ),
+      channels: getSupportedChannels(feed.min_channel).join(", "),
     },
   }));
 
@@ -359,6 +375,7 @@ const pythProSchema = z.array(
     pyth_lazer_id: z.number().int().positive(),
     exponent: z.number(),
     state: z.enum(["stable", "coming_soon", "inactive"]),
+    min_channel: z.string(),
   }),
 );
 
@@ -369,7 +386,8 @@ type Col =
   | "symbol"
   | "pyth_lazer_id"
   | "exponent"
-  | "state";
+  | "state"
+  | "channels";
 
 const errorToString = (error: unknown) => {
   if (error instanceof Error) {
