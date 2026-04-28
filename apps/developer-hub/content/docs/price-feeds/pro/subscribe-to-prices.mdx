@@ -83,13 +83,13 @@ The most significant parameters are:
 - `formats`(formerly known as `chains`) specifies the binary encoding format for the payload. This field is mandatory, but can be set to an empty array (e.g., `formats: []`) if no binary payload is needed. Use **evm** or **solana** to receive a signed payload for onchain verification, or **leUnsigned** for offchain-only use without signatures. See [Binary Formats & Signature Schemes](/price-feeds/pro/payload-reference#binary-formats--signature-schemes) for all options.
 - `channel` determines the update rate. Pyth Pro offers the following channels:
 
-  | Channel             | Description                                                                                    | Use Cases                                   |
-  | ------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------- |
-  | `real_time`         | Updates sent immediately when new price is available (no faster than 1ms, no slower than 50ms) | High-frequency trading, real-time analytics |
-  | `fixed_rate@1ms`    | Updates every 1 millisecond                                                                    | Ultra-low latency applications              |
-  | `fixed_rate@50ms`   | Updates every 50 milliseconds                                                                  | Low-latency trading systems                 |
-  | `fixed_rate@200ms`  | Updates every 200 milliseconds                                                                 | Standard trading applications               |
-  | `fixed_rate@1000ms` | Updates every 1 second                                                                         | General applications, dashboards            |
+  | Channel             | Description                                                                                    |
+  | ------------------- | ---------------------------------------------------------------------------------------------- |
+  | `real_time`         | Updates sent immediately when new price is available (no faster than 1ms, no slower than 50ms) |
+  | `fixed_rate@1ms`    | Updates every 1 millisecond                                                                    |
+  | `fixed_rate@50ms`   | Updates every 50 milliseconds                                                                  |
+  | `fixed_rate@200ms`  | Updates every 200 milliseconds                                                                 |
+  | `fixed_rate@1000ms` | Updates every 1 second                                                                         |
 
   <Callout type="info" title="Per-Feed Channel Availability">
     Not every feed supports every channel. Each feed has a minimum channel
