@@ -4,6 +4,7 @@ exclude = [
     "programs/pyth-price-store",
     "pyth_solana_receiver_sdk",
 ] # pyth_solana_receiver_sdk is excluded because it uses a later anchor-lang version than the contract
+resolver = "2"
 
 [profile.release]
 overflow-checks = true

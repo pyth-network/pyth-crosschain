@@ -7,9 +7,16 @@ use anchor_lang::prelude::*;
 
 /// Compute quorum based on the number of guardians in a guardian set.
 #[inline]
+#[cfg(feature = "lazer")]
+pub fn quorum(num_guardians: usize) -> usize {
+    num_guardians / 2 + 1
+}
+#[inline]
+#[cfg(not(feature = "lazer"))]
 pub fn quorum(num_guardians: usize) -> usize {
     (2 * num_guardians) / 3 + 1
 }
+
 
 /// Close an account by transferring all its lamports to another account.
 pub(crate) fn close_account(info: &AccountInfo, sol_destination: &AccountInfo) -> Result<()> {

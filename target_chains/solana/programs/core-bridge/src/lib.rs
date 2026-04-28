@@ -1,12 +1,10 @@
 #![allow(clippy::result_large_err)]
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "localnet")] {
+    if #[cfg(feature = "lazer")] {
         declare_id!("Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o");
-    } else if #[cfg(feature = "mainnet")] {
+    } else  {
         declare_id!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");
-    } else if #[cfg(feature = "testnet")] {
-        declare_id!("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5");
     }
 }
 
@@ -26,7 +24,7 @@ pub mod state;
 
 pub mod types;
 
-pub(crate) mod utils;
+pub mod utils;
 
 use anchor_lang::prelude::*;
 

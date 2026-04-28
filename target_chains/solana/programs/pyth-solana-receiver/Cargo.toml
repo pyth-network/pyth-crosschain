@@ -14,9 +14,11 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
+lazer = []
 
 [dependencies]
 anchor-lang = { workspace = true }
+cfg-if = { workspace = true }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = [
     "solana-program",
 ] }

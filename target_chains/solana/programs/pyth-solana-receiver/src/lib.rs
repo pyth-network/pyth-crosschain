@@ -27,14 +27,21 @@ use {
     wormhole_core_bridge_solana::{
         sdk::{legacy::AccountVariant, VaaAccount},
         state::GuardianSet,
+        utils::quorum,
     },
-    wormhole_raw_vaas::{utils::quorum, GuardianSetSig, Vaa},
+    wormhole_raw_vaas::{GuardianSetSig, Vaa},
 };
 
 pub mod error;
 pub mod sdk;
 
-declare_id!(pyth_solana_receiver_sdk::ID);
+cfg_if::cfg_if! {
+    if #[cfg(feature = "lazer")] {
+        declare_id!("rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp");
+    } else {
+        declare_id!(pyth_solana_receiver_sdk::ID);
+    }
+}
 
 #[program]
 pub mod pyth_solana_receiver {

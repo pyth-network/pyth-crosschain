@@ -15,7 +15,13 @@ use {
 
 pub mod sdk;
 
-pub const ID: Pubkey = PYTH_PUSH_ORACLE_ID;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "lazer")] {
+        declare_id!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
+    } else {
+        declare_id!(PYTH_PUSH_ORACLE_ID);
+    }
+}
 
 #[error_code]
 pub enum PushOracleError {

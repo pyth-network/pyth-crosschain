@@ -12,18 +12,14 @@ repository = "https://github.com/wormhole-foundation/wormhole"
 crate-type = ["cdylib", "lib"]
 
 [features]
-default = ["mainnet", "cpi", "no-idl"]
+default = ["cpi", "no-idl"]
 anchor-debug = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-### A.K.A. Local Validator (via JS Integration Test) and Tilt
-localnet = []
-### A.K.A. Solana Mainnet-Beta
-mainnet = []
-### A.K.A. Solana Devnet
-testnet = []
+
+lazer = []
 
 [dependencies]
 wormhole-io.workspace = true
