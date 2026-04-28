@@ -17,7 +17,6 @@ pub fn quorum(num_guardians: usize) -> usize {
     (2 * num_guardians) / 3 + 1
 }
 
-
 /// Close an account by transferring all its lamports to another account.
 pub(crate) fn close_account(info: &AccountInfo, sol_destination: &AccountInfo) -> Result<()> {
     // Transfer tokens from the account to the sol_destination.
