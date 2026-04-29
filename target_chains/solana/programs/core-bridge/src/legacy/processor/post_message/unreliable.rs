@@ -95,12 +95,6 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, PostMessageArg
     const LOG_IX_NAME: &'static str = "LegacyPostMessageUnreliable";
 
     const ANCHOR_IX_FN: fn(Context<Self>, PostMessageArgs) -> Result<()> = post_message_unreliable;
-
-    fn order_account_infos<'a>(
-        account_infos: &'a [AccountInfo<'info>],
-    ) -> Result<Vec<AccountInfo<'info>>> {
-        super::order_post_message_account_infos(account_infos)
-    }
 }
 
 impl<'info> PostMessageUnreliable<'info> {

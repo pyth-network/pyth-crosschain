@@ -172,76 +172,30 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
     /// program. This method gets invoked in the process instruction method.
     const ANCHOR_IX_FN: fn(Context<Self>, T) -> Result<()>;
 
-    /// This method is used to order the accounts in the same order as the Anchorized account
-    /// contexts. In the legacy implementation, some accounts were not required to be defined in any
-    /// context, and were passed in sort of like how remaining accounts work in Anchor.
-    ///
-    /// For example, in the post message instruction, the Anchor context orders the accounts as:
-    ///
-    /// 1. `config`
-    /// 2. `message`
-    /// 3. `emitter`
-    /// 4. `emitter_sequence`
-    /// 5. `payer`
-    /// 6. `fee_collector`
-    /// 7. `clock`
-    /// 8. `system_program`
-    ///
-    /// In the legacy implementation, accounts only up through the `clock` sysvar were defined in
-    /// an account context (meaning that the accounts relevant to the business logic were defined
-    /// with a specific order).
-    ///
-    /// There were actually two accounts that were required with the legacy post message
-    /// instruction:
-    ///
-    /// 8. System program
-    /// 9. Rent sysvar.
-    ///
-    /// These two accounts could have been passed into an instruction in any order (so the System
-    /// program can either be #8 or #9 in the instruction's account metas). Because integrators
-    /// composing with these legacy implementations may be passing in these accounts in any sort of
-    /// order, this method will make sure that any account after the last ordered account. So in
-    /// this example, making sure the System program is #9 (and not caring about where Rent ends up
-    /// because it is not needed anymore).
-    ///
-    /// Ordering matters for accounts defined in Anchor account contexts. An example of one of these
-    /// contextual accounts is the System program, which Anchor requires to be defined when an
-    /// account macro directive like `init` is used (while the old implementation basically treated
-    /// the System program as a remaining account).
-    fn order_account_infos<'a>(
-        account_infos: &'a [AccountInfo<'info>],
-    ) -> Result<Vec<AccountInfo<'info>>> {
-        Ok(account_infos.to_vec())
-    }
-
     /// This method implements the same procedure Anchor performs in its codegen, where it creates
     /// a Context using the account context and invokes the instruction handler with the handler's
     /// arguments. It then performs clean up at the end by writing the account data back into the
     /// borrowed account data via exit.
     fn process_instruction(
         program_id: &Pubkey,
-        account_infos: &[AccountInfo<'info>],
+        mut account_infos: &'info [AccountInfo<'info>],
         mut ix_data: &[u8],
     ) -> Result<()> {
         #[cfg(not(feature = "no-log-ix-name"))]
         msg!("Instruction: {}", Self::LOG_IX_NAME);
 
         let mut bumps = Default::default();
-
-        let ordered = Self::order_account_infos(account_infos)?;   // owns Vec
-        let mut remaining: &[AccountInfo<'info>] = &ordered;       // borrow slice from named local
         
         let mut accounts = Self::try_accounts(
             program_id,
-            &mut remaining,
+            &mut account_infos,
             ix_data,
             &mut bumps,
             &mut std::collections::BTreeSet::new(),
         )?;
         
-        let ctx = Context::new(program_id, &mut accounts, &ordered, bumps);
-
         // Create new context of these accounts.
+        let ctx = Context::new(program_id, &mut accounts, account_infos, bumps);
 
         // Execute method that takes this context with specified instruction arguments.
         Self::ANCHOR_IX_FN(ctx, T::deserialize(&mut ix_data)?)?;
