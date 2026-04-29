@@ -38,5 +38,7 @@ solana-program-test = "2"
 solana-sdk = "2"
 solana-sdk-ids = "2"
 solana-client = "2"
+solana-system-interface = { version = "1", features = ["bincode"] }
+solana-compute-budget-interface = "2"
 tokio = "1.14.1"
 wormhole-solana = { path = "./crates/wormhole-solana" }

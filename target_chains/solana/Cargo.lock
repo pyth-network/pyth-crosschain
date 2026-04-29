@@ -3541,9 +3541,11 @@ dependencies = [
  "bincode",
  "borsh 0.10.4",
  "solana-client",
+ "solana-compute-budget-interface",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
+ "solana-system-interface",
 ]
 
 [[package]]
@@ -3627,7 +3629,9 @@ dependencies = [
  "serde_wormhole",
  "shellexpand",
  "solana-client",
+ "solana-compute-budget-interface",
  "solana-sdk",
+ "solana-system-interface",
  "wormhole-core-bridge-solana",
  "wormhole-solana",
  "wormhole-vaas-serde",

@@ -22,7 +22,6 @@ use {
     },
     solana_program::{
         keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover,
-        system_instruction,
     },
     wormhole_core_bridge_solana::{
         sdk::{legacy::AccountVariant, VaaAccount},

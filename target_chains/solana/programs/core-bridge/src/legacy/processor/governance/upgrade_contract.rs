@@ -6,7 +6,7 @@ use crate::{
     utils::{self, vaa::VaaAccount},
 };
 use anchor_lang::prelude::*;
-use solana_program::{bpf_loader_upgradeable, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 #[derive(Accounts)]
 pub struct UpgradeContract<'info> {
