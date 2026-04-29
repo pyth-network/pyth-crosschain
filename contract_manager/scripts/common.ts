@@ -338,7 +338,7 @@ export async function deployWormholeContract(
     cacheFile,
     chain,
     config,
-    wormholeConfig.guardianSetSource === "lazer"
+    wormholeConfig.quorum === "half"
       ? "ReceiverImplementationHalf"
       : "ReceiverImplementation",
     [],

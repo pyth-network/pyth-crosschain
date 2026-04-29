@@ -139,9 +139,8 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
     initialGuardianSet: string[]; // 20 byte addresses in 40 char hex format
-    // Source of the guardian set this receiver follows. Drives the quorum
-    // threshold (wormhole = 2/3+1, lazer = 1/2+1)
-    guardianSetSource: "wormhole" | "lazer";
+    // The quorum threshold (pythnet = 2/3+1, lazer = 1/2+1)
+    quorum: "two-third" | "half";
   };
 } {
   if (deploymentType === "stable")
@@ -172,7 +171,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        guardianSetSource: "wormhole",
+        quorum: "two-third",
         initialGuardianSet: ["58cc3ae5c097b213ce3c81979e1b9f9570746aa5"],
       },
     };
@@ -204,7 +203,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        guardianSetSource: "wormhole",
+        quorum: "two-third",
         initialGuardianSet: ["13947bd48b18e53fdaeee77f3473391ac727c638"],
       },
     };
@@ -226,7 +225,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        guardianSetSource: "lazer",
+        quorum: "half",
         initialGuardianSet: [
           "dcd37a16f42a7ddd377046c3d607e7227c1ef459",
           "1098b22a55202594341052605228e3d896132f6a",
@@ -252,7 +251,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        guardianSetSource: "lazer",
+        quorum: "half",
         initialGuardianSet: [
           "41534bb176e461a3fb30479400f210549ecce638",
           "6502987b62f21cab7eb5ccd8f0173084b60d5b41",
