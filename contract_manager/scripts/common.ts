@@ -250,18 +250,12 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
 }
 
 /**
- * Finds the wormhole contract for a given EVM chain that's compatible with
- * the requested deployment type.
- *
- * Canonical Wormhole receivers (stable/beta) are shared across those two
- * deployment types — they have the same guardian set. Pre-existing entries
- * in the JSON store have no `deploymentType` label (they predate this
- * field) and are presumed canonical, so a `stable` or `beta` lookup matches
- * any stable / beta / unlabeled entry on the chain.
- *
- * Lazer receivers are NOT shared: lazer-staging and lazer-prod each carry
- * their own guardian set, so the lookup is strict.
- */
+ * Finds the wormhole contract for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
+ * @param {DeploymentType} deploymentType The deployment type to find the wormhole contract for.
+ * If deploymentType is "stable" or "beta", it will also find wormhole contracts with no deployment to preserve backwards compatibility.
+ * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
+*/
 export function findWormholeContract(
   chain: EvmChain,
   deploymentType: DeploymentType,
@@ -271,15 +265,10 @@ export function findWormholeContract(
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
     if (!(contract instanceof EvmWormholeContract)) continue;
     if (contract.getChain().getId() !== chain.getId()) continue;
-    if (isCanonicalWormhole) {
-      if (
-        contract.deploymentType === undefined ||
-        contract.deploymentType === "stable" ||
-        contract.deploymentType === "beta"
-      ) {
-        return contract;
-      }
-    } else if (contract.deploymentType === deploymentType) {
+    if (
+      contract.deploymentType === deploymentType || 
+      (isCanonicalWormhole && !contract.deploymentType))
+    {
       return contract;
     }
   }
