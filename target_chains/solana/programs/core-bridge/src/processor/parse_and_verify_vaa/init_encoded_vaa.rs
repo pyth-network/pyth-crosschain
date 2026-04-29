@@ -4,6 +4,7 @@ use crate::{
     state::{Header, ProcessingStatus},
 };
 use anchor_lang::prelude::*;
+use std::io::Write;
 
 #[derive(Accounts)]
 pub struct InitEncodedVaa<'info> {
@@ -52,8 +53,8 @@ pub fn init_encoded_vaa(ctx: Context<InitEncodedVaa>) -> Result<()> {
 
     // Finally initialize the encoded VAA account by serializing the discriminator, header and
     // expected VAA length.
+    writer.write_all(<EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR)?;
     (
-        <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
         Header {
             status: ProcessingStatus::Writing,
             write_authority: ctx.accounts.write_authority.key(),
