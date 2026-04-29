@@ -7,7 +7,6 @@
 #![deny(warnings)]
 
 mod accounts;
-mod error;
 mod message;
 
 // Re-export the entire instruction module as a namespace for functions that create wormhole
@@ -17,6 +16,5 @@ pub mod instructions;
 // Re-export the minimal Wormhole API set required to develop contracts.
 pub use {
     accounts::{Account, Config, Emitter, FeeCollector, GuardianSet, Sequence, VAA},
-    error::WormholeError,
     message::{post_message, Message},
 };
