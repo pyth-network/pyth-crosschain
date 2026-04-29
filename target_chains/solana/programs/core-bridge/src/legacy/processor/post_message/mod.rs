@@ -192,7 +192,7 @@ fn handle_post_new_message(ctx: Context<PostMessage>, args: PostMessageArgs) -> 
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &emitter.key(),
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     require!(
@@ -297,7 +297,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &info.emitter,
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     // If the emitter is the same as the emitter authority, this message's emitter is a legacy

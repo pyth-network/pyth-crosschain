@@ -9,7 +9,6 @@ name = "common_test_utils"
 
 [dependencies]
 pyth-sdk = "0.8.0"
-pyth-sdk-solana = "0.8.0"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 tokio = "1.14.1"
