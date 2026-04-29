@@ -26,7 +26,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.23/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.2.20/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
         run: cargo fmt --all -- --check
