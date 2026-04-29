@@ -20,9 +20,7 @@ use {
             v1::{WormholeMessage, WormholePayload},
         },
     },
-    solana_program::{
-        keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover,
-    },
+    solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover},
     wormhole_core_bridge_solana::{
         sdk::{legacy::AccountVariant, VaaAccount},
         state::GuardianSet,
