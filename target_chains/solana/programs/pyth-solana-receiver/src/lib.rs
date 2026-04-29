@@ -34,7 +34,7 @@ use {
 pub mod error;
 pub mod sdk;
 
-declare_id!(pyth_solana_receiver_sdk::ID);
+declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ"); // FIX ME: point to pyth-solana-receiver-sdk::ID
 
 #[program]
 pub mod pyth_solana_receiver {

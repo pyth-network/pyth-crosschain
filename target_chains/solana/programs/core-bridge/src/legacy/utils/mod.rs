@@ -162,7 +162,9 @@ where
 /// Trait used for legacy instruction handlers. It is used to process instructions from
 /// legacy programs, where an enum defines the instruction type (one byte selector).
 pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
-    Accounts<'info, Self::Bumps> + AccountsExit<'info> + ToAccountInfos<'info> + Bumps<Bumps: Default>
+    Accounts<'info, Self::Bumps> + AccountsExit<'info> + ToAccountInfos<'info> + Bumps
+where
+    Self::Bumps: Default,
 {
     /// This name is what gets written to in a program log similar to how Anchor instructions are
     /// logged. This name is logged in the process instruction method.
