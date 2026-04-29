@@ -7,6 +7,7 @@ import type { PrivateKey } from "../src/core/base";
 import { toPrivateKey } from "../src/core/base";
 import type { WormholeContract } from "../src/core/contracts/wormhole";
 import { DefaultStore } from "../src/node/utils/store";
+import { EvmWormholeContract } from "../src/core/contracts";
 
 const GUARDIAN_INDEX_TIMEOUT_MS = 10_000;
 const SYNC_GUARDIAN_SETS_TIMEOUT_MS = 3 * 60 * 1000;
@@ -147,9 +148,16 @@ async function main() {
   const chains = argv.chain;
   const targetIndex = argv.targetIndex;
 
-  const contracts = Object.values(DefaultStore.wormhole_contracts).filter(
+  const contracts = Object.values(DefaultStore.wormhole_contracts)
+  // Filter chains
+  .filter(
     (contract) => !chains || chains.includes(contract.getChain().getId()),
-  );
+  )
+  // Filter out lazer wormhole contracts
+  .filter((contract) => (
+    !(contract instanceof EvmWormholeContract) || 
+    (contract.deploymentType !== "lazer-staging" && contract.deploymentType !== "lazer-prod")
+  ));
 
   const results = await Promise.all(
     contracts.map((contract) =>
