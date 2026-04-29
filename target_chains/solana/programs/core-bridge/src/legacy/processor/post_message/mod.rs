@@ -106,53 +106,6 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, PostMessageArg
     const LOG_IX_NAME: &'static str = "LegacyPostMessage";
 
     const ANCHOR_IX_FN: fn(Context<Self>, PostMessageArgs) -> Result<()> = post_message;
-
-    fn order_account_infos<'a>(
-        account_infos: &'a [AccountInfo<'info>],
-    ) -> Result<Vec<AccountInfo<'info>>> {
-        order_post_message_account_infos(account_infos)
-    }
-}
-
-/// The Anchor context orders the accounts as:
-///
-/// 1. `config`
-/// 2. `message`
-/// 3. `emitter`
-/// 4. `emitter_sequence`
-/// 5. `payer`
-/// 6. `fee_collector`
-/// 7. `clock`
-/// 8. `system_program`
-///
-/// Because the legacy implementation did not require specifying where the System program should be,
-/// we ensure that it is account #8 because the Anchor account context requires it to be in this
-/// position.
-fn order_post_message_account_infos<'info>(
-    account_infos: &[AccountInfo<'info>],
-) -> Result<Vec<AccountInfo<'info>>> {
-    const NUM_ACCOUNTS: usize = 8;
-    const SYSTEM_PROGRAM_IDX: usize = NUM_ACCOUNTS - 1;
-
-    let mut infos = account_infos.to_vec();
-
-    // We only need to order the account infos if there are more than 8 accounts.
-    if infos.len() > NUM_ACCOUNTS {
-        // System program needs to exist in these account infos.
-        let system_program_idx = SYSTEM_PROGRAM_IDX
-            + infos
-                .iter()
-                .skip(SYSTEM_PROGRAM_IDX)
-                .position(|info| info.key() == anchor_lang::system_program::ID)
-                .ok_or(error!(ErrorCode::InvalidProgramId))?;
-
-        // Make sure System program is in the right index.
-        if system_program_idx != SYSTEM_PROGRAM_IDX {
-            infos.swap(SYSTEM_PROGRAM_IDX, system_program_idx);
-        }
-    }
-
-    Ok(infos)
 }
 
 /// Processor to post (publish) a Wormhole message by setting up the message account for
@@ -192,7 +145,7 @@ fn handle_post_new_message(ctx: Context<PostMessage>, args: PostMessageArgs) -> 
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &emitter.key(),
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     require!(
@@ -297,7 +250,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &info.emitter,
-        ctx.bumps["emitter_sequence"],
+        ctx.bumps.emitter_sequence,
     )?;
 
     // If the emitter is the same as the emitter authority, this message's emitter is a legacy

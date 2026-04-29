@@ -166,7 +166,7 @@ fn transfer_fees(ctx: Context<TransferFees>, _args: EmptyArgs) -> Result<()> {
                 from: fee_collector.to_account_info(),
                 to: ctx.accounts.recipient.to_account_info(),
             },
-            &[&[FEE_COLLECTOR_SEED_PREFIX, &[ctx.bumps["fee_collector"]]]],
+            &[&[FEE_COLLECTOR_SEED_PREFIX, &[ctx.bumps.fee_collector]]],
         ),
         to_u64_unchecked(&U256::from_be_bytes(decree.amount())),
     )?;

@@ -25,16 +25,16 @@ wormhole-raw-vaas = { version = "0.1.3", features = [
     "on-chain",
 ], default-features = false }
 serde_wormhole = "0.1.0"
-anchor-lang = "0.28.0"
-anchor-client = "0.28.0"
+anchor-lang = "0.30.1"
+anchor-client = "0.30.1"
 wormhole-io = "0.1.0"
 cfg-if = "1.0"
 hex = "0.4.3"
 ruint = "1.9.0"
-solana-program = "1.16.20"
-solana-program-test = "1.16.20"
-solana-sdk = "1.16.20"
-solana-client = "1.16.20"
+solana-program = "1.17.3"
+solana-program-test = "1.17.3"
+solana-sdk = "1.17.3"
+solana-client = "1.17.3"
 tokio = "1.14.1"
 wormhole-solana = { path = "./crates/wormhole-solana" }
 

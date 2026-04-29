@@ -169,7 +169,7 @@ fn upgrade_contract(ctx: Context<UpgradeContract>, _args: EmptyArgs) -> Result<(
             &ctx.accounts.spill.key(),
         ),
         &ctx.accounts.to_account_infos(),
-        &[&[UPGRADE_SEED_PREFIX, &[ctx.bumps["upgrade_authority"]]]],
+        &[&[UPGRADE_SEED_PREFIX, &[ctx.bumps.upgrade_authority]]],
     )
     .map_err(Into::into)
 }
