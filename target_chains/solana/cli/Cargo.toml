@@ -12,11 +12,11 @@ solana-client = { workspace = true }
 anchor-client = { workspace = true }
 clap = { version = "3.2.22", features = ["derive"] }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
-wormhole-solana = { path = "../crates/wormhole-solana" }
+wormhole-solana = { workspace = true }
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = { workspace = true }
-borsh = { workspace = true }                                                                                   # Old version of borsh needed for wormhole-solana
+borsh = { workspace = true }
 wormhole-core-bridge-solana = { workspace = true }
 pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
