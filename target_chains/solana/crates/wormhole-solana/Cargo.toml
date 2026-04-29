@@ -1,0 +1,28 @@
+[package]
+name    = "wormhole-solana"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "wormhole_solana"
+
+[dependencies]
+borsh           = { workspace = true }
+bstr            = "0.2.17"
+byteorder       = { workspace = true }
+hex             = { workspace = true }
+hex-literal     = "0.3.4"
+sha3            = "0.10.4"
+thiserror       = "1.0.34"
+solana-program  = { workspace = true }
+
+nom             = { version="7", default-features=false, features=["alloc"] }
+primitive-types = { version="0.11", default-features=false }
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+serde_wormhole = { workspace = true }
+
+[dev-dependencies]
+solana-program         = { workspace = true }
+solana-program-test    = { workspace = true }
+solana-sdk             = { workspace = true }
+tokio                  = { workspace = true }

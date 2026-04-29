@@ -226,7 +226,8 @@ fn main() -> Result<()> {
                     Ok(pk) => pk,
                     Err(err) => {
                         eprintln!("[{name}] skipping: invalid wormhole pubkey {wormhole:?}: {err}");
-                        failures.push((name.to_string(), format!("invalid wormhole pubkey: {err}")));
+                        failures
+                            .push((name.to_string(), format!("invalid wormhole pubkey: {err}")));
                         continue;
                     }
                 };

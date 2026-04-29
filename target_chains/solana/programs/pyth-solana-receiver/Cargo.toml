@@ -29,7 +29,7 @@ rand = "0.8.5"
 
 [dev-dependencies]
 solana-sdk = { workspace = true }
-tokio = "1.14.1"
+tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
