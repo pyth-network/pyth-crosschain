@@ -23,8 +23,7 @@ pub(crate) mod utils;
 pub mod cpi {
     use anchor_lang::prelude::*;
     use solana_program::program::invoke_signed;
-
-    use super::*;
+    use crate::legacy::instruction::{PostMessageArgs, post_message};
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
     /// Guardian observation.

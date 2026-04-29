@@ -105,7 +105,7 @@ pub struct EmptyArgs {}
 #[cfg(feature = "no-entrypoint")]
 mod __no_entrypoint {
     use crate::legacy::instruction::{LegacyInstruction, PostMessageArgs};
-    use anchor_lang::ToAccountMetas;
+    use anchor_lang::{ToAccountMetas, prelude::borsh};
     use solana_program::instruction::Instruction;
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
@@ -118,9 +118,9 @@ mod __no_entrypoint {
         args: PostMessageArgs,
     ) -> Instruction {
         let message_is_signer = !args.payload.is_empty();
-        Instruction::new_with_borsh(
+        Instruction::new_with_bytes(
             crate::ID,
-            &(LegacyInstruction::PostMessage, args),
+            &borsh::to_vec(&(LegacyInstruction::PostMessage, args)).unwrap(),
             accounts.to_account_metas(Some(message_is_signer)),
         )
     }
@@ -135,9 +135,9 @@ mod __no_entrypoint {
         accounts: crate::legacy::accounts::PostMessageUnreliable,
         args: PostMessageArgs,
     ) -> Instruction {
-        Instruction::new_with_borsh(
+        Instruction::new_with_bytes(
             crate::ID,
-            &(LegacyInstruction::PostMessageUnreliable, args),
+            &borsh::to_vec(&(LegacyInstruction::PostMessageUnreliable, args)).unwrap(),
             accounts.to_account_metas(None),
         )
     }

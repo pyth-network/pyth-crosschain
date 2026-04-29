@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
 use crate::types::Timestamp;
-use anchor_lang::{prelude::*, solana_program::keccak};
+use anchor_lang::prelude::*;
+use solana_program::keccak;
 
 pub const POSTED_VAA_V1_SEED_PREFIX: &[u8] = b"PostedVAA";
 pub const POSTED_VAA_V1_DISCRIMINATOR: [u8; 4] = *b"vaa\x01";
@@ -52,7 +53,7 @@ pub struct PostedVaaV1 {
 }
 
 impl crate::legacy::utils::LegacyAccount for PostedVaaV1 {
-    const DISCRIMINATOR: &'static [u8] = &POSTED_VAA_V1_DISCRIMINATOR;
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &POSTED_VAA_V1_DISCRIMINATOR;
 
     fn program_id() -> Pubkey {
         crate::ID
