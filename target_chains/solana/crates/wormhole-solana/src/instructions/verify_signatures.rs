@@ -100,12 +100,12 @@ pub fn verify_signatures_txs(
 
         // Write signatures and addresses
         for s in chunk.iter() {
-            secp_payload.write(&s.signature)?;
-            secp_payload.write(&s.key)?;
+            secp_payload.write_all(&s.signature)?;
+            secp_payload.write_all(&s.key)?;
         }
 
         // Write body
-        secp_payload.write(&vaa_hash)?;
+        secp_payload.write_all(&vaa_hash)?;
 
         let secp_ix = SolanaInstruction {
             program_id: solana_program::secp256k1_program::id(),
