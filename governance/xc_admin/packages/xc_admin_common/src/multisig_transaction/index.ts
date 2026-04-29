@@ -188,10 +188,6 @@ export class MultisigParser {
 }
 
 export { AnchorMultisigInstruction } from "./AnchorMultisigInstruction";
-export {
-  EXPRESS_RELAY_PROGRAM_ID,
-  ExpressRelayMultisigInstruction,
-} from "./ExpressRelayMultisigInstruction";
 export { idlSetBuffer } from "./anchor";
 export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
