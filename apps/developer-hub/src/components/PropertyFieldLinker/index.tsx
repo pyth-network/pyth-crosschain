@@ -75,5 +75,5 @@ export function PropertyFieldLinker() {
     }
   }, [expandedProperty]);
 
-  return;
+  return null;
 }
