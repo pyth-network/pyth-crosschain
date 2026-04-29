@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 use solana_program::keccak;
 use wormhole_raw_vaas::Vaa;
 
-pub(super) const ENCODED_VAA_DISCRIMINATOR: [u8; 8] =
+pub(super) const ENCODED_VAA_DISCRIMINATOR: &[u8] =
     <state::EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR;
 pub const VAA_START: usize = state::EncodedVaa::VAA_START;
 
