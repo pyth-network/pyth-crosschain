@@ -139,12 +139,14 @@ npm install --save @pythnetwork/pyth-lazer-sdk
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
 const client = await PythLazerClient.create({
-  urls: [
-    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
-  ],
   token: process.env.ACCESS_TOKEN,
+  webSocketPoolConfig: {
+    urls: [
+      "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+    ],
+  },
 });
 ```
 
