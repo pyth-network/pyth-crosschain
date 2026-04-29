@@ -80,7 +80,7 @@ impl EncodedVaa {
     ;
 
     /// Return as [VaaVersion] if the version number is valid.
-    pub fn as_vaa(&self) -> Result<VaaVersion> {
+    pub fn as_vaa(&self) -> Result<VaaVersion<'_>> {
         match self.version {
             1 => Ok(VaaVersion::V1(Vaa::parse(&self.buf).unwrap())),
             _ => err!(CoreBridgeError::UnverifiedVaa),

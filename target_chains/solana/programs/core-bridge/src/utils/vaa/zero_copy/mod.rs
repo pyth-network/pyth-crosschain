@@ -73,7 +73,7 @@ impl<'a> VaaAccount<'a> {
         }
     }
 
-    pub fn try_payload(&self) -> Result<Payload> {
+    pub fn try_payload(&self) -> Result<Payload<'_>> {
         match self {
             Self::EncodedVaa(inner) => match inner.as_vaa()? {
                 VaaVersion::V1(vaa) => Ok(vaa.body().payload()),

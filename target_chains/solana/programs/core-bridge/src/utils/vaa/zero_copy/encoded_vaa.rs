@@ -39,7 +39,7 @@ impl<'a> EncodedVaa<'a> {
         &self.0[VAA_START..]
     }
 
-    pub fn as_vaa(&self) -> Result<state::VaaVersion> {
+    pub fn as_vaa(&self) -> Result<state::VaaVersion<'_>> {
         match self.version() {
             1 => Ok(state::VaaVersion::V1(
                 Vaa::parse(&self.0[VAA_START..]).unwrap(),
