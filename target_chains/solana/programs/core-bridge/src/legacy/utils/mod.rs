@@ -1,7 +1,7 @@
 //! Utilities for the Core Bridge Program. These utilities are used to convert the legacy program to
 //! use the Anchor framework.
 
-use anchor_lang::{Bumps, prelude::*};
+use anchor_lang::{prelude::*, Bumps};
 
 /// Trait for account schemas of legacy programs (intended for Core Bridge and Token Bridge, but can
 /// be used for any legacy program). A legacy account requires a defined discriminator (if there is
@@ -162,7 +162,7 @@ where
 /// Trait used for legacy instruction handlers. It is used to process instructions from
 /// legacy programs, where an enum defines the instruction type (one byte selector).
 pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
-    Accounts<'info, Self::Bumps> + AccountsExit<'info> + ToAccountInfos<'info> + Bumps<Bumps : Default>
+    Accounts<'info, Self::Bumps> + AccountsExit<'info> + ToAccountInfos<'info> + Bumps<Bumps: Default>
 {
     /// This name is what gets written to in a program log similar to how Anchor instructions are
     /// logged. This name is logged in the process instruction method.
@@ -185,7 +185,8 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
         msg!("Instruction: {}", Self::LOG_IX_NAME);
 
         let mut bumps = Default::default();
-        
+
+        // Generate accounts struct. This checks account constraints, including PDAs.
         let mut accounts = Self::try_accounts(
             program_id,
             &mut account_infos,
@@ -193,7 +194,7 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
             &mut bumps,
             &mut std::collections::BTreeSet::new(),
         )?;
-        
+
         // Create new context of these accounts.
         let ctx = Context::new(program_id, &mut accounts, account_infos, bumps);
 
