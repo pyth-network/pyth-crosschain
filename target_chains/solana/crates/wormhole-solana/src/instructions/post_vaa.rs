@@ -6,8 +6,9 @@ use {
     solana_program::{
         instruction::{AccountMeta, Instruction as SolanaInstruction},
         pubkey::Pubkey,
-        system_program, sysvar,
+     sysvar, 
     },
+    solana_sdk_ids::system_program,
     std::io::{Cursor, Write},
 };
 

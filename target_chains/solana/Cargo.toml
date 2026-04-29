@@ -36,6 +36,7 @@ ruint = "1.9.0"
 solana-program = "2"
 solana-program-test = "2"
 solana-sdk = "2"
+solana-sdk-ids = "2"
 solana-client = "2"
 tokio = "1.14.1"
 wormhole-solana = { path = "./crates/wormhole-solana" }
