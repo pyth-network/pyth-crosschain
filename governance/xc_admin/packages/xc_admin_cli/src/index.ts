@@ -42,12 +42,14 @@ import {
   createPriceStoreInstruction,
   fetchStakeAccounts,
   findDetermisticStakeAccountAddress,
+  EXPRESS_RELAY_PROGRAM_ID,
   getMultisigCluster,
   getProposalInstructions,
   idlSetBuffer,
   isPriceStorePublisherInitialized,
   lazerIdl,
   integrityPoolIdl,
+  expressRelayIdl,
   INTEGRITY_POOL_PROGRAM_ID,
 } from "@pythnetwork/xc-admin-common";
 
@@ -1102,6 +1104,104 @@ multisigCommand(
     if (setPublisherStakeAccountInstruction) {
       await vault.proposeInstructions(
         [setPublisherStakeAccountInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
+  });
+
+multisigCommand("withdraw-er-native-fees", "Withdraw Express Relay native fees")
+  .requiredOption(
+    "-d, --fee-receiver-admin <pubkey>",
+    "destination address to receive withdrawn native fees",
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+    const admin = await vault.getVaultAuthorityPDA(targetCluster);
+    const feeReceiverAdmin = new PublicKey(options.feeReceiverAdmin);
+    const expressRelayMetadata = PublicKey.findProgramAddressSync(
+      [Buffer.from("metadata")],
+      EXPRESS_RELAY_PROGRAM_ID,
+    )[0];
+
+    const expressRelayProgram = new Program(
+      expressRelayIdl as Idl,
+      EXPRESS_RELAY_PROGRAM_ID,
+      vault.getAnchorProvider(),
+    );
+
+    const withdrawInstruction = await expressRelayProgram.methods
+      .withdrawFees?.()
+      .accounts({
+        admin,
+        feeReceiverAdmin,
+        expressRelayMetadata,
+      })
+      .instruction();
+
+    if (withdrawInstruction) {
+      await vault.proposeInstructions(
+        [withdrawInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
+  });
+
+multisigCommand("withdraw-er-spl-fees", "Withdraw Express Relay SPL fees")
+  .requiredOption(
+    "-f, --mint-fee <pubkey>",
+    "mint of the fee token to withdraw",
+  )
+  .requiredOption(
+    "-d, --fee-receiver-admin-ta <pubkey>",
+    "destination token account to receive withdrawn SPL fees",
+  )
+  .option(
+    "-t, --token-program-fee <pubkey>",
+    "token program for fee mint",
+    TOKEN_PROGRAM_ID.toBase58(),
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+    const admin = await vault.getVaultAuthorityPDA(targetCluster);
+    const mintFee = new PublicKey(options.mintFee);
+    const feeReceiverAdminTa = new PublicKey(options.feeReceiverAdminTa);
+    const tokenProgramFee = new PublicKey(options.tokenProgramFee);
+    const expressRelayMetadata = PublicKey.findProgramAddressSync(
+      [Buffer.from("metadata")],
+      EXPRESS_RELAY_PROGRAM_ID,
+    )[0];
+    const expressRelayFeeReceiverAta = await getAssociatedTokenAddress(
+      mintFee,
+      expressRelayMetadata,
+      true,
+      tokenProgramFee,
+    );
+
+    const expressRelayProgram = new Program(
+      expressRelayIdl as Idl,
+      EXPRESS_RELAY_PROGRAM_ID,
+      vault.getAnchorProvider(),
+    );
+
+    const withdrawSplInstruction = await expressRelayProgram.methods
+      .withdrawSplFees?.()
+      .accounts({
+        admin,
+        expressRelayMetadata,
+        expressRelayFeeReceiverAta,
+        feeReceiverAdminTa,
+        mintFee,
+        tokenProgramFee,
+      })
+      .instruction();
+
+    if (withdrawSplInstruction) {
+      await vault.proposeInstructions(
+        [withdrawSplInstruction],
         targetCluster,
         DEFAULT_PRIORITY_FEE_CONFIG,
       );

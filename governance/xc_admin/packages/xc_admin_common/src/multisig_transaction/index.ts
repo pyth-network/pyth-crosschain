@@ -19,6 +19,10 @@ import {
 } from "./AnchorMultisigInstruction";
 import type { AnchorAccounts } from "./anchor";
 import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
+import {
+  EXPRESS_RELAY_PROGRAM_ID,
+  ExpressRelayMultisigInstruction,
+} from "./ExpressRelayMultisigInstruction";
 import { LazerMultisigInstruction } from "./LazerMultisigInstruction";
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
@@ -40,6 +44,7 @@ export enum MultisigInstructionProgram {
   UnrecognizedProgram,
   PythPriceStore,
   Lazer,
+  ExpressRelay,
 }
 
 export function getProgramName(program: MultisigInstructionProgram) {
@@ -70,6 +75,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Unknown";
     case MultisigInstructionProgram.Lazer:
       return "Lazer";
+    case MultisigInstructionProgram.ExpressRelay:
+      return "Express Relay";
   }
 }
 
@@ -172,6 +179,8 @@ export class MultisigParser {
       instruction.programId.equals(new PublicKey(SOLANA_LAZER_PROGRAM_ID))
     ) {
       return LazerMultisigInstruction.fromInstruction(instruction);
+    } else if (instruction.programId.equals(EXPRESS_RELAY_PROGRAM_ID)) {
+      return ExpressRelayMultisigInstruction.fromInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
@@ -179,6 +188,10 @@ export class MultisigParser {
 }
 
 export { AnchorMultisigInstruction } from "./AnchorMultisigInstruction";
+export {
+  EXPRESS_RELAY_PROGRAM_ID,
+  ExpressRelayMultisigInstruction,
+} from "./ExpressRelayMultisigInstruction";
 export { idlSetBuffer } from "./anchor";
 export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
