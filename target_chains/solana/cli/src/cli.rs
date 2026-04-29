@@ -1,8 +1,15 @@
 use {
+    anyhow::{anyhow, Result},
     clap::{Parser, Subcommand},
     solana_sdk::pubkey::Pubkey,
     std::str::FromStr,
 };
+
+pub fn require_wormhole(wormhole: Option<Pubkey>) -> Result<Pubkey> {
+    wormhole.ok_or_else(|| {
+        anyhow!("--wormhole/-w is required for this subcommand (only `initialize-wormhole-receiver-all-svm` may omit it)")
+    })
+}
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -24,8 +31,13 @@ pub struct Cli {
         help = "RPC endpoint of the solana"
     )]
     pub url: String,
-    #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Address of the wormhole contract")]
-    pub wormhole: Pubkey,
+    #[clap(
+        short = 'w',
+        long,
+        parse(try_from_str = Pubkey::from_str),
+        help = "Address of the wormhole contract. Required for all subcommands except `initialize-wormhole-receiver-all-svm`, which uses the per-chain address from the built-in chain table."
+    )]
+    pub wormhole: Option<Pubkey>,
     #[clap(subcommand)]
     pub action: Action,
 }
@@ -66,7 +78,13 @@ pub enum Action {
     #[clap(
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
-    InitializeWormholeReceiver {},
+    InitializeWormholeReceiver {
+        #[clap(
+            long,
+            help = "Treat the on-chain guardian set account as the legacy (non-Anchor) layout for every upgrade step. Required for Pythnet and other deployments running the legacy Wormhole bridge program."
+        )]
+        legacy: bool,
+    },
     #[clap(about = "Initialize wormhole receiver on all known SVM chains with retries")]
     InitializeWormholeReceiverAllSvm {
         #[clap(
