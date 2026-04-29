@@ -19,6 +19,26 @@ If you have questions that are not answered here, feel free to add a question to
 
 There is **no hard cap**, but for optimal performance we recommend splitting large subscriptions across multiple connections. The number of connections is limited by your specific usage agreement. If you need to subscribe to many feeds, contact support for guidance on high-volume subscriptions. For more on rate limits, see [Rate Limits](/price-feeds/pro/rate-limits).
 
+#### Q. How should I handle feed expiration or invalid feed IDs in production?
+
+Feed IDs can become invalid over time — for example, when a feed is retired or an equity is delisted. By default, a subscription request containing **any** invalid feed ID will fail entirely with a `subscriptionError`, dropping all of your valid feeds along with it.
+
+For production deployments, set `ignoreInvalidFeeds: true` in your subscribe message:
+
+```js copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price", "feedUpdateTimestamp"],
+  formats: ["solana"],
+  channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
+});
+```
+
+With this flag enabled, invalid feeds are skipped and listed in the subscription response, while the rest of your feeds continue to stream without interruption. Inspect the response to learn which feeds were dropped and why, then update your subscription accordingly. See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) and [Error Codes](/price-feeds/pro/error-codes) for details.
+
 #### Q. What is the "client too slow" error?
 
 This error occurs when the client cannot process incoming messages fast enough. Common causes:
