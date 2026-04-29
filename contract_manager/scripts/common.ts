@@ -250,21 +250,36 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
 }
 
 /**
- * Finds the wormhole contract for a given EVM chain and guardian set source.
- * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
- * @param {"wormhole" | "lazer"} guardianSetSource The guardian set source to filter by.
- * @returns If found, the wormhole contract for the given EVM chain and source. Else, undefined
+ * Finds the wormhole contract for a given EVM chain that's compatible with
+ * the requested deployment type.
+ *
+ * Canonical Wormhole receivers (stable/beta) are shared across those two
+ * deployment types — they have the same guardian set. Pre-existing entries
+ * in the JSON store have no `deploymentType` label (they predate this
+ * field) and are presumed canonical, so a `stable` or `beta` lookup matches
+ * any stable / beta / unlabeled entry on the chain.
+ *
+ * Lazer receivers are NOT shared: lazer-staging and lazer-prod each carry
+ * their own guardian set, so the lookup is strict.
  */
 export function findWormholeContract(
   chain: EvmChain,
-  guardianSetSource: "wormhole" | "lazer",
+  deploymentType: DeploymentType,
 ): EvmWormholeContract | undefined {
+  const isCanonicalWormhole =
+    deploymentType === "stable" || deploymentType === "beta";
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
-    if (
-      contract instanceof EvmWormholeContract &&
-      contract.getChain().getId() === chain.getId() &&
-      contract.guardianSetSource === guardianSetSource
-    ) {
+    if (!(contract instanceof EvmWormholeContract)) continue;
+    if (contract.getChain().getId() !== chain.getId()) continue;
+    if (isCanonicalWormhole) {
+      if (
+        contract.deploymentType === undefined ||
+        contract.deploymentType === "stable" ||
+        contract.deploymentType === "beta"
+      ) {
+        return contract;
+      }
+    } else if (contract.deploymentType === deploymentType) {
       return contract;
     }
   }
@@ -357,7 +372,7 @@ export async function deployWormholeContract(
   const wormholeContract = new EvmWormholeContract(
     chain,
     wormholeReceiverAddr,
-    wormholeConfig.guardianSetSource,
+    config.type,
   );
 
   if (config.type === "stable") {
@@ -389,9 +404,8 @@ export async function getOrDeployWormholeContract(
   config: DeployWormholeReceiverContractsConfig,
   cacheFile: string,
 ): Promise<EvmWormholeContract> {
-  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
   return (
-    findWormholeContract(chain, wormholeConfig.guardianSetSource) ??
+    findWormholeContract(chain, config.type) ??
     (await deployWormholeContract(chain, config, cacheFile))
   );
 }

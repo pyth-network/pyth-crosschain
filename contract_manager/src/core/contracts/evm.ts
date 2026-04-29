@@ -74,7 +74,7 @@ export class EvmWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       address: string;
-      guardianSetSource?: "wormhole" | "lazer";
+      deploymentType?: DeploymentType;
     },
   ): EvmWormholeContract {
     if (parsed.type !== EvmWormholeContract.type)
@@ -84,14 +84,14 @@ export class EvmWormholeContract extends WormholeContract {
     return new EvmWormholeContract(
       chain,
       parsed.address,
-      parsed.guardianSetSource ?? "wormhole",
+      parsed.deploymentType,
     );
   }
 
   constructor(
     public chain: EvmChain,
     public address: string,
-    public guardianSetSource: "wormhole" | "lazer" = "wormhole",
+    public deploymentType?: DeploymentType,
   ) {
     super();
   }
@@ -142,8 +142,12 @@ export class EvmWormholeContract extends WormholeContract {
     return {
       address: this.address,
       chain: this.chain.getId(),
-      guardianSetSource: this.guardianSetSource,
       type: EvmWormholeContract.type,
+      // Only emit deploymentType for entries that have it set; pre-existing
+      // unlabeled entries round-trip unchanged.
+      ...(this.deploymentType !== undefined && {
+        deploymentType: this.deploymentType,
+      }),
     };
   }
 }
