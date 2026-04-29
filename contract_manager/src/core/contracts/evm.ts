@@ -13,7 +13,7 @@ import type { DataSource } from "@pythnetwork/xc-admin-common";
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
 
-import type { PrivateKey } from "../base";
+import type { DeploymentType, PrivateKey } from "../base";
 import { PriceFeedContract, Storable } from "../base";
 import type { Chain } from "../chains";
 import { EvmChain } from "../chains";
@@ -71,18 +71,27 @@ export class EvmWormholeContract extends WormholeContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string },
+    parsed: {
+      type: string;
+      address: string;
+      guardianSetSource?: "wormhole" | "lazer";
+    },
   ): EvmWormholeContract {
     if (parsed.type !== EvmWormholeContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmWormholeContract(chain, parsed.address);
+    return new EvmWormholeContract(
+      chain,
+      parsed.address,
+      parsed.guardianSetSource ?? "wormhole",
+    );
   }
 
   constructor(
     public chain: EvmChain,
     public address: string,
+    public guardianSetSource: "wormhole" | "lazer" = "wormhole",
   ) {
     super();
   }
@@ -133,6 +142,7 @@ export class EvmWormholeContract extends WormholeContract {
     return {
       address: this.address,
       chain: this.chain.getId(),
+      guardianSetSource: this.guardianSetSource,
       type: EvmWormholeContract.type,
     };
   }
@@ -543,19 +553,28 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   constructor(
     public chain: EvmChain,
     public address: string,
+    public deploymentType?: DeploymentType,
   ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string },
+    parsed: {
+      type: string;
+      address: string;
+      deploymentType?: DeploymentType;
+    },
   ): EvmPriceFeedContract {
     if (parsed.type !== EvmPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmPriceFeedContract(chain, parsed.address);
+    return new EvmPriceFeedContract(
+      chain,
+      parsed.address,
+      parsed.deploymentType,
+    );
   }
 
   getId(): string {
@@ -748,6 +767,11 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       address: this.address,
       chain: this.chain.getId(),
       type: EvmPriceFeedContract.type,
+      // Only emit deploymentType for entries that have it set; existing JSON
+      // entries without this field are left untouched on save.
+      ...(this.deploymentType !== undefined && {
+        deploymentType: this.deploymentType,
+      }),
     };
   }
 }

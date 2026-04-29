@@ -17,17 +17,18 @@ import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
 import type { InferredOptionType } from "yargs";
 
-import type { PrivateKey } from "../src/core/base";
+import type { DeploymentType, PrivateKey } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import {
-  EvmEntropyContract,
   EvmExecutorContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
 export type BaseDeployConfig = {
+  type: DeploymentType;
   gasMultiplier: number;
   gasPriceMultiplier: number;
   jsonOutputDir: string;
@@ -47,7 +48,7 @@ export async function deployIfNotCached(
   cacheKey?: string,
 ): Promise<string> {
   const runIfNotCached = makeCacheFunction(cacheFile);
-  const key = cacheKey ?? `${chain.getId()}-${artifactName}`;
+  const key = cacheKey ?? `${chain.getId()}-${artifactName}-${config.type}`;
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
       readFileSync(
@@ -106,77 +107,77 @@ export function getWeb3Contract(
 }
 
 export const COMMON_DEPLOY_OPTIONS = {
-  "std-output-dir": {
-    type: "string",
-    demandOption: true,
-    desc: "Path to the Foundry output directory (typically 'out/' directory, contains Contract.sol/Contract.json structure)",
-  },
-  "private-key": {
-    type: "string",
-    demandOption: true,
-    desc: "Private key to sign the transactions with",
-  },
   chain: {
-    type: "array",
-    string: true,
     demandOption: true,
     desc: "Chains to upload the contract on. Must be one of the chains available in the store",
+    string: true,
+    type: "array",
   },
   "deployment-type": {
-    type: "string",
-    demandOption: false,
     default: "stable",
-    desc: "Deployment type to use. Can be 'stable' or 'beta'",
+    demandOption: false,
+    desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+    type: "string",
   },
   "gas-multiplier": {
-    type: "number",
-    demandOption: false,
     // Proxy (ERC1967) contract gas estimate is insufficient in many networks and thus we use 2 by default to make it work.
     default: 2,
+    demandOption: false,
     desc: "Gas multiplier to use for the deployment. This is useful when gas estimates are not accurate",
+    type: "number",
   },
   "gas-price-multiplier": {
-    type: "number",
-    demandOption: false,
     default: 1,
+    demandOption: false,
     desc: "Gas price multiplier to use for the deployment. This is useful when gas price estimates are not accurate",
+    type: "number",
+  },
+  "private-key": {
+    demandOption: true,
+    desc: "Private key to sign the transactions with",
+    type: "string",
   },
   "save-contract": {
-    type: "boolean",
-    demandOption: false,
     default: true,
+    demandOption: false,
     desc: "Save the contract to the store",
+    type: "boolean",
+  },
+  "std-output-dir": {
+    demandOption: true,
+    desc: "Path to the Foundry output directory (typically 'out/' directory, contains Contract.sol/Contract.json structure)",
+    type: "string",
   },
 } as const;
 export const CHAIN_SELECTION_OPTIONS = {
-  testnet: {
-    type: "boolean",
-    default: false,
-    desc: "Upgrade testnet contracts instead of mainnet",
-  },
   "all-chains": {
-    type: "boolean",
     default: false,
     desc: "Upgrade the contract on all chains. Use with --testnet flag to upgrade all testnet contracts",
+    type: "boolean",
   },
   chain: {
-    type: "array",
-    string: true,
     desc: "Chains to upgrade the contract on",
+    string: true,
+    type: "array",
+  },
+  testnet: {
+    default: false,
+    desc: "Upgrade testnet contracts instead of mainnet",
+    type: "boolean",
   },
 } as const;
 export const COMMON_UPGRADE_OPTIONS = {
   ...CHAIN_SELECTION_OPTIONS,
-  "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   "ops-key-path": {
-    type: "string",
     demandOption: true,
     desc: "Path to the private key of the proposer to use for the operations multisig governance proposal",
-  },
-  "std-output": {
     type: "string",
+  },
+  "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+  "std-output": {
     demandOption: false,
     desc: "Path to the standard JSON output of the pyth contract (build artifact)",
+    type: "string",
   },
 } as const;
 
@@ -249,17 +250,20 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
 }
 
 /**
- * Finds the wormhole contract for a given EVM chain.
+ * Finds the wormhole contract for a given EVM chain and guardian set source.
  * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
- * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
+ * @param {"wormhole" | "lazer"} guardianSetSource The guardian set source to filter by.
+ * @returns If found, the wormhole contract for the given EVM chain and source. Else, undefined
  */
 export function findWormholeContract(
   chain: EvmChain,
+  guardianSetSource: "wormhole" | "lazer",
 ): EvmWormholeContract | undefined {
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
     if (
       contract instanceof EvmWormholeContract &&
-      contract.getChain().getId() === chain.getId()
+      contract.getChain().getId() === chain.getId() &&
+      contract.guardianSetSource === guardianSetSource
     ) {
       return contract;
     }
@@ -291,7 +295,7 @@ export function findExecutorContract(
 
 export type DeployWormholeReceiverContractsConfig = {
   saveContract: boolean;
-  type: "stable" | "beta";
+  type: DeploymentType;
 } & BaseDeployConfig;
 /**
  * Deploys the wormhole receiver contract for a given EVM chain.
@@ -305,6 +309,8 @@ export async function deployWormholeContract(
   config: DeployWormholeReceiverContractsConfig,
   cacheFile: string,
 ): Promise<EvmWormholeContract> {
+  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
+
   const receiverSetupAddr = await deployIfNotCached(
     cacheFile,
     chain,
@@ -317,7 +323,9 @@ export async function deployWormholeContract(
     cacheFile,
     chain,
     config,
-    "ReceiverImplementation",
+    wormholeConfig.guardianSetSource === "lazer"
+      ? "ReceiverImplementationHalf"
+      : "ReceiverImplementation",
     [],
   );
 
@@ -327,8 +335,6 @@ export async function deployWormholeContract(
     "ReceiverSetup",
     receiverSetupAddr,
   );
-
-  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
 
   const initData = setupContract.methods
     .setup(
@@ -348,7 +354,11 @@ export async function deployWormholeContract(
     [receiverSetupAddr, initData],
   );
 
-  const wormholeContract = new EvmWormholeContract(chain, wormholeReceiverAddr);
+  const wormholeContract = new EvmWormholeContract(
+    chain,
+    wormholeReceiverAddr,
+    wormholeConfig.guardianSetSource,
+  );
 
   if (config.type === "stable") {
     console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
@@ -379,8 +389,9 @@ export async function getOrDeployWormholeContract(
   config: DeployWormholeReceiverContractsConfig,
   cacheFile: string,
 ): Promise<EvmWormholeContract> {
+  const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
   return (
-    findWormholeContract(chain) ??
+    findWormholeContract(chain, wormholeConfig.guardianSetSource) ??
     (await deployWormholeContract(chain, config, cacheFile))
   );
 }
@@ -435,10 +446,10 @@ export async function topupAccountsIfNecessary(
 
       const tx = await web3.eth.sendTransaction({
         from: signer.address,
-        to: accountAddress,
         gas: estimatedGas * deploymentConfig.gasMultiplier,
         gasPrice: gasPrice.toString(),
         nonce: nonce,
+        to: accountAddress,
         value: web3.utils.toWei(`${minBalance}`, "ether"),
         // // Uncomment this if your tx are getting stuck in the mempool. Or if you get this error:
         // // "An existing transaction had higher priority"

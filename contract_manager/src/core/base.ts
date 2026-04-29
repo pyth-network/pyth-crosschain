@@ -9,7 +9,7 @@ export type TxResult = {
   info: unknown; // chain specific info
 };
 
-export type DeploymentType = "stable" | "beta";
+export type DeploymentType = "stable" | "beta" | "lazer-staging" | "lazer-prod";
 export type PrivateKey = string & { __type: "PrivateKey" };
 
 function checkIsPrivateKey(key: string): asserts key is PrivateKey {
@@ -23,7 +23,13 @@ export function toPrivateKey(key: string): PrivateKey {
 }
 
 export function toDeploymentType(type: string): DeploymentType {
-  if (type === "stable" || type === "beta") return type;
+  if (
+    type === "stable" ||
+    type === "beta" ||
+    type === "lazer-staging" ||
+    type === "lazer-prod"
+  )
+    return type;
   throw new Error(`Invalid deployment type ${type}`);
 }
 
@@ -133,36 +139,40 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
     initialGuardianSet: string[]; // 20 byte addresses in 40 char hex format
+    // Source of the guardian set this receiver follows. Drives the quorum
+    // threshold (wormhole = 2/3+1, lazer = 1/2+1)
+    guardianSetSource: "wormhole" | "lazer";
   };
 } {
   if (deploymentType === "stable")
     return {
       dataSources: [
         {
-          emitterChain: 1,
           emitterAddress:
             "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+          emitterChain: 1,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0",
+          emitterChain: 26,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+          emitterChain: 26,
         },
       ],
       governanceDataSource: {
-        emitterChain: 1,
         emitterAddress:
           "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+        emitterChain: 1,
       },
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
+        guardianSetSource: "wormhole",
         initialGuardianSet: ["58cc3ae5c097b213ce3c81979e1b9f9570746aa5"],
       },
     };
@@ -170,31 +180,86 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     return {
       dataSources: [
         {
-          emitterChain: 1,
           emitterAddress:
             "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+          emitterChain: 1,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6",
+          emitterChain: 26,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+          emitterChain: 26,
         },
       ],
       governanceDataSource: {
-        emitterChain: 1,
         emitterAddress:
           "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+        emitterChain: 1,
       },
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
+        guardianSetSource: "wormhole",
         initialGuardianSet: ["13947bd48b18e53fdaeee77f3473391ac727c638"],
+      },
+    };
+  else if (deploymentType === "lazer-staging")
+    return {
+      dataSources: [
+        {
+          emitterAddress:
+            "507974686e6574507974686e6574507974686e6574507974686e657450797468",
+          emitterChain: 26,
+        },
+      ],
+      governanceDataSource: {
+        emitterAddress:
+          "0000000000000000000000000000000000000000000000000000000000000004",
+        emitterChain: 1,
+      },
+      wormholeConfig: {
+        governanceChainId: 1,
+        governanceContract:
+          "0000000000000000000000000000000000000000000000000000000000000004",
+        guardianSetSource: "lazer",
+        initialGuardianSet: [
+          "dcd37a16f42a7ddd377046c3d607e7227c1ef459",
+          "1098b22a55202594341052605228e3d896132f6a",
+          "ff3b3ab7e07314359bd2469c2b1591478e398124",
+        ],
+      },
+    };
+  else if (deploymentType === "lazer-prod")
+    return {
+      dataSources: [
+        {
+          emitterAddress:
+            "507974686e6574507974686e6574507974686e6574507974686e657450797468",
+          emitterChain: 26,
+        },
+      ],
+      governanceDataSource: {
+        emitterAddress:
+          "0000000000000000000000000000000000000000000000000000000000000004",
+        emitterChain: 1,
+      },
+      wormholeConfig: {
+        governanceChainId: 1,
+        governanceContract:
+          "0000000000000000000000000000000000000000000000000000000000000004",
+        guardianSetSource: "lazer",
+        initialGuardianSet: [
+          "41534bb176e461a3fb30479400f210549ecce638",
+          "6502987b62f21cab7eb5ccd8f0173084b60d5b41",
+          "44a3e8f6a382412cf6bb90a3f8106e68977476c9",
+          "d9d7d4529577864352c9a6539a48238fcd447052",
+          "1663a5a822336ece48559b1dfb1e93a017a7dac3",
+        ],
       },
     };
   else throw new Error(`Invalid deployment type ${deploymentType}`);
