@@ -239,6 +239,16 @@
         "types": "./dist/cjs/node/utils/governance.d.ts"
       }
     },
+    "./node/utils/preserve-native-fetch": {
+      "import": {
+        "default": "./dist/esm/node/utils/preserve-native-fetch.mjs",
+        "types": "./dist/esm/node/utils/preserve-native-fetch.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/node/utils/preserve-native-fetch.cjs",
+        "types": "./dist/cjs/node/utils/preserve-native-fetch.d.ts"
+      }
+    },
     "./node/utils/shell": {
       "import": {
         "default": "./dist/esm/node/utils/shell.mjs",

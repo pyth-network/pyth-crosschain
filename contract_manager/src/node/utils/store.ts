@@ -7,6 +7,8 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import "./preserve-native-fetch";
+
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 
 import { Vault } from "./governance";
