@@ -61,6 +61,7 @@ client.send({
   properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
 });
 ```
 
@@ -99,6 +100,17 @@ The most significant parameters are:
   </Callout>
 - `ignoreInvalidFeeds` (optional, default: `false`) — if `true`, the subscription will ignore invalid feed IDs and subscribe to any valid feeds. The response will include details about which feeds were ignored and why. If all feeds are invalid, the subscription will still fail with a `subscriptionError`. See [Error Codes](/price-feeds/pro/error-codes) for the response format.
 
+<Callout type="warning" title="Recommended for production: set ignoreInvalidFeeds: true">
+  Feed IDs can become invalid over time — for example, when a feed is retired or
+  an equity is delisted. By default (`ignoreInvalidFeeds: false`), a single
+  invalid feed in your subscription request will cause the **entire**
+  subscription to fail with a `subscriptionError`, dropping all your other valid
+  feeds along with it. Setting `ignoreInvalidFeeds: true` makes your subscription
+  resilient: invalid feeds are skipped and reported in the response, while valid
+  feeds continue to stream uninterrupted. Inspect the response to learn which
+  feeds were dropped and why, then update your subscription accordingly.
+</Callout>
+
 There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
 
 Determine the most suitable values for your application -- they will be used in the next step.
@@ -126,14 +138,16 @@ npm install --save @pythnetwork/pyth-lazer-sdk
 ```js copy
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
-const client = await PythLazerClient.create(
-  [
-    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
-  ],
-  "YOUR_API_KEY",
-);
+const client = await PythLazerClient.create({
+  token: process.env.ACCESS_TOKEN,
+  webSocketPoolConfig: {
+    urls: [
+      "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+    ],
+  },
+});
 ```
 
 3. After the client is created, subscribe to prices (using the configuration parameters from step 2):
@@ -146,6 +160,7 @@ client.subscribe({
   properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
 });
 ```
 
