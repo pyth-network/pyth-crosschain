@@ -17,6 +17,25 @@ pub fn quorum(num_guardians: usize) -> usize {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(feature = "lazer")]
+    fn test_quorum() {
+        assert_eq!(quorum(5), 3);
+        assert_eq!(quorum(19), 10);
+    }
+
+    #[test]
+    #[cfg(not(feature = "lazer"))]
+    fn test_quorum() {
+        assert_eq!(quorum(5), 4);
+        assert_eq!(quorum(19), 13);
+    }
+}
+
 /// Close an account by transferring all its lamports to another account.
 pub(crate) fn close_account(info: &AccountInfo, sol_destination: &AccountInfo) -> Result<()> {
     // Transfer tokens from the account to the sol_destination.
