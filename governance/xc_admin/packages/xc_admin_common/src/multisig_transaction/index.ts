@@ -13,16 +13,13 @@ import {
 import { WORMHOLE_ADDRESS } from "../wormhole";
 import {
   AnchorMultisigInstruction,
+  EXPRESS_RELAY_PROGRAM_ID,
   INTEGRITY_POOL_PROGRAM_ID,
   MESH_PROGRAM_ID,
   STAKING_PROGRAM_ID,
 } from "./AnchorMultisigInstruction";
 import type { AnchorAccounts } from "./anchor";
 import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
-import {
-  EXPRESS_RELAY_PROGRAM_ID,
-  ExpressRelayMultisigInstruction,
-} from "./ExpressRelayMultisigInstruction";
 import { LazerMultisigInstruction } from "./LazerMultisigInstruction";
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
@@ -160,7 +157,8 @@ export class MultisigParser {
       instruction.programId.equals(MESH_PROGRAM_ID) ||
       instruction.programId.equals(STAKING_PROGRAM_ID) ||
       instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID) ||
-      instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID)
+      instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID) ||
+      instruction.programId.equals(EXPRESS_RELAY_PROGRAM_ID)
     ) {
       return AnchorMultisigInstruction.fromTransactionInstruction(instruction);
     } else if (instruction.programId.equals(SystemProgram.programId)) {
@@ -179,8 +177,6 @@ export class MultisigParser {
       instruction.programId.equals(new PublicKey(SOLANA_LAZER_PROGRAM_ID))
     ) {
       return LazerMultisigInstruction.fromInstruction(instruction);
-    } else if (instruction.programId.equals(EXPRESS_RELAY_PROGRAM_ID)) {
-      return ExpressRelayMultisigInstruction.fromInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }

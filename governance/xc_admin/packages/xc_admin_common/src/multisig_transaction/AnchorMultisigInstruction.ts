@@ -17,6 +17,7 @@ import {
 } from ".";
 import type { AnchorAccounts } from "./anchor";
 import { IDL_SET_BUFFER_DISCRIMINATOR, resolveAccountNames } from "./anchor";
+import expressRelayIdl from "./idl/express_relay.json";
 import integrityPoolIdl from "./idl/integrity-pool.json";
 import stakingIdl from "./idl/staking.json";
 
@@ -28,6 +29,9 @@ export const STAKING_PROGRAM_ID = new PublicKey(
 );
 export const INTEGRITY_POOL_PROGRAM_ID = new PublicKey(
   "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
+);
+export const EXPRESS_RELAY_PROGRAM_ID = new PublicKey(
+  "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou",
 );
 
 export class AnchorMultisigInstruction implements MultisigInstruction {
@@ -71,6 +75,10 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
       case INTEGRITY_POOL_PROGRAM_ID.toBase58():
         idl = integrityPoolIdl as Idl;
         program = MultisigInstructionProgram.IntegrityPool;
+        break;
+      case EXPRESS_RELAY_PROGRAM_ID.toBase58():
+        idl = expressRelayIdl as Idl;
+        program = MultisigInstructionProgram.ExpressRelay;
         break;
       case DEFAULT_RECEIVER_PROGRAM_ID.toBase58():
         idl = pythSolanaReceiverIdl as Idl;

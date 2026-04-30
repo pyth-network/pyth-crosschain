@@ -1,73 +1,71 @@
-import { Program, BN, type Idl } from "@coral-xyz/anchor";
+import type { Idl } from "@coral-xyz/anchor";
+import { BN, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import {
-  pythOracleProgram,
-  parseBaseData,
   AccountType,
+  parseBaseData,
   parsePriceData,
+  pythOracleProgram,
 } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
-  type PythCluster,
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
 } from "@pythnetwork/client/lib/cluster";
+import {
+  SOLANA_LAZER_PROGRAM_ID,
+  SOLANA_LAZER_STORAGE_ID,
+} from "@pythnetwork/pyth-lazer-sdk";
+import {
+  DEFAULT_RECEIVER_PROGRAM_ID,
+  getConfigPda,
+  pythSolanaReceiverIdl,
+} from "@pythnetwork/pyth-solana-receiver";
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import {
+  BPF_UPGRADABLE_LOADER,
+  createDetermisticPriceStoreInitializePublisherInstruction,
+  createPriceStoreInstruction,
+  EXPRESS_RELAY_PROGRAM_ID,
+  expressRelayIdl,
+  fetchStakeAccounts,
+  findDetermisticStakeAccountAddress,
+  getMultisigCluster,
+  getProposalInstructions,
+  INTEGRITY_POOL_PROGRAM_ID,
+  idlSetBuffer,
+  integrityPoolIdl,
+  isPriceStorePublisherInitialized,
+  lazerIdl,
+  MultisigParser,
+  MultisigVault,
+  PROGRAM_AUTHORITY_ESCROW,
+} from "@pythnetwork/xc-admin-common";
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
   getMint,
 } from "@solana/spl-token";
+import type { AccountMeta, TransactionInstruction } from "@solana/web3.js";
 import {
-  type AccountMeta,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  StakeProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  StakeProgram,
   SystemProgram,
-  TransactionInstruction,
 } from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
 import { program } from "commander";
 import fs from "fs";
-import {
-  BPF_UPGRADABLE_LOADER,
-  MultisigParser,
-  MultisigVault,
-  PROGRAM_AUTHORITY_ESCROW,
-  createDetermisticPriceStoreInitializePublisherInstruction,
-  createPriceStoreInstruction,
-  fetchStakeAccounts,
-  findDetermisticStakeAccountAddress,
-  EXPRESS_RELAY_PROGRAM_ID,
-  getMultisigCluster,
-  getProposalInstructions,
-  idlSetBuffer,
-  isPriceStorePublisherInitialized,
-  lazerIdl,
-  integrityPoolIdl,
-  expressRelayIdl,
-  INTEGRITY_POOL_PROGRAM_ID,
-} from "@pythnetwork/xc-admin-common";
-
-import {
-  pythSolanaReceiverIdl,
-  getConfigPda,
-  DEFAULT_RECEIVER_PROGRAM_ID,
-} from "@pythnetwork/pyth-solana-receiver";
-import {
-  SOLANA_LAZER_PROGRAM_ID,
-  SOLANA_LAZER_STORAGE_ID,
-} from "@pythnetwork/pyth-lazer-sdk";
-
 import { LedgerNodeWallet } from "./ledger";
-import {
-  DEFAULT_PRIORITY_FEE_CONFIG,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -174,11 +172,11 @@ multisigCommand(
     const proposalInstruction = await programAuthorityEscrow.methods
       .accept?.()
       .accounts({
+        bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
         currentAuthority: current,
         newAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         programAccount: programId,
         programDataAccount,
-        bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
@@ -207,8 +205,8 @@ multisigCommand(
   const proposalInstruction = await programSolanaReceiver.methods
     .acceptGovernanceAuthorityTransfer()
     .accounts({
-      payer: await vault.getVaultAuthorityPDA(targetCluster),
       config: getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID),
+      payer: await vault.getVaultAuthorityPDA(targetCluster),
     })
     .instruction();
 
@@ -242,8 +240,8 @@ multisigCommand(
     const proposalInstruction = await programSolanaReceiver.methods
       .requestGovernanceAuthorityTransfer(target)
       .accounts({
-        payer: await vault.getVaultAuthorityPDA(targetCluster),
         config: getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID),
+        payer: await vault.getVaultAuthorityPDA(targetCluster),
       })
       .instruction();
 
@@ -274,22 +272,22 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
 
     // This is intruction is not in @solana/web3.js, source : https://docs.rs/solana-program/latest/src/solana_program/bpf_loader_upgradeable.rs.html#200
     const proposalInstruction: TransactionInstruction = {
-      programId: BPF_UPGRADABLE_LOADER,
       // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html#104
       data: Buffer.from([3, 0, 0, 0]),
       keys: [
-        { pubkey: programDataAccount, isSigner: false, isWritable: true },
-        { pubkey: programId, isSigner: false, isWritable: true },
-        { pubkey: buffer, isSigner: false, isWritable: true },
-        { pubkey: vault.wallet.publicKey, isSigner: false, isWritable: true },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-        { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
+        { isSigner: false, isWritable: true, pubkey: programDataAccount },
+        { isSigner: false, isWritable: true, pubkey: programId },
+        { isSigner: false, isWritable: true, pubkey: buffer },
+        { isSigner: false, isWritable: true, pubkey: vault.wallet.publicKey },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
         {
-          pubkey: await vault.getVaultAuthorityPDA(cluster),
           isSigner: true,
           isWritable: false,
+          pubkey: await vault.getVaultAuthorityPDA(cluster),
         },
       ],
+      programId: BPF_UPGRADABLE_LOADER,
     };
 
     await vault.proposeInstructions(
@@ -330,24 +328,24 @@ async function closeProgramOrBuffer(
   spill: PublicKey,
   programId?: PublicKey,
 ) {
-  let accounts = [
-    { pubkey: programDataOrBufferAccount, isSigner: false, isWritable: true },
-    { pubkey: spill, isSigner: false, isWritable: true },
+  const accounts = [
+    { isSigner: false, isWritable: true, pubkey: programDataOrBufferAccount },
+    { isSigner: false, isWritable: true, pubkey: spill },
     {
-      pubkey: await vault.getVaultAuthorityPDA(cluster),
       isSigner: true,
       isWritable: false,
+      pubkey: await vault.getVaultAuthorityPDA(cluster),
     },
   ];
   if (programId) {
-    accounts.push({ pubkey: programId, isSigner: false, isWritable: true });
+    accounts.push({ isSigner: false, isWritable: true, pubkey: programId });
   }
 
   const proposalInstruction: TransactionInstruction = {
-    programId: BPF_UPGRADABLE_LOADER,
     // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
     data: Buffer.from([5, 0, 0, 0]),
     keys: accounts,
+    programId: BPF_UPGRADABLE_LOADER,
   };
 
   await vault.proposeInstructions(
@@ -423,20 +421,18 @@ multisigCommand(
           ),
         ),
       )
-    )
-      .map((stakeAccounts, index) => {
-        if (stakeAccounts.length === 0) {
-          console.log(
-            `Skipping vote account ${voteAccounts[index]?.toBase58()} - no stake accounts found`,
-          );
-        }
-        return stakeAccounts;
-      })
-      .flat();
+    ).flatMap((stakeAccounts, index) => {
+      if (stakeAccounts.length === 0) {
+        console.log(
+          `Skipping vote account ${voteAccounts[index]?.toBase58()} - no stake accounts found`,
+        );
+      }
+      return stakeAccounts;
+    });
 
     const instructions = stakeAccounts.flatMap(
       (stakeAccount) =>
-        StakeProgram.deactivate({ stakePubkey: stakeAccount, authorizedPubkey })
+        StakeProgram.deactivate({ authorizedPubkey, stakePubkey: stakeAccount })
           .instructions,
     );
 
@@ -468,8 +464,8 @@ multisigCommand(
     const voteAccount: PublicKey = new PublicKey(options.voteAccount);
 
     const instructions = StakeProgram.delegate({
-      stakePubkey: stakeAccount,
       authorizedPubkey,
+      stakePubkey: stakeAccount,
       votePubkey: voteAccount,
     }).instructions;
 
@@ -533,27 +529,27 @@ multisigCommand(
       instructions.push(
         SystemProgram.createAccountWithSeed({
           basePubkey: authorizedPubkey,
-          seed: seed,
           fromPubkey: authorizedPubkey,
-          newAccountPubkey: stakePubkey,
           lamports: amount * LAMPORTS_PER_SOL,
-          space: StakeProgram.space,
+          newAccountPubkey: stakePubkey,
           programId: StakeProgram.programId,
+          seed: seed,
+          space: StakeProgram.space,
         }),
       );
       instructions.push(
         StakeProgram.initialize({
-          stakePubkey,
           authorized: {
             staker: authorizedPubkey,
             withdrawer: authorizedPubkey,
           },
+          stakePubkey,
         }),
       );
       instructions.push(
         StakeProgram.delegate({
-          stakePubkey,
           authorizedPubkey,
+          stakePubkey,
           votePubkey,
         }).instructions[0]!,
       );
@@ -660,11 +656,11 @@ multisigCommand("init-price-store", "Init price store program").action(
     const cluster: PythCluster = options.cluster;
     const authorityKey = await vault.getVaultAuthorityPDA(cluster);
     const instruction = createPriceStoreInstruction({
-      type: "Initialize",
       data: {
         authorityKey,
         payerKey: authorityKey,
       },
+      type: "Initialize",
     });
     await vault.proposeInstructions(
       [instruction],
@@ -702,7 +698,7 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
       }
     }
 
-    let instructions = [];
+    const instructions = [];
     for (const publisherKeyBase58 of allPublishers) {
       const publisherKey = new PublicKey(publisherKeyBase58);
       if (await isPriceStorePublisherInitialized(connection, publisherKey)) {
@@ -746,9 +742,9 @@ program
     const parser = MultisigParser.fromCluster(cluster);
     const parsed = onChainInstructions.map((ix) =>
       parser.parseInstruction({
-        programId: ix.programId,
         data: ix.data as Buffer,
         keys: ix.keys as AccountMeta[],
+        programId: ix.programId,
       }),
     );
     console.log(
@@ -838,8 +834,8 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
 
     const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
       fromPubkey: await vault.getVaultAuthorityPDA(cluster),
-      toPubkey: destination,
       lamports: amount * LAMPORTS_PER_SOL,
+      toPubkey: destination,
     });
 
     await vault.proposeInstructions(
@@ -903,7 +899,7 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
       ? options.targetVaults.split(",").map((m: string) => new PublicKey(m))
       : [];
 
-    let proposalInstructions: TransactionInstruction[] = [];
+    const proposalInstructions: TransactionInstruction[] = [];
 
     const membersToAdd: PublicKey[] = options.add
       ? options.add.split(",").map((m: string) => new PublicKey(m))
@@ -981,8 +977,8 @@ multisigCommand(
     const updateInstruction = await lazerProgram.methods
       .update?.(trustedSigner, expiryTime)
       .accounts({
-        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
+        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
       })
       .instruction();
 
@@ -1024,22 +1020,22 @@ multisigCommand(
 
     // This is intruction is not in @solana/web3.js, source : https://docs.rs/solana-program/latest/src/solana_program/bpf_loader_upgradeable.rs.html#200
     const upgradeInstruction: TransactionInstruction = {
-      programId: BPF_UPGRADABLE_LOADER,
       // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html#104
       data: Buffer.from([3, 0, 0, 0]),
       keys: [
-        { pubkey: programDataAccount, isSigner: false, isWritable: true },
-        { pubkey: programId, isSigner: false, isWritable: true },
-        { pubkey: buffer, isSigner: false, isWritable: true },
-        { pubkey: vault.wallet.publicKey, isSigner: false, isWritable: true },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-        { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
+        { isSigner: false, isWritable: true, pubkey: programDataAccount },
+        { isSigner: false, isWritable: true, pubkey: programId },
+        { isSigner: false, isWritable: true, pubkey: buffer },
+        { isSigner: false, isWritable: true, pubkey: vault.wallet.publicKey },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+        { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
         {
-          pubkey: await vault.getVaultAuthorityPDA(targetCluster),
           isSigner: true,
           isWritable: false,
+          pubkey: await vault.getVaultAuthorityPDA(targetCluster),
         },
       ],
+      programId: BPF_UPGRADABLE_LOADER,
     };
 
     // Create Anchor program instance
@@ -1053,8 +1049,8 @@ multisigCommand(
     const updateSignerInstruction = await lazerProgram.methods
       .updateEcdsaSigner?.(trustedSigner, expiryTime)
       .accounts({
-        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
+        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
       })
       .instruction();
 
@@ -1090,16 +1086,19 @@ multisigCommand(
     );
 
     // Use Anchor to create the instruction
-    let setPublisherStakeAccountInstruction = await integrityPoolProgram.methods
-      .setPublisherStakeAccount?.()
-      .accounts({
-        signer: await vault.getVaultAuthorityPDA(targetCluster),
-        publisher: new PublicKey(options.publisher),
-        poolData: new PublicKey("poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb"),
-        currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID, // This corresponds to `None` for optional accounts in Anchor
-        newStakeAccountPositionsOption,
-      })
-      .instruction();
+    const setPublisherStakeAccountInstruction =
+      await integrityPoolProgram.methods
+        .setPublisherStakeAccount?.()
+        .accounts({
+          currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID, // This corresponds to `None` for optional accounts in Anchor
+          newStakeAccountPositionsOption,
+          poolData: new PublicKey(
+            "poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb",
+          ),
+          publisher: new PublicKey(options.publisher),
+          signer: await vault.getVaultAuthorityPDA(targetCluster),
+        })
+        .instruction();
 
     if (setPublisherStakeAccountInstruction) {
       await vault.proposeInstructions(
@@ -1135,8 +1134,8 @@ multisigCommand("withdraw-er-native-fees", "Withdraw Express Relay native fees")
       .withdrawFees?.()
       .accounts({
         admin,
-        feeReceiverAdmin,
         expressRelayMetadata,
+        feeReceiverAdmin,
       })
       .instruction();
 
@@ -1155,21 +1154,23 @@ multisigCommand("withdraw-er-spl-fees", "Withdraw Express Relay SPL fees")
     "mint of the fee token to withdraw",
   )
   .requiredOption(
-    "-d, --fee-receiver-admin-ta <pubkey>",
-    "destination token account to receive withdrawn SPL fees",
-  )
-  .option(
-    "-t, --token-program-fee <pubkey>",
-    "token program for fee mint",
-    TOKEN_PROGRAM_ID.toBase58(),
+    "-d, --fee-receiver-admin <pubkey>",
+    "destination address to receive withdrawn SPL fees",
   )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const targetCluster: PythCluster = options.cluster;
+    const connection = new Connection(getPythClusterApiUrl(targetCluster));
     const admin = await vault.getVaultAuthorityPDA(targetCluster);
     const mintFee = new PublicKey(options.mintFee);
-    const feeReceiverAdminTa = new PublicKey(options.feeReceiverAdminTa);
-    const tokenProgramFee = new PublicKey(options.tokenProgramFee);
+    const feeReceiverAdmin = new PublicKey(options.feeReceiverAdmin);
+    const mintAccountInfo = await connection.getAccountInfo(mintFee);
+
+    if (!mintAccountInfo) {
+      throw new Error(`Mint account not found: ${mintFee.toBase58()}`);
+    }
+
+    const tokenProgramFee = mintAccountInfo.owner;
     const expressRelayMetadata = PublicKey.findProgramAddressSync(
       [Buffer.from("metadata")],
       EXPRESS_RELAY_PROGRAM_ID,
@@ -1178,6 +1179,12 @@ multisigCommand("withdraw-er-spl-fees", "Withdraw Express Relay SPL fees")
       mintFee,
       expressRelayMetadata,
       true,
+      tokenProgramFee,
+    );
+    const feeReceiverAdminTa = await getAssociatedTokenAddress(
+      mintFee,
+      feeReceiverAdmin,
+      false,
       tokenProgramFee,
     );
 
@@ -1191,8 +1198,8 @@ multisigCommand("withdraw-er-spl-fees", "Withdraw Express Relay SPL fees")
       .withdrawSplFees?.()
       .accounts({
         admin,
-        expressRelayMetadata,
         expressRelayFeeReceiverAta,
+        expressRelayMetadata,
         feeReceiverAdminTa,
         mintFee,
         tokenProgramFee,

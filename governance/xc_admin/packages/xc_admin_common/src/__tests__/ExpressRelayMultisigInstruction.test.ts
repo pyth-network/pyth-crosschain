@@ -1,20 +1,21 @@
-import { BorshInstructionCoder, type Idl } from "@coral-xyz/anchor";
+import type { Idl } from "@coral-xyz/anchor";
+import { BorshInstructionCoder } from "@coral-xyz/anchor";
 import {
   PublicKey,
-  TransactionInstruction,
   SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
-import {
-  EXPRESS_RELAY_PROGRAM_ID,
-  ExpressRelayMultisigInstruction,
-} from "../multisig_transaction/ExpressRelayMultisigInstruction";
 import {
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "../multisig_transaction";
+import {
+  AnchorMultisigInstruction,
+  EXPRESS_RELAY_PROGRAM_ID,
+} from "../multisig_transaction/AnchorMultisigInstruction";
 import expressRelayIdl from "../multisig_transaction/idl/express_relay.json";
 
-describe("ExpressRelayMultisigInstruction", () => {
+describe("AnchorExpressRelayMultisigInstruction", () => {
   const coder = new BorshInstructionCoder(expressRelayIdl as Idl);
 
   const admin = PublicKey.unique();
@@ -28,19 +29,19 @@ describe("ExpressRelayMultisigInstruction", () => {
   test("fromInstruction should decode withdrawFees instruction", () => {
     const instructionData = coder.encode("withdrawFees", {});
     const keys = [
-      { pubkey: admin, isSigner: true, isWritable: false },
-      { pubkey: feeReceiverAdmin, isSigner: false, isWritable: true },
-      { pubkey: expressRelayMetadata, isSigner: false, isWritable: true },
+      { isSigner: true, isWritable: false, pubkey: admin },
+      { isSigner: false, isWritable: true, pubkey: feeReceiverAdmin },
+      { isSigner: false, isWritable: true, pubkey: expressRelayMetadata },
     ];
 
     const instruction = new TransactionInstruction({
-      programId: EXPRESS_RELAY_PROGRAM_ID,
-      keys,
       data: instructionData,
+      keys,
+      programId: EXPRESS_RELAY_PROGRAM_ID,
     });
 
     const erInstruction =
-      ExpressRelayMultisigInstruction.fromInstruction(instruction);
+      AnchorMultisigInstruction.fromTransactionInstruction(instruction);
 
     expect(erInstruction.program).toBe(MultisigInstructionProgram.ExpressRelay);
     expect(erInstruction.name).toBe("withdrawFees");
@@ -61,22 +62,22 @@ describe("ExpressRelayMultisigInstruction", () => {
   test("fromInstruction should decode withdrawSplFees instruction", () => {
     const instructionData = coder.encode("withdrawSplFees", {});
     const keys = [
-      { pubkey: admin, isSigner: true, isWritable: false },
-      { pubkey: expressRelayMetadata, isSigner: false, isWritable: true },
-      { pubkey: expressRelayFeeReceiverAta, isSigner: false, isWritable: true },
-      { pubkey: feeReceiverAdminTa, isSigner: false, isWritable: true },
-      { pubkey: mintFee, isSigner: false, isWritable: false },
-      { pubkey: tokenProgramFee, isSigner: false, isWritable: false },
+      { isSigner: true, isWritable: false, pubkey: admin },
+      { isSigner: false, isWritable: true, pubkey: expressRelayMetadata },
+      { isSigner: false, isWritable: true, pubkey: expressRelayFeeReceiverAta },
+      { isSigner: false, isWritable: true, pubkey: feeReceiverAdminTa },
+      { isSigner: false, isWritable: false, pubkey: mintFee },
+      { isSigner: false, isWritable: false, pubkey: tokenProgramFee },
     ];
 
     const instruction = new TransactionInstruction({
-      programId: EXPRESS_RELAY_PROGRAM_ID,
-      keys,
       data: instructionData,
+      keys,
+      programId: EXPRESS_RELAY_PROGRAM_ID,
     });
 
     const erInstruction =
-      ExpressRelayMultisigInstruction.fromInstruction(instruction);
+      AnchorMultisigInstruction.fromTransactionInstruction(instruction);
 
     expect(erInstruction.program).toBe(MultisigInstructionProgram.ExpressRelay);
     expect(erInstruction.name).toBe("withdrawSplFees");
@@ -98,16 +99,16 @@ describe("ExpressRelayMultisigInstruction", () => {
 
   test("fromInstruction should handle unrecognized instruction", () => {
     const unrecognizedData = Buffer.from([1, 2, 3, 4]);
-    const keys = [{ pubkey: admin, isSigner: false, isWritable: true }];
+    const keys = [{ isSigner: false, isWritable: true, pubkey: admin }];
 
     const instruction = new TransactionInstruction({
-      programId: EXPRESS_RELAY_PROGRAM_ID,
-      keys,
       data: unrecognizedData,
+      keys,
+      programId: EXPRESS_RELAY_PROGRAM_ID,
     });
 
     const erInstruction =
-      ExpressRelayMultisigInstruction.fromInstruction(instruction);
+      AnchorMultisigInstruction.fromTransactionInstruction(instruction);
 
     expect(erInstruction.program).toBe(MultisigInstructionProgram.ExpressRelay);
     expect(erInstruction.name).toBe(UNRECOGNIZED_INSTRUCTION);
