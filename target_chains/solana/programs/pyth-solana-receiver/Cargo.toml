@@ -14,6 +14,10 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
+lazer = [
+    "pyth-solana-receiver-sdk/lazer",
+    "wormhole-core-bridge-solana/lazer",
+]
 
 [dependencies]
 anchor-lang = { workspace = true }
@@ -28,6 +32,7 @@ pyth-solana-receiver-sdk = { workspace = true }
 rand = "0.8.5"
 
 [dev-dependencies]
+cfg-if = { workspace = true }
 solana-sdk = { workspace = true }
 tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }

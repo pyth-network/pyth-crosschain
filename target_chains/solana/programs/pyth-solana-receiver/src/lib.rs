@@ -22,10 +22,10 @@ use {
     },
     solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover},
     wormhole_core_bridge_solana::{
-        sdk::{legacy::AccountVariant, VaaAccount},
+        sdk::{legacy::AccountVariant, quorum, VaaAccount},
         state::GuardianSet,
     },
-    wormhole_raw_vaas::{utils::quorum, GuardianSetSig, Vaa},
+    wormhole_raw_vaas::{GuardianSetSig, Vaa},
 };
 
 pub mod error;

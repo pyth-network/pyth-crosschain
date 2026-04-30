@@ -16,6 +16,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            features: ""
+          - name: lazer
+            features: "--features lazer"
+    name: (${{ matrix.name }})
     defaults:
       run:
         working-directory: target_chains/solana
@@ -35,11 +44,11 @@ jobs:
         run: cargo clippy --all-targets -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo-build-sbf
+        run: cargo-build-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run tests
-        run: cargo-test-sbf
+        run: cargo-test-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run sdk tests
-        run: cargo test --package pyth-solana-receiver-sdk
+        run: cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
         if: success() || failure()

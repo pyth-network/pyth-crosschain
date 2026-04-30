@@ -8,7 +8,13 @@ use anchor_lang::prelude::*;
 /// Compute quorum based on the number of guardians in a guardian set.
 #[inline]
 pub fn quorum(num_guardians: usize) -> usize {
-    (2 * num_guardians) / 3 + 1
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "lazer")] {
+            num_guardians / 2 + 1
+        } else {
+            (2 * num_guardians) / 3 + 1
+        }
+    }
 }
 
 /// Close an account by transferring all its lamports to another account.
