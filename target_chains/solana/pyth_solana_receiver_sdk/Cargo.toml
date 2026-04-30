@@ -13,9 +13,9 @@ name = "pyth_solana_receiver_sdk"
 
 
 [dependencies]
-anchor-lang = "0.32.1"
+anchor-lang = { workspace = true }
 hex = { workspace = true }
-pythnet-sdk = { workspace = true , features = ["solana-program"]}
+pythnet-sdk = { workspace = true, features = ["solana-program"]}
 
 [dev-dependencies]
 solana-borsh = "2.2.1" # Needed for borsh0_10 compatibility
