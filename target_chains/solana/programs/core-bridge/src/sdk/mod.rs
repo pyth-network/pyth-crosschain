@@ -32,6 +32,7 @@ pub use crate::{
     processor::{InitMessageV1Args, WriteEncodedVaaArgs, WriteMessageV1Args},
     state,
     types::*,
+    utils::quorum,
     utils::vaa::{EmitterInfo, VaaAccount, VAA_START},
 };
 #[doc(inline)]

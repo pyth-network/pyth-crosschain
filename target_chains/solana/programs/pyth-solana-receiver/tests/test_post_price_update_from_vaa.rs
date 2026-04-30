@@ -494,10 +494,17 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
+    #[cfg(feature = "lazer")]
+    assert_eq!(
+        price_update_account.verification_level,
+        VerificationLevel::Full
+    );
+    #[cfg(not(feature = "lazer"))]
     assert_eq!(
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 12 }
     );
+
     assert_eq!(
         Message::PriceFeedMessage(price_update_account.price_message),
         feed_2
@@ -550,5 +557,51 @@ async fn test_post_price_update_from_vaa() {
             .unwrap_err()
             .unwrap(),
         into_transaction_error(ReceiverError::WrongWriteAuthority)
+    );
+
+    // This one is partial for both lazer and non-lazer
+    let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
+        serde_wormhole::from_slice(&vaa).unwrap(),
+        9,
+    ))
+    .unwrap();
+
+    program_simulator
+        .airdrop(&poster.pubkey(), LAMPORTS_PER_SOL)
+        .await
+        .unwrap();
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            PostUpdateAtomic::populate(
+                poster.pubkey(),
+                poster.pubkey(),
+                price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
+                merkle_price_updates[1].clone(),
+                DEFAULT_TREASURY_ID,
+            ),
+            &vec![&poster, &price_update_keypair],
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_treasury_balance(
+        &mut program_simulator,
+        Rent::default().minimum_balance(0) + 1 + 2 * LAMPORTS_PER_SOL,
+        DEFAULT_TREASURY_ID,
+    )
+    .await;
+
+    price_update_account = program_simulator
+        .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
+        .await
+        .unwrap();
+    assert_eq!(price_update_account.write_authority, poster.pubkey());
+    assert_eq!(
+        price_update_account.verification_level,
+        VerificationLevel::Partial { num_signatures: 9 }
     );
 }
