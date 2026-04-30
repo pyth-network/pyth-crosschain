@@ -5,6 +5,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover};
+use std::io::Write;
 use wormhole_raw_vaas::{GuardianSetSig, Vaa};
 
 #[derive(Accounts)]
@@ -110,12 +111,8 @@ pub fn verify_encoded_vaa_v1(ctx: Context<VerifyEncodedVaaV1>) -> Result<()> {
     // Finally serialize.
     let acc_data: &mut [_] = &mut ctx.accounts.draft_vaa.data.borrow_mut();
     let mut writer = std::io::Cursor::new(acc_data);
-    (
-        <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
-        header,
-    )
-        .serialize(&mut writer)
-        .map_err(Into::into)
+    writer.write_all(<EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR)?;
+    header.serialize(&mut writer).map_err(Into::into)
 }
 
 fn verify_guardian_signature(

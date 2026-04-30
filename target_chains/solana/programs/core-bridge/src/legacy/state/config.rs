@@ -23,7 +23,7 @@ pub struct Config {
 }
 
 impl crate::legacy::utils::LegacyAccount for Config {
-    const DISCRIMINATOR: &'static [u8] = &[];
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &[];
 
     fn program_id() -> Pubkey {
         crate::ID

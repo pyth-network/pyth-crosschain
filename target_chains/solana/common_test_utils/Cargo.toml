@@ -12,16 +12,16 @@ pyth-sdk = "0.8.0"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 tokio = "1.14.1"
-bincode = "1.3.3"
+bincode = { workspace = true }
 libsecp256k1 = "0.7.1"
 rand = "0.8.5"
 lazy_static = "1.4.0"
 program-simulator = { path = "../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
-pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", features = ["test-utils"] }
+pythnet-sdk = { workspace = true, features = ["test-utils"] }
 anchor-lang = { workspace = true }
 solana-program = { workspace = true }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
 wormhole-core-bridge-solana = {workspace = true}
-pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
+pyth-solana-receiver-sdk = { workspace = true }

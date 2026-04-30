@@ -132,7 +132,7 @@ impl PostedMessageV1 {
     ) -> Result<bool> {
         let data = acc_info.try_borrow_data()?;
         require!(
-            data.len() > 4 && data[..4] == *Self::DISCRIMINATOR,
+            data.len() > 4 && data[..4] == *Self::LEGACY_DISCRIMINATOR,
             ErrorCode::AccountDidNotDeserialize
         );
 
@@ -173,7 +173,7 @@ impl PostedMessageV1 {
     pub(crate) fn try_deserialize_info(acc_info: &AccountInfo) -> Result<PostedMessageV1Info> {
         let data = acc_info.try_borrow_data()?;
         require!(
-            data.len() > 4 && data[..4] == *Self::DISCRIMINATOR,
+            data.len() > 4 && data[..4] == *Self::LEGACY_DISCRIMINATOR,
             ErrorCode::AccountDidNotDeserialize
         );
 
@@ -188,7 +188,7 @@ impl From<PostedMessageV1Data> for PostedMessageV1 {
 }
 
 impl LegacyAccount for PostedMessageV1 {
-    const DISCRIMINATOR: &'static [u8] = b"msg\x00";
+    const LEGACY_DISCRIMINATOR: &'static [u8] = b"msg\x00";
 
     fn program_id() -> Pubkey {
         crate::ID

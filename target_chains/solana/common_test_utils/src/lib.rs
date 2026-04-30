@@ -47,8 +47,9 @@ pub fn build_encoded_vaa_account_from_vaa(
     vaa: Vaa<&RawMessage>,
     wrong_setup_option: WrongSetupOption,
 ) -> Account {
-    let encoded_vaa_data = (
-        <EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR,
+    let mut encoded_vaa_data = vec![];
+    encoded_vaa_data.extend_from_slice(<EncodedVaa as anchor_lang::Discriminator>::DISCRIMINATOR);
+    (
         Header {
             status: {
                 if matches!(wrong_setup_option, WrongSetupOption::UnverifiedEncodedVaa) {
@@ -62,7 +63,7 @@ pub fn build_encoded_vaa_account_from_vaa(
         },
         serde_wormhole::to_vec(&vaa).unwrap(),
     )
-        .try_to_vec()
+        .serialize(&mut encoded_vaa_data)
         .unwrap();
 
     Account {
@@ -104,12 +105,9 @@ pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Accou
         .into(),
     };
 
-    let guardian_set_data = (
-        <GuardianSet as anchor_lang::Discriminator>::DISCRIMINATOR,
-        guardian_set,
-    )
-        .try_to_vec()
-        .unwrap();
+    let mut guardian_set_data = vec![];
+    guardian_set_data.extend_from_slice(<GuardianSet as anchor_lang::Discriminator>::DISCRIMINATOR);
+    guardian_set.serialize(&mut guardian_set_data).unwrap();
 
     Account {
         lamports: Rent::default().minimum_balance(guardian_set_data.len()),

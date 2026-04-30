@@ -9,14 +9,16 @@ base64 = "0.13.0"
 shellexpand = "2.1.2"
 solana-sdk = { workspace = true }
 solana-client = { workspace = true }
+solana-system-interface = { workspace = true }
+solana-compute-budget-interface = { workspace = true }
 anchor-client = { workspace = true }
 clap = { version = "3.2.22", features = ["derive"] }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
 wormhole-solana = { workspace = true }
-pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
+pythnet-sdk = { workspace = true }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = { workspace = true }
 borsh = { workspace = true }
 wormhole-core-bridge-solana = { workspace = true }
-pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
+pyth-solana-receiver-sdk = { workspace = true }

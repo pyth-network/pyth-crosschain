@@ -135,7 +135,7 @@ impl<L, T> IntoIterator for PrefixedVec<L, T> {
 }
 
 impl<L, T> PrefixedVec<L, T> {
-    pub fn iter(&self) -> std::slice::Iter<T> {
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
         self.data.inner.iter()
     }
 }

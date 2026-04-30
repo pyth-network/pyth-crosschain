@@ -9,7 +9,7 @@ pub struct LegacyEmitterSequence {
 }
 
 impl LegacyAccount for LegacyEmitterSequence {
-    const DISCRIMINATOR: &'static [u8] = &[];
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &[];
 
     fn program_id() -> Pubkey {
         crate::ID
@@ -61,7 +61,7 @@ impl EmitterSequence {
 }
 
 impl LegacyAccount for EmitterSequence {
-    const DISCRIMINATOR: &'static [u8] = &[];
+    const LEGACY_DISCRIMINATOR: &'static [u8] = &[];
 
     fn program_id() -> Pubkey {
         crate::ID

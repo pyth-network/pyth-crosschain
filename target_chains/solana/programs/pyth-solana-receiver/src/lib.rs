@@ -20,10 +20,7 @@ use {
             v1::{WormholeMessage, WormholePayload},
         },
     },
-    solana_program::{
-        keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover,
-        system_instruction,
-    },
+    solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover},
     wormhole_core_bridge_solana::{
         sdk::{legacy::AccountVariant, VaaAccount},
         state::GuardianSet,
@@ -34,7 +31,7 @@ use {
 pub mod error;
 pub mod sdk;
 
-declare_id!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ"); // FIX ME: point to pyth-solana-receiver-sdk::ID
+declare_id!(pyth_solana_receiver_sdk::ID);
 
 #[program]
 pub mod pyth_solana_receiver {

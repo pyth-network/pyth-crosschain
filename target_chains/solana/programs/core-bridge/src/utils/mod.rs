@@ -20,5 +20,5 @@ pub(crate) fn close_account(info: &AccountInfo, sol_destination: &AccountInfo) -
     **info.lamports.borrow_mut() = 0;
 
     info.assign(&solana_program::system_program::ID);
-    info.realloc(0, false).map_err(Into::into)
+    info.resize(0).map_err(Into::into)
 }

@@ -9,10 +9,12 @@ name = "program_simulator"
 
 
 [dependencies]
-solana-sdk = "*"
-solana-client = "*"
-solana-program-test = "*"
-solana-program = "*"
-bincode = "*"
-borsh = "*"
-anchor-lang = ">=0.28.0"
+solana-sdk = { workspace = true }
+solana-client = { workspace = true }
+solana-program-test = { workspace = true }
+solana-program = { workspace = true }
+solana-system-interface = { workspace = true }
+solana-compute-budget-interface = { workspace = true }
+bincode = { workspace = true }
+borsh = { workspace = true }
+anchor-lang = { workspace = true }
