@@ -8,18 +8,18 @@ import { PublicKey } from "@solana/web3.js";
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_RECEIVER_PROGRAM_ID = new PublicKey(
-  "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+  "aVNBvyLWAF7HNt6YpRnRB25dxdAmtxCviYJs885h5mM",
 );
 /**
  * The default Wormhole program ID.
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_WORMHOLE_PROGRAM_ID = new PublicKey(
-  "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
+  "bYUPYPgG4EHLAPfYxz1WXhN2k8z9wuNqV7oveqkcag1",
 );
 
 export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
-  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
+  "cBgCnqY8mJBAkwJHJJceK9fpvTHoypHEDfFkzDrUZuD",
 );
 
 /**

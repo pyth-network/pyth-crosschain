@@ -2,9 +2,9 @@
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "lazer")] {
-        declare_id!("HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL");
+        declare_id!("bYUPYPgG4EHLAPfYxz1WXhN2k8z9wuNqV7oveqkcag1");
     } else {
-        declare_id!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");
+        declare_id!("bYUPYPgG4EHLAPfYxz1WXhN2k8z9wuNqV7oveqkcag1");
     }
 }
 

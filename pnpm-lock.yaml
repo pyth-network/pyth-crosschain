@@ -1411,6 +1411,9 @@ importers:
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:^
         version: link:../target_chains/ethereum/sdk/solidity
+      '@pythnetwork/pyth-solana-receiver':
+        specifier: workspace:*
+        version: link:../target_chains/solana/sdk/js/pyth_solana_receiver
       '@pythnetwork/pyth-starknet-js':
         specifier: ^0.2.1
         version: 0.2.1
@@ -1450,6 +1453,9 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 17.0.33
+      '@wormhole-foundation/sdk-solana-core':
+        specifier: ^4.18.0
+        version: 4.18.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       aptos:
         specifier: ^1.5.0
         version: 1.21.0
@@ -11162,6 +11168,12 @@ packages:
     peerDependencies:
       '@solana/web3.js': ^1.88.0
 
+  '@solana/spl-token@0.3.9':
+    resolution: {integrity: sha512-1EXHxKICMnab35MvvY/5DBc/K/uQAOJCYnDZXw83McCAYUAfi+rwq6qfd6MmITmSTEhcfBcl/zYxmW/OSN0RmA==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@solana/web3.js': ^1.47.4
+
   '@solana/spl-token@0.4.6':
     resolution: {integrity: sha512-1nCnUqfHVtdguFciVWaY/RKcQz1IF4b31jnKgAmjU9QVN1q7dRUkTEWJZgTYIEtsULjVnC9jRqlhgGN39WbKKA==}
     engines: {node: '>=16'}
@@ -13203,8 +13215,26 @@ packages:
   '@wormhole-foundation/sdk-base@0.10.12':
     resolution: {integrity: sha512-ZeC44XstoOp1lhGPdZhAAoAVmWJVWm8rgn6jjRPsM5HlpbSTZAhznhRvYblQa+hlvogfHFskJiz7WpD0JsZfgw==}
 
+  '@wormhole-foundation/sdk-base@4.18.0':
+    resolution: {integrity: sha512-KTFsuba2IggaS4e8asHUsvhWTTlPYWRS7Ww8zBtQXZ17FDHb+9ByBZNz4pakQeWjoZoHK10QgHmTSLjlSp+GVA==}
+
+  '@wormhole-foundation/sdk-connect@4.18.0':
+    resolution: {integrity: sha512-0n+wslxvipy71tNTQAJ94dZPOrqz9BvcHZLSnmzDkshGcPQhK3B2to2jdh5HHvDPbIqrbhQfYh0hWpu9TxgMwQ==}
+    engines: {node: '>=16'}
+
   '@wormhole-foundation/sdk-definitions@0.10.12':
     resolution: {integrity: sha512-7uCweTkC6b8Edg1eKOcOcK03H4CTBvAK8DKilKD1NjTS0Tqlqk+y7XknOumjzii6kBdyz/ApqdUAHU5l4YRzLQ==}
+
+  '@wormhole-foundation/sdk-definitions@4.18.0':
+    resolution: {integrity: sha512-Zyzk1SVoGjUwWqXSt2W5NJkaB1nkNALb5qsaJUxVxFJ090t2VmTv2TXTgTKCgmgeAB+QK30TV4RzSfMeoFr4aA==}
+
+  '@wormhole-foundation/sdk-solana-core@4.18.0':
+    resolution: {integrity: sha512-I9hwUhDQxTbOtdYOWjM52qjoVvV6RHWSHyKR/48gO6z8OAs+5hzYJ5paU2Mc0cBdeuWol6KsPiW51MiyYBcXjg==}
+    engines: {node: '>=16'}
+
+  '@wormhole-foundation/sdk-solana@4.18.0':
+    resolution: {integrity: sha512-p5OuTg0vFTfpqgLz/5JZ45A2dM8dK4c/mqXXyxbakeF4F78y6NAcuof+NtpLmrmSX8QAna1VuIzQ+rieIDqwHg==}
+    engines: {node: '>=16'}
 
   '@wry/caches@1.0.1':
     resolution: {integrity: sha512-bXuaUNLVVkD20wcGBWRyo7j9N3TxePEWFZj2Y+r9OoUzfqmavM84+mFykRicNsBqatba5JLay1t48wxaXaWnlA==}
@@ -13968,6 +13998,9 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  binary-layout@1.3.2:
+    resolution: {integrity: sha512-Lw3GDJ7bjTQ2j6TeuwK3IGNywBKzyOPfUn17AK+FGFl8xPcX+a/IZk5f7mhnOZFsqDyTDzPuvhMreSWelAdeMg==}
 
   binary-parser@2.2.1:
     resolution: {integrity: sha512-5ATpz/uPDgq5GgEDxTB4ouXCde7q2lqAQlSdBRQVl/AJnxmQmhIfyxJx+0MGu//D5rHQifkfGbWWlaysG0o9NA==}
@@ -23251,6 +23284,7 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@11.1.0:
@@ -23268,7 +23302,7 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
@@ -23277,6 +23311,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuidv4@6.2.13:
@@ -28318,13 +28353,13 @@ snapshots:
   '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
+      bn.js: 5.2.3
       buffer-layout: 1.2.2
 
   '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.3))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.3)
-      bn.js: 5.2.1
+      bn.js: 5.2.3
       buffer-layout: 1.2.2
 
   '@coral-xyz/borsh@0.30.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
@@ -37715,6 +37750,17 @@ snapshots:
       - typescript
       - utf-8-validate
 
+  '@solana/spl-token@0.3.9(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@solana/buffer-layout': 4.0.1
+      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      buffer: 6.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   '@solana/spl-token@0.4.6(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -38623,14 +38669,14 @@ snapshots:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@wallet-standard/base': 1.1.0
       bs58: 5.0.0
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       uuid: 9.0.1
 
   '@solflare-wallet/sdk@1.4.2(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bs58: 5.0.0
-      eventemitter3: 5.0.1
+      eventemitter3: 5.0.4
       uuid: 9.0.1
 
   '@sqds/mesh@1.0.6(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
@@ -41516,11 +41562,57 @@ snapshots:
     dependencies:
       '@scure/base': 1.2.6
 
+  '@wormhole-foundation/sdk-base@4.18.0':
+    dependencies:
+      '@scure/base': 1.2.6
+      binary-layout: 1.3.2
+
+  '@wormhole-foundation/sdk-connect@4.18.0':
+    dependencies:
+      '@wormhole-foundation/sdk-base': 4.18.0
+      '@wormhole-foundation/sdk-definitions': 4.18.0
+      axios: 1.15.2(debug@4.4.3)
+    transitivePeerDependencies:
+      - debug
+
   '@wormhole-foundation/sdk-definitions@0.10.12':
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       '@wormhole-foundation/sdk-base': 0.10.12
+
+  '@wormhole-foundation/sdk-definitions@4.18.0':
+    dependencies:
+      '@noble/curves': 1.9.6
+      '@noble/hashes': 1.8.0
+      '@wormhole-foundation/sdk-base': 4.18.0
+
+  '@wormhole-foundation/sdk-solana-core@4.18.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
+      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-connect': 4.18.0
+      '@wormhole-foundation/sdk-solana': 4.18.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - utf-8-validate
+
+  '@wormhole-foundation/sdk-solana@4.18.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
+      '@solana/spl-token': 0.3.9(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-connect': 4.18.0
+      rpc-websockets: 7.11.2
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - utf-8-validate
 
   '@wry/caches@1.0.1':
     dependencies:
@@ -42635,6 +42727,8 @@ snapshots:
   bignumber.js@9.3.1: {}
 
   binary-extensions@2.3.0: {}
+
+  binary-layout@1.3.2: {}
 
   binary-parser@2.2.1: {}
 
@@ -53110,7 +53204,7 @@ snapshots:
 
   rlp@2.2.7:
     dependencies:
-      bn.js: 5.2.1
+      bn.js: 5.2.3
 
   rolldown@1.0.0-rc.1:
     dependencies:
@@ -56612,7 +56706,7 @@ snapshots:
 
   web3-eth-iban@1.10.4:
     dependencies:
-      bn.js: 5.2.1
+      bn.js: 5.2.3
       web3-utils: 1.10.4
 
   web3-eth-iban@4.0.7:

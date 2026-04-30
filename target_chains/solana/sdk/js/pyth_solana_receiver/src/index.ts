@@ -11,6 +11,7 @@ export {
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,
   DEFAULT_WORMHOLE_PROGRAM_ID,
+  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
 } from "./address";
 
 export {
