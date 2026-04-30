@@ -15,7 +15,7 @@ anchor-client = { workspace = true }
 clap = { version = "3.2.22", features = ["derive"] }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
 wormhole-solana = { workspace = true }
-pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
+pythnet-sdk = { workspace = true }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = { workspace = true }
