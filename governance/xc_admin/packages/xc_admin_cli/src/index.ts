@@ -1184,7 +1184,7 @@ multisigCommand("withdraw-er-spl-fees", "Withdraw Express Relay SPL fees")
     const feeReceiverAdminTa = await getAssociatedTokenAddress(
       mintFee,
       feeReceiverAdmin,
-      false,
+      true,
       tokenProgramFee,
     );
 
