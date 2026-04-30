@@ -73,6 +73,12 @@ const SVM_CHAINS: &[SvmChain] = &[
         legacy_guardian_set: false,
     },
     SvmChain {
+        name: "solana_devnet",
+        rpc_url: Some("https://api.devnet.solana.com"),
+        wormhole: PYTH_SVM_WORMHOLE_RECEIVER,
+        legacy_guardian_set: false,
+    },
+    SvmChain {
         name: "eclipse_testnet",
         rpc_url: Some("https://testnet.dev2.eclipsenetwork.xyz"),
         wormhole: PYTH_SVM_WORMHOLE_RECEIVER,
