@@ -31,6 +31,14 @@ use {
     },
 };
 
+/// Creates a ProcessInstruction-compatible function pointer from the Anchor-generated
+/// entry function. Anchor constrains `&'info [AccountInfo<'info>]` (matching lifetimes),
+/// while ProcessInstruction has independent lifetimes. This is safe because ProgramTest's
+/// invoke_builtin_function always provides matching lifetimes (both derived from the same buffer).
+fn wormhole_process_instruction() -> solana_program::entrypoint::ProcessInstruction {
+    unsafe { std::mem::transmute(wormhole_core_bridge_solana::entry as usize) }
+}
+
 #[tokio::test]
 async fn test_post_update_with_wormhole() {
     // 1. Setup: Create accumulator message with dummy price feeds
@@ -44,7 +52,11 @@ async fn test_post_update_with_wormhole() {
     let mut program_test = ProgramTest::default();
     program_test.add_program("pyth_solana_receiver", pyth_solana_receiver::ID, None);
     program_test.add_program("pyth_push_oracle", PYTH_PUSH_ORACLE_ID, None);
-    program_test.add_program("wormhole_core_bridge_solana", BRIDGE_ID, None);
+    program_test.add_program(
+        "wormhole_core_bridge_solana",
+        BRIDGE_ID,
+        solana_program_test::processor!(wormhole_process_instruction()),
+    );
 
     // Add guardian set account at the correct PDA
     program_test.add_account(
