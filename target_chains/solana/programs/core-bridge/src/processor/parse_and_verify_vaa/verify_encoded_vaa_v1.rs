@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use crate::{
     error::CoreBridgeError,
     legacy::utils::AccountVariant,
@@ -7,6 +5,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover};
+use std::io::Write;
 use wormhole_raw_vaas::{GuardianSetSig, Vaa};
 
 #[derive(Accounts)]
