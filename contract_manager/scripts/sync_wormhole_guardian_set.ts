@@ -12,7 +12,7 @@ const GUARDIAN_INDEX_TIMEOUT_MS = 10_000;
 const SYNC_GUARDIAN_SETS_TIMEOUT_MS = 3 * 60 * 1000;
 
 /** Suppress got/p-cancelable race when our timeout fires before the request settles. */
-function isPancelableRaceError(err: unknown): boolean {
+function isPCancelableRaceError(err: unknown): boolean {
   return (
     err instanceof Error &&
     err.message.includes("onCancel") &&
@@ -21,10 +21,11 @@ function isPancelableRaceError(err: unknown): boolean {
 }
 
 process.on("unhandledRejection", (reason: unknown) => {
-  if (isPancelableRaceError(reason)) return;
+  if (isPCancelableRaceError(reason)) return;
+  throw reason;
 });
 process.on("uncaughtException", (err: Error) => {
-  if (isPancelableRaceError(err)) return;
+  if (isPCancelableRaceError(err)) return;
   throw err;
 });
 
