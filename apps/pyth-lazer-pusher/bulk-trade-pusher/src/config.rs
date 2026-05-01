@@ -47,10 +47,15 @@ pub struct BulkConfig {
 pub fn load_config<P: AsRef<Path>>(path: P) -> anyhow::Result<Config> {
     let path = path.as_ref();
     let config: Config = config::Config::builder()
-        .add_source(File::with_name(
-            path.to_str().context("invalid config path")?,
-        ))
-        .add_source(Environment::with_prefix("BULK_PUSHER").separator("__"))
+        .add_source(
+            File::with_name(path.to_str().context("invalid config path")?)
+                .required(false),
+        )
+        .add_source(
+            Environment::with_prefix("BULK_PUSHER")
+                .separator("__")
+                .try_parsing(true),
+        )
         .build()?
         .try_deserialize()?;
 
