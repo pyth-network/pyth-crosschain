@@ -9,6 +9,7 @@ export type TxResult = {
   info: unknown; // chain specific info
 };
 
+// "stable" and "beta" are for pythnet and "lazer-staging" and "lazer-prod" are for lazer deployments
 export type DeploymentType = "stable" | "beta" | "lazer-staging" | "lazer-prod";
 export type PrivateKey = string & { __type: "PrivateKey" };
 
