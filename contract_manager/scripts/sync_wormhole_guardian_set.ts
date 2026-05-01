@@ -156,7 +156,9 @@ async function main() {
   // Filter out lazer wormhole contracts
   .filter((contract) => (
     !(contract instanceof EvmWormholeContract) || 
-    (contract.deploymentType !== "lazer-staging" && contract.deploymentType !== "lazer-prod")
+    contract.deploymentType === undefined ||
+    contract.deploymentType === "stable" ||
+    contract.deploymentType === "beta"
   ));
 
   const results = await Promise.all(

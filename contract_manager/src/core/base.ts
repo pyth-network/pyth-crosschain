@@ -218,7 +218,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
       ],
       governanceDataSource: {
         emitterAddress:
-          "0000000000000000000000000000000000000000000000000000000000000004",
+          "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
         emitterChain: 1,
       },
       wormholeConfig: {
@@ -244,7 +244,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
       ],
       governanceDataSource: {
         emitterAddress:
-          "0000000000000000000000000000000000000000000000000000000000000004",
+          "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
         emitterChain: 1,
       },
       wormholeConfig: {
