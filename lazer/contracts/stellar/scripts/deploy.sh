@@ -138,26 +138,8 @@ echo "Executor WASM: $EXECUTOR_WASM ($(wc -c < "$EXECUTOR_WASM") bytes)"
 echo "Lazer WASM:    $LAZER_WASM ($(wc -c < "$LAZER_WASM") bytes)"
 echo ""
 
-# Step 2: Deploy wormhole-executor-stellar
-echo "=== Deploying wormhole-executor-stellar ==="
-EXECUTOR_ID=$(stellar contract deploy \
-    --wasm "$EXECUTOR_WASM" \
-    $COMMON_ARGS \
-    2>&1 | tail -1)
-echo "Executor contract ID: $EXECUTOR_ID"
-echo ""
-
-# Step 3: Deploy pyth-lazer-stellar
-echo "=== Deploying pyth-lazer-stellar ==="
-LAZER_ID=$(stellar contract deploy \
-    --wasm "$LAZER_WASM" \
-    $COMMON_ARGS \
-    2>&1 | tail -1)
-echo "Lazer contract ID: $LAZER_ID"
-echo ""
-
-# Step 4: Initialize wormhole-executor-stellar
-echo "=== Initializing wormhole-executor-stellar ==="
+# Step 2: Prepare constructor args
+echo "=== Preparing constructor arguments ==="
 
 # Build guardian set JSON array
 IFS=',' read -ra GUARDIANS <<< "$GUARDIAN_SET"
@@ -172,35 +154,35 @@ for i in "${!GUARDIANS[@]}"; do
 done
 GUARDIAN_JSON+="]"
 
-# Pad emitter address to 64 hex chars (32 bytes)
+# Pad emitter address to 64 hex chars (32 bytes).
 PADDED_EMITTER=$(printf '%064s' "$EMITTER_ADDRESS" | tr ' ' '0')
 
-stellar contract invoke \
-    --id "$EXECUTOR_ID" \
+# Step 3: Deploy wormhole-executor-stellar (runs __constructor during deploy)
+echo "=== Deploying wormhole-executor-stellar ==="
+EXECUTOR_ID=$(stellar contract deploy \
+    --wasm "$EXECUTOR_WASM" \
     $COMMON_ARGS \
     -- \
-    initialize \
     --chain_id "$CHAIN_ID" \
     --owner_emitter_chain "$EMITTER_CHAIN" \
     --owner_emitter_address "$PADDED_EMITTER" \
     --initial_guardian_set "$GUARDIAN_JSON" \
-    --guardian_set_index "$GUARDIAN_INDEX"
-
-echo "Executor initialized."
+    --guardian_set_index "$GUARDIAN_INDEX" \
+    2>&1 | tail -1)
+echo "Executor contract ID: $EXECUTOR_ID"
 echo ""
 
-# Step 5: Initialize pyth-lazer-stellar with initial trusted signer
-echo "=== Initializing pyth-lazer-stellar ==="
-stellar contract invoke \
-    --id "$LAZER_ID" \
+# Step 4: Deploy pyth-lazer-stellar with initial trusted signer (__constructor)
+echo "=== Deploying pyth-lazer-stellar ==="
+LAZER_ID=$(stellar contract deploy \
+    --wasm "$LAZER_WASM" \
     $COMMON_ARGS \
     -- \
-    initialize \
     --executor "$EXECUTOR_ID" \
     --initial_signer "\"$LAZER_SIGNER_PUBKEY\"" \
-    --initial_signer_expires_at "$FAR_FUTURE_EXPIRY"
-
-echo "Lazer contract initialized with trusted signer."
+    --initial_signer_expires_at "$FAR_FUTURE_EXPIRY" \
+    2>&1 | tail -1)
+echo "Lazer contract ID: $LAZER_ID"
 echo "Trusted signer: $LAZER_SIGNER_PUBKEY (expires: $FAR_FUTURE_EXPIRY)"
 echo ""
 

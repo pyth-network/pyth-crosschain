@@ -27,11 +27,11 @@ pub struct WormholeExecutor;
 
 #[contractimpl]
 impl WormholeExecutor {
-    /// Initialize the executor contract.
+    /// Constructor for the executor contract.
     ///
-    /// Must be called exactly once. Sets up the guardian set, chain ID, and
+    /// Runs only during deployment. Sets up the guardian set, chain ID, and
     /// governance emitter configuration.
-    pub fn initialize(
+    pub fn __constructor(
         env: Env,
         chain_id: u32,
         owner_emitter_chain: u32,

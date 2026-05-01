@@ -34,15 +34,16 @@ fn test_trusted_signer_pubkey(env: &Env) -> BytesN<33> {
     )
 }
 
-/// Deploy and initialize the contract, returning the client.
+/// Deploy the contract with constructor args, returning the client.
 fn setup(env: &Env) -> (PythLazerContractClient, Address) {
-    let contract_id = env.register(PythLazerContract, ());
-    let client = PythLazerContractClient::new(env, &contract_id);
     let executor = Address::generate(env);
     let initial_signer: Option<BytesN<33>> = None;
     let initial_signer_expires_at: Option<u64> = None;
-
-    client.initialize(&executor, &initial_signer, &initial_signer_expires_at);
+    let contract_id = env.register(
+        PythLazerContract,
+        (executor.clone(), initial_signer, initial_signer_expires_at),
+    );
+    let client = PythLazerContractClient::new(env, &contract_id);
     (client, executor)
 }
 
@@ -189,28 +190,6 @@ fn test_verify_update_multiple_signers() {
     let update = test_lazer_update_bytes(&env);
     let payload = client.verify_update(&update);
     assert!(payload.len() > 0);
-}
-
-#[test]
-fn test_initialize_prevents_reinitialization() {
-    let env = Env::default();
-    let contract_id = env.register(PythLazerContract, ());
-    let client = PythLazerContractClient::new(&env, &contract_id);
-
-    let executor1 = Address::generate(&env);
-    let executor2 = Address::generate(&env);
-    let initial_signer: Option<BytesN<33>> = None;
-    let initial_signer_expires_at: Option<u64> = None;
-
-    // First initialization should succeed
-    client.initialize(&executor1, &initial_signer, &initial_signer_expires_at);
-
-    // Second initialization should fail
-    let result = client.try_initialize(&executor2, &initial_signer, &initial_signer_expires_at);
-    assert_eq!(
-        result.err().unwrap(),
-        Ok(ContractError::AlreadyInitialized)
-    );
 }
 
 #[test]

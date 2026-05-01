@@ -218,13 +218,9 @@ struct TestEnv<'a> {
     owner_emitter_address: [u8; 32],
 }
 
-/// Deploy and initialize both contracts with a shared guardian set.
+/// Deploy both contracts with constructor args and a shared guardian set.
 fn setup(num_guardians: u8) -> TestEnv<'static> {
     let env = Env::default();
-
-    // Deploy executor contract.
-    let executor_id = env.register(WormholeExecutor, ());
-    let executor_client = WormholeExecutorClient::new(&env, &executor_id);
 
     // Build guardian set.
     let mut secrets = alloc::vec::Vec::new();
@@ -238,18 +234,22 @@ fn setup(num_guardians: u8) -> TestEnv<'static> {
 
     let owner_emitter_address = [0x42u8; 32];
 
-    executor_client.initialize(
-        &CHAIN_ID,
-        &OWNER_EMITTER_CHAIN,
-        &BytesN::from_array(&env, &owner_emitter_address),
-        &guardian_addrs,
-        &0u32,
+    // Deploy executor contract.
+    let executor_id = env.register(
+        WormholeExecutor,
+        (
+            CHAIN_ID,
+            OWNER_EMITTER_CHAIN,
+            BytesN::from_array(&env, &owner_emitter_address),
+            guardian_addrs,
+            0u32,
+        ),
     );
+    let executor_client = WormholeExecutorClient::new(&env, &executor_id);
 
     // Deploy Lazer contract, initialized with executor as its governance authority.
-    let lazer_id = env.register(PythLazerContract, ());
+    let lazer_id = env.register(PythLazerContract, (executor_id.clone(), None::<BytesN<33>>, None::<u64>));
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id, &None, &None);
 
     TestEnv {
         env,
@@ -799,10 +799,14 @@ fn test_governance_stale_sequence() {
 fn test_unauthorized_direct_signer_update() {
     let env = Env::default();
 
-    let executor_id = env.register(WormholeExecutor, ());
-    let lazer_id = env.register(PythLazerContract, ());
+    let owner_emitter_address = BytesN::from_array(&env, &[0x42u8; 32]);
+    let guardian_addrs: Vec<BytesN<20>> = Vec::new(&env);
+    let executor_id = env.register(
+        WormholeExecutor,
+        (CHAIN_ID, OWNER_EMITTER_CHAIN, owner_emitter_address, guardian_addrs, 0u32),
+    );
+    let lazer_id = env.register(PythLazerContract, (executor_id.clone(), None::<BytesN<33>>, None::<u64>));
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id, &None, &None);
 
     let pubkey = BytesN::from_array(&env, &test_trusted_signer_pubkey());
 
@@ -815,10 +819,14 @@ fn test_unauthorized_direct_signer_update() {
 fn test_unauthorized_direct_upgrade() {
     let env = Env::default();
 
-    let executor_id = env.register(WormholeExecutor, ());
-    let lazer_id = env.register(PythLazerContract, ());
+    let owner_emitter_address = BytesN::from_array(&env, &[0x42u8; 32]);
+    let guardian_addrs: Vec<BytesN<20>> = Vec::new(&env);
+    let executor_id = env.register(
+        WormholeExecutor,
+        (CHAIN_ID, OWNER_EMITTER_CHAIN, owner_emitter_address, guardian_addrs, 0u32),
+    );
+    let lazer_id = env.register(PythLazerContract, (executor_id.clone(), None::<BytesN<33>>, None::<u64>));
     let lazer_client = PythLazerContractClient::new(&env, &lazer_id);
-    lazer_client.initialize(&executor_id, &None, &None);
 
     let fake_hash = BytesN::from_array(&env, &[0u8; 32]);
 

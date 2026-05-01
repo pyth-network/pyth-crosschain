@@ -18,12 +18,12 @@ pub struct PythLazerContract;
 
 #[contractimpl]
 impl PythLazerContract {
-    /// One-time initialization. Stores the executor address (the Wormhole executor
+    /// Constructor. Stores the executor address (the Wormhole executor
     /// contract authorized for governance operations).
     ///
     /// Optionally accepts an initial trusted signer and expiry. This avoids
     /// needing a governance VAA for the very first signer during deployment.
-    pub fn initialize(
+    pub fn __constructor(
         env: Env,
         executor: Address,
         initial_signer: Option<BytesN<33>>,

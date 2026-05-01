@@ -113,16 +113,13 @@ fn build_signed_vaa(
     vaa
 }
 
-/// Initialize the contract with a set of test guardians.
+/// Deploy the contract with constructor args and a test guardian set.
 /// Returns (client, contract_address, secrets).
 fn setup_contract(
     env: &Env,
     num_guardians: u8,
     guardian_set_index: u32,
 ) -> (WormholeExecutorClient, Address, alloc::vec::Vec<[u8; 32]>) {
-    let contract_id = env.register(WormholeExecutor, ());
-    let client = WormholeExecutorClient::new(env, &contract_id);
-
     let mut secrets = alloc::vec::Vec::new();
     let mut guardian_addrs: Vec<BytesN<20>> = Vec::new(env);
 
@@ -135,13 +132,17 @@ fn setup_contract(
 
     let owner_emitter_address = BytesN::from_array(env, &[0u8; 32]);
 
-    client.initialize(
-        &30u32,  // chain_id (arbitrary for tests)
-        &1u32,   // owner_emitter_chain
-        &owner_emitter_address,
-        &guardian_addrs,
-        &guardian_set_index,
+    let contract_id = env.register(
+        WormholeExecutor,
+        (
+            30u32, // chain_id (arbitrary for tests)
+            1u32,  // owner_emitter_chain
+            owner_emitter_address,
+            guardian_addrs,
+            guardian_set_index,
+        ),
     );
+    let client = WormholeExecutorClient::new(env, &contract_id);
 
     (client, contract_id, secrets)
 }
@@ -183,11 +184,11 @@ fn test_eth_address_derivation() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Tests: initialization
+// Tests: constructor deployment
 // ──────────────────────────────────────────────────────────────────────
 
 #[test]
-fn test_initialize_success() {
+fn test_constructor_deployment_success() {
     let env = Env::default();
     let (_, contract_id, _) = setup_contract(&env, 3, 0);
 
@@ -202,17 +203,7 @@ fn test_initialize_success() {
     });
 }
 
-#[test]
-fn test_initialize_double_init_fails() {
-    let env = Env::default();
-    let (client, _, _) = setup_contract(&env, 1, 0);
 
-    let addr = BytesN::from_array(&env, &[0u8; 32]);
-    let gs: Vec<BytesN<20>> = Vec::new(&env);
-
-    let result = client.try_initialize(&1u32, &1u32, &addr, &gs, &0u32);
-    assert!(result.is_err());
-}
 
 // ──────────────────────────────────────────────────────────────────────
 // Tests: VAA signature verification
