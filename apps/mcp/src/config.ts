@@ -16,6 +16,8 @@ const ConfigSchema = z.object({
     .url()
     .default("https://pyth-lazer.dourolabs.app")
     .refine((u) => u.startsWith("https://"), "URL must use HTTPS"),
+  /** Server-managed Pyth Pro token for Code Mode get_latest_price injection. Never exposed to LLM. */
+  pythProAccessToken: z.string().min(1).optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -25,6 +27,7 @@ export function loadConfig(): Config {
     channel: process.env.PYTH_CHANNEL,
     historyUrl: process.env.PYTH_HISTORY_URL,
     logLevel: process.env.PYTH_LOG_LEVEL,
+    pythProAccessToken: process.env.PYTH_PRO_ACCESS_TOKEN,
     requestTimeoutMs: process.env.PYTH_REQUEST_TIMEOUT_MS,
     routerUrl: process.env.PYTH_ROUTER_URL,
   });
