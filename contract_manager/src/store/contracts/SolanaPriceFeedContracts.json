@@ -1,0 +1,7 @@
+[
+  {
+    "chain": "solana_mainnet_beta",
+    "address": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+    "type": "SolanaPriceFeedContract"
+  }
+]

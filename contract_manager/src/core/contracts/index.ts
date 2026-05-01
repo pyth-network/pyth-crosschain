@@ -7,3 +7,4 @@ export * from "./iota";
 export * from "./wormhole";
 export * from "./evm_abis";
 export * from "./ton";
+export * from "./solana";

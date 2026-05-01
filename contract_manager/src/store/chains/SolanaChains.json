@@ -1,0 +1,16 @@
+[
+  {
+    "id": "solana_mainnet_beta",
+    "wormholeChainName": "pythnet",
+    "mainnet": true,
+    "type": "SolanaChain",
+    "rpcUrl": "https://api.mainnet-beta.solana.com"
+  },
+  {
+    "id": "solana_devnet",
+    "wormholeChainName": "pythnet",
+    "mainnet": false,
+    "type": "SolanaChain",
+    "rpcUrl": "https://api.devnet.solana.com"
+  }
+]
