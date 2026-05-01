@@ -958,5 +958,17 @@
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "chain": "fluent",
     "type": "EvmWormholeContract"
+  },
+  {
+    "address": "0x636915338a2f5Ff0F332636be44fc124a9842A74",
+    "chain": "sepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-staging"
+  },
+  {
+    "address": "0x237b7aFF1Af5d9F311f830234792d429355A58F3",
+    "chain": "ethereum",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
   }
 ]

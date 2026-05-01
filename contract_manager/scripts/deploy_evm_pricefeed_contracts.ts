@@ -13,14 +13,6 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  getWeb3Contract,
-  getOrDeployWormholeContract,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import {
   getDefaultDeploymentConfig,
@@ -30,6 +22,13 @@ import {
 import { EvmChain } from "../src/core/chains";
 import { EvmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -47,32 +46,32 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
-    "valid-time-period-seconds": {
-      type: "number",
-      demandOption: false,
-      default: 60,
-      desc: "Valid time period in seconds for the price feed staleness",
-    },
-    "single-update-fee-in-wei": {
-      type: "number",
-      demandOption: false,
-      default: 1,
-      desc: "Single update fee in wei for the price feed",
-    },
-    "single-update-fee-in-usd": {
-      type: "number",
-      demandOption: false,
-      desc: "Single update fee in USD for the price feed. (This overrides the single-update-fee-in-wei option) ",
-    },
-    "native-token-price-feed-id": {
-      type: "string",
-      demandOption: false,
-      desc: "Pyth Price Feed ID to fetch the current price of the native token (This will be used to calculate the single-update-fee-in-usd)",
-    },
     "native-token-decimals": {
-      type: "number",
       demandOption: false,
       desc: "Number of decimals of the native token",
+      type: "number",
+    },
+    "native-token-price-feed-id": {
+      demandOption: false,
+      desc: "Pyth Price Feed ID to fetch the current price of the native token (This will be used to calculate the single-update-fee-in-usd)",
+      type: "string",
+    },
+    "single-update-fee-in-usd": {
+      demandOption: false,
+      desc: "Single update fee in USD for the price feed. (This overrides the single-update-fee-in-wei option) ",
+      type: "number",
+    },
+    "single-update-fee-in-wei": {
+      default: 1,
+      demandOption: false,
+      desc: "Single update fee in wei for the price feed",
+      type: "number",
+    },
+    "valid-time-period-seconds": {
+      default: 60,
+      demandOption: false,
+      desc: "Valid time period in seconds for the price feed staleness",
+      type: "number",
     },
   });
 
@@ -158,14 +157,14 @@ async function main() {
   }
 
   const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
-    validTimePeriodSeconds: argv.validTimePeriodSeconds,
-    singleUpdateFeeInWei: singleUpdateFeeInWei,
     gasMultiplier: argv.gasMultiplier,
     gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
+    privateKey: toPrivateKey(argv.privateKey),
     saveContract: argv.saveContract,
+    singleUpdateFeeInWei: singleUpdateFeeInWei,
+    type: toDeploymentType(argv.deploymentType),
+    validTimePeriodSeconds: argv.validTimePeriodSeconds,
   };
 
   const maskedDeploymentConfig = {
@@ -197,7 +196,11 @@ async function main() {
 
     if (deploymentConfig.saveContract) {
       console.log("Saving the contract in the store...");
-      const contract = new EvmPriceFeedContract(chain, priceFeedAddr);
+      const contract = new EvmPriceFeedContract(
+        chain,
+        priceFeedAddr,
+        deploymentConfig.type,
+      );
       DefaultStore.contracts[contract.getId()] = contract;
       DefaultStore.saveAllContracts();
     }

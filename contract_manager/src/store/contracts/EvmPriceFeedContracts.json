@@ -948,5 +948,17 @@
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "fluent",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xc643e55EE8944F3017F4CB8C82aa3DB1AA2d8941",
+    "chain": "sepolia",
+    "deploymentType": "lazer-staging",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xa78951b6bADC9F4740f6f456E9144705D5C5E4B2",
+    "chain": "ethereum",
+    "deploymentType": "lazer-prod",
+    "type": "EvmPriceFeedContract"
   }
 ]
