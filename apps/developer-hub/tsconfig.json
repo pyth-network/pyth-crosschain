@@ -1,8 +1,5 @@
 {
   "extends": "@cprussin/tsconfig/nextjs.json",
-  "compilerOptions": {
-    "allowImportingTsExtensions": true
-  },
   "include": ["svg.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

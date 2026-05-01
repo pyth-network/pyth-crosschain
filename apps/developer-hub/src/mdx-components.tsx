@@ -16,7 +16,7 @@ const OpenAPIPage = createAPIPage(openapi);
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
-    ...(defaultMdxComponents as MDXComponents),
+    ...defaultMdxComponents,
     APIPage: OpenAPIPage,
     APICard,
     APICards,

@@ -74,7 +74,7 @@
     "build:analyze": "ANALYZE=true next build",
     "count:llm-tokens": "tsx ./scripts/count-llm-tokens.ts",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "generate:docs": "node --experimental-strip-types ./scripts/generate-docs.ts",
+    "generate:docs": "tsx ./scripts/generate-docs.ts",
     "start:dev": "next dev --port 3627",
     "start:prod": "next start --port 3627",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
