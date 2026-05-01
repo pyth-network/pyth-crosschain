@@ -89,44 +89,44 @@ pub fn require_initialized(env: &Env) -> Result<(), ContractError> {
 }
 
 /// Get the current guardian set.
-pub fn get_guardian_set(env: &Env) -> Vec<BytesN<20>> {
+pub fn get_guardian_set(env: &Env) -> Result<Vec<BytesN<20>>, ContractError> {
     extend_guardian_set_ttl(env);
     env.storage()
         .persistent()
         .get(&DataKey::GuardianSet)
-        .expect("guardian set not found")
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Get the current guardian set index.
-pub fn get_guardian_set_index(env: &Env) -> u32 {
+pub fn get_guardian_set_index(env: &Env) -> Result<u32, ContractError> {
     env.storage()
         .persistent()
         .get(&DataKey::GuardianSetIndex)
-        .expect("guardian set index not found")
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Get the chain ID.
-pub fn get_chain_id(env: &Env) -> u32 {
+pub fn get_chain_id(env: &Env) -> Result<u32, ContractError> {
     env.storage()
         .instance()
         .get(&DataKey::ChainId)
-        .expect("chain id not found")
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Get the owner emitter chain ID.
-pub fn get_owner_emitter_chain(env: &Env) -> u32 {
+pub fn get_owner_emitter_chain(env: &Env) -> Result<u32, ContractError> {
     env.storage()
         .instance()
         .get(&DataKey::OwnerEmitterChain)
-        .expect("owner emitter chain not found")
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Get the owner emitter address.
-pub fn get_owner_emitter_address(env: &Env) -> BytesN<32> {
+pub fn get_owner_emitter_address(env: &Env) -> Result<BytesN<32>, ContractError> {
     env.storage()
         .instance()
         .get(&DataKey::OwnerEmitterAddress)
-        .expect("owner emitter address not found")
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Get the last executed sequence number.

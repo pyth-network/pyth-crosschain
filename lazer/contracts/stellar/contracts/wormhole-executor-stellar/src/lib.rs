@@ -101,7 +101,7 @@ impl WormholeExecutor {
 
         // Target chain (2 bytes BE u16) - 0 means all chains.
         let target_chain = read_be_u16(payload, 33)?;
-        let our_chain = guardian::get_chain_id(&env);
+        let our_chain = guardian::get_chain_id(&env)?;
         if target_chain != 0 && target_chain as u32 != our_chain {
             return Err(ContractError::InvalidEmitterChain);
         }
@@ -110,7 +110,7 @@ impl WormholeExecutor {
         let new_index = read_be_u32(payload, 35)?;
 
         // Must increment by exactly 1.
-        let current_index = guardian::get_guardian_set_index(&env);
+        let current_index = guardian::get_guardian_set_index(&env)?;
         if new_index != current_index + 1 {
             return Err(ContractError::InvalidGuardianSetUpgrade);
         }
@@ -162,13 +162,13 @@ impl WormholeExecutor {
         verify_vaa(&env, &vaa)?;
 
         // Validate emitter chain matches stored owner.
-        let owner_chain = guardian::get_owner_emitter_chain(&env);
+        let owner_chain = guardian::get_owner_emitter_chain(&env)?;
         if vaa.body.emitter_chain as u32 != owner_chain {
             return Err(ContractError::InvalidEmitterChain);
         }
 
         // Validate emitter address matches stored owner.
-        let owner_address = guardian::get_owner_emitter_address(&env);
+        let owner_address = guardian::get_owner_emitter_address(&env)?;
         if vaa.body.emitter_address != owner_address {
             return Err(ContractError::InvalidEmitterAddress);
         }
@@ -183,7 +183,7 @@ impl WormholeExecutor {
         guardian::set_last_executed_sequence(&env, vaa.body.sequence);
 
         // Parse the PTGM governance instruction.
-        let our_chain = guardian::get_chain_id(&env);
+        let our_chain = guardian::get_chain_id(&env)?;
         // TODO: we should use a more generic encoding of function calls so we're not hardcoding the
         // target function names here. The result of parse_ptgm should enable us to call *any* function
         // on the contract. I.e., we have something like the string name of the function and a generic

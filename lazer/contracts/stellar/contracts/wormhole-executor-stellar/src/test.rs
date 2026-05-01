@@ -194,9 +194,11 @@ fn test_initialize_success() {
     // Access storage in contract context.
     env.as_contract(&contract_id, || {
         let gs = guardian::get_guardian_set(&env);
+        assert!(gs.is_ok());
+        let gs = gs.unwrap_or(Vec::new(&env));
         assert_eq!(gs.len(), 3);
-        assert_eq!(guardian::get_guardian_set_index(&env), 0);
-        assert_eq!(guardian::get_chain_id(&env), 30);
+        assert_eq!(guardian::get_guardian_set_index(&env), Ok(0));
+        assert_eq!(guardian::get_chain_id(&env), Ok(30));
     });
 }
 
@@ -438,10 +440,12 @@ fn test_guardian_set_upgrade() {
 
     env.as_contract(&contract_id, || {
         let gs = guardian::get_guardian_set(&env);
+        assert!(gs.is_ok());
+        let gs = gs.unwrap_or(Vec::new(&env));
         assert_eq!(gs.len(), 2);
         assert_eq!(gs.get(0).unwrap(), BytesN::from_array(&env, &new_addr_0));
         assert_eq!(gs.get(1).unwrap(), BytesN::from_array(&env, &new_addr_1));
-        assert_eq!(guardian::get_guardian_set_index(&env), 1);
+        assert_eq!(guardian::get_guardian_set_index(&env), Ok(1));
     });
 }
 
@@ -490,7 +494,7 @@ fn test_guardian_set_upgrade_chain_specific() {
 
     client.update_guardian_set(&vaa_bytes);
     env.as_contract(&contract_id, || {
-        assert_eq!(guardian::get_guardian_set_index(&env), 1);
+        assert_eq!(guardian::get_guardian_set_index(&env), Ok(1));
     });
 }
 
@@ -524,7 +528,7 @@ fn test_sequential_guardian_set_upgrades() {
     let vaa_raw = build_signed_vaa(0, &[(0u8, secrets[0])], &body);
     client.update_guardian_set(&Bytes::from_slice(&env, &vaa_raw));
     env.as_contract(&contract_id, || {
-        assert_eq!(guardian::get_guardian_set_index(&env), 1);
+        assert_eq!(guardian::get_guardian_set_index(&env), Ok(1));
     });
 
     // Upgrade 1 -> 2 with the new guardian set
@@ -535,7 +539,10 @@ fn test_sequential_guardian_set_upgrades() {
     let vaa_raw_2 = build_signed_vaa(1, &[(0u8, new_secret)], &body_2);
     client.update_guardian_set(&Bytes::from_slice(&env, &vaa_raw_2));
     env.as_contract(&contract_id, || {
-        assert_eq!(guardian::get_guardian_set_index(&env), 2);
-        assert_eq!(guardian::get_guardian_set(&env).len(), 1);
+        assert_eq!(guardian::get_guardian_set_index(&env), Ok(2));
+        let gs = guardian::get_guardian_set(&env);
+        assert!(gs.is_ok());
+        let gs = gs.unwrap_or(Vec::new(&env));
+        assert_eq!(gs.len(), 1);
     });
 }

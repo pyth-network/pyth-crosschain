@@ -157,12 +157,12 @@ pub fn parse_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
 /// 6. Verifies quorum (2/3 + 1 of guardians have valid signatures).
 /// 7. Checks for duplicate guardian indices.
 pub fn verify_vaa(env: &Env, vaa: &Vaa) -> Result<(), ContractError> {
-    let stored_index = guardian::get_guardian_set_index(env);
+    let stored_index = guardian::get_guardian_set_index(env)?;
     if vaa.guardian_set_index != stored_index {
         return Err(ContractError::InvalidGuardianSetIndex);
     }
 
-    let guardian_set = guardian::get_guardian_set(env);
+    let guardian_set = guardian::get_guardian_set(env)?;
     let num_guardians = guardian_set.len();
     let required = guardian::quorum(num_guardians);
 
