@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable unicorn/prefer-add-event-listener */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
@@ -10,6 +9,9 @@ import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
 import { sleep } from "./utils.js";
 
 type TimestampInMs = number & { readonly _: unique symbol };
+
+const RECONNECT_BASE_DELAY_MS = 1000;
+const RECONNECT_MAX_DELAY_MS = 30_000;
 
 export class PythPriceListener implements IPriceListener {
   private hermesClient: HermesClient;
@@ -93,12 +95,36 @@ export class PythPriceListener implements IPriceListener {
         }
     };
 
-    eventSource.onerror = async (error: Event) => {
-      console.error("Error receiving updates from Hermes:", error);
+    eventSource.onerror = (error: Event) => {
+      this.logger.error({ err: error }, "Error receiving updates from Hermes");
       eventSource.close();
-      await sleep(5000); // Wait a bit before trying to reconnect
-      void this.startListening(); // Attempt to restart the listener
+      void this.reconnectWithBackoff();
     };
+  }
+
+  private async reconnectWithBackoff(): Promise<void> {
+    let attempt = 0;
+    while (true) {
+      const delayMs = Math.min(
+        RECONNECT_BASE_DELAY_MS * 2 ** attempt,
+        RECONNECT_MAX_DELAY_MS,
+      );
+      attempt += 1;
+      this.logger.warn(
+        `Reconnecting to Hermes in ${delayMs}ms (attempt ${attempt}).`,
+      );
+      await sleep(delayMs);
+
+      try {
+        await this.startListening();
+        return;
+      } catch (error) {
+        this.logger.error(
+          { err: error },
+          `Hermes reconnect attempt ${attempt} failed; will retry with backoff.`,
+        );
+      }
+    }
   }
 
   getLatestPriceInfo(priceId: HexString): PriceInfo | undefined {
