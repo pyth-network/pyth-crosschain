@@ -1,0 +1,252 @@
+---
+title: Migrate from Core
+description: Technical migration guide for developers moving from Pyth Core to Pyth Pro — architecture, data semantics, endpoints, and contract changes for EVM and SVM
+slug: /price-feeds/pro/migrate-from-core
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Steps, Step } from "fumadocs-ui/components/steps";
+
+**Pyth Pro** delivers the same first-party publisher data as **Pyth Core**, but through standard WebSocket and REST APIs with configurable update speeds and a streamlined on-chain verification path.
+This guide covers everything you need to migrate an existing Pyth Core integration.
+
+<Callout type="info">
+  **Pyth Pro was previously known as Pyth Lazer.** SDK package names still use
+  the `lazer` naming.
+</Callout>
+
+## What Stays the Same
+
+Before diving into what changes, here's what doesn't:
+
+- **Same data quality** — first-party publisher data from 120+ sources including major exchanges and market makers
+- **Same data fields** — price, confidence interval, exponent, and timestamp are available in both Core and Pro
+- **Same exponent model** — both use fixed-point representation: `actual_price = mantissa × 10^exponent`
+- **On-chain verification** — both products guarantee data authenticity through cryptographic verification
+- **Permissionless consumption** — once price data is verified on-chain, any contract can read it
+
+## Architecture Changes
+
+**Data delivery** remains similar. With Core, you fetch price updates from **Hermes** (an off-chain relay for Pythnet data) and submit them on-chain in the same transaction.
+With Pro, prices stream directly from publishers via WebSocket. On-demand queries are also available via REST.
+
+**Update frequency** becomes configurable. Core updates every 400ms (fixed). Pro lets you choose per subscription: `real_time`, `fixed_rate@50`, `fixed_rate@200ms` or `fixed_rate@1000ms`.
+
+**On-chain verification** uses a different signature scheme. Core verifies data using **Wormhole VAA** (guardian multi-sig) through the Pyth Receiver contract. Pro uses **Ed25519 signature verification** through the Pyth Lazer verifier contract.
+
+**Price feed IDs** change format. Core uses `bytes32` hashes. Pro uses `uint32` numeric IDs. You will need to map your feed IDs. Consult the [Price Feed IDs](./price-feed-ids) page for the complete list.
+
+## Behavioral Differences
+
+Core and Pro aggregate publisher data differently. These differences affect how you interpret prices, confidence, and timestamps.
+
+| Aspect                       | Core                                                                                          | Pro                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Confidence calculation**   | Each publisher contributes 3 votes (price, price + conf, price - conf). Confidence is the IQR of these 3N points. | IQR computed directly on all publisher prices, bids, and asks.                            |
+| **Price aggregation**        | Weighted median of 3N votes — confident publishers have more influence.                       | Simple median across publishers.                                                          |
+| **Timestamps**               | `publish_time` in Unix seconds.                                                               | `timestampUs` and `feedUpdateTimestamp` in microseconds (μs).                             |
+| **Staleness handling**       | `getPriceNoOlderThan()` reverts if data exceeds max age.                                      | Carries forward the last known price. Compare `feedUpdateTimestamp` against `timestampUs` to detect stale data. |
+| **Best bid/ask**             | Not available.                                                                                | Available via `bestBidPrice` and `bestAskPrice` properties. (Experimental)                             |
+| **EMA price**                | Available (slot-weighted, inverse confidence-weighted, ~1 hour period).                       | Available (`emaPrice`, `emaConfidence`).                                                  |
+
+<Callout type="warning">
+  Pyth Pro EVM contracts don't store the prices on-chain. The prices are parsed from the payload and verified on-chain.
+  That's why Pyth Pro does **not** revert on stale prices. You must check `feedUpdateTimestamp`
+  yourself to determine whether a price is fresh or carried forward. See
+  [Payload Reference — Price Availability
+  Semantics](/price-feeds/pro/payload-reference#core-price-properties) for
+  details.
+</Callout>
+
+## Endpoint Changes
+
+<Tabs items={["Core Endpoints", "Pro Endpoints"]}>
+  <Tab value="Core Endpoints">
+    | What             | Value                                                    |
+    | ---------------- | -------------------------------------------------------- |
+    | Price updates    | `https://hermes.pyth.network/v2/updates/price/latest`    |
+    | Authentication   | None (permissionless)                                    |
+    | TypeScript SDK   | `@pythnetwork/hermes-client`                             |
+  </Tab>
+  <Tab value="Pro Endpoints">
+    | What             | Value                                                               |
+    | ---------------- | ------------------------------------------------------------------- |
+    | Streaming        | `wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream`                  |
+    | REST (latest)    | `POST https://pyth-lazer.dourolabs.app/v1/latest_price`             |
+    | REST (historical)| `GET https://pyth.dourolabs.app/v1/{channel}/history`     |
+    | Authentication   | Bearer token in `Authorization` header                              |
+    | TypeScript SDK   | `@pythnetwork/pyth-lazer-sdk`                                       |
+  </Tab>
+</Tabs>
+
+<Callout type="warning">
+  Connect to **all three** WebSocket endpoints (`pyth-lazer-0`, `pyth-lazer-1`,
+  `pyth-lazer-2`) for redundancy. Individual endpoints go down briefly during
+  deployments.
+</Callout>
+
+## EVM Migration
+
+Integrating with **Pyth Pro** on EVM chains uses the **Pyth Lazer Solidity SDK** instead of the `IPyth` interface. The verification and reading pattern changes significantly.
+
+<Tabs items={["Core (IPyth)", "Pro (PythLazer)"]}>
+  <Tab value="Core (IPyth)">
+    ```solidity copy
+    uint fee = pyth.getUpdateFee(updateData);
+    pyth.updatePriceFeeds{value: fee}(updateData);
+    PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, maxAge);
+    // price.price, price.conf, price.expo, price.publishTime
+    ```
+  </Tab>
+  <Tab value="Pro (PythLazer)">
+    ```solidity copy
+    uint fee = pythLazer.verification_fee();
+    (bytes memory payload, ) = pythLazer.verifyUpdate{value: fee}(update);
+    // Parse payload sequentially — see full guide
+    ```
+  </Tab>
+</Tabs>
+
+### Key EVM differences
+
+| Aspect           | Core                                     | Pro                                                                                                              |
+| ---------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Solidity interface | `IPyth`                                | `PythLazer`                                                                                                      |
+| Fee method       | `getUpdateFee(bytes[])`                  | `verification_fee()`                                                                                             |
+| Update method    | `updatePriceFeeds{value}(bytes[])`       | `verifyUpdate{value}(bytes)`                                                                                     |
+| Read pattern     | `getPriceNoOlderThan(bytes32, uint)`     | Sequential parsing: `parsePayloadHeader` → `parseFeedHeader` → `parseFeedProperty` → `parseFeedValueUint64`     |
+| Feed ID type     | `bytes32`                                | `uint32`                                                                                                         |
+| Flow             | Update, then read (two steps)            | Verify, parse, and use (single flow)                                                                             |
+| SDK package      | `@pythnetwork/pyth-sdk-solidity`         | Pyth Lazer Solidity SDK                                                                                          |
+
+<Callout type="warning">
+  You **must** pass the `pos` cursor returned by each parsing call to the next
+  call sequentially. Skipping any parsing step will cause incorrect results.
+</Callout>
+
+See the [full EVM integration guide](./integrate-as-consumer/evm) and the [pyth-lazer-example-evm](https://github.com/pyth-network/pyth-examples/tree/main/lazer/evm) example.
+
+## SVM (Solana) Migration
+
+On Solana, **Pyth Pro** uses the **Pyth Lazer program** instead of the Pyth Solana Receiver. The verification mechanism changes from Wormhole VAA to SVM's native ed25519 program, and price data no longer requires separate accounts.
+
+<Tabs items={["Core (Solana Receiver)", "Pro (Pyth Lazer)"]}>
+  <Tab value="Core (Solana Receiver)">
+    ```rust copy
+    use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
+
+    pub price_update: Account<'info, PriceUpdateV2>,
+
+    let price = ctx.accounts.price_update
+        .get_price_no_older_than(&Clock::get()?, max_age, &price_feed_id)?;
+    ```
+  </Tab>
+  <Tab value="Pro (Pyth Lazer)">
+    ```rust copy
+    use pyth_lazer_solana_contract::*;
+
+    invoke(&verify_instruction, &[lazer_storage, treasury, fee_payer])?;
+    let message = PayloadData::deserialize_slice_le(&verified.payload)?;
+    // Access: message.feeds, message.timestamp, etc.
+    ```
+  </Tab>
+</Tabs>
+
+### Key SVM differences
+
+| Aspect                 | Core                                                            | Pro                                                        |
+| ---------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
+| Rust crate             | `pyth-solana-receiver-sdk`                                      | `pyth-lazer-solana-contract`                               |
+| TypeScript SDK         | `@pythnetwork/hermes-client` + `@pythnetwork/pyth-solana-receiver` | `@pythnetwork/pyth-lazer-sdk`                           |
+| Verification           | Wormhole VAA via Solana Receiver                                | Ed25519 via SVM native program                             |
+| On-chain program       | Pyth Solana Receiver                                            | `pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt`            |
+| Compute cost           | Higher (Wormhole VAA verification)                              | ~15K CU (supports 20 feeds per tx)                         |
+| Account model          | `PriceUpdateV2` accounts (must create/manage)                   | No price accounts — data passed in instruction             |
+| Feed ID type           | `bytes32` hex                                                   | `uint32` numeric                                           |
+| Transaction complexity | May require multiple transactions                               | Single transaction                                         |
+
+<Callout type="warning">
+  Pyth Pro uses SVM's native **ed25519 program** for signature verification.
+  This program **cannot** be invoked via CPI — you must include the ed25519
+  instruction explicitly in the transaction alongside your program instruction.
+  See the [SVM integration guide](./integrate-as-consumer/svm) for details.
+</Callout>
+
+See the [full SVM integration guide](./integrate-as-consumer/svm) and the [pyth-lazer-example-solana](https://github.com/pyth-network/pyth-examples/tree/main/lazer/solana) example.
+
+## TypeScript SDK Migration
+
+<Tabs items={["Core (Hermes)", "Pro (Lazer SDK)"]}>
+  <Tab value="Core (Hermes)">
+    ```ts copy
+    import { HermesClient } from "@pythnetwork/hermes-client";
+
+    const hermes = new HermesClient("https://hermes.pyth.network");
+    const updates = await hermes.getLatestPriceUpdates([priceFeedId]);
+    ```
+  </Tab>
+  <Tab value="Pro (Lazer SDK)">
+    ```ts copy
+    import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+    const client = await PythLazerClient.create({
+      urls: [
+        "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+        "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+        "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+      ],
+      token: accessToken,
+    });
+
+    client.subscribe({
+      type: "subscribe",
+      subscriptionId: 1,
+      priceFeedIds: [1, 2],                       // uint32 numeric IDs
+      properties: ["price", "bestBidPrice", "bestAskPrice"],
+      formats: ["solana"],                         // or ["evm"]
+      channel: "fixed_rate@200ms",                 // or "real_time", "fixed_rate@50ms"
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Migration Checklist
+
+<Steps>
+  <Step>
+    ### Get your access token
+    Request authenticated credentials from a [Pyth Data Distributor](./acquire-access-token). You'll receive a Bearer token for API authentication.
+  </Step>
+  <Step>
+    ### Update your off-chain SDK
+    Replace `@pythnetwork/hermes-client` with `@pythnetwork/pyth-lazer-sdk`. See [Subscribe to Prices](./subscribe-to-prices) for the full setup guide.
+  </Step>
+  <Step>
+    ### Update your smart contracts
+    **EVM:** Import the Pyth Lazer Solidity SDK. Replace `IPyth` calls with `PythLazer` verification and parsing. See the [EVM guide](./integrate-as-consumer/evm).
+
+    **SVM:** Switch from `pyth-solana-receiver-sdk` to `pyth-lazer-solana-contract`. Add the ed25519 instruction to your transaction. See the [SVM guide](./integrate-as-consumer/svm).
+  </Step>
+  <Step>
+    ### Update price feed IDs
+    Pyth Pro Price Feed IDs are different from Pyth Core Price Feed IDs. You can find the complete list of Price Feed IDs in the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page.
+  </Step>
+  <Step>
+    ### Configure your subscription
+    Set your preferred `channel` (`real_time`, `fixed_rate@200ms`, `fixed_rate@50ms`), `properties`, and `formats` in your WebSocket subscription message.
+  </Step>
+  <Step>
+    ### Test your integration
+    Use the example repos to validate:
+    - [pyth-lazer-example-evm](https://github.com/pyth-network/pyth-examples/tree/main/lazer/evm) for EVM
+    - [pyth-lazer-example-solana](https://github.com/pyth-network/pyth-examples/tree/main/lazer/solana) for Solana
+    - [pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) for the WebSocket SDK
+  </Step>
+</Steps>
+
+<Callout type="error">
+  **Never expose your access token in frontend code.** Use it only in secure
+  backend environments. Exposing it in client-side code is a violation of the
+  Terms of Service.
+</Callout>
