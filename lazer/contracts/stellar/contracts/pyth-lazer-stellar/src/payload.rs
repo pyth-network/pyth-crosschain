@@ -3,6 +3,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use soroban_sdk::Bytes;
 
+use crate::bytes::get_byte;
 use crate::error::ContractError;
 
 // TODO: this payload parsing code needs to be a library or something that users can integrate
@@ -82,7 +83,7 @@ impl<'a> Reader<'a> {
         if self.offset >= self.data.len() {
             return Err(ContractError::TruncatedData);
         }
-        let val = self.data.get(self.offset).unwrap();
+        let val = get_byte(self.data, self.offset)?;
         self.offset += 1;
         Ok(val)
     }
@@ -95,8 +96,8 @@ impl<'a> Reader<'a> {
         if self.remaining() < 2 {
             return Err(ContractError::TruncatedData);
         }
-        let b0 = self.data.get(self.offset).unwrap() as u16;
-        let b1 = self.data.get(self.offset + 1).unwrap() as u16;
+        let b0 = get_byte(self.data, self.offset)? as u16;
+        let b1 = get_byte(self.data, self.offset + 1)? as u16;
         self.offset += 2;
         Ok(b0 | (b1 << 8))
     }
@@ -105,10 +106,10 @@ impl<'a> Reader<'a> {
         if self.remaining() < 4 {
             return Err(ContractError::TruncatedData);
         }
-        let b0 = self.data.get(self.offset).unwrap() as u32;
-        let b1 = self.data.get(self.offset + 1).unwrap() as u32;
-        let b2 = self.data.get(self.offset + 2).unwrap() as u32;
-        let b3 = self.data.get(self.offset + 3).unwrap() as u32;
+        let b0 = get_byte(self.data, self.offset)? as u32;
+        let b1 = get_byte(self.data, self.offset + 1)? as u32;
+        let b2 = get_byte(self.data, self.offset + 2)? as u32;
+        let b3 = get_byte(self.data, self.offset + 3)? as u32;
         self.offset += 4;
         Ok(b0 | (b1 << 8) | (b2 << 16) | (b3 << 24))
     }
@@ -119,7 +120,7 @@ impl<'a> Reader<'a> {
         }
         let mut val = 0u64;
         for i in 0..8u32 {
-            val |= (self.data.get(self.offset + i).unwrap() as u64) << (i * 8);
+            val |= (get_byte(self.data, self.offset + i)? as u64) << (i * 8);
         }
         self.offset += 8;
         Ok(val)

@@ -1,5 +1,6 @@
 use soroban_sdk::{Address, Bytes};
 
+use crate::bytes::{get_byte, read_be_u16, read_be_u64};
 use crate::error::ContractError;
 
 /// PTGM magic: "PTGM" = 0x5054474d
@@ -68,23 +69,22 @@ pub fn parse_ptgm(
 
     // Verify magic.
     for i in 0..4 {
-        if payload.get(i as u32).unwrap() != PTGM_MAGIC[i] {
+        if get_byte(payload, i as u32)? != PTGM_MAGIC[i] {
             return Err(ContractError::InvalidPtgmMagic);
         }
     }
 
     // Verify module.
-    let module = payload.get(4).unwrap();
+    let module = get_byte(payload, 4)?;
     if module != LAZER_MODULE {
         return Err(ContractError::InvalidPtgmModule);
     }
 
     // Action.
-    let action = payload.get(5).unwrap();
+    let action = get_byte(payload, 5)?;
 
     // Target chain ID (BE u16).
-    let target_chain_id =
-        ((payload.get(6).unwrap() as u16) << 8) | (payload.get(7).unwrap() as u16);
+    let target_chain_id = read_be_u16(payload, 6)?;
 
     // Validate target chain: must match our chain (no wildcard 0 for PTGM).
     if target_chain_id as u32 != our_chain_id {
@@ -102,7 +102,7 @@ pub fn parse_ptgm(
         return Err(ContractError::TruncatedData);
     }
 
-    let executor_len = payload.get(offset as u32).unwrap() as usize;
+    let executor_len = get_byte(payload, offset as u32)? as usize;
     offset += 1;
     if executor_len == 0 || len < offset + executor_len {
         return Err(ContractError::TruncatedData);
@@ -118,7 +118,7 @@ pub fn parse_ptgm(
     if len < offset + 1 {
         return Err(ContractError::TruncatedData);
     }
-    let target_len = payload.get(offset as u32).unwrap() as usize;
+    let target_len = get_byte(payload, offset as u32)? as usize;
     offset += 1;
     if target_len == 0 || len < offset + target_len {
         return Err(ContractError::TruncatedData);
@@ -136,18 +136,11 @@ pub fn parse_ptgm(
 
             let mut pubkey = [0u8; 33];
             for i in 0..33 {
-                pubkey[i] = payload.get((offset + i) as u32).unwrap();
+                pubkey[i] = get_byte(payload, (offset + i) as u32)?;
             }
 
             let exp_offset = offset + 33;
-            let expires_at = ((payload.get(exp_offset as u32).unwrap() as u64) << 56)
-                | ((payload.get((exp_offset + 1) as u32).unwrap() as u64) << 48)
-                | ((payload.get((exp_offset + 2) as u32).unwrap() as u64) << 40)
-                | ((payload.get((exp_offset + 3) as u32).unwrap() as u64) << 32)
-                | ((payload.get((exp_offset + 4) as u32).unwrap() as u64) << 24)
-                | ((payload.get((exp_offset + 5) as u32).unwrap() as u64) << 16)
-                | ((payload.get((exp_offset + 6) as u32).unwrap() as u64) << 8)
-                | (payload.get((exp_offset + 7) as u32).unwrap() as u64);
+            let expires_at = read_be_u64(payload, exp_offset as u32)?;
 
             Ok(GovernanceAction::UpdateTrustedSigner(
                 UpdateTrustedSignerPayload {
@@ -164,19 +157,12 @@ pub fn parse_ptgm(
             }
 
             let ver_offset = offset;
-            let version = ((payload.get(ver_offset as u32).unwrap() as u64) << 56)
-                | ((payload.get((ver_offset + 1) as u32).unwrap() as u64) << 48)
-                | ((payload.get((ver_offset + 2) as u32).unwrap() as u64) << 40)
-                | ((payload.get((ver_offset + 3) as u32).unwrap() as u64) << 32)
-                | ((payload.get((ver_offset + 4) as u32).unwrap() as u64) << 24)
-                | ((payload.get((ver_offset + 5) as u32).unwrap() as u64) << 16)
-                | ((payload.get((ver_offset + 6) as u32).unwrap() as u64) << 8)
-                | (payload.get((ver_offset + 7) as u32).unwrap() as u64);
+            let version = read_be_u64(payload, ver_offset as u32)?;
 
             let digest_offset = offset + 8;
             let mut wasm_digest = [0u8; 32];
             for i in 0..32 {
-                wasm_digest[i] = payload.get((digest_offset + i) as u32).unwrap();
+                wasm_digest[i] = get_byte(payload, (digest_offset + i) as u32)?;
             }
 
             Ok(GovernanceAction::Upgrade(UpgradePayload {

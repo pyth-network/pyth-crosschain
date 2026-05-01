@@ -1,5 +1,7 @@
 use soroban_sdk::{contracttype, Address, BytesN, Env};
 
+use crate::error::ContractError;
+
 /// TTL threshold: extend when TTL drops below this (approx 6 days at 5s/ledger).
 pub const TTL_THRESHOLD: u32 = 100_000;
 /// TTL extension target (approx 29 days at 5s/ledger).
@@ -20,8 +22,11 @@ pub fn set_executor(env: &Env, executor: &Address) {
 }
 
 /// Read the executor address. Panics if not initialized.
-pub fn get_executor(env: &Env) -> Address {
-    env.storage().instance().get(&DataKey::Executor).unwrap()
+pub fn get_executor(env: &Env) -> Result<Address, ContractError> {
+    env.storage()
+        .instance()
+        .get(&DataKey::Executor)
+        .ok_or(ContractError::NotInitialized)
 }
 
 /// Check whether the contract has been initialized.

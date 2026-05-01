@@ -1,5 +1,6 @@
 #![no_std]
 
+pub mod bytes;
 pub mod error;
 pub mod governance;
 pub mod guardian;
@@ -10,6 +11,7 @@ mod test;
 
 use soroban_sdk::{contract, contractimpl, Bytes, BytesN, Env, IntoVal, Symbol, Vec};
 
+use crate::bytes::{get_byte, read_be_u16, read_be_u32};
 use crate::error::ContractError;
 use crate::governance::{parse_ptgm, GovernanceAction};
 use crate::vaa::{parse_vaa, verify_vaa};
@@ -85,31 +87,27 @@ impl WormholeExecutor {
         // Verify module is "Core".
         let mut module_bytes = [0u8; 32];
         for i in 0..32 {
-            module_bytes[i] = payload.get(i as u32).unwrap();
+            module_bytes[i] = get_byte(payload, i as u32)?;
         }
         if module_bytes != CORE_MODULE {
             return Err(ContractError::InvalidEmitterAddress);
         }
 
         // Verify action is guardian set upgrade (2).
-        let action = payload.get(32).unwrap();
+        let action = get_byte(payload, 32)?;
         if action != GUARDIAN_SET_UPGRADE_ACTION {
             return Err(ContractError::InvalidEmitterChain);
         }
 
         // Target chain (2 bytes BE u16) - 0 means all chains.
-        let target_chain = ((payload.get(33).unwrap() as u16) << 8)
-            | (payload.get(34).unwrap() as u16);
+        let target_chain = read_be_u16(payload, 33)?;
         let our_chain = guardian::get_chain_id(&env);
         if target_chain != 0 && target_chain as u32 != our_chain {
             return Err(ContractError::InvalidEmitterChain);
         }
 
         // New guardian set index (4 bytes BE u32).
-        let new_index = ((payload.get(35).unwrap() as u32) << 24)
-            | ((payload.get(36).unwrap() as u32) << 16)
-            | ((payload.get(37).unwrap() as u32) << 8)
-            | (payload.get(38).unwrap() as u32);
+        let new_index = read_be_u32(payload, 35)?;
 
         // Must increment by exactly 1.
         let current_index = guardian::get_guardian_set_index(&env);
@@ -118,7 +116,7 @@ impl WormholeExecutor {
         }
 
         // Number of guardians.
-        let num_guardians = payload.get(39).unwrap() as usize;
+        let num_guardians = get_byte(payload, 39)? as usize;
         if num_guardians == 0 {
             return Err(ContractError::EmptyGuardianSet);
         }
@@ -135,7 +133,7 @@ impl WormholeExecutor {
             let offset = 40 + i * 20;
             let mut addr = [0u8; 20];
             for j in 0..20 {
-                addr[j] = payload.get((offset + j) as u32).unwrap();
+                addr[j] = get_byte(payload, (offset + j) as u32)?;
             }
             new_guardian_set.push_back(BytesN::from_array(&env, &addr));
         }

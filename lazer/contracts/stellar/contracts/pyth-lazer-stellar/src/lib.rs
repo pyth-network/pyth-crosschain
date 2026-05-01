@@ -2,6 +2,7 @@
 
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
 
+mod bytes;
 mod error;
 pub mod payload;
 mod state;
@@ -55,7 +56,7 @@ impl PythLazerContract {
         pubkey: BytesN<33>,
         expires_at: u64,
     ) -> Result<(), ContractError> {
-        let executor = state::get_executor(&env);
+        let executor = state::get_executor(&env)?;
         executor.require_auth();
         state::set_trusted_signer(&env, &pubkey, expires_at);
         state::extend_instance_ttl(&env);
@@ -64,7 +65,7 @@ impl PythLazerContract {
 
     /// Upgrade the contract WASM. Callable only by the executor.
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
-        let executor = state::get_executor(&env);
+        let executor = state::get_executor(&env)?;
         executor.require_auth();
         env.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())

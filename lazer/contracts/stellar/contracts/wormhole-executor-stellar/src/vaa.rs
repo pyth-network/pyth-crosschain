@@ -1,5 +1,6 @@
 use soroban_sdk::{contracttype, Bytes, BytesN, Env, Vec};
 
+use crate::bytes::{get_byte, or_truncated, read_be_u16, read_be_u32, read_be_u64};
 use crate::error::ContractError;
 use crate::guardian;
 
@@ -46,11 +47,6 @@ pub struct Vaa {
     pub body_bytes: Bytes,
 }
 
-/// Helper to read a byte from Soroban Bytes at a given index.
-fn get_byte(data: &Bytes, index: usize) -> u8 {
-    data.get(index as u32).expect("index out of bounds")
-}
-
 /// Parse a raw Wormhole VAA from bytes.
 ///
 /// The VAA binary format:
@@ -68,19 +64,16 @@ pub fn parse_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
     }
 
     // Version
-    let version = get_byte(data, 0);
+    let version = get_byte(data, 0)?;
     if version != 1 {
         return Err(ContractError::InvalidVaaVersion);
     }
 
     // Guardian set index (BE u32)
-    let guardian_set_index = ((get_byte(data, 1) as u32) << 24)
-        | ((get_byte(data, 2) as u32) << 16)
-        | ((get_byte(data, 3) as u32) << 8)
-        | (get_byte(data, 4) as u32);
+    let guardian_set_index = read_be_u32(data, 1)?;
 
     // Number of signatures
-    let num_signatures = get_byte(data, 5) as usize;
+    let num_signatures = get_byte(data, 5)? as usize;
 
     let body_offset = HEADER_SIZE + num_signatures * SIGNATURE_ENTRY_SIZE;
     if len < body_offset + MIN_BODY_SIZE {
@@ -91,16 +84,16 @@ pub fn parse_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
     let mut signatures: Vec<GuardianSignature> = Vec::new(env);
     for i in 0..num_signatures {
         let sig_offset = HEADER_SIZE + i * SIGNATURE_ENTRY_SIZE;
-        let guardian_index = get_byte(data, sig_offset) as u32;
+        let guardian_index = get_byte(data, sig_offset as u32)? as u32;
 
         // Extract 64-byte signature (r || s)
         let mut sig_bytes: [u8; 64] = [0u8; 64];
         for j in 0..64 {
-            sig_bytes[j] = get_byte(data, sig_offset + 1 + j);
+            sig_bytes[j] = get_byte(data, (sig_offset + 1 + j) as u32)?;
         }
         let signature = BytesN::from_array(env, &sig_bytes);
 
-        let recovery_id = get_byte(data, sig_offset + 65) as u32;
+        let recovery_id = get_byte(data, (sig_offset + 65) as u32)? as u32;
 
         signatures.push_back(GuardianSignature {
             guardian_index,
@@ -113,36 +106,22 @@ pub fn parse_vaa(env: &Env, data: &Bytes) -> Result<Vaa, ContractError> {
     let body_bytes = data.slice(body_offset as u32..len as u32);
 
     // Parse body fields
-    let timestamp = ((get_byte(data, body_offset) as u32) << 24)
-        | ((get_byte(data, body_offset + 1) as u32) << 16)
-        | ((get_byte(data, body_offset + 2) as u32) << 8)
-        | (get_byte(data, body_offset + 3) as u32);
+    let timestamp = read_be_u32(data, body_offset as u32)?;
 
-    let nonce = ((get_byte(data, body_offset + 4) as u32) << 24)
-        | ((get_byte(data, body_offset + 5) as u32) << 16)
-        | ((get_byte(data, body_offset + 6) as u32) << 8)
-        | (get_byte(data, body_offset + 7) as u32);
+    let nonce = read_be_u32(data, (body_offset + 4) as u32)?;
 
-    let emitter_chain = ((get_byte(data, body_offset + 8) as u16) << 8)
-        | (get_byte(data, body_offset + 9) as u16);
+    let emitter_chain = read_be_u16(data, (body_offset + 8) as u32)?;
 
     let mut emitter_addr: [u8; 32] = [0u8; 32];
     for j in 0..32 {
-        emitter_addr[j] = get_byte(data, body_offset + 10 + j);
+        emitter_addr[j] = get_byte(data, (body_offset + 10 + j) as u32)?;
     }
     let emitter_address = BytesN::from_array(env, &emitter_addr);
 
     let seq_offset = body_offset + 42;
-    let sequence = ((get_byte(data, seq_offset) as u64) << 56)
-        | ((get_byte(data, seq_offset + 1) as u64) << 48)
-        | ((get_byte(data, seq_offset + 2) as u64) << 40)
-        | ((get_byte(data, seq_offset + 3) as u64) << 32)
-        | ((get_byte(data, seq_offset + 4) as u64) << 24)
-        | ((get_byte(data, seq_offset + 5) as u64) << 16)
-        | ((get_byte(data, seq_offset + 6) as u64) << 8)
-        | (get_byte(data, seq_offset + 7) as u64);
+    let sequence = read_be_u64(data, seq_offset as u32)?;
 
-    let consistency_level = get_byte(data, seq_offset + 8);
+    let consistency_level = get_byte(data, (seq_offset + 8) as u32)?;
 
     let payload_offset = (seq_offset + 9) as u32;
     let payload = if payload_offset < len as u32 {
@@ -201,7 +180,10 @@ pub fn verify_vaa(env: &Env, vaa: &Vaa) -> Result<(), ContractError> {
     let mut last_index: Option<u32> = None;
 
     for i in 0..num_sigs {
-        let sig = vaa.signatures.get(i).unwrap();
+        let sig = vaa
+            .signatures
+            .get(i);
+        let sig = or_truncated(sig)?;
         let gi = sig.guardian_index;
 
         // Check ascending order (also prevents duplicates).
@@ -228,7 +210,9 @@ pub fn verify_vaa(env: &Env, vaa: &Vaa) -> Result<(), ContractError> {
         let recovered_addr = guardian::eth_address_from_pubkey(env, &recovered_pubkey);
 
         // Check against stored guardian address.
-        let expected_addr = guardian_set.get(gi).unwrap();
+        let expected_addr = guardian_set
+            .get(gi)
+            .ok_or(ContractError::InvalidGuardianIndex)?;
         if recovered_addr != expected_addr {
             return Err(ContractError::GuardianSignatureMismatch);
         }
