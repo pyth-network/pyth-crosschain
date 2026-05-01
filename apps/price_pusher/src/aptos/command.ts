@@ -6,7 +6,7 @@
 import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { AptosAccount } from "aptos";
+import { Account } from "@aptos-labs/ts-sdk";
 import pino from "pino";
 import type { Options } from "yargs";
 
@@ -84,11 +84,11 @@ export default {
     }
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
-    const account = AptosAccount.fromDerivePath(
-      APTOS_ACCOUNT_HD_PATH,
+    const account = Account.fromDerivationPath({
+      path: APTOS_ACCOUNT_HD_PATH,
       mnemonic,
-    );
-    logger.info(`Pushing from account address: ${account.address()}`);
+    });
+    logger.info(`Pushing from account address: ${account.accountAddress}`);
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
@@ -144,7 +144,7 @@ export default {
     // Create and start the balance tracker if metrics are enabled
     if (metrics) {
       const balanceTracker = createAptosBalanceTracker({
-        address: account.address().toString(),
+        address: account.accountAddress.toString(),
         endpoint,
         network: "aptos",
         updateInterval: pushingFrequency,

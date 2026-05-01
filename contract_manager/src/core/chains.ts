@@ -46,8 +46,13 @@ import {
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
 import { Address, TonClient, WalletContractV4 } from "@ton/ton";
-import type { TxnBuilderTypes } from "aptos";
-import { AptosAccount, AptosClient, CoinClient } from "aptos";
+import {
+  Account,
+  Aptos,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network as AptosNetwork,
+} from "@aptos-labs/ts-sdk";
 import * as bs58 from "bs58";
 import type { BN, WalletUnlocked } from "fuels";
 import { Provider, Wallet } from "fuels";
@@ -1152,8 +1157,10 @@ export class AptosChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  getClient(): AptosClient {
-    return new AptosClient(this.rpcUrl);
+  getClient(): Aptos {
+    return new Aptos(
+      new AptosConfig({ network: AptosNetwork.CUSTOM, fullnode: this.rpcUrl }),
+    );
   }
 
   /**
@@ -1190,36 +1197,50 @@ export class AptosChain extends Chain {
   }
 
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex")),
-    );
-    return Promise.resolve(account.address().toString());
+    const account = Account.fromPrivateKey({
+      privateKey: new Ed25519PrivateKey(privateKey),
+    });
+    return Promise.resolve(account.accountAddress.toString());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const client = this.getClient();
-    const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex")),
+    const account = Account.fromPrivateKey({
+      privateKey: new Ed25519PrivateKey(privateKey),
+    });
+    return (
+      Number(
+        await client.getAccountAPTAmount({
+          accountAddress: account.accountAddress,
+        }),
+      ) /
+      10 ** 8
     );
-    const coinClient = new CoinClient(client);
-    return Number(await coinClient.checkBalance(account)) / 10 ** 8;
   }
 
   async sendTransaction(
     senderPrivateKey: PrivateKey,
-    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
+    txPayload: {
+      function: `${string}::${string}::${string}`;
+      functionArguments: any[];
+    },
   ): Promise<TxResult> {
     const client = this.getClient();
-    const sender = new AptosAccount(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
-    );
-    const result = await client.generateSignSubmitWaitForTransaction(
-      sender,
-      txPayload,
-      {
-        maxGasAmount: BigInt(30_000),
-      },
-    );
+    const sender = Account.fromPrivateKey({
+      privateKey: new Ed25519PrivateKey(senderPrivateKey),
+    });
+    const transaction = await client.transaction.build.simple({
+      sender: sender.accountAddress,
+      data: txPayload,
+      options: { maxGasAmount: 30_000 },
+    });
+    const pending = await client.signAndSubmitTransaction({
+      signer: sender,
+      transaction,
+    });
+    const result = await client.waitForTransaction({
+      transactionHash: pending.hash,
+    });
     return { id: result.hash, info: result };
   }
 }

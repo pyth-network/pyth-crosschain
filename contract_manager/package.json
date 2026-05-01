@@ -1,6 +1,7 @@
 {
   "author": "",
   "dependencies": {
+    "@aptos-labs/ts-sdk": "^6.3.1",
     "@certusone/wormhole-sdk": "^0.9.8",
     "@coral-xyz/anchor": "^0.29.0",
     "@cosmjs/cosmwasm-stargate": "^0.32.3",
@@ -30,7 +31,6 @@
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/yargs": "catalog:",
-    "aptos": "^1.5.0",
     "axios": "^0.24.0",
     "bs58": "^5.0.0",
     "extract-files": "^13.0.0",
