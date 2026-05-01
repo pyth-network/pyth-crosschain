@@ -30,7 +30,7 @@ import path from "node:path";
 import { generateFiles } from "fumadocs-openapi";
 import { createOpenAPI } from "fumadocs-openapi/server";
 
-import { products } from "../src/lib/openapi.ts";
+import { products } from "../src/lib/openapi";
 
 const OUTPUT_DIR = "./content/docs/api-reference/";
 
