@@ -12,6 +12,7 @@ import { matchSorter } from "match-sorter";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
+import { SYMBOLS_API_URL } from "../../config/pyth-pro-public";
 import styles from "./index.module.scss";
 
 const CHANNEL_ORDER = [
@@ -356,9 +357,10 @@ const State = {
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 const getPythProFeeds = async () => {
-  const result: Response = await fetch(
-    "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
-  );
+  const result: Response = await fetch(SYMBOLS_API_URL);
+  if (!result.ok) {
+    throw new Error(`Failed to fetch Pyth Pro feeds: ${String(result.status)}`);
+  }
   const data = pythProSchema.parse(await result.json());
   return data.toSorted(
     (firstFeed, secondFeed) =>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { SYMBOLS_API_URL } from "../types";
+import { SYMBOLS_API_URL } from "../../../config/pyth-pro-public";
 
 const priceFeedSchema = z.object({
   pyth_lazer_id: z.number().int().positive(),
