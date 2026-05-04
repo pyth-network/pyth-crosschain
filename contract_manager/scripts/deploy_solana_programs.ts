@@ -58,6 +58,7 @@ import { existsSync, openSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { deflateSync } from "node:zlib";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -68,7 +69,9 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   Transaction,
+  TransactionInstruction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { BN, Wallet } from "@coral-xyz/anchor";
@@ -79,6 +82,9 @@ import {
   PythSolanaReceiver,
   getConfigPda,
 } from "@pythnetwork/pyth-solana-receiver";
+import { IDL as pythSolanaReceiverIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_solana_receiver";
+import { IDL as pythPushOracleIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_push_oracle";
+import { IDL as wormholeCoreBridgeIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/wormhole_core_bridge_solana";
 import { utils as wormholeUtils } from "@wormhole-foundation/sdk-solana-core";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
@@ -129,6 +135,12 @@ const parser = yargs(hideBin(process.argv))
       demandOption: false,
       desc: "Path to the directory containing the keypair files",
       default: DEFAULT_KEY_DIR,
+    },
+    final: {
+      type: "boolean",
+      demandOption: false,
+      default: false,
+      desc: "Transfer the program upgrade authority of all deployed programs to the governance vault. On mainnet, also transfer the IDL authority.",
     },
   })
   .strict();
@@ -274,12 +286,12 @@ async function deployProgram(
 
   const { soPath, keypairPath } = programArtifactPaths(program, artifactsDir, keyDir, programId);
   
-  if (await isProgramDeployed(connection, programId)) {
-    console.log(
-      `⏭️  Skipping ${program}: ${programId.toString()} is already deployed`,
-    );
-    return;
-  }
+  // if (await isProgramDeployed(connection, programId)) {
+  //   console.log(
+  //     `⏭️  Skipping ${program}: ${programId.toString()} is already deployed`,
+  //   );
+  //   return;
+  // }
 
 
   if (!existsSync(soPath)) {
@@ -307,6 +319,218 @@ async function deployProgram(
   console.log(`✅ Deployed ${program}`);
 }
 
+// Anchor IDL upload protocol — see anchor-syn/src/codegen/program/idl.rs
+// and the reference flow in anchor cli/src/lib.rs (`create_idl_account`, `idl_write`).
+const IDL_IX_TAG = Buffer.from([
+  0x40, 0xf4, 0xbc, 0x78, 0xa7, 0xe9, 0x69, 0x0a,
+]);
+const IDL_HEADER_SIZE = 44;
+const IDL_PDA_MAX_GROWTH = 60_000;
+const IDL_RESIZE_STEP = 10_000;
+const IDL_WRITE_CHUNK = 600;
+
+function encodeIdlCreate(dataLen: bigint): Buffer {
+  const buf = Buffer.alloc(IDL_IX_TAG.length + 1 + 8);
+  IDL_IX_TAG.copy(buf, 0);
+  buf.writeUInt8(0, IDL_IX_TAG.length);
+  buf.writeBigUInt64LE(dataLen, IDL_IX_TAG.length + 1);
+  return buf;
+}
+
+function encodeIdlResize(dataLen: bigint): Buffer {
+  const buf = Buffer.alloc(IDL_IX_TAG.length + 1 + 8);
+  IDL_IX_TAG.copy(buf, 0);
+  buf.writeUInt8(6, IDL_IX_TAG.length);
+  buf.writeBigUInt64LE(dataLen, IDL_IX_TAG.length + 1);
+  return buf;
+}
+
+function encodeIdlWrite(chunk: Buffer): Buffer {
+  const buf = Buffer.alloc(IDL_IX_TAG.length + 1 + 4 + chunk.length);
+  IDL_IX_TAG.copy(buf, 0);
+  buf.writeUInt8(2, IDL_IX_TAG.length);
+  buf.writeUInt32LE(chunk.length, IDL_IX_TAG.length + 1);
+  chunk.copy(buf, IDL_IX_TAG.length + 1 + 4);
+  return buf;
+}
+
+function encodeIdlSetAuthority(newAuthority: PublicKey): Buffer {
+  const buf = Buffer.alloc(IDL_IX_TAG.length + 1 + 32);
+  IDL_IX_TAG.copy(buf, 0);
+  buf.writeUInt8(4, IDL_IX_TAG.length);
+  newAuthority.toBuffer().copy(buf, IDL_IX_TAG.length + 1);
+  return buf;
+}
+
+// BPF Upgradeable Loader program id and its SetAuthority instruction discriminator.
+// See https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
+const BPF_UPGRADEABLE_LOADER_ID = new PublicKey(
+  "BPFLoaderUpgradeab1e11111111111111111111111",
+);
+const BPF_LOADER_SET_AUTHORITY_IX = Buffer.from([4, 0, 0, 0]);
+
+async function transferProgramAuthority(
+  program: ProgramName,
+  programId: PublicKey,
+  connection: Connection,
+  payer: Keypair,
+  newAuthority: PublicKey,
+): Promise<void> {
+  console.log(
+    `\n=== Transferring upgrade authority of ${program} to ${newAuthority.toString()} ===`,
+  );
+
+  const programDataAccount = PublicKey.findProgramAddressSync(
+    [programId.toBuffer()],
+    BPF_UPGRADEABLE_LOADER_ID,
+  )[0];
+
+  const tx = new Transaction().add(
+    new TransactionInstruction({
+      programId: BPF_UPGRADEABLE_LOADER_ID,
+      keys: [
+        { pubkey: programDataAccount, isSigner: false, isWritable: true },
+        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+        { pubkey: newAuthority, isSigner: false, isWritable: false },
+      ],
+      data: BPF_LOADER_SET_AUTHORITY_IX,
+    }),
+  );
+  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: true,
+  });
+  console.log(`✅ Transferred upgrade authority of ${program} (sig=${signature})`);
+}
+
+async function transferIdlAuthority(
+  connection: Connection,
+  payer: Keypair,
+  program: ProgramName,
+  programId: PublicKey,
+  newAuthority: PublicKey,
+): Promise<void> {
+  console.log(
+    `\n=== Transferring IDL authority of ${program} to ${newAuthority.toString()} ===`,
+  );
+
+  const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
+  const idlAddress = await PublicKey.createWithSeed(
+    programSigner,
+    "anchor:idl",
+    programId,
+  );
+
+  const tx = new Transaction().add(
+    new TransactionInstruction({
+      programId,
+      keys: [
+        { pubkey: idlAddress, isSigner: false, isWritable: true },
+        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+      ],
+      data: encodeIdlSetAuthority(newAuthority),
+    }),
+  );
+  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: true,
+  });
+  console.log(`✅ Transferred IDL authority of ${program} (sig=${signature})`);
+}
+
+async function uploadIdl(
+  connection: Connection,
+  payer: Keypair,
+  program: ProgramName,
+  programId: PublicKey,
+  idl: unknown,
+): Promise<void> {
+  console.log(`\n=== Uploading IDL for ${program} ===`);
+
+  const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
+  const idlAddress = await PublicKey.createWithSeed(
+    programSigner,
+    "anchor:idl",
+    programId,
+  );
+  const existing = await connection.getAccountInfo(idlAddress, "confirmed");
+  if (existing && existing.data.length > 0) {
+    console.log(
+      `⏭️  Skipping IDL upload for ${program}: ${idlAddress.toString()} already initialized`,
+    );
+    return;
+  }
+
+  const compressed = deflateSync(Buffer.from(JSON.stringify(idl), "utf8"));
+  if (compressed.length > IDL_PDA_MAX_GROWTH) {
+    throw new Error(
+      `Compressed IDL for ${program} is ${compressed.length} bytes; exceeds ${IDL_PDA_MAX_GROWTH}`,
+    );
+  }
+  const dataLen = BigInt(
+    Math.min(compressed.length * 2, IDL_PDA_MAX_GROWTH - IDL_HEADER_SIZE),
+  );
+
+  const createTx = new Transaction().add(
+    new TransactionInstruction({
+      programId,
+      keys: [
+        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+        { pubkey: idlAddress, isSigner: false, isWritable: true },
+        { pubkey: programSigner, isSigner: false, isWritable: false },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: programId, isSigner: false, isWritable: false },
+      ],
+      data: encodeIdlCreate(dataLen),
+    }),
+  );
+  const numResizes = Math.floor(Number(dataLen) / IDL_RESIZE_STEP);
+  for (let i = 0; i < numResizes; i++) {
+    createTx.add(
+      new TransactionInstruction({
+        programId,
+        keys: [
+          { pubkey: idlAddress, isSigner: false, isWritable: true },
+          { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        ],
+        data: encodeIdlResize(dataLen),
+      }),
+    );
+  }
+
+  const createSig = await sendAndConfirmTransaction(connection, createTx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: true,
+  });
+  console.log(`IDL account created at ${idlAddress.toString()} (sig=${createSig})`);
+
+  for (let offset = 0; offset < compressed.length; offset += IDL_WRITE_CHUNK) {
+    const chunk = compressed.subarray(
+      offset,
+      Math.min(offset + IDL_WRITE_CHUNK, compressed.length),
+    );
+    const writeTx = new Transaction().add(
+      new TransactionInstruction({
+        programId,
+        keys: [
+          { pubkey: idlAddress, isSigner: false, isWritable: true },
+          { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+        ],
+        data: encodeIdlWrite(chunk),
+      }),
+    );
+    await sendAndConfirmTransaction(connection, writeTx, [payer], {
+      commitment: "confirmed",
+      skipPreflight: true,
+    });
+    console.log(
+      `  wrote ${Math.min(offset + chunk.length, compressed.length)}/${compressed.length} bytes`,
+    );
+  }
+  console.log(`✅ IDL uploaded for ${program}`);
+}
+
 async function postPriceUpdate(
   connection: Connection,
   payer: Keypair,
@@ -329,7 +553,7 @@ async function postPriceUpdate(
   const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
     closeUpdateAccounts: false,
   });
-  await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+  await transactionBuilder.addUpdatePriceFeed(priceUpdateData, 0);
   console.log(
     "The SOL/USD price update will be posted to:",
     transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58(),
@@ -411,9 +635,66 @@ async function main() {
   );
 
   const payer = loadKeypair(argv.keypair);
+  await uploadIdl(
+    connection,
+    payer,
+    "wormhole_core_bridge_solana",
+    DEFAULT_WORMHOLE_PROGRAM_ID,
+    wormholeCoreBridgeIdl,
+  );
+  await uploadIdl(
+    connection,
+    payer,
+    "pyth_solana_receiver",
+    DEFAULT_RECEIVER_PROGRAM_ID,
+    pythSolanaReceiverIdl,
+  );
+  await uploadIdl(
+    connection,
+    payer,
+    "pyth_push_oracle",
+    DEFAULT_PUSH_ORACLE_PROGRAM_ID,
+    pythPushOracleIdl,
+  );
+
   await initializeWormholeReceiver(connection, payer);
   await initializePythReceiver(connection, payer);
   await postPriceUpdate(connection, payer);
+
+  if (argv.final) {
+    const newAuthority = await vault.getEmitter();
+    console.log(
+      `\nFinalization step: transferring authorities to vault ${vault.key.toString()} (authority PDA: ${newAuthority.toString()})`,
+    );
+
+    const programs = [
+      ["wormhole_core_bridge_solana", DEFAULT_WORMHOLE_PROGRAM_ID],
+      ["pyth_solana_receiver", DEFAULT_RECEIVER_PROGRAM_ID],
+      ["pyth_push_oracle", DEFAULT_PUSH_ORACLE_PROGRAM_ID],
+    ] as const;
+
+    for (const [program, programId] of programs) {
+      await transferProgramAuthority(
+        program,
+        programId,
+        connection,
+        payer,
+        newAuthority,
+      );
+    }
+
+    if (chain.isMainnet()) {
+      for (const [program, programId] of programs) {
+        await transferIdlAuthority(
+          connection,
+          payer,
+          program,
+          programId,
+          newAuthority,
+        );
+      }
+    }
+  }
 
   console.log("\nAll done.");
 }

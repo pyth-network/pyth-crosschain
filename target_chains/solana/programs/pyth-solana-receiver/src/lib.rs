@@ -593,7 +593,7 @@ fn pay_single_update_fee<'info>(
     payer: &Signer<'info>,
 ) -> Result<()> {
     // Handle treasury payment
-    let amount_to_pay = if treasury.lamports() == 0 {
+    let amount_to_pay = if treasury.lamports() == 0 && config.single_update_fee_in_lamports > 0 {
         Rent::get()?
             .minimum_balance(0)
             .max(config.single_update_fee_in_lamports)
@@ -609,11 +609,13 @@ fn pay_single_update_fee<'info>(
         return err!(ReceiverError::InsufficientFunds);
     }
 
-    let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
-    anchor_lang::solana_program::program::invoke(
-        &transfer_instruction,
-        &[payer.to_account_info(), treasury.to_account_info()],
-    )?;
+    if amount_to_pay > 0 {
+        let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
+        anchor_lang::solana_program::program::invoke(
+            &transfer_instruction,
+            &[payer.to_account_info(), treasury.to_account_info()],
+        )?;
+    }
     Ok(())
 }
 
