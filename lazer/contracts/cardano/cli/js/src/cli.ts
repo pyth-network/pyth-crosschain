@@ -5,6 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import {
   Address,
+  Assets,
   createClient,
   PolicyId,
   PrivateKey,
@@ -344,6 +345,42 @@ parser.command(
       ),
     );
     console.info("Digest:", TransactionHash.toHex(digest));
+  },
+);
+
+parser.command(
+  "balance",
+  "get current account balance",
+  (b) =>
+    b.options({
+      "api-key": commonOptions.apiKey,
+      mnemonic: commonOptions.mnemonic,
+      network: commonOptions.network,
+      verbose: commonOptions.verbose,
+    }),
+  async ({ apiKey, mnemonic, network, verbose }) => {
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
+    const address = await ctx.client.address();
+    console.log("Address:", Address.toBech32(address));
+
+    const utxos = await ctx.client.getWalletUtxos();
+    const total = utxos.reduce(
+      (acc, utxo) => Assets.merge(acc, utxo.assets),
+      Assets.zero,
+    );
+    const lovelace = Assets.lovelaceOf(total);
+    console.log(
+      "Balance:",
+      `${Number(lovelace) / 1_000_000} ADA (${lovelace} lovelace)`,
+    );
+    if (Assets.hasMultiAsset(total)) {
+      const assets = Assets.getMultiAsset(total)?.map ?? new Map();
+      const tokenCount = [...assets.values()].reduce(
+        (sum, assetMap) => sum + assetMap.size,
+        0,
+      );
+      console.log(`Native tokens: ${tokenCount} asset(s)`);
+    }
   },
 );
 
