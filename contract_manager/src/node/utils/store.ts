@@ -25,6 +25,7 @@ import {
   TonChain,
   NearChain,
   IotaChain,
+  SvmChain,
 } from "../../core/chains";
 import {
   AptosPriceFeedContract,
@@ -113,6 +114,7 @@ export class Store {
       [NearChain.type]: NearChain,
       [SuiChain.type]: SuiChain,
       [IotaChain.type]: IotaChain,
+      [SvmChain.type]: SvmChain,
     };
 
     for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
