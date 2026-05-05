@@ -5,7 +5,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { AptosAccount, AptosClient } from "aptos";
+import {
+  Account,
+  Aptos,
+  AptosConfig,
+  Network,
+} from "@aptos-labs/ts-sdk";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -26,23 +31,28 @@ export class AptosPriceListener extends ChainPriceListener {
   }
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
-    const client = new AptosClient(this.endpoint);
-
-    const res = await client.getAccountResource(
-      this.pythModule,
-      `${this.pythModule}::state::LatestPriceInfo`,
+    const client = new Aptos(
+      new AptosConfig({ network: Network.CUSTOM, fullnode: this.endpoint }),
     );
+
+    const res = await client.getAccountResource<{ info: { handle: string } }>({
+      accountAddress: this.pythModule,
+      resourceType: `${this.pythModule}::state::LatestPriceInfo`,
+    });
 
     try {
       // This depends upon the pyth contract storage on Aptos and should not be undefined.
       // If undefined, there has been some change and we would need to update accordingly.
-      const handle = (res.data as any).info.handle;
+      const handle = res.info.handle;
 
-      const priceItemRes = await client.getTableItem(handle, {
-        key_type: `${this.pythModule}::price_identifier::PriceIdentifier`,
-        value_type: `${this.pythModule}::price_info::PriceInfo`,
-        key: {
-          bytes: priceId,
+      const priceItemRes = await client.getTableItem<any>({
+        handle,
+        data: {
+          key_type: `${this.pythModule}::price_identifier::PriceIdentifier`,
+          value_type: `${this.pythModule}::price_info::PriceInfo`,
+          key: {
+            bytes: priceId,
+          },
         },
       });
 
@@ -138,28 +148,31 @@ export class AptosPricePusher implements IPricePusher {
       return;
     }
 
-    const account = AptosAccount.fromDerivePath(
-      APTOS_ACCOUNT_HD_PATH,
-      this.mnemonic,
+    const account = Account.fromDerivationPath({
+      path: APTOS_ACCOUNT_HD_PATH,
+      mnemonic: this.mnemonic,
+    });
+    const client = new Aptos(
+      new AptosConfig({ network: Network.CUSTOM, fullnode: this.endpoint }),
     );
-    const client = new AptosClient(this.endpoint);
 
     const sequenceNumber = await this.tryGetNextSequenceNumber(client, account);
-    const rawTx = await client.generateTransaction(
-      account.address(),
-      {
+    const transaction = await client.transaction.build.simple({
+      sender: account.accountAddress,
+      data: {
         function: `${this.pythContractAddress}::pyth::update_price_feeds_with_funder`,
-        type_arguments: [],
-        arguments: [priceFeedUpdateData],
+        functionArguments: [priceFeedUpdateData],
       },
-      {
-        sequence_number: sequenceNumber.toFixed(0),
+      options: {
+        accountSequenceNumber: sequenceNumber,
       },
-    );
+    });
 
     try {
-      const signedTx = await client.signTransaction(account, rawTx);
-      const pendingTx = await client.submitTransaction(signedTx);
+      const pendingTx = await client.signAndSubmitTransaction({
+        signer: account,
+        transaction,
+      });
 
       this.logger.debug(
         { hash: pendingTx.hash },
@@ -185,13 +198,13 @@ export class AptosPricePusher implements IPricePusher {
 
   // Wait for the transaction to be confirmed. If it fails, reset the sequence number.
   private async waitForTransactionConfirmation(
-    client: AptosClient,
+    client: Aptos,
     txHash: string,
   ): Promise<void> {
     try {
-      await client.waitForTransaction(txHash, {
-        checkSuccess: true,
-        timeoutSecs: 10,
+      await client.waitForTransaction({
+        transactionHash: txHash,
+        options: { checkSuccess: true, timeoutSecs: 10 },
       });
 
       this.logger.info({ hash: txHash }, `Transaction confirmed.`);
@@ -209,8 +222,8 @@ export class AptosPricePusher implements IPricePusher {
   // to predict the next sequence number if possible; if not, it fetches the number from
   // the blockchain itself (and caches it for later).
   private async tryGetNextSequenceNumber(
-    client: AptosClient,
-    account: AptosAccount,
+    client: Aptos,
+    account: Account,
   ): Promise<number> {
     if (this.lastSequenceNumber === undefined) {
       // Fetch from the blockchain if we don't have the local cache.
@@ -222,7 +235,11 @@ export class AptosPricePusher implements IPricePusher {
         try {
           this.sequenceNumberLocked = true;
           this.lastSequenceNumber = Number(
-            (await client.getAccount(account.address())).sequence_number,
+            (
+              await client.getAccountInfo({
+                accountAddress: account.accountAddress,
+              })
+            ).sequence_number,
           );
           this.logger.debug(
             `Fetched account sequence number: ${this.lastSequenceNumber}`,

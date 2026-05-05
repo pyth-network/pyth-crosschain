@@ -1,4 +1,10 @@
-import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
+import {
+  Account,
+  Aptos,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network,
+} from "@aptos-labs/ts-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -47,19 +53,28 @@ async function run() {
     throw new Error(`APTOS_KEY environment variable should be set.`);
   }
 
-  const sender = new AptosAccount(Buffer.from(process.env.APTOS_KEY, "hex"));
-  const client = new AptosClient(argv.fullNode);
-  const result = await client.generateSignSubmitWaitForTransaction(
-    sender,
-    new TxnBuilderTypes.TransactionPayloadEntryFunction(
-      TxnBuilderTypes.EntryFunction.natural(
-        argv.pythContract + "::pyth",
-        "update_price_feeds_with_funder",
-        [],
-        [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)],
-      ),
-    ),
+  const sender = Account.fromPrivateKey({
+    privateKey: new Ed25519PrivateKey(process.env.APTOS_KEY),
+  });
+  const client = new Aptos(
+    new AptosConfig({ network: Network.CUSTOM, fullnode: argv.fullNode }),
   );
+  const transaction = await client.transaction.build.simple({
+    sender: sender.accountAddress,
+    data: {
+      function: `${argv.pythContract}::pyth::update_price_feeds_with_funder`,
+      functionArguments: [
+        AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData),
+      ],
+    },
+  });
+  const pending = await client.signAndSubmitTransaction({
+    signer: sender,
+    transaction,
+  });
+  const result = await client.waitForTransaction({
+    transactionHash: pending.hash,
+  });
 
   console.dir(result, { depth: null });
 }

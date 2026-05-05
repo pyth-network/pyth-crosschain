@@ -3,7 +3,7 @@
     "pyth-price-pusher": "./dist/index.cjs"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^1.39.0",
+    "@aptos-labs/ts-sdk": "^6.3.1",
     "@coral-xyz/anchor": "^0.30.0",
     "@injectivelabs/networks": "1.14.47",
     "@injectivelabs/sdk-ts": "1.14.50",
@@ -22,7 +22,6 @@
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/pino": "^7.0.5",
-    "aptos": "^1.8.5",
     "express": "^4.18.2",
     "fuels": "catalog:",
     "jito-ts": "^3.0.1",
