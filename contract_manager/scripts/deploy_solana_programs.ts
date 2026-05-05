@@ -1,4 +1,5 @@
-/* eslint-disable no-console */
+/* biome-ignore-all lint/suspicious/noConsole: This is a script */
+/* biome-ignore-all lint/style/noProcessEnv: This is a script */
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -119,7 +120,7 @@ async function isProgramDeployed(
   programId: PublicKey,
 ): Promise<boolean> {
   const accountInfo = await connection.getAccountInfo(programId);
-  return accountInfo !== null && accountInfo.executable;
+  return accountInfo?.executable ?? false;
 }
 
 function run(command: string, args: string[], cwd?: string): void {
@@ -612,7 +613,9 @@ async function main() {
   console.log(`  Payer keypair:  ${argv.keypair}`);
   console.log(`  Key dir:        ${keyDir}`);
   console.log(`  Artifacts dir:  ${artifactsDir}`);
-  console.log(`  Governance authority: ${(await vault.getEmitter()).toString()}`);
+  console.log(
+    `  Governance authority: ${(await vault.getEmitter()).toString()}`,
+  );
   if (argv.final) {
     console.log(
       `  Final: the upgrade authorities of the programs will be transferred to the governance authority: ${(await vault.getEmitter()).toString()}`,

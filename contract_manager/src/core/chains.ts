@@ -1310,13 +1310,12 @@ export class FuelChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  async getProvider(): Promise<Provider> {
+  getProvider(): Provider {
     return new Provider(this.gqlUrl);
   }
 
-  async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
-    const provider = await this.getProvider();
-    return Wallet.fromPrivateKey(privateKey, provider);
+  getWallet(privateKey: PrivateKey): WalletUnlocked {
+    return Wallet.fromPrivateKey(privateKey, this.getProvider());
   }
 
   /**
@@ -1353,13 +1352,13 @@ export class FuelChain extends Chain {
     );
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const wallet = await this.getWallet(privateKey);
-    return wallet.address.toString();
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const wallet = this.getWallet(privateKey);
+    return Promise.resolve(wallet.address.toString());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const wallet = await this.getWallet(privateKey);
+    const wallet = this.getWallet(privateKey);
     const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
     return Number(balance) / 10 ** 9;
   }
