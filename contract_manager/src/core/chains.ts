@@ -962,7 +962,7 @@ export class SvmChain extends Chain {
   }
 
   getConnection(): Connection {
-    return new Connection(parseRpcUrl(this.rpcUrl));
+    return new Connection(parseRpcUrl(this.rpcUrl), "confirmed");
   }
 
   getAccountAddress(privateKey: PrivateKey): Promise<string> {

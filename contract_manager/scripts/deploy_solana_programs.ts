@@ -1,60 +1,5 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable unicorn/prefer-top-level-await */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
-/**
- * Solana Contract Deployment Script
- *
- * Deploys the three Solana programs that make up the Pyth Solana stack:
- *   - wormhole_core_bridge_solana   (Wormhole receiver)
- *   - pyth_solana_receiver          (Pyth price update receiver)
- *   - pyth_push_oracle              (Pyth push oracle)
- *
- * The script wraps `solana program deploy` for the program binaries and the
- * Rust CLI under target_chains/solana/cli for post-deploy initialization
- * (`initialize-wormhole-receiver` and `initialize-pyth-receiver`).
- *
- * The chain is looked up in DefaultStore by id (see SolanaChains.json), so the
- * RPC URL comes from the store rather than being passed in directly.
- *
- * Expected layout of --artifacts-dir (default: target_chains/solana/target/deploy):
- *   <artifacts-dir>/wormhole_core_bridge_solana.so
- *   <artifacts-dir>/wormhole_core_bridge_solana-keypair.json
- *   <artifacts-dir>/pyth_solana_receiver.so
- *   <artifacts-dir>/pyth_solana_receiver-keypair.json
- *   <artifacts-dir>/pyth_push_oracle.so
- *   <artifacts-dir>/pyth_push_oracle-keypair.json
- *
- * Examples:
- *   # Deploy all three programs to devnet, then initialize the wormhole and pyth receivers.
- *   npx tsx scripts/deploy_solana_contracts.ts \
- *     --chain solana_devnet \
- *     --keypair ~/.config/solana/id.json \
- *     --governance-authority <pubkey> \
- *     --source-emitter <pubkey> \
- *     --source-chain 26
- *
- *   # Only deploy the program binaries, skip initialization.
- *   npx tsx scripts/deploy_solana_contracts.ts \
- *     --chain solana_devnet \
- *     --keypair ~/.config/solana/id.json \
- *     --skip-init
- *
- *   # Only run initialization on already-deployed programs.
- *   npx tsx scripts/deploy_solana_contracts.ts \
- *     --chain solana_devnet \
- *     --keypair ~/.config/solana/id.json \
- *     --skip-deploy \
- *     --governance-authority <pubkey> \
- *     --source-emitter <pubkey> \
- *     --source-chain 26
- */
-
 import { execFileSync } from "node:child_process";
-import { existsSync, openSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -62,10 +7,10 @@ import { deflateSync } from "node:zlib";
 import { BN, Wallet } from "@coral-xyz/anchor";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
-  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-  DEFAULT_RECEIVER_PROGRAM_ID,
-  DEFAULT_WORMHOLE_PROGRAM_ID,
   getConfigPda,
+  LAZER_PUSH_ORACLE_PROGRAM_ID,
+  LAZER_RECEIVER_PROGRAM_ID,
+  LAZER_WORMHOLE_PROGRAM_ID,
   PythSolanaReceiver,
 } from "@pythnetwork/pyth-solana-receiver";
 import { sendTransactions } from "@pythnetwork/solana-utils";
@@ -86,30 +31,15 @@ import { IDL as pythSolanaReceiverIdl } from "../../target_chains/solana/sdk/js/
 import { IDL as wormholeCoreBridgeIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/wormhole_core_bridge_solana";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { SvmChain } from "../src/core/chains";
-import type { DeploymentConfig } from "../src/core/contracts";
 import type { Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
-import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
-
-const SOL_PRICE_FEED_ID =
-  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
-
-const GUARDIAN_EXPIRATION_TIME = 86_400;
-
-const PROGRAMS = [
-  "wormhole_core_bridge_solana",
-  "pyth_solana_receiver",
-  "pyth_push_oracle",
-] as const;
-
-type ProgramName = (typeof PROGRAMS)[number];
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "../..");
 const SOLANA_DIR = path.join(REPO_ROOT, "target_chains", "solana");
 const ARTIFACTS_DIR = path.join(SOLANA_DIR, "target", "deploy");
 const DEFAULT_KEY_DIR = path.join(os.homedir(), ".config", "solana");
-const SOLANA_CLI_DIR = path.join(SOLANA_DIR, "cli");
+
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_solana_contracts.ts")
@@ -140,31 +70,16 @@ const parser = yargs(hideBin(process.argv))
   })
   .strict();
 
-const PYTH_RECEIVER_GOVERNANCE_AUTHORITY = new PublicKey(
-  "11111111111111111111111111111111",
-);
-const PYTH_RECEIVER_SOURCE_EMITTER = new PublicKey(
-  "11111111111111111111111111111111",
-);
-const PYTH_RECEIVER_SOURCE_CHAIN = 26;
-const PYTH_RECEIVER_SINGLE_UPDATE_FEE_IN_LAMPORTS = 1;
-const PYTH_RECEIVER_MINIMUM_SIGNATURES = 3;
-
-function run(command: string, args: string[], cwd?: string): void {
-  console.log(`\n$ ${command} ${args.join(" ")}`);
-  execFileSync(command, args, {
-    cwd,
-    stdio: "inherit",
-  });
-}
-
-async function isProgramDeployed(
-  connection: Connection,
-  programId: PublicKey,
-): Promise<boolean> {
-  const accountInfo = await connection.getAccountInfo(programId, "confirmed");
-  return accountInfo !== null && accountInfo.executable;
-}
+const loadGovernanceVault = (isMainnet: boolean): Vault => {
+  const governanceEnvironment = isMainnet ? "mainnet-beta" : "devnet";
+  const vault = Object.entries(DefaultStore.vaults).find(([id]) =>
+    id.startsWith(governanceEnvironment + "_"),
+  )?.[1];
+  if (!vault) {
+    throw new Error(`Could not find ${governanceEnvironment} vault.`);
+  }
+  return vault;
+};
 
 function loadKeypair(keypairPath: string): Keypair {
   const resolved = keypairPath.startsWith("~")
@@ -174,104 +89,13 @@ function loadKeypair(keypairPath: string): Keypair {
   return Keypair.fromSecretKey(Uint8Array.from(secret));
 }
 
-const INITIAL_GUARDIAN_SET = [
-  Buffer.from("41534bb176e461a3fb30479400f210549ecce638", "hex"),
-  Buffer.from("6502987b62f21cab7eb5ccd8f0173084b60d5b41", "hex"),
-  Buffer.from("44a3e8f6a382412cf6bb90a3f8106e68977476c9", "hex"),
-  Buffer.from("d9d7d4529577864352c9a6539a48238fcd447052", "hex"),
-  Buffer.from("1663a5a822336ece48559b1dfb1e93a017a7dac3", "hex"),
-]; // fix me: use base.ts
+const PROGRAMS_TO_DEPLOY = [
+  ["wormhole_core_bridge_solana", LAZER_WORMHOLE_PROGRAM_ID, wormholeCoreBridgeIdl],
+  ["pyth_solana_receiver", LAZER_RECEIVER_PROGRAM_ID, pythSolanaReceiverIdl],
+  ["pyth_push_oracle", LAZER_PUSH_ORACLE_PROGRAM_ID, pythPushOracleIdl],
+] as const;
 
-async function initializeWormholeReceiver(
-  connection: Connection,
-  payer: Keypair,
-): Promise<void> {
-  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(
-    DEFAULT_WORMHOLE_PROGRAM_ID,
-  );
-  const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
-
-  if (bridgeAccount !== null) {
-    const bridge = wormholeUtils.BridgeData.deserialize(bridgeAccount.data);
-    console.log(
-      `Wormhole already initialized. guardianSetIndex=${bridge.guardianSetIndex} fee=${bridge.config.fee}`,
-    );
-    return;
-  }
-
-  console.log("\n=== Initializing wormhole receiver ===");
-  const ix = wormholeUtils.createInitializeInstruction(
-    connection,
-    DEFAULT_WORMHOLE_PROGRAM_ID,
-    payer.publicKey,
-    GUARDIAN_EXPIRATION_TIME,
-    0n,
-    INITIAL_GUARDIAN_SET,
-  );
-
-  const signature = await sendAndConfirmTransaction(
-    connection,
-    new Transaction().add(ix),
-    [payer],
-    { commitment: "confirmed", skipPreflight: true },
-  );
-  console.log(`Wormhole initialized. signature=${signature}`);
-}
-
-async function initializePythReceiver(
-  connection: Connection,
-  payer: Keypair,
-): Promise<void> {
-  const configPda = getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID);
-  const existingConfig = await connection.getAccountInfo(
-    configPda,
-    "confirmed",
-  );
-  if (existingConfig !== null) {
-    console.log(
-      `Pyth receiver already initialized. config=${configPda.toString()}`,
-    );
-    return;
-  }
-
-  console.log("\n=== Initializing pyth receiver ===");
-
-  const deploymentConfig = getDefaultDeploymentConfig("stable");
-
-  const pythSolanaReceiver = new PythSolanaReceiver({
-    connection,
-    wallet: new Wallet(payer),
-  });
-
-  const signature = await pythSolanaReceiver.receiver.methods
-    .initialize({
-      governanceAuthority: new PublicKey(
-        Buffer.from(
-          deploymentConfig.governanceDataSource.emitterAddress,
-          "hex",
-        ),
-      ),
-      minimumSignatures: 3,
-      singleUpdateFeeInLamports: new BN(0),
-      targetGovernanceAuthority: null,
-      validDataSources: [
-        {
-          chain: 26,
-          emitter: new PublicKey(
-            Buffer.from(
-              "507974686e6574507974686e6574507974686e6574507974686e657450797468",
-              "hex",
-            ),
-          ), // fix me: use base.ts
-        },
-      ],
-      wormhole: DEFAULT_WORMHOLE_PROGRAM_ID,
-    })
-    .accounts({ config: configPda, payer: payer.publicKey })
-    .signers([payer])
-    .rpc({ commitment: "confirmed", skipPreflight: true });
-  console.log(`Pyth receiver initialized. signature=${signature}`);
-}
+type ProgramName = (typeof PROGRAMS_TO_DEPLOY)[number][0];
 
 function programArtifactPaths(
   program: ProgramName,
@@ -285,13 +109,29 @@ function programArtifactPaths(
   };
 }
 
+async function isProgramDeployed(
+  connection: Connection,
+  programId: PublicKey,
+): Promise<boolean> {
+  const accountInfo = await connection.getAccountInfo(programId);
+  return accountInfo !== null && accountInfo.executable;
+}
+
+function run(command: string, args: string[], cwd?: string): void {
+  console.log(`\n$ ${command} ${args.join(" ")}`);
+  execFileSync(command, args, {
+    cwd,
+    stdio: "inherit",
+  });
+}
+
 async function deployProgram(
   program: ProgramName,
   artifactsDir: string,
   keyDir: string,
   programId: PublicKey,
   connection: Connection,
-  payerKeypair: string,
+  payerKeypairPath: string,
 ): Promise<void> {
   console.log(`\n=== Deploying ${program} ===`);
 
@@ -302,16 +142,16 @@ async function deployProgram(
     programId,
   );
 
-  // if (await isProgramDeployed(connection, programId)) {
-  //   console.log(
-  //     `⏭️  Skipping ${program}: ${programId.toString()} is already deployed`,
-  //   );
-  //   return;
-  // }
+  if (await isProgramDeployed(connection, programId)) {
+    console.log(
+      `⏭️  Skipping ${program}: ${programId.toString()} is already deployed`,
+    );
+    return;
+  }
 
   if (!existsSync(soPath)) {
     throw new Error(
-      `Missing program binary for ${program} at ${soPath}. Build it with \`anchor build\` (or pass --artifacts-dir).`,
+      `Missing program binary for ${program} at ${soPath}. Build it with cargo-build-sbf --features lazer.`,
     );
   }
   if (!existsSync(keypairPath)) {
@@ -326,7 +166,7 @@ async function deployProgram(
     "--url",
     connection.rpcEndpoint,
     "--keypair",
-    payerKeypair,
+    payerKeypairPath,
     "--program-id",
     keyDir + "/" + programId.toString() + ".json",
     soPath,
@@ -375,84 +215,6 @@ function encodeIdlSetAuthority(newAuthority: PublicKey): Buffer {
   buf.writeUInt8(4, IDL_IX_TAG.length);
   newAuthority.toBuffer().copy(buf, IDL_IX_TAG.length + 1);
   return buf;
-}
-
-// BPF Upgradeable Loader program id and its SetAuthority instruction discriminator.
-// See https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
-const BPF_UPGRADEABLE_LOADER_ID = new PublicKey(
-  "BPFLoaderUpgradeab1e11111111111111111111111",
-);
-const BPF_LOADER_SET_AUTHORITY_IX = Buffer.from([4, 0, 0, 0]);
-
-async function transferProgramAuthority(
-  program: ProgramName,
-  programId: PublicKey,
-  connection: Connection,
-  payer: Keypair,
-  newAuthority: PublicKey,
-): Promise<void> {
-  console.log(
-    `\n=== Transferring upgrade authority of ${program} to ${newAuthority.toString()} ===`,
-  );
-
-  const programDataAccount = PublicKey.findProgramAddressSync(
-    [programId.toBuffer()],
-    BPF_UPGRADEABLE_LOADER_ID,
-  )[0];
-
-  const tx = new Transaction().add(
-    new TransactionInstruction({
-      data: BPF_LOADER_SET_AUTHORITY_IX,
-      keys: [
-        { isSigner: false, isWritable: true, pubkey: programDataAccount },
-        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
-        { isSigner: false, isWritable: false, pubkey: newAuthority },
-      ],
-      programId: BPF_UPGRADEABLE_LOADER_ID,
-    }),
-  );
-  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
-    commitment: "confirmed",
-    skipPreflight: true,
-  });
-  console.log(
-    `✅ Transferred upgrade authority of ${program} (sig=${signature})`,
-  );
-}
-
-async function transferIdlAuthority(
-  connection: Connection,
-  payer: Keypair,
-  program: ProgramName,
-  programId: PublicKey,
-  newAuthority: PublicKey,
-): Promise<void> {
-  console.log(
-    `\n=== Transferring IDL authority of ${program} to ${newAuthority.toString()} ===`,
-  );
-
-  const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
-  const idlAddress = await PublicKey.createWithSeed(
-    programSigner,
-    "anchor:idl",
-    programId,
-  );
-
-  const tx = new Transaction().add(
-    new TransactionInstruction({
-      data: encodeIdlSetAuthority(newAuthority),
-      keys: [
-        { isSigner: false, isWritable: true, pubkey: idlAddress },
-        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
-      ],
-      programId,
-    }),
-  );
-  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
-    commitment: "confirmed",
-    skipPreflight: true,
-  });
-  console.log(`✅ Transferred IDL authority of ${program} (sig=${signature})`);
 }
 
 async function uploadIdl(
@@ -559,36 +321,132 @@ async function uploadIdl(
   console.log(`✅ IDL uploaded for ${program}`);
 }
 
-async function postPriceUpdate(
+const GUARDIAN_EXPIRATION_TIME = 86_400;
+
+async function initializeWormholeReceiver(
   connection: Connection,
   payer: Keypair,
+  programId: PublicKey,
 ): Promise<void> {
-  console.log("\n=== Testing posting a pyth price update ===");
+  const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
+  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(
+    programId,
+  );
+  const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
+
+  if (bridgeAccount !== null) {
+    const bridge = wormholeUtils.BridgeData.deserialize(bridgeAccount.data);
+    console.log(
+      `Wormhole already initialized. guardianSetIndex=${bridge.guardianSetIndex} fee=${bridge.config.fee}`,
+    );
+    return;
+  }
+
+  console.log("\n=== Initializing wormhole receiver ===");
+  const ix = wormholeUtils.createInitializeInstruction(
+    connection,
+    programId,
+    payer.publicKey,
+    GUARDIAN_EXPIRATION_TIME,
+    0n,
+    deploymentConfig.wormholeConfig.initialGuardianSet.map((guardian) => Buffer.from(guardian, "hex")),
+  );
+
+  const signature = await sendAndConfirmTransaction(
+    connection,
+    new Transaction().add(ix),
+    [payer],
+    { commitment: "confirmed", skipPreflight: true },
+  );
+  console.log(`Wormhole initialized. signature=${signature}`);
+}
+
+async function initializePythReceiver(
+  connection: Connection,
+  payer: Keypair,
+  wormholeProgramId: PublicKey,
+  receiverProgramId: PublicKey,
+  vault: Vault,
+): Promise<void> {
+  const configPda = getConfigPda(receiverProgramId);
+  const existingConfig = await connection.getAccountInfo(
+    configPda,
+    "confirmed",
+  );
+  if (existingConfig !== null) {
+    console.log(
+      `Pyth receiver already initialized. config=${configPda.toString()}`,
+    );
+    return;
+  }
+
+  console.log("\n=== Initializing pyth receiver ===");
+
+  const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
     wallet: new Wallet(payer),
+    receiverProgramId
   });
 
-  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", {
-    accessToken: process.env.HERMES_ACCESS_TOKEN ?? "",
+  const signature = await pythSolanaReceiver.receiver.methods
+    .initialize({
+      governanceAuthority: vault.getEmitter(),
+      minimumSignatures: 3,
+      singleUpdateFeeInLamports: new BN(0),
+      targetGovernanceAuthority: null,
+      validDataSources: [
+        {
+          chain: deploymentConfig.dataSources[0].emitterChain,
+          emitter: new PublicKey(
+            Buffer.from(deploymentConfig.dataSources[0].emitterAddress, "hex"),
+          ),
+        },
+      ],
+      wormhole: wormholeProgramId,
+    })
+    .accounts({ config: configPda, payer: payer.publicKey })
+    .signers([payer])
+    .rpc({ commitment: "confirmed", skipPreflight: true });
+  console.log(`Pyth receiver initialized. signature=${signature}`);
+}
+
+const SOL_USD_HERMES_ID =
+  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+
+
+async function updatePriceFeed(
+  connection: Connection,
+  payer: Keypair,
+  wormholeProgramId: PublicKey,
+  receiverProgramId: PublicKey,
+  pushOracleProgramId: PublicKey,
+): Promise<void> {
+  console.log("\n=== Testing updating a price feed account ===");
+
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    wallet: new Wallet(payer),
+    wormholeProgramId,
+    receiverProgramId,
+    pushOracleProgramId,
   });
+
+  if (process.env.HERMES_ACCESS_TOKEN === undefined) {
+    throw new Error("This step requires a Lazer access token. Please set the HERMES_ACCESS_TOKEN environment variable.");
+  }
+  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", { accessToken: process.env.HERMES_ACCESS_TOKEN });
   const priceUpdateData = (
-    await hermesClient.getLatestPriceUpdates([SOL_PRICE_FEED_ID], {
+    await hermesClient.getLatestPriceUpdates([SOL_USD_HERMES_ID], {
       encoding: "base64",
     })
   ).binary.data;
-  console.log(`Posting price update: ${priceUpdateData}`);
 
   const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
-    closeUpdateAccounts: false,
+    closeUpdateAccounts: true,
   });
   await transactionBuilder.addUpdatePriceFeed(priceUpdateData, 0);
-  console.log(
-    "The SOL/USD price update will be posted to:",
-    transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58(),
-  );
-
   await sendTransactions(
     await transactionBuilder.buildVersionedTransactions({
       computeUnitPriceMicroLamports: 100_000,
@@ -597,22 +455,87 @@ async function postPriceUpdate(
     pythSolanaReceiver.connection,
     pythSolanaReceiver.wallet,
   );
-  console.log("Price update posted.");
+  console.log("Price update posted successfully.");
 }
 
-const loadVault = (isMainnet: boolean): Vault => {
-  const governanceCluster = isMainnet ? "mainnet-beta" : "devnet";
-  const governanceVault = upgradeVaults.find(
-    (v) => v.cluster === governanceCluster && v.type === "vault",
+
+// BPF Upgradeable Loader program id and its SetAuthority instruction discriminator.
+// See https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
+const BPF_UPGRADEABLE_LOADER_ID = new PublicKey(
+  "BPFLoaderUpgradeab1e11111111111111111111111",
+);
+const BPF_LOADER_SET_AUTHORITY_IX = Buffer.from([4, 0, 0, 0]);
+
+async function transferProgramAuthority(
+  program: ProgramName,
+  programId: PublicKey,
+  connection: Connection,
+  payer: Keypair,
+  newAuthority: PublicKey,
+): Promise<void> {
+  console.log(
+    `\n=== Transferring upgrade authority of ${program} to ${newAuthority.toString()} ===`,
   );
-  if (!governanceVault)
-    throw new Error("Governance vault not found in UpgradeVaults.json");
-  const vault =
-    DefaultStore.vaults[`${governanceVault.cluster}_${governanceVault.key}`];
-  if (!vault)
-    throw new Error("Governance vault not found in DefaultStore.vaults");
-  return vault;
-};
+
+  const programDataAccount = PublicKey.findProgramAddressSync(
+    [programId.toBuffer()],
+    BPF_UPGRADEABLE_LOADER_ID,
+  )[0];
+
+  const tx = new Transaction().add(
+    new TransactionInstruction({
+      data: BPF_LOADER_SET_AUTHORITY_IX,
+      keys: [
+        { isSigner: false, isWritable: true, pubkey: programDataAccount },
+        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+        { isSigner: false, isWritable: false, pubkey: newAuthority },
+      ],
+      programId: BPF_UPGRADEABLE_LOADER_ID,
+    }),
+  );
+  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: true,
+  });
+  console.log(
+    `✅ Transferred upgrade authority of ${program} (sig=${signature})`,
+  );
+}
+
+async function transferIdlAuthority(
+  connection: Connection,
+  payer: Keypair,
+  program: ProgramName,
+  programId: PublicKey,
+  newAuthority: PublicKey,
+): Promise<void> {
+  console.log(
+    `\n=== Transferring IDL authority of ${program} to ${newAuthority.toString()} ===`,
+  );
+
+  const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
+  const idlAddress = await PublicKey.createWithSeed(
+    programSigner,
+    "anchor:idl",
+    programId,
+  );
+
+  const tx = new Transaction().add(
+    new TransactionInstruction({
+      data: encodeIdlSetAuthority(newAuthority),
+      keys: [
+        { isSigner: false, isWritable: true, pubkey: idlAddress },
+        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+      ],
+      programId,
+    }),
+  );
+  const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: true,
+  });
+  console.log(`✅ Transferred IDL authority of ${program} (sig=${signature})`);
+}
 
 async function main() {
   const argv = await parser.argv;
@@ -622,77 +545,57 @@ async function main() {
   }
 
   const chain = DefaultStore.getChainOrThrow(argv.chain, SvmChain);
-  const vault = loadVault(chain.isMainnet());
-  const url = chain.rpcUrl;
+  const vault = loadGovernanceVault(chain.isMainnet());
+  const connection = chain.getConnection();
+
   const keyDir = path.resolve(argv["key-dir"]);
-  const connection = new Connection(url, "confirmed");
+  if (!existsSync(keyDir)) {
+    throw new Error(`Key directory does not exist: ${keyDir}`);
+  }
 
   const artifactsDir = path.resolve(ARTIFACTS_DIR);
   if (!existsSync(artifactsDir)) {
     throw new Error(`Artifacts directory does not exist: ${artifactsDir}`);
   }
 
-  // const selectedPrograms = argv.programs as ProgramName[];
+  const keypair = loadKeypair(argv.keypair);
 
   console.log("Deployment configuration:");
   console.log(
     `  Chain:          ${chain.getId()} (${chain.wormholeChainName})`,
   );
-  console.log(`  RPC URL:        ${url}`);
+  console.log(`  RPC URL:        ${chain.rpcUrl}`);
   console.log(`  Payer keypair:  ${argv.keypair}`);
+  console.log(`  Key dir:        ${keyDir}`);
   console.log(`  Artifacts dir:  ${artifactsDir}`);
+  if (argv.final) {
+    console.log(`  Final: the upgrade authorities of the programs will be transferred to the vault authority: ${vault.getEmitter().toString()}`);
+  }
 
-  await deployProgram(
-    "wormhole_core_bridge_solana",
-    artifactsDir,
-    keyDir,
-    DEFAULT_WORMHOLE_PROGRAM_ID,
-    connection,
-    argv.keypair,
-  );
-  await deployProgram(
-    "pyth_solana_receiver",
-    artifactsDir,
-    keyDir,
-    DEFAULT_RECEIVER_PROGRAM_ID,
-    connection,
-    argv.keypair,
-  );
-  await deployProgram(
-    "pyth_push_oracle",
-    artifactsDir,
-    keyDir,
-    DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-    connection,
-    argv.keypair,
-  );
+  for (const [program, programId] of PROGRAMS_TO_DEPLOY) {
+    await deployProgram(
+      program,
+      artifactsDir,
+      keyDir,
+      programId,
+      connection,
+      argv.keypair,
+    );
+  }
 
-  const payer = loadKeypair(argv.keypair);
-  await uploadIdl(
-    connection,
-    payer,
-    "wormhole_core_bridge_solana",
-    DEFAULT_WORMHOLE_PROGRAM_ID,
-    wormholeCoreBridgeIdl,
-  );
-  await uploadIdl(
-    connection,
-    payer,
-    "pyth_solana_receiver",
-    DEFAULT_RECEIVER_PROGRAM_ID,
-    pythSolanaReceiverIdl,
-  );
-  await uploadIdl(
-    connection,
-    payer,
-    "pyth_push_oracle",
-    DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-    pythPushOracleIdl,
-  );
+  for (const [program, programId, programIdl] of PROGRAMS_TO_DEPLOY) {
+    await uploadIdl(
+      connection,
+      keypair,
+      program,
+      programId,
+      programIdl,
+    );
+  }
 
-  await initializeWormholeReceiver(connection, payer);
-  await initializePythReceiver(connection, payer);
-  await postPriceUpdate(connection, payer);
+  await initializeWormholeReceiver(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID);
+  await initializePythReceiver(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID, LAZER_RECEIVER_PROGRAM_ID, vault);
+  await updatePriceFeed(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID, LAZER_RECEIVER_PROGRAM_ID, LAZER_PUSH_ORACLE_PROGRAM_ID);
 
   if (argv.final) {
     const newAuthority = await vault.getEmitter();
@@ -700,27 +603,21 @@ async function main() {
       `\nFinalization step: transferring authorities to vault ${vault.key.toString()} (authority PDA: ${newAuthority.toString()})`,
     );
 
-    const programs = [
-      ["wormhole_core_bridge_solana", DEFAULT_WORMHOLE_PROGRAM_ID],
-      ["pyth_solana_receiver", DEFAULT_RECEIVER_PROGRAM_ID],
-      ["pyth_push_oracle", DEFAULT_PUSH_ORACLE_PROGRAM_ID],
-    ] as const;
-
-    for (const [program, programId] of programs) {
+    for (const [program, programId] of PROGRAMS_TO_DEPLOY) {
       await transferProgramAuthority(
         program,
         programId,
         connection,
-        payer,
+        keypair,
         newAuthority,
       );
     }
 
     if (chain.isMainnet()) {
-      for (const [program, programId] of programs) {
+      for (const [program, programId] of PROGRAMS_TO_DEPLOY) {
         await transferIdlAuthority(
           connection,
-          payer,
+          keypair,
           program,
           programId,
           newAuthority,
@@ -728,7 +625,6 @@ async function main() {
       }
     }
   }
-
   console.log("\nAll done.");
 }
 
