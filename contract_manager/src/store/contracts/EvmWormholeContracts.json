@@ -966,7 +966,127 @@
     "deploymentType": "lazer-staging"
   },
   {
-    "address": "0x237b7aFF1Af5d9F311f830234792d429355A58F3",
+    "address": "0xBb86bCc951A62DF86826219d9251Ee05F2c1e286",
+    "chain": "abstract",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x3e2D5966bF67Ed2F66edfbc325f6bCf3d64EaA0A",
+    "chain": "abstract_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x378d8771E9c66A2aAd370344DfD4b65D1a3C1D8e",
+    "chain": "arbitrum",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xa70e78A339Cd42abc6bC4B2407fd815eF268a0f3",
+    "chain": "arbitrum_sepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x7360A4Df2703B8a5C9F70320C97Ff1C02faD3b4c",
+    "chain": "base",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xca24068711536190805b986d0dB16082C5221DD3",
+    "chain": "base_sepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x307Ee5a0a0D06289b1c7DFAeEcbF6BA7DD170bE8",
+    "chain": "berachain_mainnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x3F21E4bdBC5Fb721672E0c0C2da3a758F4eBBa26",
+    "chain": "berachain_bepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
+    "chain": "hyperevm_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x7c56D119a916da6593e1Fd8c1d010161f20Afd70",
+    "chain": "hyperevm",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x932883eEd93D12EE1575feE6a9694D5b8909Ec69",
+    "chain": "linea_sepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x4821932D0CDd71225A6d914706A621e0389D7061",
+    "chain": "linea",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xCd76c50c3210C5AaA9c39D53A4f95BFd8b1a3a19",
+    "chain": "monad_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
+    "chain": "monad",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x7aD6D5c9435aa7781A817913B3Afec2645Ef78Be",
+    "chain": "optimism",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x1d870DBaBc9ca415CFA722E3656d6032FE1807FC",
+    "chain": "optimism_sepolia",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5",
+    "chain": "soneium_minato_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x621330D0ECd449A06b72f41C1A93626cCEC53ccA",
+    "chain": "soneium",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "chain": "sonic_evm_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x9DF02366A266D79DA5E978aDBEe8B8502117ee1a",
+    "chain": "fantom_sonic_mainnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x90eC5b8a21349751D0c2654b5F1FBeDfD6342d8c",
     "chain": "ethereum",
     "type": "EvmWormholeContract",
     "deploymentType": "lazer-prod"

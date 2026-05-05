@@ -12,12 +12,14 @@ repository = "https://github.com/wormhole-foundation/wormhole"
 crate-type = ["cdylib", "lib"]
 
 [features]
-default = ["cpi", "no-idl"]
+default = []
 anchor-debug = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
+custom-heap = []
+custom-panic = []
 lazer = []
 
 [dependencies]

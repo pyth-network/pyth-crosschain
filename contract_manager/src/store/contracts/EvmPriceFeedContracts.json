@@ -952,13 +952,133 @@
   {
     "address": "0xc643e55EE8944F3017F4CB8C82aa3DB1AA2d8941",
     "chain": "sepolia",
-    "deploymentType": "lazer-staging",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-staging"
   },
   {
-    "address": "0xa78951b6bADC9F4740f6f456E9144705D5C5E4B2",
+    "address": "0xF451934f97aFe1347bD297542d19d4B727e071cB",
+    "chain": "abstract",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
+    "chain": "abstract_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xda5bED97db5417fB19d78A36529c26027735F404",
+    "chain": "arbitrum",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x4D5F8fD2D76E2b00D14697c7B279Cc0e783EC731",
+    "chain": "arbitrum_sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xC0c7e8A8D77Ae986862e5d9811C6826B3a760e85",
+    "chain": "base",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xffE8B2F80d61614DC1b06cD38a82e3ccc85EB52b",
+    "chain": "base_sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x007B40aC2A3F1d5624CD325D7E7E408d4247A5aD",
+    "chain": "berachain_mainnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x5a641b1ba5FD4132fB6308F4cD22FE7C3eFfbFD7",
+    "chain": "berachain_bepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xd74CdD8Eef0E97a5a7678F907991316f88E7965A",
+    "chain": "hyperevm_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x3a2DD09B4739D905183D503d594c8FB3e3D41820",
+    "chain": "hyperevm",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x6AaB9a4CD5a7e5740c5cee76d4EAc2BD9957c66d",
+    "chain": "linea_sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x5Cc070844E98F4ceC5f2fBE1592fB1ed73aB7b48",
+    "chain": "linea",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xc4CD37d432F699dAf3fCf1Ad75c5Ab6107A27da3",
+    "chain": "monad_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x237b7aFF1Af5d9F311f830234792d429355A58F3",
+    "chain": "monad",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x05D4Ed5F126aC23b6fB8e4ffD4C2c28B6050E480",
+    "chain": "optimism",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x9f4dbF226dd62F3e4F9D57529170EC0C948819d6",
+    "chain": "optimism_sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x9fcDCAb0A147e799Fa866594B2c4c20F4eF29F37",
+    "chain": "soneium_minato_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x986c00a290D1767651723c7cF9e5bD7bD745f6f9",
+    "chain": "soneium",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "chain": "sonic_evm_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0xbdEfAe34858456B5B0C6B9E249eaBe1600aB3171",
+    "chain": "fantom_sonic_mainnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x378d8771E9c66A2aAd370344DfD4b65D1a3C1D8e",
     "chain": "ethereum",
-    "deploymentType": "lazer-prod",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "lazer-prod"
   }
 ]
