@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
@@ -14,8 +16,8 @@ import {
   PythSolanaReceiver,
 } from "@pythnetwork/pyth-solana-receiver";
 import { sendTransactions } from "@pythnetwork/solana-utils";
+import type { Connection } from "@solana/web3.js";
 import {
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -39,7 +41,6 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "../..");
 const SOLANA_DIR = path.join(REPO_ROOT, "target_chains", "solana");
 const ARTIFACTS_DIR = path.join(SOLANA_DIR, "target", "deploy");
 const DEFAULT_KEY_DIR = path.join(os.homedir(), ".config", "solana");
-
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_solana_contracts.ts")
@@ -90,7 +91,11 @@ function loadKeypair(keypairPath: string): Keypair {
 }
 
 const PROGRAMS_TO_DEPLOY = [
-  ["wormhole_core_bridge_solana", LAZER_WORMHOLE_PROGRAM_ID, wormholeCoreBridgeIdl],
+  [
+    "wormhole_core_bridge_solana",
+    LAZER_WORMHOLE_PROGRAM_ID,
+    wormholeCoreBridgeIdl,
+  ],
   ["pyth_solana_receiver", LAZER_RECEIVER_PROGRAM_ID, pythSolanaReceiverIdl],
   ["pyth_push_oracle", LAZER_PUSH_ORACLE_PROGRAM_ID, pythPushOracleIdl],
 ] as const;
@@ -329,9 +334,7 @@ async function initializeWormholeReceiver(
   programId: PublicKey,
 ): Promise<void> {
   const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
-  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(
-    programId,
-  );
+  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(programId);
   const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
 
   if (bridgeAccount !== null) {
@@ -349,7 +352,9 @@ async function initializeWormholeReceiver(
     payer.publicKey,
     GUARDIAN_EXPIRATION_TIME,
     0n,
-    deploymentConfig.wormholeConfig.initialGuardianSet.map((guardian) => Buffer.from(guardian, "hex")),
+    deploymentConfig.wormholeConfig.initialGuardianSet.map((guardian) =>
+      Buffer.from(guardian, "hex"),
+    ),
   );
 
   const signature = await sendAndConfirmTransaction(
@@ -386,8 +391,8 @@ async function initializePythReceiver(
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
+    receiverProgramId,
     wallet: new Wallet(payer),
-    receiverProgramId
   });
 
   const signature = await pythSolanaReceiver.receiver.methods
@@ -415,7 +420,6 @@ async function initializePythReceiver(
 const SOL_USD_HERMES_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
-
 async function updatePriceFeed(
   connection: Connection,
   payer: Keypair,
@@ -427,16 +431,20 @@ async function updatePriceFeed(
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
+    pushOracleProgramId,
+    receiverProgramId,
     wallet: new Wallet(payer),
     wormholeProgramId,
-    receiverProgramId,
-    pushOracleProgramId,
   });
 
   if (process.env.HERMES_ACCESS_TOKEN === undefined) {
-    throw new Error("This step requires a Lazer access token. Please set the HERMES_ACCESS_TOKEN environment variable.");
+    throw new Error(
+      "This step requires a Lazer access token. Please set the HERMES_ACCESS_TOKEN environment variable.",
+    );
   }
-  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", { accessToken: process.env.HERMES_ACCESS_TOKEN });
+  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", {
+    accessToken: process.env.HERMES_ACCESS_TOKEN,
+  });
   const priceUpdateData = (
     await hermesClient.getLatestPriceUpdates([SOL_USD_HERMES_ID], {
       encoding: "base64",
@@ -457,7 +465,6 @@ async function updatePriceFeed(
   );
   console.log("Price update posted successfully.");
 }
-
 
 // BPF Upgradeable Loader program id and its SetAuthority instruction discriminator.
 // See https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
@@ -481,6 +488,27 @@ async function transferProgramAuthority(
     [programId.toBuffer()],
     BPF_UPGRADEABLE_LOADER_ID,
   )[0];
+
+  // ProgramData layout: 4 bytes state | 8 bytes slot | 1 byte Option<Pubkey> tag | 32 bytes authority
+  const programDataInfo = await connection.getAccountInfo(
+    programDataAccount,
+    "confirmed",
+  );
+  if (
+    programDataInfo &&
+    programDataInfo.data.length >= 13 + 32 &&
+    programDataInfo.data[12] === 1
+  ) {
+    const currentAuthority = new PublicKey(
+      programDataInfo.data.subarray(13, 13 + 32),
+    );
+    if (currentAuthority.equals(newAuthority)) {
+      console.log(
+        `⏭️  Skipping ${program}: upgrade authority already set to ${newAuthority.toString()}`,
+      );
+      return;
+    }
+  }
 
   const tx = new Transaction().add(
     new TransactionInstruction({
@@ -519,6 +547,23 @@ async function transferIdlAuthority(
     "anchor:idl",
     programId,
   );
+
+  // IdlAccount layout: 8 bytes discriminator | 32 bytes authority | 4 bytes data_len | data
+  const idlAccountInfo = await connection.getAccountInfo(
+    idlAddress,
+    "confirmed",
+  );
+  if (idlAccountInfo && idlAccountInfo.data.length >= 8 + 32) {
+    const currentAuthority = new PublicKey(
+      idlAccountInfo.data.subarray(8, 8 + 32),
+    );
+    if (currentAuthority.equals(newAuthority)) {
+      console.log(
+        `⏭️  Skipping ${program}: IDL authority already set to ${newAuthority.toString()}`,
+      );
+      return;
+    }
+  }
 
   const tx = new Transaction().add(
     new TransactionInstruction({
@@ -569,7 +614,9 @@ async function main() {
   console.log(`  Key dir:        ${keyDir}`);
   console.log(`  Artifacts dir:  ${artifactsDir}`);
   if (argv.final) {
-    console.log(`  Final: the upgrade authorities of the programs will be transferred to the vault authority: ${vault.getEmitter().toString()}`);
+    console.log(
+      `  Final: the upgrade authorities of the programs will be transferred to the vault authority: ${vault.getEmitter().toString()}`,
+    );
   }
 
   for (const [program, programId] of PROGRAMS_TO_DEPLOY) {
@@ -584,18 +631,28 @@ async function main() {
   }
 
   for (const [program, programId, programIdl] of PROGRAMS_TO_DEPLOY) {
-    await uploadIdl(
-      connection,
-      keypair,
-      program,
-      programId,
-      programIdl,
-    );
+    await uploadIdl(connection, keypair, program, programId, programIdl);
   }
 
-  await initializeWormholeReceiver(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID);
-  await initializePythReceiver(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID, LAZER_RECEIVER_PROGRAM_ID, vault);
-  await updatePriceFeed(connection, keypair, LAZER_WORMHOLE_PROGRAM_ID, LAZER_RECEIVER_PROGRAM_ID, LAZER_PUSH_ORACLE_PROGRAM_ID);
+  await initializeWormholeReceiver(
+    connection,
+    keypair,
+    LAZER_WORMHOLE_PROGRAM_ID,
+  );
+  await initializePythReceiver(
+    connection,
+    keypair,
+    LAZER_WORMHOLE_PROGRAM_ID,
+    LAZER_RECEIVER_PROGRAM_ID,
+    vault,
+  );
+  await updatePriceFeed(
+    connection,
+    keypair,
+    LAZER_WORMHOLE_PROGRAM_ID,
+    LAZER_RECEIVER_PROGRAM_ID,
+    LAZER_PUSH_ORACLE_PROGRAM_ID,
+  );
 
   if (argv.final) {
     const newAuthority = await vault.getEmitter();
