@@ -43,7 +43,12 @@ import {
   UpgradeContract256Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
 import { Address, TonClient, WalletContractV4 } from "@ton/ton";

@@ -10,44 +10,42 @@
 import "./preserve-native-fetch";
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-
-import { Vault } from "./governance";
-import { PriceFeedContract, Storable } from "../../core/base";
+import type { PriceFeedContract, Storable } from "../../core/base";
+import type { Chain } from "../../core/chains";
 import {
   AptosChain,
-  Chain,
   CosmWasmChain,
-  StarknetChain,
   EvmChain,
   FuelChain,
   GlobalChain,
-  SuiChain,
-  TonChain,
-  NearChain,
   IotaChain,
+  NearChain,
+  StarknetChain,
+  SuiChain,
   SvmChain,
+  TonChain,
 } from "../../core/chains";
+import type { EvmPulseContract } from "../../core/contracts";
 import {
   AptosPriceFeedContract,
   AptosWormholeContract,
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  EvmWormholeContract,
-  SuiPriceFeedContract,
-  SuiWormholeContract,
-  FuelWormholeContract,
-  WormholeContract,
-  FuelPriceFeedContract,
-  TonPriceFeedContract,
-  TonWormholeContract,
-  IotaWormholeContract,
-  IotaPriceFeedContract,
-  EvmPulseContract,
   EvmExecutorContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  EvmWormholeContract,
+  FuelPriceFeedContract,
+  FuelWormholeContract,
+  IotaPriceFeedContract,
+  IotaWormholeContract,
   SuiLazerContract,
+  SuiPriceFeedContract,
+  SuiWormholeContract,
+  TonPriceFeedContract,
+  TonWormholeContract,
+  WormholeContract,
 } from "../../core/contracts";
 import {
   NearPriceFeedContract,
@@ -58,6 +56,7 @@ import {
   StarknetWormholeContract,
 } from "../../core/contracts/starknet";
 import { Token } from "../../core/token";
+import { Vault } from "./governance";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };

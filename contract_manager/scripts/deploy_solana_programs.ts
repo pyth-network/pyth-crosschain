@@ -59,43 +59,40 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
-
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-
-import { SvmChain } from "../src/core/chains";
-import { DefaultStore } from "../src/node/utils/store";
+import { BN, Wallet } from "@coral-xyz/anchor";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import {
+  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
+  DEFAULT_RECEIVER_PROGRAM_ID,
+  DEFAULT_WORMHOLE_PROGRAM_ID,
+  getConfigPda,
+  PythSolanaReceiver,
+} from "@pythnetwork/pyth-solana-receiver";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 import {
   Connection,
   Keypair,
   PublicKey,
   SystemProgram,
+  sendAndConfirmTransaction,
   Transaction,
   TransactionInstruction,
-  sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { BN, Wallet } from "@coral-xyz/anchor";
-import {
-  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-  DEFAULT_RECEIVER_PROGRAM_ID,
-  DEFAULT_WORMHOLE_PROGRAM_ID,
-  PythSolanaReceiver,
-  getConfigPda,
-} from "@pythnetwork/pyth-solana-receiver";
-import { IDL as pythSolanaReceiverIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_solana_receiver";
-import { IDL as pythPushOracleIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_push_oracle";
-import { IDL as wormholeCoreBridgeIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/wormhole_core_bridge_solana";
 import { utils as wormholeUtils } from "@wormhole-foundation/sdk-solana-core";
-import { HermesClient } from "@pythnetwork/hermes-client";
-import { sendTransactions } from "@pythnetwork/solana-utils";
-import type { Vault } from "../src/node/utils/governance";
-import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
-import type { DeploymentConfig } from "../src/core/contracts";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { IDL as pythPushOracleIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_push_oracle";
+import { IDL as pythSolanaReceiverIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_solana_receiver";
+import { IDL as wormholeCoreBridgeIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/wormhole_core_bridge_solana";
 import { getDefaultDeploymentConfig } from "../src/core/base";
+import { SvmChain } from "../src/core/chains";
+import type { DeploymentConfig } from "../src/core/contracts";
+import type { Vault } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
+import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
-
 
 const GUARDIAN_EXPIRATION_TIME = 86_400;
 
@@ -116,31 +113,29 @@ const SOLANA_CLI_DIR = path.join(SOLANA_DIR, "cli");
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_solana_contracts.ts")
-  .usage(
-    "Usage: $0 --chain <chain-id> --keypair <path>",
-  )
+  .usage("Usage: $0 --chain <chain-id> --keypair <path>")
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain id from SolanaChains.json (e.g. solana_devnet, solana_mainnet)",
-    },
-    keypair: {
       type: "string",
-      demandOption: true,
-      desc: "Path to the payer keypair file",
-    },
-    "key-dir": {
-      type: "string",
-      demandOption: false,
-      desc: "Path to the directory containing the keypair files",
-      default: DEFAULT_KEY_DIR,
     },
     final: {
-      type: "boolean",
-      demandOption: false,
       default: false,
+      demandOption: false,
       desc: "Transfer the program upgrade authority of all deployed programs to the governance vault. On mainnet, also transfer the IDL authority.",
+      type: "boolean",
+    },
+    "key-dir": {
+      default: DEFAULT_KEY_DIR,
+      demandOption: false,
+      desc: "Path to the directory containing the keypair files",
+      type: "string",
+    },
+    keypair: {
+      demandOption: true,
+      desc: "Path to the payer keypair file",
+      type: "string",
     },
   })
   .strict();
@@ -158,12 +153,15 @@ const PYTH_RECEIVER_MINIMUM_SIGNATURES = 3;
 function run(command: string, args: string[], cwd?: string): void {
   console.log(`\n$ ${command} ${args.join(" ")}`);
   execFileSync(command, args, {
-    stdio: "inherit",
     cwd,
+    stdio: "inherit",
   });
 }
 
-async function isProgramDeployed(connection: Connection, programId: PublicKey): Promise<boolean> {
+async function isProgramDeployed(
+  connection: Connection,
+  programId: PublicKey,
+): Promise<boolean> {
   const accountInfo = await connection.getAccountInfo(programId, "confirmed");
   return accountInfo !== null && accountInfo.executable;
 }
@@ -182,13 +180,15 @@ const INITIAL_GUARDIAN_SET = [
   Buffer.from("44a3e8f6a382412cf6bb90a3f8106e68977476c9", "hex"),
   Buffer.from("d9d7d4529577864352c9a6539a48238fcd447052", "hex"),
   Buffer.from("1663a5a822336ece48559b1dfb1e93a017a7dac3", "hex"),
-] // fix me: use base.ts
+]; // fix me: use base.ts
 
 async function initializeWormholeReceiver(
   connection: Connection,
   payer: Keypair,
 ): Promise<void> {
-  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(DEFAULT_WORMHOLE_PROGRAM_ID);
+  const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(
+    DEFAULT_WORMHOLE_PROGRAM_ID,
+  );
   const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
 
   if (bridgeAccount !== null) {
@@ -223,7 +223,10 @@ async function initializePythReceiver(
   payer: Keypair,
 ): Promise<void> {
   const configPda = getConfigPda(DEFAULT_RECEIVER_PROGRAM_ID);
-  const existingConfig = await connection.getAccountInfo(configPda, "confirmed");
+  const existingConfig = await connection.getAccountInfo(
+    configPda,
+    "confirmed",
+  );
   if (existingConfig !== null) {
     console.log(
       `Pyth receiver already initialized. config=${configPda.toString()}`,
@@ -242,21 +245,29 @@ async function initializePythReceiver(
 
   const signature = await pythSolanaReceiver.receiver.methods
     .initialize({
-      governanceAuthority: new PublicKey(Buffer.from(deploymentConfig.governanceDataSource.emitterAddress, "hex")),
+      governanceAuthority: new PublicKey(
+        Buffer.from(
+          deploymentConfig.governanceDataSource.emitterAddress,
+          "hex",
+        ),
+      ),
+      minimumSignatures: 3,
+      singleUpdateFeeInLamports: new BN(0),
       targetGovernanceAuthority: null,
-      wormhole: DEFAULT_WORMHOLE_PROGRAM_ID,
       validDataSources: [
         {
           chain: 26,
-          emitter: new PublicKey(Buffer.from("507974686e6574507974686e6574507974686e6574507974686e657450797468", "hex")), // fix me: use base.ts
+          emitter: new PublicKey(
+            Buffer.from(
+              "507974686e6574507974686e6574507974686e6574507974686e657450797468",
+              "hex",
+            ),
+          ), // fix me: use base.ts
         },
       ],
-      singleUpdateFeeInLamports: new BN(
-        0,
-      ),
-      minimumSignatures: 3,
+      wormhole: DEFAULT_WORMHOLE_PROGRAM_ID,
     })
-    .accounts({ payer: payer.publicKey, config: configPda })
+    .accounts({ config: configPda, payer: payer.publicKey })
     .signers([payer])
     .rpc({ commitment: "confirmed", skipPreflight: true });
   console.log(`Pyth receiver initialized. signature=${signature}`);
@@ -269,8 +280,8 @@ function programArtifactPaths(
   programId: PublicKey,
 ): { soPath: string; keypairPath: string } {
   return {
-    soPath: path.join(artifactsDir, `${program}.so`),
     keypairPath: path.join(keyDir, `${programId.toString()}.json`),
+    soPath: path.join(artifactsDir, `${program}.so`),
   };
 }
 
@@ -284,15 +295,19 @@ async function deployProgram(
 ): Promise<void> {
   console.log(`\n=== Deploying ${program} ===`);
 
-  const { soPath, keypairPath } = programArtifactPaths(program, artifactsDir, keyDir, programId);
-  
+  const { soPath, keypairPath } = programArtifactPaths(
+    program,
+    artifactsDir,
+    keyDir,
+    programId,
+  );
+
   // if (await isProgramDeployed(connection, programId)) {
   //   console.log(
   //     `⏭️  Skipping ${program}: ${programId.toString()} is already deployed`,
   //   );
   //   return;
   // }
-
 
   if (!existsSync(soPath)) {
     throw new Error(
@@ -387,20 +402,22 @@ async function transferProgramAuthority(
 
   const tx = new Transaction().add(
     new TransactionInstruction({
-      programId: BPF_UPGRADEABLE_LOADER_ID,
-      keys: [
-        { pubkey: programDataAccount, isSigner: false, isWritable: true },
-        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-        { pubkey: newAuthority, isSigner: false, isWritable: false },
-      ],
       data: BPF_LOADER_SET_AUTHORITY_IX,
+      keys: [
+        { isSigner: false, isWritable: true, pubkey: programDataAccount },
+        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+        { isSigner: false, isWritable: false, pubkey: newAuthority },
+      ],
+      programId: BPF_UPGRADEABLE_LOADER_ID,
     }),
   );
   const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
     commitment: "confirmed",
     skipPreflight: true,
   });
-  console.log(`✅ Transferred upgrade authority of ${program} (sig=${signature})`);
+  console.log(
+    `✅ Transferred upgrade authority of ${program} (sig=${signature})`,
+  );
 }
 
 async function transferIdlAuthority(
@@ -423,12 +440,12 @@ async function transferIdlAuthority(
 
   const tx = new Transaction().add(
     new TransactionInstruction({
-      programId,
-      keys: [
-        { pubkey: idlAddress, isSigner: false, isWritable: true },
-        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      ],
       data: encodeIdlSetAuthority(newAuthority),
+      keys: [
+        { isSigner: false, isWritable: true, pubkey: idlAddress },
+        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+      ],
+      programId,
     }),
   );
   const signature = await sendAndConfirmTransaction(connection, tx, [payer], {
@@ -473,37 +490,48 @@ async function uploadIdl(
 
   const createTx = new Transaction().add(
     new TransactionInstruction({
-      programId,
-      keys: [
-        { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-        { pubkey: idlAddress, isSigner: false, isWritable: true },
-        { pubkey: programSigner, isSigner: false, isWritable: false },
-        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        { pubkey: programId, isSigner: false, isWritable: false },
-      ],
       data: encodeIdlCreate(dataLen),
+      keys: [
+        { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+        { isSigner: false, isWritable: true, pubkey: idlAddress },
+        { isSigner: false, isWritable: false, pubkey: programSigner },
+        { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
+        { isSigner: false, isWritable: false, pubkey: programId },
+      ],
+      programId,
     }),
   );
   const numResizes = Math.floor(Number(dataLen) / IDL_RESIZE_STEP);
   for (let i = 0; i < numResizes; i++) {
     createTx.add(
       new TransactionInstruction({
-        programId,
-        keys: [
-          { pubkey: idlAddress, isSigner: false, isWritable: true },
-          { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        ],
         data: encodeIdlResize(dataLen),
+        keys: [
+          { isSigner: false, isWritable: true, pubkey: idlAddress },
+          { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+          {
+            isSigner: false,
+            isWritable: false,
+            pubkey: SystemProgram.programId,
+          },
+        ],
+        programId,
       }),
     );
   }
 
-  const createSig = await sendAndConfirmTransaction(connection, createTx, [payer], {
-    commitment: "confirmed",
-    skipPreflight: true,
-  });
-  console.log(`IDL account created at ${idlAddress.toString()} (sig=${createSig})`);
+  const createSig = await sendAndConfirmTransaction(
+    connection,
+    createTx,
+    [payer],
+    {
+      commitment: "confirmed",
+      skipPreflight: true,
+    },
+  );
+  console.log(
+    `IDL account created at ${idlAddress.toString()} (sig=${createSig})`,
+  );
 
   for (let offset = 0; offset < compressed.length; offset += IDL_WRITE_CHUNK) {
     const chunk = compressed.subarray(
@@ -512,12 +540,12 @@ async function uploadIdl(
     );
     const writeTx = new Transaction().add(
       new TransactionInstruction({
-        programId,
-        keys: [
-          { pubkey: idlAddress, isSigner: false, isWritable: true },
-          { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-        ],
         data: encodeIdlWrite(chunk),
+        keys: [
+          { isSigner: false, isWritable: true, pubkey: idlAddress },
+          { isSigner: true, isWritable: false, pubkey: payer.publicKey },
+        ],
+        programId,
       }),
     );
     await sendAndConfirmTransaction(connection, writeTx, [payer], {
@@ -542,7 +570,9 @@ async function postPriceUpdate(
     wallet: new Wallet(payer),
   });
 
-  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", {accessToken: process.env.HERMES_ACCESS_TOKEN ?? "" });
+  const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", {
+    accessToken: process.env.HERMES_ACCESS_TOKEN ?? "",
+  });
   const priceUpdateData = (
     await hermesClient.getLatestPriceUpdates([SOL_PRICE_FEED_ID], {
       encoding: "base64",
@@ -577,17 +607,18 @@ const loadVault = (isMainnet: boolean): Vault => {
   );
   if (!governanceVault)
     throw new Error("Governance vault not found in UpgradeVaults.json");
-  const vault = DefaultStore.vaults[`${governanceVault.cluster}_${governanceVault.key}`];
+  const vault =
+    DefaultStore.vaults[`${governanceVault.cluster}_${governanceVault.key}`];
   if (!vault)
     throw new Error("Governance vault not found in DefaultStore.vaults");
   return vault;
-}
+};
 
 async function main() {
   const argv = await parser.argv;
 
   if (argv.chain !== "solana_mainnet" && argv.chain !== "solana_devnet") {
-    throw new Error("This tool doesn't yet support generic SVM chains")    
+    throw new Error("This tool doesn't yet support generic SVM chains");
   }
 
   const chain = DefaultStore.getChainOrThrow(argv.chain, SvmChain);
@@ -604,7 +635,9 @@ async function main() {
   // const selectedPrograms = argv.programs as ProgramName[];
 
   console.log("Deployment configuration:");
-  console.log(`  Chain:          ${chain.getId()} (${chain.wormholeChainName})`);
+  console.log(
+    `  Chain:          ${chain.getId()} (${chain.wormholeChainName})`,
+  );
   console.log(`  RPC URL:        ${url}`);
   console.log(`  Payer keypair:  ${argv.keypair}`);
   console.log(`  Artifacts dir:  ${artifactsDir}`);

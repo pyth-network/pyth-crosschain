@@ -1,17 +1,17 @@
 [
   {
     "id": "solana_mainnet",
-    "wormholeChainName": "solana",
     "mainnet": true,
+    "nativeToken": "SOL",
     "rpcUrl": "https://pyth-network.rpcpool.com/#$ENV_SOLANA_MAINNET_API_KEY",
     "type": "SvmChain",
-    "nativeToken": "SOL"
+    "wormholeChainName": "solana"
   },
   {
     "id": "solana_devnet",
-    "wormholeChainName": "solana",
     "mainnet": false,
     "rpcUrl": "https://api.devnet.solana.com",
-    "type": "SvmChain"
+    "type": "SvmChain",
+    "wormholeChainName": "solana"
   }
 ]
