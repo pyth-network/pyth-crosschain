@@ -391,9 +391,9 @@ async function initializePythReceiver(
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
-    wormholeProgramId,
     receiverProgramId,
     wallet: new Wallet(payer),
+    wormholeProgramId,
   });
 
   const signature = await pythSolanaReceiver.receiver.methods
