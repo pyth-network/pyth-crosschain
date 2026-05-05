@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
+    "@stellar/stellar-sdk": "^13.0.0"
+  },
+  "description": "End-to-end tests for the Pyth Lazer Stellar contracts",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "tsx": "catalog:",
+    "yargs": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "name": "@pythnetwork/pyth-lazer-stellar-e2e",
+  "private": true,
+  "scripts": {
+    "test:e2e": "tsx src/test_real_update.ts"
+  },
+  "type": "module"
+}

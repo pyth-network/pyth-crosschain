@@ -45,6 +45,7 @@ packages:
   - contract_manager
   - lazer/contracts/sui/sdk/js
   - lazer/contracts/cardano/sdk/js
+  - lazer/contracts/stellar/scripts/e2e
 
 catalog:
   "@amplitude/analytics-browser": ^2.13.0
