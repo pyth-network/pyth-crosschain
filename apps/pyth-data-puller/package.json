@@ -1,0 +1,30 @@
+{
+  "name": "@pythnetwork/pyth-data-puller",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "scripts": {
+    "build": "next build",
+    "start:dev": "next dev --port 3000",
+    "start:prod": "next start -H 127.0.0.1 --port 3000",
+    "test:types": "tsc"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  }
+}
