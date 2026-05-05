@@ -208,7 +208,7 @@ export class Store {
     for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
-        if (allContractClasses[parsed.type] === undefined) return;
+        if (allContractClasses[parsed.type] === undefined) continue;
         if (!this.chains[parsed.chain])
           throw new Error(`Chain ${parsed.chain} not found`);
         const chain = this.chains[parsed.chain];
@@ -248,7 +248,7 @@ export class Store {
     for (const jsonFile of this.getJsonFiles(`${this.path}/tokens/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
-        if (parsed.type !== Token.type) return;
+        if (parsed.type !== Token.type) continue;
 
         const token = Token.fromJson(parsed);
         if (this.tokens[token.getId()])
@@ -262,7 +262,7 @@ export class Store {
     for (const jsonFile of this.getJsonFiles(`${this.path}/vaults/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
-        if (parsed.type !== Vault.type) return;
+        if (parsed.type !== Vault.type) continue;
 
         const vault = Vault.fromJson(parsed);
         if (this.vaults[vault.getId()])

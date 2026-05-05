@@ -3,7 +3,7 @@
     "id": "solana_mainnet",
     "mainnet": true,
     "nativeToken": "SOL",
-    "rpcUrl": "https://pyth-network.rpcpool.com/#$ENV_SOLANA_MAINNET_API_KEY",
+    "rpcUrl": "https://pyth-network.rpcpool.com/$ENV_SOLANA_MAINNET_API_KEY",
     "type": "SvmChain",
     "wormholeChainName": "solana"
   },
