@@ -72,7 +72,7 @@ const parser = yargs(hideBin(process.argv))
   .strict();
 
 const loadGovernanceVault = (isMainnet: boolean): Vault => {
-  const governanceEnvironment = isMainnet ? "mainnet-beta" : "devnet";
+  const governanceEnvironment = !isMainnet ? "mainnet-beta" : "devnet";
   const vault = Object.entries(DefaultStore.vaults).find(([id]) =>
     id.startsWith(governanceEnvironment + "_"),
   )?.[1];
@@ -337,6 +337,7 @@ async function initializeWormholeReceiver(
   const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(programId);
   const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
 
+  console.log("\n=== Initializing wormhole receiver ===");
   if (bridgeAccount !== null) {
     const bridge = wormholeUtils.BridgeData.deserialize(bridgeAccount.data);
     console.log(
@@ -345,7 +346,6 @@ async function initializeWormholeReceiver(
     return;
   }
 
-  console.log("\n=== Initializing wormhole receiver ===");
   const ix = wormholeUtils.createInitializeInstruction(
     connection,
     programId,
@@ -378,14 +378,13 @@ async function initializePythReceiver(
     configPda,
     "confirmed",
   );
+  console.log("\n=== Initializing pyth receiver ===");
   if (existingConfig !== null) {
     console.log(
       `Pyth receiver already initialized. config=${configPda.toString()}`,
     );
     return;
   }
-
-  console.log("\n=== Initializing pyth receiver ===");
 
   const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
 
@@ -397,7 +396,7 @@ async function initializePythReceiver(
 
   const signature = await pythSolanaReceiver.receiver.methods
     .initialize({
-      governanceAuthority: vault.getEmitter(),
+      governanceAuthority: await vault.getEmitter(),
       minimumSignatures: 3,
       singleUpdateFeeInLamports: new BN(0),
       targetGovernanceAuthority: null,
@@ -613,9 +612,10 @@ async function main() {
   console.log(`  Payer keypair:  ${argv.keypair}`);
   console.log(`  Key dir:        ${keyDir}`);
   console.log(`  Artifacts dir:  ${artifactsDir}`);
+  console.log(`  Governance authority: ${(await vault.getEmitter()).toString()}`);
   if (argv.final) {
     console.log(
-      `  Final: the upgrade authorities of the programs will be transferred to the vault authority: ${vault.getEmitter().toString()}`,
+      `  Final: the upgrade authorities of the programs will be transferred to the governance authority: ${(await vault.getEmitter()).toString()}`,
     );
   }
 
