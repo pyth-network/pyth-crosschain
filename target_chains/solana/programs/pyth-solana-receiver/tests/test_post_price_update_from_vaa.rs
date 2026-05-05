@@ -604,4 +604,37 @@ async fn test_post_price_update_from_vaa() {
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 9 }
     );
+
+    // With fee=0, posting to a brand-new treasury should not fund its rent
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            SetFee::populate(governance_authority.pubkey(), 0),
+            &vec![&governance_authority],
+            None,
+        )
+        .await
+        .unwrap();
+
+    const NEW_TREASURY_ID: u8 = 1;
+    assert_treasury_balance(&mut program_simulator, 0, NEW_TREASURY_ID).await;
+
+    program_simulator
+        .process_ix_with_default_compute_limit(
+            PostUpdateAtomic::populate(
+                poster.pubkey(),
+                poster.pubkey(),
+                price_update_keypair.pubkey(),
+                BRIDGE_ID,
+                DEFAULT_GUARDIAN_SET_INDEX,
+                vaa.clone(),
+                merkle_price_updates[1].clone(),
+                NEW_TREASURY_ID,
+            ),
+            &vec![&poster, &price_update_keypair],
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_treasury_balance(&mut program_simulator, 0, NEW_TREASURY_ID).await;
 }

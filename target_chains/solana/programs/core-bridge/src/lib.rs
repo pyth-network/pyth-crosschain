@@ -1,4 +1,4 @@
-#![allow(clippy::result_large_err)]
+#![allow(clippy::result_large_err, unexpected_cfgs)]
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "lazer")] {
