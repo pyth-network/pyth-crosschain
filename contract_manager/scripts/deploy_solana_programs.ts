@@ -72,7 +72,7 @@ const parser = yargs(hideBin(process.argv))
   .strict();
 
 const loadGovernanceVault = (isMainnet: boolean): Vault => {
-  const governanceEnvironment = !isMainnet ? "mainnet-beta" : "devnet";
+  const governanceEnvironment = isMainnet ? "mainnet-beta" : "devnet";
   const vault = Object.entries(DefaultStore.vaults).find(([id]) =>
     id.startsWith(governanceEnvironment + "_"),
   )?.[1];
