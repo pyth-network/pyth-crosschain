@@ -31,7 +31,7 @@ import type {
   WithdrawParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
-import type { ClientContext } from "./client";
+import { ClientContext } from "./client";
 
 export const execFileAsync = promisify(execFile);
 
@@ -295,17 +295,12 @@ export class SpendingValidator<
     redeemer: RedeemerArg<Redeemer>,
   ): SpendResults<ReplaceItems<Inputs, Datum>> {
     return {
-      datums: inputs.map(({ datumOption }) => {
-        if (!(datumOption instanceof InlineDatum.InlineDatum)) {
-          throw new Error(
-            "SpendingValidator.spend only supports inline inputs",
-          );
-        }
-        return deapplyPlutusOrWithSchema(
+      datums: inputs.map((utxo) =>
+        deapplyPlutusOrWithSchema(
           this.blueprint.datum,
-          datumOption.data,
-        );
-      }) as ReplaceItems<Inputs, Datum>,
+          ClientContext.readUtxo(utxo),
+        ),
+      ) as ReplaceItems<Inputs, Datum>,
       input: {
         inputs,
         redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),

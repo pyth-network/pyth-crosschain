@@ -78,6 +78,18 @@ export async function initWormholeState(
   ];
 }
 
+export async function readWormholeSetIndex(
+  ctx: ClientContext,
+  policy: string,
+): Promise<bigint> {
+  const state = await ctx.getNftUtxo(policy, WH_STATE_NFT);
+  const data = ClientContext.readUtxo(state);
+  if (!Data.isConstr(data)) {
+    throw new TypeError("Wormhole state datum is not a Constr");
+  }
+  return Wormhole_state_update_spend.datum.fromData(data).set_index;
+}
+
 export async function applyGuardianSetUpgrade(
   ctx: ClientContext,
   policy: string,

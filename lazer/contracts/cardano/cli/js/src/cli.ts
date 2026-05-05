@@ -26,11 +26,13 @@ import {
   initPythState,
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
+  readWormholeSetIndex,
   spendScriptHash,
   verifyUpdates,
   withdrawScriptHash,
 } from "./transactions.js";
 import { execFileAsync } from "./utils.js";
+import type { PreparedGuardianSetUpgrade } from "./wormhole.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
 async function createCtx(
@@ -70,17 +72,25 @@ async function initAndUpgradeWormhole(
     TransactionHash.toHex(wormholeDigest),
   );
 
+  await upgradeWormhole(ctx, PolicyId.toHex(wormhole), upgrades);
+
+  return wormhole;
+}
+
+async function upgradeWormhole(
+  ctx: ClientContext,
+  policy: string,
+  upgrades: PreparedGuardianSetUpgrade[],
+) {
   console.info("Upgrading Pyth Wormhole...");
   for (const upgrade of upgrades) {
     console.info(`...to guardian set #${upgrade.index}...`);
     const [digest] = await ctx.run(() =>
-      applyGuardianSetUpgrade(ctx, PolicyId.toHex(wormhole), upgrade),
+      applyGuardianSetUpgrade(ctx, policy, upgrade),
     );
     console.info(`(Digest: ${TransactionHash.toHex(digest)})`);
   }
   console.info("...done.");
-
-  return wormhole;
 }
 
 const parser = yargs().usage(
@@ -91,6 +101,16 @@ const commonOptions = {
   apiKey: {
     description: "API key to use",
     type: "string",
+  },
+  emitterAddress: {
+    demandOption: true,
+    description: "emitter chain address",
+    type: "string",
+  },
+  emitterChain: {
+    default: 1, // Solana
+    description: "emitter chain ID",
+    type: "number",
   },
   mnemonic: {
     description: "wallet mnemonic to use",
@@ -184,16 +204,8 @@ parser.command(
   (b) =>
     b.options({
       "api-key": commonOptions.apiKey,
-      "emitter-address": {
-        demandOption: true,
-        description: "emitter chain address",
-        type: "string",
-      },
-      "emitter-chain": {
-        default: 1, // Solana
-        description: "emitter chain ID",
-        type: "number",
-      },
+      "emitter-address": commonOptions.emitterAddress,
+      "emitter-chain": commonOptions.emitterChain,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       verbose: commonOptions.verbose,
@@ -222,6 +234,77 @@ parser.command(
     console.info("Initialized Pyth:", TransactionHash.toHex(pythDigest));
 
     console.info("Pyth Wormhole Policy ID:", PolicyId.toHex(whPolicy));
+    console.info("Pyth Policy ID:", PolicyId.toHex(pyth));
+  },
+);
+
+parser.command(
+  "upgrade-wormhole",
+  "upgrade wormhole guardian set from current to latest",
+  (b) =>
+    b.options({
+      "api-key": commonOptions.apiKey,
+      mnemonic: commonOptions.mnemonic,
+      network: commonOptions.network,
+      state: commonOptions.state,
+      verbose: commonOptions.verbose,
+    }),
+  async ({ apiKey, mnemonic, network, state, verbose }) => {
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
+
+    const currentIndex = await readWormholeSetIndex(ctx, state);
+    console.info("Current guardian set index:", currentIndex);
+
+    const upgrades = (await prepareGuardianSetVAAs()).filter(
+      (u) => BigInt(u.index) > currentIndex,
+    );
+
+    if (upgrades.length === 0) {
+      console.info("Already at latest guardian set.");
+    } else {
+      console.info(`Found ${upgrades.length} pending upgrade(s)...`);
+      await upgradeWormhole(ctx, state, upgrades);
+    }
+  },
+);
+
+parser.command(
+  "init-pyth",
+  "initialize on-chain state of Pyth contract only",
+  (b) =>
+    b.options({
+      "api-key": commonOptions.apiKey,
+      "emitter-address": commonOptions.emitterAddress,
+      "emitter-chain": commonOptions.emitterChain,
+      mnemonic: commonOptions.mnemonic,
+      network: commonOptions.network,
+      verbose: commonOptions.verbose,
+      wormhole: {
+        demandOption: true,
+        description: "Policy ID of the Wormhole state token",
+        type: "string",
+      },
+    }),
+  async ({
+    apiKey,
+    emitterAddress,
+    emitterChain,
+    mnemonic,
+    network,
+    verbose,
+    wormhole,
+  }) => {
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
+
+    console.info("Initializing Pyth...");
+    const [pythDigest, pyth] = await ctx.run(() =>
+      initPythState(ctx, {
+        emitter_address: Buffer.from(emitterAddress, "hex"),
+        emitter_chain: BigInt(emitterChain),
+        wormhole: Buffer.from(wormhole, "hex"),
+      }),
+    );
+    console.info("Initialized Pyth:", TransactionHash.toHex(pythDigest));
     console.info("Pyth Policy ID:", PolicyId.toHex(pyth));
   },
 );
