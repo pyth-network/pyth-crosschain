@@ -58,6 +58,17 @@ import {
 } from "../../core/contracts/starknet";
 import { Token } from "../../core/token";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseJsonFile(jsonFile: string): any {
+  try {
+    return JSON.parse(readFileSync(jsonFile, "utf8"));
+  } catch (err) {
+    throw new Error(
+      `Failed to parse ${jsonFile}: ${(err as Error).message}`,
+    );
+  }
+}
+
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
@@ -116,7 +127,7 @@ export class Store {
     };
 
     for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
+      const parsedArray = parseJsonFile(jsonFile);
       for (const parsed of parsedArray) {
         if (allChainClasses[parsed.type] === undefined) {
           throw new Error(
@@ -204,7 +215,7 @@ export class Store {
       [SuiLazerContract.type]: SuiLazerContract,
     };
     this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
+      const parsedArray = parseJsonFile(jsonFile);
       for (const parsed of parsedArray) {
         if (allContractClasses[parsed.type] === undefined) return;
         if (!this.chains[parsed.chain])
@@ -244,7 +255,7 @@ export class Store {
 
   loadAllTokens() {
     this.getJsonFiles(`${this.path}/tokens/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
+      const parsedArray = parseJsonFile(jsonFile);
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
 
@@ -258,7 +269,7 @@ export class Store {
 
   loadAllVaults() {
     this.getJsonFiles(`${this.path}/vaults/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
+      const parsedArray = parseJsonFile(jsonFile);
       for (const parsed of parsedArray) {
         if (parsed.type !== Vault.type) return;
 
