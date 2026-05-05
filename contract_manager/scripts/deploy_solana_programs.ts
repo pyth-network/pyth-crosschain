@@ -247,11 +247,12 @@ async function uploadIdl(
   }
 
   const compressed = deflateSync(Buffer.from(JSON.stringify(idl), "utf8"));
-  if (compressed.length > IDL_PDA_MAX_GROWTH) {
+  if (compressed.length > IDL_PDA_MAX_GROWTH - IDL_HEADER_SIZE) {
     throw new Error(
-      `Compressed IDL for ${program} is ${compressed.length} bytes; exceeds ${IDL_PDA_MAX_GROWTH}`,
+      `Compressed IDL for ${program} is ${compressed.length} bytes; exceeds ${IDL_PDA_MAX_GROWTH - IDL_HEADER_SIZE}`,
     );
   }
+
   const dataLen = BigInt(
     Math.min(compressed.length * 2, IDL_PDA_MAX_GROWTH - IDL_HEADER_SIZE),
   );
