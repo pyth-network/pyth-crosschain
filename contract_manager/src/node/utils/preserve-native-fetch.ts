@@ -19,3 +19,11 @@ Object.defineProperty(globalThis, "fetch", {
   },
   configurable: true,
 });
+
+/**
+ * Re-exported so callers can use a named import (`import { preserveNativeFetch }
+ * from …`) instead of a side-effect-only `import "…"`.  Side-effect-only imports
+ * are not rewritten by the build tool (ts-duality) when it rewrites file
+ * extensions for ESM output, causing ERR_MODULE_NOT_FOUND at runtime.
+ */
+export const preserveNativeFetch = true;

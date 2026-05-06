@@ -8,7 +8,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* biome-ignore-all lint/suspicious/noExplicitAny: legacy code */
 /* biome-ignore-all lint/style/noNonNullAssertion: legacy code */
-import "./preserve-native-fetch";
+import { preserveNativeFetch } from "./preserve-native-fetch";
+void preserveNativeFetch; // keep side-effect import; bare `import "…"` breaks ESM build
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import type { PriceFeedContract, Storable } from "../../core/base";
