@@ -9,7 +9,7 @@ import fs from "node:fs";
 
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import { LAZER_PUSH_ORACLE_PROGRAM_ID, LAZER_RECEIVER_PROGRAM_ID, LAZER_WORMHOLE_PROGRAM_ID, PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   Keypair,
   Connection,
@@ -124,10 +124,10 @@ export default {
       endpoint,
       keypairFile,
       shardId,
-      computeUnitPriceMicroLamports,
+      computeUnitPriceMicroLamports: _computeUnitPriceMicroLamports,
       priceConfigFile,
       priceServiceEndpoint,
-      pythContractAddress,
+      pythContractAddress: _pythContractAddress,
       pushingFrequency,
       pollingFrequency,
       jitoEndpoints,
@@ -148,7 +148,7 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {accessToken: process.env.HERMES_ACCESS_TOKEN?? ""});
 
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
@@ -189,7 +189,9 @@ export default {
     const pythSolanaReceiver = new PythSolanaReceiver({
       connection,
       wallet,
-      pushOracleProgramId: new PublicKey(pythContractAddress),
+      pushOracleProgramId: LAZER_PUSH_ORACLE_PROGRAM_ID,
+      receiverProgramId: LAZER_RECEIVER_PROGRAM_ID,
+      wormholeProgramId: LAZER_WORMHOLE_PROGRAM_ID,
       treasuryId: treasuryId,
     });
 
@@ -257,7 +259,6 @@ export default {
         hermesClient,
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
-        computeUnitPriceMicroLamports,
         lookupTableAccount,
       );
     }

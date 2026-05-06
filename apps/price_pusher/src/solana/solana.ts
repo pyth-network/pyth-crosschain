@@ -96,7 +96,7 @@ export class SolanaPricePusher implements IPricePusher {
     private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
-    private computeUnitPriceMicroLamports: number,
+    // private _computeUnitPriceMicroLamports: number,
     private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
@@ -139,7 +139,7 @@ export class SolanaPricePusher implements IPricePusher {
     );
 
     const transactions = await transactionBuilder.buildVersionedTransactions({
-      computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+      jitoTipLamports: 100,
       tightComputeBudget: true,
     });
 
