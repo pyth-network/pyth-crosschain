@@ -9,6 +9,7 @@
     "aptos": "^1.3.14",
     "ethers": "^5.7.1",
     "js-sha3": "^0.8.0",
+    "tsx": "catalog:",
     "yargs": "^17.5.1"
   },
   "description": "Utilities for managing the Pyth Target Chain contract on Aptos",
@@ -60,7 +61,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "cli": "ts-node src/cli.ts"
+    "cli": "tsx src/cli.ts"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

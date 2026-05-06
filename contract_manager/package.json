@@ -306,7 +306,7 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
-    "shell": "ts-node ./src/node/utils/shell.ts"
+    "shell": "tsx ./src/node/utils/shell.ts"
   },
   "ts-duality": {
     "extraExports": {

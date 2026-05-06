@@ -6,7 +6,7 @@
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
     "@pythnetwork/xc-admin-common": "workspace:*",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "yargs": "^17.7.2"
   },
   "description": "Pyth IOTA Integration Cli tools",
@@ -67,7 +67,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "cli": "ts-node src/cli.ts"
+    "cli": "tsx src/cli.ts"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",
