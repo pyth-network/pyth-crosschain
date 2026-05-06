@@ -132,20 +132,6 @@ module wormhole::wormhole_scenario {
             x"58076f561cc62a47087b567c86f986426dfcd000",
             x"bd6e9833490f8fa87c733a183cd076a6cbd29074",
             x"b853fcf0a5c78c1b56d15fce7a154e6ebe9ed7a2",
-            x"af3503dbd2e37518ab04d7ce78b630f98b15b78a",
-            x"785632dea5609064803b1c8ea8bb2c77a6004bd1",
-            x"09a281a698c0f5ba31f158585b41f4f33659e54d",
-            x"3178443ab76a60e21690dbfb17f7f59f09ae3ea1",
-            x"647ec26ae49b14060660504f4da1c2059e1c5ab6",
-            x"810ac3d8e1258bd2f004a94ca0cd4c68fc1c0611",
-            x"80610e96d645b12f47ae5cf4546b18538739e90f",
-            x"2edb0d8530e31a218e72b9480202acbaeb06178d",
-            x"a78858e5e5c4705cdd4b668ffe3be5bae4867c9d",
-            x"5efe3a05efc62d60e1d19faeb56a80223cdd3472",
-            x"d791b7d32c05abb1cc00b6381fa0c4928f0c56fc",
-            x"14bc029b8809069093d712a3fd4dfab31963597e",
-            x"246ab29fc6ebedf2d392a51ab2dc5c59d0902a03",
-            x"132a84dfd920b35a3d0ba5f7a0635df298f9033e",
         ]
     }
 
