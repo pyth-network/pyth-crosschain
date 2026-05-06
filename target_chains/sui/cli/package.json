@@ -3,7 +3,7 @@
     "@certusone/wormhole-sdk": "^0.9.12",
     "@mysten/sui": "^1.3.0",
     "@pythnetwork/contract-manager": "workspace:*",
-    "@pythnetwork/price-service-client": "^1.4.0",
+    "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "^1.2.0",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "ts-node": "catalog:",
@@ -67,7 +67,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "cli": "ts-node src/cli.ts"
+    "cli": "node dist/cjs/cli.cjs"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

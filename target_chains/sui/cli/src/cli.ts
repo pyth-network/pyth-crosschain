@@ -2,12 +2,14 @@ import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
 import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import {
+  getDefaultDeploymentConfig,
+  toDeploymentType,
+} from "@pythnetwork/contract-manager/core/base";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { execSync } from "child_process";
-import { initPyth, publishPackage } from "./pyth_deploy.js";
+import { initPyth } from "./pyth_deploy.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
@@ -28,8 +30,8 @@ const OPTIONS = {
   },
   path: {
     type: "string",
-    default: "../../contracts",
-    desc: "Path to the sui contracts, will use ../../contracts by default",
+    default: "../contracts",
+    desc: "Path to the sui contracts (relative to the package root), will use ../contracts by default",
   },
   endpoint: {
     type: "string",
@@ -71,12 +73,15 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
+      console.log(process.env.HERMES_ACCESS_TOKEN);
+      const client = new HermesClient(argv.endpoint, {accessToken: process.env.HERMES_ACCESS_TOKEN??""});
       const feedIds = argv["feed-id"] as string[];
-      const vaas = await priceService.getLatestVaas(feedIds);
+      const updates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeCreatePriceFeed(
         argv["private-key"],
-        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+        updates.binary.data.map((update) => Buffer.from(update, "hex")),
       );
       console.log("Transaction successful. Digest:", digest);
     },
@@ -97,15 +102,18 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
-      const feedIds = await priceService.getPriceFeedIds();
+      const client = new HermesClient(argv.endpoint);
+      const priceFeedsMetadata = await client.getPriceFeeds();
+      const feedIds = priceFeedsMetadata.map((feed) => feed.id);
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
         const batch = feedIds.slice(i, i + BATCH_SIZE);
-        const vaas = await priceService.getLatestVaas(batch);
+        const updates = await client.getLatestPriceUpdates(batch, {
+          parsed: false,
+        });
         const digest = await contract.executeCreatePriceFeed(
           argv["private-key"],
-          vaas.map((vaa) => Buffer.from(vaa, "base64")),
+          updates.binary.data.map((update) => Buffer.from(update, "hex")),
         );
         console.log("Transaction successful. Digest:", digest);
         console.log(`Progress: ${i + BATCH_SIZE}/${feedIds.length}`);
@@ -129,7 +137,7 @@ yargs
         digest: number[];
       } = JSON.parse(
         execSync(
-          `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${argv.path} 2> /dev/null`,
+          `sui move build --dump-bytecode-as-base64 --path ${argv.path} 2> /dev/null`,
           {
             encoding: "utf-8",
           },
@@ -153,6 +161,13 @@ yargs
           },
           path: OPTIONS.path,
         })
+        .options({
+          "deployment-type": {
+            type: "string",
+            demandOption: false,
+            desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+          },
+        })
         .usage(
           "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts>",
         );
@@ -163,19 +178,23 @@ yargs
       const keypair = Ed25519Keypair.fromSecretKey(
         new Uint8Array(Buffer.from(walletPrivateKey, "hex")),
       );
-      const result = await publishPackage(
-        keypair,
-        chain.getProvider(),
-        argv.path,
+      // const result = await publishPackage(
+      //   keypair,
+      //   chain.getProvider(),
+      //   argv.path,
+      // );
+      console.log("argv[deployment-type]:", argv["deployment-type"]);
+      const deploymentType = toDeploymentType(
+        argv["deployment-type"] ?? (chain.isMainnet() ? "stable" : "beta"),
       );
-      const deploymentType = chain.isMainnet() ? "stable" : "beta";
+      console.log("Deployment type:", deploymentType);
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
         keypair,
         chain.getProvider(),
-        result.packageId,
-        result.deployerCapId,
-        result.upgradeCapId,
+        "0x79b869b45497b1d95a64a80d2ca1af4220d96586bd07275e94d161449decba3a",
+        "0xc3b3e256e5608ef502b1a00a12d18ace6464f842135363746e80d24151dd26de",
+        "0xb30afbc04a35e3ec1905d2dfec700f01ddb31feb68078dc6f16a1e2e9abdfa24",
         config,
       );
     },
@@ -197,12 +216,14 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
+      const client = new HermesClient(argv.endpoint, {accessToken: process.env.HERMES_ACCESS_TOKEN??""});
       const feedIds = argv["feed-id"] as string[];
-      const vaas = await priceService.getLatestVaas(feedIds);
+      const updates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
         argv["private-key"],
-        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+        updates.binary.data.map((update) => Buffer.from(update, "hex")),
         feedIds,
       );
       console.log("Transaction successful. Digest:", digest);
@@ -233,11 +254,10 @@ yargs
         new Uint8Array(Buffer.from(argv["private-key"], "hex")),
       );
 
-      const pythContractsPath = resolve(`${__dirname}/${argv.path}`);
-
       // Build for modules and dependencies
-      const { modules, dependencies, digest } =
-        buildForBytecodeAndDigest(pythContractsPath);
+      const { modules, dependencies, digest } = buildForBytecodeAndDigest(
+        argv.path,
+      );
       //Execute upgrade with signed governance VAA.
       console.log("Digest is", digest.toString("hex"));
       const pythPackageOld = await contract.getPackageId(contract.stateId);
