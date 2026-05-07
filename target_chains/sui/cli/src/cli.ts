@@ -179,15 +179,8 @@ yargs
             desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
           },
         })
-        .options({
-          "deployment-type": {
-            type: "string",
-            demandOption: true,
-            desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
-          },
-        })
         .usage(
-          "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts>",
+          "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts> --deployment-type <deployment-type>",
         );
     },
     async (argv) => {
