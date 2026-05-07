@@ -83,15 +83,17 @@ const ChangeLogView = ({ log }: { log: ChangeLogData }) => {
 
 const Footer = () => (
   <footer className={styles.footer}>
-    <span className={styles.footerNote}>Source · pyth.dourolabs.app</span>
-    <span className={styles.footerSep} aria-hidden="true">
-      ·
+    <span className={styles.footerNote}>
+      Sourced from{" "}
+      <a
+        className={styles.footerLink}
+        href="https://pyth.dourolabs.app/docs/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Symbols API
+      </a>
     </span>
-    <span className={styles.footerNote}>UTC times</span>
-    <span className={styles.footerSep} aria-hidden="true">
-      ·
-    </span>
-    <span className={styles.footerNote}>Daily snapshots</span>
     <span className={styles.footerSpacer} />
     {/* TODO: link to the actual file in GitHub once a public URL is decided. */}
     <a className={styles.footerEdit} href="#">
