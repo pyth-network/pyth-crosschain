@@ -1,7 +1,6 @@
 "use client";
 
 import { Bell } from "@phosphor-icons/react/dist/ssr/Bell";
-import { Rss } from "@phosphor-icons/react/dist/ssr/Rss";
 import clsx from "clsx";
 import { Callout } from "fumadocs-ui/components/callout";
 import { useEffect, useMemo, useState } from "react";
@@ -410,12 +409,6 @@ const MetaBar = ({
     >
       <Bell size={10} weight="regular" />
       Subscribe
-    </a>
-
-    {/* TODO: wire to /price-feeds/changelog/rss.xml once the route exists. */}
-    <a className={styles.metaButton} href="#" aria-label="RSS feed">
-      <Rss size={10} weight="regular" />
-      RSS
     </a>
   </div>
 );
