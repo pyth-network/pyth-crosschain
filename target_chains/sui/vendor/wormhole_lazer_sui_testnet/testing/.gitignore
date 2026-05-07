@@ -1,6 +1,0 @@
-node_modules
-sui.log.*
-./token_bridge/
-./wormhole/
-
-dist/
