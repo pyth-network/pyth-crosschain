@@ -67,7 +67,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "cli": "node dist/cjs/cli.cjs"
+    "cli": "ts-node src/cli.ts"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

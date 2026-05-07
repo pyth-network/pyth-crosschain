@@ -5,7 +5,7 @@ import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contrac
 import { getDefaultDeploymentConfig, toDeploymentType } from "@pythnetwork/contract-manager/core/base";
 import {HermesClient} from "@pythnetwork/hermes-client";
 import { execSync } from "child_process";
-import { initPyth } from "./pyth_deploy.js";
+import { initPyth, publishPackage } from "./pyth_deploy.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import {
   buildForBytecodeAndDigest,
@@ -170,7 +170,7 @@ yargs
         .options({
           "deployment-type": {
             type: "string",
-            demandOption: false,
+            demandOption: true,
             desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
           },
         })
@@ -194,9 +194,9 @@ yargs
       await initPyth(
         keypair,
         chain.getProvider(),
-        "0x79b869b45497b1d95a64a80d2ca1af4220d96586bd07275e94d161449decba3a",
-        "0xc3b3e256e5608ef502b1a00a12d18ace6464f842135363746e80d24151dd26de",
-        "0xb30afbc04a35e3ec1905d2dfec700f01ddb31feb68078dc6f16a1e2e9abdfa24",
+        result.packageId,
+        result.deployerCapId,
+        result.upgradeCapId,
         config,
       );
     },
