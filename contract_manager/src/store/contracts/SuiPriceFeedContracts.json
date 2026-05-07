@@ -26,5 +26,12 @@
     "wormholeStateId": "0x750da8e6d16b6a363a39fe2eaa8295ac224a1e6fce4e47b58845e2e8746164f0",
     "type": "SuiPriceFeedContract",
     "deploymentType": "lazer-prod"
+  },
+  {
+    "chain": "sui_mainnet",
+    "stateId": "0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d",
+    "wormholeStateId": "0xdbca52b9fb4f712e25f61f974586d93ac541bcf8389564f0323bb07215168b5c",
+    "type": "SuiPriceFeedContract",
+    "deploymentType": "lazer-prod"
   }
 ]
