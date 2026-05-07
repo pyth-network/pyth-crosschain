@@ -129,7 +129,7 @@ yargs
           priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
         );
         console.log("Transaction successful. Digest:", digest);
-        console.log(`Progress: ${i + BATCH_SIZE}/${priceFeeds.length}`);
+        console.log(`Progress: ${i + BATCH_SIZE}/${feedIds.length}`);
       }
     },
   )
