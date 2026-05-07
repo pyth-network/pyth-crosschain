@@ -1,7 +1,11 @@
 [package]
 name = "Wormhole"
 version = "0.2.0"
+<<<<<<<< HEAD:target_chains/sui/vendor/wormhole_lazer/wormhole/Move.sui_mainnet.toml
 published-at = "0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4"
+========
+published-at = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+>>>>>>>> main:target_chains/sui/vendor/wormhole_lazer/wormhole/Move.sui_testnet.toml
 
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
@@ -9,7 +13,11 @@ subdir = "crates/sui-framework/packages/sui-framework"
 rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
 
 [addresses]
+<<<<<<<< HEAD:target_chains/sui/vendor/wormhole_lazer/wormhole/Move.sui_mainnet.toml
 wormhole = "0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4"
+========
+wormhole = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+>>>>>>>> main:target_chains/sui/vendor/wormhole_lazer/wormhole/Move.sui_testnet.toml
 
 [dev-addresses]
 wormhole = "0x100"
