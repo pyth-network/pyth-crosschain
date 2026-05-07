@@ -104,11 +104,12 @@ export async function initPyth(
   config: {
     dataSources: DataSource[];
     governanceDataSource: DataSource;
+    initialSingleUpdateFee: number;
   },
 ) {
   const tx = new Transaction();
 
-  const baseUpdateFee = tx.pure.u64(1);
+  const baseUpdateFee = tx.pure.u64(config.initialSingleUpdateFee);
   const dataSourceEmitterAddresses = tx.pure(
     bcs
       .vector(bcs.vector(bcs.u8()))

@@ -136,6 +136,7 @@ export abstract class PriceFeedContract extends Storable {
 export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
   dataSources: DataSource[];
   governanceDataSource: DataSource;
+  initialSingleUpdateFee: number;
   wormholeConfig: {
     governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
@@ -146,6 +147,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
 } {
   if (deploymentType === "stable")
     return {
+      initialSingleUpdateFee: 1,
       dataSources: [
         {
           emitterAddress:
@@ -178,6 +180,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     };
   else if (deploymentType === "beta")
     return {
+      initialSingleUpdateFee: 1,
       dataSources: [
         {
           emitterAddress:
@@ -210,6 +213,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     };
   else if (deploymentType === "lazer-staging")
     return {
+      initialSingleUpdateFee: 0,
       dataSources: [
         {
           emitterAddress:
@@ -236,6 +240,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     };
   else if (deploymentType === "lazer-prod")
     return {
+      initialSingleUpdateFee: 0,
       dataSources: [
         {
           emitterAddress:
