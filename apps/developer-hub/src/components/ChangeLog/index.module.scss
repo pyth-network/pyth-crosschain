@@ -491,9 +491,13 @@
   color: theme.color("muted");
 }
 
-.footerSep {
-  color: theme.color("border");
-  user-select: none;
+.footerLink {
+  color: theme.color("link", "primary");
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .footerSpacer {
