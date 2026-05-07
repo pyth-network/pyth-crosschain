@@ -19,7 +19,7 @@ export async function publishPackage(
     dependencies: string[];
   } = JSON.parse(
     execSync(
-      `sui move build --dump-bytecode-as-base64 --path ${packagePath} 2> /dev/null`,
+      `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${packagePath} 2> /dev/null`,
       {
         encoding: "utf-8",
       },

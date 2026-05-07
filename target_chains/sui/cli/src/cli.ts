@@ -16,6 +16,7 @@ import {
   upgradePyth,
 } from "./upgrade_pyth.js";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
+import { resolve } from "path";
 
 const OPTIONS = {
   "private-key": {
@@ -30,8 +31,8 @@ const OPTIONS = {
   },
   path: {
     type: "string",
-    default: "../contracts",
-    desc: "Path to the sui contracts (relative to the package root), will use ../contracts by default",
+    default: "../../contracts",
+    desc: "Path to the sui contracts, will use ../../contracts by default",
   },
   endpoint: {
     type: "string",
@@ -149,7 +150,7 @@ yargs
         digest: number[];
       } = JSON.parse(
         execSync(
-          `sui move build --dump-bytecode-as-base64 --path ${argv.path} 2> /dev/null`,
+          `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${argv.path} 2> /dev/null`,
           {
             encoding: "utf-8",
           },
@@ -271,10 +272,11 @@ yargs
         new Uint8Array(Buffer.from(argv["private-key"], "hex")),
       );
 
+      const pythContractsPath = resolve(`${__dirname}/${argv.path}`);
+
       // Build for modules and dependencies
-      const { modules, dependencies, digest } = buildForBytecodeAndDigest(
-        argv.path,
-      );
+      const { modules, dependencies, digest } =
+        buildForBytecodeAndDigest(pythContractsPath);
       //Execute upgrade with signed governance VAA.
       console.log("Digest is", digest.toString("hex"));
       const pythPackageOld = await contract.getPackageId(contract.stateId);
