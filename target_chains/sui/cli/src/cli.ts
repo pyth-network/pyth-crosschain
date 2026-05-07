@@ -2,8 +2,11 @@ import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
 import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
-import { getDefaultDeploymentConfig, toDeploymentType } from "@pythnetwork/contract-manager/core/base";
-import {HermesClient} from "@pythnetwork/hermes-client";
+import {
+  getDefaultDeploymentConfig,
+  toDeploymentType,
+} from "@pythnetwork/contract-manager/core/base";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -76,10 +79,14 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const hermesClientConfig = argv["endpoint-access-token"] ? {accessToken: argv["endpoint-access-token"]} : undefined;
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
       const client = new HermesClient(argv.endpoint, hermesClientConfig);
       const feedIds = argv["feed-id"] as string[];
-      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {parsed: false});
+      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeCreatePriceFeed(
         argv["private-key"],
         priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
@@ -104,14 +111,18 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const hermesClientConfig = argv["endpoint-access-token"] ? {accessToken: argv["endpoint-access-token"]} : undefined;
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
       const client = new HermesClient(argv.endpoint, hermesClientConfig);
       const priceFeeds = await client.getPriceFeeds();
       const feedIds = priceFeeds.map((feed) => feed.id);
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
         const batch = feedIds.slice(i, i + BATCH_SIZE);
-        const priceUpdates = await client.getLatestPriceUpdates(batch, {parsed: false});
+        const priceUpdates = await client.getLatestPriceUpdates(batch, {
+          parsed: false,
+        });
         const digest = await contract.executeCreatePriceFeed(
           argv["private-key"],
           priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
@@ -219,10 +230,14 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const hermesClientConfig = argv["endpoint-access-token"] ? {accessToken: argv["endpoint-access-token"]} : undefined;
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
       const client = new HermesClient(argv.endpoint, hermesClientConfig);
       const feedIds = argv["feed-id"] as string[];
-      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {parsed: false});
+      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
         argv["private-key"],
         priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
