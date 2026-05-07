@@ -2,7 +2,7 @@
   "root": true,
   "title": "Price Feeds",
   "description": "Real-time financial market data",
-  "pages": ["core", "pro"],
+  "pages": ["core", "pro", "changelog"],
   "defaultOpen": true,
   "icon": "ChartLine"
 }
