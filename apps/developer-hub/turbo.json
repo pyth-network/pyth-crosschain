@@ -6,7 +6,8 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "generate:docs"
+        "generate:docs",
+        "generate:changelog"
       ],
       "env": [
         "VERCEL_ENV",
@@ -41,6 +42,18 @@
       "cache": false,
       "dependsOn": [
         "//#install:modules"
+      ]
+    },
+    "generate:changelog": {
+      "dependsOn": [
+        "//#install:modules"
+      ],
+      "inputs": [
+        "data/changelog-snapshots/**",
+        "scripts/generate-changelog.ts"
+      ],
+      "outputs": [
+        "src/components/ChangeLog/generated-data.ts"
       ]
     },
     "generate:docs": {

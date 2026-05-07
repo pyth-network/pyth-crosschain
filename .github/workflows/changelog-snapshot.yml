@@ -1,0 +1,53 @@
+name: Snapshot Pyth symbols for Change Log
+
+on:
+  schedule:
+    # Daily at 00:30 UTC. Slight offset from midnight to avoid contention
+    # and to ensure any in-progress upstream writes have settled.
+    - cron: "30 0 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies for developer-hub
+        working-directory: apps/developer-hub
+        run: pnpm install --frozen-lockfile --filter @pythnetwork/developer-hub...
+
+      - name: Capture today's snapshot
+        working-directory: apps/developer-hub
+        run: pnpm snapshot:changelog
+
+      - name: Regenerate change log data
+        working-directory: apps/developer-hub
+        run: pnpm generate:changelog
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/developer-hub/data/changelog-snapshots/
+
+          if git diff --cached --quiet; then
+            echo "No new snapshot — nothing to commit."
+            exit 0
+          fi
+
+          DATE=$(date -u +%Y-%m-%d)
+          git commit -m "chore(developer-hub): daily change-log snapshot ${DATE}"
+          git push

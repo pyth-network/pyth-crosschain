@@ -1,0 +1,519 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Meta bar ──────────────────────────────────────────────────────────
+
+.metaBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: theme.spacing(3.5);
+  padding-bottom: theme.spacing(4.5);
+  border-bottom: 1px solid theme.color("border");
+  margin-bottom: theme.spacing(8);
+}
+
+.modeToggle {
+  display: inline-flex;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+  padding: 2px;
+  background: theme.color("background", "card-secondary");
+}
+
+.modeToggleButton {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  font-weight: theme.font-weight("semibold");
+  padding: theme.spacing(1.25) theme.spacing(3);
+  border: 0;
+  background: transparent;
+  color: theme.color("muted");
+  border-radius: theme.border-radius("sm");
+  letter-spacing: theme.letter-spacing("wider");
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+
+  &:hover:not(.modeToggleButtonActive) {
+    color: theme.color("foreground");
+  }
+}
+
+.modeToggleButtonActive {
+  background: theme.color("background", "secondary");
+  color: theme.color("foreground");
+  cursor: default;
+}
+
+.updated {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.25);
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+}
+
+.updatedDot {
+  width: 6px;
+  height: 6px;
+  border-radius: theme.border-radius("full");
+  background: theme.color("states", "success", "base");
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.metaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.25);
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  font-weight: theme.font-weight("semibold");
+  padding: theme.spacing(1) theme.spacing(2.25);
+  border-radius: theme.border-radius("base");
+  color: theme.color("muted");
+  border: 1px solid theme.color("border");
+  background: transparent;
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wider");
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    color: theme.color("foreground");
+    border-color: theme.color("foreground");
+  }
+}
+
+// ─── Week summary ──────────────────────────────────────────────────────
+
+.weekSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: theme.spacing(7);
+  margin-bottom: theme.spacing(12);
+  padding: theme.spacing(5.5) theme.spacing(6.5);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  background: theme.color("background", "secondary");
+}
+
+.weekTotal {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+}
+
+.weekHeading {
+  margin: 0;
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("widest");
+  text-transform: uppercase;
+  color: theme.color("muted");
+  line-height: 1;
+}
+
+.weekNumber {
+  font-size: 2.25rem;
+  font-weight: theme.font-weight("medium");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1;
+  color: theme.color("foreground");
+}
+
+.weekRange {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+  line-height: 1;
+}
+
+.weekDivider {
+  width: 1px;
+  align-self: stretch;
+  background: theme.color("border");
+}
+
+.weekStats {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: theme.spacing(4);
+  min-width: 0;
+}
+
+.weekStat {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1.5);
+  min-width: 0;
+}
+
+.weekStatValue {
+  font-size: 1.625rem;
+  font-weight: theme.font-weight("medium");
+  line-height: 1;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("muted");
+  font-variant-numeric: tabular-nums;
+
+  &_added {
+    color: theme.color("states", "success", "base");
+  }
+
+  &_wentLive {
+    color: theme.color("highlight");
+  }
+
+  &_expiring {
+    color: theme.color("states", "warning", "normal");
+  }
+
+  &_removed {
+    color: theme.color("states", "error", "base");
+  }
+}
+
+.weekStatLabel {
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  letter-spacing: theme.letter-spacing("wide");
+  color: theme.color("muted");
+  line-height: 1;
+}
+
+// ─── Day section ───────────────────────────────────────────────────────
+
+.days {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(14);
+}
+
+.day {
+  scroll-margin-top: theme.spacing(8);
+}
+
+.dayHeader {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: theme.spacing(3);
+  margin-bottom: theme.spacing(3.5);
+}
+
+.dayDate {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: theme.font-weight("medium");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1.1;
+  color: theme.color("foreground");
+}
+
+.dayLabel {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+}
+
+.dayCount {
+  margin-left: auto;
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+}
+
+.dayEmpty {
+  padding: theme.spacing(3.5) theme.spacing(4.5);
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  font-size: 1rem;
+  font-style: italic;
+  color: theme.color("muted");
+}
+
+.dayHero {
+  margin: 0 0 theme.spacing(5.5) 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("foreground");
+}
+
+// ─── Events list (regular) ─────────────────────────────────────────────
+
+.eventsList {
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background: theme.color("background", "card-secondary");
+  overflow: hidden;
+}
+
+.eventRow {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: theme.spacing(4);
+  padding: theme.spacing(3) theme.spacing(4.5);
+  align-items: baseline;
+  border-bottom: 1px solid theme.color("border");
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.eventRowWithDate {
+  grid-template-columns: 78px 132px minmax(0, 1fr);
+}
+
+.eventDate {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+  white-space: nowrap;
+}
+
+.eventTag {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.75);
+  font-size: 0.75rem;
+  color: theme.color("paragraph");
+}
+
+.eventDot {
+  width: 6px;
+  height: 6px;
+  border-radius: theme.border-radius("full");
+  flex-shrink: 0;
+  transform: translateY(-1px);
+  background: theme.color("muted");
+}
+
+.dotAdded {
+  background: theme.color("states", "success", "base");
+}
+
+.dotWentLive {
+  background: theme.color("highlight");
+}
+
+.dotExpiring {
+  background: theme.color("states", "warning", "normal");
+}
+
+.dotRemoved {
+  background: theme.color("states", "error", "base");
+}
+
+.eventInfo {
+  display: flex;
+  align-items: baseline;
+  gap: theme.spacing(2.5);
+  min-width: 0;
+}
+
+.eventId {
+  font-family: theme.font-family("monospace");
+  font-size: 0.8125rem;
+  font-weight: theme.font-weight("semibold");
+  color: theme.color("foreground");
+  white-space: nowrap;
+}
+
+.eventAsset {
+  font-size: 0.8125rem;
+  color: theme.color("paragraph");
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.eventAssetType {
+  font-size: 0.75rem;
+  color: theme.color("muted");
+  white-space: nowrap;
+}
+
+// ─── Expiring callout ──────────────────────────────────────────────────
+
+.expiringCallout {
+  margin-top: theme.spacing(6);
+  padding-left: theme.spacing(4.5);
+  border-left: 2px solid theme.color("states", "warning", "normal");
+}
+
+.expiringCalloutFirst {
+  margin-top: 0;
+}
+
+.expiringHeading {
+  margin: 0 0 theme.spacing(2.5) 0;
+  font-size: 0.9375rem;
+  font-weight: theme.font-weight("medium");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1;
+  color: theme.color("foreground");
+}
+
+.expiringHeadingMuted {
+  font-weight: theme.font-weight("normal");
+  font-size: 0.875rem;
+  color: theme.color("muted");
+}
+
+.expiringList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1.5);
+}
+
+.expiringRow {
+  display: flex;
+  align-items: baseline;
+  gap: theme.spacing(2.5);
+  font-size: 0.8125rem;
+}
+
+.expiringDays {
+  margin-left: auto;
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+  white-space: nowrap;
+}
+
+// ─── Stream view ───────────────────────────────────────────────────────
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(1.5);
+  margin-bottom: theme.spacing(5.5);
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.75);
+  padding: theme.spacing(1.25) theme.spacing(3);
+  border-radius: theme.border-radius("base");
+  border: 1px solid theme.color("border");
+  background: transparent;
+  color: theme.color("paragraph");
+  font-size: 0.75rem;
+  font-weight: theme.font-weight("medium");
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    border-color: theme.color("muted");
+    color: theme.color("foreground");
+  }
+}
+
+.filterChipActive {
+  border-color: theme.color("foreground");
+  background: theme.color("background", "secondary");
+  color: theme.color("foreground");
+  cursor: default;
+}
+
+.filterDot {
+  width: 6px;
+  height: 6px;
+  border-radius: theme.border-radius("full");
+  flex-shrink: 0;
+  background: theme.color("muted");
+}
+
+.filterCount {
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  color: theme.color("muted");
+}
+
+.streamEmpty {
+  padding: theme.spacing(4) theme.spacing(4.5);
+  font-style: italic;
+  color: theme.color("muted");
+  font-size: 0.875rem;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background: theme.color("background", "card-secondary");
+}
+
+// ─── Empty state (no diffs yet) ────────────────────────────────────────
+
+.emptyState {
+  padding: theme.spacing(6) theme.spacing(7);
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  font-style: italic;
+  color: theme.color("muted");
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+// ─── Footer ────────────────────────────────────────────────────────────
+
+.footer {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: theme.spacing(3);
+  margin-top: theme.spacing(16);
+  padding-top: theme.spacing(7);
+  border-top: 1px solid theme.color("border");
+}
+
+.footerNote {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+}
+
+.footerSep {
+  color: theme.color("border");
+  user-select: none;
+}
+
+.footerSpacer {
+  flex: 1 1 auto;
+}
+
+.footerEdit {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("link", "primary");
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ─── Loading ───────────────────────────────────────────────────────────
+
+.loading {
+  padding: theme.spacing(6) 0;
+  color: theme.color("muted");
+}
