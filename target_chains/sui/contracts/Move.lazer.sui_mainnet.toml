@@ -1,7 +1,7 @@
 [package]
 name = "Pyth"
 version = "0.0.2"
-published_at = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
+published-at = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
 
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
