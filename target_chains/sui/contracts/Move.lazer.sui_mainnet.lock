@@ -2,11 +2,7 @@
 
 [move]
 version = 0
-<<<<<<<< HEAD:target_chains/sui/contracts/Move.lazer.sui_mainnet.lock
 manifest_digest = "23AF7589E5900087EAD98BBB2CDF4DA3AB08DA8A0A270AB4ECFCE25AB4745B3B"
-========
-manifest_digest = "82E854CF551897527885458CA2C46FFA58E26BA3C57E5F4DB6ACB4BB123AF0CB"
->>>>>>>> main:target_chains/sui/contracts/Move.lazer.sui_testnet.lock
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 
 dependencies = [
