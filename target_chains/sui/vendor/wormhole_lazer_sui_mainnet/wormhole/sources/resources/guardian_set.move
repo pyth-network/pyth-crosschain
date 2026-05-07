@@ -92,7 +92,7 @@ module wormhole::guardian_set {
 
     /// Returns the minimum number of signatures required for a VAA to be valid.
     public fun quorum(self: &GuardianSet): u64 {
-        (num_guardians(self) * 2) / 3 + 1
+        num_guardians(self) / 2 + 1
     }
 
     /// Configure this Guardian set to expire from some amount of time based on
