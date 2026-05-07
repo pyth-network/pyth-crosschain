@@ -1,6 +1,5 @@
 "use client";
 
-import { Bell } from "@phosphor-icons/react/dist/ssr/Bell";
 import clsx from "clsx";
 import { Callout } from "fumadocs-ui/components/callout";
 import { useEffect, useMemo, useState } from "react";
@@ -398,18 +397,6 @@ const MetaBar = ({
         Updated {fmtDateShort(lastUpdated)} UTC
       </span>
     )}
-
-    <span className={styles.spacer} />
-
-    {/* TODO: wire to a real subscribe target (mailing list / Discord). */}
-    <a
-      className={styles.metaButton}
-      href="#"
-      aria-label="Subscribe to changelog updates"
-    >
-      <Bell size={10} weight="regular" />
-      Subscribe
-    </a>
   </div>
 );
 

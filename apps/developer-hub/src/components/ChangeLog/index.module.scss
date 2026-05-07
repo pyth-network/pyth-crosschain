@@ -66,34 +66,6 @@
   background: theme.color("states", "success", "base");
 }
 
-.spacer {
-  flex: 1 1 auto;
-}
-
-.metaButton {
-  display: inline-flex;
-  align-items: center;
-  gap: theme.spacing(1.25);
-  font-family: theme.font-family("monospace");
-  font-size: 0.625rem;
-  font-weight: theme.font-weight("semibold");
-  padding: theme.spacing(1) theme.spacing(2.25);
-  border-radius: theme.border-radius("base");
-  color: theme.color("muted");
-  border: 1px solid theme.color("border");
-  background: transparent;
-  text-transform: uppercase;
-  letter-spacing: theme.letter-spacing("wider");
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease;
-
-  &:hover {
-    color: theme.color("foreground");
-    border-color: theme.color("foreground");
-  }
-}
-
 // ─── Week summary ──────────────────────────────────────────────────────
 
 .weekSummary {
