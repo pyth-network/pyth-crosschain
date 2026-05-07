@@ -147,7 +147,6 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
 } {
   if (deploymentType === "stable")
     return {
-      initialSingleUpdateFee: 1,
       dataSources: [
         {
           emitterAddress:
@@ -170,17 +169,17 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
           "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
         emitterChain: 1,
       },
+      initialSingleUpdateFee: 1,
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        quorum: "two-third",
         initialGuardianSet: ["58cc3ae5c097b213ce3c81979e1b9f9570746aa5"],
+        quorum: "two-third",
       },
     };
   else if (deploymentType === "beta")
     return {
-      initialSingleUpdateFee: 1,
       dataSources: [
         {
           emitterAddress:
@@ -203,17 +202,17 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
           "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
         emitterChain: 1,
       },
+      initialSingleUpdateFee: 1,
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        quorum: "two-third",
         initialGuardianSet: ["13947bd48b18e53fdaeee77f3473391ac727c638"],
+        quorum: "two-third",
       },
     };
   else if (deploymentType === "lazer-staging")
     return {
-      initialSingleUpdateFee: 0,
       dataSources: [
         {
           emitterAddress:
@@ -226,21 +225,21 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
           "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
         emitterChain: 1,
       },
+      initialSingleUpdateFee: 0,
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        quorum: "half",
         initialGuardianSet: [
           "dcd37a16f42a7ddd377046c3d607e7227c1ef459",
           "1098b22a55202594341052605228e3d896132f6a",
           "ff3b3ab7e07314359bd2469c2b1591478e398124",
         ],
+        quorum: "half",
       },
     };
   else if (deploymentType === "lazer-prod")
     return {
-      initialSingleUpdateFee: 0,
       dataSources: [
         {
           emitterAddress:
@@ -253,11 +252,11 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
           "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
         emitterChain: 1,
       },
+      initialSingleUpdateFee: 0,
       wormholeConfig: {
         governanceChainId: 1,
         governanceContract:
           "0000000000000000000000000000000000000000000000000000000000000004",
-        quorum: "half",
         initialGuardianSet: [
           "41534bb176e461a3fb30479400f210549ecce638",
           "6502987b62f21cab7eb5ccd8f0173084b60d5b41",
@@ -265,6 +264,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
           "d9d7d4529577864352c9a6539a48238fcd447052",
           "1663a5a822336ece48559b1dfb1e93a017a7dac3",
         ],
+        quorum: "half",
       },
     };
   else throw new Error(`Invalid deployment type ${deploymentType}`);
