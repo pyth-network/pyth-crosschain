@@ -38,7 +38,7 @@ const OUTPUT_FILE = resolve(
   HERE,
   "../src/components/ChangeLog/generated-data.ts",
 );
-const DAYS_TO_RENDER = 14;
+const DAYS_TO_RENDER = 15;
 
 type Symbol = {
   pyth_lazer_id: number;
