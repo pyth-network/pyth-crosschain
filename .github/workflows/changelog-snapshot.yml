@@ -29,6 +29,16 @@ jobs:
         working-directory: apps/developer-hub
         run: pnpm install --frozen-lockfile --filter @pythnetwork/developer-hub...
 
+      # Restore the rolling baseline (the 3 MB symbols snapshot from the
+      # previous run) so today's diff can be computed against it. Missing
+      # cache is fine — the snapshot script bootstraps a fresh baseline.
+      - name: Restore baseline snapshot
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/developer-hub/data/latest-snapshot.json
+          key: changelog-baseline
+          restore-keys: changelog-baseline
+
       - name: Capture today's snapshot and diff
         working-directory: apps/developer-hub
         run: pnpm snapshot:changelog
@@ -37,15 +47,24 @@ jobs:
         working-directory: apps/developer-hub
         run: pnpm generate:changelog
 
-      - name: Commit and push if changed
+      # Save today's snapshot back to the cache for tomorrow. Unique key
+      # per run so each save creates a new entry; old caches age out via
+      # GitHub's standard 7-day inactivity eviction.
+      - name: Save baseline snapshot
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: apps/developer-hub/data/latest-snapshot.json
+          key: changelog-baseline-${{ github.run_id }}
+
+      - name: Commit and push diff if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/developer-hub/data/latest-snapshot.json \
-                  apps/developer-hub/data/changelog-diffs/
+          git add apps/developer-hub/data/changelog-diffs/
 
           if git diff --cached --quiet; then
-            echo "No baseline change and no new diff — nothing to commit."
+            echo "No new diff today — nothing to commit."
             exit 0
           fi
 
