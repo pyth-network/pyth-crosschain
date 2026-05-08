@@ -1,8 +1,8 @@
 // The data this module exposes is generated at build time by
-// `scripts/generate-changelog.ts`, which diffs the daily snapshots in
-// `data/changelog-snapshots/` and writes a typed module here as
-// `generated-data.ts`. Snapshots themselves come from the daily
-// GitHub Action at `.github/workflows/changelog-snapshot.yml`.
+// `scripts/generate-changelog.ts`, which bundles the daily diff JSONs
+// in `data/changelog-diffs/` into a typed module at `generated-data.ts`.
+// Diffs themselves are produced by `scripts/snapshot-and-diff.ts`,
+// run daily from `.github/workflows/changelog-snapshot.yml`.
 
 import { GENERATED_CHANGE_LOG } from "./generated-data";
 

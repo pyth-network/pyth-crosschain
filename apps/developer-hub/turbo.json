@@ -49,8 +49,9 @@
         "//#install:modules"
       ],
       "inputs": [
-        "data/changelog-snapshots/**",
-        "scripts/generate-changelog.ts"
+        "data/changelog-diffs/**",
+        "scripts/generate-changelog.ts",
+        "scripts/changelog-lib.ts"
       ],
       "outputs": [
         "src/components/ChangeLog/generated-data.ts"
