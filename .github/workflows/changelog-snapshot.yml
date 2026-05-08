@@ -59,6 +59,8 @@ jobs:
 
       - name: Commit and push diff if changed
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps/developer-hub/data/changelog-diffs/
@@ -70,4 +72,20 @@ jobs:
 
           DATE=$(date -u +%Y-%m-%d)
           git commit -m "chore(developer-hub): daily change-log diff ${DATE}"
-          git push
+
+          # Retry on conflict — another commit may have landed on the
+          # default branch between checkout and push. Rebase and retry
+          # up to 3 times before giving up loudly.
+          BRANCH="${GITHUB_REF_NAME}"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${BRANCH}"; then
+              echo "Push succeeded on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push rejected on attempt ${attempt}; rebasing onto origin/${BRANCH} and retrying…"
+            git fetch origin "${BRANCH}"
+            git rebase "origin/${BRANCH}"
+          done
+
+          echo "::error::Push failed after 3 attempts. Investigate branch protection or persistent races." >&2
+          exit 1
