@@ -2,6 +2,7 @@
   "pages": [
     "getting-started",
     "pyth-terminal",
+    "external:[Pyth Playground](https://docs.pyth.network/playground)",
     "---How-To Guides---",
     "acquire-api-key",
     "subscribe-to-prices",
