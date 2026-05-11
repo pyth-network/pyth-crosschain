@@ -4,6 +4,6 @@ description: Rate Limits for the Pyth Hermes and Benchmarks APIs
 slug: /price-feeds/core/rate-limits
 ---
 
-In order to maximize the reliability of the Pyth Hermes and Benchmarks APIs, a request rate limit is enforced. All endpoints limits are set at **20 requests every 10 seconds per IP address**.
+In order to maximize the reliability of the Pyth Hermes and Benchmarks APIs, a request rate limit is enforced. All endpoints limits are set at **10 requests every 10 seconds per IP address**.
 
 **One exception**: the TradingView endpoint will allow 90 requests every 10 seconds. Clients issuing request above the limit will receive a 429 (Too Many Requests) response for the subsequent 60-second period.
