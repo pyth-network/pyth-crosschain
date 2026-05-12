@@ -6,14 +6,13 @@ use std::unit_test::{assert_eq, destroy};
 use sui::clock;
 
 use pyth_lazer::{
-    channel::new_fixed_rate_200ms,
     feed::Feed,
     governance,
     i16,
     i64,
     pyth_lazer::{
-        parse_and_verify_le_ecdsa_update, verify_le_ecdsa_message,
-        ESignerNotTrusted, ESignerExpired, EInvalidUpdateMagic,
+        parse_and_verify_le_ecdsa_update, parse_and_verify_le_ecdsa_update_v2,
+        verify_le_ecdsa_message, ESignerNotTrusted, ESignerExpired, EInvalidUpdateMagic,
         EInvalidPayloadMagic, EInvalidPayloadLength
     },
     state,
@@ -95,6 +94,7 @@ const TEST_PAYLOAD: vector<u8> = x"75d3c793c0f4295fbb3c060003030100000007005986b
 const TEST_SIGNATURE: vector<u8> = x"42e3c9c3477b30f2c5527ebe2fb2c8adadadacaddfa7d95243b80fb8f0d813b453e587f140cf40a1120d75f1ffee8ad4337267e4fcbd23eabb2a555804f85ec101";
 const TEST_TRUSTED_SIGNER_PUBKEY: vector<u8> = x"03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b";
 
+#[allow(deprecated_usage)]
 #[test]
 public fun test_parse_and_verify_le_ecdsa_update() {
     let mut ctx = tx_context::dummy();
@@ -112,10 +112,36 @@ public fun test_parse_and_verify_le_ecdsa_update() {
     // If we reach this point, the function successfully verified & parsed the payload (no assertion failures)
     // Validate that the fields have correct values
     assert_eq!(update.timestamp(), 1771252161800000);
-    assert_eq!(update.channel(), new_fixed_rate_200ms());
+    assert!(update.channel().is_fixed_rate_200ms());
     assert_eq!(update.feeds_ref().length(), 3);
 
-    // Separated into another function to get past function size limit
+    test_parse_and_verify_le_ecdsa_update__feeds(update.feeds_ref());
+
+    // Clean up
+    destroy(state);
+    clock.destroy_for_testing();
+}
+
+#[test]
+public fun test_parse_and_verify_le_ecdsa_update_v2() {
+    let mut ctx = tx_context::dummy();
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
+    let current_cap = state.current_cap();
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer that matches the test data
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2_000_000_000_000; // Far in the future
+    state.update_trusted_signer(&current_cap, trusted_pubkey, expiry_time);
+
+    let update = parse_and_verify_le_ecdsa_update_v2(&state, &clock, TEST_LAZER_UPDATE);
+
+    // If we reach this point, the function successfully verified & parsed the payload (no assertion failures)
+    // Validate that the fields have correct values
+    assert_eq!(update.timestamp(), 1771252161800000);
+    assert!(update.channel().is_fixed_rate_200ms());
+    assert_eq!(update.feeds_ref().length(), 3);
+
     test_parse_and_verify_le_ecdsa_update__feeds(update.feeds_ref());
 
     // Clean up
@@ -342,7 +368,7 @@ public fun test_parse_invalid_update_magic() {
     *vector::borrow_mut(&mut invalid_update, 0) = 0xFF; // Corrupt the magic
 
     // This should fail with EInvalidUpdateMagic
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -367,7 +393,7 @@ public fun test_parse_invalid_payload_magic() {
     *invalid_update.borrow_mut(71) = 0xFF; // Corrupt the payload magic
 
     // This corrupts the payload magic, so expect EInvalidMagic
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -393,7 +419,7 @@ public fun test_parse_invalid_payload_length() {
     *invalid_update.borrow_mut(69) = 0xFF; // Set payload length too high
 
     // This should fail with EInvalidPayloadLength because payload length validation happens before signature verification
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -416,7 +442,7 @@ public fun test_parse_truncated_data() {
     let truncated_update = TEST_LAZER_UPDATE.take(50);
 
     // This should fail with BCS EOutOfRange error when trying to read beyond available data
-    parse_and_verify_le_ecdsa_update(&state, &clock, truncated_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, truncated_update);
 
     // Clean up
     destroy(state);

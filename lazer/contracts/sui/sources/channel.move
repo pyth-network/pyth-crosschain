@@ -74,7 +74,7 @@ public fun get_update_interval_ms(channel: &Channel): u64 {
     }
 }
 
-#[allow(deprecated)]
+#[allow(deprecated_usage)]
 public(package) fun from_v2(channel: channel_v2::Channel): Channel {
     if (channel.is_real_time()) {
         Channel::RealTime

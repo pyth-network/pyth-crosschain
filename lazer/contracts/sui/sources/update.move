@@ -32,7 +32,7 @@ public fun feeds_ref(update: &Update): &vector<Feed> {
     &update.feeds
 }
 
-#[allow(deprecated)]
+#[allow(deprecated_usage)]
 public(package) fun from_v2(update: update_v2::Update): Update {
     Update {
         timestamp: update.timestamp(),
