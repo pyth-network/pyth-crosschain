@@ -50,3 +50,17 @@ ENGINE = ReplacingMergeTree(ingested_at)
 PARTITION BY toYYYYMM(trade_time)
 ORDER BY (coin, trade_time, block_number, tid, oid, user)
 TTL toDateTime(trade_time) + INTERVAL 90 DAY DELETE;
+
+CREATE TABLE IF NOT EXISTS pyth_analytics.hyperliquid_funding_rates
+(
+    coin LowCardinality(String),
+    funding_time DateTime64(3),
+    funding_rate Decimal64(12),
+    premium Nullable(Decimal64(12)),
+    source_endpoint LowCardinality(String),
+    ingested_at DateTime64(3) DEFAULT now64(3)
+)
+ENGINE = ReplacingMergeTree(ingested_at)
+PARTITION BY toYYYYMM(funding_time)
+ORDER BY (coin, funding_time)
+TTL toDateTime(funding_time) + INTERVAL 90 DAY DELETE;
