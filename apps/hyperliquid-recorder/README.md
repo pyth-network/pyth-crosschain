@@ -1,8 +1,9 @@
 # Hyperliquid Recorder (Rust)
 
 `hyperliquid-recorder` continuously ingests Hyperliquid `StreamL2Book` snapshots
-and `StreamData` trades from QuickNode gRPC, then writes them into ClickHouse
-for market analysis.
+and `StreamData` trades from QuickNode gRPC, plus applied per-hour funding
+rates polled from the Hyperliquid Info REST API, then writes them into
+ClickHouse for market analysis.
 
 ## Features
 
@@ -10,6 +11,10 @@ for market analysis.
 - Batched ClickHouse ingestion with in-batch dedupe.
 - `ReplacingMergeTree(ingested_at)` table keyed by
   `(coin, block_time, block_number, n_levels, n_sig_figs, mantissa)`.
+- Funding rates: per-market HTTP poll worker against Hyperliquid's Info API
+  (`POST /info` with `fundingHistory`) persisting applied per-hour funding
+  events into `hyperliquid_funding_rates`, with the same dedupe / TTL /
+  readiness story as the L2 and trades lanes.
 - Prometheus metrics and `/live` + `/ready` endpoints.
 - Tilt-based local stack (recorder + local ClickHouse + Prometheus + Grafana).
 
@@ -194,3 +199,31 @@ ClickHouse configuration:
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE` (default `pyth_analytics`)
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__L2_SNAPSHOTS_TABLE` (default `hyperliquid_l2_snapshots`)
 - `HYPERLIQUID_RECORDER__CLICKHOUSE__TRADES_TABLE` (default `hyperliquid_trades`)
+- `HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE` (default `hyperliquid_funding_rates`)
+
+Funding-rate ingestion:
+
+- `HYPERLIQUID_RECORDER__INFO_API_URL` (default `https://api.hyperliquid.xyz/info`) — Hyperliquid Info REST endpoint used for `fundingHistory` polls.
+- `HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS` (default `300`) — interval between funding polls. Must be `>= 30`.
+- `HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS` (default `21600`) — `startTime` window per poll. Must be `>= funding_poll_seconds`.
+
+## Schema deployment
+
+`ClickHouseClient::ensure_schema` is **documentation-only** — it lists the
+canonical Rust reference DDL for every table the recorder writes to, but it is
+never invoked from `main`. Production / staging runs against ClickHouse Cloud
+with credentials that lack DDL permissions, so schema changes are applied
+**out-of-band by the operator** as a separate DDL deploy.
+
+For the local stack, schema is applied automatically by
+`sql/001-init.sql`, which is mounted into the `clickhouse-local` container's
+`docker-entrypoint-initdb.d/`. Note: `001-init.sql` only runs against an empty
+data volume — to pick up new tables against an already-initialized local
+volume, either `tilt down -v && tilt up` to reset, or apply the new
+`CREATE TABLE` against the running container via `docker exec`.
+
+When adding a new table, update **all three** of these in lock-step:
+
+1. `ensure_schema` in `src/clickhouse.rs` (canonical Rust reference).
+2. `sql/001-init.sql` (local stack).
+3. The operator's out-of-band DDL deploy (production / staging).
