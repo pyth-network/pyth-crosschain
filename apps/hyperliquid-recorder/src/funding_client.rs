@@ -1,14 +1,9 @@
 use std::{
     collections::HashMap,
-    sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use serde::Serialize;
-use tokio::{
-    sync::mpsc,
-    time::{interval, MissedTickBehavior},
-};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
@@ -17,84 +12,65 @@ use crate::{
 };
 
 #[allow(clippy::too_many_arguments)]
-pub async fn run_funding_poll_worker(
-    info_api_url: String,
-    markets: Vec<MarketSubscription>,
-    poll_seconds: u64,
+pub async fn poll_funding_once(
+    http: &reqwest::Client,
+    info_api_url: &str,
+    markets: &[MarketSubscription],
     lookback_seconds: u64,
     max_backoff_seconds: u64,
-    sender: mpsc::Sender<FundingRateRecord>,
-    metrics: Arc<RecorderMetrics>,
-    stop_token: CancellationToken,
-) {
-    let http = reqwest::Client::new();
-    let mut backoff: HashMap<String, u64> = HashMap::new();
+    metrics: &RecorderMetrics,
+    backoff: &mut HashMap<String, u64>,
+    stop_token: &CancellationToken,
+) -> Vec<FundingRateRecord> {
+    let mut batch: Vec<FundingRateRecord> = Vec::new();
 
-    let mut ticker = interval(Duration::from_secs(poll_seconds.max(1)));
-    ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
-
-    while !stop_token.is_cancelled() {
-        ticker.tick().await;
+    for market in markets {
         if stop_token.is_cancelled() {
-            return;
+            return batch;
         }
+        let coin = market.coin.clone();
+        let start_time_ms = now_unix_ms().saturating_sub(lookback_seconds.saturating_mul(1000));
 
-        for market in &markets {
-            if stop_token.is_cancelled() {
-                return;
-            }
-            let coin = market.coin.clone();
-            let start_time_ms = now_unix_ms().saturating_sub(lookback_seconds.saturating_mul(1000));
-
-            match fetch_funding_history(&http, &info_api_url, &coin, start_time_ms).await {
-                Ok(body) => match parse_funding_history(&body, &coin, &info_api_url) {
-                    Ok(records) => {
-                        tracing::info!(
-                            coin = %coin,
-                            rows = records.len(),
-                            start_time_ms,
-                            "fundingHistory poll ok"
-                        );
-                        metrics
-                            .funding_poll_attempts
-                            .with_label_values(&[&coin, "success"])
-                            .inc();
-                        backoff.insert(coin.clone(), 1);
-                        for record in records {
-                            if tokio::time::timeout(
-                                Duration::from_secs(1),
-                                sender.send(record),
-                            )
-                            .await
-                            .is_err()
-                            {
-                                tracing::warn!(coin = %coin, "funding queue drop");
-                            }
-                        }
-                    }
-                    Err(err) => {
-                        tracing::warn!(coin = %coin, error = ?err, "fundingHistory parse error");
-                        metrics
-                            .funding_poll_attempts
-                            .with_label_values(&[&coin, "error"])
-                            .inc();
-                        metrics.funding_payload_errors.inc();
-                        sleep_backoff(&mut backoff, &coin, max_backoff_seconds).await;
-                    }
-                },
+        match fetch_funding_history(http, info_api_url, &coin, start_time_ms).await {
+            Ok(body) => match parse_funding_history(&body, &coin, info_api_url) {
+                Ok(records) => {
+                    tracing::info!(
+                        coin = %coin,
+                        rows = records.len(),
+                        start_time_ms,
+                        "fundingHistory poll ok"
+                    );
+                    metrics
+                        .funding_poll_attempts
+                        .with_label_values(&[&coin, "success"])
+                        .inc();
+                    backoff.insert(coin.clone(), 1);
+                    batch.extend(records);
+                }
                 Err(err) => {
-                    tracing::warn!(coin = %coin, error = ?err, "fundingHistory request failed");
+                    tracing::warn!(coin = %coin, error = ?err, "fundingHistory parse error");
                     metrics
                         .funding_poll_attempts
                         .with_label_values(&[&coin, "error"])
                         .inc();
-                    sleep_backoff(&mut backoff, &coin, max_backoff_seconds).await;
+                    metrics.funding_payload_errors.inc();
+                    sleep_backoff(backoff, &coin, max_backoff_seconds).await;
                 }
+            },
+            Err(err) => {
+                tracing::warn!(coin = %coin, error = ?err, "fundingHistory request failed");
+                metrics
+                    .funding_poll_attempts
+                    .with_label_values(&[&coin, "error"])
+                    .inc();
+                sleep_backoff(backoff, &coin, max_backoff_seconds).await;
             }
-
-            tokio::time::sleep(Duration::from_millis(100)).await;
         }
+
+        tokio::time::sleep(Duration::from_millis(100)).await;
     }
+
+    batch
 }
 
 #[derive(Serialize)]

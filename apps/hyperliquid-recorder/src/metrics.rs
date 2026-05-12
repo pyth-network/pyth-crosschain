@@ -42,8 +42,6 @@ pub struct RecorderMetrics {
     pub funding_insert_attempts: CounterVec,
     pub funding_insert_rows: Counter,
     pub funding_insert_latency_seconds: Histogram,
-    pub funding_queue_depth: Gauge,
-    pub funding_queue_fill_ratio: Gauge,
     pub funding_last_event_time_seconds: GaugeVec,
 }
 
@@ -235,14 +233,6 @@ impl RecorderMetrics {
             )
             .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
         )?;
-        let funding_queue_depth = Gauge::with_opts(Opts::new(
-            "hyperliquid_recorder_funding_queue_depth",
-            "Current in-memory queue depth for funding records",
-        ))?;
-        let funding_queue_fill_ratio = Gauge::with_opts(Opts::new(
-            "hyperliquid_recorder_funding_queue_fill_ratio",
-            "Current in-memory queue fill ratio for funding records",
-        ))?;
         let funding_last_event_time_seconds = GaugeVec::new(
             Opts::new(
                 "hyperliquid_recorder_funding_last_event_time_seconds",
@@ -282,8 +272,6 @@ impl RecorderMetrics {
         registry.register(Box::new(funding_insert_attempts.clone()))?;
         registry.register(Box::new(funding_insert_rows.clone()))?;
         registry.register(Box::new(funding_insert_latency_seconds.clone()))?;
-        registry.register(Box::new(funding_queue_depth.clone()))?;
-        registry.register(Box::new(funding_queue_fill_ratio.clone()))?;
         registry.register(Box::new(funding_last_event_time_seconds.clone()))?;
 
         Ok(Self {
@@ -319,8 +307,6 @@ impl RecorderMetrics {
             funding_insert_attempts,
             funding_insert_rows,
             funding_insert_latency_seconds,
-            funding_queue_depth,
-            funding_queue_fill_ratio,
             funding_last_event_time_seconds,
         })
     }

@@ -3,13 +3,13 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::{
     sync::mpsc,
     task::JoinHandle,
-    time::{Instant, MissedTickBehavior},
+    time::{interval, Instant, MissedTickBehavior},
 };
 use tokio_util::sync::CancellationToken;
 
 use crate::{
     clickhouse::ClickHouseClient,
-    funding_client::run_funding_poll_worker,
+    funding_client::poll_funding_once,
     health::HealthState,
     metrics::RecorderMetrics,
     models::{FundingRateRecord, L2Snapshot, MarketSubscription, TradeRecord},
@@ -82,11 +82,8 @@ impl RecorderRuntime {
     pub fn start(&mut self) {
         let (l2_tx, l2_rx) = mpsc::channel::<L2Snapshot>(self.writer_config.queue_max_rows);
         let (trade_tx, trade_rx) = mpsc::channel::<TradeRecord>(self.writer_config.queue_max_rows);
-        let (funding_tx, funding_rx) =
-            mpsc::channel::<FundingRateRecord>(self.writer_config.queue_max_rows);
         self.spawn_l2_writer_loop(l2_rx);
         self.spawn_trade_writer_loop(trade_rx);
-        self.spawn_funding_writer_loop(funding_rx);
 
         for market in self.markets.clone() {
             let handle = tokio::spawn(run_stream_worker(
@@ -112,17 +109,7 @@ impl RecorderRuntime {
         ));
         self.handles.push(trade_handle);
 
-        let funding_handle = tokio::spawn(run_funding_poll_worker(
-            self.funding_config.info_api_url.clone(),
-            self.markets.clone(),
-            self.funding_config.poll_seconds,
-            self.funding_config.lookback_seconds,
-            self.reconnect_max_backoff_seconds,
-            funding_tx,
-            self.metrics.clone(),
-            self.stop_token.clone(),
-        ));
-        self.handles.push(funding_handle);
+        self.spawn_funding_loop();
 
         self.spawn_health_probe_loop();
     }
@@ -273,61 +260,57 @@ impl RecorderRuntime {
         self.handles.push(handle);
     }
 
-    fn spawn_funding_writer_loop(&mut self, mut receiver: mpsc::Receiver<FundingRateRecord>) {
+    fn spawn_funding_loop(&mut self) {
+        let info_api_url = self.funding_config.info_api_url.clone();
+        let markets = self.markets.clone();
+        let poll_seconds = self.funding_config.poll_seconds;
+        let lookback_seconds = self.funding_config.lookback_seconds;
+        let max_backoff = self.reconnect_max_backoff_seconds;
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
         let health = self.health.clone();
-        let batch_max_rows = self.writer_config.batch_max_rows;
-        let batch_flush_seconds = self.writer_config.batch_flush_seconds;
-        let queue_max_rows = self.writer_config.queue_max_rows;
-        let stop_token = self.stop_token.clone();
         let insert_async = self.insert_async;
+        let stop_token = self.stop_token.clone();
 
         let handle = tokio::spawn(async move {
-            let mut batch: Vec<FundingRateRecord> = Vec::new();
-            let mut last_flush = Instant::now();
+            let http = reqwest::Client::new();
+            let mut backoff: HashMap<String, u64> = HashMap::new();
+            let mut ticker = interval(Duration::from_secs(poll_seconds.max(1)));
+            ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
 
-            loop {
-                if stop_token.is_cancelled() && receiver.is_empty() {
-                    break;
-                }
-                let elapsed = last_flush.elapsed().as_secs_f64();
-                let wait_seconds = (batch_flush_seconds - elapsed).max(0.1);
-                match tokio::time::timeout(Duration::from_secs_f64(wait_seconds), receiver.recv())
-                    .await
-                {
-                    Ok(Some(record)) => {
-                        metrics.record_funding(&record);
-                        health.set_funding_event_seen(&record.coin, record.funding_time_ms);
-                        batch.push(record);
-                        let size = receiver.len();
-                        metrics.funding_queue_depth.set(size as f64);
-                        metrics
-                            .funding_queue_fill_ratio
-                            .set(size as f64 / queue_max_rows.max(1) as f64);
-                    }
-                    Ok(None) => break,
-                    Err(_) => {}
+            while !stop_token.is_cancelled() {
+                ticker.tick().await;
+                if stop_token.is_cancelled() {
+                    return;
                 }
 
-                let should_flush = batch.len() >= batch_max_rows
-                    || (!batch.is_empty()
-                        && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
-                if should_flush {
+                let batch = poll_funding_once(
+                    &http,
+                    &info_api_url,
+                    &markets,
+                    lookback_seconds,
+                    max_backoff,
+                    &metrics,
+                    &mut backoff,
+                    &stop_token,
+                )
+                .await;
+
+                for record in &batch {
+                    metrics.record_funding(record);
+                    health.set_funding_event_seen(&record.coin, record.funding_time_ms);
+                }
+
+                if !batch.is_empty() {
                     flush_funding_with_retry(
                         &writer,
                         &metrics,
-                        std::mem::take(&mut batch),
+                        batch,
                         stop_token.clone(),
                         insert_async,
                     )
                     .await;
-                    last_flush = Instant::now();
                 }
-            }
-
-            if !batch.is_empty() {
-                flush_funding_with_retry(&writer, &metrics, batch, stop_token, insert_async).await;
             }
         });
         self.handles.push(handle);
