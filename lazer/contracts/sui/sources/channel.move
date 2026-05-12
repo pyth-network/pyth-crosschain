@@ -1,6 +1,8 @@
 #[deprecated(note = b"Use `pyth_lazer::channel_v2` instead.")]
 module pyth_lazer::channel;
 
+use pyth_lazer::channel_v2;
+
 #[error]
 const EInvalidChannel: vector<u8> = "Invalid channel value";
 
@@ -69,5 +71,18 @@ public fun get_update_interval_ms(channel: &Channel): u64 {
         Channel::FixedRate50ms => 50,
         Channel::FixedRate200ms => 200,
         _ => 0,
+    }
+}
+
+#[allow(deprecated)]
+public(package) fun from_v2(channel: channel_v2::Channel): Channel {
+    if (channel.is_real_time()) {
+        Channel::RealTime
+    } else if (channel.is_fixed_rate_50ms()) {
+        Channel::FixedRate50ms
+    } else if (channel.is_fixed_rate_200ms()) {
+        Channel::FixedRate200ms
+    } else {
+        abort EInvalidChannel
     }
 }
