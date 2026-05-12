@@ -44,6 +44,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -59,6 +60,7 @@ export default {
       endpoint,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -73,7 +75,9 @@ export default {
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
