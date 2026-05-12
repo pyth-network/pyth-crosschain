@@ -276,6 +276,7 @@ impl RecorderRuntime {
     fn spawn_funding_writer_loop(&mut self, mut receiver: mpsc::Receiver<FundingRateRecord>) {
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
+        let health = self.health.clone();
         let batch_max_rows = self.writer_config.batch_max_rows;
         let batch_flush_seconds = self.writer_config.batch_flush_seconds;
         let queue_max_rows = self.writer_config.queue_max_rows;
@@ -297,6 +298,7 @@ impl RecorderRuntime {
                 {
                     Ok(Some(record)) => {
                         metrics.record_funding(&record);
+                        health.set_funding_event_seen(&record.coin, record.funding_time_ms);
                         dedupe.insert(record.dedupe_key(), record);
                         let size = receiver.len();
                         metrics.funding_queue_depth.set(size as f64);

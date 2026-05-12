@@ -11,6 +11,8 @@ use hyperliquid_recorder::{
 };
 use tokio::signal::unix::{signal, SignalKind};
 
+const FUNDING_PERIOD_SECONDS: u64 = 3600;
+
 #[tokio::main]
 async fn main() -> ExitCode {
     init_logging();
@@ -35,6 +37,8 @@ async fn run() -> Result<()> {
     let health = HealthState::new(
         config.markets.iter().map(|m| m.coin.clone()).collect(),
         config.ready_stale_seconds,
+        config.funding_poll_seconds,
+        FUNDING_PERIOD_SECONDS * 2,
     );
     let (health_server, metrics_server) = start_http_servers(
         config.health_port,
