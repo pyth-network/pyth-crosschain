@@ -62,9 +62,11 @@ impl HealthState {
 
     pub fn set_funding_event_seen(&self, coin: &str, funding_time_ms: u64) {
         let mut inner = self.inner.lock().expect("health mutex poisoned");
-        inner
+        let entry = inner
             .funding_last_event_ms
-            .insert(coin.to_string(), funding_time_ms);
+            .entry(coin.to_string())
+            .or_insert(0);
+        *entry = (*entry).max(funding_time_ms);
     }
 
     pub fn set_clickhouse_ok(&self, healthy: bool) {
