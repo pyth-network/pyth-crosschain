@@ -1,0 +1,30 @@
+name: AI Gatekeeper
+
+# Wrapper around the reusable workflow in pyth-network/shared-actions.
+#
+# Why a wrapper instead of attaching the workflow via the org ruleset's
+# "Require workflows to pass before merging" rule?
+#
+# Ruleset-attached workflows only run on the default activity types of
+# `pull_request`, `pull_request_target` and `merge_group`. The `pull_request_review`
+# event (and even the `ready_for_review` activity type of `pull_request`) is
+# ignored. We need the gatekeeper to re-evaluate when reviewers approve or
+# dismiss reviews, so we run it as a regular workflow here.
+#
+# See: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+jobs:
+  gatekeeper:
+    name: Bot Proxy Gatekeeper
+    uses: pyth-network/shared-actions/.github/workflows/ai-gatekeeper.yaml@main
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      checks: write
