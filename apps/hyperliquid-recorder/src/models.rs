@@ -111,12 +111,6 @@ pub struct FundingRateRecord {
     pub source_endpoint: String,
 }
 
-impl FundingRateRecord {
-    pub fn dedupe_key(&self) -> (String, u64) {
-        (self.coin.clone(), self.funding_time_ms)
-    }
-}
-
 pub fn parse_funding_history(
     body: &str,
     coin_hint: &str,

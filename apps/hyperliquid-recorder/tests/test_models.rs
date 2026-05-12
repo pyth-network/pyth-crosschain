@@ -1,8 +1,6 @@
 use std::str::FromStr;
 
-use hyperliquid_recorder::models::{
-    parse_funding_history, FundingRateRecord, L2Level, L2Snapshot,
-};
+use hyperliquid_recorder::models::{parse_funding_history, L2Level, L2Snapshot};
 use rust_decimal::Decimal;
 
 #[test]
@@ -27,21 +25,6 @@ fn test_snapshot_dedupe_key_uses_request_shape() {
         }],
     };
     assert_eq!(snapshot.dedupe_key(), ("BTC".to_string(), 123, 20, 3, 1));
-}
-
-#[test]
-fn test_funding_dedupe_key_is_coin_and_time() {
-    let record = FundingRateRecord {
-        coin: "BTC".to_string(),
-        funding_time_ms: 1_700_000_000_000,
-        funding_rate: Decimal::from_str("0.0000125").expect("valid decimal"),
-        premium: Some(Decimal::from_str("0.00001").expect("valid decimal")),
-        source_endpoint: "https://api.hyperliquid.xyz/info".to_string(),
-    };
-    assert_eq!(
-        record.dedupe_key(),
-        ("BTC".to_string(), 1_700_000_000_000)
-    );
 }
 
 #[test]

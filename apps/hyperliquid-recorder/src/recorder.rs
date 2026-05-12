@@ -284,7 +284,7 @@ impl RecorderRuntime {
         let insert_async = self.insert_async;
 
         let handle = tokio::spawn(async move {
-            let mut dedupe: HashMap<(String, u64), FundingRateRecord> = HashMap::new();
+            let mut batch: Vec<FundingRateRecord> = Vec::new();
             let mut last_flush = Instant::now();
 
             loop {
@@ -299,7 +299,7 @@ impl RecorderRuntime {
                     Ok(Some(record)) => {
                         metrics.record_funding(&record);
                         health.set_funding_event_seen(&record.coin, record.funding_time_ms);
-                        dedupe.insert(record.dedupe_key(), record);
+                        batch.push(record);
                         let size = receiver.len();
                         metrics.funding_queue_depth.set(size as f64);
                         metrics
@@ -310,32 +310,24 @@ impl RecorderRuntime {
                     Err(_) => {}
                 }
 
-                let should_flush = dedupe.len() >= batch_max_rows
-                    || (!dedupe.is_empty()
+                let should_flush = batch.len() >= batch_max_rows
+                    || (!batch.is_empty()
                         && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
                 if should_flush {
                     flush_funding_with_retry(
                         &writer,
                         &metrics,
-                        dedupe.values().cloned().collect::<Vec<_>>(),
+                        std::mem::take(&mut batch),
                         stop_token.clone(),
                         insert_async,
                     )
                     .await;
-                    dedupe.clear();
                     last_flush = Instant::now();
                 }
             }
 
-            if !dedupe.is_empty() {
-                flush_funding_with_retry(
-                    &writer,
-                    &metrics,
-                    dedupe.values().cloned().collect::<Vec<_>>(),
-                    stop_token,
-                    insert_async,
-                )
-                .await;
+            if !batch.is_empty() {
+                flush_funding_with_retry(&writer, &metrics, batch, stop_token, insert_async).await;
             }
         });
         self.handles.push(handle);
