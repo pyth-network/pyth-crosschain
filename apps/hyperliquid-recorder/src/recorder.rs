@@ -119,6 +119,7 @@ impl RecorderRuntime {
             self.funding_config.lookback_seconds,
             self.reconnect_max_backoff_seconds,
             funding_tx,
+            self.metrics.clone(),
             self.stop_token.clone(),
         ));
         self.handles.push(funding_handle);
@@ -274,8 +275,10 @@ impl RecorderRuntime {
 
     fn spawn_funding_writer_loop(&mut self, mut receiver: mpsc::Receiver<FundingRateRecord>) {
         let writer = self.writer.clone();
+        let metrics = self.metrics.clone();
         let batch_max_rows = self.writer_config.batch_max_rows;
         let batch_flush_seconds = self.writer_config.batch_flush_seconds;
+        let queue_max_rows = self.writer_config.queue_max_rows;
         let stop_token = self.stop_token.clone();
         let insert_async = self.insert_async;
 
@@ -293,7 +296,13 @@ impl RecorderRuntime {
                     .await
                 {
                     Ok(Some(record)) => {
+                        metrics.record_funding(&record);
                         dedupe.insert(record.dedupe_key(), record);
+                        let size = receiver.len();
+                        metrics.funding_queue_depth.set(size as f64);
+                        metrics
+                            .funding_queue_fill_ratio
+                            .set(size as f64 / queue_max_rows.max(1) as f64);
                     }
                     Ok(None) => break,
                     Err(_) => {}
@@ -305,6 +314,7 @@ impl RecorderRuntime {
                 if should_flush {
                     flush_funding_with_retry(
                         &writer,
+                        &metrics,
                         dedupe.values().cloned().collect::<Vec<_>>(),
                         stop_token.clone(),
                         insert_async,
@@ -318,6 +328,7 @@ impl RecorderRuntime {
             if !dedupe.is_empty() {
                 flush_funding_with_retry(
                     &writer,
+                    &metrics,
                     dedupe.values().cloned().collect::<Vec<_>>(),
                     stop_token,
                     insert_async,
@@ -391,6 +402,7 @@ async fn flush_with_retry(
 
 async fn flush_funding_with_retry(
     writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
     batch: Vec<FundingRateRecord>,
     stop_token: CancellationToken,
     insert_async: bool,
@@ -403,11 +415,21 @@ async fn flush_funding_with_retry(
             return;
         }
         match writer.insert_funding_batch(&batch, insert_async).await {
-            Ok((rows, _latency)) => {
+            Ok((rows, latency)) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.funding_insert_rows.inc_by(rows as f64);
+                metrics.funding_insert_latency_seconds.observe(latency);
                 tracing::info!("inserted {} funding rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["error"])
+                    .inc();
                 tracing::error!(
                     rows = batch.len(),
                     error = ?err,

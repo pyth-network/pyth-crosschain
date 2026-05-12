@@ -6,7 +6,7 @@ use prometheus::{
     TextEncoder,
 };
 
-use crate::models::{L2Snapshot, TradeRecord};
+use crate::models::{FundingRateRecord, L2Snapshot, TradeRecord};
 
 #[derive(Clone)]
 pub struct RecorderMetrics {
@@ -37,6 +37,14 @@ pub struct RecorderMetrics {
     pub insert_trades_attempts: CounterVec,
     pub insert_trades_rows: Counter,
     pub insert_trades_latency_seconds: Histogram,
+    pub funding_poll_attempts: CounterVec,
+    pub funding_payload_errors: Counter,
+    pub funding_insert_attempts: CounterVec,
+    pub funding_insert_rows: Counter,
+    pub funding_insert_latency_seconds: Histogram,
+    pub funding_queue_depth: Gauge,
+    pub funding_queue_fill_ratio: Gauge,
+    pub funding_last_event_time_seconds: GaugeVec,
 }
 
 impl RecorderMetrics {
@@ -198,6 +206,50 @@ impl RecorderMetrics {
             )
             .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
         )?;
+        let funding_poll_attempts = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_poll_attempts_total",
+                "Total Hyperliquid fundingHistory poll attempts by coin and outcome",
+            ),
+            &["coin", "outcome"],
+        )?;
+        let funding_payload_errors = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_payload_errors_total",
+            "Total malformed fundingHistory payloads",
+        ))?;
+        let funding_insert_attempts = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_insert_attempts_total",
+                "Total ClickHouse insert attempts for funding batches",
+            ),
+            &["outcome"],
+        )?;
+        let funding_insert_rows = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_insert_rows_total",
+            "Total funding rows inserted into ClickHouse",
+        ))?;
+        let funding_insert_latency_seconds = Histogram::with_opts(
+            HistogramOpts::new(
+                "hyperliquid_recorder_funding_insert_latency_seconds",
+                "ClickHouse funding insert latency in seconds",
+            )
+            .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
+        )?;
+        let funding_queue_depth = Gauge::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_queue_depth",
+            "Current in-memory queue depth for funding records",
+        ))?;
+        let funding_queue_fill_ratio = Gauge::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_queue_fill_ratio",
+            "Current in-memory queue fill ratio for funding records",
+        ))?;
+        let funding_last_event_time_seconds = GaugeVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_last_event_time_seconds",
+                "Unix timestamp of the most recent applied funding event observed per coin",
+            ),
+            &["coin"],
+        )?;
 
         registry.register(Box::new(stream_messages.clone()))?;
         registry.register(Box::new(stream_reconnects.clone()))?;
@@ -225,6 +277,14 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_trades_attempts.clone()))?;
         registry.register(Box::new(insert_trades_rows.clone()))?;
         registry.register(Box::new(insert_trades_latency_seconds.clone()))?;
+        registry.register(Box::new(funding_poll_attempts.clone()))?;
+        registry.register(Box::new(funding_payload_errors.clone()))?;
+        registry.register(Box::new(funding_insert_attempts.clone()))?;
+        registry.register(Box::new(funding_insert_rows.clone()))?;
+        registry.register(Box::new(funding_insert_latency_seconds.clone()))?;
+        registry.register(Box::new(funding_queue_depth.clone()))?;
+        registry.register(Box::new(funding_queue_fill_ratio.clone()))?;
+        registry.register(Box::new(funding_last_event_time_seconds.clone()))?;
 
         Ok(Self {
             registry,
@@ -254,6 +314,14 @@ impl RecorderMetrics {
             insert_trades_attempts,
             insert_trades_rows,
             insert_trades_latency_seconds,
+            funding_poll_attempts,
+            funding_payload_errors,
+            funding_insert_attempts,
+            funding_insert_rows,
+            funding_insert_latency_seconds,
+            funding_queue_depth,
+            funding_queue_fill_ratio,
+            funding_last_event_time_seconds,
         })
     }
 
@@ -283,6 +351,12 @@ impl RecorderMetrics {
         let mut buffer = Vec::new();
         TextEncoder::new().encode(&metric_families, &mut buffer)?;
         Ok(buffer)
+    }
+
+    pub fn record_funding(&self, record: &FundingRateRecord) {
+        self.funding_last_event_time_seconds
+            .with_label_values(&[&record.coin])
+            .set(record.funding_time_ms as f64 / 1000.0);
     }
 
     pub fn record_trade(&self, trade: &TradeRecord) {

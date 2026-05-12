@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -10,7 +11,10 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-use crate::models::{parse_funding_history, FundingRateRecord, MarketSubscription};
+use crate::{
+    metrics::RecorderMetrics,
+    models::{parse_funding_history, FundingRateRecord, MarketSubscription},
+};
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run_funding_poll_worker(
@@ -20,6 +24,7 @@ pub async fn run_funding_poll_worker(
     lookback_seconds: u64,
     max_backoff_seconds: u64,
     sender: mpsc::Sender<FundingRateRecord>,
+    metrics: Arc<RecorderMetrics>,
     stop_token: CancellationToken,
 ) {
     let http = reqwest::Client::new();
@@ -50,6 +55,10 @@ pub async fn run_funding_poll_worker(
                             start_time_ms,
                             "fundingHistory poll ok"
                         );
+                        metrics
+                            .funding_poll_attempts
+                            .with_label_values(&[&coin, "success"])
+                            .inc();
                         backoff.insert(coin.clone(), 1);
                         for record in records {
                             if tokio::time::timeout(
@@ -65,11 +74,20 @@ pub async fn run_funding_poll_worker(
                     }
                     Err(err) => {
                         tracing::warn!(coin = %coin, error = ?err, "fundingHistory parse error");
+                        metrics
+                            .funding_poll_attempts
+                            .with_label_values(&[&coin, "error"])
+                            .inc();
+                        metrics.funding_payload_errors.inc();
                         sleep_backoff(&mut backoff, &coin, max_backoff_seconds).await;
                     }
                 },
                 Err(err) => {
                     tracing::warn!(coin = %coin, error = ?err, "fundingHistory request failed");
+                    metrics
+                        .funding_poll_attempts
+                        .with_label_values(&[&coin, "error"])
+                        .inc();
                     sleep_backoff(&mut backoff, &coin, max_backoff_seconds).await;
                 }
             }
