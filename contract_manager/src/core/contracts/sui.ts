@@ -21,11 +21,11 @@ import {
 } from "@pythnetwork/xc-admin-common";
 
 import { SubmittedWormholeMessage, Vault } from "../../node/utils/governance";
-import type { PrivateKey, TxResult } from "../base";
+import type { DeploymentType, PrivateKey, TxResult } from "../base";
 import type { SuiLazerMeta } from "../chains";
 import { Chain, SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
-import { PriceFeedContract, Storable } from "../base";
+import { PriceFeedContract, Storable, toDeploymentType } from "../base";
 
 type ObjectId = string;
 
@@ -45,6 +45,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     public chain: SuiChain,
     public stateId: string,
     public wormholeStateId: string,
+    public deploymentType: DeploymentType
   ) {
     super();
     this.client = new SuiPythClient(
@@ -56,7 +57,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; stateId: string; wormholeStateId: string },
+    parsed: { type: string; stateId: string; wormholeStateId: string; deploymentType: string },
   ): SuiPriceFeedContract {
     if (parsed.type !== SuiPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -66,6 +67,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       chain,
       parsed.stateId,
       parsed.wormholeStateId,
+      toDeploymentType(parsed.deploymentType),
     );
   }
 
@@ -83,6 +85,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
       type: SuiPriceFeedContract.type,
+      deploymentType: this.deploymentType,
     };
   }
 
@@ -435,6 +438,7 @@ export class SuiWormholeContract extends WormholeContract {
       chain: this.chain.getId(),
       stateId: this.stateId,
       type: SuiWormholeContract.type,
+      deploymentType: this.deploymentType,
     };
   }
 
@@ -443,18 +447,20 @@ export class SuiWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       stateId: string;
+      deploymentType: string;
     },
   ): SuiWormholeContract {
     if (parsed.type !== SuiWormholeContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiWormholeContract(chain, parsed.stateId);
+    return new SuiWormholeContract(chain, parsed.stateId, toDeploymentType(parsed.deploymentType));
   }
 
   constructor(
     public chain: SuiChain,
     public stateId: string,
+    public deploymentType: DeploymentType,
   ) {
     super();
     this.client = new SuiPythClient(

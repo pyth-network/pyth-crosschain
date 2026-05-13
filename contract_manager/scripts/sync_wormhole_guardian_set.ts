@@ -7,7 +7,7 @@ import type { PrivateKey } from "../src/core/base";
 import { toPrivateKey } from "../src/core/base";
 import type { WormholeContract } from "../src/core/contracts/wormhole";
 import { DefaultStore } from "../src/node/utils/store";
-import { EvmWormholeContract } from "../src/core/contracts";
+import { EvmWormholeContract, SuiWormholeContract } from "../src/core/contracts";
 
 const GUARDIAN_INDEX_TIMEOUT_MS = 10_000;
 const SYNC_GUARDIAN_SETS_TIMEOUT_MS = 3 * 60 * 1000;
@@ -155,7 +155,7 @@ async function main() {
   )
   // Filter out lazer wormhole contracts
   .filter((contract) => (
-    !(contract instanceof EvmWormholeContract) || 
+    !(contract instanceof EvmWormholeContract || contract instanceof SuiWormholeContract) || 
     contract.deploymentType === undefined ||
     contract.deploymentType === "stable" ||
     contract.deploymentType === "beta"
