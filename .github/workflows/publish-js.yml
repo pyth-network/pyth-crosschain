@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - pyth-js-v*
+
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish-js:
     name: Publish Javascript Packages to NPM
@@ -14,6 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: "package.json"
+          registry-url: "https://registry.npmjs.org"
       # Libusb is a build requirement for the node-hid package and so pnpm
       # install will fail if this isn't in the build environment and if a
       # precompiled binary isn't found.
@@ -28,11 +34,11 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
+      # Ensure npm 11.5.1 or later is installed -- mandatory for Trusted
+      # Publishing, see https://docs.npmjs.com/trusted-publishers
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Install Forge dependencies
         run: cd target_chains/ethereum/contracts && pnpm run install-forge-deps
-      - name: Set publishing config
-        run: pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm run turbo build
-      - run: pnpm publish -r --no-git-checks
+      - run: pnpm publish -r --no-git-checks --provenance
