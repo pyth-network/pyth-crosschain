@@ -110,6 +110,197 @@ metrics_port: 9092
 }
 
 #[test]
+fn test_funding_config_defaults_when_unspecified() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__QUICKNODE__ENDPOINT",
+        "HYPERLIQUID_RECORDER__QUICKNODE__AUTH_TOKEN",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__URL",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__USER",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__PASSWORD",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__DATABASE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__L2_SNAPSHOTS_TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__TRADES_TABLE",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
+        "HYPERLIQUID_RECORDER__INFO_API_URL",
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+    ]);
+
+    let config_file = temp_yaml_path("hrec-config-funding-defaults");
+    let yaml = r#"
+quicknode:
+  endpoint: "example:10000"
+  auth_token: "token"
+markets:
+  - coin: "BTC"
+    n_levels: 20
+clickhouse:
+  url: "http://127.0.0.1:8123"
+  user: "recorder"
+  password: "recorder"
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let config =
+        AppConfig::from_sources(Some(&config_file)).expect("config should parse with defaults");
+    assert_eq!(config.info_api_url, "https://api.hyperliquid.xyz/info");
+    assert_eq!(config.funding_poll_seconds, 300);
+    assert_eq!(config.funding_lookback_seconds, 21_600);
+    assert_eq!(
+        config.clickhouse.funding_rates_table,
+        "hyperliquid_funding_rates"
+    );
+
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_config_yaml_overrides_defaults() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__INFO_API_URL",
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
+    ]);
+
+    let config_file = temp_yaml_path("hrec-config-funding-yaml");
+    let yaml = r#"
+quicknode:
+  endpoint: "example:10000"
+  auth_token: "token"
+markets:
+  - coin: "BTC"
+    n_levels: 20
+clickhouse:
+  url: "http://127.0.0.1:8123"
+  funding_rates_table: "custom_funding"
+info_api_url: "https://custom.example/info"
+funding_poll_seconds: 600
+funding_lookback_seconds: 43200
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let config = AppConfig::from_sources(Some(&config_file)).expect("config should parse");
+    assert_eq!(config.info_api_url, "https://custom.example/info");
+    assert_eq!(config.funding_poll_seconds, 600);
+    assert_eq!(config.funding_lookback_seconds, 43_200);
+    assert_eq!(config.clickhouse.funding_rates_table, "custom_funding");
+
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_config_env_overrides_yaml() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__INFO_API_URL",
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
+    ]);
+
+    let config_file = temp_yaml_path("hrec-config-funding-env");
+    let yaml = r#"
+quicknode:
+  endpoint: "example:10000"
+  auth_token: "token"
+markets:
+  - coin: "BTC"
+    n_levels: 20
+clickhouse:
+  url: "http://127.0.0.1:8123"
+info_api_url: "https://yaml.example/info"
+funding_poll_seconds: 600
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    std::env::set_var(
+        "HYPERLIQUID_RECORDER__INFO_API_URL",
+        "https://env.example/info",
+    );
+    std::env::set_var("HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS", "900");
+    std::env::set_var("HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS", "10800");
+    std::env::set_var(
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
+        "env_funding",
+    );
+
+    let config = AppConfig::from_sources(Some(&config_file)).expect("config should parse");
+    assert_eq!(config.info_api_url, "https://env.example/info");
+    assert_eq!(config.funding_poll_seconds, 900);
+    assert_eq!(config.funding_lookback_seconds, 10_800);
+    assert_eq!(config.clickhouse.funding_rates_table, "env_funding");
+
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__INFO_API_URL",
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+        "HYPERLIQUID_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
+    ]);
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_poll_seconds_below_minimum_rejected() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+    ]);
+    let config_file = temp_yaml_path("hrec-config-funding-poll-min");
+    let yaml = r#"
+quicknode:
+  endpoint: "example:10000"
+  auth_token: "token"
+markets:
+  - coin: "BTC"
+    n_levels: 20
+clickhouse:
+  url: "http://127.0.0.1:8123"
+funding_poll_seconds: 10
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let result = AppConfig::from_sources(Some(&config_file));
+    assert!(result.is_err(), "poll < 30 must be rejected");
+    let message = result.err().map(|e| e.to_string()).unwrap_or_default();
+    assert!(
+        message.contains("funding_poll_seconds"),
+        "unexpected error: {message}"
+    );
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_lookback_smaller_than_poll_rejected() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "HYPERLIQUID_RECORDER__FUNDING_POLL_SECONDS",
+        "HYPERLIQUID_RECORDER__FUNDING_LOOKBACK_SECONDS",
+    ]);
+    let config_file = temp_yaml_path("hrec-config-funding-lookback");
+    let yaml = r#"
+quicknode:
+  endpoint: "example:10000"
+  auth_token: "token"
+markets:
+  - coin: "BTC"
+    n_levels: 20
+clickhouse:
+  url: "http://127.0.0.1:8123"
+funding_poll_seconds: 300
+funding_lookback_seconds: 100
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let result = AppConfig::from_sources(Some(&config_file));
+    assert!(result.is_err(), "lookback < poll must be rejected");
+    let message = result.err().map(|e| e.to_string()).unwrap_or_default();
+    assert!(
+        message.contains("funding_lookback_seconds"),
+        "unexpected error: {message}"
+    );
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
 fn test_invalid_market_configuration_fails() {
     let _lock = ENV_LOCK.lock().expect("env lock poisoned");
     let config_file = temp_yaml_path("hrec-config-invalid-market");

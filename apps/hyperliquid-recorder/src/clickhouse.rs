@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     config::ClickHouseTarget,
-    models::{L2Snapshot, TradeRecord},
+    models::{FundingRateRecord, L2Snapshot, TradeRecord},
 };
 
 #[derive(Clone)]
@@ -91,6 +91,26 @@ impl ClickHouseClient {
             self.target.database, self.target.trades_table
         ))
         .await?;
+
+        self.command(&format!(
+            "
+            CREATE TABLE IF NOT EXISTS {}.{}
+            (
+                coin LowCardinality(String),
+                funding_time DateTime64(3),
+                funding_rate Decimal64(12),
+                premium Nullable(Decimal64(12)),
+                source_endpoint LowCardinality(String),
+                ingested_at DateTime64(3) DEFAULT now64(3)
+            )
+            ENGINE = ReplacingMergeTree(ingested_at)
+            PARTITION BY toYYYYMM(funding_time)
+            ORDER BY (coin, funding_time)
+            TTL toDateTime(funding_time) + INTERVAL {retention_days} DAY DELETE
+            ",
+            self.target.database, self.target.funding_rates_table
+        ))
+        .await?;
         Ok(())
     }
 
@@ -159,6 +179,36 @@ impl ClickHouseClient {
         );
         self.command(&query).await?;
         Ok((trades.len(), start.elapsed().as_secs_f64()))
+    }
+
+    pub async fn insert_funding_batch(
+        &self,
+        rates: &[FundingRateRecord],
+        insert_async: bool,
+    ) -> Result<(usize, f64)> {
+        if rates.is_empty() {
+            return Ok((0, 0.0));
+        }
+        let start = Instant::now();
+
+        let rows = rates
+            .iter()
+            .map(funding_to_values)
+            .collect::<Vec<_>>()
+            .join(",");
+
+        let settings = if insert_async {
+            " SETTINGS async_insert=1,wait_for_async_insert=1"
+        } else {
+            ""
+        };
+
+        let query = format!(
+            "INSERT INTO {}.{} (coin,funding_time,funding_rate,premium,source_endpoint){settings} VALUES {rows}",
+            self.target.database, self.target.funding_rates_table
+        );
+        self.command(&query).await?;
+        Ok((rates.len(), start.elapsed().as_secs_f64()))
     }
 
     async fn command(&self, sql: &str) -> Result<String> {
@@ -270,6 +320,25 @@ fn trade_to_values(trade: &TradeRecord) -> String {
         nullable_decimal(liquidation_mark_px),
         nullable_string(liquidation_method),
         escape(&trade.source_endpoint),
+    )
+}
+
+fn funding_to_values(rate: &FundingRateRecord) -> String {
+    let funding_time = DateTime::<Utc>::from_timestamp_millis(rate.funding_time_ms as i64)
+        .unwrap_or(DateTime::<Utc>::UNIX_EPOCH)
+        .format("%Y-%m-%d %H:%M:%S%.3f");
+    let premium = nullable_decimal(
+        rate.premium
+            .as_ref()
+            .map(|value| value.normalize().to_string()),
+    );
+    format!(
+        "('{}','{}',toDecimal64('{}',12),{},'{}')",
+        escape(&rate.coin),
+        funding_time,
+        rate.funding_rate.normalize(),
+        premium,
+        escape(&rate.source_endpoint),
     )
 }
 

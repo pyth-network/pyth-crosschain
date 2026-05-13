@@ -102,6 +102,58 @@ pub struct TradeLiquidation {
     pub method: String,
 }
 
+#[derive(Clone, Debug)]
+pub struct FundingRateRecord {
+    pub coin: String,
+    pub funding_time_ms: u64,
+    pub funding_rate: Decimal,
+    pub premium: Option<Decimal>,
+    pub source_endpoint: String,
+}
+
+pub fn parse_funding_history(
+    body: &str,
+    coin_hint: &str,
+    source_endpoint: &str,
+) -> Result<Vec<FundingRateRecord>> {
+    let raw: Vec<FundingHistoryRaw> =
+        serde_json::from_str(body).context("failed to decode fundingHistory payload")?;
+    let mut records = Vec::with_capacity(raw.len());
+    for entry in raw {
+        if entry.coin != coin_hint {
+            tracing::warn!(
+                expected = coin_hint,
+                got = entry.coin,
+                "fundingHistory coin mismatch; dropping row"
+            );
+            continue;
+        }
+        let funding_rate = parse_decimal(&entry.funding_rate, "fundingRate")?;
+        let premium = entry
+            .premium
+            .as_deref()
+            .map(|value| parse_decimal(value, "premium"))
+            .transpose()?;
+        records.push(FundingRateRecord {
+            coin: entry.coin,
+            funding_time_ms: entry.time,
+            funding_rate,
+            premium,
+            source_endpoint: source_endpoint.to_string(),
+        });
+    }
+    Ok(records)
+}
+
+#[derive(Debug, Deserialize)]
+struct FundingHistoryRaw {
+    coin: String,
+    #[serde(rename = "fundingRate")]
+    funding_rate: String,
+    premium: Option<String>,
+    time: u64,
+}
+
 pub fn parse_trades_payload(
     payload_json: &str,
     fallback_block_number: u64,

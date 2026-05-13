@@ -3,15 +3,16 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::{
     sync::mpsc,
     task::JoinHandle,
-    time::{Instant, MissedTickBehavior},
+    time::{interval, Instant, MissedTickBehavior},
 };
 use tokio_util::sync::CancellationToken;
 
 use crate::{
     clickhouse::ClickHouseClient,
+    funding_client::poll_funding_once,
     health::HealthState,
     metrics::RecorderMetrics,
-    models::{L2Snapshot, MarketSubscription, TradeRecord},
+    models::{FundingRateRecord, L2Snapshot, MarketSubscription, TradeRecord},
     stream_client::{run_stream_worker, run_trades_stream_worker},
 };
 
@@ -22,12 +23,20 @@ pub struct WriterRuntimeConfig {
     pub queue_max_rows: usize,
 }
 
+#[derive(Clone, Debug)]
+pub struct FundingRuntimeConfig {
+    pub info_api_url: String,
+    pub poll_seconds: u64,
+    pub lookback_seconds: u64,
+}
+
 pub struct RecorderRuntime {
     endpoint: String,
     auth_token: String,
     markets: Vec<MarketSubscription>,
     writer: ClickHouseClient,
     writer_config: WriterRuntimeConfig,
+    funding_config: FundingRuntimeConfig,
     metrics: Arc<RecorderMetrics>,
     health: HealthState,
     reconnect_max_backoff_seconds: u64,
@@ -44,6 +53,7 @@ impl RecorderRuntime {
         markets: Vec<MarketSubscription>,
         writer: ClickHouseClient,
         writer_config: WriterRuntimeConfig,
+        funding_config: FundingRuntimeConfig,
         metrics: Arc<RecorderMetrics>,
         health: HealthState,
         reconnect_max_backoff_seconds: u64,
@@ -55,6 +65,7 @@ impl RecorderRuntime {
             markets,
             writer,
             writer_config,
+            funding_config,
             metrics,
             health,
             reconnect_max_backoff_seconds,
@@ -97,6 +108,8 @@ impl RecorderRuntime {
             self.stop_token.clone(),
         ));
         self.handles.push(trade_handle);
+
+        self.spawn_funding_loop();
 
         self.spawn_health_probe_loop();
     }
@@ -178,6 +191,7 @@ impl RecorderRuntime {
         self.handles.push(handle);
     }
 
+    #[allow(clippy::type_complexity)]
     fn spawn_trade_writer_loop(&mut self, mut receiver: mpsc::Receiver<TradeRecord>) {
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
@@ -246,6 +260,63 @@ impl RecorderRuntime {
         self.handles.push(handle);
     }
 
+    fn spawn_funding_loop(&mut self) {
+        let info_api_url = self.funding_config.info_api_url.clone();
+        let markets = self.markets.clone();
+        let poll_seconds = self.funding_config.poll_seconds;
+        let lookback_seconds = self.funding_config.lookback_seconds;
+        let max_backoff = self.reconnect_max_backoff_seconds;
+        let writer = self.writer.clone();
+        let metrics = self.metrics.clone();
+        let health = self.health.clone();
+        let insert_async = self.insert_async;
+        let stop_token = self.stop_token.clone();
+
+        let handle = tokio::spawn(async move {
+            let http = reqwest::Client::new();
+            let mut backoff: HashMap<String, u64> = HashMap::new();
+            let mut ticker = interval(Duration::from_secs(poll_seconds.max(1)));
+            ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+
+            while stop_token
+                .run_until_cancelled(async {
+                    ticker.tick().await;
+
+                    let batch = poll_funding_once(
+                        &http,
+                        &info_api_url,
+                        &markets,
+                        lookback_seconds,
+                        max_backoff,
+                        &metrics,
+                        &mut backoff,
+                        &stop_token,
+                    )
+                    .await;
+
+                    for record in &batch {
+                        metrics.record_funding(record);
+                        health.set_funding_event_seen(&record.coin, record.funding_time_ms);
+                    }
+
+                    if !batch.is_empty() {
+                        flush_funding_with_retry(
+                            &writer,
+                            &metrics,
+                            batch,
+                            stop_token.clone(),
+                            insert_async,
+                        )
+                        .await;
+                    }
+                })
+                .await
+                .is_some()
+            {}
+        });
+        self.handles.push(handle);
+    }
+
     fn spawn_health_probe_loop(&mut self) {
         let writer = self.writer.clone();
         let metrics = self.metrics.clone();
@@ -300,6 +371,47 @@ async fn flush_with_retry(
                     rows = batch.len(),
                     error = ?err,
                     "failed to insert L2 batch"
+                );
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+}
+
+async fn flush_funding_with_retry(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    batch: Vec<FundingRateRecord>,
+    stop_token: CancellationToken,
+    insert_async: bool,
+) {
+    if batch.is_empty() {
+        return;
+    }
+    loop {
+        if stop_token.is_cancelled() {
+            return;
+        }
+        match writer.insert_funding_batch(&batch, insert_async).await {
+            Ok((rows, latency)) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.funding_insert_rows.inc_by(rows as f64);
+                metrics.funding_insert_latency_seconds.observe(latency);
+                tracing::info!("inserted {} funding rows into ClickHouse", rows);
+                return;
+            }
+            Err(err) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["error"])
+                    .inc();
+                tracing::error!(
+                    rows = batch.len(),
+                    error = ?err,
+                    "failed to insert funding batch"
                 );
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }
