@@ -9,6 +9,15 @@ export const priceServiceEndpoint = {
   } as Options,
 };
 
+export const hermesAccessToken = {
+  "hermes-access-token": {
+    description:
+      "Access token to authenticate with Hermes. Sent as a Bearer token in the Authorization header.",
+    type: "string",
+    required: false,
+  } as Options,
+};
+
 export const pythContractAddress = {
   "pyth-contract-address": {
     description:

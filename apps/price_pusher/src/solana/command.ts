@@ -111,6 +111,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
@@ -127,6 +128,7 @@ export default {
       computeUnitPriceMicroLamports,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
@@ -148,7 +150,9 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
