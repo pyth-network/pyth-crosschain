@@ -278,40 +278,41 @@ impl RecorderRuntime {
             let mut ticker = interval(Duration::from_secs(poll_seconds.max(1)));
             ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
 
-            while !stop_token.is_cancelled() {
-                ticker.tick().await;
-                if stop_token.is_cancelled() {
-                    return;
-                }
+            while stop_token
+                .run_until_cancelled(async {
+                    ticker.tick().await;
 
-                let batch = poll_funding_once(
-                    &http,
-                    &info_api_url,
-                    &markets,
-                    lookback_seconds,
-                    max_backoff,
-                    &metrics,
-                    &mut backoff,
-                    &stop_token,
-                )
-                .await;
-
-                for record in &batch {
-                    metrics.record_funding(record);
-                    health.set_funding_event_seen(&record.coin, record.funding_time_ms);
-                }
-
-                if !batch.is_empty() {
-                    flush_funding_with_retry(
-                        &writer,
+                    let batch = poll_funding_once(
+                        &http,
+                        &info_api_url,
+                        &markets,
+                        lookback_seconds,
+                        max_backoff,
                         &metrics,
-                        batch,
-                        stop_token.clone(),
-                        insert_async,
+                        &mut backoff,
+                        &stop_token,
                     )
                     .await;
-                }
-            }
+
+                    for record in &batch {
+                        metrics.record_funding(record);
+                        health.set_funding_event_seen(&record.coin, record.funding_time_ms);
+                    }
+
+                    if !batch.is_empty() {
+                        flush_funding_with_retry(
+                            &writer,
+                            &metrics,
+                            batch,
+                            stop_token.clone(),
+                            insert_async,
+                        )
+                        .await;
+                    }
+                })
+                .await
+                .is_some()
+            {}
         });
         self.handles.push(handle);
     }
