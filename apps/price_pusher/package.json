@@ -200,7 +200,6 @@
   ],
   "license": "Apache-2.0",
   "main": "./dist/index.cjs",
-  "module": "./dist/esm/index.js",
   "name": "@pythnetwork/price-pusher",
   "publishConfig": {
     "access": "public"
@@ -211,10 +210,12 @@
     "url": "https://github.com/pyth-network/pyth-crosschain"
   },
   "scripts": {
+    "build": "ts-duality --noEsm",
+    "clean": "rm -rf ./dist",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build",
     "start": "node dist/index.cjs",
-    "version": "pnpm run test:format && git add -A src"
+    "test:types": "tsc"
   },
   "type": "module",
   "types": "./dist/index.d.ts",
