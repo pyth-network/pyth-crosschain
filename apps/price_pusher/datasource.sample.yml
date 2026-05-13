@@ -6,3 +6,11 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+  # The Loki UID is referenced by the provided grafana-dashboard.sample.json
+  # (Tx Hash / All Logs / Error Logs panels and the `chain` template variable).
+  # Keep the UID in sync with the dashboard if it ever changes.
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    uid: ads9ouz3jh4hsa

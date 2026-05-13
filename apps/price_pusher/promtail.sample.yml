@@ -1,0 +1,41 @@
+# Sample Promtail config that ships Docker container logs to the local Loki
+# instance defined in docker-compose.metrics.sample.yaml. It tags every line
+# with `namespace=<container_name>` so the `chain` template variable in
+# grafana-dashboard.sample.json (which filters `{namespace=~"$chain"}`) picks
+# up one entry per pusher container you run alongside this stack.
+#
+# Run one pusher container per chain (e.g. `price-pusher-evm`,
+# `price-pusher-sui`) and the dashboard's chain selector will list them.
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Use the container name (without the leading slash Docker prepends) as
+      # the `namespace` label that the Grafana dashboard filters on.
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: namespace
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: container_id
+    pipeline_stages:
+      # Surface pino's standard `level` field so the Error Logs panel
+      # (`detected_level = error`) can detect log levels emitted as JSON.
+      - json:
+          expressions:
+            level: level
+            msg: msg
+      - labels:
+          level:

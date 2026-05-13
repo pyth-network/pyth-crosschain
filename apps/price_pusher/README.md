@@ -293,7 +293,7 @@ pnpm run dev evm --config config.evm.mainnet.json --metrics-port 9091
 
 ### Running Locally with Docker
 
-You can run the monitoring stack (Prometheus and Grafana) using the provided docker-compose configuration:
+You can run the monitoring stack (Prometheus, Loki, Promtail, and Grafana) using the provided docker-compose configuration:
 
 1. Use the sample docker-compose file for metrics:
 
@@ -303,9 +303,11 @@ docker-compose -f docker-compose.metrics.sample.yaml up
 
 This will start:
 - Prometheus server on port 9090 with the alerts configured in alerts.sample.yml
+- Loki server on port 3100 (log aggregation)
+- Promtail, configured by promtail.sample.yml to ship every Docker container's logs into Loki and tag them with `namespace=<container_name>`
 - Grafana server on port 3000 with default credentials (admin/admin)
 
-The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard (see the [Dashboard](#dashboard) section below) that displays all the metrics mentioned above. This dashboard provides monitoring of your price pusher operations with panels for configured feeds, active feeds, wallet balance, update statistics, and error tracking. The dashboard is automatically provisioned when you start the stack with docker-compose.
+The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard (see the [Dashboard](#dashboard) section below) that displays all the metrics mentioned above plus log panels (Tx Hash, All Logs, Error Logs) backed by Loki. The dashboard is automatically provisioned when you start the stack with docker-compose; the `chain` template variable lists every container name Promtail has seen, so running one pusher container per chain gives you per-chain log views out of the box.
 
 ### Example Grafana Queries
 
