@@ -5,9 +5,12 @@ import { hideBin } from "yargs/helpers";
 
 import type { PrivateKey } from "../src/core/base";
 import { toPrivateKey } from "../src/core/base";
+import {
+  EvmWormholeContract,
+  SuiWormholeContract,
+} from "../src/core/contracts";
 import type { WormholeContract } from "../src/core/contracts/wormhole";
 import { DefaultStore } from "../src/node/utils/store";
-import { EvmWormholeContract } from "../src/core/contracts";
 
 const GUARDIAN_INDEX_TIMEOUT_MS = 10_000;
 const SYNC_GUARDIAN_SETS_TIMEOUT_MS = 3 * 60 * 1000;
@@ -85,7 +88,12 @@ async function syncChain(
         GUARDIAN_INDEX_TIMEOUT_MS,
       );
     }
-    return { chainName: chain.getId(), mainnet: chain.isMainnet(), startIndex: String(startIndex), endIndex: String(endIndex) };
+    return {
+      chainName: chain.getId(),
+      endIndex: String(endIndex),
+      mainnet: chain.isMainnet(),
+      startIndex: String(startIndex),
+    };
   } catch (error) {
     const message =
       verbose && error instanceof Error
@@ -98,10 +106,10 @@ async function syncChain(
     }
     return {
       chainName: chain.getId(),
-      mainnet: contract.getChain().isMainnet(),
-      startIndex: "—",
       endIndex: "—",
       error: message.slice(0, 120),
+      mainnet: contract.getChain().isMainnet(),
+      startIndex: "—",
     };
   }
 }
@@ -109,35 +117,35 @@ async function syncChain(
 const parser = yargs(hideBin(process.argv))
   .usage("Update the guardian set in stable networks. Usage: $0")
   .options({
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to sign the transactions with",
-    },
     chain: {
-      type: "string",
       array: true,
       desc: "Can be one of the chains available in the store",
-    },
-    "target-index": {
-      type: "number",
-      demandOption: true,
-      desc: "Only sync and show contracts whose current guardian set index is below this value",
+      type: "string",
     },
     "dry-run": {
-      type: "boolean",
       default: false,
       desc: "Dry run the script",
-    },
-    verbose: {
       type: "boolean",
-      default: false,
-      desc: "Print full error messages and stack traces; by default only a short message is shown",
     },
     json: {
-      type: "boolean",
       default: false,
       desc: "Output results as a single JSON line (for scripting); exit 0 when no chains need update, 1 otherwise",
+      type: "boolean",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions with",
+      type: "string",
+    },
+    "target-index": {
+      demandOption: true,
+      desc: "Only sync and show contracts whose current guardian set index is below this value",
+      type: "number",
+    },
+    verbose: {
+      default: false,
+      desc: "Print full error messages and stack traces; by default only a short message is shown",
+      type: "boolean",
     },
   });
 
@@ -149,33 +157,31 @@ async function main() {
   const targetIndex = argv.targetIndex;
 
   const contracts = Object.values(DefaultStore.wormhole_contracts)
-  // Filter chains
-  .filter(
-    (contract) => !chains || chains.includes(contract.getChain().getId()),
-  )
-  // Filter out lazer wormhole contracts
-  .filter((contract) => (
-    !(contract instanceof EvmWormholeContract) || 
-    contract.deploymentType === undefined ||
-    contract.deploymentType === "stable" ||
-    contract.deploymentType === "beta"
-  ));
+    // Filter chains
+    .filter(
+      (contract) => !chains || chains.includes(contract.getChain().getId()),
+    )
+    // Filter out lazer wormhole contracts
+    .filter(
+      (contract) =>
+        !(
+          contract instanceof EvmWormholeContract ||
+          contract instanceof SuiWormholeContract
+        ) ||
+        contract.deploymentType === undefined ||
+        contract.deploymentType === "stable" ||
+        contract.deploymentType === "beta",
+    );
 
   const results = await Promise.all(
     contracts.map((contract) =>
-      syncChain(
-        contract,
-        privateKey,
-        targetIndex,
-        argv.dryRun,
-        argv.verbose,
-      ),
+      syncChain(contract, privateKey, targetIndex, argv.dryRun, argv.verbose),
     ),
   );
 
   const rows = results.filter((row): row is Row => row !== undefined);
   if (argv.json) {
-    console.log(JSON.stringify({ rows, needRetry: rows.length > 0 }));
+    console.log(JSON.stringify({ needRetry: rows.length > 0, rows }));
     process.exit(rows.length > 0 ? 1 : 0);
   }
   console.table(rows);
