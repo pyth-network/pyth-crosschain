@@ -209,10 +209,8 @@ Funding-rate ingestion:
 
 ## Schema deployment
 
-`ClickHouseClient::ensure_schema` is **documentation-only** — it lists the
-canonical Rust reference DDL for every table the recorder writes to, but it is
-never invoked from `main`. Production / staging runs against ClickHouse Cloud
-with credentials that lack DDL permissions, so schema changes are applied
+The recorder does not apply DDL. Production / staging runs against ClickHouse
+Cloud with credentials that lack DDL permissions, so schema changes are applied
 **out-of-band by the operator** as a separate DDL deploy.
 
 For the local stack, schema is applied automatically by
@@ -222,8 +220,12 @@ data volume — to pick up new tables against an already-initialized local
 volume, either `tilt down -v && tilt up` to reset, or apply the new
 `CREATE TABLE` against the running container via `docker exec`.
 
-When adding a new table, update **all three** of these in lock-step:
+The wire-format row structs in `src/clickhouse.rs` (`L2SnapshotRow`,
+`TradeRow`, `FundingRateRow`) are the Rust-side source of truth for column
+names, order, and types. Field order matters — RowBinary inserts are
+positional. When adding or changing a column, update **all three** of these
+in lock-step:
 
-1. `ensure_schema` in `src/clickhouse.rs` (canonical Rust reference).
+1. The `Row`-deriving struct in `src/clickhouse.rs` (Rust-side schema).
 2. `sql/001-init.sql` (local stack).
 3. The operator's out-of-band DDL deploy (production / staging).

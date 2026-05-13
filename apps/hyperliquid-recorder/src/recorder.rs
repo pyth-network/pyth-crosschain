@@ -7,6 +7,12 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
+/// On graceful shutdown, give the writer this many attempts (with exponential
+/// backoff) to flush whatever it has buffered before giving up. The point is
+/// "don't silently drop the last batch", not "retry forever".
+const SHUTDOWN_DRAIN_MAX_ATTEMPTS: u32 = 3;
+const SHUTDOWN_DRAIN_INITIAL_BACKOFF: Duration = Duration::from_millis(500);
+
 use crate::{
     clickhouse::ClickHouseClient,
     funding_client::poll_funding_once,
@@ -178,11 +184,10 @@ impl RecorderRuntime {
             }
 
             if !dedupe.is_empty() {
-                flush_with_retry(
+                drain_l2_on_shutdown(
                     &writer,
                     &metrics,
                     dedupe.values().cloned().collect::<Vec<_>>(),
-                    stop_token,
                     insert_async,
                 )
                 .await;
@@ -247,11 +252,10 @@ impl RecorderRuntime {
             }
 
             if !dedupe.is_empty() {
-                flush_trades_with_retry(
+                drain_trades_on_shutdown(
                     &writer,
                     &metrics,
                     dedupe.values().cloned().collect::<Vec<_>>(),
-                    stop_token,
                     insert_async,
                 )
                 .await;
@@ -340,6 +344,113 @@ impl RecorderRuntime {
     }
 }
 
+/// Drain the in-memory L2 buffer on shutdown. Unlike `flush_with_retry`, this
+/// does **not** consult the cancellation token (which is always set during
+/// shutdown) — it would otherwise return immediately and silently drop the
+/// last batch. Instead it makes a bounded number of attempts with exponential
+/// backoff so a flaky CH at shutdown doesn't permanently stall the process.
+async fn drain_l2_on_shutdown(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    batch: Vec<L2Snapshot>,
+    insert_async: bool,
+) {
+    if batch.is_empty() {
+        return;
+    }
+    let mut delay = SHUTDOWN_DRAIN_INITIAL_BACKOFF;
+    for attempt in 1..=SHUTDOWN_DRAIN_MAX_ATTEMPTS {
+        match writer.insert_batch(&batch, insert_async).await {
+            Ok((rows, latency)) => {
+                metrics
+                    .insert_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.insert_rows.inc_by(rows as f64);
+                metrics.insert_latency_seconds.observe(latency);
+                tracing::info!(
+                    rows,
+                    attempt,
+                    "drained {} L2 rows into ClickHouse on shutdown",
+                    rows
+                );
+                return;
+            }
+            Err(err) => {
+                metrics.insert_attempts.with_label_values(&["error"]).inc();
+                tracing::error!(
+                    rows = batch.len(),
+                    attempt,
+                    error = ?err,
+                    "shutdown drain attempt for L2 batch failed"
+                );
+                if attempt < SHUTDOWN_DRAIN_MAX_ATTEMPTS {
+                    tokio::time::sleep(delay).await;
+                    delay = delay.saturating_mul(2);
+                }
+            }
+        }
+    }
+    tracing::error!(
+        rows = batch.len(),
+        attempts = SHUTDOWN_DRAIN_MAX_ATTEMPTS,
+        "giving up on L2 shutdown drain; rows lost"
+    );
+}
+
+/// See `drain_l2_on_shutdown`. Same shape, different table.
+async fn drain_trades_on_shutdown(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    batch: Vec<TradeRecord>,
+    insert_async: bool,
+) {
+    if batch.is_empty() {
+        return;
+    }
+    let mut delay = SHUTDOWN_DRAIN_INITIAL_BACKOFF;
+    for attempt in 1..=SHUTDOWN_DRAIN_MAX_ATTEMPTS {
+        match writer.insert_trades_batch(&batch, insert_async).await {
+            Ok((rows, latency)) => {
+                metrics
+                    .insert_trades_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.insert_trades_rows.inc_by(rows as f64);
+                metrics.insert_trades_latency_seconds.observe(latency);
+                tracing::info!(
+                    rows,
+                    attempt,
+                    "drained {} trade rows into ClickHouse on shutdown",
+                    rows
+                );
+                return;
+            }
+            Err(err) => {
+                metrics
+                    .insert_trades_attempts
+                    .with_label_values(&["error"])
+                    .inc();
+                tracing::error!(
+                    rows = batch.len(),
+                    attempt,
+                    error = ?err,
+                    "shutdown drain attempt for trade batch failed"
+                );
+                if attempt < SHUTDOWN_DRAIN_MAX_ATTEMPTS {
+                    tokio::time::sleep(delay).await;
+                    delay = delay.saturating_mul(2);
+                }
+            }
+        }
+    }
+    tracing::error!(
+        rows = batch.len(),
+        attempts = SHUTDOWN_DRAIN_MAX_ATTEMPTS,
+        "giving up on trade shutdown drain; rows lost"
+    );
+}
+
 async fn flush_with_retry(
     writer: &ClickHouseClient,
     metrics: &RecorderMetrics,
@@ -362,7 +473,7 @@ async fn flush_with_retry(
                     .inc();
                 metrics.insert_rows.inc_by(rows as f64);
                 metrics.insert_latency_seconds.observe(latency);
-                tracing::info!("inserted {} L2 rows into ClickHouse", rows);
+                tracing::debug!("inserted {} L2 rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
@@ -400,7 +511,7 @@ async fn flush_funding_with_retry(
                     .inc();
                 metrics.funding_insert_rows.inc_by(rows as f64);
                 metrics.funding_insert_latency_seconds.observe(latency);
-                tracing::info!("inserted {} funding rows into ClickHouse", rows);
+                tracing::debug!("inserted {} funding rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
@@ -441,7 +552,7 @@ async fn flush_trades_with_retry(
                     .inc();
                 metrics.insert_trades_rows.inc_by(rows as f64);
                 metrics.insert_trades_latency_seconds.observe(latency);
-                tracing::info!("inserted {} trade rows into ClickHouse", rows);
+                tracing::debug!("inserted {} trade rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {

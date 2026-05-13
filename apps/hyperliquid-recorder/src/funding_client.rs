@@ -34,7 +34,7 @@ pub async fn poll_funding_once(
         match fetch_funding_history(http, info_api_url, &coin, start_time_ms).await {
             Ok(body) => match parse_funding_history(&body, &coin, info_api_url) {
                 Ok(records) => {
-                    tracing::info!(
+                    tracing::debug!(
                         coin = %coin,
                         rows = records.len(),
                         start_time_ms,
@@ -108,7 +108,8 @@ async fn sleep_backoff(
     max_backoff_seconds: u64,
 ) {
     let current = backoff.get(coin).copied().unwrap_or(1);
-    tokio::time::sleep(Duration::from_secs(current)).await;
+    let jittered_ms = fastrand::u64(0..=current.saturating_mul(1000));
+    tokio::time::sleep(Duration::from_millis(jittered_ms)).await;
     let next = current.saturating_mul(2).min(max_backoff_seconds.max(1));
     backoff.insert(coin.to_string(), next);
 }
