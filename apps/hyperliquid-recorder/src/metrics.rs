@@ -340,9 +340,13 @@ impl RecorderMetrics {
     }
 
     pub fn record_funding(&self, record: &FundingRateRecord) {
-        self.funding_last_event_time_seconds
-            .with_label_values(&[&record.coin])
-            .set(record.funding_time_ms as f64 / 1000.0);
+        let gauge = self
+            .funding_last_event_time_seconds
+            .with_label_values(&[&record.coin]);
+        let new_val = record.funding_time_ms as f64 / 1000.0;
+        if new_val > gauge.get() {
+            gauge.set(new_val);
+        }
     }
 
     pub fn record_trade(&self, trade: &TradeRecord) {
