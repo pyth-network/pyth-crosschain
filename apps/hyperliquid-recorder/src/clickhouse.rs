@@ -236,6 +236,13 @@ fn decimal_to_d64(value: &Decimal) -> i64 {
     const SCALE: u32 = 12;
     let mut scaled = *value;
     scaled.rescale(SCALE);
+    if scaled.scale() != SCALE {
+        tracing::warn!(
+            value = %value,
+            "Decimal value too large to rescale to Decimal64(12); writing 0"
+        );
+        return 0;
+    }
     match i64::try_from(scaled.mantissa()) {
         Ok(v) => v,
         Err(_) => {
