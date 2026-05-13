@@ -19,13 +19,13 @@ import {
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
-
-import { SubmittedWormholeMessage, Vault } from "../../node/utils/governance";
+import type { Vault } from "../../node/utils/governance";
+import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
-import type { SuiLazerMeta } from "../chains";
-import { Chain, SuiChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract, Storable, toDeploymentType } from "../base";
+import type { Chain, SuiLazerMeta } from "../chains";
+import { SuiChain } from "../chains";
+import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
 
@@ -45,7 +45,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     public chain: SuiChain,
     public stateId: string,
     public wormholeStateId: string,
-    public deploymentType: DeploymentType
+    public deploymentType: DeploymentType,
   ) {
     super();
     this.client = new SuiPythClient(
@@ -57,7 +57,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; stateId: string; wormholeStateId: string; deploymentType: string },
+    parsed: {
+      type: string;
+      stateId: string;
+      wormholeStateId: string;
+      deploymentType: string;
+    },
   ): SuiPriceFeedContract {
     if (parsed.type !== SuiPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -82,10 +87,10 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   toJson() {
     return {
       chain: this.chain.getId(),
-      stateId: this.stateId,
-      wormholeStateId: this.wormholeStateId,
-      type: SuiPriceFeedContract.type,
       deploymentType: this.deploymentType,
+      stateId: this.stateId,
+      type: SuiPriceFeedContract.type,
+      wormholeStateId: this.wormholeStateId,
     };
   }
 
@@ -124,9 +129,9 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     if (priceInfo.fields.price.fields.negative) price = "-" + price;
     return {
       conf: priceInfo.fields.conf,
-      publishTime: priceInfo.fields.timestamp,
       expo,
       price,
+      publishTime: priceInfo.fields.timestamp,
     };
   }
 
@@ -179,8 +184,8 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     );
 
     tx.moveCall({
-      target: `${packageId}::migrate::migrate`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::migrate::migrate`,
     });
 
     return this.executeTransaction(tx, keypair);
@@ -237,8 +242,8 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     );
 
     tx.moveCall({
-      target: `${packageId}::governance::execute_governance_instruction`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::governance::execute_governance_instruction`,
     });
 
     const result = await this.executeTransaction(tx, keypair);
@@ -260,20 +265,20 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     );
 
     const [upgradeTicket] = tx.moveCall({
-      target: `${packageId}::contract_upgrade::authorize_upgrade`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::contract_upgrade::authorize_upgrade`,
     });
 
     const [upgradeReceipt] = tx.upgrade({
-      modules,
       dependencies,
+      modules,
       package: packageId,
       ticket: upgradeTicket!,
     });
 
     tx.moveCall({
-      target: `${packageId}::contract_upgrade::commit_upgrade`,
       arguments: [tx.object(this.stateId), upgradeReceipt!],
+      target: `${packageId}::contract_upgrade::commit_upgrade`,
     });
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -294,17 +299,17 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const wormholePackageId = await this.getWormholePackageId();
 
     const [verifiedVAA] = tx.moveCall({
-      target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
         tx.pure.arguments([...vaa]),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${wormholePackageId}::vaa::parse_and_verify`,
     });
 
     const [verificationReceipt] = tx.moveCall({
-      target: `${packageId}::governance::verify_vaa`,
       arguments: [tx.object(this.stateId), verifiedVAA!],
+      target: `${packageId}::governance::verify_vaa`,
     });
     return verificationReceipt;
   }
@@ -323,12 +328,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
     return provider.signAndExecuteTransaction({
-      signer: keypair,
-      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,
       },
+      signer: keypair,
+      transaction: tx,
     });
   }
 
@@ -342,11 +347,11 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
     const result = await provider.getDynamicFieldObject({
-      parentId: this.stateId,
       name: {
         type: "vector<u8>",
         value: "data_sources",
       },
+      parentId: this.stateId,
     });
     if (!result.data?.content) {
       throw new Error(
@@ -368,10 +373,10 @@ export class SuiPriceFeedContract extends PriceFeedContract {
         };
       }) => {
         return {
-          emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(
             fields.emitter_address.fields.value.fields.data,
           ).toString("hex"),
+          emitterChain: Number(fields.emitter_chain),
         };
       },
     );
@@ -386,8 +391,8 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const emitterAddress =
       governanceFields.emitter_address.fields.value.fields.data;
     return {
-      emitterChain: Number(chainId),
       emitterAddress: Buffer.from(emitterAddress).toString("hex"),
+      emitterChain: Number(chainId),
     };
   }
 
@@ -436,9 +441,9 @@ export class SuiWormholeContract extends WormholeContract {
   toJson() {
     return {
       chain: this.chain.getId(),
+      deploymentType: this.deploymentType,
       stateId: this.stateId,
       type: SuiWormholeContract.type,
-      deploymentType: this.deploymentType,
     };
   }
 
@@ -454,7 +459,11 @@ export class SuiWormholeContract extends WormholeContract {
       throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiWormholeContract(chain, parsed.stateId, toDeploymentType(parsed.deploymentType));
+    return new SuiWormholeContract(
+      chain,
+      parsed.stateId,
+      toDeploymentType(parsed.deploymentType),
+    );
   }
 
   constructor(
@@ -507,34 +516,34 @@ export class SuiWormholeContract extends WormholeContract {
     const coreObjectId = this.stateId;
     const corePackageId = await this.client.getWormholePackageId();
     const [verifiedVaa] = tx.moveCall({
-      target: `${corePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(coreObjectId),
         tx.pure(uint8ArrayToBCS(new Uint8Array(vaa))),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${corePackageId}::vaa::parse_and_verify`,
     });
 
     const [decreeTicket] = tx.moveCall({
-      target: `${corePackageId}::update_guardian_set::authorize_governance`,
       arguments: [tx.object(coreObjectId)],
+      target: `${corePackageId}::update_guardian_set::authorize_governance`,
     });
 
     const [decreeReceipt] = tx.moveCall({
-      target: `${corePackageId}::governance_message::verify_vaa`,
       arguments: [tx.object(coreObjectId), verifiedVaa!, decreeTicket!],
+      target: `${corePackageId}::governance_message::verify_vaa`,
       typeArguments: [
         `${corePackageId}::update_guardian_set::GovernanceWitness`,
       ],
     });
 
     tx.moveCall({
-      target: `${corePackageId}::update_guardian_set::update_guardian_set`,
       arguments: [
         tx.object(coreObjectId),
         decreeReceipt!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${corePackageId}::update_guardian_set::update_guardian_set`,
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
@@ -570,12 +579,12 @@ export class SuiWormholeContract extends WormholeContract {
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
     return provider.signAndExecuteTransaction({
-      signer: keypair,
-      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,
       },
+      signer: keypair,
+      transaction: tx,
     });
   }
 }
@@ -603,8 +612,8 @@ export class SuiLazerContract extends Storable {
     return {
       chain: this.chain.getId(),
       stateId: this.stateId,
-      wormholeStateId: this.wormholeStateId,
       type: SuiLazerContract.type,
+      wormholeStateId: this.wormholeStateId,
     };
   }
 
@@ -681,12 +690,12 @@ export class SuiLazerContract extends Storable {
         const meta = await this.fetchAndBumpMeta(chain, packagePath);
         const pkg = await chain.buildPackage(packagePath);
         const digest = await chain.upgradeLazerContract({
-          stateId: this.stateId,
-          wormholeStateId: this.wormholeStateId,
-          pkg,
           meta,
-          vaa,
+          pkg,
           signer,
+          stateId: this.stateId,
+          vaa,
+          wormholeStateId: this.wormholeStateId,
         });
         console_.info(
           `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
@@ -694,10 +703,10 @@ export class SuiLazerContract extends Storable {
       } else if (action instanceof UpdateTrustedSigner264Bit) {
         console_.info(`Updating trusted signer ${action.publicKey}...`);
         const digest = await chain.updateTrustedSigner({
-          stateId: this.stateId,
-          wormholeStateId: this.wormholeStateId,
-          vaa,
           signer,
+          stateId: this.stateId,
+          vaa,
+          wormholeStateId: this.wormholeStateId,
         });
         console_.info(
           `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
@@ -723,8 +732,8 @@ export class SuiLazerContract extends Storable {
       this.stateId,
     );
     const meta = {
-      version: (BigInt(version) + 1n).toString(),
       receiver_chain_id: chain.getWormholeChainId(),
+      version: (BigInt(version) + 1n).toString(),
     };
     await chain.updateLazerMeta(packagePath, meta);
     return meta;
