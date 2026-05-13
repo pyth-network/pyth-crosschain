@@ -120,8 +120,8 @@ struct L2SnapshotRow {
     n_sig_figs: u8,
     mantissa: u8,
     source_endpoint: String,
-    bids: Vec<(i64, i64, u32)>,
-    asks: Vec<(i64, i64, u32)>,
+    bids: Vec<(i128, i128, u32)>,
+    asks: Vec<(i128, i128, u32)>,
 }
 
 impl From<&L2Snapshot> for L2SnapshotRow {
@@ -222,16 +222,37 @@ impl From<&FundingRateRecord> for FundingRateRow {
     }
 }
 
-fn level_to_tuple(level: &L2Level) -> (i64, i64, u32) {
-    (decimal_to_d64(&level.px), decimal_to_d64(&level.sz), level.n)
+fn level_to_tuple(level: &L2Level) -> (i128, i128, u32) {
+    (decimal_to_d128(&level.px), decimal_to_d128(&level.sz), level.n)
 }
 
-/// Convert a `Decimal` to its `Decimal64(12)` wire representation (i64).
+/// Convert a `Decimal` to its `Decimal(38, 12)` (`Decimal128`) wire
+/// representation (i128). Used by `L2SnapshotRow` since the L2 schema uses
+/// `Decimal(38, 12)` for bid/ask prices and sizes.
 ///
-/// On overflow we log and write 0 rather than failing the insert: the old
-/// text-INSERT path would have been rejected by CH and retried forever, and
-/// silently zeroing a single field is preferable to losing the whole batch.
-/// In practice HL prices and sizes fit comfortably in Decimal64(12).
+/// The only realistic failure is `rescale` no-op'ing because the target scale
+/// would overflow `rust_decimal`'s 96-bit mantissa — i.e. the input has more
+/// than 26 digits left of the decimal point. We log and write 0 in that case
+/// rather than losing the whole batch.
+fn decimal_to_d128(value: &Decimal) -> i128 {
+    const SCALE: u32 = 12;
+    let mut scaled = *value;
+    scaled.rescale(SCALE);
+    if scaled.scale() != SCALE {
+        tracing::warn!(
+            value = %value,
+            "Decimal value too large to rescale to Decimal(38, 12); writing 0"
+        );
+        return 0;
+    }
+    scaled.mantissa()
+}
+
+/// Convert a `Decimal` to its `Decimal(18, 12)` (`Decimal64`) wire
+/// representation (i64). Used by `TradeRow` and `FundingRateRow`, which both
+/// use `Decimal(18, 12)` in CH. Same failure modes as `decimal_to_d128`, plus
+/// the additional `i128 → i64` truncation guard for values that fit
+/// `Decimal128` but not `Decimal64`.
 fn decimal_to_d64(value: &Decimal) -> i64 {
     const SCALE: u32 = 12;
     let mut scaled = *value;
@@ -239,7 +260,7 @@ fn decimal_to_d64(value: &Decimal) -> i64 {
     if scaled.scale() != SCALE {
         tracing::warn!(
             value = %value,
-            "Decimal value too large to rescale to Decimal64(12); writing 0"
+            "Decimal value too large to rescale to Decimal(18, 12); writing 0"
         );
         return 0;
     }
@@ -248,7 +269,7 @@ fn decimal_to_d64(value: &Decimal) -> i64 {
         Err(_) => {
             tracing::warn!(
                 value = %value,
-                "Decimal value overflows Decimal64(12); writing 0"
+                "Decimal value overflows Decimal(18, 12); writing 0"
             );
             0
         }

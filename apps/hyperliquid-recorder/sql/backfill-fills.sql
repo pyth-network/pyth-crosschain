@@ -50,7 +50,7 @@ INSERT INTO { database :Identifier }.{ trades_table :Identifier } (
             builder,
             if(
                 isNull(builder_fee),
-                CAST(NULL, 'Nullable(Decimal64(12))'),
+                CAST(NULL, 'Nullable(Decimal(18, 12))'),
                 toDecimal64(toString(builder_fee), 12)
             ) AS builder_fee,
             if(
@@ -60,7 +60,7 @@ INSERT INTO { database :Identifier }.{ trades_table :Identifier } (
             ) AS liquidated_user,
             if(
                 isNull(liquidation_mark_px),
-                CAST(NULL, 'Nullable(Decimal64(12))'),
+                CAST(NULL, 'Nullable(Decimal(18, 12))'),
                 toDecimal64(toString(liquidation_mark_px), 12)
             ) AS liquidation_mark_px,
             liquidation_method,
