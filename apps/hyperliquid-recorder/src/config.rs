@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use config::{Environment, File};
+use derivative::Derivative;
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
 
@@ -16,11 +17,13 @@ pub enum ConfigError {
     Invalid(String),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[derive(Clone, Derivative, Eq, PartialEq, Deserialize)]
+#[derivative(Debug)]
 pub struct ClickHouseTarget {
     pub host: String,
     pub port: u16,
     pub username: String,
+    #[derivative(Debug = "ignore")]
     pub password: String,
     pub secure: bool,
     pub database: String,
@@ -29,9 +32,11 @@ pub struct ClickHouseTarget {
     pub funding_rates_table: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Derivative)]
+#[derivative(Debug)]
 pub struct AppConfig {
     pub quicknode_endpoint: String,
+    #[derivative(Debug = "ignore")]
     pub quicknode_auth_token: String,
     pub markets: Vec<MarketSubscription>,
     pub clickhouse: ClickHouseTarget,
@@ -171,9 +176,6 @@ impl AppConfig {
         })
     }
 
-    pub fn from_env() -> Result<Self, ConfigError> {
-        Self::from_sources(None)
-    }
 }
 
 fn get_or_default<T, F>(cfg: &config::Config, key: &str, default: F) -> Result<T, ConfigError>

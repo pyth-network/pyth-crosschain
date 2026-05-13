@@ -12,17 +12,6 @@ pub struct MarketSubscription {
     pub mantissa: Option<u64>,
 }
 
-impl MarketSubscription {
-    pub fn dedupe_shape(&self) -> (String, u32, u32, u64) {
-        (
-            self.coin.clone(),
-            self.n_levels,
-            self.n_sig_figs.unwrap_or(0),
-            self.mantissa.unwrap_or(0),
-        )
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct L2Level {
     pub px: Decimal,
