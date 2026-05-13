@@ -41,4 +41,4 @@ jobs:
       - name: Install Forge dependencies
         run: cd target_chains/ethereum/contracts && pnpm run install-forge-deps
       - run: pnpm run turbo build
-      - run: pnpm publish -r --no-git-checks --provenance
+      - run: pnpm publish -r --no-git-checks
