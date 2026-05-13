@@ -14,7 +14,6 @@ use crate::{
 #[derive(Clone)]
 pub struct ClickHouseClient {
     client: Client,
-    http_client: reqwest::Client,
     target: ClickHouseTarget,
 }
 
@@ -31,24 +30,11 @@ impl ClickHouseClient {
             .with_user(target.username.clone())
             .with_password(target.password.clone())
             .with_database(target.database.clone());
-        Self {
-            client,
-            http_client: reqwest::Client::new(),
-            target,
-        }
+        Self { client, target }
     }
 
     pub async fn ping(&self) -> bool {
-        let url = format!(
-            "{}://{}:{}/ping",
-            if self.target.secure { "https" } else { "http" },
-            self.target.host,
-            self.target.port,
-        );
-        match self.http_client.get(&url).send().await {
-            Ok(response) => response.status().is_success(),
-            Err(_) => false,
-        }
+        self.client.query("SELECT 1").execute().await.is_ok()
     }
 
     pub async fn insert_batch(
