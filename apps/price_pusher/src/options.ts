@@ -60,9 +60,11 @@ export const pushingFrequency = {
 
 export const mnemonicFile = {
   "mnemonic-file": {
-    description: "Path to payer mnemonic (private key) file.",
-    required: true,
+    description:
+      "Path to payer mnemonic (private key) file. " +
+      "If omitted, the mnemonic is read from the `MNEMONIC` environment variable.",
     type: "string",
+    required: false,
   } as Options,
 };
 

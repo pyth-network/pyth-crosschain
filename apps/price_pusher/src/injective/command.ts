@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import fs from "node:fs";
-
 import { getNetworkInfo } from "@injectivelabs/networks";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { pino } from "pino";
@@ -11,7 +9,7 @@ import { Controller } from "../controller.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { filterInvalidPriceItems } from "../utils.js";
+import { filterInvalidPriceItems, readMnemonic } from "../utils.js";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
 export default {
   builder: {
@@ -83,7 +81,7 @@ export default {
     const hermesClient = new HermesClient(priceServiceEndpoint, {
       accessToken: hermesAccessToken,
     });
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
+    const mnemonic = readMnemonic(mnemonicFile);
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
