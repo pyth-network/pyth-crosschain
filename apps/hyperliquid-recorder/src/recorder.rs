@@ -13,6 +13,11 @@ use tokio_util::sync::CancellationToken;
 const SHUTDOWN_DRAIN_MAX_ATTEMPTS: u32 = 3;
 const SHUTDOWN_DRAIN_INITIAL_BACKOFF: Duration = Duration::from_millis(500);
 
+/// Initial sleep between failed CH insert attempts on the live retry path.
+/// Doubled each attempt up to `reconnect_max_backoff_seconds`. Slows the retry
+/// drumbeat during outages so we don't hammer a struggling CH at 1Hz.
+const INSERT_RETRY_INITIAL_DELAY: Duration = Duration::from_secs(1);
+
 use crate::{
     clickhouse::ClickHouseClient,
     funding_client::poll_funding_once,
@@ -139,6 +144,7 @@ impl RecorderRuntime {
         let queue_max_rows = self.writer_config.queue_max_rows;
         let stop_token = self.stop_token.clone();
         let insert_async = self.insert_async;
+        let max_backoff_seconds = self.reconnect_max_backoff_seconds;
 
         let handle = tokio::spawn(async move {
             let mut dedupe: HashMap<(String, u64, u32, u32, u64), L2Snapshot> = HashMap::new();
@@ -176,6 +182,7 @@ impl RecorderRuntime {
                         dedupe.values().cloned().collect::<Vec<_>>(),
                         stop_token.clone(),
                         insert_async,
+                        max_backoff_seconds,
                     )
                     .await;
                     dedupe.clear();
@@ -206,6 +213,7 @@ impl RecorderRuntime {
         let queue_max_rows = self.writer_config.queue_max_rows;
         let stop_token = self.stop_token.clone();
         let insert_async = self.insert_async;
+        let max_backoff_seconds = self.reconnect_max_backoff_seconds;
 
         let handle = tokio::spawn(async move {
             let mut dedupe: HashMap<(String, u64, String, String, u64, u64, String), TradeRecord> =
@@ -244,6 +252,7 @@ impl RecorderRuntime {
                         dedupe.values().cloned().collect::<Vec<_>>(),
                         stop_token.clone(),
                         insert_async,
+                        max_backoff_seconds,
                     )
                     .await;
                     dedupe.clear();
@@ -310,6 +319,7 @@ impl RecorderRuntime {
                             batch,
                             stop_token.clone(),
                             insert_async,
+                            max_backoff,
                         )
                         .await;
                     }
@@ -457,10 +467,14 @@ async fn flush_with_retry(
     batch: Vec<L2Snapshot>,
     stop_token: CancellationToken,
     insert_async: bool,
+    max_backoff_seconds: u64,
 ) {
     if batch.is_empty() {
         return;
     }
+    let max_delay = Duration::from_secs(max_backoff_seconds.max(1));
+    let mut delay = INSERT_RETRY_INITIAL_DELAY;
+    let mut attempt: u32 = 0;
     loop {
         if stop_token.is_cancelled() {
             return;
@@ -473,17 +487,24 @@ async fn flush_with_retry(
                     .inc();
                 metrics.insert_rows.inc_by(rows as f64);
                 metrics.insert_latency_seconds.observe(latency);
+                if attempt > 0 {
+                    tracing::info!(rows, recovered_after_attempts = attempt, "L2 insert recovered");
+                }
                 tracing::debug!("inserted {} L2 rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
+                attempt = attempt.saturating_add(1);
                 metrics.insert_attempts.with_label_values(&["error"]).inc();
                 tracing::error!(
                     rows = batch.len(),
+                    attempt,
+                    retry_in_seconds = delay.as_secs_f64(),
                     error = ?err,
                     "failed to insert L2 batch"
                 );
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::time::sleep(delay).await;
+                delay = (delay.saturating_mul(2)).min(max_delay);
             }
         }
     }
@@ -495,10 +516,14 @@ async fn flush_funding_with_retry(
     batch: Vec<FundingRateRecord>,
     stop_token: CancellationToken,
     insert_async: bool,
+    max_backoff_seconds: u64,
 ) {
     if batch.is_empty() {
         return;
     }
+    let max_delay = Duration::from_secs(max_backoff_seconds.max(1));
+    let mut delay = INSERT_RETRY_INITIAL_DELAY;
+    let mut attempt: u32 = 0;
     loop {
         if stop_token.is_cancelled() {
             return;
@@ -511,20 +536,31 @@ async fn flush_funding_with_retry(
                     .inc();
                 metrics.funding_insert_rows.inc_by(rows as f64);
                 metrics.funding_insert_latency_seconds.observe(latency);
+                if attempt > 0 {
+                    tracing::info!(
+                        rows,
+                        recovered_after_attempts = attempt,
+                        "funding insert recovered"
+                    );
+                }
                 tracing::debug!("inserted {} funding rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
+                attempt = attempt.saturating_add(1);
                 metrics
                     .funding_insert_attempts
                     .with_label_values(&["error"])
                     .inc();
                 tracing::error!(
                     rows = batch.len(),
+                    attempt,
+                    retry_in_seconds = delay.as_secs_f64(),
                     error = ?err,
                     "failed to insert funding batch"
                 );
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::time::sleep(delay).await;
+                delay = (delay.saturating_mul(2)).min(max_delay);
             }
         }
     }
@@ -536,10 +572,14 @@ async fn flush_trades_with_retry(
     batch: Vec<TradeRecord>,
     stop_token: CancellationToken,
     insert_async: bool,
+    max_backoff_seconds: u64,
 ) {
     if batch.is_empty() {
         return;
     }
+    let max_delay = Duration::from_secs(max_backoff_seconds.max(1));
+    let mut delay = INSERT_RETRY_INITIAL_DELAY;
+    let mut attempt: u32 = 0;
     loop {
         if stop_token.is_cancelled() {
             return;
@@ -552,20 +592,31 @@ async fn flush_trades_with_retry(
                     .inc();
                 metrics.insert_trades_rows.inc_by(rows as f64);
                 metrics.insert_trades_latency_seconds.observe(latency);
+                if attempt > 0 {
+                    tracing::info!(
+                        rows,
+                        recovered_after_attempts = attempt,
+                        "trade insert recovered"
+                    );
+                }
                 tracing::debug!("inserted {} trade rows into ClickHouse", rows);
                 return;
             }
             Err(err) => {
+                attempt = attempt.saturating_add(1);
                 metrics
                     .insert_trades_attempts
                     .with_label_values(&["error"])
                     .inc();
                 tracing::error!(
                     rows = batch.len(),
+                    attempt,
+                    retry_in_seconds = delay.as_secs_f64(),
                     error = ?err,
                     "failed to insert trade batch"
                 );
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::time::sleep(delay).await;
+                delay = (delay.saturating_mul(2)).min(max_delay);
             }
         }
     }
