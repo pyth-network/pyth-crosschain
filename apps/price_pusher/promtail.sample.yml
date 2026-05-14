@@ -33,9 +33,15 @@ scrape_configs:
     pipeline_stages:
       # Surface pino's standard `level` field so the Error Logs panel
       # (`detected_level = error`) can detect log levels emitted as JSON.
+      # Pino emits numeric severities by default (10=trace, 20=debug,
+      # 30=info, 40=warn, 50=error, 60=fatal) and Loki's detected_level
+      # only recognises the string forms, so translate before labelling.
       - json:
           expressions:
             level: level
             msg: msg
+      - template:
+          source: level
+          template: '{{ if eq .Value "10" }}trace{{ else if eq .Value "20" }}debug{{ else if eq .Value "30" }}info{{ else if eq .Value "40" }}warn{{ else if eq .Value "50" }}error{{ else if eq .Value "60" }}fatal{{ else }}{{ .Value }}{{ end }}'
       - labels:
           level:

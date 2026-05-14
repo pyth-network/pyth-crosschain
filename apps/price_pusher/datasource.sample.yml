@@ -1,14 +1,18 @@
 apiVersion: 1
 
 datasources:
+  # Both UIDs below are referenced from grafana-dashboard.sample.json (the
+  # Prometheus UID by every metric panel, the Loki UID by Tx Hash / All Logs
+  # / Error Logs and the `chain` template variable). Without explicit UIDs
+  # Grafana auto-generates per-provision random values and the dashboard's
+  # hardcoded references fail to resolve. Keep them in sync if the dashboard
+  # is regenerated.
   - name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
+    uid: edryyydtht14wa
     isDefault: true
-  # The Loki UID is referenced by the provided grafana-dashboard.sample.json
-  # (Tx Hash / All Logs / Error Logs panels and the `chain` template variable).
-  # Keep the UID in sync with the dashboard if it ever changes.
   - name: Loki
     type: loki
     access: proxy
