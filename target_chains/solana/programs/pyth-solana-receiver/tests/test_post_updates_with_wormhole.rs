@@ -101,17 +101,15 @@ async fn test_post_update_with_wormhole() {
     let encoded_vaa_size: usize = vaa.len() + VAA_START;
 
     // TX1: Create account for encoded VAA
-    let create_encoded_vaa = solana_sdk::system_instruction::create_account(
-        &write_authority.pubkey(),
-        &encoded_vaa_keypair.pubkey(),
-        Rent::default().minimum_balance(encoded_vaa_size),
-        encoded_vaa_size as u64,
-        &BRIDGE_ID,
-    );
-
     program_simulator
         .process_ix_with_default_compute_limit(
-            create_encoded_vaa,
+            solana_sdk::system_instruction::create_account(
+                &write_authority.pubkey(),
+                &encoded_vaa_keypair.pubkey(),
+                Rent::default().minimum_balance(encoded_vaa_size),
+                encoded_vaa_size as u64,
+                &BRIDGE_ID,
+            ),
             &vec![&encoded_vaa_keypair],
             Some(&write_authority),
         )
@@ -119,19 +117,17 @@ async fn test_post_update_with_wormhole() {
         .unwrap();
 
     // TX2: Init encoded VAA
-    let init_encoded_vaa_instruction = Instruction {
-        program_id: BRIDGE_ID,
-        accounts: wormhole_core_bridge_solana::accounts::InitEncodedVaa {
-            write_authority: write_authority.pubkey(),
-            encoded_vaa: encoded_vaa_keypair.pubkey(),
-        }
-        .to_account_metas(None),
-        data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
-    };
-
     program_simulator
         .process_ix_with_default_compute_limit(
-            init_encoded_vaa_instruction,
+            Instruction {
+                program_id: BRIDGE_ID,
+                accounts: wormhole_core_bridge_solana::accounts::InitEncodedVaa {
+                    write_authority: write_authority.pubkey(),
+                    encoded_vaa: encoded_vaa_keypair.pubkey(),
+                }
+                .to_account_metas(None),
+                data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
+            },
             &vec![],
             Some(&write_authority),
         )
@@ -139,24 +135,23 @@ async fn test_post_update_with_wormhole() {
         .unwrap();
 
     // TX3: Write first part of VAA data, we didn't write the last 10 bytes
-    let write_encoded_vaa_instruction_1 = Instruction {
-        program_id: BRIDGE_ID,
-        accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
-            write_authority: write_authority.pubkey(),
-            draft_vaa: encoded_vaa_keypair.pubkey(),
-        }
-        .to_account_metas(None),
-        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
-            args: WriteEncodedVaaArgs {
-                index: 0,
-                data: vaa[..vaa.len() - 10].to_vec(),
-            },
-        }
-        .data(),
-    };
     program_simulator
         .process_ix_with_default_compute_limit(
-            write_encoded_vaa_instruction_1,
+            Instruction {
+                program_id: BRIDGE_ID,
+                accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
+                    write_authority: write_authority.pubkey(),
+                    draft_vaa: encoded_vaa_keypair.pubkey(),
+                }
+                .to_account_metas(None),
+                data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+                    args: WriteEncodedVaaArgs {
+                        index: 0,
+                        data: vaa[..vaa.len() - 10].to_vec(),
+                    },
+                }
+                .data(),
+            },
             &vec![],
             Some(&write_authority),
         )
@@ -204,25 +199,23 @@ async fn test_post_update_with_wormhole() {
     );
 
     // TX4: Write remaining VAA data
-    let write_encoded_vaa_instruction_2 = Instruction {
-        program_id: BRIDGE_ID,
-        accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
-            write_authority: write_authority.pubkey(),
-            draft_vaa: encoded_vaa_keypair.pubkey(),
-        }
-        .to_account_metas(None),
-        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
-            args: WriteEncodedVaaArgs {
-                index: (vaa.len() - 10).try_into().unwrap(),
-                data: vaa[vaa.len() - 10..].to_vec(),
-            },
-        }
-        .data(),
-    };
-
     program_simulator
         .process_ix_with_default_compute_limit(
-            write_encoded_vaa_instruction_2,
+            Instruction {
+                program_id: BRIDGE_ID,
+                accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
+                    write_authority: write_authority.pubkey(),
+                    draft_vaa: encoded_vaa_keypair.pubkey(),
+                }
+                .to_account_metas(None),
+                data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+                    args: WriteEncodedVaaArgs {
+                        index: (vaa.len() - 10).try_into().unwrap(),
+                        data: vaa[vaa.len() - 10..].to_vec(),
+                    },
+                }
+                .data(),
+            },
             &vec![],
             Some(&write_authority),
         )
@@ -242,7 +235,7 @@ async fn test_post_update_with_wormhole() {
         .await
         .unwrap();
 
-    // 4. Post update using the core-bridge-verified encoded VAA
+    // 5. Post update using the core-bridge-verified encoded VAA
     program_simulator
         .process_ix_with_default_compute_limit(
             PostUpdate::populate(
@@ -259,7 +252,7 @@ async fn test_post_update_with_wormhole() {
         .await
         .unwrap();
 
-    // 5. Assertions
+    // 6. Assertions
     let price_update_account = program_simulator
         .get_anchor_account_data::<PriceUpdateV2>(price_update_keypair.pubkey())
         .await
@@ -288,6 +281,8 @@ async fn test_wormhole_insufficient_signatures() {
     let message =
         create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
     let (vaa, _) = deserialize_accumulator_update_data(message).unwrap();
+
+    // Trim the VAA to 9 signatures
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
         9,
@@ -302,7 +297,6 @@ async fn test_wormhole_insufficient_signatures() {
 
     // 3. Initialize wormhole
     let setup_keypair = program_simulator.get_funded_keypair().await.unwrap();
-
     program_simulator
         .process_ix_with_default_compute_limit(
             wormhole_solana::instructions::initialize(
@@ -325,17 +319,15 @@ async fn test_wormhole_insufficient_signatures() {
     let encoded_vaa_size: usize = vaa.len() + VAA_START;
 
     // TX1: Create account for encoded VAA
-    let create_encoded_vaa = solana_sdk::system_instruction::create_account(
-        &write_authority.pubkey(),
-        &encoded_vaa_keypair.pubkey(),
-        Rent::default().minimum_balance(encoded_vaa_size),
-        encoded_vaa_size as u64,
-        &BRIDGE_ID,
-    );
-
     program_simulator
         .process_ix_with_default_compute_limit(
-            create_encoded_vaa,
+            solana_sdk::system_instruction::create_account(
+                &write_authority.pubkey(),
+                &encoded_vaa_keypair.pubkey(),
+                Rent::default().minimum_balance(encoded_vaa_size),
+                encoded_vaa_size as u64,
+                &BRIDGE_ID,
+            ),
             &vec![&encoded_vaa_keypair],
             Some(&write_authority),
         )
@@ -343,19 +335,17 @@ async fn test_wormhole_insufficient_signatures() {
         .unwrap();
 
     // TX2: Init encoded VAA
-    let init_encoded_vaa_instruction = Instruction {
-        program_id: BRIDGE_ID,
-        accounts: wormhole_core_bridge_solana::accounts::InitEncodedVaa {
-            write_authority: write_authority.pubkey(),
-            encoded_vaa: encoded_vaa_keypair.pubkey(),
-        }
-        .to_account_metas(None),
-        data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
-    };
-
     program_simulator
         .process_ix_with_default_compute_limit(
-            init_encoded_vaa_instruction,
+            Instruction {
+                program_id: BRIDGE_ID,
+                accounts: wormhole_core_bridge_solana::accounts::InitEncodedVaa {
+                    write_authority: write_authority.pubkey(),
+                    encoded_vaa: encoded_vaa_keypair.pubkey(),
+                }
+                .to_account_metas(None),
+                data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
+            },
             &vec![],
             Some(&write_authority),
         )
@@ -363,24 +353,23 @@ async fn test_wormhole_insufficient_signatures() {
         .unwrap();
 
     // TX3: Write VAA data
-    let write_encoded_vaa_instruction = Instruction {
-        program_id: BRIDGE_ID,
-        accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
-            write_authority: write_authority.pubkey(),
-            draft_vaa: encoded_vaa_keypair.pubkey(),
-        }
-        .to_account_metas(None),
-        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
-            args: WriteEncodedVaaArgs {
-                index: 0,
-                data: vaa.to_vec(),
-            },
-        }
-        .data(),
-    };
     program_simulator
         .process_ix_with_default_compute_limit(
-            write_encoded_vaa_instruction,
+            Instruction {
+                program_id: BRIDGE_ID,
+                accounts: wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
+                    write_authority: write_authority.pubkey(),
+                    draft_vaa: encoded_vaa_keypair.pubkey(),
+                }
+                .to_account_metas(None),
+                data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+                    args: WriteEncodedVaaArgs {
+                        index: 0,
+                        data: vaa.to_vec(),
+                    },
+                }
+                .data(),
+            },
             &vec![],
             Some(&write_authority),
         )
