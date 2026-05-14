@@ -43,6 +43,12 @@ import {
   UpgradeContract256Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
 import { Address, TonClient, WalletContractV4 } from "@ton/ton";
@@ -907,6 +913,73 @@ export class IotaChain extends Chain {
   }
 }
 
+export class SvmChain extends Chain {
+  static override type = "SvmChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public rpcUrl: string,
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): SvmChain {
+    if (parsed.type !== SvmChain.type) throw new Error("Invalid type");
+    if (parsed.wormholeChainName === undefined) {
+      throw new Error("wormholeChainName is required");
+    }
+    if (parsed.rpcUrl === undefined) {
+      throw new Error("rpcUrl is required");
+    }
+    return new SvmChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.rpcUrl,
+    );
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: SvmChain.type,
+      wormholeChainName: this.wormholeChainName,
+    };
+  }
+
+  getType(): string {
+    return SvmChain.type;
+  }
+
+  generateGovernanceUpgradePayload(_programId: string): Buffer {
+    throw new Error("Not implemented");
+  }
+
+  getConnection(): Connection {
+    return new Connection(parseRpcUrl(this.rpcUrl), "confirmed");
+  }
+
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const keypair = Keypair.fromSecretKey(
+      new Uint8Array(Buffer.from(privateKey, "hex")),
+    );
+    return Promise.resolve(keypair.publicKey.toBase58());
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const connection = this.getConnection();
+    const address = await this.getAccountAddress(privateKey);
+    const balance = await connection.getBalance(new PublicKey(address));
+    return balance / LAMPORTS_PER_SOL;
+  }
+}
+
 export class EvmChain extends Chain {
   static override type = "EvmChain";
 
@@ -1237,13 +1310,12 @@ export class FuelChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  async getProvider(): Promise<Provider> {
+  getProvider(): Provider {
     return new Provider(this.gqlUrl);
   }
 
-  async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
-    const provider = await this.getProvider();
-    return Wallet.fromPrivateKey(privateKey, provider);
+  getWallet(privateKey: PrivateKey): WalletUnlocked {
+    return Wallet.fromPrivateKey(privateKey, this.getProvider());
   }
 
   /**
@@ -1280,13 +1352,13 @@ export class FuelChain extends Chain {
     );
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const wallet = await this.getWallet(privateKey);
-    return wallet.address.toString();
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const wallet = this.getWallet(privateKey);
+    return Promise.resolve(wallet.address.toString());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const wallet = await this.getWallet(privateKey);
+    const wallet = this.getWallet(privateKey);
     const balance: BN = await wallet.getBalance(FUEL_ETH_ASSET_ID);
     return Number(balance) / 10 ** 9;
   }

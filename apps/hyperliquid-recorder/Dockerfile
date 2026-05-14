@@ -1,15 +1,15 @@
-FROM rust:1.86-slim AS builder
+FROM rust:1.91-slim AS builder
 
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
-COPY Cargo.toml build.rs ./
+COPY Cargo.toml Cargo.lock build.rs rust-toolchain.toml ./
 COPY proto ./proto
 COPY src ./src
-RUN cargo build --release
+RUN cargo build --locked --release
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \

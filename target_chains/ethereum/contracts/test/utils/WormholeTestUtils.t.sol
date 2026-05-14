@@ -8,6 +8,7 @@ import "../../contracts/wormhole/Wormhole.sol";
 import "../../contracts/wormhole/interfaces/IWormhole.sol";
 
 import "../../contracts/wormhole-receiver/ReceiverImplementation.sol";
+import "../../contracts/wormhole-receiver/ReceiverImplementationHalf.sol";
 import "../../contracts/wormhole-receiver/ReceiverSetup.sol";
 import "../../contracts/wormhole-receiver/WormholeReceiver.sol";
 import "../../contracts/wormhole-receiver/ReceiverGovernanceStructs.sol";
@@ -47,6 +48,37 @@ abstract contract WormholeTestUtils is Test {
         );
 
         return address(wormhole);
+    }
+
+    function setUpWormholeReceiverHalf(
+        uint8 numGuardians
+    ) public returns (address) {
+        ReceiverImplementationHalf wormholeReceiverImpl = new ReceiverImplementationHalf();
+        ReceiverSetup wormholeReceiverSetup = new ReceiverSetup();
+
+        WormholeReceiver wormholeReceiver = new WormholeReceiver(
+            address(wormholeReceiverSetup),
+            new bytes(0)
+        );
+
+        address[] memory initSigners = new address[](numGuardians);
+        currentSigners = new uint256[](numGuardians);
+
+        for (uint256 i = 0; i < numGuardians; ++i) {
+            currentSigners[i] = i + 1;
+            initSigners[i] = vm.addr(currentSigners[i]);
+        }
+
+        ReceiverSetup(address(wormholeReceiver)).setup(
+            address(wormholeReceiverImpl),
+            initSigners,
+            CHAIN_ID,
+            GOVERNANCE_CHAIN_ID,
+            GOVERNANCE_CONTRACT
+        );
+        wormholeReceiverAddr = address(wormholeReceiver);
+
+        return wormholeReceiverAddr;
     }
 
     function setUpWormholeReceiver(

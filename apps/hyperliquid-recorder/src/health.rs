@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 use anyhow::Result;
@@ -15,12 +15,16 @@ use crate::metrics::RecorderMetrics;
 pub struct HealthState {
     expected_coins: Vec<String>,
     stale_seconds: u64,
+    funding_poll_seconds: u64,
+    funding_stale_seconds: u64,
+    started_at: Instant,
     inner: Arc<Mutex<HealthInner>>,
 }
 
 #[derive(Default)]
 struct HealthInner {
     market_last_message: HashMap<String, f64>,
+    funding_last_event_ms: HashMap<String, u64>,
     clickhouse_ok: bool,
 }
 
@@ -29,13 +33,22 @@ struct ReadyResponse {
     ready: bool,
     clickhouse_ok: bool,
     stale_markets: Vec<String>,
+    stale_funding_markets: Vec<String>,
 }
 
 impl HealthState {
-    pub fn new(expected_coins: Vec<String>, stale_seconds: u64) -> Self {
+    pub fn new(
+        expected_coins: Vec<String>,
+        stale_seconds: u64,
+        funding_poll_seconds: u64,
+        funding_stale_seconds: u64,
+    ) -> Self {
         Self {
             expected_coins,
             stale_seconds,
+            funding_poll_seconds,
+            funding_stale_seconds,
+            started_at: Instant::now(),
             inner: Arc::new(Mutex::new(HealthInner::default())),
         }
     }
@@ -45,6 +58,15 @@ impl HealthState {
         inner
             .market_last_message
             .insert(coin.to_string(), unix_seconds_now());
+    }
+
+    pub fn set_funding_event_seen(&self, coin: &str, funding_time_ms: u64) {
+        let mut inner = self.inner.lock().expect("health mutex poisoned");
+        let entry = inner
+            .funding_last_event_ms
+            .entry(coin.to_string())
+            .or_insert(0);
+        *entry = (*entry).max(funding_time_ms);
     }
 
     pub fn set_clickhouse_ok(&self, healthy: bool) {
@@ -59,6 +81,9 @@ impl HealthState {
     fn to_ready_response(&self) -> ReadyResponse {
         let inner = self.inner.lock().expect("health mutex poisoned");
         let now = unix_seconds_now();
+        let elapsed_secs = self.started_at.elapsed().as_secs();
+        let grace_secs = self.funding_poll_seconds.saturating_mul(2);
+
         let stale_markets = self
             .expected_coins
             .iter()
@@ -72,10 +97,26 @@ impl HealthState {
             .cloned()
             .collect::<Vec<_>>();
 
+        let now_ms = (now * 1000.0) as u64;
+        let stale_funding_markets = self
+            .expected_coins
+            .iter()
+            .filter(|coin| match inner.funding_last_event_ms.get(*coin) {
+                Some(event_ms) => {
+                    now_ms.saturating_sub(*event_ms) / 1000 > self.funding_stale_seconds
+                }
+                None => elapsed_secs >= grace_secs,
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+
         ReadyResponse {
-            ready: inner.clickhouse_ok && stale_markets.is_empty(),
+            ready: inner.clickhouse_ok
+                && stale_markets.is_empty()
+                && stale_funding_markets.is_empty(),
             clickhouse_ok: inner.clickhouse_ok,
             stale_markets,
+            stale_funding_markets,
         }
     }
 }

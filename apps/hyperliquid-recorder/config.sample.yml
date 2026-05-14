@@ -15,6 +15,7 @@ clickhouse:
   database: "pyth_analytics"
   l2_snapshots_table: "hyperliquid_l2_snapshots"
   trades_table: "hyperliquid_trades"
+  funding_rates_table: "hyperliquid_funding_rates"
 
 metrics_port: 9092
 health_port: 8082
@@ -25,3 +26,7 @@ batch_flush_seconds: 2.0
 retention_days: 90
 insert_async: true
 reconnect_max_backoff_seconds: 60
+
+info_api_url: "https://api.hyperliquid.xyz/info"
+funding_poll_seconds: 300
+funding_lookback_seconds: 21600

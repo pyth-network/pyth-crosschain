@@ -1,6 +1,6 @@
 [package]
 name = "pyth-solana-receiver-sdk"
-version = "1.1.0"
+version = "1.2.0"
 description = "SDK for the Pyth Solana Receiver program"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pyth-crosschain"
@@ -11,9 +11,12 @@ edition = "2021"
 crate-type = ["lib"]
 name = "pyth_solana_receiver_sdk"
 
+[features]
+lazer = []
 
 [dependencies]
 anchor-lang = { workspace = true }
+cfg-if = { workspace = true }
 hex = { workspace = true }
 pythnet-sdk = { workspace = true, features = ["solana-program"]}
 

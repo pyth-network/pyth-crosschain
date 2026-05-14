@@ -2,6 +2,7 @@ import type { AdvancedIndex } from "fumadocs-core/search/server";
 import { createSearchAPI } from "fumadocs-core/search/server";
 import { z } from "zod";
 
+import { SYMBOLS_API_URL } from "../../../config/pyth-pro-public";
 import { source } from "../../../lib/source";
 
 // Define schemas for type safety
@@ -64,10 +65,7 @@ async function getHermesFeeds(): Promise<AdvancedIndex[]> {
 
 async function getLazerFeeds(): Promise<AdvancedIndex[]> {
   try {
-    const res = await fetch(
-      "https://pyth.dourolabs.app/v1/symbols",
-      { next: { revalidate: 3600 } },
-    );
+    const res = await fetch(SYMBOLS_API_URL, { next: { revalidate: 3600 } });
     const parsed = lazerSchema.safeParse(await res.json());
 
     if (!parsed.success) {

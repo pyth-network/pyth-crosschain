@@ -8,6 +8,13 @@
   overflow-x: auto;
 }
 
+.descriptionContent {
+  max-width: 15rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
 .paginator {
   margin-bottom: theme.spacing(8);
 }
@@ -36,4 +43,91 @@
   width: theme.spacing(3);
   height: theme.spacing(3);
   flex-shrink: 0;
+}
+
+.channelIndicator {
+  display: flex;
+  width: 8.25rem;
+  min-width: 8.25rem;
+  flex-direction: column;
+  gap: theme.spacing(1);
+}
+
+.channelTrack,
+.channelLabels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.channelTrack {
+  column-gap: 2px;
+}
+
+.channelSegment {
+  height: 4px;
+  border-radius: theme.border-radius("full");
+  background: theme.color("muted");
+  opacity: 0.35;
+}
+
+.channelSegmentActive {
+  background: theme.color("highlight");
+  opacity: 1;
+}
+
+.channelLabels {
+  column-gap: theme.spacing(1);
+}
+
+.channelLabel {
+  overflow: hidden;
+  color: theme.color("muted");
+  cursor: help;
+  font-size: theme.font-size("xs");
+  line-height: 1;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.channelLabelActive {
+  color: theme.color("highlight");
+  font-weight: theme.font-weight("medium");
+}
+
+.channelUnknown {
+  color: theme.color("muted");
+  font-size: theme.font-size("xs");
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.legendIntro {
+  margin: 0;
+  font-size: theme.font-size("sm");
+  line-height: 1.5;
+}
+
+.legendRows {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(4);
+}
+
+.legendText {
+  font-size: theme.font-size("sm");
+  line-height: 1.4;
 }

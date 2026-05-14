@@ -77,6 +77,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
@@ -90,6 +91,7 @@ export default {
       endpoint,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       mnemonicFile,
       pushingFrequency,
       pollingFrequency,
@@ -108,7 +110,9 @@ export default {
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(

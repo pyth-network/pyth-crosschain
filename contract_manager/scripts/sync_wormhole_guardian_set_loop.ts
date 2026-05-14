@@ -148,10 +148,7 @@ function getAlternativeRpc(
   return endpoints[tryNext % endpoints.length];
 }
 
-function updateEvmChainRpc(
-  chainId: string,
-  newRpcUrl: string,
-): boolean {
+function updateEvmChainRpc(chainId: string, newRpcUrl: string): boolean {
   const raw = fs.readFileSync(EVM_CHAINS_PATH, "utf-8");
   const chains = JSON.parse(raw) as EvmChainEntry[];
   const entry = chains.find((c) => c.id === chainId);

@@ -86,6 +86,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -101,6 +102,7 @@ export default {
       endpoint,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -123,7 +125,9 @@ export default {
     });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
