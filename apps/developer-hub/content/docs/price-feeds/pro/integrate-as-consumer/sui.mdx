@@ -44,7 +44,7 @@ client.subscribe({
 Pyth Pro provides a [Sui TypeScript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) that handles the verification call for you.
 
 <Callout type="warning">
-  Always call `parse_and_verify_le_ecdsa_update` in a Programmable Transaction Block (PTB), not inside your smart contract.
+  Always call `parse_and_verify_le_ecdsa_update_v2` in a Programmable Transaction Block (PTB), not inside your smart contract.
   This allows your contract to work with any newer version of the Pyth Lazer contract, since the `Update` type remains stable.
 </Callout>
 
@@ -122,7 +122,7 @@ pyth_lazer = { git = "https://github.com/pyth-network/pyth-crosschain.git", subd
 Import the necessary modules and write a function that accepts the `Update`:
 
 ```move copy
-use pyth_lazer::update::Update;
+use pyth_lazer::update_v2::Update;
 use pyth_lazer::feed::Feed;
 
 public fun consume_price(update: Update) {
