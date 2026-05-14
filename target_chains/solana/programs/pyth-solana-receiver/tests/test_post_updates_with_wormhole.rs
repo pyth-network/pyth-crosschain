@@ -1,14 +1,10 @@
 use {
     anchor_lang::{InstructionData, ToAccountMetas},
-    common_test_utils::{
-        default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX,
-    },
+    common_test_utils::{default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX},
     program_simulator::{into_transaction_error, ProgramSimulator},
     pyth_solana_receiver::{
         instruction::{Initialize, PostUpdate},
-        sdk::{
-            deserialize_accumulator_update_data, get_guardian_set_address, DEFAULT_TREASURY_ID,
-        },
+        sdk::{deserialize_accumulator_update_data, get_guardian_set_address, DEFAULT_TREASURY_ID},
     },
     pyth_solana_receiver_sdk::{
         config::Config,
@@ -19,8 +15,8 @@ use {
     pythnet_sdk::{
         messages::Message,
         test_utils::{
-            create_accumulator_message, create_dummy_price_feed_message,
-            dummy_guardians_addresses, trim_vaa_signatures,
+            create_accumulator_message, create_dummy_price_feed_message, dummy_guardians_addresses,
+            trim_vaa_signatures,
         },
     },
     solana_program::instruction::Instruction,
