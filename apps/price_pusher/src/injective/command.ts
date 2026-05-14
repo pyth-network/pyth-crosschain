@@ -25,11 +25,15 @@ export default {
     } as Options,
     "grpc-endpoint": {
       description:
-        "gRPC endpoint URL for injective. The pusher will periodically" +
+        "gRPC endpoint URL(s) for injective. The pusher will periodically " +
         "poll for updates. The polling interval is configurable via the " +
-        "`polling-frequency` command-line argument.",
+        "`polling-frequency` command-line argument. " +
+        "Pass the flag multiple times or supply a comma-separated list " +
+        "(e.g. `--grpc-endpoint a,b`) to register a fallback set; the " +
+        "pusher will round-robin through them on gRPC errors.",
+      type: "array",
+      string: true,
       required: true,
-      type: "string",
     } as Options,
     network: {
       description: "testnet or mainnet",
@@ -85,6 +89,20 @@ export default {
     });
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
+    // `grpc-endpoint` is `type: "array"` so yargs always hands us a list. Each
+    // entry may itself be a comma-separated string (e.g. `--grpc-endpoint a,b`),
+    // so split + trim + drop empties to get a clean failover set.
+    const grpcEndpoints: string[] = (grpcEndpoint as string[])
+      .flatMap((entry) => entry.split(","))
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+    if (grpcEndpoints.length === 0) {
+      throw new Error(
+        "At least one --grpc-endpoint must be provided. Pass the flag once per " +
+          "endpoint, or supply a comma-separated list.",
+      );
+    }
+
     let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
@@ -109,7 +127,7 @@ export default {
 
     const injectiveListener = new InjectivePriceListener(
       pythContractAddress,
-      grpcEndpoint,
+      grpcEndpoints,
       priceItems,
       logger.child({ module: "InjectivePriceListener" }),
       {
@@ -119,7 +137,7 @@ export default {
     const injectivePusher = new InjectivePricePusher(
       hermesClient,
       pythContractAddress,
-      grpcEndpoint,
+      grpcEndpoints,
       logger.child({ module: "InjectivePricePusher" }),
       mnemonic,
       {
