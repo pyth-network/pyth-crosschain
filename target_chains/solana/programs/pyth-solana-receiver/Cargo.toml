@@ -37,6 +37,7 @@ solana-sdk = { workspace = true }
 solana-program-test = { workspace = true }
 tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
+wormhole-solana = { workspace = true }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 common-test-utils = { path = "../../common_test_utils" }
