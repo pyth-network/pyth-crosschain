@@ -4,8 +4,6 @@ import type { PlaygroundConfig } from "../types";
  * Generates CLI code using wscat for WebSocket connections
  */
 export function generateCliCode(config: PlaygroundConfig): string {
-  // If accessToken is empty, use demo token placeholder
-  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds =
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
@@ -30,10 +28,12 @@ export function generateCliCode(config: PlaygroundConfig): string {
   return `# Install wscat if not already installed
 npm install -g wscat
 
+# Export your API key so it never ends up in shell history or version control
+export LAZER_TOKEN="your-api-key-here"
+
 # Connect to Pyth Lazer WebSocket with authentication
-# Replace YOUR_ACCESS_TOKEN with your actual token
 wscat -c "wss://pyth-lazer-0.dourolabs.app/v1/stream" \\
-  -H "Authorization: Bearer ${token}"
+  -H "Authorization: Bearer $LAZER_TOKEN"
 
 # Once connected, send this subscription message:
 ${payloadStr}
@@ -42,7 +42,7 @@ ${payloadStr}
 
 # Alternative: Using curl for one-shot requests (HTTP API)
 curl -X POST "https://pyth-lazer-0.dourolabs.app/v1/latest_price" \\
-  -H "Authorization: Bearer ${token}" \\
+  -H "Authorization: Bearer $LAZER_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify({ formats, parsed: config.parsed, priceFeedIds, properties })}'
 

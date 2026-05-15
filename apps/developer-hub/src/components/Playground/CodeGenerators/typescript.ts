@@ -4,8 +4,6 @@ import type { PlaygroundConfig } from "../types";
  * Generates TypeScript code using the pyth-lazer-sdk package
  */
 export function generateTypeScriptCode(config: PlaygroundConfig): string {
-  // If accessToken is empty, use demo token placeholder
-  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds =
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
@@ -19,9 +17,13 @@ export function generateTypeScriptCode(config: PlaygroundConfig): string {
 
   return `import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
+// Read your API key from the environment (never hard-code it)
+const token = process.env.LAZER_TOKEN;
+if (!token) throw new Error("Set LAZER_TOKEN in your environment");
+
 // Create the Pyth Lazer client with WebSocket pool configuration
 const client = await PythLazerClient.create({
-  token: "${token}",
+  token,
   webSocketPoolConfig: {
     urls: [
       "wss://pyth-lazer-0.dourolabs.app/v1/stream",

@@ -15,6 +15,17 @@ error SignatureIndexesNotAscending();
 contract ReceiverMessages is ReceiverGetters {
     using BytesLib for bytes;
 
+    /// @dev Returns the minimum number of guardian signatures required to reach
+    /// quorum for a guardian set of size `numGuardians`. Default is 2/3 + 1
+    /// (the BFT threshold). Implementations may override this to enforce a
+    /// different threshold (e.g. 1/2 + 1).
+    function quorumThreshold(
+        uint numGuardians
+    ) internal pure virtual returns (uint) {
+        // fixed-point trick with 1 decimal to avoid integer-rounding bugs
+        return (((numGuardians * 10) / 3) * 2) / 10 + 1;
+    }
+
     /// @dev parseAndVerifyVM serves to parse an encodedVM and wholy validate it for consumption
     /// WARNING: it intentionally sets vm.signatures to an empty array since it is not needed after it is validated in this function
     /// since it not used anywhere. If you need to use vm.signatures, use parseVM and verifyVM separately.
@@ -128,15 +139,13 @@ contract ReceiverMessages is ReceiverGetters {
             }
 
             /**
-             * @dev We're using a fixed point number transformation with 1 decimal to deal with rounding.
+             * @dev See `quorumThreshold` for the threshold computation.
              *   WARNING: This quorum check is critical to assessing whether we have enough Guardian signatures to validate a VM
              *   if making any changes to this, obtain additional peer review. If guardianSet key length is 0 and
              *   vm.signatures length is 0, this could compromise the integrity of both vm and signature verification.
              */
 
-            if (
-                (((guardianSet.keys.length * 10) / 3) * 2) / 10 + 1 > signersLen
-            ) {
+            if (quorumThreshold(guardianSet.keys.length) > signersLen) {
                 return (vm, false, "no quorum");
             }
 
@@ -217,15 +226,12 @@ contract ReceiverMessages is ReceiverGetters {
         }
 
         /**
-         * @dev We're using a fixed point number transformation with 1 decimal to deal with rounding.
+         * @dev See `quorumThreshold` for the threshold computation.
          *   WARNING: This quorum check is critical to assessing whether we have enough Guardian signatures to validate a VM
          *   if making any changes to this, obtain additional peer review. If guardianSet key length is 0 and
          *   vm.signatures length is 0, this could compromise the integrity of both vm and signature verification.
          */
-        if (
-            (((guardianSet.keys.length * 10) / 3) * 2) / 10 + 1 >
-            vm.signatures.length
-        ) {
+        if (quorumThreshold(guardianSet.keys.length) > vm.signatures.length) {
             return (false, "no quorum");
         }
 

@@ -32,7 +32,7 @@
     "id": "canto",
     "mainnet": true,
     "networkId": 7700,
-    "rpcUrl": "https://canto.slingshot.finance",
+    "rpcUrl": "https://canto.gravitychain.io/",
     "type": "EvmChain"
   },
   {
@@ -60,7 +60,7 @@
     "id": "canto_testnet",
     "mainnet": false,
     "networkId": 7701,
-    "rpcUrl": "https://canto-testnet.plexnode.wtf",
+    "rpcUrl": "https://testnet-archive.plexnode.wtf",
     "type": "EvmChain"
   },
   {
@@ -103,28 +103,28 @@
     "id": "fantom_testnet",
     "mainnet": false,
     "networkId": 4002,
-    "rpcUrl": "https://fantom.api.onfinality.io/public",
+    "rpcUrl": "https://rpc.testnet.fantom.network/",
     "type": "EvmChain"
   },
   {
     "id": "neon",
     "mainnet": true,
     "networkId": 245022934,
-    "rpcUrl": "https://neon-evm.drpc.org",
+    "rpcUrl": "https://neon-proxy-mainnet.solana.p2p.org",
     "type": "EvmChain"
   },
   {
     "id": "fantom",
     "mainnet": true,
     "networkId": 250,
-    "rpcUrl": "https://rpc.ankr.com/fantom",
+    "rpcUrl": "https://250.rpc.thirdweb.com",
     "type": "EvmChain"
   },
   {
     "id": "mumbai",
     "mainnet": false,
     "networkId": 80001,
-    "rpcUrl": "https://polygon-mumbai.api.onfinality.io/public",
+    "rpcUrl": "https://polygon-testnet.public.blastapi.io",
     "type": "EvmChain"
   },
   {
@@ -167,14 +167,14 @@
     "id": "evmos_testnet",
     "mainnet": false,
     "networkId": 9000,
-    "rpcUrl": "https://jsonrpc-evmos-testnet.mzonder.com",
+    "rpcUrl": "https://evmos-testnet-jsonrpc.stake-town.com",
     "type": "EvmChain"
   },
   {
     "id": "cronos",
     "mainnet": true,
     "networkId": 25,
-    "rpcUrl": "https://cronosrpc-1.xstaking.sg",
+    "rpcUrl": "https://cronos-evm-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
@@ -182,14 +182,14 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 1,
-    "rpcUrl": "https://eth.llamarpc.com",
+    "rpcUrl": "https://eth1.lava.build",
     "type": "EvmChain"
   },
   {
     "id": "bsc_testnet",
     "mainnet": false,
     "networkId": 97,
-    "rpcUrl": "https://rpc.ankr.com/bsc_testnet_chapel",
+    "rpcUrl": "https://bsc-testnet-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
@@ -212,7 +212,7 @@
     "mainnet": true,
     "nativeToken": "BNB",
     "networkId": 56,
-    "rpcUrl": "https://public-bsc-mainnet.fastnode.io",
+    "rpcUrl": "https://56.rpc.thirdweb.com",
     "type": "EvmChain"
   },
   {
@@ -255,7 +255,7 @@
     "id": "wemix_testnet",
     "mainnet": false,
     "networkId": 1112,
-    "rpcUrl": "https://api.test.wemix.com",
+    "rpcUrl": "https://wemix-testnet.drpc.org",
     "type": "EvmChain"
   },
   {
@@ -293,7 +293,7 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 324,
-    "rpcUrl": "https://zksync2-mainnet.zksync.io",
+    "rpcUrl": "https://mainnet.era.zksync.io",
     "type": "EvmChain"
   },
   {
@@ -317,7 +317,7 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 10,
-    "rpcUrl": "https://mainnet.optimism.io/",
+    "rpcUrl": "https://optimism-public.nodies.app",
     "type": "EvmChain"
   },
   {
@@ -381,7 +381,7 @@
     "id": "ronin",
     "mainnet": true,
     "networkId": 2020,
-    "rpcUrl": "https://api-gateway.skymavis.com/rpc?apikey=$ENV_RONIN_API_KEY",
+    "rpcUrl": "https://api.roninchain.com/rpc",
     "type": "EvmChain"
   },
   {
@@ -430,7 +430,7 @@
     "id": "boba",
     "mainnet": true,
     "networkId": 288,
-    "rpcUrl": "https://replica.boba.network",
+    "rpcUrl": "https://mainnet.boba.network/",
     "type": "EvmChain"
   },
   {
@@ -472,7 +472,7 @@
     "id": "optimism_sepolia",
     "mainnet": false,
     "networkId": 11155420,
-    "rpcUrl": "https://sepolia.optimism.io",
+    "rpcUrl": "https://optimism-sepolia-public.nodies.app",
     "type": "EvmChain"
   },
   {
@@ -493,7 +493,7 @@
     "id": "chiliz",
     "mainnet": true,
     "networkId": 88888,
-    "rpcUrl": "https://rpc.ankr.com/chiliz",
+    "rpcUrl": "https://rpc.chiliz.com",
     "type": "EvmChain"
   },
   {
@@ -507,7 +507,7 @@
     "id": "zetachain",
     "mainnet": true,
     "networkId": 7000,
-    "rpcUrl": "https://zetachain-evm.blockpi.network/v1/rpc/public",
+    "rpcUrl": "https://zetachain-mainnet.g.allthatnode.com/archive/evm",
     "type": "EvmChain"
   },
   {
@@ -594,7 +594,7 @@
     "id": "zksync_sepolia",
     "mainnet": false,
     "networkId": 300,
-    "rpcUrl": "https://sepolia.era.zksync.dev/",
+    "rpcUrl": "https://rpc.ankr.com/zksync_era_sepolia",
     "type": "EvmChain"
   },
   {
@@ -629,7 +629,7 @@
     "id": "blast_s2_testnet",
     "mainnet": false,
     "networkId": 168587773,
-    "rpcUrl": "https://sepolia.blast.io",
+    "rpcUrl": "https://rpc.ankr.com/blast_testnet_sepolia",
     "type": "EvmChain"
   },
   {
@@ -700,14 +700,14 @@
     "id": "injective_inevm_testnet",
     "mainnet": false,
     "networkId": 2424,
-    "rpcUrl": "https://inevm-testnet.rpc.caldera.xyz/http",
+    "rpcUrl": "https://testnet.rpc.inevm.com/http",
     "type": "EvmChain"
   },
   {
     "id": "injective_inevm",
     "mainnet": true,
     "networkId": 2525,
-    "rpcUrl": "https://inevm.calderachain.xyz/http",
+    "rpcUrl": "https://mainnet.rpc.inevm.com/http",
     "type": "EvmChain"
   },
   {
@@ -800,14 +800,14 @@
     "id": "taiko_mainnet",
     "mainnet": true,
     "networkId": 167000,
-    "rpcUrl": "https://rpc.mainnet.taiko.xyz",
+    "rpcUrl": "https://taiko-json-rpc.stakely.io/",
     "type": "EvmChain"
   },
   {
     "id": "sei_evm_mainnet",
     "mainnet": true,
     "networkId": 1329,
-    "rpcUrl": "https://evm-rpc.sei-apis.com",
+    "rpcUrl": "https://sei-evm-rpc.stakeme.pro",
     "type": "EvmChain"
   },
   {
@@ -821,7 +821,7 @@
     "id": "kakarot_sepolia",
     "mainnet": false,
     "networkId": 920637907288165,
-    "rpcUrl": "https://rpc-kakarot-sepolia.karnot.xyz/",
+    "rpcUrl": "https://sepolia-rpc.kakarot.org",
     "type": "EvmChain"
   },
   {
@@ -857,7 +857,7 @@
     "id": "polynomial",
     "mainnet": true,
     "networkId": 8008,
-    "rpcUrl": "https://rpc.polynomial.fi/",
+    "rpcUrl": "https://rpc.polynomial.fi",
     "type": "EvmChain"
   },
   {
@@ -878,7 +878,7 @@
     "id": "kaia_testnet",
     "mainnet": false,
     "networkId": 1001,
-    "rpcUrl": "https://rpc.ankr.com/klaytn_testnet",
+    "rpcUrl": "https://kaia-kairos.blockpi.network/v1/rpc/public",
     "type": "EvmChain"
   },
   {
@@ -906,7 +906,7 @@
     "id": "kinto",
     "mainnet": true,
     "networkId": 7887,
-    "rpcUrl": "https://rpc.kinto-rpc.com",
+    "rpcUrl": "https://rpc.ankr.com/kinto",
     "type": "EvmChain"
   },
   {
@@ -934,14 +934,14 @@
     "id": "cronos_zkevm_mainnet",
     "mainnet": true,
     "networkId": 388,
-    "rpcUrl": "https://mainnet.zkevm.cronos.org",
+    "rpcUrl": "https://rpc.sentio.xyz/cronos-zkevm",
     "type": "EvmChain"
   },
   {
     "id": "movement_evm_devnet_imola",
     "mainnet": false,
     "networkId": 30732,
-    "rpcUrl": "https://mevm.devnet.imola.movementlabs.xyz",
+    "rpcUrl": "https://mevm.testnet.imola.movementlabs.xyz",
     "type": "EvmChain"
   },
   {
@@ -955,7 +955,7 @@
     "id": "idex_xchain_mainnet",
     "mainnet": true,
     "networkId": 94524,
-    "rpcUrl": "https://xchain-rpc.idex.io/",
+    "rpcUrl": "https://xchain-rpc.kuma.bid",
     "type": "EvmChain"
   },
   {
@@ -1039,7 +1039,7 @@
     "id": "kraken_ink_testnet",
     "mainnet": false,
     "networkId": 763373,
-    "rpcUrl": "https://patient-cool-emerald.ink-sepolia.quiknode.pro/$ENV_KRAKEN_INK_API_KEY",
+    "rpcUrl": "https://rpc-gel-sepolia.inkonchain.com",
     "type": "EvmChain"
   },
   {
@@ -1053,14 +1053,14 @@
     "id": "superseed_mainnet",
     "mainnet": true,
     "networkId": 5330,
-    "rpcUrl": "https://rpc-superseed-mainnet-0.t.conduit.xyz/$ENV_SUPERSEED_API_KEY",
+    "rpcUrl": "https://mainnet.superseed.xyz",
     "type": "EvmChain"
   },
   {
     "id": "superseed_testnet",
     "mainnet": false,
     "networkId": 53302,
-    "rpcUrl": "https://rpc-sepolia-superseed-826s35710w.t.conduit.xyz/$ENV_SUPERSEED_API_KEY",
+    "rpcUrl": "https://sepolia.superseed.xyz",
     "type": "EvmChain"
   },
   {
@@ -1144,7 +1144,7 @@
     "id": "kraken_ink_mainnet",
     "mainnet": true,
     "networkId": 57073,
-    "rpcUrl": "$KRAKEN_INK_RPC_URL",
+    "rpcUrl": "https://ink-public.nodies.app",
     "type": "EvmChain"
   },
   {
@@ -1158,7 +1158,7 @@
     "id": "monad_testnet",
     "mainnet": false,
     "networkId": 10143,
-    "rpcUrl": "https://rpc-testnet.monadinfra.com",
+    "rpcUrl": "https://rpc.ankr.com/monad_testnet",
     "type": "EvmChain"
   },
   {
@@ -1249,7 +1249,7 @@
     "id": "mezo",
     "mainnet": true,
     "networkId": 31612,
-    "rpcUrl": "https://jsonrpc-mezo.boar.network",
+    "rpcUrl": "https://mainnet.mezo.public.validationcloud.io",
     "type": "EvmChain"
   },
   {
@@ -1305,7 +1305,7 @@
     "id": "monad",
     "mainnet": true,
     "networkId": 143,
-    "rpcUrl": "https://rpc-mainnet.monadinfra.com",
+    "rpcUrl": "https://rpc.monad.xyz",
     "type": "EvmChain"
   },
   {
@@ -1410,7 +1410,7 @@
     "id": "tempo",
     "mainnet": true,
     "networkId": 4217,
-    "rpcUrl": "https://rpc.tempo.xyz",
+    "rpcUrl": "https://rpc.mainnet.tempo.xyz",
     "type": "EvmChain"
   },
   {

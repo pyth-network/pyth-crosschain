@@ -12,7 +12,107 @@ import { matchSorter } from "match-sorter";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
+import { SYMBOLS_API_URL } from "../../config/pyth-pro-public";
 import styles from "./index.module.scss";
+
+const CHANNELS = [
+  { id: "real_time", label: "RT", fullName: "Real Time" },
+  { id: "fixed_rate@50ms", label: "50ms", fullName: "fixed_rate@50ms" },
+  { id: "fixed_rate@200ms", label: "200ms", fullName: "fixed_rate@200ms" },
+  { id: "fixed_rate@1000ms", label: "1s", fullName: "fixed_rate@1000ms" },
+] as const;
+
+const normalizeChannelId = (channelId: string) =>
+  channelId === "fixed_rate@1ms" ? "real_time" : channelId;
+
+const getSupportedChannels = (minChannel: string): string[] => {
+  const normalizedMinChannel = normalizeChannelId(minChannel);
+  const idx = CHANNELS.findIndex(
+    (channel) => channel.id === normalizedMinChannel,
+  );
+  if (idx === -1) return [minChannel];
+  return CHANNELS.slice(idx).map((channel) => channel.label);
+};
+
+const getChannelLabel = (channelId: string) =>
+  CHANNELS.find((channel) => channel.id === normalizeChannelId(channelId))
+    ?.label ?? channelId;
+
+const ChannelSupportIndicator = ({ minChannel }: { minChannel: string }) => {
+  const normalizedMinChannel = normalizeChannelId(minChannel);
+  const minChannelIndex = CHANNELS.findIndex(
+    (channel) => channel.id === normalizedMinChannel,
+  );
+
+  if (minChannelIndex === -1) {
+    return <span className={styles.channelUnknown}>{minChannel}</span>;
+  }
+
+  const minChannelLabel = getChannelLabel(minChannel);
+  const supportedChannels = getSupportedChannels(minChannel).join(", ");
+  const label = `Fastest channel: ${minChannelLabel}. Supported channels: ${supportedChannels}.`;
+
+  return (
+    <div className={styles.channelIndicator} role="img" aria-label={label}>
+      <div className={styles.channelTrack} aria-hidden="true">
+        {CHANNELS.map((channel, index) => (
+          <span
+            key={channel.id}
+            className={[
+              styles.channelSegment,
+              index >= minChannelIndex ? styles.channelSegmentActive : "",
+            ].join(" ")}
+          />
+        ))}
+      </div>
+      <div className={styles.channelLabels} aria-hidden="true">
+        {CHANNELS.map((channel, index) => (
+          <span
+            key={channel.id}
+            className={[
+              styles.channelLabel,
+              index >= minChannelIndex ? styles.channelLabelActive : "",
+            ].join(" ")}
+            title={channel.fullName}
+          >
+            {channel.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const LEGEND_DESCRIPTIONS: Record<(typeof CHANNELS)[number]["id"], string> = {
+  real_time:
+    "Minimum channel: Real Time. Published on Real Time, fixed_rate@50ms, fixed_rate@200ms, and fixed_rate@1000ms.",
+  "fixed_rate@50ms":
+    "Minimum channel: fixed_rate@50ms. Published on fixed_rate@50ms, fixed_rate@200ms, and fixed_rate@1000ms.",
+  "fixed_rate@200ms":
+    "Minimum channel: fixed_rate@200ms. Published on fixed_rate@200ms and fixed_rate@1000ms.",
+  "fixed_rate@1000ms":
+    "Minimum channel: fixed_rate@1000ms. Published on fixed_rate@1000ms only.",
+};
+
+export const ChannelLegend = () => (
+  <div className={styles.legend}>
+    <p className={styles.legendIntro}>
+      The <strong>Channels</strong> column shows the fastest tier a feed
+      supports. Every slower channel is also delivered, so highlighted segments
+      cascade to the right.
+    </p>
+    <ul className={styles.legendRows}>
+      {CHANNELS.map((channel) => (
+        <li key={channel.id} className={styles.legendRow}>
+          <ChannelSupportIndicator minChannel={channel.id} />
+          <span className={styles.legendText}>
+            {LEGEND_DESCRIPTIONS[channel.id]}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
 type FeedState = (typeof FEED_STATES)[number];
@@ -71,6 +171,7 @@ export const PriceFeedIdsProTable = () => {
     { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
     { id: "exponent", name: "Exponent" },
     { id: "state", name: "Status" },
+    { id: "channels", name: "Channels" },
   ];
 
   const {
@@ -226,7 +327,9 @@ export const PriceFeedIdsProTable = () => {
     id: feed.pyth_lazer_id,
     data: {
       asset_type: feed.asset_type,
-      description: feed.description,
+      description: (
+        <div className={styles.descriptionContent}>{feed.description}</div>
+      ),
       name: feed.name,
       symbol: feed.symbol,
       pyth_lazer_id: feed.pyth_lazer_id,
@@ -236,6 +339,7 @@ export const PriceFeedIdsProTable = () => {
           {FEED_STATE_LABELS[feed.state]}
         </Badge>
       ),
+      channels: <ChannelSupportIndicator minChannel={feed.min_channel} />,
     },
   }));
 
@@ -340,9 +444,10 @@ const State = {
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
 const getPythProFeeds = async () => {
-  const result: Response = await fetch(
-    "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
-  );
+  const result: Response = await fetch(SYMBOLS_API_URL);
+  if (!result.ok) {
+    throw new Error(`Failed to fetch Pyth Pro feeds: ${String(result.status)}`);
+  }
   const data = pythProSchema.parse(await result.json());
   return data.toSorted(
     (firstFeed, secondFeed) =>
@@ -359,6 +464,7 @@ const pythProSchema = z.array(
     pyth_lazer_id: z.number().int().positive(),
     exponent: z.number(),
     state: z.enum(["stable", "coming_soon", "inactive"]),
+    min_channel: z.string(),
   }),
 );
 
@@ -369,7 +475,8 @@ type Col =
   | "symbol"
   | "pyth_lazer_id"
   | "exponent"
-  | "state";
+  | "state"
+  | "channels";
 
 const errorToString = (error: unknown) => {
   if (error instanceof Error) {

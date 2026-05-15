@@ -28,7 +28,7 @@ URL: https://hermes-beta.pyth.network
 ### Rate limits
 
 In order to maximize the reliability of the Public Hermes API, a request rate limit is enforced.
-All endpoints limits are set at 30 requests every 10 seconds per IP address.
+All endpoints limits are set at 10 requests every 10 seconds per IP address.
 Clients issuing request above the limit will receive a 429 (Too Many Requests) response for the subsequent 60-second period.
 
 For production deployments, developers integrating with Pyth Network are **strongly encouraged** to use Node Providers

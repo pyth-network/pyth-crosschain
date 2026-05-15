@@ -2,18 +2,21 @@ import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
 import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import {
+  getDefaultDeploymentConfig,
+  toDeploymentType,
+} from "@pythnetwork/contract-manager/core/base";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
   upgradePyth,
 } from "./upgrade_pyth.js";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
+import { resolve } from "path";
 
 const OPTIONS = {
   "private-key": {
@@ -35,6 +38,11 @@ const OPTIONS = {
     type: "string",
     default: "https://hermes.pyth.network",
     desc: "Price service endpoint to use, defaults to https://hermes.pyth.network",
+  },
+  "endpoint-access-token": {
+    type: "string",
+    demandOption: false,
+    desc: "Access token to use for the endpoint",
   },
   "feed-id": {
     type: "array",
@@ -64,6 +72,7 @@ yargs
           "feed-id": OPTIONS["feed-id"],
           "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
+          "endpoint-access-token": OPTIONS["endpoint-access-token"],
         })
         .usage(
           "$0 create --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -71,12 +80,17 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
+      const client = new HermesClient(argv.endpoint, hermesClientConfig);
       const feedIds = argv["feed-id"] as string[];
-      const vaas = await priceService.getLatestVaas(feedIds);
+      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeCreatePriceFeed(
         argv["private-key"],
-        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+        priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
       );
       console.log("Transaction successful. Digest:", digest);
     },
@@ -90,6 +104,7 @@ yargs
           contract: OPTIONS.contract,
           "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
+          "endpoint-access-token": OPTIONS["endpoint-access-token"],
         })
         .usage(
           "$0 create-all --contract <contract-id> --private-key <private-key>",
@@ -97,15 +112,21 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
-      const feedIds = await priceService.getPriceFeedIds();
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
+      const client = new HermesClient(argv.endpoint, hermesClientConfig);
+      const priceFeeds = await client.getPriceFeeds();
+      const feedIds = priceFeeds.map((feed) => feed.id);
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
         const batch = feedIds.slice(i, i + BATCH_SIZE);
-        const vaas = await priceService.getLatestVaas(batch);
+        const priceUpdates = await client.getLatestPriceUpdates(batch, {
+          parsed: false,
+        });
         const digest = await contract.executeCreatePriceFeed(
           argv["private-key"],
-          vaas.map((vaa) => Buffer.from(vaa, "base64")),
+          priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
         );
         console.log("Transaction successful. Digest:", digest);
         console.log(`Progress: ${i + BATCH_SIZE}/${feedIds.length}`);
@@ -152,9 +173,14 @@ yargs
             desc: "Chain to deploy the code to. Can be sui_mainnet or sui_testnet",
           },
           path: OPTIONS.path,
+          "deployment-type": {
+            type: "string",
+            demandOption: true,
+            desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+          },
         })
         .usage(
-          "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts>",
+          "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts> --deployment-type <deployment-type>",
         );
     },
     async (argv) => {
@@ -163,12 +189,12 @@ yargs
       const keypair = Ed25519Keypair.fromSecretKey(
         new Uint8Array(Buffer.from(walletPrivateKey, "hex")),
       );
+      const deploymentType = toDeploymentType(argv["deployment-type"]);
       const result = await publishPackage(
         keypair,
         chain.getProvider(),
         argv.path,
       );
-      const deploymentType = chain.isMainnet() ? "stable" : "beta";
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
         keypair,
@@ -190,6 +216,7 @@ yargs
           "feed-id": OPTIONS["feed-id"],
           "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
+          "endpoint-access-token": OPTIONS["endpoint-access-token"],
         })
         .usage(
           "$0 update-feeds --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -197,12 +224,17 @@ yargs
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = new PriceServiceConnection(argv.endpoint);
+      const hermesClientConfig = argv["endpoint-access-token"]
+        ? { accessToken: argv["endpoint-access-token"] }
+        : undefined;
+      const client = new HermesClient(argv.endpoint, hermesClientConfig);
       const feedIds = argv["feed-id"] as string[];
-      const vaas = await priceService.getLatestVaas(feedIds);
+      const priceUpdates = await client.getLatestPriceUpdates(feedIds, {
+        parsed: false,
+      });
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
         argv["private-key"],
-        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+        priceUpdates.binary.data.map((update) => Buffer.from(update, "hex")),
         feedIds,
       );
       console.log("Transaction successful. Digest:", digest);

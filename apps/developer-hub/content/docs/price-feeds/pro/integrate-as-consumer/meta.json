@@ -3,7 +3,8 @@
   "pages": [
     "[in SVM programs](/price-feeds/pro/integrate-as-consumer/svm)",
     "[in EVM contracts](/price-feeds/pro/integrate-as-consumer/evm)",
-    "[in Sui contracts](/price-feeds/pro/integrate-as-consumer/sui)"
+    "[in Sui contracts](/price-feeds/pro/integrate-as-consumer/sui)",
+    "[in Cardano contracts (Beta)](/price-feeds/pro/integrate-as-consumer/cardano)"
   ],
   "defaultOpen": false
 }

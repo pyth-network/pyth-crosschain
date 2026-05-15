@@ -26,7 +26,16 @@
 /* @import "./theme.css"; this overrides the default colors to match the pyth branding */
 /* @import "./fumadocs-global-style-overrides.css"; */
 
+/* Drive Lightning CSS's light-dark() polyfill via the next-themes class instead
+   of prefers-color-scheme. Specificity must beat the :root polyfill rules
+   (which Lightning CSS emits multiple times per CSS chunk), so we anchor to
+   :root.light / :root.dark (0,2,0) rather than .light / .dark (0,1,0). */
+:root.light,
 .light {
+  --lightningcss-light: initial;
+  --lightningcss-dark: ;
+  color-scheme: light;
+
   --color-fd-background: hsla(0, 16%, 96%, 1);
   --color-fd-foreground: hsla(0, 16%, 5%, 1);
   --color-fd-muted: hsla(0, 16%, 90%, 1);
@@ -45,7 +54,12 @@
   --color-fd-ring: hsla(263, 70%, 50%, 1);
 }
 
+:root.dark,
 .dark {
+  --lightningcss-light: ;
+  --lightningcss-dark: initial;
+  color-scheme: dark;
+
   --color-fd-background: hsl(240, 4%, 11%);
   --color-fd-foreground: hsl(250, 18%, 87%);
   --color-fd-muted: hsl(0, 3%, 6%);

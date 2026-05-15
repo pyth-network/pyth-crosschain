@@ -6,7 +6,6 @@ import { Gavel } from "@phosphor-icons/react/dist/ssr/Gavel";
 import { Lifebuoy } from "@phosphor-icons/react/dist/ssr/Lifebuoy";
 import { List } from "@phosphor-icons/react/dist/ssr/List";
 import { Plug } from "@phosphor-icons/react/dist/ssr/Plug";
-import { ShieldChevron } from "@phosphor-icons/react/dist/ssr/ShieldChevron";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -210,13 +209,6 @@ export const SupportDrawer = {
               "Learn about how the $PYTH token is structured and distributed",
             target: "_blank",
             href: "https://docs.pyth.network/home/pyth-token/pyth-distribution",
-          },
-          {
-            icon: <ShieldChevron />,
-            title: "Oracle Integrity Staking (OIS) Guide",
-            description: "Learn how to help secure the oracle and earn rewards",
-            target: "_blank",
-            href: "https://docs.pyth.network/home/oracle-integrity-staking",
           },
           {
             icon: <Gavel />,

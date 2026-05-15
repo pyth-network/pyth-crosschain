@@ -1,9 +1,9 @@
+import { ProductCard } from "../../ProductCard";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
 import { Section } from "./section";
-import { SectionCards, SectionCard } from "./section-card";
+import { SectionCard, SectionCards } from "./section-card";
 import SignalImage from "./signal.svg";
-import { ProductCard } from "../../ProductCard";
 
 export const Homepage = () => {
   return (
@@ -26,14 +26,14 @@ export const Homepage = () => {
         </p>
         <div className={styles.productsGrid}>
           {products.map((product: ProductCardConfig) => (
-            <div key={product.title} className={styles.productsCardWrapper}>
+            <div className={styles.productsCardWrapper} key={product.title}>
               <ProductCard
-                title={product.title}
+                buttonHref={product.href}
+                buttonLabel="Get started"
                 description={product.description}
                 features={product.features}
                 quickLinks={product.quickLinks}
-                buttonLabel="Get started"
-                buttonHref={product.href}
+                title={product.title}
               />
             </div>
           ))}
@@ -41,68 +41,68 @@ export const Homepage = () => {
       </section>
 
       <Section
-        title="Additional Resources"
-        subtitle="Explore the Pyth Network"
-        isHighlight
         image={<ResourcesForBuildersImage />}
+        isHighlight
+        subtitle="Explore the Pyth Network"
+        title="Additional Resources"
       >
         <SectionCards>
           <SectionCard
-            title="Pyth Token"
             description="The native token powering governance and staking across the Pyth Network."
+            image={<SignalImage />}
+            title="Pyth Token"
             url="/pyth-token"
             urlLabel="Read more"
-            image={<SignalImage />}
           />
           <SectionCard
-            title="Oracle Integrity Staking"
             description="Stake PYTH to support data publishers and secure the integrity of Pyth price feeds."
+            image={<SignalImage />}
+            title="Oracle Integrity Staking"
             url="/oracle-integrity-staking"
             urlLabel="Read more"
-            image={<SignalImage />}
           />
           <SectionCard
-            title="Pyth Metrics"
             description="Track network performance, feed activity, and ecosystem growth in real time."
+            image={<SignalImage />}
+            title="Pyth Metrics"
             url="/metrics"
             urlLabel="Read more"
-            image={<SignalImage />}
           />
         </SectionCards>
       </Section>
       <Section
-        title="Resources for Developers"
         subtitle="Explore the Pyth Network for developers"
+        title="Resources for Developers"
       >
         <SectionCards>
           <SectionCard
-            title="Get Your Access Token"
             description="Request access for the Pyth Ultra Low Latency price feeds."
-            url="/price-feeds/pro/acquire-access-token"
-            urlLabel="Link"
             image={<SignalImage />}
+            title="Get Your API Key"
+            url="/price-feeds/pro/acquire-api-key"
+            urlLabel="Link"
           />
           <SectionCard
-            title="Supported Feeds -- Pyth Pro"
             description="Explore the complete list of supported price feeds for Pyth Pro."
+            image={<SignalImage />}
+            title="Supported Feeds -- Pyth Pro"
             url="/price-feeds/pro/price-feed-ids"
             urlLabel="Link"
-            image={<SignalImage />}
           />
           <SectionCard
-            title="Supported Blockchains -- Pyth Core"
             description="Explore the complete list of supported chains for Pyth Core."
+            image={<SignalImage />}
+            title="Supported Blockchains -- Pyth Core"
             url="/price-feeds/core/contract-addresses"
             urlLabel="Link"
-            image={<SignalImage />}
           />
           <SectionCard
-            title="API Reference -- Pyth Pro"
             description="Explore the complete API reference for Pyth Pro."
-            url="https://pyth-lazer.dourolabs.app/docs"
-            urlLabel="Link"
             image={<SignalImage />}
             target="_blank"
+            title="API Reference -- Pyth Pro"
+            url="https://pyth-lazer.dourolabs.app/docs"
+            urlLabel="Link"
           />
         </SectionCards>
       </Section>
@@ -118,73 +118,73 @@ function GradientDivider() {
 
 const products: ProductCardConfig[] = [
   {
-    title: "Pyth Pro",
     description:
       "Subscription-based price data for institutions and advanced use cases. Previously known as Lazer.",
-    href: "/price-feeds/pro",
     features: [
       { label: "Ultra-low latency" },
       { label: "Crypto, Equities & Indexes" },
       { label: "Customizable channels and latency" },
       { label: "Dedicated support" },
     ],
+    href: "/price-feeds/pro",
     quickLinks: [
       {
-        label: "Get Pyth Pro Access Token",
-        href: "/price-feeds/pro/acquire-access-token",
+        href: "/price-feeds/pro/acquire-api-key",
+        label: "Get Pyth Pro API Key",
       },
       {
-        label: "Browse Supported Feeds",
         href: "/price-feeds/pro/price-feed-ids",
+        label: "Browse Supported Feeds",
       },
-      { label: "Pricing", href: "https://www.pyth.network/pricing" },
+      { href: "https://www.pyth.network/pricing", label: "Pricing" },
     ],
+    title: "Pyth Pro",
   },
   {
-    title: "Pyth Core",
     description:
       "Decentralized price feeds for DeFi and TradFi builders with deterministic on-chain delivery.",
-    href: "/price-feeds/core",
     features: [
       { label: "400ms update frequency" },
       { label: "100+ blockchains" },
       { label: "Supports Pull and Push updates" },
       { label: "Decentralized Oracle" },
     ],
+    href: "/price-feeds/core",
     quickLinks: [
       {
-        label: "Supported Blockchains",
         href: "/price-feeds/core/contract-addresses",
+        label: "Supported Blockchains",
       },
       {
-        label: "Browse Supported Feeds",
         href: "/price-feeds/core/price-feeds",
+        label: "Browse Supported Feeds",
       },
-      { label: "API Reference", href: "/price-feeds/core/api-reference" },
+      { href: "/price-feeds/core/api-reference", label: "API Reference" },
     ],
+    title: "Pyth Core",
   },
   {
-    title: "Entropy",
     description:
       "Secure, Verifiable Random Number Generator for EVM-based smart contracts.",
-    href: "/entropy",
     features: [
       { label: "On-chain randomness" },
       { label: "Verifiable results" },
       { label: "Pay in native token" },
       { label: "Supports 20+ EVM chains" },
     ],
+    href: "/entropy",
     quickLinks: [
       {
-        label: "Chainlist",
         href: "/entropy/chainlist",
+        label: "Chainlist",
       },
-      { label: "Protocol Design", href: "/entropy/protocol-design" },
+      { href: "/entropy/protocol-design", label: "Protocol Design" },
       {
-        label: "Entropy Explorer",
         href: "https://entropy-explorer.pyth.network/",
+        label: "Entropy Explorer",
       },
     ],
+    title: "Entropy",
   },
 ];
 

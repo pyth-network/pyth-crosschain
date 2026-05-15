@@ -1119,8 +1119,8 @@ importers:
         specifier: ^1.3.0
         version: 1.26.1(typescript@5.9.3)
       '@pythnetwork/hermes-client':
-        specifier: ^1.3.1
-        version: 1.4.0(axios@1.13.6)
+        specifier: workspace:*
+        version: link:../hermes/client/js
       '@pythnetwork/price-service-sdk':
         specifier: workspace:^
         version: link:../../price_service/sdk/js
@@ -1183,7 +1183,7 @@ importers:
         version: 15.1.3
       viem:
         specifier: ^2.19.4
-        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+        version: 2.42.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6)
       yaml:
         specifier: ^2.1.1
         version: 2.7.1
@@ -1411,6 +1411,9 @@ importers:
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:^
         version: link:../target_chains/ethereum/sdk/solidity
+      '@pythnetwork/pyth-solana-receiver':
+        specifier: workspace:*
+        version: link:../target_chains/solana/sdk/js/pyth_solana_receiver
       '@pythnetwork/pyth-starknet-js':
         specifier: ^0.2.1
         version: 0.2.1
@@ -1450,6 +1453,9 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 17.0.33
+      '@wormhole-foundation/sdk-solana-core':
+        specifier: ^4.18.0
+        version: 4.20.0(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
       aptos:
         specifier: ^1.5.0
         version: 1.21.0
@@ -1927,6 +1933,31 @@ importers:
       tsx:
         specifier: 'catalog:'
         version: 4.20.6
+
+  lazer/contracts/cardano/sdk/js:
+    dependencies:
+      '@evolution-sdk/evolution':
+        specifier: ^0.3.29
+        version: 0.3.32(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+    devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 4.0.2(typescript@5.9.3)
+      '@pythnetwork/pyth-lazer-sdk':
+        specifier: ^5.2.0
+        version: 5.2.1(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
+      '@types/yargs':
+        specifier: 'catalog:'
+        version: 17.0.33
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
+      yargs:
+        specifier: 'catalog:'
+        version: 18.0.0
 
   lazer/contracts/sui/sdk/js:
     dependencies:
@@ -2888,9 +2919,9 @@ importers:
       '@pythnetwork/contract-manager':
         specifier: workspace:*
         version: link:../../../contract_manager
-      '@pythnetwork/price-service-client':
-        specifier: ^1.4.0
-        version: 1.9.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@pythnetwork/hermes-client':
+        specifier: workspace:*
+        version: link:../../../apps/hermes/client/js
       '@pythnetwork/price-service-sdk':
         specifier: ^1.2.0
         version: 1.8.0
@@ -6184,6 +6215,9 @@ packages:
   '@evolution-sdk/evolution@0.3.28':
     resolution: {integrity: sha512-rgB7bswriAQeLcLSq+HT+nAugsmgdHor9skk6nT9ewTgk1fP9Wq55AxH118Jb5gFAnST40GGEh9SJfswpOeDTg==}
 
+  '@evolution-sdk/evolution@0.3.32':
+    resolution: {integrity: sha512-D0PZgkW55V1sPmul+WbdWNDon7aN8s4+SXuKAkJBRsHVbMvpvrM2doQwSCjQ1cB4zrW9LQGlLKt2SpGdAtLrLQ==}
+
   '@evolution-sdk/scalus-uplc@0.0.9':
     resolution: {integrity: sha512-ByC7I00NmgTUEhC3ZFr+wjFCAmZrKuV5yE5l4naHf9EhkYLgPVOM+NokLhb2j+CyXuOCB7ePvlcoidFkAJ/DiQ==}
     peerDependencies:
@@ -8447,9 +8481,6 @@ packages:
     resolution: {integrity: sha512-/RjUB7BMWl42Hr3qSezmO+tsOPBdtrNNXkjskJgZx0kYi+O1UlAweWuwjWBXTNOqlL9jab24odomx8KCAzFjtg==}
     peerDependencies:
       '@solana/web3.js': ^1.30.2
-
-  '@pythnetwork/hermes-client@1.4.0':
-    resolution: {integrity: sha512-nOOlqFgnSjFLcOUeKjfCxPOYShp4VW9/pTUB7D7OFjgmdJ3hPbSadR9rajurGc4zl2N4NbqR2O/ZMdYkAFaddQ==}
 
   '@pythnetwork/price-service-client@1.9.0':
     resolution: {integrity: sha512-SLm3IFcfmy9iMqHeT4Ih6qMNZhJEefY14T9yTlpsH2D/FE5+BaGGnfcexUifVlfH6M7mwRC4hEFdNvZ6ebZjJg==}
@@ -11368,6 +11399,12 @@ packages:
     peerDependencies:
       '@solana/web3.js': ^1.88.0
 
+  '@solana/spl-token@0.3.9':
+    resolution: {integrity: sha512-1EXHxKICMnab35MvvY/5DBc/K/uQAOJCYnDZXw83McCAYUAfi+rwq6qfd6MmITmSTEhcfBcl/zYxmW/OSN0RmA==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@solana/web3.js': ^1.47.4
+
   '@solana/spl-token@0.4.6':
     resolution: {integrity: sha512-1nCnUqfHVtdguFciVWaY/RKcQz1IF4b31jnKgAmjU9QVN1q7dRUkTEWJZgTYIEtsULjVnC9jRqlhgGN39WbKKA==}
     engines: {node: '>=16'}
@@ -13476,8 +13513,26 @@ packages:
   '@wormhole-foundation/sdk-base@0.10.12':
     resolution: {integrity: sha512-ZeC44XstoOp1lhGPdZhAAoAVmWJVWm8rgn6jjRPsM5HlpbSTZAhznhRvYblQa+hlvogfHFskJiz7WpD0JsZfgw==}
 
+  '@wormhole-foundation/sdk-base@4.20.0':
+    resolution: {integrity: sha512-+uWmqEJ5n+3BjBHTM1PXpEYNHZTA1J+5uR50qADHJNwKbXu6Sg7X2ZJUC+2b5ZKeyVmmev1irksMhdl9UIZl/w==}
+
+  '@wormhole-foundation/sdk-connect@4.20.0':
+    resolution: {integrity: sha512-SYfiDGtKp9zNRMEndvLzPpGXa7RQoqdCYL2T1jHN+KiVgMVDABtUVA76ma1iNxlw+jM0H1LnAMHPm9WvstQ75A==}
+    engines: {node: '>=16'}
+
   '@wormhole-foundation/sdk-definitions@0.10.12':
     resolution: {integrity: sha512-7uCweTkC6b8Edg1eKOcOcK03H4CTBvAK8DKilKD1NjTS0Tqlqk+y7XknOumjzii6kBdyz/ApqdUAHU5l4YRzLQ==}
+
+  '@wormhole-foundation/sdk-definitions@4.20.0':
+    resolution: {integrity: sha512-Ht/lTI8PKdGTN+ghlUeve6I6oMiWgZnMK6h8VGyyA9mZYsCzRgZ7OlpaxKFHK2WEgUAeO1ITmBjnLxCoUpdb+w==}
+
+  '@wormhole-foundation/sdk-solana-core@4.20.0':
+    resolution: {integrity: sha512-EHNlJ+rTWdYr6HK3D6cZoEhLP7A2BD9O+jwXEaxbWdOcstij6GA091n8Bv6pesH1f/4xx2UEwWZzpCS5G+EPiQ==}
+    engines: {node: '>=16'}
+
+  '@wormhole-foundation/sdk-solana@4.20.0':
+    resolution: {integrity: sha512-12ycRHBa810sCLp2XtPpjgG8LS9wGc3E4W6ClqosJ8slxeC8yCr7yH27XtsoX1waGc/N5uAH7VY7/OJB/0k7cA==}
+    engines: {node: '>=16'}
 
   '@wry/caches@1.0.1':
     resolution: {integrity: sha512-bXuaUNLVVkD20wcGBWRyo7j9N3TxePEWFZj2Y+r9OoUzfqmavM84+mFykRicNsBqatba5JLay1t48wxaXaWnlA==}
@@ -14246,6 +14301,9 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  binary-layout@1.3.2:
+    resolution: {integrity: sha512-Lw3GDJ7bjTQ2j6TeuwK3IGNywBKzyOPfUn17AK+FGFl8xPcX+a/IZk5f7mhnOZFsqDyTDzPuvhMreSWelAdeMg==}
 
   binary-parser@2.2.1:
     resolution: {integrity: sha512-5ATpz/uPDgq5GgEDxTB4ouXCde7q2lqAQlSdBRQVl/AJnxmQmhIfyxJx+0MGu//D5rHQifkfGbWWlaysG0o9NA==}
@@ -23461,7 +23519,7 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
@@ -23470,6 +23528,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuidv4@6.2.13:
@@ -27347,6 +27406,12 @@ snapshots:
       bn.js: 5.2.3
       buffer-layout: 1.2.2
 
+  '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10))':
+    dependencies:
+      '@solana/web3.js': 1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      bn.js: 5.2.3
+      buffer-layout: 1.2.2
+
   '@coral-xyz/borsh@0.30.1(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -29193,6 +29258,25 @@ snapshots:
       - supports-color
 
   '@evolution-sdk/evolution@0.3.28(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
+    dependencies:
+      '@effect/platform': 0.90.10(effect@3.19.19)
+      '@effect/platform-node': 0.96.1(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(effect@3.19.19)(utf-8-validate@6.0.6)
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.6
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      '@types/bip39': 3.0.4
+      bip39: 3.1.0
+      effect: 3.19.19
+    transitivePeerDependencies:
+      - '@effect/cluster'
+      - '@effect/rpc'
+      - '@effect/sql'
+      - bufferutil
+      - utf-8-validate
+
+  '@evolution-sdk/evolution@0.3.32(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(utf-8-validate@6.0.6)':
     dependencies:
       '@effect/platform': 0.90.10(effect@3.19.19)
       '@effect/platform-node': 0.96.1(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(effect@3.19.19)(utf-8-validate@6.0.6)
@@ -33168,14 +33252,6 @@ snapshots:
       - bufferutil
       - encoding
       - utf-8-validate
-
-  '@pythnetwork/hermes-client@1.4.0(axios@1.13.6)':
-    dependencies:
-      '@zodios/core': 10.9.6(axios@1.13.6)(zod@3.25.76)
-      eventsource: 3.0.6
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - axios
 
   '@pythnetwork/price-service-client@1.9.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
     dependencies:
@@ -37943,6 +38019,18 @@ snapshots:
       - bufferutil
       - encoding
       - fastestsmallesttextencoderdecoder
+      - typescript
+      - utf-8-validate
+
+  '@solana/spl-token@0.3.9(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@solana/buffer-layout': 4.0.1
+      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      buffer: 6.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
       - typescript
       - utf-8-validate
 
@@ -43134,11 +43222,59 @@ snapshots:
     dependencies:
       '@scure/base': 1.2.6
 
+  '@wormhole-foundation/sdk-base@4.20.0':
+    dependencies:
+      '@scure/base': 1.2.6
+      binary-layout: 1.3.2
+
+  '@wormhole-foundation/sdk-connect@4.20.0':
+    dependencies:
+      '@wormhole-foundation/sdk-base': 4.20.0
+      '@wormhole-foundation/sdk-definitions': 4.20.0
+      axios: 1.13.6(debug@4.4.3)
+    transitivePeerDependencies:
+      - debug
+
   '@wormhole-foundation/sdk-definitions@0.10.12':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@wormhole-foundation/sdk-base': 0.10.12
+
+  '@wormhole-foundation/sdk-definitions@4.20.0':
+    dependencies:
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@wormhole-foundation/sdk-base': 4.20.0
+
+  '@wormhole-foundation/sdk-solana-core@4.20.0(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.29.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10))
+      '@solana/web3.js': 1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-connect': 4.20.0
+      '@wormhole-foundation/sdk-solana': 4.20.0(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - typescript
+      - utf-8-validate
+
+  '@wormhole-foundation/sdk-solana@4.20.0(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.29.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10))
+      '@solana/spl-token': 0.3.9(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-connect': 4.20.0
+      rpc-websockets: 7.11.2
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - typescript
+      - utf-8-validate
 
   '@wry/caches@1.0.1':
     dependencies:
@@ -43206,11 +43342,6 @@ snapshots:
     dependencies:
       axios: 1.13.6(debug@4.4.3)
       zod: 3.24.2
-
-  '@zodios/core@10.9.6(axios@1.13.6)(zod@3.25.76)':
-    dependencies:
-      axios: 1.13.6(debug@4.4.3)
-      zod: 3.25.76
 
   '@zodios/core@10.9.6(axios@1.8.4)(zod@3.25.76)':
     dependencies:
@@ -43874,7 +44005,7 @@ snapshots:
 
   axios@0.25.0:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.3)
+      follow-redirects: 1.15.11(debug@4.4.3)
     transitivePeerDependencies:
       - debug
 
@@ -44138,6 +44269,8 @@ snapshots:
   bignumber.js@9.3.1: {}
 
   binary-extensions@2.3.0: {}
+
+  binary-layout@1.3.2: {}
 
   binary-parser@2.2.1: {}
 

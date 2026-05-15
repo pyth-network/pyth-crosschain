@@ -16,6 +16,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            features: ""
+          - name: lazer
+            features: "--features lazer"
+    name: (${{ matrix.name }})
     defaults:
       run:
         working-directory: target_chains/solana
@@ -26,21 +35,20 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v1.17.34/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.2.20/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --all-targets -- --deny warnings
+        run: cargo clippy --all-targets --all-features -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo-build-sbf
+        run: cargo-build-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run tests
-        run: cargo-test-sbf
+        run: cargo-test-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run sdk tests
-        run: cargo test --package pyth-solana-receiver-sdk
-        working-directory: target_chains/solana/pyth_solana_receiver_sdk
+        run: cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
         if: success() || failure()

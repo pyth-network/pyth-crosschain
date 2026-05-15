@@ -26,7 +26,7 @@ Access requires an API token from an authorized Pyth Data Distributor. Apply at 
 - \`fixed_rate@1ms\` — Updates every 1ms (ultra-low latency)
 - \`fixed_rate@1000ms\` — Updates every 1 second
 
-**Access Tokens**: Required for authentication. Pass as \`Authorization: Bearer {token}\` header. Tokens are permissioned for specific asset types and minimum channel rates. Never expose tokens in frontend code.
+**API Keys**: Required for authentication. Pass as \`Authorization: Bearer {key}\` header. Keys are permissioned for specific asset types and minimum channel rates. Never expose keys in frontend code.
 
 **Price Feed IDs**: Pro uses numeric IDs (not hex strings). BTC/USD = 1, ETH/USD = 2, SOL/USD = 5.
 
@@ -135,13 +135,13 @@ You MUST connect to all three endpoints simultaneously. Any single endpoint may 
 |---------|----------|---------|
 | WebSocket | wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream | Real-time price streaming |
 | REST | https://pyth-lazer.dourolabs.app | Latest price and historical lookups |
-| History | https://history.pyth-lazer.dourolabs.app | OHLC candlestick data, TradingView UDF |
+| History | https://pyth.dourolabs.app/v1 | OHLC candlestick data, TradingView UDF |
 
 ### REST API
 - POST /v1/latest_price — Fetch most recent price for requested feeds
 - POST /v1/price — Fetch price at a specific historical timestamp (Unix microseconds)
 
-### History API
+### History API (base: https://pyth.dourolabs.app/v1)
 - GET /{channel}/history — OHLC candlestick data
 - GET /{channel}/price — Price at specific timestamp
 - GET /symbols — List available symbols (no auth required)
@@ -229,7 +229,7 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/payload-reference.mdx — Complete payload structure and properties
 - https://docs.pyth.network/price-feeds/pro/how-lazer-works.mdx — Architecture and system components
 - https://docs.pyth.network/price-feeds/pro/understanding-price-data.mdx — Confidence intervals, best bid/ask
-- https://docs.pyth.network/price-feeds/pro/acquire-access-token.mdx — Token acquisition and permissions
+- https://docs.pyth.network/price-feeds/pro/acquire-api-key.mdx — Token acquisition and permissions
 - https://docs.pyth.network/price-feeds/pro/error-codes.mdx — Error responses and handling
 - https://docs.pyth.network/price-feeds/pro/faq.mdx — Common questions and solutions
 - https://docs.pyth.network/price-feeds/pro/api/websocket.mdx — WebSocket API reference

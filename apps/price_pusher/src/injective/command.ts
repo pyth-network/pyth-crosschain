@@ -47,6 +47,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -69,6 +70,7 @@ export default {
       controllerLogLevel,
       pythContractAddress,
       priceServiceEndpoint,
+      hermesAccessToken,
       priceIdsProcessChunkSize,
     } = argv;
 
@@ -79,7 +81,9 @@ export default {
     }
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));

@@ -29,7 +29,7 @@ The Relayer service is the ingestion layer that receives and validates all incom
 
 **Key responsibilities:**
 
-- **Authentication**: Validates publisher access tokens and optional Ed25519 signatures.
+- **Authentication**: Validates publisher API keys and optional Ed25519 signatures.
 - **Validation**: Performs sanity checks on incoming updates by examining feed IDs, timestamps, and values to ensure data integrity and proper formatting.
 - **Rate limiting**: Enforces configurable limits on publisher updates.
 - **Message forwarding**: Publishes validated updates to an internal message queue.

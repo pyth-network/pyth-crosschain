@@ -37,6 +37,7 @@ export default {
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.pushingFrequency,
     ...options.pollingFrequency,
     ...options.logLevel,
@@ -49,6 +50,7 @@ export default {
       pythContractAddress,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       pushingFrequency,
       pollingFrequency,
       logLevel,
@@ -59,7 +61,9 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 

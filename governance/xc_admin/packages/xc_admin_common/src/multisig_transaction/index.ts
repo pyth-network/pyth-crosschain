@@ -13,6 +13,7 @@ import {
 import { WORMHOLE_ADDRESS } from "../wormhole";
 import {
   AnchorMultisigInstruction,
+  EXPRESS_RELAY_PROGRAM_ID,
   INTEGRITY_POOL_PROGRAM_ID,
   MESH_PROGRAM_ID,
   STAKING_PROGRAM_ID,
@@ -40,6 +41,7 @@ export enum MultisigInstructionProgram {
   UnrecognizedProgram,
   PythPriceStore,
   Lazer,
+  ExpressRelay,
 }
 
 export function getProgramName(program: MultisigInstructionProgram) {
@@ -70,6 +72,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Unknown";
     case MultisigInstructionProgram.Lazer:
       return "Lazer";
+    case MultisigInstructionProgram.ExpressRelay:
+      return "Express Relay";
   }
 }
 
@@ -153,7 +157,8 @@ export class MultisigParser {
       instruction.programId.equals(MESH_PROGRAM_ID) ||
       instruction.programId.equals(STAKING_PROGRAM_ID) ||
       instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID) ||
-      instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID)
+      instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID) ||
+      instruction.programId.equals(EXPRESS_RELAY_PROGRAM_ID)
     ) {
       return AnchorMultisigInstruction.fromTransactionInstruction(instruction);
     } else if (instruction.programId.equals(SystemProgram.programId)) {

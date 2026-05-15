@@ -1,0 +1,60 @@
+services:
+  clickhouse-local:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: ondo-recorder-clickhouse-local
+    environment:
+      CLICKHOUSE_USER: recorder
+      CLICKHOUSE_PASSWORD: recorder
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8224:8123"
+      - "9101:9000"
+    volumes:
+      - clickhouse-local-data:/var/lib/clickhouse
+      - ./migrations/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+
+  ondo-recorder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ondo-recorder
+    env_file:
+      - .env
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+    command: ["ondo-recorder", "--config", "/app/config.yml"]
+    depends_on:
+      - clickhouse-local
+    ports:
+      - "9093:9093"
+      - "8083:8083"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ondo-recorder-prometheus
+    ports:
+      - "9094:9090"
+    volumes:
+      - ./prometheus.sample.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.sample.yml:/etc/prometheus/alerts.sample.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    depends_on:
+      - ondo-recorder
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ondo-recorder-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  clickhouse-local-data:

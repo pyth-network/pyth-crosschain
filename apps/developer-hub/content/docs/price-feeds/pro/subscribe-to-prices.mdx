@@ -13,7 +13,7 @@ This guide will also explain various properties and configuration options to cus
 
 Subscribing to prices is a three-step process:
 
-1. **Acquire** an access token.
+1. **Acquire** an API key.
 2. **Configure** subscription parameters.
 3. **Subscribe** to the prices via [websocket API](https://pyth-lazer.dourolabs.app/docs).
 
@@ -32,16 +32,16 @@ The websocket servers are available at:
 
 <Steps>
   <Step>
-  ### 1. Acquire an access token
+  ### 1. Acquire an API key
 
-Please fill out [this form](https://2fga8d.share-eu1.hsforms.com/2ftdPrASCTLCxtP5YMzAq_Q) to get in touch with our authorized distribution partners (Pyth Data Distributors) and obtain an access token.
+  Follow the steps we've outlined in the [Acquire an API key section](./acquire-api-key).
 
-Use the access token to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {token}{:bash}`.
+Use the API key to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {key}{:bash}`.
 
 <Callout type="warning">
-  **Security Warning**: Never expose your access token in frontend applications
-  or client-side code. Access tokens should only be used in secure backend
-  environments. Exposing tokens in frontend code makes them publicly accessible
+  **Security Warning**: Never expose your API key in frontend applications
+  or client-side code. API keys should only be used in secure backend
+  environments. Exposing keys in frontend code makes them publicly accessible
   and is a violation of our terms of service.
 </Callout>
 
@@ -61,6 +61,7 @@ client.send({
   properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
 });
 ```
 
@@ -81,8 +82,34 @@ The most significant parameters are:
 </Callout>
 
 - `formats`(formerly known as `chains`) specifies the binary encoding format for the payload. This field is mandatory, but can be set to an empty array (e.g., `formats: []`) if no binary payload is needed. Use **evm** or **solana** to receive a signed payload for onchain verification, or **leUnsigned** for offchain-only use without signatures. See [Binary Formats & Signature Schemes](/price-feeds/pro/payload-reference#binary-formats--signature-schemes) for all options.
-- `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
+- `channel` determines the update rate. Pyth Pro offers the following channels:
+
+  | Channel             | Description                                                                                    |
+  | ------------------- | ---------------------------------------------------------------------------------------------- |
+  | `real_time`         | Updates sent immediately when new price is available (no faster than 1ms, no slower than 50ms) |
+  | `fixed_rate@1ms`    | Updates every 1 millisecond                                                                    |
+  | `fixed_rate@50ms`   | Updates every 50 milliseconds                                                                  |
+  | `fixed_rate@200ms`  | Updates every 200 milliseconds                                                                 |
+  | `fixed_rate@1000ms` | Updates every 1 second                                                                         |
+
+  <Callout type="info" title="Per-Feed Channel Availability">
+    Not every feed supports every channel. Each feed has a minimum channel
+    (`min_channel`) — it supports that channel and all slower channels. Check the
+    [Price Feed IDs](/price-feeds/pro/price-feed-ids) page to see which channels
+    are available for each feed.
+  </Callout>
 - `ignoreInvalidFeeds` (optional, default: `false`) — if `true`, the subscription will ignore invalid feed IDs and subscribe to any valid feeds. The response will include details about which feeds were ignored and why. If all feeds are invalid, the subscription will still fail with a `subscriptionError`. See [Error Codes](/price-feeds/pro/error-codes) for the response format.
+
+<Callout type="warning" title="Recommended for production: set ignoreInvalidFeeds: true">
+  Feed IDs can become invalid over time — for example, when a feed is retired or
+  an equity is delisted. By default (`ignoreInvalidFeeds: false`), a single
+  invalid feed in your subscription request will cause the **entire**
+  subscription to fail with a `subscriptionError`, dropping all your other valid
+  feeds along with it. Setting `ignoreInvalidFeeds: true` makes your subscription
+  resilient: invalid feeds are skipped and reported in the response, while valid
+  feeds continue to stream uninterrupted. Inspect the response to learn which
+  feeds were dropped and why, then update your subscription accordingly.
+</Callout>
 
 There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
 
@@ -106,19 +133,21 @@ To subscribe to the prices, send a request to the websocket server. The server w
 npm install --save @pythnetwork/pyth-lazer-sdk
 ```
 
-2. Then create a `PythLazerClient` object using both endpoint URLs and the access token requested from our authorized distribution partners (Pyth Data Distributors) in the first step:
+2. Then create a `PythLazerClient` object using both endpoint URLs and the API key obtained in the first step:
 
 ```js copy
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
-const client = await PythLazerClient.create(
-  [
-    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
-  ],
-  "YOUR_ACCESS_TOKEN",
-);
+const client = await PythLazerClient.create({
+  token: process.env.ACCESS_TOKEN,
+  webSocketPoolConfig: {
+    urls: [
+      "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+      "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+    ],
+  },
+});
 ```
 
 3. After the client is created, subscribe to prices (using the configuration parameters from step 2):
@@ -131,6 +160,7 @@ client.subscribe({
   properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
 });
 ```
 

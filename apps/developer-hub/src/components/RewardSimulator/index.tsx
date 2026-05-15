@@ -22,12 +22,12 @@ const Sup = ({ children }: { children: React.ReactNode }) => (
 );
 
 const RewardSimulator: React.FC = () => {
+  // Per OP-PIP-103, reward rate y is now 0 — all rewards are 0
   const [rewards, setRewards] = useState({
-    // These are the initial values for the reward simulator based on default values
-    publisher: 26,
-    delegator: 24,
-    publisherRate: 13,
-    delegatorRate: 8,
+    publisher: 0,
+    delegator: 0,
+    publisherRate: 0,
+    delegatorRate: 0,
   });
 
   const doSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
@@ -61,12 +61,12 @@ const RewardSimulator: React.FC = () => {
       setRewards({
         publisher: Number(finalPublisherReward.toFixed(2)),
         delegator: Number(finalDelegatorReward.toFixed(2)),
-        publisherRate: Number(
+        publisherRate: publisherStake > 0 ? Number(
           ((finalPublisherReward * 100) / publisherStake).toFixed(2),
-        ),
-        delegatorRate: Number(
+        ) : 0,
+        delegatorRate: delegatorStake > 0 ? Number(
           ((finalDelegatorReward * 100) / delegatorStake).toFixed(2),
-        ),
+        ) : 0,
       });
     },
     [],
@@ -79,6 +79,9 @@ const RewardSimulator: React.FC = () => {
       nonInteractive
       className={styles.card}
     >
+      <p className={styles.notice}>
+        <strong>Note:</strong> Per OP-PIP-103, the reward rate (y) is currently 0. This simulator shows historical mechanics.
+      </p>
       <form onSubmit={recalculateRewards} onChange={doSubmit}>
         <div className={styles.inputGrid}>
           <div className={styles.inputGroup}>
@@ -155,17 +158,18 @@ const RewardSimulator: React.FC = () => {
 
           <div className={styles.inputGroup}>
             <Label htmlFor="reward-rate">
-              Reward Rate (<MathExpression>r</MathExpression>) (%):
+              Reward Rate (<MathExpression>y</MathExpression>) (%):
             </Label>
             <Input
               id="reward-rate"
               name="rewardRate"
               type="number"
-              defaultValue={10}
+              defaultValue={0}
               className={styles.input ?? ""}
               min="0"
               max="100"
               step="0.1"
+              disabled
             />
           </div>
         </div>

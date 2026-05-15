@@ -19,6 +19,26 @@ If you have questions that are not answered here, feel free to add a question to
 
 There is **no hard cap**, but for optimal performance we recommend splitting large subscriptions across multiple connections. The number of connections is limited by your specific usage agreement. If you need to subscribe to many feeds, contact support for guidance on high-volume subscriptions. For more on rate limits, see [Rate Limits](/price-feeds/pro/rate-limits).
 
+#### Q. How should I handle feed expiration or invalid feed IDs in production?
+
+Feed IDs can become invalid over time — for example, when a feed is retired or an equity is delisted. By default, a subscription request containing **any** invalid feed ID will fail entirely with a `subscriptionError`, dropping all of your valid feeds along with it.
+
+For production deployments, set `ignoreInvalidFeeds: true` in your subscribe message:
+
+```js copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price", "feedUpdateTimestamp"],
+  formats: ["solana"],
+  channel: "fixed_rate@200ms",
+  ignoreInvalidFeeds: true,
+});
+```
+
+With this flag enabled, invalid feeds are skipped and listed in the subscription response, while the rest of your feeds continue to stream without interruption. Inspect the response to learn which feeds were dropped and why, then update your subscription accordingly. See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) and [Error Codes](/price-feeds/pro/error-codes) for details.
+
 #### Q. What is the "client too slow" error?
 
 This error occurs when the client cannot process incoming messages fast enough. Common causes:
@@ -92,13 +112,13 @@ Contract addresses for Pyth Pro on **Solana, Fogo, and EVM networks (including B
 Use the History API for OHLC candlestick data and TradingView-style integration. Base URL:
 
 ```
-https://history.pyth-lazer.dourolabs.app/v1/
+https://pyth.dourolabs.app/v1/
 ```
 
 For OHLC history, use `GET /{channel}/history`. Example for BTC/USD in the last year with the `fixed_rate@200ms` channel:
 
 ```
-https://history.pyth-lazer.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
+https://pyth.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
 ```
 
 See the [History API](/price-feeds/pro/api/history) for full endpoint details, query parameters, and resolutions.
@@ -116,11 +136,11 @@ https://pyth-lazer.dourolabs.app
 
 See the [REST API](/price-feeds/pro/api/rest) for request/response schemas and examples.
 
-## Access Tokens & Permissions
+## API Keys & Permissions
 
-#### Q. How are access tokens permissioned for different asset classes?
+#### Q. How are API keys permissioned for different asset classes?
 
-Each access token is permissioned for a specific set of:
+Each API key is permissioned for a specific set of:
 
 - **Asset types** (e.g., crypto, equity, fx, metals, rates)
 - **Minimum channel** (e.g., `fixed_rate@200ms`, `real_time`)
@@ -133,7 +153,7 @@ One customer might have access to all asset types; another might be restricted t
 Common causes:
 
 1. **Wrong endpoint:** Ensure you are using the correct WebSocket or REST endpoint for your token.
-2. **Asset class restriction:** Your access token may not be entitled to the requested feed types.
+2. **Asset class restriction:** Your API key may not be entitled to the requested feed types.
 3. **Expired token:** Demo tokens expire; request a production token for long-term use.
 
 ## Troubleshooting

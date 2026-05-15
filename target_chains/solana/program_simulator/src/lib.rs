@@ -1,20 +1,20 @@
 use {
     borsh::BorshDeserialize,
+    solana_compute_budget_interface as compute_budget,
     solana_program::{
         hash::Hash,
         instruction::{Instruction, InstructionError},
         native_token::LAMPORTS_PER_SOL,
         program_error::ProgramError,
         pubkey::Pubkey,
-        system_instruction,
     },
     solana_program_test::{BanksClient, BanksClientError, ProgramTest, ProgramTestBanksClientExt},
     solana_sdk::{
         clock::Clock,
-        compute_budget,
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
+    solana_system_interface::instruction as system_instruction,
 };
 
 pub struct ProgramSimulator {

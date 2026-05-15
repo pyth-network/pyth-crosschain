@@ -1,8 +1,10 @@
 {
   "pages": [
     "getting-started",
+    "pyth-terminal",
+    "external:[Pyth Playground](https://docs.pyth.network/playground)",
     "---How-To Guides---",
-    "acquire-access-token",
+    "acquire-api-key",
     "subscribe-to-prices",
     "integrate-as-consumer",
     "mcp",
@@ -19,7 +21,7 @@
     "market-hours",
     "futures-terminology",
     "external:[HIP-3 as a Service](https://docs.pyth.network/price-feeds/hip-3-service)",
-    "external:[Symbols List API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols)",
+    "external:[Symbols List API](https://pyth.dourolabs.app/v1/symbols)",
     "external:[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/lazer)",
     "---Understanding Pyth Pro---",
     "how-lazer-works",

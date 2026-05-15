@@ -14,20 +14,21 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
+lazer = ["pyth-solana-receiver-sdk/lazer"]
 
 [dependencies]
 anchor-lang = { workspace = true }
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+pythnet-sdk = { workspace = true }
 solana-program = { workspace = true }
 byteorder = "1.4.3"
-pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
+pyth-solana-receiver-sdk = { workspace = true }
 
 [dev-dependencies]
 pyth-solana-receiver = { path = "../pyth-solana-receiver", features = [
     "no-entrypoint",
 ] }
 solana-sdk = { workspace = true }
-tokio = "1.14.1"
+tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
