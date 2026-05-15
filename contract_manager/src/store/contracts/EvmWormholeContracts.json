@@ -1090,5 +1090,11 @@
     "chain": "ethereum",
     "type": "EvmWormholeContract",
     "deploymentType": "lazer-prod"
+  },
+  {
+    "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
+    "chain": "injective_inevm",
+    "type": "EvmWormholeContract",
+    "deploymentType": "lazer-prod"
   }
 ]
