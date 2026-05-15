@@ -1,3 +1,6 @@
+import { Button } from "@pythnetwork/component-library/Button";
+
+import { MinimalPlayground } from "../../MinimalPlayground";
 import { ProductCard } from "../../ProductCard";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
@@ -19,13 +22,15 @@ export const Homepage = () => {
         </div>
       </section>
 
+      <MinimalPlayground />
+
       <section className={styles.sectionProducts}>
-        <p className={styles.sectionHeaderTitle}>Products</p>
+        <p className={styles.sectionHeaderTitle}>Global Pricing Layer</p>
         <p className={styles.sectionHeaderSubtitle}>
-          Connect to the global market data and randomness layer.
+          Real-time price feeds for crypto, equities, FX, and metals.
         </p>
         <div className={styles.productsGrid}>
-          {products.map((product: ProductCardConfig) => (
+          {pricingLayerProducts.map((product: ProductCardConfig) => (
             <div className={styles.productsCardWrapper} key={product.title}>
               <ProductCard
                 buttonHref={product.href}
@@ -37,6 +42,20 @@ export const Homepage = () => {
               />
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.sectionEntropy}>
+        <div className={styles.entropyCard}>
+          <div className={styles.entropyContent}>
+            <p className={styles.entropyTitle}>Entropy</p>
+            <p className={styles.entropyDescription}>
+              Secure, verifiable randomness for EVM-based smart contracts.
+            </p>
+          </div>
+          <Button href="/entropy" variant="primary" size="md">
+            Get started
+          </Button>
         </div>
       </section>
 
@@ -116,7 +135,7 @@ function GradientDivider() {
   return <div className={styles.gradientDivider} role="presentation" />;
 }
 
-const products: ProductCardConfig[] = [
+const pricingLayerProducts: ProductCardConfig[] = [
   {
     description:
       "Subscription-based price data for institutions and advanced use cases. Previously known as Lazer.",
@@ -162,29 +181,6 @@ const products: ProductCardConfig[] = [
       { href: "/price-feeds/core/api-reference", label: "API Reference" },
     ],
     title: "Pyth Core",
-  },
-  {
-    description:
-      "Secure, Verifiable Random Number Generator for EVM-based smart contracts.",
-    features: [
-      { label: "On-chain randomness" },
-      { label: "Verifiable results" },
-      { label: "Pay in native token" },
-      { label: "Supports 20+ EVM chains" },
-    ],
-    href: "/entropy",
-    quickLinks: [
-      {
-        href: "/entropy/chainlist",
-        label: "Chainlist",
-      },
-      { href: "/entropy/protocol-design", label: "Protocol Design" },
-      {
-        href: "https://entropy-explorer.pyth.network/",
-        label: "Entropy Explorer",
-      },
-    ],
-    title: "Entropy",
   },
 ];
 

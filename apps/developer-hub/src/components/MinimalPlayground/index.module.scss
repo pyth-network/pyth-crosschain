@@ -1,0 +1,175 @@
+@use "@pythnetwork/component-library/theme";
+
+.section {
+  margin-top: theme.spacing(-10);
+
+  @include theme.max-width;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(6);
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+  max-width: 40rem;
+}
+
+.title {
+  @include theme.text("xl", "semibold");
+
+  color: theme.color("heading");
+  margin: 0;
+}
+
+.layout {
+  display: grid;
+  gap: theme.spacing(4);
+  grid-template-columns: 1fr;
+  align-items: stretch;
+
+  @include theme.breakpoint("md") {
+    grid-template-columns: 14rem 1fr;
+  }
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  margin: 0;
+  padding: theme.spacing(2);
+  list-style: none;
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+}
+
+.feedItem {
+  list-style: none;
+}
+
+.feedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: theme.spacing(2) theme.spacing(3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: theme.border-radius("lg");
+  color: theme.color("paragraph");
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+
+  @include theme.text("sm", "medium");
+
+  &:hover {
+    background: light-dark(
+      theme.pallette-color("white"),
+      theme.pallette-color("steel", 800)
+    );
+    color: theme.color("heading");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("focus");
+    outline-offset: 2px;
+  }
+}
+
+.feedRowActive {
+  background: light-dark(
+    theme.pallette-color("violet", 50),
+    theme.pallette-color("steel", 700)
+  );
+  color: theme.color("heading");
+
+  &:hover {
+    background: light-dark(
+      theme.pallette-color("violet", 50),
+      theme.pallette-color("steel", 700)
+    );
+  }
+}
+
+.terminal {
+  display: flex;
+  flex-direction: column;
+  background: theme.pallette-color("steel", 950);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+  overflow: hidden;
+  min-height: 13rem;
+}
+
+.terminalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: theme.spacing(2);
+  padding: theme.spacing(3) theme.spacing(5);
+  background: theme.color("background", "secondary");
+  border-bottom: 1px solid theme.color("border");
+}
+
+.terminalLabel {
+  @include theme.text("xs", "medium");
+
+  color: light-dark(
+    theme.pallette-color("stone", 500),
+    theme.pallette-color("steel", 400)
+  );
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wider");
+}
+
+.terminalLabelLive {
+  color: light-dark(
+    theme.pallette-color("emerald", 600),
+    theme.pallette-color("emerald", 400)
+  );
+}
+
+.terminalActions {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+
+.editorContainer {
+  flex: 1;
+  min-height: 10rem;
+  overflow: hidden;
+}
+
+.editorLoading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: theme.spacing(4);
+  color: theme.pallette-color("steel", 400);
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("sm", "normal");
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(3);
+}
