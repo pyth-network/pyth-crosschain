@@ -50,20 +50,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "WSTKSCETH/SCETH.RR",
-      "id": "b680422b70915df562e4802bd8679112ff0f6b0a29ec2c3762ae2720eda01e58",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WSTKSCUSD/SCUSD.RR",
-      "id": "caed0964240861da425cf03fae9737473f6f031fb80cbbd73c3fb8cddd7a2204",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "STS/S.RR",
       "id": "3b14bd355f182fa3a3feeea6824228e1f71e7c221a37bc91e8307280aee6a803",
       "time_difference": 3600,
@@ -73,13 +59,6 @@
     {
       "alias": "ANON/USD",
       "id": "7a36855b8a4a6efd701ed82688694bbf67602de9faae509ae28f91065013cb82",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "SHADOW/USD",
-      "id": "6f02ad2b8a307411fc3baedb9876e83efe9fa9f5b752aab8c99f4742c9e5f5d5",
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100
