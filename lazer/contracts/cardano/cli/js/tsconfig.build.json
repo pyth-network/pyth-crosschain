@@ -5,6 +5,6 @@
     "isolatedModules": false,
     "noEmit": false
   },
-  "exclude": ["node_modules", "dist", "examples/", "**/__tests__/*"],
+  "exclude": ["node_modules", "dist", "src/examples/", "**/__tests__/*"],
   "extends": "./tsconfig.json"
 }

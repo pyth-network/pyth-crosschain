@@ -1,10 +1,4 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
+/** biome-ignore-all lint/suspicious/noConsole: CLI script */
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +13,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
   WormholeMultisigInstruction,
@@ -34,10 +29,10 @@ import { CosmWasmChain, EvmChain, SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import {
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  getCodeDigestWithoutAddress,
-  EvmWormholeContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  EvmWormholeContract,
+  getCodeDigestWithoutAddress,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -243,12 +238,15 @@ async function main() {
           }
         }
       }
-      if (instruction.governanceAction instanceof UpdateTrustedSigner264Bit) {
+      if (
+        instruction.governanceAction instanceof UpdateTrustedSigner264Bit ||
+        instruction.governanceAction instanceof UpdateTrustedSigner256Bit
+      ) {
         const { targetChainId, publicKey, expiresAt } =
           instruction.governanceAction;
 
         console.log(
-          `Verifying UpdateTrustedSigner264Bit on '${targetChainId}'`,
+          `Verifying ${instruction.governanceAction.action} on '${targetChainId}'`,
         );
 
         const expiresAtMs = expiresAt * 1000n;
