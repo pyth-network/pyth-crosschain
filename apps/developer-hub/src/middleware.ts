@@ -39,7 +39,7 @@ function prefersMarkdown(accept: string | null): boolean {
   return !html || markdown.q >= html.q;
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return NextResponse.next();
   }
