@@ -3605,10 +3605,12 @@ dependencies = [
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
+ "solana-program-test",
  "solana-sdk",
  "tokio",
  "wormhole-core-bridge-solana",
  "wormhole-raw-vaas",
+ "wormhole-solana",
  "wormhole-vaas-serde",
 ]
 
