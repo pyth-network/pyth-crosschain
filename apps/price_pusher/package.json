@@ -117,6 +117,10 @@
       "default": "./dist/injective/command.cjs",
       "types": "./dist/injective/command.d.ts"
     },
+    "./injective/endpoint-pool": {
+      "default": "./dist/injective/endpoint-pool.cjs",
+      "types": "./dist/injective/endpoint-pool.d.ts"
+    },
     "./injective/injective": {
       "default": "./dist/injective/injective.cjs",
       "types": "./dist/injective/injective.d.ts"
