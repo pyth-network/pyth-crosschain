@@ -1,7 +1,10 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
+
+import { parseVaa } from "@certusone/wormhole-sdk";
 import type { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import {
+  decodeGovernancePayload,
   UpdateTrustedSigner256Bit,
   UpgradeCardanoSpendScript,
   UpgradeCardanoWithdrawScript,
@@ -9,7 +12,11 @@ import {
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
+import {
+  loadHotWallet,
+  SubmittedWormholeMessage,
+  WormholeEmitter,
+} from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 function getMainnetVault() {
@@ -247,6 +254,48 @@ parser.command(
     ).encode();
     const proposal = await vault.proposeWormholeMessage([payload]);
     console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "fetch-vaas",
+  "fetch hex-encoded VAAs targeting the specified chain since a given sequence number",
+  (b) =>
+    b.options({
+      since: {
+        coerce: Number,
+        demandOption: true,
+        description: "sequence number to start fetching from (inclusive)",
+        type: "number",
+      },
+    }),
+  async ({ chain, since }) => {
+    const vault = getMainnetVault();
+    const emitter = await vault.getEmitter();
+    const lastSequence = await vault.getLastSequenceNumber();
+
+    process.stderr.write(
+      `Fetching sequences ${since}..${lastSequence} from emitter ${emitter.toBase58()}\n`,
+    );
+
+    for (let seq = since; seq <= lastSequence; seq++) {
+      const msg = new SubmittedWormholeMessage(emitter, seq, vault.cluster);
+      let vaa: Buffer;
+      try {
+        vaa = await msg.fetchVaa(10);
+      } catch {
+        process.stderr.write(`Sequence ${seq}: not found, skipping\n`);
+        continue;
+      }
+      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      if (!action || action.targetChainId !== chain) {
+        process.stderr.write(
+          `Sequence ${seq}: could not decode as action for this chain, skipping\n`,
+        );
+        continue;
+      }
+      process.stdout.write(`${vaa.toString("hex")}\n`);
+    }
   },
 );
 
