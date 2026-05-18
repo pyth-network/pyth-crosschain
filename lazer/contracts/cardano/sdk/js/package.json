@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@evolution-sdk/evolution": "^0.3.29"
+    "@evolution-sdk/evolution": "0.3.28"
   },
   "description": "User-facing SDK for the Pyth Lazer Cardano integration",
   "devDependencies": {
