@@ -20,4 +20,11 @@ export const MigrationDeploymentsConfig: Record<string, ChainOverride> = {
   "57054": {
     explorer: "https://testnet.sonicscan.org",
   },
+
+  // chainid.network has a stale "Wanchain Testnet" entry for network ID 999;
+  // Hyperliquid EVM Mainnet has taken over that ID.
+  "999": {
+    name: "HyperEVM",
+    explorer: "https://hyperevmscan.io",
+  },
 };
