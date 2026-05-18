@@ -2,7 +2,9 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import { Analytics } from "@vercel/analytics/next";
+import { Banner } from "fumadocs-ui/components/banner";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider/next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import "./global.css";
@@ -26,6 +28,15 @@ export const Root = ({ children, googleAnalyticsId }: Props) => (
             },
           }}
         >
+          <Banner
+            id="pyth-core-pro-migration-2026-07-31"
+            className="bg-violet-950 text-violet-100 hover:bg-violet-900"
+          >
+            <Link href="/price-feeds/migration" className="hover:underline">
+              Pyth Core is upgrading to Pyth Pro on July 31, 2026 — see what
+              changes →
+            </Link>
+          </Banner>
           {children}
         </FumadocsRootProvider>
       </RootProviders>
