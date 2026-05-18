@@ -116,7 +116,7 @@ catalog:
   fuels: 0.103.0
   fumadocs-core: ^16.4.7
   fumadocs-mdx: ^14.2.5
-  fumadocs-openapi: ^10.2.4
+  fumadocs-openapi: 10.3.13
   fumadocs-typescript: ^5.0.1
   fumadocs-ui: ^16.4.7
   glob: ^13.0.0
@@ -226,6 +226,7 @@ onlyBuiltDependencies:
 
 overrides:
   "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
+  "@solana/web3.js": 1.98.4
 
 packageManagerStrict: true
 
