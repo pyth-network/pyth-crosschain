@@ -4,7 +4,7 @@
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
     "@base-ui/react": "catalog:",
-    "@internationalized/date": "^3.10.1",
+    "@internationalized/date": "^3.12.0",
     "@next/third-parties": "catalog:",
     "@pythnetwork/react-hooks": "workspace:",
     "@pythnetwork/shared-lib": "workspace:",

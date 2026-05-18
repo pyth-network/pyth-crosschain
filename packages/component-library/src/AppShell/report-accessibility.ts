@@ -21,7 +21,7 @@ const useReportAccessibility = () => {
     import("@axe-core/react")
       .then((axe) => axe.default(React, ReactDOM, AXE_TIMEOUT))
       .catch((error: unknown) => {
-        logger.error("Error setting up axe for accessibility testing", error);
+        logger.error({ err: error }, "Error setting up axe for accessibility testing");
       });
   }, [logger]);
 };
