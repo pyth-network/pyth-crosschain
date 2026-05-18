@@ -3,7 +3,7 @@ use {
     anyhow::Result,
     chrono::DateTime,
     ethers::{
-        core::utils::hex::ToHex,
+        core::utils::hex::ToHexExt,
         prelude::TxHash,
         types::{Address, Bytes, U256},
         utils::keccak256,

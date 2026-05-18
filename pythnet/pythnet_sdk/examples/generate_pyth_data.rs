@@ -6,6 +6,7 @@ use {
     pythnet_sdk::pythnet::PYTH_PID,
     serde_json::json,
     solana_client::rpc_client::RpcClient,
+    solana_program::system_program,
     solana_sdk::pubkey::Pubkey,
     std::{io::Write, str::FromStr},
 };
@@ -113,7 +114,7 @@ fn main() {
         for i in 0..10_000u32 {
             let (accumulator_account, _) = Pubkey::find_program_address(
                 &[b"AccumulatorState", &PYTH_PID, &i.to_be_bytes()],
-                &solana_sdk::system_program::id(),
+                &system_program::id(),
             );
             file.write_all(format!("{accumulator_account}\n").as_bytes())
                 .unwrap();

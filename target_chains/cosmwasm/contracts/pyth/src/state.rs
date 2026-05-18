@@ -47,19 +47,19 @@ pub struct ConfigInfo {
     pub fee: Coin,
 }
 
-pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {
+pub fn config(storage: &mut dyn Storage) -> Singleton<'_, ConfigInfo> {
     singleton(storage, CONFIG_KEY)
 }
 
-pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<ConfigInfo> {
+pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<'_, ConfigInfo> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn price_feed_bucket(storage: &mut dyn Storage) -> Bucket<PriceFeed> {
+pub fn price_feed_bucket(storage: &mut dyn Storage) -> Bucket<'_, PriceFeed> {
     bucket(storage, PRICE_FEED_KEY)
 }
 
-pub fn price_feed_read_bucket(storage: &dyn Storage) -> ReadonlyBucket<PriceFeed> {
+pub fn price_feed_read_bucket(storage: &dyn Storage) -> ReadonlyBucket<'_, PriceFeed> {
     bucket_read(storage, PRICE_FEED_KEY)
 }
 
