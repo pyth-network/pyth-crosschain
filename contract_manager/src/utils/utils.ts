@@ -17,10 +17,14 @@ export const allEvmChainIds: number[] = evmChainsData.map((c) => c.networkId);
 
 export type EvmChainEntry = (typeof evmChainsData)[number];
 export type EvmLazerContractEntry = (typeof evmLazerContractsData)[number];
+export type EvmPriceFeedContractEntry =
+  (typeof evmPriceFeedContractsData)[number];
 
 export const evmChains: readonly EvmChainEntry[] = evmChainsData;
 export const evmLazerContracts: readonly EvmLazerContractEntry[] =
   evmLazerContractsData;
+export const evmPriceFeedContracts: readonly EvmPriceFeedContractEntry[] =
+  evmPriceFeedContractsData;
 
 export const getEvmPriceFeedContractAddress = (
   chainId: number,
