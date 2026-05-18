@@ -1,0 +1,201 @@
+---
+title: "Upgrading to Pyth Pro"
+description: "Everything you need to upgrade your Pyth Core integration to Pyth Pro before July 31, 2026."
+full: true
+---
+
+import { Button } from "@pythnetwork/component-library/Button";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+## What's changing
+
+Pyth Network is upgrading [Pyth Core](/price-feeds/core) into [Pyth Pro](/price-feeds/pro) on **July 31, 2026**.
+This upgrade replaces Pyth Core's underlying data infrastructure with the improved Pyth Pro infrastructure, enabling users of Pyth Core to access many of the features of [Pyth Pro](/price-feeds/pro) like
+- Higher-frequency updates
+- Customizable channels
+- Access to Pyth Terminal
+
+Your existing integration keeps working: [Hermes](/api-reference/pyth-core/hermes) requests are redirected to a single Pyth Pro endpoint, and the on-chain Pyth contract is replaced with a Pyth Classic Contract.
+
+Each integration needs three small updates before July 31 described in the following steps.
+Nearly all Pyth Core feeds are available on Pyth Pro, plus additional feeds — confirm your specific feeds on the [Pyth Pro feed explorer](https://pythdata.app/explore).
+
+<Callout type="warn">
+  **All integrations need a Pyth Pro API key by July 31, 2026** — Hermes will
+  require authentication after the upgrade, even for users who wait for the
+  automatic migration. [Register at Pyth Terminal →](https://pythdata.app/signup)
+</Callout>
+
+## Does this apply to you?
+
+If you use any [Pyth Core contracts](/price-feeds/core/contract-addresses) or query [`hermes.pyth.network`](https://hermes.pyth.network/docs/), the upgrade applies to you.
+Both the contract address and the Hermes endpoint need updating before July 31, 2026.
+
+If you access prices only through another protocol that already integrates Pyth (for example, a lending market), that protocol handles the upgrade, so you do not need to take any action.
+
+## Your upgrade path
+
+Three steps, ~15 minutes for most integrations.
+
+<Steps>
+<Step>
+
+### Get your Pyth Pro API key
+
+Sign up at Pyth Terminal. A free trial is included; paid plans cover ongoing use. 
+
+**All users must register for a Pyth Pro API key. Hermes will require authentication after the upgrade, even via automatic migration.**
+
+<Button
+  href="https://pythdata.app/signup"
+  rel="noopener noreferrer"
+  size="md"
+  target="_blank"
+  variant="primary"
+>
+  Sign up at Pyth Terminal
+</Button>
+
+</Step>
+<Step>
+
+### Replace your Pyth contract address
+
+Swap your existing Pyth contract address for the Pyth Classic Contract on your chain. The Pyth Classic Contract preserves the Pyth Core interface — no other code changes are needed.
+
+[View all Pyth Classic Contract addresses →](/price-feeds/migration/contracts) Publishing closer to the deadline.
+
+</Step>
+<Step>
+
+### Update your Hermes endpoint
+
+Replace `hermes.pyth.network` with the Pyth Pro endpoint and add your API key as a bearer token.
+
+<Tabs items={["curl", "TypeScript SDK"]}>
+<Tab value="curl">
+
+```diff
+- url: "https://hermes.pyth.network"
++ url: "https://pyth.dourolabs.app/hermes"
++ Authorization: "Bearer $PYTH_PRO_KEY"
+```
+
+</Tab>
+<Tab value="TypeScript SDK">
+
+If you use `@pythnetwork/hermes-client`, swap the endpoint and pass your API key as a bearer token.
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const client = new HermesClient("https://pyth.dourolabs.app/hermes", {
+  headers: {
+    Authorization: `Bearer ${process.env.PYTH_PRO_KEY}`,
+  },
+});
+```
+
+</Tab>
+</Tabs>
+
+Routes and response shapes are unchanged — the new endpoint is a drop-in replacement. See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
+
+</Step>
+</Steps>
+
+## Upgrade now or wait for automatic?
+
+Both paths land on Pyth Pro. The difference is timing and downtime.
+
+|                  | Upgrade now (recommended)    | Wait for automatic       |
+| ---------------- | ---------------------------- | ------------------------ |
+| Timing           | You choose                   | July 31, 2026            |
+| Downtime         | None                         | Brief, during the switch |
+| Contract address | You swap to a Pyth Classic Contract | DAO upgrades it for you  |
+| Hermes endpoint  | Update URL + add API key     | Update URL + add API key |
+| API key          | Required                     | Required                 |
+| Action           | 3 steps, ~30 min             | API key + Hermes update  |
+
+<Callout type="info">
+  **Avoiding downtime on July 31** — to eliminate any inconsistency window
+  during the switch, subscribe to price updates from both [`hermes.pyth.network`](https://hermes.pyth.network/docs/)
+  and the Pyth Pro endpoint during the transition. Either source will return
+  valid prices.
+</Callout>
+
+## Chain support
+
+Pyth Pro is live on these chains. Others are in active discussion or available via custom arrangement.
+
+### Supported
+
+Arbitrum, Base, Ethereum, Optimism, Solana, Sui
+
+### In negotiation
+
+Aptos, Avalanche, Movement, Near, TON, Stacks
+
+### Other chains
+
+Custom support arrangements are possible. [Get in touch with the team.](#get-help)
+
+### Feed support
+
+Nearly all Pyth Core feeds are available on Pyth Pro, plus additional feeds exclusive to Pyth Pro. Look up your specific feeds on the [Pyth Pro feed explorer](https://pythdata.app/explore). If a feed you depend on isn't listed, [contact the team](#get-help).
+
+## FAQ
+
+<Accordions type="single">
+  <Accordion title="What happens if I do nothing?">
+    On July 31, 2026, the Pyth DAO will execute the upgrade on your behalf — your contract will be redirected to read from Pyth Pro, and `hermes.pyth.network` will start serving Pyth Pro data. Expect a brief downtime window during the switch. You'll still need a Pyth Pro API key to keep Hermes working — automatic migration doesn't change that requirement.
+  </Accordion>
+  <Accordion title="Will my existing code break?">
+    No, as long as you complete the two endpoint and address updates. Pyth Pro is fully backward-compatible with Pyth Core via the Pyth Classic Contracts.
+  </Accordion>
+  <Accordion title="When exactly does Hermes redirect?">
+    On July 31, 2026. Exact switch timing is announced closer to the date. To avoid any window of inconsistency, you can register for price updates from both endpoints during the transition.
+  </Accordion>
+  <Accordion title="Can I test before upgrading?">
+    Yes. Pyth Pro is available on testnets — see the chain support section above for testnet contract addresses.
+  </Accordion>
+  <Accordion title="Will it cost me more?">
+    Pyth Pro is a subscription-based product; Pyth Core was free. A free trial is included on signup; paid plans cover ongoing use. Custom plans are available — contact sales. This is the most significant change for many Core users.
+  </Accordion>
+  <Accordion title="What if my chain isn't supported?">
+    Contact the team. Several chains are in active discussion and may be supported by July 31. For others, custom arrangements are possible.
+  </Accordion>
+  <Accordion title="Are all my feeds available on Pyth Pro?">
+    Nearly all Pyth Core feeds are available on Pyth Pro, and Pyth Pro adds new ones. Look up your specific feeds on the [Pyth Pro feed explorer](https://pythdata.app/explore). If a feed you depend on isn't listed, [contact the team](#get-help).
+  </Accordion>
+  <Accordion title="My code uses the Hermes REST/SSE API directly — does anything change?">
+    No breaking changes. The new Pyth Pro Hermes endpoint is route-compatible with `hermes.pyth.network` — same paths, same response shapes. You only need to update the base URL and add your API key as a bearer token. See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
+  </Accordion>
+</Accordions>
+
+## Get help
+
+<Cards>
+  <Card
+    title="Technical questions"
+    description="Public dev Telegram. Answers get reused — fastest path to engineers."
+    href="https://t.me/Pyth_Network"
+    external
+  />
+  <Card
+    title="Sales contact"
+    description="Plans, chain support, custom arrangements."
+    href="mailto:contact@pyth.network"
+    external
+  />
+  <Card
+    title="Production incidents"
+    description="Existing escalation path for paying customers."
+    href="mailto:contact@pyth.network"
+    external
+  />
+</Cards>
