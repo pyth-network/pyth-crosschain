@@ -1,10 +1,18 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import {
+  type InstructionWithEphemeralSigners,
+  LAZER_PUSH_ORACLE_PROGRAM_ID,
+  LAZER_RECEIVER_PROGRAM_ID,
+  LAZER_WORMHOLE_PROGRAM_ID,
+  PythSolanaReceiver,
+} from "../src/index.js";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
 import { sendTransactions } from "@pythnetwork/solana-utils";
+
+const HERMES_ACCESS_TOKEN = process.env["HERMES_ACCESS_TOKEN"];
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -24,7 +32,13 @@ async function main() {
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
   );
   const wallet = new Wallet(keypair);
-  const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    wallet,
+    wormholeProgramId: LAZER_WORMHOLE_PROGRAM_ID,
+    receiverProgramId: LAZER_RECEIVER_PROGRAM_ID,
+    pushOracleProgramId: LAZER_PUSH_ORACLE_PROGRAM_ID,
+  });
 
   // Get the price update from hermes
   const priceUpdateData = await getPriceUpdateDataFromOneDayAgo();
@@ -68,7 +82,10 @@ async function main() {
 
 // Fetch price update data from Hermes
 async function getPriceUpdateDataFromOneDayAgo(): Promise<string[]> {
-  const hermesClient = new HermesClient("https://hermes.pyth.network/", {});
+  const hermesClient = new HermesClient(
+    "https://pyth.dourolabs.app/hermes",
+    HERMES_ACCESS_TOKEN ? { accessToken: HERMES_ACCESS_TOKEN } : {}
+  );
 
   const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
   const response = await hermesClient.getPriceUpdatesAtTimestamp(

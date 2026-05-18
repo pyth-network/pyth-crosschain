@@ -109,6 +109,16 @@ export default {
       type: "number",
       optional: true,
     } as Options,
+    "pyth-receiver-program-id": {
+      description: "The Pyth receiver program ID to use",
+      type: "string",
+      optional: true,
+    } as Options,
+    "wormhole-program-id": {
+      description: "The Pyth push oracle program ID to use",
+      type: "string",
+      optional: true,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.hermesAccessToken,
@@ -144,6 +154,8 @@ export default {
       controllerLogLevel,
       enableMetrics,
       metricsPort,
+      pythReceiverProgramId,
+      wormholeProgramId,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -194,6 +206,8 @@ export default {
       connection,
       wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
+      wormholeProgramId: wormholeProgramId ? new PublicKey(wormholeProgramId) : undefined,
+      receiverProgramId: pythReceiverProgramId ? new PublicKey(pythReceiverProgramId) : undefined,
       treasuryId: treasuryId,
     });
 
