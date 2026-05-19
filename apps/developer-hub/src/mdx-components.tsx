@@ -7,6 +7,7 @@ import type { MDXComponents } from "mdx/types";
 import { APICard, APICards } from "./components/APICard";
 import { BinaryFormatCards } from "./components/BinaryFormatCards";
 import { FieldCodePanel } from "./components/FieldCodePanel";
+import { Mermaid } from "./components/Mermaid";
 import { PropertyCard } from "./components/PropertyCard";
 import { PropertyFieldLinker } from "./components/PropertyFieldLinker";
 import { YouTubeEmbed } from "./components/YouTubeEmbed";
@@ -27,6 +28,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     YouTubeEmbed,
     BinaryFormatCards,
     FieldCodePanel,
+    Mermaid,
     PropertyCard,
     PropertyFieldLinker,
   };
