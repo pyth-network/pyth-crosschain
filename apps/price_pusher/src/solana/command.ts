@@ -115,7 +115,7 @@ export default {
       optional: true,
     } as Options,
     "wormhole-program-id": {
-      description: "The Pyth push oracle program ID to use",
+      description: "The Wormhole program ID to use",
       type: "string",
       optional: true,
     } as Options,
