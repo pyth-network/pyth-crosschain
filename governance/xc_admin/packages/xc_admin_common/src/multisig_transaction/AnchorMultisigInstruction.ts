@@ -81,7 +81,8 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         idl = expressRelayIdl as Idl;
         program = MultisigInstructionProgram.ExpressRelay;
         break;
-      case DEFAULT_RECEIVER_PROGRAM_ID.toBase58() || LAZER_RECEIVER_PROGRAM_ID.toBase58():
+      case DEFAULT_RECEIVER_PROGRAM_ID.toBase58():
+      case LAZER_RECEIVER_PROGRAM_ID.toBase58():
         idl = pythSolanaReceiverIdl as Idl;
         program = MultisigInstructionProgram.SolanaReceiver;
         break;
