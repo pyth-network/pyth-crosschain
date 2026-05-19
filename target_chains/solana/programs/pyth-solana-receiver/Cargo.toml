@@ -14,9 +14,9 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
-lazer = [
-    "pyth-solana-receiver-sdk/lazer",
-    "wormhole-core-bridge-solana/lazer",
+pro-compatible = [
+    "pyth-solana-receiver-sdk/pro-compatible",
+    "wormhole-core-bridge-solana/pro-compatible",
 ]
 
 [dependencies]

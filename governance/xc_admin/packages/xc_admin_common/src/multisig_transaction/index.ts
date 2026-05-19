@@ -3,7 +3,7 @@ import { getPythProgramKeyForCluster } from "@pythnetwork/client/lib/cluster";
 import { SOLANA_LAZER_PROGRAM_ID } from "@pythnetwork/pyth-lazer-sdk";
 import {
   DEFAULT_RECEIVER_PROGRAM_ID,
-  LAZER_RECEIVER_PROGRAM_ID,
+  PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
 } from "@pythnetwork/pyth-solana-receiver";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { PublicKey, StakeProgram, SystemProgram } from "@solana/web3.js";
@@ -160,7 +160,7 @@ export class MultisigParser {
       instruction.programId.equals(MESH_PROGRAM_ID) ||
       instruction.programId.equals(STAKING_PROGRAM_ID) ||
       instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID) ||
-      instruction.programId.equals(LAZER_RECEIVER_PROGRAM_ID) ||
+      instruction.programId.equals(PRO_COMPATIBLE_RECEIVER_PROGRAM_ID) ||
       instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID) ||
       instruction.programId.equals(EXPRESS_RELAY_PROGRAM_ID)
     ) {

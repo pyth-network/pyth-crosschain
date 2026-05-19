@@ -9,7 +9,7 @@ subdir = "crates/sui-framework/packages/sui-framework"
 rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
 
 [dependencies.Wormhole]
-local = "../vendor/wormhole_lazer/wormhole"
+local = "../vendor/wormhole_simple_majority/wormhole"
 
 [addresses]
 pyth = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"

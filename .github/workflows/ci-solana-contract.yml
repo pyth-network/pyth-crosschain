@@ -22,8 +22,8 @@ jobs:
         include:
           - name: default
             features: ""
-          - name: lazer
-            features: "--features lazer"
+          - name: pro-compatible
+            features: "--features pro-compatible"
     name: (${{ matrix.name }})
     defaults:
       run:

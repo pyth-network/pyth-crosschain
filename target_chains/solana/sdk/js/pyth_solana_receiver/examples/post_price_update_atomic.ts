@@ -6,9 +6,9 @@ import fs from "fs";
 import os from "os";
 import type { InstructionWithEphemeralSigners } from "../src/index.js";
 import {
-  LAZER_PUSH_ORACLE_PROGRAM_ID,
-  LAZER_RECEIVER_PROGRAM_ID,
-  LAZER_WORMHOLE_PROGRAM_ID,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+  PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+  PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
   PythSolanaReceiver,
 } from "../src/index.js";
 
@@ -34,10 +34,10 @@ async function main() {
   const wallet = new Wallet(keypair);
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
-    pushOracleProgramId: LAZER_PUSH_ORACLE_PROGRAM_ID,
-    receiverProgramId: LAZER_RECEIVER_PROGRAM_ID,
+    pushOracleProgramId: PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+    receiverProgramId: PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
     wallet,
-    wormholeProgramId: LAZER_WORMHOLE_PROGRAM_ID,
+    wormholeProgramId: PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
   });
 
   // Get the price update from hermes

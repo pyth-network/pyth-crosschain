@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 #[inline]
 pub fn quorum(num_guardians: usize) -> usize {
     cfg_if::cfg_if! {
-        if #[cfg(feature = "lazer")] {
+        if #[cfg(feature = "pro-compatible")] {
             num_guardians / 2 + 1
         } else {
             (2 * num_guardians) / 3 + 1
@@ -34,14 +34,14 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "lazer")]
+    #[cfg(feature = "pro-compatible")]
     fn test_quorum() {
         assert_eq!(quorum(5), 3);
         assert_eq!(quorum(19), 10);
     }
 
     #[test]
-    #[cfg(not(feature = "lazer"))]
+    #[cfg(not(feature = "pro-compatible"))]
     fn test_quorum() {
         assert_eq!(quorum(5), 4);
         assert_eq!(quorum(19), 13);

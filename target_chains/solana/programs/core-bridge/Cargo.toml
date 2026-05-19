@@ -20,7 +20,7 @@ no-log-ix-name = []
 cpi = ["no-entrypoint"]
 custom-heap = []
 custom-panic = []
-lazer = []
+pro-compatible = []
 
 [dependencies]
 wormhole-io.workspace = true

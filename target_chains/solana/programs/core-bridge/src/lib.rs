@@ -1,7 +1,7 @@
 #![allow(clippy::result_large_err, unexpected_cfgs)]
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "lazer")] {
+    if #[cfg(feature = "pro-compatible")] {
         declare_id!("HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL");
     } else {
         declare_id!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");

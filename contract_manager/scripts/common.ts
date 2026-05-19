@@ -116,7 +116,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   "deployment-type": {
     default: "stable",
     demandOption: false,
-    desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+    desc: "Deployment type to use. Can be 'stable', 'beta', 'pro-compatible-staging', or 'pro-compatible-production'",
     type: "string",
   },
   "gas-multiplier": {
