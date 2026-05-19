@@ -2,6 +2,7 @@ import type { Idl } from "@coral-xyz/anchor";
 import { BorshCoder } from "@coral-xyz/anchor";
 import {
   DEFAULT_RECEIVER_PROGRAM_ID,
+  LAZER_RECEIVER_PROGRAM_ID,
   pythSolanaReceiverIdl,
 } from "@pythnetwork/pyth-solana-receiver";
 import type { TransactionInstruction } from "@solana/web3.js";
@@ -81,6 +82,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         program = MultisigInstructionProgram.ExpressRelay;
         break;
       case DEFAULT_RECEIVER_PROGRAM_ID.toBase58():
+      case LAZER_RECEIVER_PROGRAM_ID.toBase58():
         idl = pythSolanaReceiverIdl as Idl;
         program = MultisigInstructionProgram.SolanaReceiver;
         break;

@@ -2849,9 +2849,9 @@ importers:
       ts-jest:
         specifier: ^29.0.5
         version: 29.3.1(@babel/core@7.28.6)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.6))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
-      ts-node:
+      tsx:
         specifier: 'catalog:'
-        version: 10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)
+        version: 4.20.6
 
   target_chains/solana/sdk/js/solana_utils:
     dependencies:
@@ -14901,10 +14901,6 @@ packages:
     resolution: {integrity: sha512-f0ReSURdM3pcKPNS30mxOHSbaFLcknGmQjwSfmbcdOw1XWKXVhukM3NJHhr7NpY9BIyyWQb0EBo3KQvvuU5egQ==}
     engines: {node: '>= 8.0'}
 
-  docker-modem@5.0.6:
-    resolution: {integrity: sha512-ens7BiayssQz/uAxGzH8zGXCtiV24rRWXdjNha5V4zSOcxmAZsfGVm/PPFbwQdqEkDnhG+SyR9E3zSHUbOKXBQ==}
-    engines: {node: '>= 8.0'}
-
   docker-modem@5.0.7:
     resolution: {integrity: sha512-XJgGhoR/CLpqshm4d3L7rzH6t8NgDFUIIpztYlLHIApeJjMZKYJMz2zxPsYxnejq5h3ELYSw/RBsi3t5h7gNTA==}
     engines: {node: '>= 8.0'}
@@ -14919,10 +14915,6 @@ packages:
 
   dockerode@4.0.12:
     resolution: {integrity: sha512-/bCZd6KlGcjZO8Buqmi/vXuqEGVEZ0PNjx/biBNqJD3MhK9DmdiAuKxqfNhflgDESDIiBz3qF+0e55+CpnrUcw==}
-    engines: {node: '>= 8.0'}
-
-  dockerode@4.0.5:
-    resolution: {integrity: sha512-ZPmKSr1k1571Mrh7oIBS/j0AqAccoecY2yH420ni5j1KyNMgnoTh4Nu4FWunh0HZIJmRSmSysJjBIpa/zyWUEA==}
     engines: {node: '>= 8.0'}
 
   doctrine@3.0.0:
@@ -30041,7 +30033,7 @@ snapshots:
       chai: 4.5.0
       chalk: 4.1.2
       debug: 4.4.3(supports-color@8.1.1)
-      dockerode: 4.0.5
+      dockerode: 4.0.12
       fs-extra: 11.3.3
       hardhat: 2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@6.0.3)
       proper-lockfile: 4.1.2
@@ -41532,15 +41524,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  docker-modem@5.0.6:
-    dependencies:
-      debug: 4.4.3(supports-color@8.1.1)
-      readable-stream: 3.6.2
-      split-ca: 1.0.1
-      ssh2: 1.16.0
-    transitivePeerDependencies:
-      - supports-color
-
   docker-modem@5.0.7:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
@@ -41574,18 +41557,6 @@ snapshots:
       docker-modem: 5.0.7
       protobufjs: 7.4.0
       tar-fs: 2.1.4
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - supports-color
-
-  dockerode@4.0.5:
-    dependencies:
-      '@balena/dockerignore': 1.0.2
-      '@grpc/grpc-js': 1.13.2
-      '@grpc/proto-loader': 0.7.13
-      docker-modem: 5.0.6
-      protobufjs: 7.4.0
-      tar-fs: 2.1.2
       uuid: 10.0.0
     transitivePeerDependencies:
       - supports-color

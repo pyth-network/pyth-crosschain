@@ -67,10 +67,8 @@ export function trimSignatures(
   if (currentNumSignatures === undefined) {
     throw new Error("vaa[5] is undefined");
   }
-  if (n > currentNumSignatures) {
-    throw new Error(
-      "Resulting VAA can't have more signatures than the original VAA",
-    );
+  if (n >= currentNumSignatures) {
+    return vaa;
   }
 
   const trimmedVaa = IsomorphicBuffer.concat([

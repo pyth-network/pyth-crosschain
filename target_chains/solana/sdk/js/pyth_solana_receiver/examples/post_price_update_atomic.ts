@@ -1,9 +1,17 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
+import {
+  type InstructionWithEphemeralSigners,
+  LAZER_PUSH_ORACLE_PROGRAM_ID,
+  LAZER_RECEIVER_PROGRAM_ID,
+  LAZER_WORMHOLE_PROGRAM_ID,
+  PythSolanaReceiver,
+} from "../src/index.js";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
+
+const HERMES_ACCESS_TOKEN = process.env["HERMES_ACCESS_TOKEN"];
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -23,7 +31,13 @@ async function main() {
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
   );
   const wallet = new Wallet(keypair);
-  const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    wallet,
+    wormholeProgramId: LAZER_WORMHOLE_PROGRAM_ID,
+    receiverProgramId: LAZER_RECEIVER_PROGRAM_ID,
+    pushOracleProgramId: LAZER_PUSH_ORACLE_PROGRAM_ID,
+  });
 
   // Get the price update from hermes
   const priceUpdateData = await getPriceUpdateData();
@@ -71,8 +85,8 @@ async function main() {
 // Fetch price update data from Hermes
 async function getPriceUpdateData() {
   const priceServiceConnection = new HermesClient(
-    "https://hermes.pyth.network/",
-    {}
+    "https://pyth.dourolabs.app/hermes",
+    HERMES_ACCESS_TOKEN ? { accessToken: HERMES_ACCESS_TOKEN } : {}
   );
 
   const response = await priceServiceConnection.getLatestPriceUpdates(

@@ -354,9 +354,9 @@ export class PythSolanaReceiver {
   }: {
     connection: Connection;
     wallet: Wallet;
-    wormholeProgramId?: PublicKey;
-    receiverProgramId?: PublicKey;
-    pushOracleProgramId?: PublicKey;
+    wormholeProgramId?: PublicKey | undefined;
+    receiverProgramId?: PublicKey | undefined;
+    pushOracleProgramId?: PublicKey | undefined;
     // Optionally provide a treasuryId to always use a specific treasury account.
     // This can be useful when using an ALT to reduce tx size.
     // If not provided, treasury accounts will be randomly selected.
