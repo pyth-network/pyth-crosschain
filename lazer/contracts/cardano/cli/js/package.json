@@ -94,10 +94,7 @@
     "dist/**"
   ],
   "name": "@pythnetwork/pyth-lazer-cardano-cli",
-  "private": false,
-  "publishConfig": {
-    "access": "public"
-  },
+  "private": true,
   "repository": {
     "directory": "lazer/contracts/cardano/cli/js",
     "type": "git",
