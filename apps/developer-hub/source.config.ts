@@ -1,6 +1,7 @@
-import { remarkMdxMermaid, rehypeCode } from "fumadocs-core/mdx-plugins";
+import { rehypeCode } from "fumadocs-core/mdx-plugins";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import rehypeKatex from "rehype-katex";
+import rehypeMermaid from "rehype-mermaid";
 import remarkMath from "remark-math";
 import { z } from "zod";
 export const docs = defineDocs({
@@ -48,6 +49,11 @@ export default defineConfig({
       },
     },
     remarkPlugins: [remarkMath],
-    rehypePlugins: (v) => [rehypeKatex, rehypeCode, remarkMdxMermaid, ...v],
+    rehypePlugins: (v) => [
+      rehypeKatex,
+      [rehypeMermaid, { strategy: "inline-svg" }],
+      rehypeCode,
+      ...v,
+    ],
   },
 });
