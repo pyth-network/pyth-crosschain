@@ -14,7 +14,7 @@ $ pnpm install
 ## Quickstart
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
+See [Pull Integration on Sui](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/sui) for more information about this approach.
 Typically, to use Pyth prices on chain,
 they must be fetched from an off-chain Hermes instance. The `SuiPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
@@ -149,4 +149,4 @@ eventSource.close();
 
 ## Hermes endpoints
 
-You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
+You can find the list of Hermes public endpoints [here](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes#public-endpoints).
