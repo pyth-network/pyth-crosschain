@@ -5,9 +5,8 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useId, useMemo } from "react";
-
-import styles from "./index.module.scss";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 type Props = {
   className?: string | undefined;
@@ -20,7 +19,7 @@ export const MobileNavTabs = ({ tabs, className }: Props) => {
   return (
     <nav className={clsx(styles.mobileNavTabs, className)}>
       {tabs.map((tab) => (
-        <NavTab key={tab.segment} bubbleId={bubbleId} {...tab} />
+        <NavTab bubbleId={bubbleId} key={tab.segment} {...tab} />
       ))}
     </nav>
   );
@@ -42,17 +41,17 @@ const NavTab = ({ segment, bubbleId, children }: TabProps) => {
 
   return (
     <Link
-      href={`/${segment}`}
       className={styles.mobileTab ?? ""}
       data-is-selected={isSelected ? "" : undefined}
+      href={`/${segment}`}
     >
       {children}
       {isSelected && (
         <motion.span
-          layoutId={`${bubbleId}-bubble`}
           className={styles.bubble}
-          transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+          layoutId={`${bubbleId}-bubble`}
           style={{ originY: "top" }}
+          transition={{ bounce: 0.3, duration: 0.6, type: "spring" }}
         />
       )}
     </Link>

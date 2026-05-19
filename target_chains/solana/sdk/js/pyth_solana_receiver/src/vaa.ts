@@ -1,11 +1,12 @@
 // eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer as IsomorphicBuffer } from "buffer";
 
-import { Program } from "@coral-xyz/anchor";
+import type { Program } from "@coral-xyz/anchor";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { sha256 } from "@noble/hashes/sha256";
 import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { Connection } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { Buffer as IsomorphicBuffer } from "buffer";
 
 import { getGuardianSetPda } from "./address";
 import {
@@ -107,6 +108,7 @@ async function generateVaaInstructionGroups(
   const initInstructions: InstructionWithEphemeralSigners[] = [
     await buildEncodedVaaCreateInstruction(wormhole, vaa, encodedVaaKeypair),
     {
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
       instruction: await wormhole.methods
         .initEncodedVaa()
         .accounts({
@@ -114,24 +116,23 @@ async function generateVaaInstructionGroups(
         })
         .instruction(),
       signers: [],
-      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
     },
   ];
 
   // First write instruction
   const writeFirstPartInstructions: InstructionWithEphemeralSigners[] = [
     {
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
       instruction: await wormhole.methods
         .writeEncodedVaa({
-          index: 0,
           data: vaa.subarray(0, VAA_SPLIT_INDEX),
+          index: 0,
         })
         .accounts({
           draftVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
       signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
     },
   ];
 
@@ -142,53 +143,53 @@ async function generateVaaInstructionGroups(
   // The second write instruction is only needed if there are more bytes past the split index in the VAA
   if (vaa.length > VAA_SPLIT_INDEX) {
     writeSecondPartAndVerifyInstructions.push({
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
       instruction: await wormhole.methods
         .writeEncodedVaa({
-          index: VAA_SPLIT_INDEX,
           data: vaa.subarray(VAA_SPLIT_INDEX),
+          index: VAA_SPLIT_INDEX,
         })
         .accounts({
           draftVaa: encodedVaaKeypair.publicKey,
         })
         .instruction(),
       signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
     });
   }
 
   writeSecondPartAndVerifyInstructions.push({
+    computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
     instruction: await wormhole.methods
       .verifyEncodedVaaV1()
       .accounts({
+        draftVaa: encodedVaaKeypair.publicKey,
         guardianSet: getGuardianSetPda(
           getGuardianSetIndex(vaa),
           wormhole.programId,
         ),
-        draftVaa: encodedVaaKeypair.publicKey,
       })
       .instruction(),
     signers: [],
-    computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
   });
 
   // Close instructions
   const closeInstructions: InstructionWithEphemeralSigners[] = [
     {
+      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
       instruction: await wormhole.methods
         .closeEncodedVaa()
         .accounts({ encodedVaa: encodedVaaKeypair.publicKey })
         .instruction(),
       signers: [],
-      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
     },
   ];
 
   return {
+    closeInstructions,
+    encodedVaaAddress: encodedVaaKeypair.publicKey,
     initInstructions,
     writeFirstPartInstructions,
     writeSecondPartAndVerifyInstructions,
-    closeInstructions,
-    encodedVaaAddress: encodedVaaKeypair.publicKey,
   };
 }
 
@@ -219,13 +220,13 @@ export async function buildPostEncodedVaaInstructions(
   // TX1: init + first write
   // TX2: second write + verify
   return {
+    closeInstructions: groups.closeInstructions,
     encodedVaaAddress: groups.encodedVaaAddress,
     postInstructions: [
       ...groups.initInstructions,
       ...groups.writeFirstPartInstructions,
       ...groups.writeSecondPartAndVerifyInstructions,
     ],
-    closeInstructions: groups.closeInstructions,
   };
 }
 
@@ -241,9 +242,9 @@ export async function buildCloseEncodedVaaInstruction(
     .accounts({ encodedVaa })
     .instruction();
   return {
+    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
     instruction,
     signers: [],
-    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   };
 }
 
@@ -280,16 +281,16 @@ export async function findEncodedVaaAccountsByWriteAuthority(
     filters: [
       {
         memcmp: {
-          offset: 0,
           bytes: bs58.encode(
             IsomorphicBuffer.from(sha256("account:EncodedVaa").slice(0, 8)),
           ),
+          offset: 0,
         },
       },
       {
         memcmp: {
-          offset: 8 + 1,
           bytes: bs58.encode(writeAuthority.toBuffer()),
+          offset: 8 + 1,
         },
       },
     ],

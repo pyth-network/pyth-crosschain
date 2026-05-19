@@ -9,9 +9,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch testnet contract fees instead of mainnet",
+      type: "boolean",
     },
   });
 

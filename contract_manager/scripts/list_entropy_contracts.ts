@@ -10,9 +10,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch testnet contract fees instead of mainnet",
+      type: "boolean",
     },
   });
 
@@ -49,13 +49,13 @@ async function main() {
       const owner = await contract.getOwner();
 
       entries.push({
+        balance: Web3.utils.fromWei(balance),
         chain: contract.getChain().getId(),
         contract: contract.address,
+        feeManager: providerInfo.feeManager,
+        keeperBalance: Web3.utils.fromWei(keeperBalance),
         owner,
         provider,
-        feeManager: providerInfo.feeManager,
-        balance: Web3.utils.fromWei(balance),
-        keeperBalance: Web3.utils.fromWei(keeperBalance),
         seq: providerInfo.sequenceNumber,
         version,
       });

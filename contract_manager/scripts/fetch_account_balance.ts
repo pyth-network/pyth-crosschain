@@ -13,15 +13,15 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --private-key <private-key> [--chain <chain>]")
   .options({
+    chain: {
+      desc: "Chain to get the balance for. If not provided the balance for all chains is returned.",
+      string: true,
+      type: "array",
+    },
     "private-key": {
-      type: "string",
       demandOption: true,
       desc: "Private key to use to sign transaction",
-    },
-    chain: {
-      type: "array",
-      string: true,
-      desc: "Chain to get the balance for. If not provided the balance for all chains is returned.",
+      type: "string",
     },
   });
 
@@ -41,11 +41,11 @@ async function getBalance(
   try {
     const balance =
       await DefaultStore.chains[chain]?.getAccountBalance(privateKey);
-    return { chain, address, balance };
+    return { address, balance, chain };
   } catch (error) {
     console.error(`Error fetching balance for ${chain}`, error);
   }
-  return { chain, address, balance: undefined };
+  return { address, balance: undefined, chain };
 }
 
 async function main() {

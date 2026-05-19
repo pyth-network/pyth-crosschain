@@ -17,25 +17,25 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path>",
   )
   .options({
-    testnet: {
-      type: "boolean",
-      default: false,
-      desc: "Accept for testnet contracts instead of mainnet",
-    },
     "all-chains": {
-      type: "boolean",
       default: false,
       desc: "Accept for contract on all chains. Use with --testnet flag to accept for all testnet contracts",
+      type: "boolean",
     },
     chain: {
-      type: "array",
-      string: true,
       desc: "Accept for contract on given chains",
+      string: true,
+      type: "array",
     },
     "ops-key-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the private key of the proposer to use for the operations multisig governance proposal",
+      type: "string",
+    },
+    testnet: {
+      default: false,
+      desc: "Accept for testnet contracts instead of mainnet",
+      type: "boolean",
     },
   });
 

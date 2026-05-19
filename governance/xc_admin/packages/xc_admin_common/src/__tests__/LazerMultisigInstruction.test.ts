@@ -1,13 +1,13 @@
 import {
   PublicKey,
-  TransactionInstruction,
   SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
-import { LazerMultisigInstruction } from "../multisig_transaction/LazerMultisigInstruction";
 import {
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "../multisig_transaction";
+import { LazerMultisigInstruction } from "../multisig_transaction/LazerMultisigInstruction";
 
 describe("LazerMultisigInstruction", () => {
   const mockProgramId = new PublicKey(
@@ -47,21 +47,21 @@ describe("LazerMultisigInstruction", () => {
 
     const keys = [
       {
-        pubkey: topAuthority,
         isSigner: true,
         isWritable: false,
+        pubkey: topAuthority,
       },
       {
-        pubkey: storage,
         isSigner: false,
         isWritable: true,
+        pubkey: storage,
       },
     ];
 
     const instruction = new TransactionInstruction({
-      programId: mockProgramId,
-      keys,
       data: instructionData,
+      keys,
+      programId: mockProgramId,
     });
 
     const lazerInstruction =
@@ -81,16 +81,16 @@ describe("LazerMultisigInstruction", () => {
     const unrecognizedData = Buffer.from([1, 2, 3, 4]);
     const keys = [
       {
-        pubkey: topAuthority,
         isSigner: false,
         isWritable: true,
+        pubkey: topAuthority,
       },
     ];
 
     const instruction = new TransactionInstruction({
-      programId: mockProgramId,
-      keys,
       data: unrecognizedData,
+      keys,
+      programId: mockProgramId,
     });
 
     const lazerInstruction =
@@ -121,26 +121,26 @@ describe("LazerMultisigInstruction", () => {
 
     const keys = [
       {
-        pubkey: payer,
         isSigner: true,
         isWritable: true,
+        pubkey: payer,
       },
       {
-        pubkey: storage,
         isSigner: false,
         isWritable: true,
+        pubkey: storage,
       },
       {
-        pubkey: systemProgram,
         isSigner: false,
         isWritable: false,
+        pubkey: systemProgram,
       },
     ];
 
     const instruction = new TransactionInstruction({
-      programId: mockProgramId,
-      keys,
       data: instructionData,
+      keys,
+      programId: mockProgramId,
     });
 
     const lazerInstruction =
@@ -159,9 +159,9 @@ describe("LazerMultisigInstruction", () => {
   // Test program field
   test("should have correct program type", () => {
     const instruction = new TransactionInstruction({
-      programId: mockProgramId,
-      keys: [],
       data: Buffer.from([]),
+      keys: [],
+      programId: mockProgramId,
     });
 
     const lazerInstruction =

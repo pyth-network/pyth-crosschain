@@ -18,17 +18,17 @@ const PriceConfigFileSchema: Joi.Schema = Joi.array()
   .items(
     Joi.object({
       alias: Joi.string().required(),
+      confidence_ratio: Joi.number().required(),
+      early_update: Joi.object({
+        confidence_ratio: Joi.number().optional(),
+        price_deviation: Joi.number().optional(),
+        time_difference: Joi.number().optional(),
+      }).optional(),
       id: Joi.string()
         .regex(/^(0x)?[a-f0-9]{64}$/)
         .required(),
-      time_difference: Joi.number().required(),
       price_deviation: Joi.number().required(),
-      confidence_ratio: Joi.number().required(),
-      early_update: Joi.object({
-        time_difference: Joi.number().optional(),
-        price_deviation: Joi.number().optional(),
-        confidence_ratio: Joi.number().optional(),
-      }).optional(),
+      time_difference: Joi.number().required(),
     }),
   )
   .unique("id")
@@ -67,15 +67,15 @@ export function readPriceConfigFile(path: string): PriceConfig[] {
   return (priceConfigs as any[]).map((priceConfigRaw) => {
     const priceConfig: PriceConfig = {
       alias: priceConfigRaw.alias,
-      id: removeLeading0x(priceConfigRaw.id),
-      timeDifference: priceConfigRaw.time_difference,
-      priceDeviation: priceConfigRaw.price_deviation,
       confidenceRatio: priceConfigRaw.confidence_ratio,
 
       customEarlyUpdate: priceConfigRaw.early_update !== undefined,
-      earlyUpdateTimeDifference: priceConfigRaw.early_update?.time_difference,
-      earlyUpdatePriceDeviation: priceConfigRaw.early_update?.price_deviation,
       earlyUpdateConfidenceRatio: priceConfigRaw.early_update?.confidence_ratio,
+      earlyUpdatePriceDeviation: priceConfigRaw.early_update?.price_deviation,
+      earlyUpdateTimeDifference: priceConfigRaw.early_update?.time_difference,
+      id: removeLeading0x(priceConfigRaw.id),
+      priceDeviation: priceConfigRaw.price_deviation,
+      timeDifference: priceConfigRaw.time_difference,
     };
     return priceConfig;
   });
@@ -141,8 +141,8 @@ export function shouldUpdate(
   logger.info(
     {
       sourcePrice: sourceLatestPrice,
-      targetPrice: targetLatestPrice,
       symbol: priceConfig.alias,
+      targetPrice: targetLatestPrice,
     },
     `Analyzing price ${priceConfig.alias} (${priceId}). ` +
       `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}? / early: < ${priceConfig.earlyUpdateTimeDifference}) OR ` +

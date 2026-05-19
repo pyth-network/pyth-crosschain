@@ -28,53 +28,53 @@ const parser = yargs(hideBin(process.argv))
     "Multi-Chain Balance Transfer Tool for Pyth Entropy Chains\n\nUsage: $0 --source-private-key <key> --destination-address <addr> [chain-selection] [transfer-method] [options]",
   )
   .options({
-    "source-private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key of the source wallet to transfer from",
-    },
-    "destination-address": {
-      type: "string",
-      demandOption: true,
-      desc: "Public address of the destination wallet",
+    amount: {
+      desc: "Exact amount in ETH to transfer from each chain",
+      type: "number",
     },
     chain: {
-      type: "array",
-      string: true,
       desc: "Specific chain IDs to transfer on (e.g., --chain optimism_sepolia --chain avalanche)",
+      string: true,
+      type: "array",
     },
-    testnets: {
-      type: "boolean",
-      default: false,
-      desc: "Transfer on all testnet entropy chains",
-    },
-    mainnets: {
-      type: "boolean",
-      default: false,
-      desc: "Transfer on all mainnet entropy chains",
-    },
-    amount: {
-      type: "number",
-      desc: "Exact amount in ETH to transfer from each chain",
-    },
-    ratio: {
-      type: "number",
-      desc: "Ratio of available balance to transfer (0-1, e.g., 0.5 for half, 1.0 for all)",
-    },
-    "min-balance": {
-      type: "number",
-      default: 0.001,
-      desc: "Minimum balance in ETH required before attempting transfer",
-    },
-    "gas-multiplier": {
-      type: "number",
-      default: 2,
-      desc: "Gas multiplier for transaction safety",
+    "destination-address": {
+      demandOption: true,
+      desc: "Public address of the destination wallet",
+      type: "string",
     },
     "dry-run": {
-      type: "boolean",
       default: false,
       desc: "Preview transfers without executing transactions",
+      type: "boolean",
+    },
+    "gas-multiplier": {
+      default: 2,
+      desc: "Gas multiplier for transaction safety",
+      type: "number",
+    },
+    mainnets: {
+      default: false,
+      desc: "Transfer on all mainnet entropy chains",
+      type: "boolean",
+    },
+    "min-balance": {
+      default: 0.001,
+      desc: "Minimum balance in ETH required before attempting transfer",
+      type: "number",
+    },
+    ratio: {
+      desc: "Ratio of available balance to transfer (0-1, e.g., 0.5 for half, 1.0 for all)",
+      type: "number",
+    },
+    "source-private-key": {
+      demandOption: true,
+      desc: "Private key of the source wallet to transfer from",
+      type: "string",
+    },
+    testnets: {
+      default: false,
+      desc: "Transfer on all testnet entropy chains",
+      type: "boolean",
     },
   })
   .group(
@@ -133,13 +133,13 @@ async function transferOnChain(
       );
       return {
         chain: chain.getId(),
-        success: false,
-        sourceAddress,
         destinationAddress,
-        originalBalance: balanceEth.toFixed(6),
-        transferAmount: "0",
-        remainingBalance: balanceEth.toFixed(6),
         error: `Balance ${balanceEth.toFixed(6)} ETH below minimum ${minBalance} ETH`,
+        originalBalance: balanceEth.toFixed(6),
+        remainingBalance: balanceEth.toFixed(6),
+        sourceAddress,
+        success: false,
+        transferAmount: "0",
       };
     }
 
@@ -181,13 +181,13 @@ async function transferOnChain(
       );
       return {
         chain: chain.getId(),
-        success: false,
-        sourceAddress,
         destinationAddress,
-        originalBalance: balanceEth.toFixed(6),
-        transferAmount: "0",
-        remainingBalance: balanceEth.toFixed(6),
         error: `Insufficient balance for transfer amount and gas costs (${gasCostEth.toFixed(6)} ETH)`,
+        originalBalance: balanceEth.toFixed(6),
+        remainingBalance: balanceEth.toFixed(6),
+        sourceAddress,
+        success: false,
+        transferAmount: "0",
       };
     }
 
@@ -195,13 +195,13 @@ async function transferOnChain(
       console.log(`   Transfer amount plus gas costs exceed balance, skipping`);
       return {
         chain: chain.getId(),
-        success: false,
-        sourceAddress,
         destinationAddress,
-        originalBalance: balanceEth.toFixed(6),
-        transferAmount: "0",
-        remainingBalance: balanceEth.toFixed(6),
         error: `Transfer amount ${transferAmountEth.toFixed(6)} ETH plus gas ${gasCostEth.toFixed(6)} ETH exceeds balance`,
+        originalBalance: balanceEth.toFixed(6),
+        remainingBalance: balanceEth.toFixed(6),
+        sourceAddress,
+        success: false,
+        transferAmount: "0",
       };
     }
 
@@ -220,12 +220,12 @@ async function transferOnChain(
       );
       return {
         chain: chain.getId(),
-        success: true,
-        sourceAddress,
         destinationAddress,
         originalBalance: balanceEth.toFixed(6),
-        transferAmount: transferAmountEth.toFixed(6),
         remainingBalance: (balanceEth - transferAmountEth).toFixed(6),
+        sourceAddress,
+        success: true,
+        transferAmount: transferAmountEth.toFixed(6),
       };
     }
 
@@ -235,10 +235,10 @@ async function transferOnChain(
     console.log(`   Executing transfer...`);
     const tx = await web3.eth.sendTransaction({
       from: sourceAddress,
-      to: destinationAddress,
-      value: transferAmountWei,
       gas: Number(estimatedGas) * gasMultiplier,
       gasPrice: gasPrice,
+      to: destinationAddress,
+      value: transferAmountWei,
     });
 
     // Get updated balance
@@ -251,25 +251,25 @@ async function transferOnChain(
 
     return {
       chain: chain.getId(),
-      success: true,
-      sourceAddress,
       destinationAddress,
       originalBalance: balanceEth.toFixed(6),
-      transferAmount: transferAmountEth.toFixed(6),
       remainingBalance: newBalanceEth.toFixed(6),
+      sourceAddress,
+      success: true,
       transactionHash: tx.transactionHash,
+      transferAmount: transferAmountEth.toFixed(6),
     };
   } catch (error) {
     console.log(`   Transfer failed: ${error}`);
     return {
       chain: chain.getId(),
-      success: false,
-      sourceAddress,
       destinationAddress,
-      originalBalance: "unknown",
-      transferAmount: "0",
-      remainingBalance: "unknown",
       error: error instanceof Error ? error.message : String(error),
+      originalBalance: "unknown",
+      remainingBalance: "unknown",
+      sourceAddress,
+      success: false,
+      transferAmount: "0",
     };
   }
 }
@@ -433,9 +433,9 @@ async function main() {
     console.table(
       successful.map((r) => ({
         Chain: r.chain,
+        "Remaining Balance (ETH)": r.remainingBalance,
         "Transfer Amount (ETH)": r.transferAmount,
         "TX Hash": r.transactionHash || "N/A (dry run)",
-        "Remaining Balance (ETH)": r.remainingBalance,
       })),
     );
   }
@@ -445,8 +445,8 @@ async function main() {
     console.table(
       failed.map((r) => ({
         Chain: r.chain,
-        "Original Balance (ETH)": r.originalBalance,
         Error: r.error,
+        "Original Balance (ETH)": r.originalBalance,
       })),
     );
   }

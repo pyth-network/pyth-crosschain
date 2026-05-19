@@ -1,37 +1,37 @@
 [
   {
     "chain": "sui_mainnet",
+    "deploymentType": "stable",
     "stateId": "0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8",
-    "wormholeStateId": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
     "type": "SuiPriceFeedContract",
-    "deploymentType": "stable"
+    "wormholeStateId": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c"
   },
   {
     "chain": "sui_testnet",
+    "deploymentType": "beta",
     "stateId": "0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c",
-    "wormholeStateId": "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790",
     "type": "SuiPriceFeedContract",
-    "deploymentType": "beta"
+    "wormholeStateId": "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
   },
   {
     "chain": "movement_m2_devnet",
+    "deploymentType": "stable",
     "stateId": "0xa2b4997fe170d5d7d622d5f43e54880ccdf69716df4ac4d215a69c35a0a1831f",
-    "wormholeStateId": "0xcf185fbc1af3a437a600587e0b39e5fede163336ffbb7ff24dca9b6eb19d2656",
     "type": "SuiPriceFeedContract",
-    "deploymentType": "stable"
+    "wormholeStateId": "0xcf185fbc1af3a437a600587e0b39e5fede163336ffbb7ff24dca9b6eb19d2656"
   },
   {
     "chain": "sui_testnet",
+    "deploymentType": "lazer-prod",
     "stateId": "0x3c48fe392912de6c18087a2b3f5fdbfbfdb4598e180947feff1f12f8e9ea073e",
-    "wormholeStateId": "0x750da8e6d16b6a363a39fe2eaa8295ac224a1e6fce4e47b58845e2e8746164f0",
     "type": "SuiPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "wormholeStateId": "0x750da8e6d16b6a363a39fe2eaa8295ac224a1e6fce4e47b58845e2e8746164f0"
   },
   {
     "chain": "sui_mainnet",
+    "deploymentType": "lazer-prod",
     "stateId": "0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d",
-    "wormholeStateId": "0xdbca52b9fb4f712e25f61f974586d93ac541bcf8389564f0323bb07215168b5c",
     "type": "SuiPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "wormholeStateId": "0xdbca52b9fb4f712e25f61f974586d93ac541bcf8389564f0323bb07215168b5c"
   }
 ]

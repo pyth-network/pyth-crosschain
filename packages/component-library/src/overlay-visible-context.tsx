@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { createContext, useCallback, use } from "react";
+import { createContext, use, useCallback } from "react";
 
 export const OverlayVisibleContext = createContext<
   [boolean, Dispatch<SetStateAction<boolean>>] | undefined
@@ -16,11 +16,11 @@ const useOverlayVisible = () => {
 export const useSetOverlayVisible = () => {
   const setOverlayVisible = useOverlayVisible()[1];
   return {
-    showOverlay: useCallback(() => {
-      setOverlayVisible(true);
-    }, [setOverlayVisible]),
     hideOverlay: useCallback(() => {
       setOverlayVisible(false);
+    }, [setOverlayVisible]),
+    showOverlay: useCallback(() => {
+      setOverlayVisible(true);
     }, [setOverlayVisible]),
   };
 };

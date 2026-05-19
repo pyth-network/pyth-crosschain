@@ -3,23 +3,23 @@ import type { MetadataRoute } from "next";
 import { metadata, viewport } from "../metadata";
 
 const manifest = (): MetadataRoute.Manifest => ({
-  name: metadata.applicationName,
-  short_name: metadata.applicationName,
-  description: metadata.description,
-  theme_color: viewport.themeColor,
   background_color: viewport.themeColor,
+  description: metadata.description,
+  display: "standalone",
   icons: [
     {
-      src: "/android-chrome-192x192.png",
       sizes: "192x192",
+      src: "/android-chrome-192x192.png",
       type: "image/png",
     },
     {
-      src: "/android-chrome-512x512.png",
       sizes: "512x512",
+      src: "/android-chrome-512x512.png",
       type: "image/png",
     },
   ],
-  display: "standalone",
+  name: metadata.applicationName,
+  short_name: metadata.applicationName,
+  theme_color: viewport.themeColor,
 });
 export default manifest;

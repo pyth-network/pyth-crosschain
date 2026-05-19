@@ -55,13 +55,13 @@ export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
       if (!instId) return;
 
       const subscribeMessage = {
-        op: "subscribe",
         args: [
           {
             channel: "bbo-tbt",
             instId,
           },
         ],
+        op: "subscribe",
       };
       socket.json(subscribeMessage);
     },

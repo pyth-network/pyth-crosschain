@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { StatCard as StatCardComponent } from "./index.jsx";
 import cardMeta, { Card as CardStory } from "../Card/index.stories.jsx";
+import { StatCard as StatCardComponent } from "./index.jsx";
 
 const cardMetaArgTypes = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -10,19 +9,15 @@ const cardMetaArgTypes = () => {
 };
 
 const meta = {
-  component: StatCardComponent,
-  parameters: {
-    layout: "padded",
-  },
   argTypes: {
     ...cardMetaArgTypes(),
-    header: {
+    corner: {
       control: "text",
       table: {
         category: "Contents",
       },
     },
-    stat: {
+    header: {
       control: "text",
       table: {
         category: "Contents",
@@ -34,12 +29,16 @@ const meta = {
         category: "Contents",
       },
     },
-    corner: {
+    stat: {
       control: "text",
       table: {
         category: "Contents",
       },
     },
+  },
+  component: StatCardComponent,
+  parameters: {
+    layout: "padded",
   },
 } satisfies Meta<typeof StatCardComponent>;
 export default meta;
@@ -53,9 +52,9 @@ const cardStoryArgs = () => {
 export const StatCard = {
   args: {
     ...cardStoryArgs(),
-    header: "Active Feeds",
-    stat: "552",
-    miniStat: "+5",
     corner: ":)",
+    header: "Active Feeds",
+    miniStat: "+5",
+    stat: "552",
   },
 } satisfies StoryObj<typeof StatCardComponent>;

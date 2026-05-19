@@ -45,8 +45,8 @@ export function Toggle(props: ToggleProps) {
     >
       <Field.Label>
         <BaseSwitch.Root
-          className={classes.switch}
           checked={checked}
+          className={classes.switch}
           onCheckedChange={onChange}
         >
           <BaseSwitch.Thumb className={classes.thumb}>

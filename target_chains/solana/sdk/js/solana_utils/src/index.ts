@@ -1,12 +1,11 @@
+export { sendTransactionsJito } from "./jito";
 export {
-  getSizeOfTransaction,
+  DEFAULT_PRIORITY_FEE_CONFIG,
   getSizeOfCompressedU16,
-  TransactionBuilder,
+  getSizeOfTransaction,
   type InstructionWithEphemeralSigners,
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
   type PriorityFeeConfig,
   sendTransactions,
-  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
 } from "./transaction";
-
-export { sendTransactionsJito } from "./jito";

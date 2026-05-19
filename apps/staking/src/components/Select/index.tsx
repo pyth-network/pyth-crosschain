@@ -2,12 +2,12 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import {
-  Label,
-  SelectValue,
   Select as BaseSelect,
-  Popover,
+  Label,
   ListBox,
   ListBoxItem,
+  Popover,
+  SelectValue,
 } from "react-aria-components";
 
 import { Button } from "../Button";
@@ -34,9 +34,9 @@ export const Select = <T extends string | number>({
 }: Props<T>) => (
   <BaseSelect
     className={clsx("flex flex-row items-center gap-2", className)}
-    selectedKey={selectedKey}
-    // @ts-expect-error react-aria coerces everything to Key for some reason...
     onSelectionChange={onSelectionChange}
+    // @ts-expect-error react-aria coerces everything to Key for some reason...
+    selectedKey={selectedKey}
     {...props}
   >
     <Label className="whitespace-nowrap opacity-80">{label}</Label>
@@ -45,8 +45,8 @@ export const Select = <T extends string | number>({
       <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
     </Button>
     <Popover
-      placement="bottom end"
       className="min-w-[--trigger-width] data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
+      placement="bottom end"
     >
       <ListBox
         className="flex origin-top-right flex-col border border-neutral-400 bg-pythpurple-100 py-2 text-sm text-pythpurple-950 shadow shadow-neutral-400 outline-none"

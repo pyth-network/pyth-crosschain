@@ -9,10 +9,6 @@ import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-li
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
-import {
-  ListLayout,
-  Virtualizer,
-} from "@pythnetwork/component-library/Virtualizer";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
 import type { ListBoxItemProps } from "@pythnetwork/component-library/unstyled/ListBox";
 import {
@@ -21,11 +17,15 @@ import {
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import {
+  ListLayout,
+  Virtualizer,
+} from "@pythnetwork/component-library/Virtualizer";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import { Cluster, ClusterToName } from "../../services/pyth";
+import type { Cluster } from "../../services/pyth";
+import { ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { PublisherTag } from "../PublisherTag";
 import { Score } from "../Score";
@@ -80,11 +80,11 @@ const useSearchDrawer = ({ feeds, publishers }: ResolvedSearchButtonProps) => {
 
   const searchDrawer = useMemo(
     () => ({
+      contents: <SearchDialogContents feeds={feeds} publishers={publishers} />,
       fill: true,
       hideHeading: true,
       title: "Search",
       variant: "dialog" as const,
-      contents: <SearchDialogContents feeds={feeds} publishers={publishers} />,
     }),
     [feeds, publishers],
   );
@@ -193,17 +193,17 @@ const SearchDialogContents = ({
     const filteredFeeds = matchSorter(feeds, search, {
       keys: ["displaySymbol", "symbol", "description", "priceAccount"],
     }).map(({ symbol, ...feed }) => ({
-      type: ResultType.PriceFeed as const,
       id: symbol,
       symbol,
+      type: ResultType.PriceFeed as const,
       ...feed,
     }));
 
     const filteredPublishers = matchSorter(publishers, search, {
       keys: ["publisherKey", "name"],
     }).map((publisher) => ({
-      type: ResultType.Publisher as const,
       id: [ClusterToName[publisher.cluster], publisher.publisherKey].join(":"),
+      type: ResultType.Publisher as const,
       ...publisher,
     }));
 
@@ -221,34 +221,34 @@ const SearchDialogContents = ({
       <div className={styles.searchBar}>
         <div className={styles.left}>
           <SearchInput
-            size="md"
-            placeholder="Asset symbol, publisher name or id"
-            value={search}
-            onChange={setSearch}
-            className={styles.searchInput ?? ""}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
+            className={styles.searchInput ?? ""}
+            onChange={setSearch}
+            placeholder="Asset symbol, publisher name or id"
+            size="md"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            value={search}
           />
           <SingleToggleGroup
-            selectedKey={type}
             className={styles.typeFilter ?? ""}
+            items={[
+              { children: "All", id: "" },
+              { children: "Price Feeds", id: ResultType.PriceFeed },
+              { children: "Publishers", id: ResultType.Publisher },
+            ]}
             // @ts-expect-error react-aria coerces everything to Key for some reason...
             onSelectionChange={setType}
-            items={[
-              { id: "", children: "All" },
-              { id: ResultType.PriceFeed, children: "Price Feeds" },
-              { id: ResultType.Publisher, children: "Publishers" },
-            ]}
+            selectedKey={type}
           />
         </div>
         <Button
-          className={styles.closeButton ?? ""}
           beforeIcon={<XCircle weight="fill" />}
-          slot="close"
+          className={styles.closeButton ?? ""}
           hideText
           rounded
-          variant="ghost"
           size="sm"
+          slot="close"
+          variant="ghost"
         >
           Close
         </Button>
@@ -257,43 +257,43 @@ const SearchDialogContents = ({
         <Virtualizer layout={new ListLayout()}>
           <ListBox
             aria-label="Search"
-            items={results}
+            autoFocus={false}
             className={styles.listbox ?? ""}
             // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus={false}
-            shouldFocusOnHover
+            items={results}
             renderEmptyState={() => (
               <NoResults
-                query={search}
                 onClearSearch={() => {
                   setSearch("");
                 }}
+                query={search}
               />
             )}
+            shouldFocusOnHover
           >
             {(result) => (
               <ListBoxItem
-                textValue={
-                  result.type === ResultType.PriceFeed
-                    ? result.displaySymbol
-                    : (result.name ?? result.publisherKey)
-                }
                 className={styles.item ?? ""}
+                data-is-first={result.id === results[0]?.id ? "" : undefined}
                 href={
                   result.type === ResultType.PriceFeed
                     ? `/price-feeds/${encodeURIComponent(result.symbol)}`
                     : `/publishers/${ClusterToName[result.cluster]}/${encodeURIComponent(result.publisherKey)}`
                 }
-                data-is-first={result.id === results[0]?.id ? "" : undefined}
                 onPointerDown={onLinkPointerDown}
                 onPointerUp={onLinkPointerUp}
+                textValue={
+                  result.type === ResultType.PriceFeed
+                    ? result.displaySymbol
+                    : (result.name ?? result.publisherKey)
+                }
               >
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
                     <SymbolPairTag
                       className={styles.itemTag}
-                      displaySymbol={result.displaySymbol}
                       description={result.description}
+                      displaySymbol={result.displaySymbol}
                       icon={result.icon}
                     />
                   ) : (
@@ -302,8 +302,8 @@ const SearchDialogContents = ({
                       cluster={result.cluster}
                       publisherKey={result.publisherKey}
                       {...(result.name && {
-                        name: result.name,
                         icon: result.icon,
+                        name: result.name,
                       })}
                     />
                   )}
@@ -312,13 +312,13 @@ const SearchDialogContents = ({
                       <dt>Type</dt>
                       <dd>
                         <Badge
+                          size="xs"
+                          style="filled"
                           variant={
                             result.type === ResultType.PriceFeed
                               ? "warning"
                               : "info"
                           }
-                          style="filled"
-                          size="xs"
                         >
                           {result.type === ResultType.PriceFeed
                             ? "PRICE FEED"
@@ -352,13 +352,13 @@ const SearchDialogContents = ({
                 <div className={styles.largeScreen}>
                   <div className={styles.itemType}>
                     <Badge
+                      size="xs"
+                      style="filled"
                       variant={
                         result.type === ResultType.PriceFeed
                           ? "warning"
                           : "info"
                       }
-                      style="filled"
-                      size="xs"
                     >
                       {result.type === ResultType.PriceFeed
                         ? "PRICE FEED"
@@ -368,10 +368,10 @@ const SearchDialogContents = ({
                   {result.type === ResultType.PriceFeed ? (
                     <>
                       <SymbolPairTag
-                        displaySymbol={result.displaySymbol}
-                        description={result.description}
-                        icon={result.icon}
                         className={styles.itemTag}
+                        description={result.description}
+                        displaySymbol={result.displaySymbol}
+                        icon={result.icon}
                       />
                       <AssetClassBadge>{result.assetClass}</AssetClassBadge>
                     </>
@@ -382,8 +382,8 @@ const SearchDialogContents = ({
                         cluster={result.cluster}
                         publisherKey={result.publisherKey}
                         {...(result.name && {
-                          name: result.name,
                           icon: result.icon,
+                          name: result.name,
                         })}
                       />
                       {result.averageScore !== undefined && (

@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  Field,
+  Label,
   Tab,
   TabGroup,
   TabList,
   TabPanel,
   TabPanels,
-  Field,
-  Label,
 } from "@headlessui/react";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
@@ -15,20 +15,15 @@ import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
 import type {
-  Dispatch,
-  SetStateAction,
   ComponentProps,
+  Dispatch,
   ElementType,
+  SetStateAction,
   SVGAttributes,
 } from "react";
-import { useState, useCallback, useMemo } from "react";
-import { useSwitchChain, useChainId, useConfig } from "wagmi";
+import { useCallback, useMemo, useState } from "react";
+import { useChainId, useConfig, useSwitchChain } from "wagmi";
 import { readContract } from "wagmi/actions";
-
-import type { Parameter } from "./parameter";
-import { ParameterInput } from "./parameter-input";
-import type { EvmApiType } from "./run-button";
-import { RunButton } from "./run-button";
 import { getLogger } from "../../browser-logger";
 import { useIsMounted } from "../../use-is-mounted";
 import type { SupportedLanguage } from "../Code";
@@ -37,6 +32,10 @@ import { ErrorTooltip } from "../ErrorTooltip";
 import { InlineLink } from "../InlineLink";
 import { Markdown } from "../Markdown";
 import { Select } from "../Select";
+import type { Parameter } from "./parameter";
+import { ParameterInput } from "./parameter-input";
+import type { EvmApiType } from "./run-button";
+import { RunButton } from "./run-button";
 
 export { ParameterType } from "./parameter";
 export { EvmApiType } from "./run-button";
@@ -146,11 +145,11 @@ export const EvmApi = <ParameterName extends string>({
             {parameters.length > 0 ? (
               <ul className="flex flex-col gap-4">
                 {parameters.map((parameter) => (
-                  <li key={parameter.name} className="contents">
+                  <li className="contents" key={parameter.name}>
                     <ParameterInput
+                      setParamValues={setParamValues}
                       spec={parameter}
                       value={paramValues[parameter.name]}
-                      setParamValues={setParamValues}
                     />
                   </li>
                 ))}
@@ -179,26 +178,15 @@ export const EvmApi = <ParameterName extends string>({
           <Field className="mb-4 flex w-full flex-row items-center gap-2">
             <Label className="text-sm font-bold">Network</Label>
             <Select
-              value={currentChain}
+              className="min-w-0 grow"
+              filter={(chains, value) =>
+                chains.filter((chain) =>
+                  chain.name.toLowerCase().includes(value.toLowerCase()),
+                )
+              }
               onChange={({ id }) => {
                 switchChain({ chainId: id });
               }}
-              renderButtonContents={({ id, name }) => (
-                <div className="flex h-8 grow basis-0 flex-row items-center gap-2 overflow-hidden">
-                  {isMounted && (
-                    <>
-                      <ChainIcon id={id} />
-                      <div className="grow basis-0 truncate">{name}</div>
-                    </>
-                  )}
-                </div>
-              )}
-              renderOption={({ id, name }) => (
-                <div key={id} className="flex flex-row items-center gap-2">
-                  <ChainIcon id={id} />
-                  <span>{name}</span>
-                </div>
-              )}
               optionGroups={[
                 {
                   name: "Mainnet",
@@ -213,12 +201,23 @@ export const EvmApi = <ParameterName extends string>({
                     .sort((a, b) => a.name.localeCompare(b.name)),
                 },
               ]}
-              filter={(chains, value) =>
-                chains.filter((chain) =>
-                  chain.name.toLowerCase().includes(value.toLowerCase()),
-                )
-              }
-              className="min-w-0 grow"
+              renderButtonContents={({ id, name }) => (
+                <div className="flex h-8 grow basis-0 flex-row items-center gap-2 overflow-hidden">
+                  {isMounted && (
+                    <>
+                      <ChainIcon id={id} />
+                      <div className="grow basis-0 truncate">{name}</div>
+                    </>
+                  )}
+                </div>
+              )}
+              renderOption={({ id, name }) => (
+                <div className="flex flex-row items-center gap-2" key={id}>
+                  <ChainIcon id={id} />
+                  <span>{name}</span>
+                </div>
+              )}
+              value={currentChain}
             />
           </Field>
           <RunButton
@@ -232,8 +231,8 @@ export const EvmApi = <ParameterName extends string>({
           <TabList className="mb-4 flex flex-row gap-2 border-b border-neutral-200 pb-px dark:border-neutral-800">
             {code.map(({ language }) => (
               <Tab
-                key={LANGUAGE_TO_DISPLAY_NAME[language]}
                 className="mb-[-2px] border-b-2 border-transparent px-2 text-sm font-medium leading-loose hover:text-pythpurple-600 data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:text-pythpurple-600 dark:hover:text-pythpurple-400 dark:data-[selected]:border-pythpurple-400 dark:data-[selected]:text-pythpurple-400"
+                key={LANGUAGE_TO_DISPLAY_NAME[language]}
               >
                 {LANGUAGE_TO_DISPLAY_NAME[language]}
               </Tab>
@@ -243,18 +242,18 @@ export const EvmApi = <ParameterName extends string>({
             {code.map(({ code: codeContents, language, dimRange }) => (
               <TabPanel key={LANGUAGE_TO_DISPLAY_NAME[language]}>
                 <Code
-                  language={LANUGAGE_TO_SHIKI_NAME[language]}
                   dimRange={dimRange}
+                  language={LANUGAGE_TO_SHIKI_NAME[language]}
                 >
                   {codeContents(
                     isMounted
                       ? {
-                          name: currentChain.name,
-                          rpcUrl: currentChain.rpcUrls.default.http[0] ?? "",
                           contractAddress:
                             getEvmPriceFeedContractAddress(chainId) ?? "",
+                          name: currentChain.name,
+                          rpcUrl: currentChain.rpcUrls.default.http[0] ?? "",
                         }
-                      : { name: "", rpcUrl: "", contractAddress: "" },
+                      : { contractAddress: "", name: "", rpcUrl: "" },
                     paramValues,
                   )}
                 </Code>
@@ -302,7 +301,7 @@ const Example = <ParameterName extends string>({
       }
       const params = example.parameters({
         readContract: (functionName, args) =>
-          readContract(config, { abi, address, functionName, args }),
+          readContract(config, { abi, address, args, functionName }),
       });
       if (params instanceof Promise) {
         setLoading(true);
@@ -332,8 +331,8 @@ const Example = <ParameterName extends string>({
     <div className="flex flex-row items-center gap-2">
       <InlineLink
         as="button"
-        onClick={updateValues}
         className="flex flex-row items-center gap-2"
+        onClick={updateValues}
       >
         {Icon && <Icon className="h-4" />}
         <span>{example.name}</span>

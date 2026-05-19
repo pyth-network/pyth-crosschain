@@ -1,4 +1,4 @@
-import type { HighlighterCore, DecorationItem } from "shiki/core";
+import type { DecorationItem, HighlighterCore } from "shiki/core";
 import { createHighlighterCore } from "shiki/core";
 import { createOnigurumaEngine } from "shiki/engine/oniguruma";
 import javascript from "shiki/langs/javascript.mjs";
@@ -23,9 +23,9 @@ export type HighlightOptions = {
 
 export const getHighlighter = async (): Promise<Highlighter> => {
   const highlighterCore = await createHighlighterCore({
+    engine: createOnigurumaEngine(() => import("shiki/wasm")),
     langs: [javascript, solidity, json],
     themes: [darkPlus, lightPlus],
-    engine: createOnigurumaEngine(() => import("shiki/wasm")),
   });
 
   return {
@@ -46,8 +46,8 @@ const highlight = (
   highlighter.codeToHtml(code, {
     lang: lang ?? "text",
     themes: {
-      light: "light-plus",
       dark: "dark-plus",
+      light: "light-plus",
     },
     ...(options?.decorations && { decorations: options.decorations }),
   });

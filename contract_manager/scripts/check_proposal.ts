@@ -50,20 +50,20 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
   .options({
     cluster: {
-      type: "string",
       demandOption: true,
       desc: "Multsig Cluster name to check proposal on can be one of [devnet, testnet, mainnet-beta]",
-    },
-    proposal: {
       type: "string",
-      demandOption: true,
-      desc: "The proposal address to check",
     },
     "contract-type": {
-      type: "string",
+      choices: ["entropy", "lazer"],
       demandOption: false,
       desc: "Type of EVM contract to verify (entropy or lazer). Required when checking EvmExecute instructions.",
-      choices: ["entropy", "lazer"],
+      type: "string",
+    },
+    proposal: {
+      demandOption: true,
+      desc: "The proposal address to check",
+      type: "string",
     },
   });
 
@@ -80,9 +80,9 @@ async function main() {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const parsedInstructions = instructions.map((instruction) => {
     return multisigParser.parseInstruction({
-      programId: instruction.programId,
       data: instruction.data as Buffer,
       keys: instruction.keys as AccountMeta[],
+      programId: instruction.programId,
     });
   });
 
@@ -307,8 +307,8 @@ async function main() {
           }
 
           await chain.updateLazerMeta(packagePath, {
-            version: version.toString(),
             receiver_chain_id: chain.getWormholeChainId(),
+            version: version.toString(),
           });
           const pkg = await chain.buildPackage(packagePath);
           const buildHash = Buffer.from(pkg.digest).toString("hex");

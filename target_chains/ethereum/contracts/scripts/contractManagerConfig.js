@@ -38,13 +38,13 @@ function getDefaultConfig(chainName) {
   );
 
   return {
-    governanceEmitter,
-    governanceChainId,
     emitterAddresses,
     emitterChainIds,
-    wormholeInitialSigners,
+    governanceChainId,
+    governanceEmitter,
     wormholeGovernanceChainId,
     wormholeGovernanceContract,
+    wormholeInitialSigners,
   };
 }
 function saveConfig(chainName, address) {
@@ -56,4 +56,4 @@ function saveConfig(chainName, address) {
   console.log(Store.serialize(contract));
 }
 
-module.exports = { saveConfig, getDefaultConfig };
+module.exports = { getDefaultConfig, saveConfig };

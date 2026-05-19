@@ -17,10 +17,10 @@ export const Tooltip = ({ children, className, offset, ...props }: Props) => (
   >
     <OverlayArrow>
       <svg
-        width={8}
+        className="fill-neutral-200 group-data-[placement=bottom]:rotate-180"
         height={8}
         viewBox="0 0 8 8"
-        className="fill-neutral-200 group-data-[placement=bottom]:rotate-180"
+        width={8}
       >
         <path d="M0 0 L4 4 L8 0" />
       </svg>

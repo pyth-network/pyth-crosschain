@@ -11,11 +11,10 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -27,15 +26,15 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain id where the contract is deployed",
+      type: "string",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     "sequence-number": {
-      type: "string",
       demandOption: true,
       desc: "Sequence number of the request to reveal or a range of sequence numbers to reveal separated by colon (e.g. 1000:1100 reveals requests with 1000 <= number < 1100)",
+      type: "string",
     },
   });
 

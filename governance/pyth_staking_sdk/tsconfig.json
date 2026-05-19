@@ -1,5 +1,5 @@
 {
+  "exclude": ["dist", "node_modules", "**/__tests__/*"],
   "extends": "@cprussin/tsconfig/base.json",
-  "include": ["src"],
-  "exclude": ["dist", "node_modules", "**/__tests__/*"]
+  "include": ["src"]
 }

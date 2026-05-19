@@ -29,9 +29,9 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
+  SystemProgram,
   Transaction,
 } from "@solana/web3.js";
 import SquadsMeshClass from "@sqds/mesh";
@@ -192,13 +192,13 @@ export class WormholeEmitter {
     const emitter = this.wallet.publicKey;
     const accounts = {
       bridge: deriveWormholeBridgeDataKey(wormholeAddress),
-      message: kp.publicKey,
-      emitter: emitter,
-      sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
-      payer: emitter,
-      feeCollector,
       clock: SYSVAR_CLOCK_PUBKEY,
+      emitter: emitter,
+      feeCollector,
+      message: kp.publicKey,
+      payer: emitter,
       rent: SYSVAR_RENT_PUBKEY,
+      sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
       systemProgram: SystemProgram.programId,
     };
     const wormholeProgram = createWormholeProgramInterface(
@@ -209,8 +209,8 @@ export class WormholeEmitter {
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: emitter,
-        toPubkey: feeCollector,
         lamports: 1000,
+        toPubkey: feeCollector,
       }),
     );
     transaction.add(
@@ -320,8 +320,8 @@ export class Vault extends Storable {
 
   toJson(): KeyValueConfig {
     return {
-      key: this.key.toString(),
       cluster: this.cluster,
+      key: this.key.toString(),
       type: Vault.type,
     };
   }

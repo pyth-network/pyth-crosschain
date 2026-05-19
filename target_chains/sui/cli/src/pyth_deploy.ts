@@ -1,12 +1,11 @@
-import { Transaction } from "@mysten/sui/transactions";
-
-import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
-
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { execSync } from "child_process";
-import { SuiClient } from "@mysten/sui/client";
 import { bcs } from "@mysten/sui/bcs";
+import type { SuiClient } from "@mysten/sui/client";
+
+import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
+import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
@@ -34,10 +33,10 @@ export async function publishPackage(
   txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
 
   const [upgradeCap] = txb.publish({
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
     ),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
   });
 
   // Transfer upgrade capability to deployer
@@ -45,12 +44,12 @@ export async function publishPackage(
 
   // Execute transactions
   const result = await provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: txb,
     options: {
       showInput: true,
       showObjectChanges: true,
     },
+    signer: keypair,
+    transaction: txb,
   });
 
   const publishedChanges = result.objectChanges?.filter(
@@ -89,9 +88,9 @@ export async function publishPackage(
   console.log("UpgradeCapId: ", upgradeCapId);
   console.log("DeployerCapId: ", deployerCapId);
   return {
+    deployerCapId: deployerCapId,
     packageId,
     upgradeCapId: upgradeCapId,
-    deployerCapId: deployerCapId,
   };
 }
 
@@ -138,7 +137,6 @@ export async function initPyth(
   );
   const stalePriceThreshold = tx.pure.u64(60);
   tx.moveCall({
-    target: `${pythPackageId}::pyth::init_pyth`,
     arguments: [
       tx.object(deployerCapId),
       tx.object(upgradeCapId),
@@ -149,20 +147,21 @@ export async function initPyth(
       dataSourceEmitterAddresses,
       baseUpdateFee,
     ],
+    target: `${pythPackageId}::pyth::init_pyth`,
   });
 
   tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
 
-  let result = await provider.signAndExecuteTransaction({
-    signer: keypair,
-    transaction: tx,
+  const result = await provider.signAndExecuteTransaction({
     options: {
-      showInput: true,
+      showBalanceChanges: true,
       showEffects: true,
       showEvents: true,
+      showInput: true,
       showObjectChanges: true,
-      showBalanceChanges: true,
     },
+    signer: keypair,
+    transaction: tx,
   });
   if (!result.effects || !result.objectChanges) {
     throw new Error("No effects or object changes found in transaction");
@@ -172,10 +171,11 @@ export async function initPyth(
     console.log("Tx digest", result.digest);
   }
   for (const objectChange of result.objectChanges) {
-    if (objectChange.type === "created") {
-      if (objectChange.objectType === `${pythPackageId}::state::State`) {
-        console.log("Pyth state id: ", objectChange.objectId);
-      }
+    if (
+      objectChange.type === "created" &&
+      objectChange.objectType === `${pythPackageId}::state::State`
+    ) {
+      console.log("Pyth state id: ", objectChange.objectId);
     }
   }
   return result;

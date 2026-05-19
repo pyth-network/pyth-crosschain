@@ -1,12 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
+import { ThemeV2 } from "../../theme";
 import { Text } from "./Text";
 import { textColorTokens } from "./Text.styles";
-import { ThemeV2 } from "../../theme";
 
 const meta = {
-  title: "V2/Text",
-  component: Text,
   args: {
     children: "Sample text",
     italic: false,
@@ -22,6 +19,8 @@ const meta = {
     },
     render: { control: false },
   },
+  component: Text,
+  title: "V2/Text",
 } satisfies Meta<typeof Text>;
 
 export default meta;

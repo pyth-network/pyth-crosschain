@@ -1,9 +1,8 @@
 import clsx from "clsx";
 import { motion } from "motion/react";
 import type { ComponentProps } from "react";
-
-import styles from "./index.module.scss";
 import { Switch as UnstyledSwitch } from "../unstyled/Switch/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   isPending?: boolean | undefined;
@@ -20,20 +19,20 @@ export const Switch = ({
 }: Props) => (
   <UnstyledSwitch
     className={clsx(styles.switch, className)}
-    isDisabled={isDisabled === true || isPending === true}
     data-pending={isPending ? "" : undefined}
+    isDisabled={isDisabled === true || isPending === true}
     {...props}
   >
     {(args) => (
       <>
         <div className={styles.indicator}>
           <motion.div
-            layout
             className={styles.dot}
+            layout
             transition={{
-              type: "spring",
-              stiffness: 500,
               damping: 20,
+              stiffness: 500,
+              type: "spring",
             }}
           />
         </div>

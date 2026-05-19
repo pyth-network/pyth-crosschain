@@ -5,9 +5,8 @@ import { omitKeys } from "@pythnetwork/shared-lib/util";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Fragment } from "react";
-
-import styles from "./index.module.scss";
 import { Skeleton } from "../Skeleton/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnProps =
   | { isLoading: true }
@@ -24,8 +23,8 @@ type Props = Omit<ComponentProps<"div">, keyof OwnProps> & OwnProps;
 export const SymbolPairTag = ({ className, ...props }: Props) => (
   <div
     className={clsx(styles.symbolPairTag, className)}
-    data-loading={props.isLoading ? "" : undefined}
     data-grow={!props.isLoading && props.grow ? "" : undefined}
+    data-loading={props.isLoading ? "" : undefined}
     {...omitKeys<Record<string, unknown>>(props, [
       "displaySymbol",
       "description",
@@ -33,7 +32,7 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
     ])}
   >
     {props.isLoading ? (
-      <Skeleton fill className={styles.icon} />
+      <Skeleton className={styles.icon} fill />
     ) : (
       <div className={styles.icon}>{props.icon}</div>
     )}
@@ -60,8 +59,10 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
 
 const Description = ({ description }: { description: string }) => {
   const [firstSegment, lastSegment] = description.split("/");
-  return (lastSegment ?? "").trim() === "US DOLLAR" ? (firstSegment ?? "").trim() : description;
-}
+  return (lastSegment ?? "").trim() === "US DOLLAR"
+    ? (firstSegment ?? "").trim()
+    : description;
+};
 
 const SymbolName = ({ displaySymbol }: { displaySymbol: string }) => {
   const [firstPart, ...rest] = displaySymbol.split("/");

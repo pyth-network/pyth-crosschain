@@ -5,10 +5,9 @@ import * as dnum from "dnum";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 import { Button, TooltipTrigger, useLocale } from "react-aria-components";
-
-import Pyth from "./pyth.svg";
 import { DECIMALS } from "../../tokens";
 import { Tooltip } from "../Tooltip";
+import Pyth from "./pyth.svg";
 
 type Props = Omit<ComponentProps<typeof Button>, "children"> & {
   children: bigint;

@@ -1,12 +1,12 @@
 [
   {
-    "chain": "near",
     "address": "contract.wormhole_crypto.near",
+    "chain": "near",
     "type": "NearWormholeContract"
   },
   {
-    "chain": "near_testnet",
     "address": "wormhole.wormhole.testnet",
+    "chain": "near_testnet",
     "type": "NearWormholeContract"
   }
 ]

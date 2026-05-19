@@ -14,11 +14,6 @@ import {
   Tabs as UnstyledTabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import type { ElementType } from "react";
-
-import { AssetClassTable } from "./asset-class-table";
-import { ComingSoonList } from "./coming-soon-list";
-import styles from "./index.module.scss";
-import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
@@ -27,10 +22,14 @@ import { Cards } from "../Cards";
 import { LivePrice } from "../LivePrices";
 import { PriceCard } from "../PriceCard";
 import {
-  YesterdaysPricesProvider,
   PriceFeedChangePercent,
+  YesterdaysPricesProvider,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { AssetClassTable } from "./asset-class-table";
+import { ComingSoonList } from "./coming-soon-list";
+import styles from "./index.module.scss";
+import { PriceFeedsCard } from "./price-feeds-card";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -58,28 +57,29 @@ export const PriceFeeds = async () => {
       <h1 className={styles.header}>Price Feeds</h1>
       <Cards className={styles.cards}>
         <StatCard
-          variant="primary"
-          header="Active Feeds"
-          stat={priceFeeds.activeFeeds.length}
-          href={`#${PRICE_FEEDS_ANCHOR}`}
           corner={<ArrowLineDown />}
+          header="Active Feeds"
+          href={`#${PRICE_FEEDS_ANCHOR}`}
+          stat={priceFeeds.activeFeeds.length}
+          variant="primary"
         />
         <StatCard
           header="Frequency"
           stat={priceFeedsStaticConfig.updateFrequency}
         />
         <StatCard
-          header="Active Chains"
-          stat={activeChains.at(-1)?.chains}
-          href="https://docs.pyth.network/price-feeds/contract-addresses"
-          target="_blank"
           corner={<ArrowSquareOut weight="fill" />}
+          header="Active Chains"
+          href="https://docs.pyth.network/price-feeds/contract-addresses"
+          stat={activeChains.at(-1)?.chains}
+          target="_blank"
         />
         <StatCard
-          header="Asset Classes"
-          stat={Object.keys(numFeedsByAssetClass).length}
           corner={<ArrowsOutSimple />}
           drawer={{
+            contents: (
+              <AssetClassTable numFeedsByAssetClass={numFeedsByAssetClass} />
+            ),
             fill: true,
             title: (
               <>
@@ -87,10 +87,9 @@ export const PriceFeeds = async () => {
                 <Badge>{numAssetClasses}</Badge>
               </>
             ),
-            contents: (
-              <AssetClassTable numFeedsByAssetClass={numFeedsByAssetClass} />
-            ),
           }}
+          header="Asset Classes"
+          stat={Object.keys(numFeedsByAssetClass).length}
         />
       </Cards>
       <section className={styles.bigScreenBody}>
@@ -102,41 +101,41 @@ export const PriceFeeds = async () => {
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
           priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
-            key: feed.product.price_account,
-            symbol: feed.symbol,
-            exponent: feed.price.exponent,
-            numQuoters: feed.price.numQuoters,
             assetClass: feed.product.asset_type,
             description: feed.product.description,
             displaySymbol: feed.product.display_symbol,
+            exponent: feed.price.exponent,
             icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
+            key: feed.product.price_account,
+            numQuoters: feed.price.numQuoters,
+            symbol: feed.symbol,
           }))}
         />
       </section>
       <UnstyledTabs className={styles.smallScreenBody ?? ""}>
         <TabList
-          label="Price Feeds Navigation"
           items={[
             { children: "Price Feeds", id: "feeds" },
             { children: "Highlights", id: "highlights" },
           ]}
+          label="Price Feeds Navigation"
         />
-        <UnstyledTabPanel id="feeds" className={styles.tabPanel ?? ""}>
+        <UnstyledTabPanel className={styles.tabPanel ?? ""} id="feeds">
           <PriceFeedsCard
             id={PRICE_FEEDS_ANCHOR}
             priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
-              key: feed.product.price_account,
-              symbol: feed.symbol,
-              exponent: feed.price.exponent,
-              numQuoters: feed.price.numQuoters,
               assetClass: feed.product.asset_type,
               description: feed.product.description,
               displaySymbol: feed.product.display_symbol,
+              exponent: feed.price.exponent,
               icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
+              key: feed.product.price_account,
+              numQuoters: feed.price.numQuoters,
+              symbol: feed.symbol,
             }))}
           />
         </UnstyledTabPanel>
-        <UnstyledTabPanel id="highlights" className={styles.tabPanel ?? ""}>
+        <UnstyledTabPanel className={styles.tabPanel ?? ""} id="highlights">
           <FeaturedFeeds
             allComingSoon={priceFeeds.comingSoon}
             featuredComingSoon={featuredComingSoon}
@@ -169,46 +168,46 @@ const FeaturedFeeds = ({
       )}
     >
       <FeaturedFeedsCard
-        title="Featured"
-        icon={<Star />}
         feeds={featuredFeeds}
+        icon={<Star />}
         showPrices
+        title="Featured"
       />
     </YesterdaysPricesProvider>
     <FeaturedFeedsCard
-      title="Coming Soon"
-      icon={<ClockCountdown />}
       feeds={featuredComingSoon}
-      toolbarAlwaysOnTop
+      icon={<ClockCountdown />}
+      title="Coming Soon"
       toolbar={
         <Button
-          size="sm"
-          variant="outline"
           drawer={{
-            fill: true,
             bodyClassName: styles.comingSoonCard ?? "",
-            title: (
-              <>
-                <span>Coming Soon</span>
-                <Badge>{allComingSoon.length}</Badge>
-              </>
-            ),
             contents: (
               <ComingSoonList
                 comingSoonFeeds={allComingSoon.map((feed) => ({
                   assetClass: feed.product.asset_type,
                   description: feed.product.description,
                   displaySymbol: feed.product.display_symbol,
-                  symbol: feed.symbol,
                   icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
+                  symbol: feed.symbol,
                 }))}
               />
             ),
+            fill: true,
+            title: (
+              <>
+                <span>Coming Soon</span>
+                <Badge>{allComingSoon.length}</Badge>
+              </>
+            ),
           }}
+          size="sm"
+          variant="outline"
         >
           Show all
         </Button>
       }
+      toolbarAlwaysOnTop
     />
   </>
 );
@@ -249,8 +248,8 @@ const FeaturedFeedsCard = <T extends ElementType>({
           {showPrices && (
             <>
               <LivePrice
-                feedKey={feed.product.price_account}
                 cluster={Cluster.Pythnet}
+                feedKey={feed.product.price_account}
               />
               <PriceFeedChangePercent
                 className={styles.changePercent}

@@ -6,21 +6,20 @@ createImports("pyth-v2-imports", () => [
 ]);
 
 createRawStyles("v2-additional-reset", (theme) => ({
+  "*::selection": {
+    background: theme.resolveThemeColor(theme.colors.selection.background),
+    color: theme.resolveThemeColor(theme.colors.selection.foreground),
+  },
   body: {
-    "-webkit-font-smoothing": "antialiased",
     "-moz-osx-font-smoothing": "grayscale",
+    "-webkit-font-smoothing": "antialiased",
     background: theme.resolveThemeColor(theme.colors.background.primary),
     color: theme.resolveThemeColor(theme.colors.foreground),
-    scrollBehavior: "smooth",
     lineHeight: 1,
+    scrollBehavior: "smooth",
   },
 
   "body, html": {
     fontFamily: theme.tokens.fontFamilies.normal,
-  },
-
-  "*::selection": {
-    background: theme.resolveThemeColor(theme.colors.selection.background),
-    color: theme.resolveThemeColor(theme.colors.selection.foreground),
   },
 }));

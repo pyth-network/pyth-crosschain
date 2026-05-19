@@ -31,9 +31,9 @@ export const Status = ({
 }: Props) => (
   <span
     className={clsx(styles.status, className)}
-    data-variant={variant}
     data-size={size}
     data-style={style}
+    data-variant={variant}
     {...props}
   >
     <span className={styles.dot} />

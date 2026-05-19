@@ -3,21 +3,37 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Paginator as PaginatorComponent } from "./index.jsx";
 
 const meta = {
-  component: PaginatorComponent,
-  parameters: {
-    layout: "padded",
-  },
   argTypes: {
+    className: {
+      table: {
+        disable: true,
+      },
+    },
     currentPage: {
       control: "number",
       table: {
         category: "Page",
       },
     },
+    mkPageLink: {
+      table: {
+        disable: true,
+      },
+    },
     numPages: {
       control: "number",
       table: {
         category: "Page",
+      },
+    },
+    onPageChange: {
+      table: {
+        category: "Behavior",
+      },
+    },
+    onPageSizeChange: {
+      table: {
+        category: "Behavior",
       },
     },
     pageSize: {
@@ -31,26 +47,10 @@ const meta = {
         disable: true,
       },
     },
-    mkPageLink: {
-      table: {
-        disable: true,
-      },
-    },
-    className: {
-      table: {
-        disable: true,
-      },
-    },
-    onPageChange: {
-      table: {
-        category: "Behavior",
-      },
-    },
-    onPageSizeChange: {
-      table: {
-        category: "Behavior",
-      },
-    },
+  },
+  component: PaginatorComponent,
+  parameters: {
+    layout: "padded",
   },
 } satisfies Meta<typeof PaginatorComponent>;
 export default meta;

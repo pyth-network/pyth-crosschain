@@ -1,30 +1,24 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
 import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
-  getPythClusterApiUrl,
-  type PythCluster,
-} from "@pythnetwork/client/lib/cluster";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import {
+  ExecutePostedVaa,
   MultisigInstructionProgram,
   MultisigParser,
   WORMHOLE_ADDRESS,
-  ExecutePostedVaa,
 } from "..";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
 test("Wormhole multisig instruction parse: send message without governance payload", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
@@ -41,11 +35,11 @@ test("Wormhole multisig instruction parse: send message without governance paylo
     .postMessage(1, Buffer.from([0]), 1)
     .accounts({
       bridge: PublicKey.unique(),
-      message: PublicKey.unique(),
-      emitter: PublicKey.unique(),
-      sequence: PublicKey.unique(),
-      feeCollector: PublicKey.unique(),
       clock: PublicKey.unique(),
+      emitter: PublicKey.unique(),
+      feeCollector: PublicKey.unique(),
+      message: PublicKey.unique(),
+      sequence: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {
@@ -168,7 +162,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
 });
 
 test("Wormhole multisig instruction parse: send message with governance payload", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
@@ -184,8 +178,8 @@ test("Wormhole multisig instruction parse: send message with governance payload"
   const executePostedVaa: ExecutePostedVaa = new ExecutePostedVaa("pythnet", [
     SystemProgram.transfer({
       fromPubkey: PublicKey.unique(),
+      lamports: 890_880,
       toPubkey: PublicKey.unique(),
-      lamports: 890880,
     }),
   ]);
 
@@ -193,11 +187,11 @@ test("Wormhole multisig instruction parse: send message with governance payload"
     .postMessage(0, executePostedVaa.encode(), 0)
     .accounts({
       bridge: PublicKey.unique(),
-      message: PublicKey.unique(),
-      emitter: PublicKey.unique(),
-      sequence: PublicKey.unique(),
-      feeCollector: PublicKey.unique(),
       clock: PublicKey.unique(),
+      emitter: PublicKey.unique(),
+      feeCollector: PublicKey.unique(),
+      message: PublicKey.unique(),
+      sequence: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {
