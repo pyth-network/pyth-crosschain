@@ -53,12 +53,13 @@ export class WormholeTest extends BaseWrapper {
       { cell: createCellChain(encodedUpgrade), type: "slice" },
     ]);
 
+    // biome-ignore assist/source/useSortedKeys: property order is load-bearing — each TupleReader call consumes the next value off the stack
     return {
       action: result.stack.readNumber(),
       chain: result.stack.readNumber(),
       module: result.stack.readBigNumber(),
-      newGuardianSetIndex: result.stack.readNumber(),
       newGuardianSetKeys: parseGuardianSetKeys(result.stack.readCell()),
+      newGuardianSetIndex: result.stack.readNumber(),
     };
   }
 
