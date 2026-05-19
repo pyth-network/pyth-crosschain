@@ -10,8 +10,8 @@ on:
       - "**.scss"
       - "**.sass"
       - "**/package.json"
-      - "**/pnpm-lock.yaml"
-      - "**/pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - "**/tsconfig.json"
       - .github/workflows/ci-turbo-build.yml
   push:
