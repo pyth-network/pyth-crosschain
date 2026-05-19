@@ -47,7 +47,7 @@ export default defineConfig({
         dark: "github-dark",
       },
     },
-    remarkPlugins: [remarkMath],
-    rehypePlugins: (v) => [rehypeKatex, rehypeCode, remarkMdxMermaid, ...v],
+    remarkPlugins: [remarkMath, remarkMdxMermaid],
+    rehypePlugins: (v) => [rehypeKatex, rehypeCode, ...v],
   },
 });
