@@ -13,7 +13,10 @@ const remarkMermaidImg = () => (tree: { children?: unknown[] }) => {
   const walk = (node: Record<string, unknown>) => {
     if (node.type === "code" && node.lang === "mermaid") {
       const source = String(node.value ?? "");
-      const encoded = Buffer.from(source, "utf8").toString("base64");
+      // base64url (RFC 4648 §5) keeps the encoded string URL-path-safe.
+      // Standard base64 can emit `/` which would split the mermaid.ink
+      // path and cause a 404; `+` is also unsafe in URL paths.
+      const encoded = Buffer.from(source, "utf8").toString("base64url");
       node.type = "mdxJsxFlowElement";
       node.name = "MermaidDiagram";
       node.attributes = [
