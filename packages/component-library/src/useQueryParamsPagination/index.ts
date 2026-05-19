@@ -53,7 +53,7 @@ export const useQueryParamFilterPagination = <T>(
   const updateQuery = useCallback(
     (...params: Parameters<typeof setQuery>) => {
       setQuery(...params).catch((error: unknown) => {
-        logger.error("Failed to update query", error);
+        logger.error(error);
       });
     },
     [setQuery, logger],
