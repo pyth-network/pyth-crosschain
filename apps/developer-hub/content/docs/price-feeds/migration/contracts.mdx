@@ -4,6 +4,7 @@ description: "Per-chain Pyth Classic Contract addresses for the Pyth Core to Pyt
 full: true
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
 import MigrationContractsTable from "../../../../src/components/MigrationContractsTable";
 
 These are the **Pyth Classic Contract** addresses on each chain. To upgrade from Pyth Core to Pyth Pro, swap your existing Pyth contract address for the one listed below for your chain. The interface is unchanged — no other code changes are needed.
@@ -17,3 +18,8 @@ See the [migration guide](/price-feeds/migration) for the full upgrade path.
 ## Testnets
 
 <MigrationContractsTable isMainnet={false} />
+
+<Callout type="info">
+  **Don't see your chain?** We're adding chains regularly and can discuss
+  custom arrangements. [Contact the team →](mailto:contact@pyth.network)
+</Callout>
