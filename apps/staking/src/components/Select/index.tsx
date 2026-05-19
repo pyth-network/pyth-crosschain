@@ -34,8 +34,8 @@ export const Select = <T extends string | number>({
 }: Props<T>) => (
   <BaseSelect
     className={clsx("flex flex-row items-center gap-2", className)}
-    onSelectionChange={onSelectionChange}
     // @ts-expect-error react-aria coerces everything to Key for some reason...
+    onSelectionChange={onSelectionChange}
     selectedKey={selectedKey}
     {...props}
   >

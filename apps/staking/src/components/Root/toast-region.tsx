@@ -60,10 +60,10 @@ const Toast = (props: ComponentProps<typeof BaseToast<ToastContentType>>) => {
     <AnimatePresence>
       {isVisible && (
         <MotionBaseToast
+          animate={{ y: 0 }}
           // @ts-expect-error the framer-motion types don't currently expose
           // props like `className` correctly for some reason, even though this
           // works correctly...
-          animate={{ y: 0 }}
           className="pt-4"
           exit={{ transition: { duration: 0.1, ease: "linear" }, y: "-100%" }}
           initial={{ y: "-100%" }}
