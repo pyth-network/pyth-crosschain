@@ -9,7 +9,7 @@ on:
       - apps/hermes/client/rust/**
 
 jobs:
-  lazer-rust-test-suite:
+  hermes-client-rust-test-suite:
     name: Hermes Client Rust Test Suite
     runs-on: ubuntu-22.04
     defaults:

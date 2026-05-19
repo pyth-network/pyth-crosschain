@@ -9,8 +9,12 @@ export type TxResult = {
   info: unknown; // chain specific info
 };
 
-// "stable" and "beta" are for pythnet and "lazer-staging" and "lazer-prod" are for lazer deployments
-export type DeploymentType = "stable" | "beta" | "lazer-staging" | "lazer-prod";
+// "stable" and "beta" are for pythnet and "pro-compatible-staging" and "pro-compatible-production" are for Pro compatible deployments
+export type DeploymentType =
+  | "stable"
+  | "beta"
+  | "pro-compatible-staging"
+  | "pro-compatible-production";
 export type PrivateKey = string & { __type: "PrivateKey" };
 
 function checkIsPrivateKey(key: string): asserts key is PrivateKey {
@@ -27,8 +31,8 @@ export function toDeploymentType(type: string): DeploymentType {
   if (
     type === "stable" ||
     type === "beta" ||
-    type === "lazer-staging" ||
-    type === "lazer-prod"
+    type === "pro-compatible-staging" ||
+    type === "pro-compatible-production"
   )
     return type;
   throw new Error(`Invalid deployment type ${type}`);
@@ -141,7 +145,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
     initialGuardianSet: string[]; // 20 byte addresses in 40 char hex format
-    // The quorum threshold (pythnet = 2/3+1, lazer = 1/2+1)
+    // The quorum threshold (pythnet = 2/3+1, pro compatible = 1/2+1)
     quorum: "two-third" | "half";
   };
 } {
@@ -211,7 +215,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         quorum: "two-third",
       },
     };
-  else if (deploymentType === "lazer-staging")
+  else if (deploymentType === "pro-compatible-staging")
     return {
       dataSources: [
         {
@@ -238,7 +242,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         quorum: "half",
       },
     };
-  else if (deploymentType === "lazer-prod")
+  else if (deploymentType === "pro-compatible-production")
     return {
       dataSources: [
         {

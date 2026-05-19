@@ -11,9 +11,9 @@ import { BN, Wallet } from "@coral-xyz/anchor";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   getConfigPda,
-  LAZER_PUSH_ORACLE_PROGRAM_ID,
-  LAZER_RECEIVER_PROGRAM_ID,
-  LAZER_WORMHOLE_PROGRAM_ID,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+  PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+  PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
   PythSolanaReceiver,
 } from "@pythnetwork/pyth-solana-receiver";
 import { sendTransactions } from "@pythnetwork/solana-utils";
@@ -94,11 +94,19 @@ function loadKeypair(keypairPath: string): Keypair {
 const PROGRAMS_TO_DEPLOY = [
   [
     "wormhole_core_bridge_solana",
-    LAZER_WORMHOLE_PROGRAM_ID,
+    PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
     wormholeCoreBridgeIdl,
   ],
-  ["pyth_solana_receiver", LAZER_RECEIVER_PROGRAM_ID, pythSolanaReceiverIdl],
-  ["pyth_push_oracle", LAZER_PUSH_ORACLE_PROGRAM_ID, pythPushOracleIdl],
+  [
+    "pyth_solana_receiver",
+    PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+    pythSolanaReceiverIdl,
+  ],
+  [
+    "pyth_push_oracle",
+    PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+    pythPushOracleIdl,
+  ],
 ] as const;
 
 type ProgramName = (typeof PROGRAMS_TO_DEPLOY)[number][0];
@@ -157,7 +165,7 @@ async function deployProgram(
 
   if (!existsSync(soPath)) {
     throw new Error(
-      `Missing program binary for ${program} at ${soPath}. Build it with cargo-build-sbf --features lazer.`,
+      `Missing program binary for ${program} at ${soPath}. Build it with cargo-build-sbf --features pro-compatible.`,
     );
   }
   if (!existsSync(keypairPath)) {
@@ -335,7 +343,9 @@ async function initializeWormholeReceiver(
   payer: Keypair,
   programId: PublicKey,
 ): Promise<void> {
-  const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
+  const deploymentConfig = getDefaultDeploymentConfig(
+    "pro-compatible-production",
+  );
   const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(programId);
   const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
 
@@ -388,7 +398,9 @@ async function initializePythReceiver(
     return;
   }
 
-  const deploymentConfig = getDefaultDeploymentConfig("lazer-prod");
+  const deploymentConfig = getDefaultDeploymentConfig(
+    "pro-compatible-production",
+  );
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
@@ -441,7 +453,7 @@ async function updatePriceFeed(
 
   if (process.env.HERMES_ACCESS_TOKEN === undefined) {
     throw new Error(
-      "This step requires a Lazer access token. Please set the HERMES_ACCESS_TOKEN environment variable.",
+      "This step requires a Pyth Pro access token. Please set the HERMES_ACCESS_TOKEN environment variable.",
     );
   }
   const hermesClient = new HermesClient("https://pyth.dourolabs.app/hermes", {
@@ -642,21 +654,21 @@ async function main() {
   await initializeWormholeReceiver(
     connection,
     keypair,
-    LAZER_WORMHOLE_PROGRAM_ID,
+    PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
   );
   await initializePythReceiver(
     connection,
     keypair,
-    LAZER_WORMHOLE_PROGRAM_ID,
-    LAZER_RECEIVER_PROGRAM_ID,
+    PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+    PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
     vault,
   );
   await updatePriceFeed(
     connection,
     keypair,
-    LAZER_WORMHOLE_PROGRAM_ID,
-    LAZER_RECEIVER_PROGRAM_ID,
-    LAZER_PUSH_ORACLE_PROGRAM_ID,
+    PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+    PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+    PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
   );
 
   if (argv.final) {

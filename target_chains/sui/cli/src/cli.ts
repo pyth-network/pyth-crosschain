@@ -173,7 +173,7 @@ yargs
           },
           "deployment-type": {
             demandOption: true,
-            desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+            desc: "Deployment type to use. Can be 'stable', 'beta', 'pro-compatible-staging', or 'pro-compatible-production'",
             type: "string",
           },
           path: OPTIONS.path,
