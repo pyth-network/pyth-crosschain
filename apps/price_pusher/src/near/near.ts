@@ -101,7 +101,13 @@ export class NearPricePusher implements IPricePusher {
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
         const is_success = Object.values(outcome.receipts_outcome).reduce(
           (is_success, receipt) => {
-            if (Object.hasOwn(receipt.outcome.status, "Failure")) {
+            if (
+              // biome-ignore lint/suspicious/noPrototypeBuiltins: receipt.outcome.status is ExecutionStatus | ExecutionStatusBasic (string union), which Object.hasOwn rejects at the type level
+              Object.prototype.hasOwnProperty.call(
+                receipt.outcome.status,
+                "Failure",
+              )
+            ) {
               failureMessages.push(receipt.outcome.status);
               return false;
             }
