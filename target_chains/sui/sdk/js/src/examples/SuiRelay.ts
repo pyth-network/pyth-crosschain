@@ -4,8 +4,8 @@ import { Transaction } from "@mysten/sui/transactions";
 import { Buffer } from "buffer";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiPythClient } from "../client";
-import { SuiPriceServiceConnection } from "../index";
+import { SuiPythClient } from "../client.js";
+import { SuiPriceServiceConnection } from "../index.js";
 
 const argvPromise = yargs(hideBin(process.argv))
   .option("feed-id", {
@@ -18,6 +18,11 @@ const argvPromise = yargs(hideBin(process.argv))
   .option("hermes", {
     demandOption: true,
     description: "Endpoint URL for Hermes. e.g: https://hermes.pyth.network",
+    type: "string",
+  })
+  .option("hermes-access-token", {
+    demandOption: false,
+    description: "Access token for Hermes.",
     type: "string",
   })
   .option("full-node", {
@@ -46,9 +51,10 @@ async function run() {
   }
 
   const argv = await argvPromise;
+  const hermesAccessToken = argv["hermes-access-token"];
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new SuiPriceServiceConnection(argv["hermes"]);
+  const connection = new SuiPriceServiceConnection(argv["hermes"], hermesAccessToken? { accessToken: hermesAccessToken } : undefined);
   const feeds = argv["feed-id"];
   if (!Array.isArray(feeds)) {
     throw new Error("Not a valid input!");
@@ -88,7 +94,7 @@ async function run() {
   const wallet = Ed25519Keypair.fromSecretKey(
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
-  tx.setGasBudget(1_000_000);
+  tx.setGasBudget(100_000_000);
   const result = await provider.signAndExecuteTransaction({
     options: {
       showEffects: true,
