@@ -337,6 +337,14 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "NFALCON/USD.RR",
+      "account_address": "6MKpWqGCLcwURBGKaCQiGem1hQVUsSixymRZcPvfnhRC",
+      "id": "323647322045edff1a0928dca6628169a57afdea43a5f0d948115e3dcae9c1fb",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "CASH/RD.RR",
       "account_address": "7ELVkNXhZLJGdwPGps8sEBgs583TewjZoRzgf9Zdp5T8",
       "id": "64c74ffd61574170cfaee65c54c8810adcf83f6c31f3c256d9a290dcbf4ff1a9",
@@ -365,7 +373,8 @@
       "account_address": "AqSwMCZYnEdnGoFCSLtWVnWf4xyCJuePcztmYWq8SBwp",
       "id": "8ed858a2214e892c9371694fb6c8a9037b6ed4052c4edf209f8cb988484e81d9",
       "time_difference": 60,
-      "price_deviation": 0.5
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
     },
     {
       "alias": "WSTUSR/USR.RR",

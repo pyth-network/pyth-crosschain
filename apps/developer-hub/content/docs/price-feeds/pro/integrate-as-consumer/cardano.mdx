@@ -126,13 +126,15 @@ The `pyth_id` below is the Pyth deployment policy ID for your network. The Pyth 
 <Tab value="Evolution SDK">
 
 ```typescript copy
-import { ScriptHash } from "@evolution-sdk/evolution";
+import { Client, preprod, ScriptHash } from "@evolution-sdk/evolution";
 import {
   getPythScriptHash,
   getPythState,
 } from "@pythnetwork/pyth-lazer-cardano-js";
 
-const client = createClient({ network, provider });
+const client = Client.make(preprod).withKoios({
+  baseUrl: "https://preprod.koios.rest/api/v1",
+});
 
 const pythState = await getPythState(POLICY_ID, client);
 const pythScript = getPythScriptHash(pythState);
@@ -141,9 +143,8 @@ const pythScript = getPythScriptHash(pythState);
 // trigger 0-withdrawal on the verification script, together with the price
 // update as a redeemer, to perform price verification on-chain.
 
-const wallet = client.attachWallet({
+const wallet = client.withSeed({
   mnemonic: CARDANO_MNEMONIC,
-  type: "seed"
 });
 
 const now = BigInt(Date.now());

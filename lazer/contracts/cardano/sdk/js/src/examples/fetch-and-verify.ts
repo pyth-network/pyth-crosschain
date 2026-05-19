@@ -1,71 +1,23 @@
 /** biome-ignore-all lint/suspicious/noConsole: code example */
 
 import process from "node:process";
-import type { ProviderOnlyClient } from "@evolution-sdk/evolution";
 import {
-  createClient,
+  Client,
+  mainnet,
+  preprod,
+  preview,
   ScriptHash,
   TransactionHash,
 } from "@evolution-sdk/evolution";
-import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
+import type { ReadClient } from "@evolution-sdk/evolution/sdk/client/Client";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { getPythScriptHash, getPythState } from "../index.js";
 
-/** Cardano network identifier. */
-export type Network = Exclude<NetworkId, number>;
+const networks = { mainnet, preprod, preview };
 
-/** Provider configuration for connecting to a Cardano node. */
-export type Provider =
-  | {
-      type: "blockfrost";
-      projectId: string;
-    }
-  | {
-      type: "koios";
-      token?: string;
-    }
-  | {
-      type: "maestro";
-      apiKey: string;
-    };
-
-function resolveBaseUrl(network: Network, provider: Provider): string {
-  switch (provider.type) {
-    case "blockfrost": {
-      return `https://cardano-${network}.blockfrost.io/api/v0`;
-    }
-    case "koios": {
-      return `https://${
-        {
-          mainnet: "api",
-          preprod: "preprod",
-          preview: "preview",
-        }[network]
-      }.koios.rest/api/v1`;
-    }
-    case "maestro": {
-      return `https://${network}.gomaestro-api.org/v1`;
-    }
-  }
-}
-
-/**
- * Create Cardano client using Evolution SDK.
- * @param network public network to use
- * @param provider API provider and token
- * @returns
- */
-export function createEvolutionClient(
-  network: Network,
-  provider: Provider,
-): ProviderOnlyClient {
-  return createClient({
-    network,
-    provider: { ...provider, baseUrl: resolveBaseUrl(network, provider) },
-  });
-}
+type Network = keyof typeof networks;
 
 const {
   network,
@@ -75,7 +27,7 @@ const {
   providerToken,
 } = await yargs(hideBin(process.argv))
   .option("network", {
-    choices: ["mainnet", "preprod", "preview"] as const,
+    choices: Object.keys(networks) as Network[],
     default: "preprod" as const,
     description: "Cardano network name, e.g. 'preprod'",
   })
@@ -102,33 +54,39 @@ const {
   .help()
   .parseAsync();
 
-let provider: Provider;
+let evolutionClient: ReadClient;
 switch (providerType) {
   case "blockfrost": {
     if (!providerToken) {
       throw new Error("missing --provider-token");
     }
-    provider = {
+    evolutionClient = Client.make(networks[network]).withBlockfrost({
+      baseUrl: `https://cardano-${network}.blockfrost.io/api/v0`,
       projectId: providerToken,
-      type: providerType,
-    };
+    });
     break;
   }
   case "koios": {
-    provider = {
-      type: providerType,
+    evolutionClient = Client.make(networks[network]).withKoios({
+      baseUrl: `https://${
+        {
+          mainnet: "api",
+          preprod: "preprod",
+          preview: "preview",
+        }[network]
+      }.koios.rest/api/v1`,
       ...(providerToken ? { token: providerToken } : {}),
-    };
+    });
     break;
   }
   case "maestro": {
     if (!providerToken) {
       throw new Error("missing --provider-token");
     }
-    provider = {
+    evolutionClient = Client.make(networks[network]).withMaestro({
       apiKey: providerToken,
-      type: providerType,
-    };
+      baseUrl: `https://${network}.gomaestro-api.org/v1`,
+    });
     break;
   }
 }
@@ -162,9 +120,8 @@ console.log("Fetched update bytes:", update.toString("hex"));
 if (!process.env.CARDANO_MNEMONIC) {
   throw new Error("CARDANO_MNEMONIC environment variable not set");
 }
-const client = createEvolutionClient(network, provider);
 
-const pythState = await getPythState(POLICY_ID, client);
+const pythState = await getPythState(POLICY_ID, evolutionClient);
 const pythScript = getPythScriptHash(pythState);
 
 console.log("Active withdraw script hash:", pythScript);
@@ -173,9 +130,8 @@ console.log("Active withdraw script hash:", pythScript);
 // trigger 0-withdrawal on the verification script, together with the price
 // update as a redeemer, to perform price verification on-chain.
 
-const wallet = client.attachWallet({
+const wallet = evolutionClient.withSeed({
   mnemonic: process.env.CARDANO_MNEMONIC,
-  type: "seed",
 });
 
 const now = BigInt(Date.now());
@@ -197,6 +153,6 @@ const digest = await builtTx.signAndSubmit();
 
 console.log("Transaction Hash:", TransactionHash.toHex(digest));
 
-await client.awaitTx(digest);
+await evolutionClient.awaitTx(digest);
 
 console.log("Transaction successful.");
