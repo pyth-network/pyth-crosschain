@@ -1,16 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
+import { ThemeV2 } from "../../theme";
 import { Badge } from "./Badge";
 import { BadgeSizes, BadgeStyles } from "./types";
-import { ThemeV2 } from "../../theme";
 
 const badgeVariants = Object.keys(
   ThemeV2.colors.states,
 ) as (keyof typeof ThemeV2.colors.states)[];
 
 const meta = {
-  title: "V2/Badge",
-  component: Badge,
   args: {
     children: "Badge",
     size: "md",
@@ -33,9 +30,11 @@ const meta = {
       options: badgeVariants,
     },
   },
+  component: Badge,
   parameters: {
     layout: "centered",
   },
+  title: "V2/Badge",
 } satisfies Meta<typeof Badge>;
 
 export default meta;
@@ -44,6 +43,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Variants: Story = {
+  args: {
+    children: undefined,
+  },
   render: (args) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
       {badgeVariants.map((variant) => (
@@ -53,12 +55,12 @@ export const Variants: Story = {
       ))}
     </div>
   ),
-  args: {
-    children: undefined,
-  },
 };
 
 export const Styles: Story = {
+  args: {
+    children: undefined,
+  },
   render: (args) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
       {BadgeStyles.map((style) => (
@@ -68,12 +70,12 @@ export const Styles: Story = {
       ))}
     </div>
   ),
-  args: {
-    children: undefined,
-  },
 };
 
 export const Sizes: Story = {
+  args: {
+    children: undefined,
+  },
   render: (args) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
       {BadgeSizes.map((size) => (
@@ -83,7 +85,4 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
-  args: {
-    children: undefined,
-  },
 };

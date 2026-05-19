@@ -32,8 +32,8 @@ export function useBybitWebSocket(): UseDataProviderSocketHookReturnType {
       if (!isAllowedSymbol(selectedSource)) return;
 
       const subscribeMessage = {
-        op: "subscribe",
         args: [`orderbook.1.${selectedSource}`],
+        op: "subscribe",
       };
       socket.json(subscribeMessage);
     },

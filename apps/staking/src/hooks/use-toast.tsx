@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, useContext, useCallback, useMemo } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
 import { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components";
 
 export enum ToastType {
@@ -9,11 +9,11 @@ export enum ToastType {
   Error,
 }
 const Toast = {
+  ErrorToast: (error: unknown) => ({ error, type: ToastType.Error as const }),
   Success: (message: ReactNode) => ({
-    type: ToastType.Success as const,
     message,
+    type: ToastType.Success as const,
   }),
-  ErrorToast: (error: unknown) => ({ type: ToastType.Error as const, error }),
 };
 export type Toast = ReturnType<(typeof Toast)[keyof typeof Toast]>;
 
@@ -48,7 +48,7 @@ export const ToastProvider = (props: ToastContextProps) => {
     [queue],
   );
 
-  return <ToastContext.Provider value={{ queue, success, error }} {...props} />;
+  return <ToastContext.Provider value={{ error, queue, success }} {...props} />;
 };
 
 export const useToast = () => {

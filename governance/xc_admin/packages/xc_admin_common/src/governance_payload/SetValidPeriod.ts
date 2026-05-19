@@ -1,7 +1,7 @@
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
 import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 /** Set the valid period (the default amount of time in which prices are considered fresh) to the provided value */
 export class SetValidPeriod extends PythGovernanceActionImpl {

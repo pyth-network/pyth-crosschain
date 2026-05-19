@@ -1,18 +1,17 @@
 "use client";
 
 import {
-  getEvmChainRpcUrl,
   allEvmChainIds,
+  getEvmChainRpcUrl,
 } from "@pythnetwork/contract-manager/utils/utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import * as chains from "viem/chains";
-import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
-
-import { chainOverrides } from "./chain-overrides";
+import { createConfig, http, useChainId, WagmiProvider } from "wagmi";
 import { metadata } from "../../metadata";
+import { chainOverrides } from "./chain-overrides";
 
 const CHAINS = allEvmChainIds
   .map((id) => {
@@ -44,12 +43,12 @@ export const EvmProvider = ({
   <WagmiProvider
     config={createConfig(
       getDefaultConfig({
+        appDescription: metadata.description,
+        appIcon: metadata.icons.apple.url,
+        appName: metadata.applicationName,
+        appUrl: metadata.metadataBase.toString(),
         chains: CHAINS,
         transports: TRANSPORTS,
-        appName: metadata.applicationName,
-        appDescription: metadata.description,
-        appUrl: metadata.metadataBase.toString(),
-        appIcon: metadata.icons.apple.url,
         walletConnectProjectId: walletConnectProjectId ?? "",
       }),
     )}
@@ -66,11 +65,11 @@ const ConnectKitProviderWrapper = ({ children }: { children: ReactNode }) => {
 
   return (
     <ConnectKitProvider
-      mode={resolvedTheme as "light" | "dark"}
-      options={{ initialChainId: chainId }}
       customTheme={{
         "--ck-font-family": "var(--font-sans)",
       }}
+      mode={resolvedTheme as "light" | "dark"}
+      options={{ initialChainId: chainId }}
     >
       {children}
     </ConnectKitProvider>

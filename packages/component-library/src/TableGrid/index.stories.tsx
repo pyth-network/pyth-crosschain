@@ -7,19 +7,10 @@ import { dummyRowData } from "./dummy-row-data";
 import { TableGrid as TableGridComponent } from "./index.jsx";
 
 const meta = {
-  component: TableGridComponent,
-  parameters: {
-    layout: "padded",
-  },
   argTypes: {
-    columnDefs: {
+    cardProps: {
       table: {
-        disable: true,
-      },
-    },
-    rowData: {
-      table: {
-        disable: true,
+        category: "Outer Card",
       },
     },
     className: {
@@ -27,9 +18,9 @@ const meta = {
         disable: true,
       },
     },
-    cardProps: {
+    columnDefs: {
       table: {
-        category: "Outer Card",
+        disable: true,
       },
     },
     loading: {
@@ -38,33 +29,42 @@ const meta = {
         category: "State",
       },
     },
+    rowData: {
+      table: {
+        disable: true,
+      },
+    },
+  },
+  component: TableGridComponent,
+  parameters: {
+    layout: "padded",
   },
 } satisfies Meta<typeof TableGridComponent>;
 export default meta;
 
 const PriceCellRenderer = ({ value }: { value: number }) => (
-  <span style={{ height: "100%", display: "flex", alignItems: "center" }}>
+  <span style={{ alignItems: "center", display: "flex", height: "100%" }}>
     {`$${value.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
       maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
     })}`}
   </span>
 );
 
 const ConfidenceCellRenderer = ({ value }: { value: number }) => (
   <span
-    style={{ height: "100%", display: "flex", alignItems: "center" }}
+    style={{ alignItems: "center", display: "flex", height: "100%" }}
   >{`+/- ${value.toFixed(2)}%`}</span>
 );
 
 const FeedCellRenderer = ({ value }: { value: string }) => (
-  <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-    <SymbolPairTag displaySymbol={value} icon={undefined} description={value} />
+  <div style={{ alignItems: "center", display: "flex", height: "100%" }}>
+    <SymbolPairTag description={value} displaySymbol={value} icon={undefined} />
   </div>
 );
 
 const FeedCellRendererLoading = () => (
-  <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+  <div style={{ alignItems: "center", display: "flex", height: "100%" }}>
     <SymbolPairTag isLoading />
   </div>
 );
@@ -72,30 +72,30 @@ const FeedCellRendererLoading = () => (
 const args = {
   columnDefs: [
     {
-      headerName: "ID",
       field: "id",
+      headerName: "ID",
     },
     {
-      headerName: "PRICE FEED",
-      field: "feed",
       cellRenderer: FeedCellRenderer,
-      loadingCellRenderer: FeedCellRendererLoading,
+      field: "feed",
       flex: 2,
+      headerName: "PRICE FEED",
+      loadingCellRenderer: FeedCellRendererLoading,
     },
     {
-      headerName: "PRICE",
+      cellRenderer: PriceCellRenderer,
       field: "price",
       flex: 3,
-      cellRenderer: PriceCellRenderer,
+      headerName: "PRICE",
     },
     {
-      headerName: "CONFIDENCE",
-      field: "confidence",
       cellRenderer: ConfidenceCellRenderer,
+      field: "confidence",
+      headerName: "CONFIDENCE",
     },
   ],
-  rowHeight: 70,
   rowData: dummyRowData,
+  rowHeight: 70,
 };
 
 export const TableGrid = {
@@ -103,22 +103,22 @@ export const TableGrid = {
 } satisfies StoryObj<typeof TableGridComponent>;
 
 export const PriceFeedsCard = {
-  render: (props) => {
-    return <TableGridComponent {...props} />;
-  },
   args: {
     ...args,
-    pagination: true,
     cardProps: {
       icon: <ChartLine />,
       title: (
         <>
           <span>Price Feeds</span>
-          <Badge style="filled" variant="neutral" size="md">
+          <Badge size="md" style="filled" variant="neutral">
             {args.rowData.length}
           </Badge>
         </>
       ),
     },
+    pagination: true,
+  },
+  render: (props) => {
+    return <TableGridComponent {...props} />;
   },
 } satisfies StoryObj<typeof TableGridComponent>;

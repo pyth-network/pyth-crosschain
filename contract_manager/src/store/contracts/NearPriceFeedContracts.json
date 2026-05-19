@@ -1,17 +1,17 @@
 [
   {
-    "chain": "near",
     "address": "pyth-oracle.near",
-    "governanceDataSourceChain": 1,
+    "chain": "near",
     "governanceDataSourceAddress": "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+    "governanceDataSourceChain": 1,
     "lastExecutedGovernanceSequence": 408,
     "type": "NearPriceFeedContract"
   },
   {
-    "chain": "near_testnet",
     "address": "pyth-oracle.testnet",
-    "governanceDataSourceChain": 1,
+    "chain": "near_testnet",
     "governanceDataSourceAddress": "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+    "governanceDataSourceChain": 1,
     "lastExecutedGovernanceSequence": 100,
     "type": "NearPriceFeedContract"
   }

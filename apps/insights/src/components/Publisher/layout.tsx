@@ -17,15 +17,15 @@ import { Suspense } from "react";
 
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import {
-  getPublisherRankingHistory,
   getPublisherAverageScoreHistory,
+  getPublisherRankingHistory,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import {
+  CLUSTER_NAMES,
+  Cluster,
   ClusterToName,
   parseCluster,
-  Cluster,
-  CLUSTER_NAMES,
 } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { Cards } from "../Cards";
@@ -34,21 +34,21 @@ import { ChangeValue } from "../ChangeValue";
 import { ChartCard } from "../ChartCard";
 import { Explain } from "../Explain";
 import {
-  ExplainAverage,
   ExplainActive,
+  ExplainAverage,
   ExplainInactive,
 } from "../Explanations";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
+import { FormattedTokens } from "../FormattedTokens";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
-import { getPriceFeeds } from "./get-price-feeds";
-import styles from "./layout.module.scss";
-import { FormattedTokens } from "../FormattedTokens";
 import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./layout.module.scss";
 import { OisApyHistory } from "./ois-apy-history";
 import { PublisherConformanceReport } from "./publisher-conformance-report";
 
@@ -72,15 +72,13 @@ export const PublisherLayout = async ({ children, params }: Props) => {
         <PublisherHeader cluster={parsedCluster} publisherKey={key} />
         <TabRoot>
           <Tabs
-            label="Price Feed Navigation"
             items={[
               {
+                children: "Performance",
                 id: "(performance)",
                 segment: undefined,
-                children: "Performance",
               },
               {
-                segment: "price-feeds",
                 children: (
                   <div className={styles.priceFeedsTabLabel}>
                     <span>Price Feeds</span>
@@ -91,8 +89,10 @@ export const PublisherLayout = async ({ children, params }: Props) => {
                     </Badge>
                   </div>
                 ),
+                segment: "price-feeds",
               },
             ]}
+            label="Price Feed Navigation"
           />
           <TabPanel className={styles.body ?? ""}>{children}</TabPanel>
         </TabRoot>
@@ -115,12 +115,12 @@ const PublisherHeader = ({
       <div className={styles.breadcrumbRow}>
         <Breadcrumbs
           className={styles.breadcrumbs ?? ""}
-          label="Breadcrumbs"
           items={[
             { href: "/", label: "Home" },
             { href: "/publishers", label: "Publishers" },
             { label: <PublisherKey publisherKey={publisherKey} /> },
           ]}
+          label="Breadcrumbs"
         />
       </div>
       <div className={styles.titleRow}>
@@ -128,13 +128,13 @@ const PublisherHeader = ({
           cluster={cluster}
           publisherKey={publisherKey}
           {...(knownPublisher && {
-            name: knownPublisher.name,
             icon: <PublisherIcon knownPublisher={knownPublisher} />,
+            name: knownPublisher.name,
           })}
         />
         <PublisherConformanceReport
-          publisherKey={publisherKey}
           cluster={CLUSTER_NAMES[cluster]}
+          publisherKey={publisherKey}
         />
       </div>
 
@@ -197,8 +197,6 @@ type RankingCardImplProps =
 
 const RankingCardImpl = (props: RankingCardImplProps) => (
   <ChartCard
-    variant="primary"
-    header="Publisher Ranking"
     corner={
       <Explain size="xs" title="Publisher Ranking">
         <p>
@@ -211,14 +209,22 @@ const RankingCardImpl = (props: RankingCardImplProps) => (
       props.isLoading
         ? []
         : props.rankingHistory.map(({ timestamp, rank }) => ({
-            x: timestamp,
-            y: rank,
             displayX: (
               <span className={styles.activeDate}>
                 <FormattedDate value={timestamp} />
               </span>
             ),
+            x: timestamp,
+            y: rank,
           }))
+    }
+    header="Publisher Ranking"
+    miniStat={
+      props.isLoading ? (
+        <Skeleton width={14} />
+      ) : (
+        <RankingChange rankingHistory={props.rankingHistory} />
+      )
     }
     stat={
       props.isLoading ? (
@@ -227,13 +233,7 @@ const RankingCardImpl = (props: RankingCardImplProps) => (
         props.rankingHistory.at(-1)?.rank
       )
     }
-    miniStat={
-      props.isLoading ? (
-        <Skeleton width={14} />
-      ) : (
-        <RankingChange rankingHistory={props.rankingHistory} />
-      )
-    }
+    variant="primary"
   />
 );
 
@@ -282,14 +282,11 @@ type ScoreCardImplProps =
 
 const ScoreCardImpl = (props: ScoreCardImplProps) => (
   <ChartCard
-    header="Average Score"
     corner={<ExplainAverage />}
     data={
       props.isLoading
         ? []
         : props.averageScoreHistory.map(({ time, averageScore }) => ({
-            x: time,
-            y: averageScore,
             displayX: (
               <span className={styles.activeDate}>
                 <FormattedDate value={time} />
@@ -301,20 +298,23 @@ const ScoreCardImpl = (props: ScoreCardImplProps) => (
                 value={averageScore}
               />
             ),
+            x: time,
+            y: averageScore,
           }))
+    }
+    header="Average Score"
+    miniStat={
+      props.isLoading ? (
+        <Skeleton width={20} />
+      ) : (
+        <ScoreChange averageScoreHistory={props.averageScoreHistory} />
+      )
     }
     stat={
       props.isLoading ? (
         <Skeleton width={20} />
       ) : (
         <CurrentAverageScore averageScoreHistory={props.averageScoreHistory} />
-      )
-    }
-    miniStat={
-      props.isLoading ? (
-        <Skeleton width={20} />
-      ) : (
-        <ScoreChange averageScoreHistory={props.averageScoreHistory} />
       )
     }
   />
@@ -374,11 +374,11 @@ const ActiveFeedsCard = async ({
 
   return publisher ? (
     <ActiveFeedsCardImpl
-      cluster={cluster}
-      publisherKey={publisherKey}
       activeFeeds={publisher.activeFeeds}
-      inactiveFeeds={publisher.inactiveFeeds}
       allFeeds={priceFeeds.length}
+      cluster={cluster}
+      inactiveFeeds={publisher.inactiveFeeds}
+      publisherKey={publisherKey}
     />
   ) : (
     notFound()
@@ -410,6 +410,26 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         Inactive Feeds
       </>
     }
+    miniStat1={
+      <RankingMiniStat
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              allFeeds: props.allFeeds,
+              stat: props.activeFeeds,
+            })}
+      />
+    }
+    miniStat2={
+      <RankingMiniStat
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              allFeeds: props.allFeeds,
+              stat: props.inactiveFeeds,
+            })}
+      />
+    }
     stat1={
       props.isLoading ? (
         <Skeleton width={10} />
@@ -434,32 +454,12 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         </Link>
       )
     }
-    miniStat1={
-      <RankingMiniStat
-        {...(props.isLoading
-          ? { isLoading: true }
-          : {
-              stat: props.activeFeeds,
-              allFeeds: props.allFeeds,
-            })}
-      />
-    }
-    miniStat2={
-      <RankingMiniStat
-        {...(props.isLoading
-          ? { isLoading: true }
-          : {
-              stat: props.inactiveFeeds,
-              allFeeds: props.allFeeds,
-            })}
-      />
-    }
   >
     {!props.isLoading && props.activeFeeds !== undefined && (
       <Meter
-        value={props.activeFeeds}
-        maxValue={props.allFeeds}
         label="Active Feeds"
+        maxValue={props.allFeeds}
+        value={props.activeFeeds}
       />
     )}
   </StatCard>
@@ -505,14 +505,14 @@ const OisPoolCard = async ({ publisherKey }: { publisherKey: string }) => {
   return (
     <OisPoolCardImpl
       apyHistory={publisher?.apyHistory ?? []}
-      poolUtilization={
-        (publisher?.totalDelegation ?? 0n) +
-        (publisher?.totalDelegationDelta ?? 0n)
-      }
       maxPoolSize={
         publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
           ({ publisher }) => publisher === publisherKey,
         )?.cap ?? 0
+      }
+      poolUtilization={
+        (publisher?.totalDelegation ?? 0n) +
+        (publisher?.totalDelegationDelta ?? 0n)
       }
     />
   );
@@ -529,56 +529,32 @@ type OisPoolCardImplProps =
 
 const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
   <StatCard
-    header="OIS Pool Allocation"
+    corner={<ArrowsOutSimple />}
     drawer={{
-      title: "OIS Pool Allocation",
-      className: styles.oisDrawer ?? "",
       bodyClassName: styles.oisDrawerBody,
-      footerClassName: styles.oisDrawerFooter,
-      footer: (
-        <>
-          <Button
-            variant="solid"
-            size="sm"
-            href="https://staking.pyth.network"
-            target="_blank"
-            beforeIcon={<Browsers />}
-          >
-            Open Staking App
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            href="https://docs.pyth.network/home/oracle-integrity-staking"
-            target="_blank"
-            beforeIcon={<BookOpenText />}
-          >
-            Documentation
-          </Button>
-        </>
-      ),
+      className: styles.oisDrawer ?? "",
       contents: (
         <>
           {!props.isLoading && (
             <>
               <SemicircleMeter
-                width={260}
-                height={310}
-                value={Number(props.poolUtilization)}
-                maxValue={props.maxPoolSize}
-                className={styles.smallOisMeter ?? ""}
                 aria-label="OIS Pool Utilization"
+                className={styles.smallOisMeter ?? ""}
+                height={310}
+                maxValue={props.maxPoolSize}
+                value={Number(props.poolUtilization)}
+                width={260}
               >
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
               </SemicircleMeter>
               <SemicircleMeter
-                width={420}
-                height={420}
-                value={Number(props.poolUtilization)}
-                maxValue={props.maxPoolSize}
-                className={styles.oisMeter ?? ""}
                 aria-label="OIS Pool Utilization"
+                className={styles.oisMeter ?? ""}
+                height={420}
+                maxValue={props.maxPoolSize}
+                value={Number(props.poolUtilization)}
+                width={420}
               >
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
@@ -587,7 +563,6 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           )}
           <StatCard
             header="Total Staked"
-            variant="secondary"
             nonInteractive
             stat={
               <>
@@ -599,10 +574,10 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 )}
               </>
             }
+            variant="secondary"
           />
           <StatCard
             header="Pool Capacity"
-            variant="secondary"
             nonInteractive
             stat={
               <>
@@ -615,12 +590,13 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 )}
               </>
             }
+            variant="secondary"
           />
           <OisApyHistory apyHistory={props.isLoading ? [] : props.apyHistory} />
           <InfoBox
             className={styles.oisInfoBox}
-            icon={<ShieldChevron />}
             header="Oracle Integrity Staking (OIS)"
+            icon={<ShieldChevron />}
           >
             OIS allows anyone to help secure Pyth and protect DeFi. Through
             decentralized staking rewards and slashing, OIS incentivizes Pyth
@@ -631,7 +607,32 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           </InfoBox>
         </>
       ),
+      footer: (
+        <>
+          <Button
+            beforeIcon={<Browsers />}
+            href="https://staking.pyth.network"
+            size="sm"
+            target="_blank"
+            variant="solid"
+          >
+            Open Staking App
+          </Button>
+          <Button
+            beforeIcon={<BookOpenText />}
+            href="https://docs.pyth.network/home/oracle-integrity-staking"
+            size="sm"
+            target="_blank"
+            variant="outline"
+          >
+            Documentation
+          </Button>
+        </>
+      ),
+      footerClassName: styles.oisDrawerFooter,
+      title: "OIS Pool Allocation",
     }}
+    header="OIS Pool Allocation"
     stat={
       props.isLoading ? (
         <Skeleton width={20} />
@@ -650,24 +651,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
         </span>
       )
     }
-    corner={<ArrowsOutSimple />}
   >
     <Meter
-      value={props.isLoading ? 0 : Number(props.poolUtilization)}
-      maxValue={props.isLoading ? 0 : props.maxPoolSize}
-      label="OIS Pool"
-      startLabel={
-        <span className={styles.tokens}>
-          <TokenIcon />
-          <span>
-            {props.isLoading ? (
-              <Skeleton width={10} />
-            ) : (
-              <FormattedTokens tokens={props.poolUtilization} />
-            )}
-          </span>
-        </span>
-      }
       endLabel={
         <span className={styles.tokens}>
           <TokenIcon />
@@ -680,6 +665,21 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           </span>
         </span>
       }
+      label="OIS Pool"
+      maxValue={props.isLoading ? 0 : props.maxPoolSize}
+      startLabel={
+        <span className={styles.tokens}>
+          <TokenIcon />
+          <span>
+            {props.isLoading ? (
+              <Skeleton width={10} />
+            ) : (
+              <FormattedTokens tokens={props.poolUtilization} />
+            )}
+          </span>
+        </span>
+      }
+      value={props.isLoading ? 0 : Number(props.poolUtilization)}
     />
   </StatCard>
 );

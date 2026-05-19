@@ -24,7 +24,7 @@ export const Ranking = ({
     {...props}
   >
     {isLoading ? (
-      <Skeleton fill className={styles.skeleton} />
+      <Skeleton className={styles.skeleton} fill />
     ) : (
       <div className={styles.content}>{children}</div>
     )}

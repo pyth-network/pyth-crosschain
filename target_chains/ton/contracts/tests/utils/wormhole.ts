@@ -1,5 +1,6 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { beginCell, Cell, Dictionary } from "@ton/core";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { Cell } from "@ton/core";
+import { beginCell, Dictionary } from "@ton/core";
 
 export const GUARDIAN_SET_0 = ["0x58CC3AE5C097B213CE3C81979E1B9F9570746AA5"];
 
@@ -172,7 +173,7 @@ export const MAINNET_UPGRADE_VAAS = [
 ];
 
 export const GOVERNANCE_DATA_SOURCE: DataSource = {
-  emitterChain: 1,
   emitterAddress:
     "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+  emitterChain: 1,
 };

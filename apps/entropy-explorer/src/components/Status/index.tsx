@@ -32,7 +32,7 @@ export const Status = ({ status, ...props }: Props) => {
     }
     case StatusType.Pending: {
       return (
-        <StatusImpl variant="disabled" style="outline" {...props}>
+        <StatusImpl style="outline" variant="disabled" {...props}>
           PENDING
         </StatusImpl>
       );

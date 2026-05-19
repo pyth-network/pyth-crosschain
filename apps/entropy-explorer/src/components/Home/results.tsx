@@ -7,10 +7,6 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
-
-import { ChainTag } from "./chain-tag";
-import { mkRequestDrawer } from "./request-drawer";
-import styles from "./results.module.scss";
 import type { ChainSlug } from "../../entropy-deployments";
 import { EntropyDeployments } from "../../entropy-deployments";
 import type { Request } from "../../requests";
@@ -18,6 +14,9 @@ import { Status } from "../../requests";
 import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
+import { ChainTag } from "./chain-tag";
+import { mkRequestDrawer } from "./request-drawer";
+import styles from "./results.module.scss";
 import { ChainSelect } from "./search-controls";
 
 type Props = {
@@ -39,42 +38,42 @@ export const Results = ({
   const rows = useMemo(
     () =>
       currentPage.map((request) => ({
-        id: request.sequenceNumber.toString(),
-        textValue: request.requestTxHash,
-        onAction: () => {
-          drawer.open(mkRequestDrawer(request, now));
-        },
         data: {
-          chain: <ChainTag className={styles.chain} chain={request.chain} />,
-          timestamp: (
-            <div className={styles.timestamp}>
-              <Timestamp timestamp={request.requestTimestamp} now={now} />
-            </div>
+          callbackTxHash: request.status === Status.Complete && (
+            <Transaction chain={request.chain} value={request.callbackTxHash} />
           ),
+          chain: <ChainTag chain={request.chain} className={styles.chain} />,
+          requestTxHash: (
+            <Transaction chain={request.chain} value={request.requestTxHash} />
+          ),
+          sender: <Account chain={request.chain} value={request.sender} />,
           sequenceNumber: (
             <div className={styles.sequenceNumber}>
               {request.sequenceNumber}
             </div>
           ),
-          sender: <Account chain={request.chain} value={request.sender} />,
-          requestTxHash: (
-            <Transaction chain={request.chain} value={request.requestTxHash} />
+          status: <StatusComponent size="xs" status={request.status} />,
+          timestamp: (
+            <div className={styles.timestamp}>
+              <Timestamp now={now} timestamp={request.requestTimestamp} />
+            </div>
           ),
-          callbackTxHash: request.status === Status.Complete && (
-            <Transaction chain={request.chain} value={request.callbackTxHash} />
-          ),
-          status: <StatusComponent status={request.status} size="xs" />,
         },
+        id: request.sequenceNumber.toString(),
+        onAction: () => {
+          drawer.open(mkRequestDrawer(request, now));
+        },
+        textValue: request.requestTxHash,
       })),
     [currentPage, drawer, now],
   );
 
   return (
     <ResultsImpl
-      rows={rows}
-      search={search}
       chain={chain}
       isUpdating={isUpdating}
+      rows={rows}
+      search={search}
     />
   );
 };
@@ -99,10 +98,9 @@ const ResultsImpl = (props: ResultsImplProps) => (
   <>
     <div className={styles.entityList}>
       {!props.isLoading && props.rows.length === 0 ? (
-        <NoResults search={props.search} chain={props.chain} />
+        <NoResults chain={props.chain} search={props.search} />
       ) : (
         <EntityList
-          label={defaultProps.label}
           fields={[
             { id: "chain", name: "Chain" },
             { id: "sequenceNumber", name: "Sequence Number" },
@@ -112,6 +110,7 @@ const ResultsImpl = (props: ResultsImplProps) => (
             { id: "callbackTxHash", name: "Callback Transaction" },
             { id: "status", name: "Status" },
           ]}
+          label={defaultProps.label}
           {...(props.isLoading ? { isLoading: true } : { rows: props.rows })}
         />
       )}
@@ -122,10 +121,10 @@ const ResultsImpl = (props: ResultsImplProps) => (
       {...(props.isLoading
         ? { isLoading: true }
         : {
-            rows: props.rows,
-            isUpdating: props.isUpdating,
-            emptyState: <NoResults search={props.search} chain={props.chain} />,
             className: styles.table ?? "",
+            emptyState: <NoResults chain={props.chain} search={props.search} />,
+            isUpdating: props.isUpdating,
+            rows: props.rows,
           })}
     />
   </>
@@ -139,7 +138,6 @@ type NoResultsProps = {
 const NoResults = ({ search, chain }: NoResultsProps) => {
   return (
     <NoResultsImpl
-      query={search ?? ""}
       body={
         <>
           <p>
@@ -149,13 +147,14 @@ const NoResults = ({ search, chain }: NoResultsProps) => {
           <p>Would you like to try your search on a different chain?</p>
           <ChainSelect
             className={styles.noResultsChainSelect ?? ""}
-            label="Chain"
             hideLabel
-            variant="outline"
+            label="Chain"
             size="sm"
+            variant="outline"
           />
         </>
       }
+      query={search ?? ""}
     />
   );
 };
@@ -175,10 +174,6 @@ const ChainName = ({ chain }: { chain: ChainSlug }) => {
 };
 
 const defaultProps = {
-  label: "Requests",
-  rounded: true,
-  fill: true,
-  stickyHeader: "appHeader",
   columns: [
     {
       id: "chain" as const,
@@ -186,11 +181,11 @@ const defaultProps = {
       width: 32,
     },
     {
-      id: "sequenceNumber" as const,
-      name: "SEQUENCE NUMBER",
       alignment: "center",
-      width: 20,
+      id: "sequenceNumber" as const,
       isRowHeader: true,
+      name: "SEQUENCE NUMBER",
+      width: 20,
     },
     {
       id: "timestamp" as const,
@@ -212,10 +207,14 @@ const defaultProps = {
       width: 35,
     },
     {
+      alignment: "center",
       id: "status" as const,
       name: "STATUS",
-      alignment: "center",
       width: 32,
     },
   ],
+  fill: true,
+  label: "Requests",
+  rounded: true,
+  stickyHeader: "appHeader",
 } satisfies Partial<ComponentProps<typeof Table<string>>>;

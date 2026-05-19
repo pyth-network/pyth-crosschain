@@ -1,4 +1,4 @@
-import { SuiClient } from "@mysten/sui/client";
+import type { SuiClient } from "@mysten/sui/client";
 import type { Logger } from "pino";
 
 import type {
@@ -6,7 +6,7 @@ import type {
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
 
 /**
@@ -81,11 +81,11 @@ export function createSuiBalanceTracker(
   params: CreateSuiBalanceTrackerParams,
 ): IBalanceTracker {
   return new SuiBalanceTracker({
-    client: params.client,
     address: params.address,
+    client: params.client,
+    logger: params.logger,
+    metrics: params.metrics,
     network: params.network,
     updateInterval: params.updateInterval,
-    metrics: params.metrics,
-    logger: params.logger,
   });
 }

@@ -1,8 +1,7 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
-
-import { getThemeCssVar } from "./get-theme-css-var";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { getThemeCssVar } from "./get-theme-css-var";
 
 let palette: Nullish<Partial<Record<AllDataSourcesType, string>>>;
 

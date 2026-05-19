@@ -1,10 +1,9 @@
 import type { ElementType, SVGProps } from "react";
-
+import { ButtonLink } from "../Button";
+import { MaxWidth } from "../MaxWidth";
 import Benchmarks from "./benchmarks.svg";
 import Entropy from "./entropy.svg";
 import PriceFeeds from "./price-feeds.svg";
-import { ButtonLink } from "../Button";
-import { MaxWidth } from "../MaxWidth";
 
 export const Home = () => (
   <main className="grid size-full place-content-center py-16 text-center">
@@ -13,14 +12,14 @@ export const Home = () => (
     </h1>
     <MaxWidth>
       <nav
-        className="flex flex-col items-stretch justify-center gap-12"
         aria-label="Products"
+        className="flex flex-col items-stretch justify-center gap-12"
       >
         <ul className="contents">
           <li className="contents">
             <ProductLink
-              icon={PriceFeeds}
               href="/price-feeds/evm/getPriceNoOlderThan"
+              icon={PriceFeeds}
               name="Price Feeds"
             >
               Fetch real-time low-latency market data, on 50+ chains or off
@@ -29,17 +28,17 @@ export const Home = () => (
           </li>
           <li className="contents">
             <ProductLink
-              icon={Benchmarks}
               href="https://benchmarks.pyth.network/docs#/"
-              target="_blank"
+              icon={Benchmarks}
               name="Benchmarks"
+              target="_blank"
             >
               Get historical market data from any Pyth feed for use in both on-
               and off-chain applications
             </ProductLink>
           </li>
           <li className="contents">
-            <ProductLink icon={Entropy} href="/entropy" name="Entropy">
+            <ProductLink href="/entropy" icon={Entropy} name="Entropy">
               Quickly and easily generate secure random numbers on the
               blockchain
             </ProductLink>
@@ -66,10 +65,10 @@ const ProductLink = ({
   icon: Icon,
 }: ProductLinkProps) => (
   <ButtonLink
+    className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
+    gradient
     href={href}
     target={target}
-    gradient
-    className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
   >
     <Icon className="h-24 p-3 text-pythpurple-600 dark:text-pythpurple-400" />
     <div className="flex flex-col gap-2">

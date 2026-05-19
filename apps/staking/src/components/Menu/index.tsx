@@ -1,16 +1,16 @@
 import clsx from "clsx";
 import type {
   ComponentProps,
-  ReactNode,
   ComponentType,
+  ReactNode,
   SVGAttributes,
 } from "react";
 import {
-  Popover,
   Menu as BaseMenu,
   MenuItem as BaseMenuItem,
   MenuSection as BaseSection,
   Separator as BaseSeparator,
+  Popover,
 } from "react-aria-components";
 
 type MenuProps<T extends object> = ComponentProps<typeof BaseMenu<T>> & {
@@ -46,11 +46,11 @@ export const MenuItem = ({
   ...props
 }: MenuItemProps) => (
   <BaseMenuItem
-    textValue={textValue ?? (typeof children === "string" ? children : "")}
     className={clsx(
       "flex cursor-pointer items-center gap-2 whitespace-nowrap px-4 py-2 text-left outline-none data-[disabled]:cursor-default data-[focused]:bg-pythpurple-800/20 data-[has-submenu]:data-[open]:bg-pythpurple-800/10 data-[has-submenu]:data-[open]:data-[focused]:bg-pythpurple-800/20",
       className,
     )}
+    textValue={textValue ?? (typeof children === "string" ? children : "")}
     {...props}
   >
     {Icon && <Icon className="size-4 text-pythpurple-600" />}

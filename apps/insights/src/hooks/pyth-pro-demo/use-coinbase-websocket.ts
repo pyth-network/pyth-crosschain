@@ -3,7 +3,7 @@
 import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllowedCryptoSymbolsType } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -55,8 +55,8 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
     bids: Map<string, string>; // price -> quantity
     asks: Map<string, string>; // price -> quantity
   }>({
-    bids: new Map(),
     asks: new Map(),
+    bids: new Map(),
   });
 
   /** callbacks */
@@ -103,9 +103,9 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
       if (!productId) return;
 
       const subscribeMessage = {
-        type: "subscribe",
-        product_ids: [productId],
         channel: "level2",
+        product_ids: [productId],
+        type: "subscribe",
       };
       socket.json(subscribeMessage);
     },

@@ -13,11 +13,10 @@ import { readFileSync } from "node:fs";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")
@@ -25,20 +24,20 @@ const parser = yargs(hideBin(process.argv))
     "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]",
   )
   .options({
-    "std-output": {
-      type: "string",
-      demandOption: true,
-      desc: "Path to the standard JSON output of the contract (build artifact)",
-    },
-    "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Must be one of the chains available in the store",
+      type: "string",
     },
     "deploy-args": {
-      type: "array",
       desc: "Arguments to pass to the contract constructor. They should not be prefixed with 0x.",
+      type: "array",
+    },
+    "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+    "std-output": {
+      demandOption: true,
+      desc: "Path to the standard JSON output of the contract (build artifact)",
+      type: "string",
     },
   });
 

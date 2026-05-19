@@ -1,14 +1,16 @@
 require("dotenv").config({ path: ".env" });
-import { utils, Wallet } from "zksync-web3";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { utils, Wallet } from "zksync-web3";
 import {
   deployWormholeContract,
   findWormholeContract,
 } from "./zkSyncDeployWormhole";
+
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 

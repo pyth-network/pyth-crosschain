@@ -1,5 +1,5 @@
-import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import type { Channel, PriceFeedProperty } from "@pythnetwork/pyth-lazer-sdk";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
 import { HttpError, withSingleRetry } from "./retry.js";
@@ -129,7 +129,9 @@ function toHttpError(err: unknown): Error {
   return new HttpError(502, err instanceof Error ? err.message : String(err));
 }
 
-export function extractHttpStatusFromMessage(message: string): number | undefined {
+export function extractHttpStatusFromMessage(
+  message: string,
+): number | undefined {
   const statusPatterns = [
     /status[:=]\s*(\d{3})/i,
     /http(?:\s+error)?\D+(\d{3})/i,

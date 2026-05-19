@@ -1,14 +1,13 @@
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-
+import { Link } from "../Link";
+import { MaxWidth } from "../MaxWidth";
+import { WalletButton } from "../WalletButton";
 import { CurrentStakeAccount } from "./current-stake-account";
 import { HelpMenu } from "./help-menu";
 import Logo from "./logo.svg";
 import Logomark from "./logomark.svg";
 import { Stats } from "./stats";
-import { Link } from "../Link";
-import { MaxWidth } from "../MaxWidth";
-import { WalletButton } from "../WalletButton";
 
 export const Header = ({
   className,
@@ -23,8 +22,8 @@ export const Header = ({
         <MaxWidth className="flex h-header items-center justify-between gap-2 lg:-mx-4">
           <div className="flex flex-row items-center gap-6 xl:gap-12">
             <Link
-              href="/"
               className="-mx-2 h-[calc(var(--header-height)_-_0.5rem)] rounded-sm p-2 text-pythpurple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+              href="/"
             >
               <Logo className="hidden h-full lg:block" />
               <Logomark className="h-full lg:hidden" />

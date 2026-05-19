@@ -21,19 +21,19 @@ export const Spinner = ({ label, className, ...props }: Props) => (
     {({ percentage }) => (
       <>
         <svg
-          width="1em"
-          height="1em"
-          viewBox="0 0 32 32"
-          fill="none"
           className={styles.spinner}
+          fill="none"
+          height="1em"
           strokeWidth={4}
+          viewBox="0 0 32 32"
+          width="1em"
         >
-          <circle cx={16} cy={16} r={12} className={styles.background} />
+          <circle className={styles.background} cx={16} cy={16} r={12} />
           <circle
+            className={styles.indicator}
             cx={16}
             cy={16}
             r={12}
-            className={styles.indicator}
             strokeDasharray={`${c.toString()} ${c.toString()}`}
             strokeDashoffset={c - ((percentage ?? 10) / 100) * c}
             strokeLinecap="round"

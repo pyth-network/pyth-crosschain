@@ -13,12 +13,12 @@
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "fix:lint:stylelint": {
-      "dependsOn": ["//#install:modules"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["//#install:modules"]
     },
     "start:dev": {
       "with": ["@pythnetwork/component-library#start:dev"]

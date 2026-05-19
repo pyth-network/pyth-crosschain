@@ -3,22 +3,21 @@
 import clsx from "clsx";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type {
-  RowProps,
   ColumnProps,
+  RowProps,
   TableBodyProps,
 } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import { Skeleton } from "../Skeleton/index.jsx";
 import {
   Cell,
   Column,
   Row,
-  Table as UnstyledTable,
   TableBody,
   TableHeader,
+  Table as UnstyledTable,
 } from "../unstyled/Table/index.jsx";
+import styles from "./index.module.scss";
 
 export type { SortDescriptor } from "../unstyled/Table/index.jsx";
 
@@ -98,7 +97,7 @@ export const Table = <T extends string>({
     {props.hideHeadersInEmptyState === true && rows?.length === 0 ? (
       <>
         {"renderEmptyState" in props
-          ? props.renderEmptyState({ isEmpty: true, isDropTarget: false })
+          ? props.renderEmptyState({ isDropTarget: false, isEmpty: true })
           : props.emptyState}
       </>
     ) : (
@@ -107,7 +106,7 @@ export const Table = <T extends string>({
         className={styles.table ?? ""}
         {...props}
       >
-        <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
+        <TableHeader className={styles.tableHeader ?? ""} columns={columns}>
           {(columnConfig: ColumnConfig<T>) => (
             <Column
               data-sticky-header={stickyHeader}
@@ -119,21 +118,11 @@ export const Table = <T extends string>({
                   <div className={styles.name}>{columnConfig.name}</div>
                   {allowsSorting && (
                     <Button
-                      className={styles.sortButton ?? ""}
-                      size="xs"
-                      variant="ghost"
-                      onPress={() => {
-                        column.sort(
-                          sortDirection === "ascending"
-                            ? "descending"
-                            : "ascending",
-                        );
-                      }}
                       beforeIcon={
                         <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 16 16"
                           fill="currentColor"
+                          viewBox="0 0 16 16"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
                           <path
                             className={styles.ascending}
@@ -145,7 +134,17 @@ export const Table = <T extends string>({
                           />
                         </svg>
                       }
+                      className={styles.sortButton ?? ""}
                       hideText
+                      onPress={() => {
+                        column.sort(
+                          sortDirection === "ascending"
+                            ? "descending"
+                            : "ascending",
+                        );
+                      }}
+                      size="xs"
+                      variant="ghost"
                     >
                       Sort
                     </Button>
@@ -157,8 +156,8 @@ export const Table = <T extends string>({
           )}
         </TableHeader>
         <TableBody
-          items={isLoading ? [] : rows}
           className={styles.tableBody ?? ""}
+          items={isLoading ? [] : rows}
           {...(dependencies !== undefined && { dependencies })}
           {...(!props.hideHeadersInEmptyState &&
             ("renderEmptyState" in props || "emptyState" in props) && {
@@ -170,10 +169,10 @@ export const Table = <T extends string>({
         >
           {isLoading ? (
             <Row
-              id="loading"
-              key="loading"
               className={styles.row ?? ""}
               columns={columns}
+              id="loading"
+              key="loading"
             >
               {(column: ColumnConfig<T>) => (
                 <Cell {...cellProps(column)}>

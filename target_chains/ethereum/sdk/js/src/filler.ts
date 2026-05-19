@@ -1,5 +1,5 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
-import type { Address, PublicClient, Hex, Transport, Chain } from "viem";
+import type { Address, Chain, Hex, PublicClient, Transport } from "viem";
 import { encodeFunctionData } from "viem";
 
 import { IPythAbi } from "./pyth-abi.js";
@@ -43,10 +43,10 @@ export async function getUpdateFee<
   updateData: Hex[],
 ): Promise<bigint> {
   return await client.readContract({
-    address: pythContractAddress,
     abi: IPythAbi,
-    functionName: "getUpdateFee",
+    address: pythContractAddress,
     args: [updateData],
+    functionName: "getUpdateFee",
   });
 }
 
@@ -188,13 +188,13 @@ const getPythUpdate = async <
   const updateFee = await getUpdateFee(client, pythContractAddress, updateData);
   return {
     call: {
-      to: pythContractAddress,
       data: encodeFunctionData({
         abi: IPythAbi,
-        functionName: "updatePriceFeeds",
         args: [updateData],
+        functionName: "updatePriceFeeds",
       }),
       from: call.from,
+      to: pythContractAddress,
       value: updateFee,
     },
     updateData,

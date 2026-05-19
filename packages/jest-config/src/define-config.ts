@@ -11,10 +11,10 @@ export function defineJestConfig(config?: Config): Config {
   return {
     ...config,
     resolver: config?.resolver ?? "jest-ts-webcompat-resolver",
+    testEnvironment: config?.testEnvironment ?? "node",
     transform: {
       "^.+\\.(t|j)sx?$": ["@swc/jest"],
       ...config?.transform,
     },
-    testEnvironment: config?.testEnvironment ?? "node",
   } as unknown as Config;
 }

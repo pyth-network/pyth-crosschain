@@ -3,8 +3,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Avatar } from "./Avatar";
 
 const meta = {
-  title: "V2/Avatar",
-  component: Avatar,
   args: {
     user: {
       avatarUrl: "https://i.pravatar.cc/120?img=12",
@@ -12,6 +10,8 @@ const meta = {
       fullName: "Sam Tanaka",
     },
   },
+  component: Avatar,
+  title: "V2/Avatar",
 } satisfies Meta<typeof Avatar>;
 
 export default meta;

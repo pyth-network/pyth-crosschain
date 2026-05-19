@@ -5,7 +5,7 @@ import {
   TabPanel as UnstyledTabPanel,
   Tabs as UnstyledTabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
-import { useSelectedLayoutSegment, usePathname } from "next/navigation";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
@@ -41,8 +41,8 @@ export const Tabs = ({ prefix, items, ...props }: TabsProps) => {
     () =>
       items.map((item) => ({
         ...item,
-        id: item.id ?? item.segment ?? "",
         href: item.segment ? `${finalPrefix}/${item.segment}` : finalPrefix,
+        id: item.id ?? item.segment ?? "",
       })),
     [items, finalPrefix],
   );
@@ -55,5 +55,5 @@ export const TabPanel = (
 ) => {
   const tabId = useSelectedLayoutSegment() ?? "";
 
-  return <UnstyledTabPanel key="tabpanel" id={tabId} {...props} />;
+  return <UnstyledTabPanel id={tabId} key="tabpanel" {...props} />;
 };

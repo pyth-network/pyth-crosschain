@@ -258,9 +258,9 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetChartRef,
       handleSetIsLoadingInitialReplayData,
       handleSetSelectedReplayDate,
-      handleSetChartRef,
       handleToggleDataSourceVisibility,
       isLoadingInitialReplayData,
       playbackSpeed: (PlaybackSpeedSchema.safeParse(playbackSpeed).data ??

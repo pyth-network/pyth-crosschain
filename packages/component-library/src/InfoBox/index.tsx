@@ -23,29 +23,29 @@ export const VARIANTS = [
 ] as const;
 
 const DEFAULTS: Default = {
-  neutral: {
-    header: "-",
-    icon: <DotOutline />,
-  },
-  info: {
-    header: "Info",
-    icon: <Info />,
-  },
-  warning: {
-    header: "Warning",
-    icon: <WarningCircle />,
+  data: {
+    header: "Data",
+    icon: <HardDrives />,
   },
   error: {
     header: "Error",
     icon: <XCircle />,
   },
-  data: {
-    header: "Data",
-    icon: <HardDrives />,
+  info: {
+    header: "Info",
+    icon: <Info />,
+  },
+  neutral: {
+    header: "-",
+    icon: <DotOutline />,
   },
   success: {
     header: "Success",
     icon: <Confetti />,
+  },
+  warning: {
+    header: "Warning",
+    icon: <WarningCircle />,
   },
 };
 

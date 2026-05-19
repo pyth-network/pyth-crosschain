@@ -1,12 +1,12 @@
 import type { Cache as ACDCache } from "async-cache-dedupe";
 import { createCache } from "async-cache-dedupe";
-import { stringify, parse } from "superjson";
+import { parse, stringify } from "superjson";
 
 import { getRedis } from "./config/server";
 
 const transformer = {
-  serialize: stringify,
   deserialize: parse,
+  serialize: stringify,
 };
 
 /**
@@ -20,13 +20,13 @@ export const DEFAULT_REDIS_CACHE_TTL = 60 * 10; // 10 minutes
 export const DEFAULT_REDIS_CACHE_STALE = 3600; // 1 hour
 
 export const redisCache: ACDCache = createCache({
-  transformer,
   stale: DEFAULT_REDIS_CACHE_STALE,
-  ttl: DEFAULT_REDIS_CACHE_TTL,
   storage: {
-    type: "redis",
     options: {
       client: getRedis(),
     },
+    type: "redis",
   },
+  transformer,
+  ttl: DEFAULT_REDIS_CACHE_TTL,
 });

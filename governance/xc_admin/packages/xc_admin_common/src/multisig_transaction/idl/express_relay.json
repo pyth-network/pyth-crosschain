@@ -694,6 +694,7 @@
   "metadata": {
     "address": "PytERJFhAKuNNuaiXkApLfWzwNwSNDACpigT3LwQfou"
   },
+  "name": "express_relay",
   "types": [
     {
       "name": "ConfigRouter",
@@ -898,6 +899,5 @@
       }
     }
   ],
-  "name": "express_relay",
   "version": "0.9.0"
 }

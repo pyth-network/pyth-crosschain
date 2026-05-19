@@ -11,7 +11,13 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [
-            { "options": { "0": { "text": "Not Ready" }, "1": { "text": "Ready" } }, "type": "value" }
+            {
+              "options": {
+                "0": { "text": "Not Ready" },
+                "1": { "text": "Ready" }
+              },
+              "type": "value"
+            }
           ],
           "thresholds": {
             "mode": "absolute",
@@ -25,17 +31,31 @@
       },
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
       "id": 1,
-      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [{ "expr": "ondo_recorder_ready", "refId": "A" }],
       "title": "Recorder Ready",
-      "type": "stat",
-      "targets": [{ "expr": "ondo_recorder_ready", "refId": "A" }]
+      "type": "stat"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": {
         "defaults": {
           "mappings": [
-            { "options": { "0": { "text": "Down" }, "1": { "text": "Up" } }, "type": "value" }
+            {
+              "options": { "0": { "text": "Down" }, "1": { "text": "Up" } },
+              "type": "value"
+            }
           ],
           "thresholds": {
             "mode": "absolute",
@@ -49,88 +69,181 @@
       },
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
       "id": 2,
-      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [{ "expr": "ondo_recorder_clickhouse_up", "refId": "A" }],
       "title": "ClickHouse Reachable",
-      "type": "stat",
-      "targets": [{ "expr": "ondo_recorder_clickhouse_up", "refId": "A" }]
+      "type": "stat"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "rowsps" }, "overrides": [] },
       "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
       "id": 3,
-      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "rate(ondo_recorder_insert_rows_total[1m])", "refId": "A" }
+      ],
       "title": "Insert Throughput",
-      "type": "stat",
-      "targets": [{ "expr": "rate(ondo_recorder_insert_rows_total[1m])", "refId": "A" }]
+      "type": "stat"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "id": 4,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (symbol) (rate(ondo_recorder_poll_requests_total{status=\"success\"}[1m]))",
+          "legendFormat": "{{symbol}}",
+          "refId": "A"
+        }
+      ],
       "title": "Poll Requests/sec by Token",
-      "type": "timeseries",
-      "targets": [{ "expr": "sum by (symbol) (rate(ondo_recorder_poll_requests_total{status=\"success\"}[1m]))", "legendFormat": "{{symbol}}", "refId": "A" }]
+      "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "id": 5,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
-      "title": "Insert Latency Quantiles",
-      "type": "timeseries",
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
       "targets": [
-        { "expr": "histogram_quantile(0.50, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))", "legendFormat": "p50", "refId": "A" },
-        { "expr": "histogram_quantile(0.95, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))", "legendFormat": "p95", "refId": "B" },
-        { "expr": "histogram_quantile(0.99, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))", "legendFormat": "p99", "refId": "C" }
-      ]
+        {
+          "expr": "histogram_quantile(0.50, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(ondo_recorder_insert_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "title": "Insert Latency Quantiles",
+      "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1 }, "overrides": [] },
+      "fieldConfig": {
+        "defaults": { "max": 1, "unit": "percentunit" },
+        "overrides": []
+      },
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
       "id": 6,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "expr": "ondo_recorder_queue_fill_ratio",
+          "legendFormat": "fill ratio",
+          "refId": "A"
+        }
+      ],
       "title": "Queue Fill Ratio",
-      "type": "timeseries",
-      "targets": [{ "expr": "ondo_recorder_queue_fill_ratio", "legendFormat": "fill ratio", "refId": "A" }]
+      "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
       "id": 7,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "expr": "ondo_recorder_queue_depth",
+          "legendFormat": "depth",
+          "refId": "A"
+        }
+      ],
       "title": "Queue Depth",
-      "type": "timeseries",
-      "targets": [{ "expr": "ondo_recorder_queue_depth", "legendFormat": "depth", "refId": "A" }]
+      "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
       "id": 8,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
-      "title": "Errors & Drops",
-      "type": "timeseries",
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
       "targets": [
-        { "expr": "sum(rate(ondo_recorder_poll_errors_total[5m]))", "legendFormat": "poll errors", "refId": "A" },
-        { "expr": "sum(rate(ondo_recorder_queue_drops_total[5m]))", "legendFormat": "queue drops", "refId": "B" },
-        { "expr": "sum(rate(ondo_recorder_insert_attempts_total{status=\"error\"}[5m]))", "legendFormat": "insert errors", "refId": "C" }
-      ]
+        {
+          "expr": "sum(rate(ondo_recorder_poll_errors_total[5m]))",
+          "legendFormat": "poll errors",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(ondo_recorder_queue_drops_total[5m]))",
+          "legendFormat": "queue drops",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(ondo_recorder_insert_attempts_total{status=\"error\"}[5m]))",
+          "legendFormat": "insert errors",
+          "refId": "C"
+        }
+      ],
+      "title": "Errors & Drops",
+      "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
       "id": 9,
-      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "time() - ondo_recorder_token_last_poll_unix_seconds",
+          "legendFormat": "{{symbol}}",
+          "refId": "A"
+        }
+      ],
       "title": "Token Poll Age (seconds since last poll)",
-      "type": "timeseries",
-      "targets": [{ "expr": "time() - ondo_recorder_token_last_poll_unix_seconds", "legendFormat": "{{symbol}}", "refId": "A" }]
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",

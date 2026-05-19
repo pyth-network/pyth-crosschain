@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { ReactNode, ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { Link as BaseLink } from "../Link";
 

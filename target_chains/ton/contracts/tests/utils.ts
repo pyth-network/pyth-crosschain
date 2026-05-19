@@ -1,7 +1,7 @@
-import { Transaction } from "@ton/core";
+import type { Transaction } from "@ton/core";
 import { Buffer } from "buffer";
 
-const GOVERNANCE_MAGIC = 0x5054474d;
+const GOVERNANCE_MAGIC = 0x50_54_47_4d;
 const GOVERNANCE_MODULE = 1;
 const AUTHORIZE_UPGRADE_CONTRACT_ACTION = 0;
 const TARGET_CHAIN_ID = 1;

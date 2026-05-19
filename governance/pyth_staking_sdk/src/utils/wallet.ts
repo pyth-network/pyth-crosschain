@@ -1,11 +1,11 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import type { TransactionSignature } from "@solana/web3.js";
-import {
+import type {
   Connection,
-  PublicKey,
   Transaction,
+  TransactionSignature,
   VersionedTransaction,
 } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 export type PythStakingWallet = AnchorWallet & {
   sendTransaction: (
@@ -16,13 +16,13 @@ export type PythStakingWallet = AnchorWallet & {
 
 export const DummyWallet: PythStakingWallet = {
   publicKey: PublicKey.default,
-  signTransaction: () => {
-    throw new Error("Cannot sign transaction without a wallet");
+  sendTransaction: () => {
+    throw new Error("Cannot send transaction without a wallet");
   },
   signAllTransactions: () => {
     throw new Error("Cannot sign transactions without a wallet");
   },
-  sendTransaction: () => {
-    throw new Error("Cannot send transaction without a wallet");
+  signTransaction: () => {
+    throw new Error("Cannot sign transaction without a wallet");
   },
 };

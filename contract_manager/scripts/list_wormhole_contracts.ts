@@ -9,9 +9,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch testnet contracts instead of mainnet",
+      type: "boolean",
     },
   });
 
@@ -33,9 +33,9 @@ async function main() {
         const chainId = await contract.getChainId();
         entries.push({
           chain: contract.getChain().getId(),
+          chainId: chainId,
           contract: contract.address,
           guardianSetIndex: index,
-          chainId: chainId,
         });
         console.log(`Fetched contract for ${contract.getId()}`);
       } catch (error) {

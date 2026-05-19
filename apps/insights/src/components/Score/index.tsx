@@ -25,19 +25,19 @@ export const Score = ({ width, fill, className, ...props }: Props) =>
   props.isLoading ? (
     <Skeleton
       className={clsx(className, styles.score)}
-      fill
       data-fill={fill ? "" : undefined}
+      fill
       {...(!fill && {
         style: { "--width": width ?? SCORE_WIDTH } as CSSProperties,
       })}
     />
   ) : (
     <Meter
-      className={clsx(className, styles.meter)}
-      value={props.score}
-      maxValue={1}
       aria-label="Score"
+      className={clsx(className, styles.meter)}
       data-fill={fill ? "" : undefined}
+      maxValue={1}
+      value={props.score}
       {...(!fill && {
         style: { "--width": width ?? SCORE_WIDTH } as CSSProperties,
       })}

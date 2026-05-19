@@ -31,11 +31,11 @@ const ONE_WEEK_IN_MS = 7 * ONE_DAY_IN_MS;
 const ONE_MONTH_IN_MS = 30 * ONE_DAY_IN_MS;
 
 const QUICK_SELECT_WINDOW_TO_MS: Record<QuickSelectWindow, number> = {
-  "1m": ONE_MINUTE_IN_MS,
-  "1H": ONE_HOUR_IN_MS,
   "1D": ONE_DAY_IN_MS,
-  "1W": ONE_WEEK_IN_MS,
+  "1H": ONE_HOUR_IN_MS,
   "1M": ONE_MONTH_IN_MS,
+  "1m": ONE_MINUTE_IN_MS,
+  "1W": ONE_WEEK_IN_MS,
 };
 
 /**
@@ -52,20 +52,20 @@ export const RESOLUTION_TO_QUICK_SELECT_WINDOW: Record<
   Resolution,
   QuickSelectWindow
 > = {
-  "1s": "1m",
-  "1m": "1H",
-  "5m": "1D",
-  "1H": "1W",
   "1D": "1M",
+  "1H": "1W",
+  "1m": "1H",
+  "1s": "1m",
+  "5m": "1D",
 };
 
 export const QUICK_SELECT_WINDOW_TO_RESOLUTION: Record<
   QuickSelectWindow,
   Resolution
 > = {
-  "1m": "1s",
-  "1H": "1m",
   "1D": "5m",
-  "1W": "1H",
+  "1H": "1m",
   "1M": "1H",
+  "1m": "1s",
+  "1W": "1H",
 };

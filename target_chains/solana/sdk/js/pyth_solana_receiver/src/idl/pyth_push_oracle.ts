@@ -116,46 +116,55 @@ export type PythPushOracle = {
 };
 
 export const IDL: PythPushOracle = {
-  version: "0.1.0",
-  name: "pyth_push_oracle",
+  errors: [
+    {
+      code: 6000,
+      msg: "Updates must be monotonically increasing",
+      name: "UpdatesNotMonotonic",
+    },
+    {
+      code: 6001,
+      msg: "Trying to update price feed with the wrong feed id",
+      name: "PriceFeedMessageMismatch",
+    },
+  ],
   instructions: [
     {
-      name: "updatePriceFeed",
       accounts: [
         {
-          name: "payer",
           isMut: true,
           isSigner: true,
+          name: "payer",
         },
         {
+          isMut: false,
+          isSigner: false,
           name: "pythSolanaReceiver",
-          isMut: false,
-          isSigner: false,
         },
         {
+          isMut: false,
+          isSigner: false,
           name: "encodedVaa",
-          isMut: false,
-          isSigner: false,
         },
         {
+          isMut: false,
+          isSigner: false,
           name: "config",
-          isMut: false,
-          isSigner: false,
         },
         {
+          isMut: true,
+          isSigner: false,
           name: "treasury",
-          isMut: true,
-          isSigner: false,
         },
         {
+          isMut: true,
+          isSigner: false,
           name: "priceFeedAccount",
-          isMut: true,
-          isSigner: false,
         },
         {
-          name: "systemProgram",
           isMut: false,
           isSigner: false,
+          name: "systemProgram",
         },
       ],
       args: [
@@ -176,13 +185,14 @@ export const IDL: PythPushOracle = {
           },
         },
       ],
+      name: "updatePriceFeed",
     },
   ],
+  name: "pyth_push_oracle",
   types: [
     {
       name: "PostUpdateParams",
       type: {
-        kind: "struct",
         fields: [
           {
             name: "merklePriceUpdate",
@@ -195,12 +205,12 @@ export const IDL: PythPushOracle = {
             type: "u8",
           },
         ],
+        kind: "struct",
       },
     },
     {
       name: "MerklePriceUpdate",
       type: {
-        kind: "struct",
         fields: [
           {
             name: "message",
@@ -215,19 +225,9 @@ export const IDL: PythPushOracle = {
             },
           },
         ],
+        kind: "struct",
       },
     },
   ],
-  errors: [
-    {
-      code: 6000,
-      name: "UpdatesNotMonotonic",
-      msg: "Updates must be monotonically increasing",
-    },
-    {
-      code: 6001,
-      name: "PriceFeedMessageMismatch",
-      msg: "Trying to update price feed with the wrong feed id",
-    },
-  ],
+  version: "0.1.0",
 };

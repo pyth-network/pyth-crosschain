@@ -3,8 +3,13 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Skeleton as SkeletonComponent } from "./index.jsx";
 
 const meta = {
-  component: SkeletonComponent,
   argTypes: {
+    fill: {
+      control: "boolean",
+      table: {
+        category: "Skeleton",
+      },
+    },
     label: {
       control: "text",
       table: {
@@ -17,25 +22,20 @@ const meta = {
         category: "Skeleton",
       },
     },
-    fill: {
-      control: "boolean",
-      table: {
-        category: "Skeleton",
-      },
-    },
   },
+  component: SkeletonComponent,
 } satisfies Meta<typeof SkeletonComponent>;
 export default meta;
 
 export const Skeleton = {
+  args: {
+    fill: false,
+    label: "Loading",
+    width: 20,
+  },
   render: (args) => (
-    <div style={{ width: "100vw", display: "flex", justifyContent: "center" }}>
+    <div style={{ display: "flex", justifyContent: "center", width: "100vw" }}>
       <SkeletonComponent {...args} />
     </div>
   ),
-  args: {
-    label: "Loading",
-    fill: false,
-    width: 20,
-  },
 } satisfies StoryObj<typeof SkeletonComponent>;

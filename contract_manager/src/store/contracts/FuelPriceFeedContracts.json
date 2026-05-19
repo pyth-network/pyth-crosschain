@@ -1,12 +1,12 @@
 [
   {
-    "chain": "fuel_testnet",
     "address": "0x5d17f54708afd01530c2e0ffb123cd21e92461aae8450de2cc08d0fd330cf240",
+    "chain": "fuel_testnet",
     "type": "FuelPriceFeedContract"
   },
   {
-    "chain": "fuel_mainnet",
     "address": "0x1c86fdd9e0e7bc0d2ae1bf6817ef4834ffa7247655701ee1b031b52a24c523da",
+    "chain": "fuel_mainnet",
     "type": "FuelPriceFeedContract"
   }
 ]

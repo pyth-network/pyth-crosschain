@@ -52,17 +52,6 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     buttonVariants = {
       ...buttonVariants,
       [`&[data-variant="${variant}"]`]: {
-        backgroundColor: normalBackground,
-        border,
-        color: normalForeground,
-        transition:
-          "background-color .2s ease, border .2s ease, color .2s ease",
-
-        "&:hover": {
-          backgroundColor: resolveBackgroundColor(rules.background, "hover"),
-          color: theme.resolveThemeColor(rules.foreground),
-        },
-
         "&:active": {
           backgroundColor: resolveBackgroundColor(rules.background, "active"),
         },
@@ -72,6 +61,16 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
           border,
           color: disabledForeground,
         },
+
+        "&:hover": {
+          backgroundColor: resolveBackgroundColor(rules.background, "hover"),
+          color: theme.resolveThemeColor(rules.foreground),
+        },
+        backgroundColor: normalBackground,
+        border,
+        color: normalForeground,
+        transition:
+          "background-color .2s ease, border .2s ease, color .2s ease",
       },
     };
   }
@@ -80,15 +79,14 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-size="${size}"]`]: {
+        "&[data-iconbutton]": {
+          width: sizes.height,
+        },
         borderRadius: sizes.borderRadius,
         fontSize: sizes.fontSize,
         gap: sizes.gap,
         height: sizes.height,
         padding: sizes.padding,
-
-        "&[data-iconbutton]": {
-          width: sizes.height,
-        },
       },
     };
   }
@@ -103,31 +101,30 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     },
 
     /**
-     * class name applied to a tooltip that wraps
-     * around a button, if specified
-     */
-    tooltip: { ...theme.popoverTooltipStyles() },
-
-    /**
      * root of the button
      */
     root: {
+      '&:disabled, &[aria-disabled="true"]': {
+        cursor: "not-allowed",
+      },
+
+      "&:hover": {
+        cursor: "pointer",
+      },
       alignItems: "center",
       border: "none",
       display: "inline-flex",
       fontSize: theme.tokens.fontSizes.base,
       justifyContent: "center",
 
-      "&:hover": {
-        cursor: "pointer",
-      },
-
-      '&:disabled, &[aria-disabled="true"]': {
-        cursor: "not-allowed",
-      },
-
       ...buttonVariants,
       ...sizeVariants,
     },
+
+    /**
+     * class name applied to a tooltip that wraps
+     * around a button, if specified
+     */
+    tooltip: { ...theme.popoverTooltipStyles() },
   };
 });

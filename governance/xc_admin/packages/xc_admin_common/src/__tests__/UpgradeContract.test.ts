@@ -5,7 +5,7 @@ import {
 import { CosmosUpgradeContract } from "../governance_payload/UpgradeContract";
 
 test("Upgrade contract ser/de", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const expectedUpgradeContract = new CosmosUpgradeContract(
     "injective",

@@ -11,7 +11,7 @@ function generateAbi(contracts) {
   var sources = {};
   var outputSelection = {};
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
     sources[contractFile] = {
       content: fs.readFileSync(contractFile).toString(),
@@ -22,7 +22,6 @@ function generateAbi(contracts) {
 
   var input = {
     language: "Solidity",
-    sources,
     settings: {
       outputSelection,
       remappings: [
@@ -30,6 +29,7 @@ function generateAbi(contracts) {
         "@pythnetwork/=./node_modules/@pythnetwork/",
       ],
     },
+    sources,
   };
 
   function findImports(path) {
@@ -59,7 +59,7 @@ function generateAbi(contracts) {
     }
   }
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
 
     if (!output.contracts[contractFile]) {

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import express from "express";
 import type { Logger } from "pino";
-import { Registry, Counter, Gauge } from "prom-client";
+import { Counter, Gauge, Registry } from "prom-client";
 
 import { UpdateCondition } from "./price-config.js";
 
@@ -33,58 +33,58 @@ export class PricePusherMetrics {
 
     // Create metrics
     this.lastPublishedTime = new Gauge({
-      name: "pyth_price_last_published_time",
       help: "The last published time of a price feed in unix timestamp",
       labelNames: ["price_id", "alias"],
+      name: "pyth_price_last_published_time",
       registers: [this.registry],
     });
 
     this.priceUpdateAttempts = new Counter({
-      name: "pyth_price_update_attempts_total",
       help: "Total number of price update attempts with their trigger condition and status",
       labelNames: ["price_id", "alias", "trigger", "status"],
+      name: "pyth_price_update_attempts_total",
       registers: [this.registry],
     });
 
     this.priceFeedsTotal = new Gauge({
-      name: "pyth_price_feeds_total",
       help: "Total number of price feeds being monitored",
+      name: "pyth_price_feeds_total",
       registers: [this.registry],
     });
 
     this.sourceTimestamp = new Gauge({
-      name: "pyth_source_timestamp",
       help: "Latest source chain price publish timestamp",
       labelNames: ["price_id", "alias"],
+      name: "pyth_source_timestamp",
       registers: [this.registry],
     });
 
     this.configuredTimeDifference = new Gauge({
-      name: "pyth_configured_time_difference",
       help: "Configured time difference threshold between source and target chains",
       labelNames: ["price_id", "alias"],
+      name: "pyth_configured_time_difference",
       registers: [this.registry],
     });
 
     this.sourcePriceValue = new Gauge({
-      name: "pyth_source_price",
       help: "Latest price value from Pyth source",
       labelNames: ["price_id", "alias"],
+      name: "pyth_source_price",
       registers: [this.registry],
     });
 
     this.targetPriceValue = new Gauge({
-      name: "pyth_target_price",
       help: "Latest price value from target chain",
       labelNames: ["price_id", "alias"],
+      name: "pyth_target_price",
       registers: [this.registry],
     });
 
     // Wallet balance metric
     this.walletBalance = new Gauge({
-      name: "pyth_wallet_balance",
       help: "Current wallet balance of the price pusher in native token units",
       labelNames: ["wallet_address", "network"],
+      name: "pyth_wallet_balance",
       registers: [this.registry],
     });
 
@@ -109,10 +109,10 @@ export class PricePusherMetrics {
     trigger = "yes",
   ): void {
     this.priceUpdateAttempts.inc({
-      price_id: priceId,
       alias,
-      trigger: trigger.toLowerCase(),
+      price_id: priceId,
       status: "success",
+      trigger: trigger.toLowerCase(),
     });
   }
 
@@ -126,10 +126,10 @@ export class PricePusherMetrics {
     // Only record as 'skipped' when the condition is NO
     if (condition === UpdateCondition.NO) {
       this.priceUpdateAttempts.inc({
-        price_id: priceId,
         alias,
-        trigger: triggerLabel,
+        price_id: priceId,
         status: "skipped",
+        trigger: triggerLabel,
       });
     }
     // YES and EARLY don't increment the counter here - they'll be counted
@@ -143,10 +143,10 @@ export class PricePusherMetrics {
     trigger = "yes",
   ): void {
     this.priceUpdateAttempts.inc({
-      price_id: priceId,
       alias,
-      trigger: trigger.toLowerCase(),
+      price_id: priceId,
       status: "error",
+      trigger: trigger.toLowerCase(),
     });
   }
 
@@ -164,15 +164,15 @@ export class PricePusherMetrics {
     priceConfigTimeDifference: number,
   ): void {
     this.sourceTimestamp.set(
-      { price_id: priceId, alias },
+      { alias, price_id: priceId },
       sourceLatestPricePublishTime,
     );
     this.lastPublishedTime.set(
-      { price_id: priceId, alias },
+      { alias, price_id: priceId },
       targetLatestPricePublishTime,
     );
     this.configuredTimeDifference.set(
-      { price_id: priceId, alias },
+      { alias, price_id: priceId },
       priceConfigTimeDifference,
     );
   }
@@ -186,13 +186,13 @@ export class PricePusherMetrics {
   ): void {
     if (sourcePrice !== undefined) {
       this.sourcePriceValue.set(
-        { price_id: priceId, alias },
+        { alias, price_id: priceId },
         Number(sourcePrice),
       );
     }
     if (targetPrice !== undefined) {
       this.targetPriceValue.set(
-        { price_id: priceId, alias },
+        { alias, price_id: priceId },
         Number(targetPrice),
       );
     }
@@ -208,7 +208,7 @@ export class PricePusherMetrics {
     const balanceNum =
       typeof balance === "bigint" ? Number(balance) / 1e18 : balance;
     this.walletBalance.set(
-      { wallet_address: walletAddress, network },
+      { network, wallet_address: walletAddress },
       balanceNum,
     );
     this.logger.debug(
