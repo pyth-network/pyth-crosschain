@@ -1937,7 +1937,7 @@ importers:
   lazer/contracts/cardano/sdk/js:
     dependencies:
       '@evolution-sdk/evolution':
-        specifier: ^0.3.29
+        specifier: 0.3.32
         version: 0.3.32(@effect/cluster@0.48.16(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/workflow@0.9.6(@effect/platform@0.90.10(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(effect@3.19.19))(@effect/rpc@0.69.5(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19)(ioredis@5.10.0))(@effect/platform@0.90.10(effect@3.19.19))(effect@3.19.19))(bufferutil@4.1.0)(utf-8-validate@6.0.6)
     devDependencies:
       '@cprussin/tsconfig':
@@ -34655,7 +34655,7 @@ snapshots:
       debug: 2.6.9
       invariant: 2.2.4
       metro: 0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-config: 0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.81.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       metro-core: 0.81.5
       readline: 1.3.0
       semver: 7.7.4
@@ -51270,22 +51270,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
-
-  metro-config@0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10):
-    dependencies:
-      connect: 3.7.0
-      cosmiconfig: 5.2.1
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      metro-cache: 0.81.5
-      metro-core: 0.81.5
-      metro-runtime: 0.81.5
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   metro-core@0.81.5:
     dependencies:
@@ -51377,7 +51361,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   metro-transform-worker@0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10):
     dependencies:
@@ -51445,7 +51428,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   metro@0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10):
     dependencies:
@@ -51473,7 +51455,7 @@ snapshots:
       metro-babel-transformer: 0.81.5
       metro-cache: 0.81.5
       metro-cache-key: 0.81.5
-      metro-config: 0.81.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      metro-config: 0.81.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       metro-core: 0.81.5
       metro-file-map: 0.81.5
       metro-resolver: 0.81.5
