@@ -1,15 +1,15 @@
 /** biome-ignore-all lint/suspicious/noConsole: code example */
 
 import process from "node:process";
-import type { ReadClient } from "@evolution-sdk/evolution";
 import {
-  client,
+  Client,
   mainnet,
   preprod,
   preview,
   ScriptHash,
   TransactionHash,
 } from "@evolution-sdk/evolution";
+import type { ReadClient } from "@evolution-sdk/evolution/sdk/client/Client";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -60,14 +60,14 @@ switch (providerType) {
     if (!providerToken) {
       throw new Error("missing --provider-token");
     }
-    evolutionClient = client(networks[network]).withBlockfrost({
+    evolutionClient = Client.make(networks[network]).withBlockfrost({
       baseUrl: `https://cardano-${network}.blockfrost.io/api/v0`,
       projectId: providerToken,
     });
     break;
   }
   case "koios": {
-    evolutionClient = client(networks[network]).withKoios({
+    evolutionClient = Client.make(networks[network]).withKoios({
       baseUrl: `https://${
         {
           mainnet: "api",
@@ -83,7 +83,7 @@ switch (providerType) {
     if (!providerToken) {
       throw new Error("missing --provider-token");
     }
-    evolutionClient = client(networks[network]).withMaestro({
+    evolutionClient = Client.make(networks[network]).withMaestro({
       apiKey: providerToken,
       baseUrl: `https://${network}.gomaestro-api.org/v1`,
     });
