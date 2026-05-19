@@ -3006,6 +3006,9 @@ importers:
       jest:
         specifier: ^29.4.1
         version: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       web3:
         specifier: ^1.8.2
         version: 1.10.4(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)

@@ -1,5 +1,5 @@
 [package]
-name = "Wormhole"
+name = "WormholeSimpleMajority"
 version = "0.2.0"
 
 [dependencies.Sui]
