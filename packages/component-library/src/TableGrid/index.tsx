@@ -81,7 +81,6 @@ export const TableGrid = <TData extends Record<string, unknown>>({
   const tableGrid = (
     <AgGridReact<TData>
       className={styles.tableGrid}
-      // @ts-expect-error empty row data, which is throwing an error here btu required to display 1 row in the loading state
       columnDefs={mappedColDefs}
       defaultColDef={DEFAULT_COL_DEF}
       domLayout="autoHeight"
@@ -89,6 +88,7 @@ export const TableGrid = <TData extends Record<string, unknown>>({
       pagination={pagination ?? false}
       paginationPageSize={pageSize}
       ref={gridRef}
+      // @ts-expect-error - silencing ag-grid typing mismatches
       rowData={loading ? [[]] : rowData}
       suppressPaginationPanel
       theme={themeQuartz}
