@@ -103,3 +103,15 @@ export const metricsPort = {
     type: "number",
   } as Options,
 };
+
+export const metricsNamespace = {
+  "metrics-namespace": {
+    description:
+      "Value emitted as the `namespace` label on every Prometheus metric. " +
+      "The sample Grafana dashboard filters by `namespace=$chain`, so set this " +
+      "to your deployment's chain/network name (e.g. `bsc-mainnet`, `sui-testnet`). " +
+      "Defaults to the chain command name (e.g. `evm`, `sui`, `aptos`, `solana`).",
+    type: "string",
+    required: false,
+  } as Options,
+};

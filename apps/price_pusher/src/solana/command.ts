@@ -124,6 +124,7 @@ export default {
     ...options.controllerLogLevel,
     ...options.enableMetrics,
     ...options.metricsPort,
+    ...options.metricsNamespace,
   },
   command: "solana",
   describe: "run price pusher for solana",
@@ -153,6 +154,7 @@ export default {
       metricsPort,
       pythReceiverProgramId,
       wormholeProgramId,
+      metricsNamespace,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -166,7 +168,10 @@ export default {
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
     if (enableMetrics) {
-      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics = new PricePusherMetrics(
+        logger.child({ module: "Metrics" }),
+        metricsNamespace ?? "solana",
+      );
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);
     }

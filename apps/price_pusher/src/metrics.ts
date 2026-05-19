@@ -28,13 +28,15 @@ export class PricePusherMetrics {
   private lastLoopIterationAt: number | undefined;
   private livenessThresholdMs = 60_000;
 
-  constructor(logger: Logger) {
+  constructor(logger: Logger, namespace: string) {
     this.logger = logger;
     this.registry = new Registry();
     this.server = express();
 
-    // Register the default metrics (memory, CPU, etc.)
-    this.registry.setDefaultLabels({ app: "price_pusher" });
+    // Register the default metrics (memory, CPU, etc.). `namespace` is set as
+    // a default label so the sample Grafana dashboard's `namespace=$chain`
+    // filter actually matches emitted series.
+    this.registry.setDefaultLabels({ app: "price_pusher", namespace });
 
     // Create metrics
     this.lastPublishedTime = new Gauge({
