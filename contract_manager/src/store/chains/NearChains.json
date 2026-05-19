@@ -1,18 +1,18 @@
 [
   {
     "id": "near_testnet",
-    "wormholeChainName": "near",
     "mainnet": false,
-    "type": "NearChain",
+    "networkId": "testnet",
     "rpcUrl": "https://rpc.testnet.near.org",
-    "networkId": "testnet"
+    "type": "NearChain",
+    "wormholeChainName": "near"
   },
   {
     "id": "near",
-    "wormholeChainName": "near",
     "mainnet": true,
-    "type": "NearChain",
+    "networkId": "mainnet",
     "rpcUrl": "https://rpc.mainnet.near.org",
-    "networkId": "mainnet"
+    "type": "NearChain",
+    "wormholeChainName": "near"
   }
 ]

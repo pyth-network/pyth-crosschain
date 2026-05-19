@@ -2,17 +2,13 @@ import forms from "@tailwindcss/forms";
 import type { Config } from "tailwindcss";
 
 const tailwindConfig = {
-  darkMode: "class",
   content: ["src/components/**/*.{ts,tsx}", "src/markdown-components.tsx"],
+  darkMode: "class",
   plugins: [forms],
   theme: {
     extend: {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"],
       },
       colors: {
         pythpurple: {
@@ -22,6 +18,10 @@ const tailwindConfig = {
           900: "#121212",
           950: "#0C0B1A",
         },
+      },
+      fontFamily: {
+        mono: ["var(--font-mono)"],
+        sans: ["var(--font-sans)"],
       },
     },
   },

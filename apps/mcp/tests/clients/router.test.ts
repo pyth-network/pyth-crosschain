@@ -1,11 +1,11 @@
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
+import { HttpError } from "../../src/clients/retry.js";
 import {
   extractHttpStatusFromMessage,
   RouterClient,
 } from "../../src/clients/router.js";
-import { HttpError } from "../../src/clients/retry.js";
 
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
 
@@ -164,11 +164,13 @@ describe("RouterClient", () => {
 
   it("throws HttpError(502) when upstream returns malformed body", async () => {
     server.use(
-      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
-        new HttpResponse("not json", {
-          headers: { "Content-Type": "application/json" },
-          status: 200,
-        }),
+      http.post(
+        `${ROUTER_URL}/v1/latest_price`,
+        () =>
+          new HttpResponse("not json", {
+            headers: { "Content-Type": "application/json" },
+            status: 200,
+          }),
       ),
     );
     const err = await client

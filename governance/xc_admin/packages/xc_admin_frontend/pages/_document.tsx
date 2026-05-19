@@ -1,5 +1,5 @@
-import { Head, Html, Main, NextScript } from 'next/document'
-import Script from 'next/script'
+import { Head, Html, Main, NextScript } from "next/document";
+import Script from "next/script";
 
 export default function Document() {
   return (
@@ -10,32 +10,32 @@ export default function Document() {
           rel="stylesheet"
         />
         <link
-          rel="icon"
-          type="image/x-icon"
           href="/public/favicon.ico"
           id="faviconTag"
+          rel="icon"
+          type="image/x-icon"
         />
         <link
+          href="/apple-touch-icon.png"
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/apple-touch-icon.png"
         />
         <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
           href="/favicon-32x32.png"
+          rel="icon"
+          sizes="32x32"
+          type="image/png"
         />
         <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
           href="/favicon-16x16.png"
+          rel="icon"
+          sizes="16x16"
+          type="image/png"
         />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#242235" />
-        <meta name="msapplication-TileColor" content="#242235" />
-        <meta name="theme-color" content="#242235"></meta>
+        <link href="/site.webmanifest" rel="manifest" />
+        <link color="#242235" href="/safari-pinned-tab.svg" rel="mask-icon" />
+        <meta content="#242235" name="msapplication-TileColor" />
+        <meta content="#242235" name="theme-color"></meta>
         <Script id="show-banner" strategy="beforeInteractive">
           {`const faviconTag = document.getElementById("faviconTag");
             const isDark = window.matchMedia("(prefers-color-scheme: dark)");
@@ -53,5 +53,5 @@ export default function Document() {
         <NextScript />
       </body>
     </Html>
-  )
+  );
 }

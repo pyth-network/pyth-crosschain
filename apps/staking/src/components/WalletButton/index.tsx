@@ -1,27 +1,27 @@
 "use client";
 
 import {
-  WalletIcon,
   ArrowsRightLeftIcon,
-  XCircleIcon,
-  ChevronDownIcon,
   BanknotesIcon,
-  ChevronRightIcon,
   CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  WalletIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import type { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
-import type { ComponentProps, ReactNode, ReactElement } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import {
+  MenuItem as BaseMenuItem,
+  Collection,
+  Header,
   MenuTrigger,
   SubmenuTrigger,
-  Header,
-  Collection,
-  MenuItem as BaseMenuItem,
 } from "react-aria-components";
 
 import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
@@ -128,10 +128,10 @@ const ConnectedButton = ({
           </>
         )}
         <Section>
-          <MenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>
+          <MenuItem icon={ArrowsRightLeftIcon} onAction={showModal}>
             Change wallet
           </MenuItem>
-          <MenuItem onAction={disconnectWallet} icon={XCircleIcon}>
+          <MenuItem icon={XCircleIcon} onAction={disconnectWallet}>
             Disconnect
           </MenuItem>
         </Section>
@@ -142,9 +142,9 @@ const ConnectedButton = ({
             onAction={toggleMainnet}
           >
             <Switch
+              className="px-4 py-1"
               isSelected={isMainnet}
               postLabel="Mainnet"
-              className="px-4 py-1"
               size="small"
             />
           </BaseMenuItem>
@@ -167,8 +167,8 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
     return data.type === DataStateType.Loaded
       ? Object.groupBy(
           api.allAccounts.map((account) => ({
-            id: account.toBase58(),
             account,
+            id: account.toBase58(),
             publisher: data.data.integrityStakingPublishers.find((publisher) =>
               publisher.stakeAccount?.equals(account),
             )?.publicKey,
@@ -185,7 +185,7 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
       <Section>
         <SubmenuTrigger>
           {children}
-          <Menu items={accounts.other ?? []} className="-mr-20 xs:mr-0">
+          <Menu className="-mr-20 xs:mr-0" items={accounts.other ?? []}>
             {accounts.main?.[0] === undefined ? (
               ({ account }) => <AccountMenuItem account={account} api={api} />
             ) : (
@@ -198,13 +198,13 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
                     {({ account, publisher }) => (
                       <AccountMenuItem
                         account={account}
+                        api={api}
                         publisher={
                           accounts.main !== undefined &&
                           accounts.main.length > 1
                             ? publisher
                             : undefined
                         }
-                        api={api}
                       />
                     )}
                   </Collection>
@@ -242,13 +242,13 @@ type AccountMenuItemProps = {
 
 const AccountMenuItem = ({ account, api, publisher }: AccountMenuItemProps) => (
   <MenuItem
-    onAction={() => {
-      api.selectAccount(account);
-    }}
     className={clsx({
       "pr-8 font-semibold": account === api.account,
     })}
     isDisabled={account === api.account}
+    onAction={() => {
+      api.selectAccount(account);
+    }}
   >
     <CheckIcon
       className={clsx("size-4 text-pythpurple-600", {

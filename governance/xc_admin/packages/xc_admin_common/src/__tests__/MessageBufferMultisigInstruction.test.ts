@@ -1,24 +1,24 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
-import { AnchorProvider, Wallet, Program, type Idl } from "@coral-xyz/anchor";
-import {
-  getPythClusterApiUrl,
-  type PythCluster,
-} from "@pythnetwork/client/lib/cluster";
+import type { Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+import messageBuffer from "message_buffer/idl/message_buffer.json";
 import {
   AnchorMultisigInstruction,
   MESSAGE_BUFFER_PROGRAM_ID,
   MultisigInstructionProgram,
   MultisigParser,
 } from "..";
-import messageBuffer from "message_buffer/idl/message_buffer.json";
-import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 test("Message buffer multisig instruction parse: create buffer", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "pythtest-crosschain";
 
@@ -45,9 +45,9 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
     })
     .remainingAccounts([
       {
-        pubkey: PublicKey.unique(),
         isSigner: false,
         isWritable: true,
+        pubkey: PublicKey.unique(),
       },
     ])
     .instruction()
@@ -138,7 +138,7 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
 });
 
 test("Message buffer multisig instruction parse: delete buffer", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "pythtest-crosschain";
 
@@ -161,8 +161,8 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
     .deleteBuffer(allowedProgramAuth, baseAccountKey)
     .accounts({
       admin: PublicKey.unique(),
-      payer: PublicKey.unique(),
       messageBuffer: PublicKey.unique(),
+      payer: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {

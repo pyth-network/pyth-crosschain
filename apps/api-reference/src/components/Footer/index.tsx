@@ -1,32 +1,31 @@
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-
+import { MaxWidth } from "../MaxWidth";
 import Discord from "./discord.svg";
 import Github from "./github.svg";
 import LinkedIn from "./linkedin.svg";
 import Telegram from "./telegram.svg";
 import X from "./x.svg";
 import Youtube from "./youtube.svg";
-import { MaxWidth } from "../MaxWidth";
 
 const SOCIAL_LINKS = [
-  { name: "X", icon: X, href: "https://x.com/PythNetwork" },
+  { href: "https://x.com/PythNetwork", icon: X, name: "X" },
   {
-    name: "Discord",
-    icon: Discord,
     href: "https://discord.gg/invite/PythNetwork",
+    icon: Discord,
+    name: "Discord",
   },
-  { name: "Telegram", icon: Telegram, href: "https://t.me/Pyth_Network" },
+  { href: "https://t.me/Pyth_Network", icon: Telegram, name: "Telegram" },
   {
-    name: "LinkedIn",
-    icon: LinkedIn,
     href: "https://www.linkedin.com/company/pyth-network",
+    icon: LinkedIn,
+    name: "LinkedIn",
   },
-  { name: "Github", icon: Github, href: "https://github.com/pyth-network" },
+  { href: "https://github.com/pyth-network", icon: Github, name: "Github" },
   {
-    name: "Youtube",
-    icon: Youtube,
     href: "https://www.youtube.com/channel/UCjCkvPN9ohl0UDvldfn1neg",
+    icon: Youtube,
+    name: "Youtube",
   },
 ];
 
@@ -49,11 +48,11 @@ export const Footer = ({
         <div className="flex h-full items-center gap-6">
           {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (
             <a
-              target="_blank"
+              className="hover:text-pythpurple-600 dark:hover:text-pythpurple-400"
               href={href}
               key={name}
-              className="hover:text-pythpurple-600 dark:hover:text-pythpurple-400"
               rel="noreferrer"
+              target="_blank"
             >
               <Icon className="h-4" />
               <span className="sr-only">{name}</span>

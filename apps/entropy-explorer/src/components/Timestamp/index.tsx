@@ -27,11 +27,11 @@ export const Timestamp = ({
 
   return (
     <Button
+      className={styles.timestamp ?? ""}
+      data-show-relative={showRelative ? "" : undefined}
       onPress={() => {
         setShowRelative((cur) => !cur);
       }}
-      className={styles.timestamp ?? ""}
-      data-show-relative={showRelative ? "" : undefined}
     >
       <Clock className={styles.clock} />
       <span className={styles.relative}>

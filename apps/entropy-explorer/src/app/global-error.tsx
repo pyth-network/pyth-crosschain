@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 
 const GlobalError = (props: ComponentProps<typeof ErrorPage>) => (
   <LoggerProvider>
-    <html lang="en" dir="ltr">
+    <html dir="ltr" lang="en">
       <body>
         <ErrorPage {...props} />
       </body>

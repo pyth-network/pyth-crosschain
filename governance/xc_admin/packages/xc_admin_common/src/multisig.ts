@@ -1,12 +1,10 @@
-import { type Cluster, PublicKey } from "@solana/web3.js";
-import Squads, {
-  DEFAULT_MULTISIG_PROGRAM_ID,
-  getIxPDA,
-  getTxPDA,
-} from "@sqds/mesh";
-import {
-  type InstructionAccount,
-  type TransactionAccount,
+import type { Cluster } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import type Squads from "@sqds/mesh";
+import { DEFAULT_MULTISIG_PROGRAM_ID, getIxPDA, getTxPDA } from "@sqds/mesh";
+import type {
+  InstructionAccount,
+  TransactionAccount,
 } from "@sqds/mesh/lib/types";
 import BN from "bn.js";
 import lodash from "lodash";
@@ -15,20 +13,20 @@ import lodash from "lodash";
  * Address of the upgrade multisig
  */
 export const UPGRADE_MULTISIG: Record<Cluster | "localnet", PublicKey> = {
-  "mainnet-beta": new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
-  testnet: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
   devnet: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
   localnet: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+  "mainnet-beta": new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+  testnet: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
 };
 
 /**
  * Address of the price feed multisig
  */
 export const PRICE_FEED_MULTISIG: Record<Cluster | "localnet", PublicKey> = {
-  "mainnet-beta": new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
-  testnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
   devnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
   localnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+  "mainnet-beta": new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+  testnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
 };
 
 /**
@@ -69,14 +67,14 @@ export function getOpsKey(vault: PublicKey): PublicKey {
 export async function getProposals(
   squad: Squads,
   vault: PublicKey,
-  offset: number = 1,
+  offset = 1,
   state: "active" | "executeReady" | "executed" | "all" = "all",
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
-  let txKeys = lodash
+  const txKeys = lodash
     .range(offset, msAccount.transactionIndex + 1)
     .map((i) => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
-  let msTransactions = await squad.getTransactions(txKeys);
+  const msTransactions = await squad.getTransactions(txKeys);
   return msTransactions
     .filter(
       (x: TransactionAccount | null): x is TransactionAccount => x != null,
@@ -96,10 +94,10 @@ export async function getManyProposalsInstructions(
   squad: Squads,
   txAccounts: TransactionAccount[],
 ): Promise<InstructionAccount[][]> {
-  let allIxsKeys = [];
-  let ownerTransaction = [];
-  for (let [index, txAccount] of txAccounts.entries()) {
-    let ixKeys = lodash
+  const allIxsKeys = [];
+  const ownerTransaction = [];
+  for (const [index, txAccount] of txAccounts.entries()) {
+    const ixKeys = lodash
       .range(1, txAccount.instructionIndex + 1)
       .map(
         (i) =>
@@ -109,14 +107,14 @@ export async function getManyProposalsInstructions(
             DEFAULT_MULTISIG_PROGRAM_ID,
           )[0],
       );
-    for (let ixKey of ixKeys) {
+    for (const ixKey of ixKeys) {
       allIxsKeys.push(ixKey);
       ownerTransaction.push(index);
     }
   }
 
-  let allTxIxsAccounts = await squad.getInstructions(allIxsKeys);
-  let ixAccountsByTx: InstructionAccount[][] = Array.from(
+  const allTxIxsAccounts = await squad.getInstructions(allIxsKeys);
+  const ixAccountsByTx: InstructionAccount[][] = Array.from(
     Array(txAccounts.length),
     () => [],
   );
@@ -140,7 +138,7 @@ export async function getProposalInstructions(
   squad: Squads,
   txAccount: TransactionAccount,
 ): Promise<InstructionAccount[]> {
-  let ixKeys = lodash
+  const ixKeys = lodash
     .range(1, txAccount.instructionIndex + 1)
     .map(
       (i) =>
@@ -150,7 +148,7 @@ export async function getProposalInstructions(
           DEFAULT_MULTISIG_PROGRAM_ID,
         )[0],
     );
-  let txIxs = await squad.getInstructions(ixKeys);
+  const txIxs = await squad.getInstructions(ixKeys);
   return txIxs.filter(
     (x: InstructionAccount | null): x is InstructionAccount => x != null,
   );

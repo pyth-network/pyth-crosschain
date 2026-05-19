@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { ComponentProps } from "react";
-
+import { Guide } from "../Guide";
+import { Link } from "../Link";
+import Safebox from "../NoWalletHome/safebox.svg";
+import SelectPublishers from "../NoWalletHome/select-publishers.svg";
+import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 import addPythTokens from "./add-pyth-tokens.png";
 import changingWallets from "./changing-wallets.png";
 import epochs from "./epochs.png";
@@ -10,17 +14,11 @@ import stakedTokens from "./staked-tokens.png";
 import totalBalance from "./total-balance.png";
 import understandingRealms from "./understanding-realms.png";
 import warmupPeriods from "./warmup-periods.png";
-import { Guide } from "../Guide";
-import { Link } from "../Link";
-import Safebox from "../NoWalletHome/safebox.svg";
-import SelectPublishers from "../NoWalletHome/select-publishers.svg";
-import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 
 export const GovernanceGuide = (
   props: Omit<ComponentProps<typeof Guide>, "title" | "description" | "steps">,
 ) => (
   <Guide
-    title="Pyth Governance Guide"
     description={
       <p>
         Pyth Governance lets the community influence the direction of the Pyth
@@ -32,8 +30,6 @@ export const GovernanceGuide = (
     }
     steps={[
       {
-        title: "Add Tokens",
-        icon: Safebox,
         description: (
           <>
             <p>
@@ -49,10 +45,36 @@ export const GovernanceGuide = (
             </p>
           </>
         ),
+        faq: {
+          questions: [
+            {
+              answer:
+                "Adding tokens to the Pyth Staking Dashboard transfers them to your SPL wallet’s staking account. Your tokens will remain under your control on-chain through the Pyth Staking Dashboard.",
+              question: "Why do I need to add my tokens?",
+            },
+            {
+              answer:
+                "Added tokens are stored on the Pyth Staking contract, which resides on-chain. The contract code is open source and the upgrade authority is governed by the Pyth DAO. No centralized party holds your tokens or controls the smart contract code.",
+              question: "Where are my added tokens stored?",
+            },
+            {
+              answer:
+                "Yes, the same PYTH tokens can be staked in both the Pyth Governance and Oracle Integrity Staking programs. Tokens previously staked to Pyth Governance will appear in your Total Balance and can also be staked with Oracle Integrity Staking.",
+              question:
+                "Can I stake the same tokens to both Pyth Governance and Oracle Integrity Staking?",
+            },
+            {
+              answer:
+                'When you first add tokens into the Pyth Staking Dashboard, your wallet needs to create a staking account. This involves a one-time fee called "rent" to cover the cost of account creation. Your wallet will notify you of this fee before you confirm the transaction.',
+              question:
+                "Why do I need to pay a rent fee when I click Add Tokens?",
+            },
+          ],
+          title: "Adding Tokens FAQ",
+        },
+        icon: Safebox,
         subTabs: [
           {
-            title: "Add PYTH Tokens",
-            image: addPythTokens,
             description: (
               <>
                 <p>
@@ -68,10 +90,10 @@ export const GovernanceGuide = (
                 </p>
               </>
             ),
+            image: addPythTokens,
+            title: "Add PYTH Tokens",
           },
           {
-            title: "Total Balance",
-            image: totalBalance,
             description: (
               <p>
                 The Total Balance displays the number of tokens you have added
@@ -79,10 +101,10 @@ export const GovernanceGuide = (
                 Integrity Staking program, or both.
               </p>
             ),
+            image: totalBalance,
+            title: "Total Balance",
           },
           {
-            title: "Changing Wallets",
-            image: changingWallets,
             description: (
               <p>
                 You can change your wallet by clicking on your displayed wallet
@@ -90,39 +112,13 @@ export const GovernanceGuide = (
                 associated with the new wallet will be displayed.
               </p>
             ),
+            image: changingWallets,
+            title: "Changing Wallets",
           },
         ],
-        faq: {
-          title: "Adding Tokens FAQ",
-          questions: [
-            {
-              question: "Why do I need to add my tokens?",
-              answer:
-                "Adding tokens to the Pyth Staking Dashboard transfers them to your SPL wallet’s staking account. Your tokens will remain under your control on-chain through the Pyth Staking Dashboard.",
-            },
-            {
-              question: "Where are my added tokens stored?",
-              answer:
-                "Added tokens are stored on the Pyth Staking contract, which resides on-chain. The contract code is open source and the upgrade authority is governed by the Pyth DAO. No centralized party holds your tokens or controls the smart contract code.",
-            },
-            {
-              question:
-                "Can I stake the same tokens to both Pyth Governance and Oracle Integrity Staking?",
-              answer:
-                "Yes, the same PYTH tokens can be staked in both the Pyth Governance and Oracle Integrity Staking programs. Tokens previously staked to Pyth Governance will appear in your Total Balance and can also be staked with Oracle Integrity Staking.",
-            },
-            {
-              question:
-                "Why do I need to pay a rent fee when I click Add Tokens?",
-              answer:
-                'When you first add tokens into the Pyth Staking Dashboard, your wallet needs to create a staking account. This involves a one-time fee called "rent" to cover the cost of account creation. Your wallet will notify you of this fee before you confirm the transaction.',
-            },
-          ],
-        },
+        title: "Add Tokens",
       },
       {
-        title: "Token Warmup",
-        icon: TokenWarmup,
         description: (
           <>
             <p>
@@ -141,9 +137,30 @@ export const GovernanceGuide = (
             </p>
           </>
         ),
+        faq: {
+          questions: [
+            {
+              answer:
+                "Yes, all tokens you designate to staking will enter the same Warmup Period. For example, if you delegate 1 PYTH token on Monday to Pyth Governance, and you delegate 1 PYTH token on Tuesday to Pyth Governance, you will have 2 PYTH tokens undergoing the same Warmup Period.",
+              question:
+                "Do all tokens committed to staking enter the same Warmup Period?",
+            },
+            {
+              answer:
+                "Yes, you can cancel tokens in the Warmup Period. Simply go to the Governance window and press Cancel under Warmup. You can choose how many tokens you wish to cancel from the staking process.",
+              question: "Can I remove my tokens from the Warmup Period?",
+            },
+            {
+              answer:
+                "No, you must wait for tokens in the Warmup Period to become officially Staked in order for them to confer voting power.",
+              question: "Do tokens in the Warmup Period provide voting power?",
+            },
+          ],
+          title: "Warmup FAQ",
+        },
+        icon: TokenWarmup,
         subTabs: [
           {
-            title: "Warmup Periods",
             description: (
               <>
                 <p>
@@ -160,9 +177,9 @@ export const GovernanceGuide = (
               </>
             ),
             image: warmupPeriods,
+            title: "Warmup Periods",
           },
           {
-            title: "Epochs",
             description: (
               <p>
                 Pyth Governance runs in epochs to ensure a safe and orderly
@@ -172,9 +189,9 @@ export const GovernanceGuide = (
               </p>
             ),
             image: epochs,
+            title: "Epochs",
           },
           {
-            title: "Staked Tokens",
             description: (
               <p>
                 Tokens that complete the Warmup Period become officially staked
@@ -182,8 +199,8 @@ export const GovernanceGuide = (
                 on the{" "}
                 <Link
                   className="underline"
-                  target="_blank"
                   href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
+                  target="_blank"
                 >
                   Pyth Network Realm
                 </Link>
@@ -191,40 +208,19 @@ export const GovernanceGuide = (
               </p>
             ),
             image: stakedTokens,
+            title: "Staked Tokens",
           },
         ],
-        faq: {
-          title: "Warmup FAQ",
-          questions: [
-            {
-              question:
-                "Do all tokens committed to staking enter the same Warmup Period?",
-              answer:
-                "Yes, all tokens you designate to staking will enter the same Warmup Period. For example, if you delegate 1 PYTH token on Monday to Pyth Governance, and you delegate 1 PYTH token on Tuesday to Pyth Governance, you will have 2 PYTH tokens undergoing the same Warmup Period.",
-            },
-            {
-              question: "Can I remove my tokens from the Warmup Period?",
-              answer:
-                "Yes, you can cancel tokens in the Warmup Period. Simply go to the Governance window and press Cancel under Warmup. You can choose how many tokens you wish to cancel from the staking process.",
-            },
-            {
-              question: "Do tokens in the Warmup Period provide voting power?",
-              answer:
-                "No, you must wait for tokens in the Warmup Period to become officially Staked in order for them to confer voting power.",
-            },
-          ],
-        },
+        title: "Token Warmup",
       },
       {
-        title: "Vote & Govern",
-        icon: SelectPublishers,
         description: (
           <p>
             To vote on Pyth Improvement Proposals (PIPs), go to the{" "}
             <Link
               className="underline"
-              target="_blank"
               href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
+              target="_blank"
             >
               Realms page for the Pyth DAO
             </Link>
@@ -236,91 +232,9 @@ export const GovernanceGuide = (
             the Pyth Governance program.
           </p>
         ),
-        subTabs: [
-          {
-            title: "Governance Forum",
-            description: (
-              <p>
-                You can join discussions and propose new Operational and
-                Constitutional PIPs on the{" "}
-                <Link
-                  className="underline"
-                  target="_blank"
-                  href="https://forum.pyth.network"
-                >
-                  Pyth Governance Forum
-                </Link>{" "}
-                on Discourse. Successful forum proposals that pass temperature
-                checks can be turned into on-chain proposals on Realms. Please
-                review the proposal creation and submission guidelines{" "}
-                <Link
-                  className="underline"
-                  target="_blank"
-                  href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24"
-                >
-                  here
-                </Link>
-                .
-              </p>
-            ),
-            image: governanceForum,
-          },
-          {
-            title: "Understanding Realms",
-            description: (
-              <p>
-                Pyth Governance uses Realms, a Solana-based platform, for voting
-                on PIPs. In the{" "}
-                <Link
-                  className="underline"
-                  target="_blank"
-                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-                >
-                  Pyth Network Realm
-                </Link>
-                , you can view all completed proposals and vote on pending ones.
-                Proposals are open for voting for seven days, starting from the
-                creation of the proposal. Eligible voters are those from the
-                epoch when the proposal started.
-              </p>
-            ),
-            image: understandingRealms,
-          },
-          {
-            title: "Proposal Results",
-            description: (
-              <p>
-                The{" "}
-                <Link
-                  className="underline"
-                  target="_blank"
-                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-                >
-                  Pyth Network Realm
-                </Link>{" "}
-                interface will indicate whether a proposal has met the quorum by
-                the end of the voting period. Successful proposals will be
-                executed and implemented at the end of the epoch, with any
-                attached on-chain instructions being carried out automatically.
-                Learn more about the goals and design of Pyth Governance in this{" "}
-                <Link
-                  className="underline"
-                  target="_blank"
-                  href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live"
-                >
-                  blog post
-                </Link>
-                .
-              </p>
-            ),
-            image: proposalResults,
-          },
-        ],
         faq: {
-          title: "Governance & Voting FAQ",
           questions: [
             {
-              question: "How much voting power do staked PYTH tokens confer?",
               answer: (
                 <p>
                   All staked tokens have equal voting power, but the voting
@@ -332,17 +246,17 @@ export const GovernanceGuide = (
                   to the{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
+                    target="_blank"
                   >
                     Pyth DAO constitution
                   </Link>
                   .
                 </p>
               ),
+              question: "How much voting power do staked PYTH tokens confer?",
             },
             {
-              question: "What are Pyth Improvement Proposals (PIPs)?",
               answer: (
                 <p>
                   PIPs are the primary methods to introduce, discuss and
@@ -351,32 +265,32 @@ export const GovernanceGuide = (
                   Constitutional. All PIPs must comply with the{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://ipfs.io/ipfs/QmP2GmL1n2WbHd7AtHqyXVWFyyHH36aZLfVZbNoqhommJi"
+                    target="_blank"
                   >
                     Pyth DAO LLC Operating Agreement
                   </Link>{" "}
                   and applicable laws. Learn more about PIPs in the{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
+                    target="_blank"
                   >
                     Pyth DAO Constitution
                   </Link>
                   .
                 </p>
               ),
+              question: "What are Pyth Improvement Proposals (PIPs)?",
             },
             {
-              question: "How can I submit a PIP?",
               answer: (
                 <p>
                   You can submit a PIP through the{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://forum.pyth.network/"
+                    target="_blank"
                   >
                     Pyth Governance Forum
                   </Link>{" "}
@@ -384,37 +298,122 @@ export const GovernanceGuide = (
                   submission process and requirements are detailed in{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24"
+                    target="_blank"
                   >
                     this forum post
                   </Link>
                   .
                 </p>
               ),
+              question: "How can I submit a PIP?",
             },
             {
-              question:
-                "Does voting on Pyth Improvement Proposals earn rewards?",
               answer: (
                 <p>
                   No, voting on PIPs does not earn rewards. Voting is a way for
                   members to influence and guide the Pyth Network.{" "}
                   <Link
                     className="underline"
-                    target="_blank"
                     href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live"
+                    target="_blank"
                   >
                     Learn more
                   </Link>
                   .
                 </p>
               ),
+              question:
+                "Does voting on Pyth Improvement Proposals earn rewards?",
             },
           ],
+          title: "Governance & Voting FAQ",
         },
+        icon: SelectPublishers,
+        subTabs: [
+          {
+            description: (
+              <p>
+                You can join discussions and propose new Operational and
+                Constitutional PIPs on the{" "}
+                <Link
+                  className="underline"
+                  href="https://forum.pyth.network"
+                  target="_blank"
+                >
+                  Pyth Governance Forum
+                </Link>{" "}
+                on Discourse. Successful forum proposals that pass temperature
+                checks can be turned into on-chain proposals on Realms. Please
+                review the proposal creation and submission guidelines{" "}
+                <Link
+                  className="underline"
+                  href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24"
+                  target="_blank"
+                >
+                  here
+                </Link>
+                .
+              </p>
+            ),
+            image: governanceForum,
+            title: "Governance Forum",
+          },
+          {
+            description: (
+              <p>
+                Pyth Governance uses Realms, a Solana-based platform, for voting
+                on PIPs. In the{" "}
+                <Link
+                  className="underline"
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
+                  target="_blank"
+                >
+                  Pyth Network Realm
+                </Link>
+                , you can view all completed proposals and vote on pending ones.
+                Proposals are open for voting for seven days, starting from the
+                creation of the proposal. Eligible voters are those from the
+                epoch when the proposal started.
+              </p>
+            ),
+            image: understandingRealms,
+            title: "Understanding Realms",
+          },
+          {
+            description: (
+              <p>
+                The{" "}
+                <Link
+                  className="underline"
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
+                  target="_blank"
+                >
+                  Pyth Network Realm
+                </Link>{" "}
+                interface will indicate whether a proposal has met the quorum by
+                the end of the voting period. Successful proposals will be
+                executed and implemented at the end of the epoch, with any
+                attached on-chain instructions being carried out automatically.
+                Learn more about the goals and design of Pyth Governance in this{" "}
+                <Link
+                  className="underline"
+                  href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live"
+                  target="_blank"
+                >
+                  blog post
+                </Link>
+                .
+              </p>
+            ),
+            image: proposalResults,
+            title: "Proposal Results",
+          },
+        ],
+        title: "Vote & Govern",
       },
     ]}
+    title="Pyth Governance Guide"
     {...props}
   />
 );

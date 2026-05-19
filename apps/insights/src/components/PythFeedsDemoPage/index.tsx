@@ -2,8 +2,6 @@
 
 import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { Suspense } from "react";
-
-import classes from "./index.module.scss";
 import {
   PythProApiTokensProvider,
   PythProAppStateProvider,
@@ -12,6 +10,7 @@ import {
 import { PythProDemoCards } from "../PythProDemoCards";
 import { PythProDemoPriceChart } from "../PythProDemoPriceChart";
 import { PythProDemoToolsMenu } from "../PythProDemoToolsMenu";
+import classes from "./index.module.scss";
 
 function PythFeedsDemoPageImpl() {
   return (

@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from "fs";
 import toml from "@ltd/j-toml";
 import { exec } from "child_process";
+import { readFileSync, writeFileSync } from "fs";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -37,12 +37,12 @@ function cargoPreSetup(contractTomlFilePath: string, feature: string) {
 
   // @ts-ignore
   const updatedToml = toml.stringify(parsedToml, {
+    forceInlineArraySpacing: 0,
     // don't remove this or else stringify will return an array of strings
     // where each string represents a line
     // this lets it combine all of those line
     newline: "\n",
     newlineAround: "section",
-    forceInlineArraySpacing: 0,
   });
 
   writeFileSync(contractTomlFilePath, updatedToml);

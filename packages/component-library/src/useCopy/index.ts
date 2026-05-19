@@ -35,5 +35,5 @@ export const useCopy = (text: string, copyIndicatorTime = 1000) => {
     }
   }, [isCopied, copyIndicatorTime]);
 
-  return { isCopied, copy };
+  return { copy, isCopied };
 };

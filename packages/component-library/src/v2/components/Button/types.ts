@@ -1,4 +1,4 @@
-import { Button as BaseButton } from "@base-ui/react/button";
+import type { Button as BaseButton } from "@base-ui/react/button";
 import type { TooltipPositionerProps } from "@base-ui/react/tooltip";
 import type { Icon } from "@phosphor-icons/react";
 import type { ComponentProps, ReactNode } from "react";

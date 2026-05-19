@@ -2,10 +2,9 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ElementType, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 export const VARIANTS = [
   "primary",
@@ -55,11 +54,6 @@ const buttonProps = ({
   ...otherProps
 }: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
   ...otherProps,
-  "data-variant": variant,
-  "data-size": size,
-  "data-rounded": rounded ? "" : undefined,
-  "data-text-hidden": hideText ? "" : undefined,
-  className: clsx(styles.button, className),
   children: (
     <>
       {beforeIcon !== undefined && (
@@ -71,4 +65,9 @@ const buttonProps = ({
       )}
     </>
   ),
+  className: clsx(styles.button, className),
+  "data-rounded": rounded ? "" : undefined,
+  "data-size": size,
+  "data-text-hidden": hideText ? "" : undefined,
+  "data-variant": variant,
 });

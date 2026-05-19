@@ -1,25 +1,25 @@
-import { toNano } from "@ton/core";
-import type { MainConfig } from "../wrappers/Main";
-import { compile, sleep } from "@ton/blueprint";
-import type { NetworkProvider } from "@ton/blueprint";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { Main } from "../wrappers/Main";
+import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { NetworkProvider } from "@ton/blueprint";
+import { compile, sleep } from "@ton/blueprint";
+import { toNano } from "@ton/core";
+import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
 import {
   GOVERNANCE_DATA_SOURCE,
   GUARDIAN_SET_0,
   MAINNET_UPGRADE_VAAS,
 } from "../tests/utils/wormhole";
-import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
-import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
+import type { MainConfig } from "../wrappers/Main";
+import { Main } from "../wrappers/Main";
 
 export async function run(provider: NetworkProvider) {
   const SINGLE_UPDATE_FEE = 1;
   const DATA_SOURCES: DataSource[] = [
     {
-      emitterChain: 26,
       emitterAddress:
         "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+      emitterChain: 26,
     },
   ];
 
@@ -30,7 +30,7 @@ export async function run(provider: NetworkProvider) {
     );
   }
 
-  const chainId = parseInt(process.env.CHAIN_ID, 10);
+  const chainId = Number.parseInt(process.env.CHAIN_ID, 10);
 
   // Validate that chainId is a valid number
   if (isNaN(chainId)) {
@@ -40,15 +40,15 @@ export async function run(provider: NetworkProvider) {
   console.log("Chain ID:", chainId);
 
   const config: MainConfig = {
-    singleUpdateFee: SINGLE_UPDATE_FEE,
-    dataSources: DATA_SOURCES,
-    guardianSetIndex: 0,
-    guardianSet: GUARDIAN_SET_0,
     chainId,
+    dataSources: DATA_SOURCES,
     governanceChainId: 1,
     governanceContract:
       "0000000000000000000000000000000000000000000000000000000000000004",
     governanceDataSource: GOVERNANCE_DATA_SOURCE,
+    guardianSet: GUARDIAN_SET_0,
+    guardianSetIndex: 0,
+    singleUpdateFee: SINGLE_UPDATE_FEE,
   };
 
   const main = provider.open(
@@ -79,7 +79,7 @@ export async function run(provider: NetworkProvider) {
 
     // Wait for 30 seconds before checking the guardian set index
     console.log("Waiting for 30 seconds before checking guardian set index...");
-    await sleep(30000);
+    await sleep(30_000);
 
     // Verify the update
     const newIndex = await main.getCurrentGuardianSetIndex();
@@ -135,7 +135,7 @@ export async function run(provider: NetworkProvider) {
   console.log("Price feeds updated successfully.", result);
 
   console.log("Waiting for 30 seconds before checking price feeds...");
-  await sleep(30000);
+  await sleep(30_000);
 
   // Query updated price feeds
   const btcPrice = await main.getPriceUnsafe(BTC_PRICE_FEED_ID);

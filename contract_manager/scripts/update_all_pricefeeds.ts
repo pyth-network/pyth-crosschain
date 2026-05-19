@@ -12,30 +12,30 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage("Update the set of price feeds in a network. Usage: $0")
   .options({
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to sign the transactions with",
+    "chunk-size": {
+      default: 150,
+      desc: "Chunk size to use for the price feeds, defaults to 150",
+      type: "number",
     },
     contract: {
-      type: "string",
       demandOption: true,
       desc: "Contract to update price feeds for (e.g mumbai_0xff1a0f4744e8582DF1aE09D5611b887B6a12925C)",
-    },
-    endpoint: {
       type: "string",
-      desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network",
     },
     encoding: {
-      type: "string",
-      desc: "Encoding to use for the price feeds (hex or base64), defaults to hex",
       choices: ["hex", "base64"],
       default: "hex",
+      desc: "Encoding to use for the price feeds (hex or base64), defaults to hex",
+      type: "string",
     },
-    "chunk-size": {
-      type: "number",
-      desc: "Chunk size to use for the price feeds, defaults to 150",
-      default: 150,
+    endpoint: {
+      desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network",
+      type: "string",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions with",
+      type: "string",
     },
   });
 

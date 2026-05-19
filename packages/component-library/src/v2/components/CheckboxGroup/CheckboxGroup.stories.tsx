@@ -17,19 +17,17 @@ const CheckboxGroupStory: Meta<typeof CheckboxGroup>["render"] = (args) => {
   return (
     <CheckboxGroup
       {...args}
-      options={options}
-      value={value}
       onChange={(nextValue) => {
         setValue(nextValue);
         args.onChange(nextValue);
       }}
+      options={options}
+      value={value}
     />
   );
 };
 
 const meta = {
-  title: "V2/CheckboxGroup",
-  component: CheckboxGroup,
   args: {
     label: "Notifications",
     onChange: NOOP,
@@ -41,7 +39,9 @@ const meta = {
     options: { control: false },
     value: { control: false },
   },
+  component: CheckboxGroup,
   render: CheckboxGroupStory,
+  title: "V2/CheckboxGroup",
 } satisfies Meta<typeof CheckboxGroup>;
 
 export default meta;

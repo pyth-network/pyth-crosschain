@@ -1,11 +1,11 @@
-import type { Argv } from "yargs";
-import { spawnSync } from "child_process";
+import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
+import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
+import { spawnSync } from "child_process";
 import fs from "fs";
 import sha3 from "js-sha3";
-import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
+import type { Argv } from "yargs";
 
 const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
   .filter(([_, config]) => {
@@ -17,16 +17,16 @@ const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
 
 const NETWORK_OPTION = {
   alias: "n",
-  describe: "network",
-  type: "string",
   choices: NETWORK_CHOICES,
   demandOption: true,
+  describe: "network",
+  type: "string",
 } as const;
 const CHANNEL_OPTION = {
-  describe: "channel",
-  type: "string",
   choices: ["stable", "beta"],
   demandOption: true,
+  describe: "channel",
+  type: "string",
 } as const;
 const DEPLOYER_OPTION = {
   describe: "deployer contract address deployed in the network",
@@ -37,9 +37,9 @@ const WORMHOLE_OPTION = {
   type: "string",
 } as const;
 const PYTH_OPTION = {
+  default: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
   describe: "pyth contract address deployed in the network",
   type: "string",
-  default: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
 } as const;
 
 interface Package {
@@ -149,7 +149,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       "Generate the derived address for the given seed and sender address",
       (yargs) => {
         return yargs
-          .positional("seed", { type: "string", demandOption: true })
+          .positional("seed", { demandOption: true, type: "string" })
           .option("signer", { type: "string" });
       },
       async (argv) => {
@@ -211,17 +211,17 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       "Init Pyth contract",
       (yargs) => {
         return yargs
-          .positional("seed", { type: "string", demandOption: true })
+          .positional("seed", { demandOption: true, type: "string" })
           .option("network", NETWORK_OPTION)
           .option("stale-price-threshold", {
+            demandOption: true,
             describe: "Stale price threshold",
             type: "number",
-            demandOption: true,
           })
           .option("update-fee", {
+            demandOption: true,
             describe: "Update fee",
             type: "number",
-            demandOption: true,
           })
           .option("channel", CHANNEL_OPTION);
       },
@@ -281,8 +281,8 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       (yargs) => {
         return yargs
           .positional("package-dir", {
-            type: "string",
             required: true,
+            type: "string",
           })
           .option("deployer", DEPLOYER_OPTION)
           .option("wormhole", WORMHOLE_OPTION)
@@ -301,8 +301,8 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       (_yargs) => {
         return yargs
           .positional("package-dir", {
-            type: "string",
             required: true,
+            type: "string",
           })
           .option("network", NETWORK_OPTION)
           .option("deployer", DEPLOYER_OPTION)
@@ -315,7 +315,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           buildPackage(argv["package-dir"]!, namedAddresses),
         );
 
-        let pythAddress = argv.pyth;
+        const pythAddress = argv.pyth;
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${pythAddress}::contract_upgrade`,
@@ -334,12 +334,12 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       (_yargs) => {
         return yargs
           .positional("addr-1", {
-            type: "string",
             required: true,
+            type: "string",
           })
           .positional("addr-2", {
-            type: "string",
             required: true,
+            type: "string",
           })
           .option("network", NETWORK_OPTION);
       },
@@ -398,7 +398,7 @@ async function executeTransaction(
   const sender = getSender();
   console.log(
     await client.generateSignSubmitWaitForTransaction(sender, txPayload, {
-      maxGasAmount: BigInt(30000),
+      maxGasAmount: BigInt(30_000),
     }),
   );
 }
@@ -413,13 +413,13 @@ function hexStringToByteArray(hexString: string) {
   var numBytes = hexString.length / 2;
   var byteArray = new Uint8Array(numBytes);
   for (var i = 0; i < numBytes; i++) {
-    byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16);
+    byteArray[i] = Number.parseInt(hexString.substr(i * 2, 2), 16);
   }
   return byteArray;
 }
 
 function generateDerivedAddress(signer_address: string, seed: string): string {
-  let derive_resource_account_scheme = Buffer.alloc(1);
+  const derive_resource_account_scheme = Buffer.alloc(1);
   derive_resource_account_scheme.writeUInt8(255);
   return sha3.sha3_256(
     Buffer.concat([
@@ -486,9 +486,9 @@ function serializePackage(p: Package): PackageBCS {
   const codeHash = Buffer.from(sha3.keccak256(Buffer.concat(hashes)), "hex");
 
   return {
-    meta: serializedPackageMetadata,
     bytecodes: serializedModules,
     codeHash,
+    meta: serializedPackageMetadata,
   };
 }
 

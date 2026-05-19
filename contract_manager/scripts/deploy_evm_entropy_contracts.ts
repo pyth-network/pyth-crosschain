@@ -11,16 +11,6 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig, DefaultAddresses } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  getWeb3Contract,
-  getOrDeployWormholeContract,
-  topupAccountsIfNecessary,
-} from "./common";
-import { getOrDeployExecutorContract } from "./deploy_evm_executor_contracts";
 import type { DeploymentType } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
@@ -30,6 +20,15 @@ import {
   EvmEntropyContract,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig, DefaultAddresses } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+  topupAccountsIfNecessary,
+} from "./common";
+import { getOrDeployExecutorContract } from "./deploy_evm_executor_contracts";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -46,9 +45,9 @@ const parser = yargs(hideBin(process.argv))
   .options({
     ...COMMON_DEPLOY_OPTIONS,
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
+      type: "string",
     },
   });
 
@@ -114,12 +113,12 @@ async function main() {
   const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
 
   const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
     gasMultiplier: argv.gasMultiplier,
     gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
+    privateKey: toPrivateKey(argv.privateKey),
     saveContract: argv.saveContract,
+    type: toDeploymentType(argv.deploymentType),
   };
 
   const wormholeContract = await getOrDeployWormholeContract(

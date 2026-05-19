@@ -1,10 +1,9 @@
 import cx from "clsx";
-import type { ReactElement, HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactElement } from "react";
 import { cloneElement, isValidElement } from "react";
-
+import type { FontSize, ThemeV2 } from "../../theme";
 import type { TextColorToken } from "./Text.styles";
 import { classes } from "./Text.styles";
-import type { FontSize, ThemeV2 } from "../../theme";
 
 export type TextProps = HTMLAttributes<HTMLElement> & {
   /**
@@ -55,10 +54,10 @@ export function Text({
   ...otherProps
 }: TextProps) {
   const internalProps = {
-    className: cx(classes.root, className),
     children,
-    "data-color": color,
+    className: cx(classes.root, className),
     "data-bold": bold,
+    "data-color": color,
     "data-italic": italic,
     "data-size": size,
     ...otherProps,
@@ -70,9 +69,9 @@ export function Text({
     return cloneElement(render as ReactElement<HTMLAttributes<HTMLElement>>, {
       ...internalProps,
       ...renderProps,
+      children: children ?? renderProps.children,
       className: cx(internalProps.className, renderProps.className),
       style: { ...internalProps.style, ...renderProps.style },
-      children: children ?? renderProps.children,
     });
   }
 

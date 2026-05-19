@@ -1,16 +1,9 @@
-import {
-  AccountType,
-  getPythProgramKeyForCluster,
-  type PythCluster,
-} from "@pythnetwork/client";
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { PRICE_FEED_OPS_KEY } from "./multisig";
+import type { PythCluster } from "@pythnetwork/client";
+import { AccountType, getPythProgramKeyForCluster } from "@pythnetwork/client";
+import type { Connection, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { isRemoteCluster } from "./cluster";
+import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 /**
  * Get seed for deterministic creation of a price/product account
@@ -41,7 +34,7 @@ function getAccountTypeSize(
   switch (accountType) {
     case AccountType.Price:
       if (isRemoteCluster(cluster)) {
-        return 12576;
+        return 12_576;
       } else {
         return 3312;
       }
@@ -92,14 +85,14 @@ export async function getCreateAccountWithSeedInstruction(
   const [address, seed]: [PublicKey, string] =
     await findDetermisticAccountAddress(accountType, symbol, cluster);
   return SystemProgram.createAccountWithSeed({
-    fromPubkey: base,
     basePubkey: base,
-    newAccountPubkey: address,
-    seed: seed,
-    space: getAccountTypeSize(accountType, cluster),
+    fromPubkey: base,
     lamports: await connection.getMinimumBalanceForRentExemption(
       getAccountTypeSize(accountType, cluster),
     ),
+    newAccountPubkey: address,
     programId: getPythProgramKeyForCluster(cluster),
+    seed: seed,
+    space: getAccountTypeSize(accountType, cluster),
   });
 }

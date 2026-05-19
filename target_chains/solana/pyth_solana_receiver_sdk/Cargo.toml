@@ -12,7 +12,7 @@ crate-type = ["lib"]
 name = "pyth_solana_receiver_sdk"
 
 [features]
-lazer = []
+pro-compatible = []
 
 [dependencies]
 anchor-lang = { workspace = true }

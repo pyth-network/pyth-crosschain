@@ -1,8 +1,8 @@
-import { JsonRpcProvider } from "@mysten/sui.js";
+import type { JsonRpcProvider } from "@mysten/sui.js";
 
 export async function getPackageId(
   provider: JsonRpcProvider,
-  stateId: string
+  stateId: string,
 ): Promise<string> {
   const state = await provider
     .getObject({

@@ -2,7 +2,7 @@ import type { UnixTimestamp } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
 import type { IPriceListener, IPricePusher } from "./interface.js";
-import { PricePusherMetrics } from "./metrics.js";
+import type { PricePusherMetrics } from "./metrics.js";
 import type { PriceConfig } from "./price-config.js";
 import { shouldUpdate, UpdateCondition } from "./price-config.js";
 import type { DurationInSeconds } from "./utils.js";
@@ -100,8 +100,8 @@ export class Controller {
         this.logger.info(
           {
             priceIds: pricesToPush.map((priceConfig) => ({
-              id: priceConfig.id,
               alias: priceConfig.alias,
+              id: priceConfig.id,
             })),
           },
           "Some of the checks triggered pushing update. Will push the updates for some feeds.",

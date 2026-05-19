@@ -1,22 +1,24 @@
+import type { Idl } from "@coral-xyz/anchor";
 import * as anchor from "@coral-xyz/anchor";
-import { Program, Idl } from "@coral-xyz/anchor";
-import { MessageBuffer } from "../target/types/message_buffer";
-import messageBuffer from "../target/idl/message_buffer.json";
+import { Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { assert } from "chai";
-import { Connection, PublicKey } from "@solana/web3.js";
+import type { PythCluster } from "@pythnetwork/client";
 import {
+  AccountType,
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  PythCluster,
   parseBaseData,
-  AccountType,
   parseProductData,
 } from "@pythnetwork/client";
-
-import path from "path";
+import type { PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
+import { assert } from "chai";
 import dotenv from "dotenv";
 import fs from "fs";
+
+import path from "path";
+import messageBuffer from "../target/idl/message_buffer.json";
+import type { MessageBuffer } from "../target/types/message_buffer";
 
 type PythClusterOrIntegration = PythCluster | "integration";
 /**
@@ -93,10 +95,11 @@ export async function getPriceAccountPubkeys(
     const base = parseBaseData(singleAccount.account.data);
     if (base) {
       switch (base.type) {
-        case AccountType.Product:
+        case AccountType.Product: {
           const productData = parseProductData(singleAccount.account.data);
           priceAccountIds.push(productData.priceAccountKey);
           break;
+        }
         default:
           break;
       }
@@ -137,8 +140,8 @@ async function main() {
     path.resolve(process.env.PAYER_KEYPAIR_PATH),
   );
   const endpoint = getPythClusterEndpoint(cluster);
-  const initialSize = parseInt(process.env.INITIAL_SIZE || "", 10);
-  let whitelistAdmin = payer;
+  const initialSize = Number.parseInt(process.env.INITIAL_SIZE || "", 10);
+  const whitelistAdmin = payer;
 
   console.info(`
         messageBufferPid: ${messageBufferPid.toString()}
@@ -185,7 +188,7 @@ async function main() {
   if (canAirdrop) {
     console.group("Requesting airdrop");
 
-    let airdropSig = await provider.connection.requestAirdrop(
+    const airdropSig = await provider.connection.requestAirdrop(
       payer.publicKey,
       1 * anchor.web3.LAMPORTS_PER_SOL,
     );
@@ -236,7 +239,7 @@ async function main() {
   if (whitelist.allowedPrograms.length === 0) {
     console.group("Setting Allowed Programs");
     const allowedProgramAuthorities = [pythOracleCpiAuth];
-    let setAllowedProgramSig = await messageBufferProgram.methods
+    const setAllowedProgramSig = await messageBufferProgram.methods
       .setAllowedPrograms(allowedProgramAuthorities)
       .accounts({
         admin: whitelistAdmin.publicKey,
@@ -260,11 +263,11 @@ async function main() {
     console.log("Allowed Programs already set");
   }
 
-  let priceIds = await getPriceAccountPubkeys(connection, pythOraclePid);
+  const priceIds = await getPriceAccountPubkeys(connection, pythOraclePid);
   console.info(`fetched ${priceIds.length} priceAccountIds`);
-  let errorAccounts = [];
+  const errorAccounts = [];
   let alreadyInitializedAccounts = [];
-  let newlyInitializedAccounts = [];
+  const newlyInitializedAccounts = [];
 
   const messageBufferKeys = priceIds.map((priceId) => {
     return {
@@ -277,9 +280,10 @@ async function main() {
     };
   });
 
-  let accounts = await messageBufferProgram.account.messageBuffer.fetchMultiple(
-    messageBufferKeys.map((k) => k.messageBuffer),
-  );
+  const accounts =
+    await messageBufferProgram.account.messageBuffer.fetchMultiple(
+      messageBufferKeys.map((k) => k.messageBuffer),
+    );
 
   const msgBufferKeysAndData = messageBufferKeys.map((k, i) => {
     return {
@@ -294,8 +298,8 @@ async function main() {
     })
     .map((v) => {
       return {
-        priceAccount: v.priceAccount.toString(),
         messageBuffer: v.messageBuffer.toString(),
+        priceAccount: v.priceAccount.toString(),
       };
     });
 
@@ -319,9 +323,9 @@ async function main() {
         const messageBufferPda = idAndAccount.messageBuffer;
         const msgBufferPdaMetas = [
           {
-            pubkey: messageBufferPda,
             isSigner: false,
             isWritable: true,
+            pubkey: messageBufferPda,
           },
         ];
 
@@ -329,16 +333,16 @@ async function main() {
           await messageBufferProgram.methods
             .createBuffer(pythOracleCpiAuth, priceId, initialSize)
             .accounts({
-              whitelist: whitelistPubkey,
               admin: whitelistAdmin.publicKey,
               systemProgram: anchor.web3.SystemProgram.programId,
+              whitelist: whitelistPubkey,
             })
             .signers([whitelistAdmin])
             .remainingAccounts(msgBufferPdaMetas)
             .rpc({ skipPreflight: true });
           newlyInitializedAccounts.push({
-            priceId: priceId.toString(),
             messageBuffer: messageBufferPda.toString(),
+            priceId: priceId.toString(),
           });
         } catch (e) {
           console.error(
@@ -347,8 +351,8 @@ async function main() {
           );
           console.error(e);
           errorAccounts.push({
-            priceId: priceId.toString(),
             messageBuffer: messageBufferPda.toString(),
+            priceId: priceId.toString(),
           });
         }
       },
@@ -370,7 +374,7 @@ async function main() {
       await messageBufferProgram.account.whitelist.fetchNullable(
         whitelistPubkey,
       );
-    let newWhitelistAdmin = new anchor.web3.PublicKey(
+    const newWhitelistAdmin = new anchor.web3.PublicKey(
       process.env.WHITELIST_ADMIN,
     );
     if (!whitelist.admin.equals(newWhitelistAdmin)) {

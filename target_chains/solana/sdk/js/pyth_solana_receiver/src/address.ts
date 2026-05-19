@@ -22,15 +22,15 @@ export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
   "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
 );
 
-export const LAZER_RECEIVER_PROGRAM_ID = new PublicKey(
+export const PRO_COMPATIBLE_RECEIVER_PROGRAM_ID = new PublicKey(
   "rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp",
 );
 
-export const LAZER_WORMHOLE_PROGRAM_ID = new PublicKey(
+export const PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID = new PublicKey(
   "HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL",
 );
 
-export const LAZER_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
+export const PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
   "pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou",
 );
 

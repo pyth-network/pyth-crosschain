@@ -11,31 +11,31 @@ import { IotaPriceServiceConnection } from "../index";
 
 const argvPromise = yargs(hideBin(process.argv))
   .option("feed-id", {
+    demandOption: true,
     description:
       "Price feed ids to update without the leading 0x (e.g f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b). Can be provided multiple times for multiple feed updates",
     type: "array",
-    demandOption: true,
   })
   .option("hermes", {
+    demandOption: true,
     description: "Endpoint URL for Hermes. e.g: https://hermes.pyth.network",
     type: "string",
-    demandOption: true,
   })
   .option("full-node", {
+    demandOption: true,
     description:
       "URL of the full IOTA node RPC endpoint. e.g: https://api.testnet.iota.cafe/",
     type: "string",
-    demandOption: true,
   })
   .option("pyth-state-id", {
+    demandOption: true,
     description: "Pyth state object id.",
     type: "string",
-    demandOption: true,
   })
   .option("wormhole-state-id", {
+    demandOption: true,
     description: "Wormhole state object id.",
     type: "string",
-    demandOption: true,
   }).argv;
 
 export function getProvider(url: string) {
@@ -67,8 +67,8 @@ async function run() {
     }
   }
   console.log({
-    newFeeds,
     existingFeeds,
+    newFeeds,
   });
   const tx = new Transaction();
   if (existingFeeds.length > 0) {
@@ -85,12 +85,12 @@ async function run() {
   );
 
   const result = await provider.signAndExecuteTransaction({
-    signer: wallet,
-    transaction: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    signer: wallet,
+    transaction: tx,
   });
   console.dir(result, { depth: null });
 }

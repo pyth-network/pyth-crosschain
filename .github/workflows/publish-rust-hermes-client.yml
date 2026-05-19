@@ -1,4 +1,4 @@
-name: Publish Rust package pyth-lazer-client to crates.io
+name: Publish Rust package pyth-hermes-client-rust to crates.io
 
 on:
   push:

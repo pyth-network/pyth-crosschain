@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  parseAsString,
-  parseAsInteger,
-  parseAsBoolean,
-  useQueryStates,
   createSerializer,
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
 } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -28,13 +28,13 @@ export const useQueryParamFilterPagination = <T>(
 
   const queryParams = useMemo(
     () => ({
+      descending: parseAsBoolean.withDefault(
+        options?.defaultDescending ?? false,
+      ),
       page: parseAsInteger.withDefault(1),
       pageSize: parseAsInteger.withDefault(options?.defaultPageSize ?? 30),
       search: parseAsString.withDefault(""),
       sort: parseAsString.withDefault(options?.defaultSort ?? ""),
-      descending: parseAsBoolean.withDefault(
-        options?.defaultDescending ?? false,
-      ),
     }),
     [options],
   );
@@ -83,9 +83,9 @@ export const useQueryParamFilterPagination = <T>(
   const updateSortDescriptor = useCallback(
     ({ column, direction }: SortDescriptor) => {
       updateQuery({
+        descending: direction === "descending",
         page: 1,
         sort: column.toString(),
-        descending: direction === "descending",
       });
     },
     [updateQuery],
@@ -127,17 +127,17 @@ export const useQueryParamFilterPagination = <T>(
   );
 
   return {
-    search,
-    sortDescriptor,
+    mkPageLink,
+    numPages,
+    numResults: mutatedItems.length,
     page,
     pageSize,
-    updateSearch,
-    updateSortDescriptor,
+    paginatedItems,
+    search,
+    sortDescriptor,
     updatePage,
     updatePageSize,
-    paginatedItems,
-    numPages,
-    mkPageLink,
-    numResults: mutatedItems.length,
+    updateSearch,
+    updateSortDescriptor,
   };
 };

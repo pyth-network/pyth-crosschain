@@ -8,7 +8,8 @@ import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract } from "../base";
-import { AptosChain, Chain } from "../chains";
+import type { Chain } from "../chains";
+import { AptosChain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
 
@@ -37,8 +38,8 @@ export class AptosWormholeContract extends WormholeContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: AptosWormholeContract.type,
     };
   }
@@ -94,9 +95,9 @@ export class AptosWormholeContract extends WormholeContract {
     const data = await this.getState();
     const client = this.chain.getClient();
     const result = (await client.getTableItem(data.guardian_sets.handle, {
+      key: data.guardian_set_index.number.toString(),
       key_type: `u64`,
       value_type: `${this.address}::structs::GuardianSet`,
-      key: data.guardian_set_index.number.toString(),
     })) as GuardianSet;
     return result.guardians.map((guardian) => guardian.address.bytes);
   }
@@ -229,9 +230,9 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     if (priceInfo.price.negative) price = "-" + price;
     return {
       conf: priceInfo.conf,
-      publishTime: priceInfo.timestamp,
       expo,
       price,
+      publishTime: priceInfo.timestamp,
     };
   }
 
@@ -243,15 +244,15 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     const handle = res.info.handle;
     try {
       const priceItemRes = await client.getTableItem(handle, {
-        key_type: `${this.stateId}::price_identifier::PriceIdentifier`,
-        value_type: `${this.stateId}::price_info::PriceInfo`,
         key: {
           bytes: feedId,
         },
+        key_type: `${this.stateId}::price_identifier::PriceIdentifier`,
+        value_type: `${this.stateId}::price_info::PriceInfo`,
       });
       return {
-        price: this.parsePrice(priceItemRes.price_feed.price),
         emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
+        price: this.parsePrice(priceItemRes.price_feed.price),
       };
     } catch (error) {
       if (
@@ -274,11 +275,11 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     };
     return data.sources.keys.map((source) => {
       return {
-        emitterChain: Number(source.emitter_chain),
         emitterAddress: source.emitter_address.external_address.replace(
           "0x",
           "",
         ),
+        emitterChain: Number(source.emitter_chain),
       };
     });
   }
@@ -291,11 +292,11 @@ export class AptosPriceFeedContract extends PriceFeedContract {
       };
     };
     return {
-      emitterChain: Number(data.source.emitter_chain),
       emitterAddress: data.source.emitter_address.external_address.replace(
         "0x",
         "",
       ),
+      emitterChain: Number(data.source.emitter_chain),
     };
   }
 
@@ -334,8 +335,8 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return {
       chain: this.chain.getId(),
       stateId: this.stateId,
-      wormholeStateId: this.wormholeStateId,
       type: AptosPriceFeedContract.type,
+      wormholeStateId: this.wormholeStateId,
     };
   }
 }

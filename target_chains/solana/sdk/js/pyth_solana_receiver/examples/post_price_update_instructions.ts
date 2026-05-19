@@ -1,10 +1,18 @@
-import { Connection, Keypair } from "@solana/web3.js";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
-import fs from "fs";
-import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
+import { Connection, Keypair } from "@solana/web3.js";
+import fs from "fs";
+import os from "os";
+import type { InstructionWithEphemeralSigners } from "../src/index.js";
+import {
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+  PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+  PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+  PythSolanaReceiver,
+} from "../src/index.js";
+
+const HERMES_ACCESS_TOKEN = process.env["HERMES_ACCESS_TOKEN"];
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -23,10 +31,16 @@ async function main() {
   const connection = new Connection("https://api.devnet.solana.com");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
-    `Sending transactions from account: ${keypair.publicKey.toBase58()}`
+    `Sending transactions from account: ${keypair.publicKey.toBase58()}`,
   );
   const wallet = new Wallet(keypair);
-  const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    pushOracleProgramId: PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+    receiverProgramId: PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+    wallet,
+    wormholeProgramId: PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+  });
 
   // Get the price update from hermes
   const priceUpdateData = await getPriceUpdateData();
@@ -37,12 +51,11 @@ async function main() {
     postInstructions,
     closeInstructions,
     priceFeedIdToPriceUpdateAccount,
-  } = await pythSolanaReceiver.buildPostPriceUpdateInstructions(
-    priceUpdateData
-  );
+  } =
+    await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData);
   console.log(
     "The SOL/USD price update will get posted to:",
-    priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID].toBase58()
+    priceFeedIdToPriceUpdateAccount[SOL_PRICE_FEED_ID].toBase58(),
   );
 
   // Put your instructions here
@@ -50,25 +63,25 @@ async function main() {
 
   const transactions = await pythSolanaReceiver.batchIntoVersionedTransactions(
     [...postInstructions, ...consumerInstructions, ...closeInstructions],
-    { computeUnitPriceMicroLamports: 100000, tightComputeBudget: true }
+    { computeUnitPriceMicroLamports: 100_000, tightComputeBudget: true },
   ); // Put all the instructions together
   await sendTransactions(
     transactions,
     pythSolanaReceiver.connection,
-    pythSolanaReceiver.wallet
+    pythSolanaReceiver.wallet,
   );
 }
 
 // Fetch price update data from Hermes
 async function getPriceUpdateData() {
   const priceServiceConnection = new HermesClient(
-    "https://hermes.pyth.network/",
-    {}
+    "https://pyth.dourolabs.app/hermes",
+    HERMES_ACCESS_TOKEN ? { accessToken: HERMES_ACCESS_TOKEN } : {},
   );
 
   const response = await priceServiceConnection.getLatestPriceUpdates(
     [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
-    { encoding: "base64" }
+    { encoding: "base64" },
   );
 
   return response.binary.data;
@@ -78,7 +91,7 @@ async function getPriceUpdateData() {
 async function loadKeypairFromFile(filePath: string): Promise<Keypair> {
   try {
     const keypairData = JSON.parse(
-      await fs.promises.readFile(filePath, "utf8")
+      await fs.promises.readFile(filePath, "utf8"),
     );
     return Keypair.fromSecretKey(Uint8Array.from(keypairData));
   } catch (error) {

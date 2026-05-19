@@ -174,8 +174,12 @@ parser.command(
       "--trace-level",
       traceLevel,
     ]);
-    const blueprint = (await import("../../../plutus.json"))
-      .default as PlutusBlueprint;
+    const blueprint = JSON.parse(
+      await fs.readFile(
+        path.resolve(import.meta.dirname, "../../../plutus.json"),
+        "utf8",
+      ),
+    ) as PlutusBlueprint;
 
     const offchainSrc = generateTypeScript(
       blueprint,

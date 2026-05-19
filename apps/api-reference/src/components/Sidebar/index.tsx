@@ -4,7 +4,7 @@ import { Field, Label } from "@headlessui/react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import type { HTMLAttributes, ComponentProps, ElementType } from "react";
+import type { ComponentProps, ElementType, HTMLAttributes } from "react";
 import { useState } from "react";
 
 import * as apis from "../../apis";
@@ -14,9 +14,9 @@ type Chain = keyof typeof apis;
 const CHAINS = Object.keys(apis) as Chain[];
 
 const CHAIN_TO_NAME = {
-  evm: "EVM",
   aptos: "Aptos",
   cosmwasm: "CosmWasm",
+  evm: "EVM",
   offchain: "Off-Chain",
 };
 
@@ -24,8 +24,8 @@ const MENU = Object.fromEntries(
   Object.entries(apis).map(([chain, methods]) => [
     chain,
     Object.entries(methods).map(([methodKey, methodValue]) => ({
-      name: (methodValue as { name: string }).name,
       href: `/price-feeds/${chain}/${methodKey}`,
+      name: (methodValue as { name: string }).name,
     })),
   ]),
 );
@@ -48,16 +48,16 @@ export const Sidebar = ({
         <Field className="sticky top-0 flex w-full flex-row items-center gap-2 bg-white pb-2 pl-3 pt-4 dark:bg-pythpurple-900">
           <Label className="text-sm font-bold">Chain</Label>
           <Select
-            value={chain}
+            className="grow"
             onChange={setChain}
             options={CHAINS}
-            className="grow"
             renderOption={(chain) => CHAIN_TO_NAME[chain]}
+            value={chain}
           />
         </Field>
         <nav
-          className="flex flex-col pb-4 pl-1 pt-2 text-sm text-neutral-600 dark:text-neutral-400"
           aria-label="Methods"
+          className="flex flex-col pb-4 pl-1 pt-2 text-sm text-neutral-600 dark:text-neutral-400"
         >
           <ul className="contents">
             {MENU[chain]?.map(({ name, href }) => (

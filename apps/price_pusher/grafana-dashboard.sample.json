@@ -72,9 +72,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -153,9 +151,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -238,9 +234,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -368,9 +362,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -438,9 +430,6 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true,
-              "Value #A": true,
-              "Value #C": false,
               "__name__": true,
               "__name__#B": true,
               "__name__#C": true,
@@ -459,19 +448,18 @@
               "job#C": true,
               "price_id": false,
               "price_id#B": true,
-              "price_id#C": true
+              "price_id#C": true,
+              "Time": true,
+              "Value #A": true,
+              "Value #C": false
             },
             "includeByName": {
-              "Value #B": true,
-              "Value #C": true,
               "alias 1": true,
-              "price_id": true
+              "price_id": true,
+              "Value #B": true,
+              "Value #C": true
             },
             "indexByName": {
-              "Time 1": 4,
-              "Time 2": 10,
-              "Time 3": 15,
-              "Value #A": 9,
               "__name__ 1": 5,
               "__name__ 2": 16,
               "alias 2": 11,
@@ -485,13 +473,17 @@
               "job 1": 8,
               "job 2": 14,
               "job 3": 20,
-              "price_id": 0
+              "price_id": 0,
+              "Time 1": 4,
+              "Time 2": 10,
+              "Time 3": 15,
+              "Value #A": 9
             },
             "renameByName": {
-              "Value #B": "Time Since Update",
-              "Value #C": "Total Updates",
               "alias 1": "Symbol",
-              "price_id": "Price ID"
+              "price_id": "Price ID",
+              "Value #B": "Time Since Update",
+              "Value #C": "Total Updates"
             }
           }
         }
@@ -711,24 +703,16 @@
       },
       "id": 13,
       "options": {
-        "displayLabels": [
-          "percent",
-          "name"
-        ],
+        "displayLabels": ["percent", "name"],
         "legend": {
           "displayMode": "list",
           "placement": "right",
           "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
+          "values": ["value", "percent"]
         },
         "pieType": "pie",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -817,9 +801,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },

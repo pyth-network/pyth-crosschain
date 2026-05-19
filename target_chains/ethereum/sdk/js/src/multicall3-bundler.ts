@@ -47,23 +47,23 @@ export function multicall3Bundler(
   // Encode the multicall3 aggregate3 function call
   const multicallData = encodeFunctionData({
     abi: MULTICALL3_ABI,
-    functionName: "aggregate3Value",
     args: [
       [
         {
-          target: pythUpdate.call.to,
           allowFailure: false,
-          value: pythUpdate.call.value ?? 0n,
           callData: pythUpdate.call.data ?? "0x",
+          target: pythUpdate.call.to,
+          value: pythUpdate.call.value ?? 0n,
         },
         {
-          target: call.to,
           allowFailure: false,
-          value: call.value ?? 0n,
           callData: call.data ?? "0x",
+          target: call.to,
+          value: call.value ?? 0n,
         },
       ],
     ],
+    functionName: "aggregate3Value",
   });
 
   // Calculate total value needed
@@ -71,9 +71,9 @@ export function multicall3Bundler(
 
   // Create the bundled transaction that calls multicall3
   return {
-    to: MULTICALL3_ADDRESS,
     data: multicallData,
-    value: totalValue,
     from: call.from,
+    to: MULTICALL3_ADDRESS,
+    value: totalValue,
   };
 }

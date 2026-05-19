@@ -2,10 +2,9 @@ import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Link } from "@pythnetwork/component-library/Link";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
-
+import { getFeed } from "../get-feed";
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
-import { getFeed } from "../get-feed";
 import { ChartToolbar } from "./chart-toolbar";
 
 type Props = {
@@ -15,7 +14,7 @@ type Props = {
 };
 
 export const ChartPage = async ({ params }: Props) => (
-  <ChartPageImpl {...await getFeed(params)} />
+  <ChartPageImpl {...(await getFeed(params))} />
 );
 
 export const ChartPageLoading = () => <ChartPageImpl isLoading />;
@@ -27,27 +26,27 @@ type ChartPageImplProps =
     });
 
 const ChartPageImpl = (props: ChartPageImplProps) => (
-  <Card title="Chart" className={styles.chartCard} toolbar={<ChartToolbar />}>
+  <Card className={styles.chartCard} title="Chart" toolbar={<ChartToolbar />}>
     <div className={styles.chart}>
       {props.isLoading ? (
         <div className={styles.spinnerContainer}>
           <Spinner
-            label="Loading chart"
-            isIndeterminate
             className={styles.spinner ?? ""}
+            isIndeterminate
+            label="Loading chart"
           />
         </div>
       ) : (
         <Chart
-          symbol={props.symbol}
           feedId={props.feed.product.price_account}
+          symbol={props.symbol}
         />
       )}
     </div>
     {!props.isLoading && (
       <Disclaimer
-        symbol={props.symbol}
         displaySymbol={props.feed.product.display_symbol}
+        symbol={props.symbol}
       />
     )}
   </Card>
@@ -64,7 +63,7 @@ const Disclaimer = ({ displaySymbol, symbol }: DisclaimerProps) => {
       <Info className={styles.disclaimerIcon} weight="fill" />
       <p className={styles.disclaimerBody}>
         The <b>{displaySymbol}</b> is subject to the Terms of Use posted at{" "}
-        <Link target="_blank" rel="noreferrer" href="https://newyorkfed.org">
+        <Link href="https://newyorkfed.org" rel="noreferrer" target="_blank">
           newyorkfed.org
         </Link>
         . The New York Fed is not responsible for publication of the{" "}

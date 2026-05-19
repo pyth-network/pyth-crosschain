@@ -8,16 +8,15 @@ import { List } from "@phosphor-icons/react/dist/ssr/List";
 import { Plug } from "@phosphor-icons/react/dist/ssr/Plug";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import { socialLinks } from "../social-links.jsx";
-import styles from "./index.module.scss";
-import Logo from "./logo.svg";
-import { ThemeSwitch } from "./theme-switch.jsx";
 import { Button } from "../Button/index.jsx";
 import type { Props as CardProps } from "../Card/index.jsx";
 import { Card } from "../Card/index.jsx";
 import { Link } from "../Link/index.jsx";
+import { socialLinks } from "../social-links.jsx";
 import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
+import Logo from "./logo.svg";
+import { ThemeSwitch } from "./theme-switch.jsx";
 
 export { default as Logo } from "./logo.svg";
 
@@ -46,7 +45,7 @@ export const Header = ({
   <header className={clsx(styles.header, className)} {...props}>
     <div className={styles.content}>
       <div className={styles.leftMenu}>
-        <Link href="/" className={styles.logoLink ?? ""}>
+        <Link className={styles.logoLink ?? ""} href="/">
           <div className={styles.logoWrapper}>
             <Logo className={styles.logo} />
           </div>
@@ -58,12 +57,12 @@ export const Header = ({
       <div className={styles.rightMenu}>
         {displaySupportButton && (
           <Button
-            variant="ghost"
-            size="sm"
-            rounded
             beforeIcon={<Lifebuoy />}
-            drawer={SupportDrawer}
             className={styles.supportButton ?? ""}
+            drawer={SupportDrawer}
+            rounded
+            size="sm"
+            variant="ghost"
           >
             Support
           </Button>
@@ -71,11 +70,11 @@ export const Header = ({
         {extraCta}
         <MobileMenu className={styles.mobileMenu} mainCta={mainCta} />
         <Button
-          href={mainCta?.href ?? "https://docs.pyth.network"}
-          size="sm"
-          rounded
-          target="_blank"
           className={styles.mainCta ?? ""}
+          href={mainCta?.href ?? "https://docs.pyth.network"}
+          rounded
+          size="sm"
+          target="_blank"
         >
           {mainCta?.label ?? "Dev Docs"}
         </Button>
@@ -93,17 +92,17 @@ const MobileMenu = ({
   mainCta: Props["mainCta"];
 }) => (
   <Button
-    className={className ?? ""}
     beforeIcon={<List />}
-    variant="ghost"
-    size="sm"
-    rounded
-    hideText
+    className={className ?? ""}
     drawer={{
+      contents: <MobileMenuContents mainCta={mainCta} />,
       hideHeading: true,
       title: "Menu",
-      contents: <MobileMenuContents mainCta={mainCta} />,
     }}
+    hideText
+    rounded
+    size="sm"
+    variant="ghost"
   >
     Menu
   </Button>
@@ -113,18 +112,18 @@ const MobileMenuContents = ({ mainCta }: { mainCta: Props["mainCta"] }) => (
   <div className={styles.mobileMenuContents}>
     <div className={styles.buttons}>
       <Button
-        variant="ghost"
-        size="md"
-        rounded
         beforeIcon={<Lifebuoy />}
         drawer={SupportDrawer}
+        rounded
+        size="md"
+        variant="ghost"
       >
         Support
       </Button>
       <Button
         href={mainCta?.href ?? "https://docs.pyth.network"}
-        size="md"
         rounded
+        size="md"
         target="_blank"
       >
         {mainCta?.label ?? "Dev Docs"}
@@ -168,70 +167,70 @@ const LinkList = ({ title, links }: LinkListProps) => (
 );
 
 export const SupportDrawer = {
-  title: "Support",
   bodyClassName: styles.supportDrawer,
   contents: (
     <>
       <LinkList
-        title="Integration"
         links={[
           {
-            icon: <Plug />,
-            title: "Connect directly with real-time market data",
             description: "Integrate the Pyth data feeds into your app",
-            target: "_blank",
             href: "https://docs.pyth.network/price-feeds/use-real-time-data",
-          },
-          {
-            icon: <BookOpenText />,
-            title: "Learn how to work with Pyth data",
-            description: "Read the Pyth Network documentation",
+            icon: <Plug />,
             target: "_blank",
-            href: "https://docs.pyth.network",
+            title: "Connect directly with real-time market data",
           },
           {
-            icon: <Code />,
-            title: "Try out the APIs",
+            description: "Read the Pyth Network documentation",
+            href: "https://docs.pyth.network",
+            icon: <BookOpenText />,
+            target: "_blank",
+            title: "Learn how to work with Pyth data",
+          },
+          {
             description:
               "Use the Pyth Network API Reference to experience the Pyth APIs",
-            target: "_blank",
             href: "https://api-reference.pyth.network",
+            icon: <Code />,
+            target: "_blank",
+            title: "Try out the APIs",
           },
         ]}
+        title="Integration"
       />
       <LinkList
-        title="$PYTH Token"
         links={[
           {
-            icon: <Coins />,
-            title: "Tokenomics",
             description:
               "Learn about how the $PYTH token is structured and distributed",
-            target: "_blank",
             href: "https://docs.pyth.network/home/pyth-token/pyth-distribution",
+            icon: <Coins />,
+            target: "_blank",
+            title: "Tokenomics",
           },
           {
-            icon: <Gavel />,
-            title: "Pyth Governance Guide",
             description:
               "Gain voting power to help shape the future of DeFi by participating in governance",
-            target: "_blank",
             href: "https://docs.pyth.network/home/pyth-token#staking-pyth-for-governance",
+            icon: <Gavel />,
+            target: "_blank",
+            title: "Pyth Governance Guide",
           },
         ]}
+        title="$PYTH Token"
       />
       <LinkList
-        title="Community"
         links={socialLinks.map(({ icon, href, name }) => ({
+          description: href,
           href,
+          icon,
           target: "_blank",
           title: name,
-          description: href,
-          icon,
         }))}
+        title="Community"
       />
     </>
   ),
+  title: "Support",
 };
 
 export { default as HeaderLogo } from "./logo.svg";

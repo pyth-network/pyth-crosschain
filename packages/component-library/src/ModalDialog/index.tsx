@@ -13,18 +13,18 @@ import {
   createContext,
   use,
   useCallback,
-  useState,
   useEffect,
-  useRef,
   useMemo,
   useReducer,
+  useRef,
+  useState,
 } from "react";
 import type { ModalRenderProps } from "react-aria-components";
 import {
-  Modal,
-  ModalOverlay,
   Dialog,
   DialogTrigger,
+  Modal,
+  ModalOverlay,
   Select,
 } from "react-aria-components";
 
@@ -171,12 +171,12 @@ export const ModalDialog = ({
 
   return (
     <MotionModalOverlay
+      animate={animation}
+      initial="unmounted"
       isDismissable
       isExiting={animation === "hidden"}
-      onAnimationStart={startAnimation}
       onAnimationComplete={endAnimation}
-      initial="unmounted"
-      animate={animation}
+      onAnimationStart={startAnimation}
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}
       {...(overlayClassName && { className: overlayClassName })}
@@ -224,22 +224,22 @@ export const createModalDialogContext = <
   }
   const State = {
     Closed: () => ({ type: StateType.Closed as const }),
-    Opening: (props: ModalDialogProps<T, U>) => ({
-      type: StateType.Opening as const,
+    Closing: (props: ModalDialogProps<T, U>) => ({
       props,
+      type: StateType.Closing as const,
     }),
     Open: (props: ModalDialogProps<T, U>) => ({
+      props,
       type: StateType.Open as const,
-      props,
     }),
-    Closing: (props: ModalDialogProps<T, U>) => ({
-      type: StateType.Closing as const,
+    Opening: (props: ModalDialogProps<T, U>) => ({
       props,
+      type: StateType.Opening as const,
     }),
     Replacing: (
       oldProps: ModalDialogProps<T, U>,
       newProps: ModalDialogProps<T, U>,
-    ) => ({ type: StateType.Replacing as const, oldProps, newProps }),
+    ) => ({ newProps, oldProps, type: StateType.Replacing as const }),
   };
   type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -250,13 +250,13 @@ export const createModalDialogContext = <
     CloseFinish,
   }
   const Action = {
-    Open: (props: ModalDialogProps<T, U>) => ({
-      type: ActionType.Open as const,
-      props,
-    }),
-    OpenFinish: () => ({ type: ActionType.OpenFinish as const }),
     Close: () => ({ type: ActionType.Close as const }),
     CloseFinish: () => ({ type: ActionType.CloseFinish as const }),
+    Open: (props: ModalDialogProps<T, U>) => ({
+      props,
+      type: ActionType.Open as const,
+    }),
+    OpenFinish: () => ({ type: ActionType.OpenFinish as const }),
   };
   type Action = ReturnType<(typeof Action)[keyof typeof Action]>;
 
@@ -354,7 +354,7 @@ export const createModalDialogContext = <
           closeResolvers.current.push(resolve),
         );
       }, [dispatch]);
-      const value = useMemo(() => ({ open, close }), [open, close]);
+      const value = useMemo(() => ({ close, open }), [open, close]);
       const handleOpenFinish = useCallback(() => {
         dispatch(Action.OpenFinish());
       }, [dispatch]);
@@ -393,9 +393,9 @@ export const createModalDialogContext = <
                 state.type === StateType.Open ||
                 state.type === StateType.Opening
               }
+              onCloseFinish={handleCloseFinish}
               onOpenChange={handleOpenChange}
               onOpenFinish={handleOpenFinish}
-              onCloseFinish={handleCloseFinish}
               {...ctxProps}
               {...(state.type === StateType.Replacing
                 ? state.oldProps

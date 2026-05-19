@@ -1,190 +1,8 @@
 {
-  "version": "0.2.0",
-  "name": "pyth_lazer_solana_contract",
-  "instructions": [
-    {
-      "name": "initialize",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "storage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "topAuthority",
-          "type": "publicKey"
-        },
-        {
-          "name": "treasury",
-          "type": "publicKey"
-        }
-      ]
-    },
-    {
-      "name": "migrateFrom010",
-      "accounts": [
-        {
-          "name": "topAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "storage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "treasury",
-          "type": "publicKey"
-        }
-      ]
-    },
-    {
-      "name": "update",
-      "accounts": [
-        {
-          "name": "topAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "storage",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "trustedSigner",
-          "type": "publicKey"
-        },
-        {
-          "name": "expiresAt",
-          "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "updateEcdsaSigner",
-      "accounts": [
-        {
-          "name": "topAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "storage",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "trustedSigner",
-          "type": {
-            "array": [
-              "u8",
-              20
-            ]
-          }
-        },
-        {
-          "name": "expiresAt",
-          "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "verifyMessage",
-      "docs": [
-        "Verifies a ed25519 signature on Solana by checking that the transaction contains",
-        "a correct call to the built-in `ed25519_program`.",
-        "",
-        "- `message_data` is the signed message that is being verified.",
-        "- `ed25519_instruction_index` is the index of the `ed25519_program` instruction",
-        "within the transaction. This instruction must precede the current instruction.",
-        "- `signature_index` is the index of the signature within the inputs to the `ed25519_program`.",
-        "- `message_offset` is the offset of the signed message within the",
-        "input data for the current instruction."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "storage",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treasury",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructionsSysvar",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "(e.g. in `sysvar::instructions::load_instruction_at_checked`).",
-            "This account is not usable with anchor's `Program` account type because it's not executable."
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "messageData",
-          "type": "bytes"
-        },
-        {
-          "name": "ed25519InstructionIndex",
-          "type": "u16"
-        },
-        {
-          "name": "signatureIndex",
-          "type": "u8"
-        },
-        {
-          "name": "messageOffset",
-          "type": "u16"
-        }
-      ],
-      "returns": {
-        "defined": "VerifiedMessage"
-      }
-    }
-  ],
   "accounts": [
     {
       "name": "Storage",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "topAuthority",
@@ -219,34 +37,211 @@
               "array": ["u8", 100]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     }
   ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "payer"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "storage"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "topAuthority",
+          "type": "publicKey"
+        },
+        {
+          "name": "treasury",
+          "type": "publicKey"
+        }
+      ],
+      "name": "initialize"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": false,
+          "isSigner": true,
+          "name": "topAuthority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "storage"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "treasury",
+          "type": "publicKey"
+        }
+      ],
+      "name": "migrateFrom010"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": false,
+          "isSigner": true,
+          "name": "topAuthority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "storage"
+        }
+      ],
+      "args": [
+        {
+          "name": "trustedSigner",
+          "type": "publicKey"
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        }
+      ],
+      "name": "update"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": false,
+          "isSigner": true,
+          "name": "topAuthority"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "storage"
+        }
+      ],
+      "args": [
+        {
+          "name": "trustedSigner",
+          "type": {
+            "array": ["u8", 20]
+          }
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        }
+      ],
+      "name": "updateEcdsaSigner"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "payer"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "storage"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "treasury"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        },
+        {
+          "docs": [
+            "(e.g. in `sysvar::instructions::load_instruction_at_checked`).",
+            "This account is not usable with anchor's `Program` account type because it's not executable."
+          ],
+          "isMut": false,
+          "isSigner": false,
+          "name": "instructionsSysvar"
+        }
+      ],
+      "args": [
+        {
+          "name": "messageData",
+          "type": "bytes"
+        },
+        {
+          "name": "ed25519InstructionIndex",
+          "type": "u16"
+        },
+        {
+          "name": "signatureIndex",
+          "type": "u8"
+        },
+        {
+          "name": "messageOffset",
+          "type": "u16"
+        }
+      ],
+      "docs": [
+        "Verifies a ed25519 signature on Solana by checking that the transaction contains",
+        "a correct call to the built-in `ed25519_program`.",
+        "",
+        "- `message_data` is the signed message that is being verified.",
+        "- `ed25519_instruction_index` is the index of the `ed25519_program` instruction",
+        "within the transaction. This instruction must precede the current instruction.",
+        "- `signature_index` is the index of the signature within the inputs to the `ed25519_program`.",
+        "- `message_offset` is the offset of the signed message within the",
+        "input data for the current instruction."
+      ],
+      "name": "verifyMessage",
+      "returns": {
+        "defined": "VerifiedMessage"
+      }
+    }
+  ],
+  "name": "pyth_lazer_solana_contract",
   "types": [
     {
-      "name": "VerifiedMessage",
       "docs": ["A message with a verified ed25519 signature."],
+      "name": "VerifiedMessage",
       "type": {
-        "kind": "struct",
         "fields": [
           {
-            "name": "publicKey",
             "docs": ["Public key that signed the message."],
+            "name": "publicKey",
             "type": "publicKey"
           },
           {
-            "name": "payload",
             "docs": ["Signed message payload."],
+            "name": "payload",
             "type": "bytes"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "TrustedSignerInfo",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "pubkey",
@@ -256,7 +251,8 @@
             "name": "expiresAt",
             "type": "i64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -318,5 +314,6 @@
         ]
       }
     }
-  ]
+  ],
+  "version": "0.2.0"
 }

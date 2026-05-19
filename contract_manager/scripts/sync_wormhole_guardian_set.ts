@@ -161,7 +161,7 @@ async function main() {
     .filter(
       (contract) => !chains || chains.includes(contract.getChain().getId()),
     )
-    // Filter out lazer wormhole contracts
+    // Filter out pro compatible wormhole contracts
     .filter(
       (contract) =>
         !(

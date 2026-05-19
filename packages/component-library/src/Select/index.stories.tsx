@@ -1,19 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { Select as SelectComponent } from "./index.jsx";
 import buttonMeta from "../Button/index.stories.jsx";
+import { Select as SelectComponent } from "./index.jsx";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { children, beforeIcon, ...argTypes } = buttonMeta.argTypes;
 const meta = {
-  component: SelectComponent,
   argTypes: {
     ...argTypes,
-    icon: beforeIcon,
-    label: {
+    buttonLabel: {
       control: "text",
       table: {
         category: "Label",
+      },
+    },
+    defaultSelectedKey: {
+      table: {
+        disable: true,
       },
     },
     hideLabel: {
@@ -22,9 +24,16 @@ const meta = {
         category: "Label",
       },
     },
-    options: {
+    icon: beforeIcon,
+    label: {
+      control: "text",
       table: {
-        disable: true,
+        category: "Label",
+      },
+    },
+    onSelectionChange: {
+      table: {
+        category: "Behavior",
       },
     },
     optionGroups: {
@@ -32,12 +41,7 @@ const meta = {
         disable: true,
       },
     },
-    defaultSelectedKey: {
-      table: {
-        disable: true,
-      },
-    },
-    show: {
+    options: {
       table: {
         disable: true,
       },
@@ -72,49 +76,43 @@ const meta = {
         category: "Popover",
       },
     },
-    onSelectionChange: {
+    show: {
       table: {
-        category: "Behavior",
-      },
-    },
-    buttonLabel: {
-      control: "text",
-      table: {
-        category: "Label",
+        disable: true,
       },
     },
   },
+  component: SelectComponent,
 } satisfies Meta<typeof SelectComponent>;
 export default meta;
 
 export const Flat = {
   args: {
+    buttonLabel: "",
     defaultSelectedKey: "foo",
-    options: ["foo", "bar", "baz"].map((id) => ({ id })),
-    variant: "primary",
-    size: "md",
+    hideLabel: true,
+    hideText: false,
     isDisabled: false,
     isPending: false,
-    rounded: false,
-    hideText: false,
-    show: (value) => `The option ${value.id.toString()}`,
     label: "A SELECT!",
-    hideLabel: true,
-    buttonLabel: "",
+    options: ["foo", "bar", "baz"].map((id) => ({ id })),
+    rounded: false,
+    show: (value) => `The option ${value.id.toString()}`,
+    size: "md",
+    variant: "primary",
   },
 } satisfies StoryObj<typeof SelectComponent>;
 
 export const Grouped = {
-  argTypes: {
-    hideGroupLabel: {
-      control: "boolean",
-      table: {
-        category: "Contents",
-      },
-    },
-  },
   args: {
+    buttonLabel: "",
     defaultSelectedKey: "foo1",
+    hideGroupLabel: true,
+    hideLabel: true,
+    hideText: false,
+    isDisabled: false,
+    isPending: false,
+    label: "FOOS AND BARS",
     optionGroups: [
       { name: "All", options: ["foo1", "foo2", "Some"].map((id) => ({ id })) },
       { name: "bars", options: ["bar1", "bar2", "bar3"].map((id) => ({ id })) },
@@ -123,16 +121,17 @@ export const Grouped = {
         options: ["baz1", "baz2", "baz3"].map((id) => ({ id })),
       },
     ],
-    variant: "primary",
-    size: "md",
-    isDisabled: false,
-    isPending: false,
     rounded: false,
-    hideText: false,
     show: (value) => `The option ${value.id.toString()}`,
-    label: "FOOS AND BARS",
-    hideLabel: true,
-    hideGroupLabel: true,
-    buttonLabel: "",
+    size: "md",
+    variant: "primary",
+  },
+  argTypes: {
+    hideGroupLabel: {
+      control: "boolean",
+      table: {
+        category: "Contents",
+      },
+    },
   },
 } satisfies StoryObj<typeof SelectComponent>;

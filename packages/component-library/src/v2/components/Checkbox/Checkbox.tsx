@@ -5,9 +5,8 @@ import { Field } from "@base-ui/react/field";
 import { Check } from "@phosphor-icons/react/dist/ssr";
 import cx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import { classes } from "./Checkbox.styles";
 import type { InputSize } from "../../theme/theme";
+import { classes } from "./Checkbox.styles";
 
 export type Checkboxvalue = {
   key: string;

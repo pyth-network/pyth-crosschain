@@ -21,10 +21,10 @@ export const PriceCardUtils = {
   formatPrice(price: Nullish<number>): string {
     if (isNullOrUndefined(price)) return "No data";
     return price.toLocaleString("en-US", {
-      style: "currency",
       currency: "USD",
-      minimumFractionDigits: MIN_PRECISION,
       maximumFractionDigits: MAX_PRECISION,
+      minimumFractionDigits: MIN_PRECISION,
+      style: "currency",
     });
   },
 };

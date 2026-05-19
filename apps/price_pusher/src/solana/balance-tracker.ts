@@ -1,4 +1,5 @@
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import type { Connection, PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import type { Logger } from "pino";
 
 import type {
@@ -6,7 +7,7 @@ import type {
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
 
 /**
@@ -84,12 +85,12 @@ export function createSolanaBalanceTracker(
   params: CreateSolanaBalanceTrackerParams,
 ): IBalanceTracker {
   return new SolanaBalanceTracker({
-    connection: params.connection,
-    publicKey: params.publicKey,
     address: params.publicKey.toString(),
-    network: params.network,
-    updateInterval: params.updateInterval,
-    metrics: params.metrics,
+    connection: params.connection,
     logger: params.logger,
+    metrics: params.metrics,
+    network: params.network,
+    publicKey: params.publicKey,
+    updateInterval: params.updateInterval,
   });
 }
