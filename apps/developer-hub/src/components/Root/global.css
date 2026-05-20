@@ -77,3 +77,11 @@
   --color-fd-accent-foreground: hsl(250, 18%, 87%);
   --color-fd-ring: hsla(262, 83%, 58%, 1);
 }
+
+/* Deep-link highlight for migration steps — fades after ~4s. */
+.migration-step-active {
+  background-color: hsla(263, 70%, 50%, 0.08);
+  outline: 2px solid hsla(263, 70%, 50%, 0.5);
+  outline-offset: 8px;
+  transition: background-color 600ms ease, outline-color 600ms ease;
+}
