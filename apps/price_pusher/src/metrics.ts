@@ -28,15 +28,19 @@ export class PricePusherMetrics {
   private lastLoopIterationAt: number | undefined;
   private livenessThresholdMs = 60_000;
 
-  constructor(logger: Logger, namespace: string) {
+  constructor(logger: Logger, chain: string) {
     this.logger = logger;
     this.registry = new Registry();
     this.server = express();
 
-    // Register the default metrics (memory, CPU, etc.). `namespace` is set as
-    // a default label so the sample Grafana dashboard's `namespace=$chain`
-    // filter actually matches emitted series.
-    this.registry.setDefaultLabels({ app: "price_pusher", namespace });
+    // Register the default metrics (memory, CPU, etc.). `chain` is set as a
+    // default label so the sample Grafana dashboard's `chain=$chain` filter
+    // actually matches emitted series. Deliberately not named `namespace` —
+    // Kubernetes Prometheus service discovery auto-applies a `namespace`
+    // label representing the pod's k8s namespace, and with the default
+    // `honor_labels: false` our label would be renamed to
+    // `exported_namespace` and the dashboard filter would silently break.
+    this.registry.setDefaultLabels({ app: "price_pusher", chain });
 
     // Create metrics
     this.lastPublishedTime = new Gauge({

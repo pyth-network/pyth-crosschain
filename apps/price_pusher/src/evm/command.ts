@@ -121,7 +121,7 @@ export default {
     ...options.controllerLogLevel,
     ...options.enableMetrics,
     ...options.metricsPort,
-    ...options.metricsNamespace,
+    ...options.metricsChain,
   },
   command: "evm",
   describe: "run price pusher for evm",
@@ -150,7 +150,7 @@ export default {
       controllerLogLevel,
       enableMetrics,
       metricsPort,
-      metricsNamespace,
+      metricsChain,
     } = argv;
 
     const logger = pino({
@@ -185,7 +185,7 @@ export default {
     if (enableMetrics) {
       metrics = new PricePusherMetrics(
         logger.child({ module: "Metrics" }),
-        metricsNamespace ?? "evm",
+        metricsChain ?? "evm",
       );
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);

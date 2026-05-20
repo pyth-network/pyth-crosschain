@@ -51,7 +51,7 @@ export default {
     ...options.controllerLogLevel,
     ...options.enableMetrics,
     ...options.metricsPort,
-    ...options.metricsNamespace,
+    ...options.metricsChain,
   },
   command: "aptos",
   describe: "run price pusher for aptos",
@@ -71,7 +71,7 @@ export default {
       controllerLogLevel,
       enableMetrics,
       metricsPort,
-      metricsNamespace,
+      metricsChain,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -86,7 +86,7 @@ export default {
     if (enableMetrics) {
       metrics = new PricePusherMetrics(
         logger.child({ module: "Metrics" }),
-        metricsNamespace ?? "aptos",
+        metricsChain ?? "aptos",
       );
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);
