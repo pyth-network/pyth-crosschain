@@ -30,13 +30,17 @@ The shape of this flow mirrors Pyth Core. The difference is where the Merkle roo
 
 ### Routers
 
+Routers are the same routers in Pyth Pro. To learn more visit [insert link here].
+
 Routers build a Merkle tree over the upgraded price aggregate each tick and sign the root. The leaf format matches Pythnet's exactly, which is what makes the resulting update payload byte-compatible with Pyth Core. Five routers, operated independently, each sign the root using the same signature scheme Wormhole guardians use on the existing system.
 
 On the existing Pyth Core, Wormhole guardians observe a Merkle root produced on Pythnet and sign it. With the upgrade, the routers both produce and sign the root.
 
 ### Upgraded Hermes endpoint
 
-The upgraded Hermes endpoint exposes the same API as traditional Hermes — the same endpoints and the same response shapes — at a different URL. It collects signed roots and price messages from all five routers and serves the latest update with the signed root and per-price Merkle proofs. Existing Hermes clients work unchanged when pointed at the upgraded endpoint.
+The upgraded Hermes endpoint exposes the same API as traditional Hermes — the same endpoints and the same response shapes — at a different URL. It collects signed roots and price messages from all five routers and serves the latest update with the signed root and per-price Merkle proofs.
+Existing Hermes clients work unchanged when pointed at the upgraded endpoint.
+Having an API key is required for upgraded Hermes.
 
 ### Upgraded Pyth Core Contract
 
