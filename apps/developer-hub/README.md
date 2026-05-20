@@ -1,6 +1,7 @@
 # Pyth Developer Hub
 
 Welcome to the Pyth Developer Hub repository! This repository contains the documentation for Pyth Network's developer resources, including guides, tutorials, and API references.
+For app-specific contributor guidance, see [AGENTS.md](./AGENTS.md).
 
 ## Getting Started
 
