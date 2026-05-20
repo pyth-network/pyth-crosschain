@@ -197,7 +197,7 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/core/troubleshoot/evm.mdx — EVM error reference
 - https://docs.pyth.network/price-feeds/core/troubleshoot/svm.mdx — Solana error reference
 - https://docs.pyth.network/price-feeds/core/current-fees.mdx — Fee schedule by chain
-- https://docs.pyth.network/price-feeds/core/price-feeds/price-feed-ids.mdx — Complete feed catalog
+- https://docs.pyth.network/price-feeds/core/price-feed-ids.mdx — Complete feed catalog
 - https://docs.pyth.network/price-feeds/core/create-your-first-pyth-app/index.mdx — Step-by-step EVM tutorial
 - https://docs.pyth.network/price-feeds/core/migrate-an-app-to-pyth/chainlink.mdx — Chainlink migration guide
 \`
