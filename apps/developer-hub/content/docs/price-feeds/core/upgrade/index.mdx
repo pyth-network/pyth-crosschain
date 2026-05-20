@@ -31,6 +31,8 @@ This upgrade replaces Pyth Core's underlying data infrastructure with an improve
 Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically.
 The one new requirement is authentication on Hermes — every Hermes user needs a Pyth API Key by **July 31**.
 
+For a walkthrough of the signers, data flow, and contracts behind the upgrade, see [How the Pyth Core upgrade works](/price-feeds/core/upgrade/how-it-works).
+
 <Callout type="warn">
   **All Hermes users need a Pyth API Key by July 31, 2026** — the upgraded
   Hermes endpoint requires authentication, even for users who wait for the
