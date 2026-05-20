@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { docsOptions } from "../../../config/layout.config";
+import { MigrationBanner } from "../../../components/MigrationBanner";
 
 export default async function Layout({
   children,
@@ -36,6 +37,7 @@ export default async function Layout({
           </span>
         </Banner>
       )}
+      {section === "price-feeds" && <MigrationBanner />}
       <DocsLayout {...docsOptions}>{children}</DocsLayout>
     </>
   );
