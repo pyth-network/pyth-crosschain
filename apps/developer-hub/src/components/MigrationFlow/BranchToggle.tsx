@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { Suspense } from "react";
 
 import styles from "./index.module.scss";
 import type { MigrationPath } from "./path-store";
@@ -25,7 +26,7 @@ const OPTIONS: Option[] = [
   },
 ];
 
-export const BranchToggle = () => {
+const BranchToggleInner = () => {
   const [path, setPath] = useMigrationPath();
   return (
     <div className={styles.toggle} role="radiogroup" aria-label="Choose your upgrade path">
@@ -50,3 +51,21 @@ export const BranchToggle = () => {
     </div>
   );
 };
+
+// Wrap in Suspense so the page can be statically rendered. The inner
+// component reads ?path= via nuqs/useSearchParams which forces a
+// client-side bailout without a Suspense boundary.
+export const BranchToggle = () => (
+  <Suspense
+    fallback={
+      <div
+        className={styles.toggle}
+        role="radiogroup"
+        aria-label="Choose your upgrade path"
+        aria-busy="true"
+      />
+    }
+  >
+    <BranchToggleInner />
+  </Suspense>
+);
