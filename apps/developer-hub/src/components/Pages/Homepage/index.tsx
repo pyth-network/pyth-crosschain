@@ -33,7 +33,7 @@ export const Homepage = () => {
             </p>
           </div>
           <div className={styles.migrationFeatureActions}>
-            <Button href="/price-feeds/core/migration" size="md" variant="primary">
+            <Button href="/price-feeds/core/upgrade" size="md" variant="primary">
               See what&rsquo;s changing
             </Button>
           </div>
