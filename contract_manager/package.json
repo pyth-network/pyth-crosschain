@@ -199,6 +199,16 @@
         "types": "./dist/cjs/core/contracts/wormhole.d.ts"
       }
     },
+    "./core/pythnet-programs": {
+      "import": {
+        "default": "./dist/esm/core/pythnet-programs.mjs",
+        "types": "./dist/esm/core/pythnet-programs.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/pythnet-programs.cjs",
+        "types": "./dist/cjs/core/pythnet-programs.d.ts"
+      }
+    },
     "./core/token": {
       "import": {
         "default": "./dist/esm/core/token.mjs",
