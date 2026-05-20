@@ -2,7 +2,7 @@
 
 .card {
   flex: 1;
-  padding: theme.spacing(6);
+  padding: theme.spacing(5);
   border: 1px solid var(--color-fd-border);
   border-radius: theme.border-radius("3xl");
   background-color: var(--color-fd-card);
@@ -12,7 +12,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(8);
+  gap: theme.spacing(5);
   height: 100%;
   flex: 1;
 }
@@ -20,16 +20,16 @@
 .mainContent {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(12);
+  gap: theme.spacing(6);
   flex: 1;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(3);
-  min-height: 7rem; // 88px - fixed height to keep FEATURES at consistent position
-  height: 7rem; // 88px - fixed height
+  gap: theme.spacing(2);
+  min-height: 5rem;
+  height: 5rem;
 }
 
 .title {
@@ -60,15 +60,13 @@
 .featuresSection {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(6);
-  min-height: 12rem;
-  max-height: 12rem;
+  gap: theme.spacing(3);
 }
 
 .quickLinksSection {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(6);
+  gap: theme.spacing(3);
 }
 
 .sectionLabel {
