@@ -1,3 +1,5 @@
+import { Button } from "@pythnetwork/component-library/Button";
+
 import { ProductCard } from "../../ProductCard";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
@@ -15,6 +17,25 @@ export const Homepage = () => {
             <p className={styles.heroSubtitle}>
               Integrate with the global price layer.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.sectionMigration}>
+        <div className={styles.migrationFeature}>
+          <div className={styles.migrationFeatureText}>
+            <h2 className={styles.migrationFeatureTitle}>
+              Changes are coming to Pyth Core
+            </h2>
+            <p className={styles.migrationFeatureBody}>
+              Existing integrations need three small updates by{" "}
+              <strong>July 31, 2026</strong> to keep working.
+            </p>
+          </div>
+          <div className={styles.migrationFeatureActions}>
+            <Button href="/price-feeds/migration" size="md" variant="primary">
+              See what&rsquo;s changing
+            </Button>
           </div>
         </div>
       </section>
