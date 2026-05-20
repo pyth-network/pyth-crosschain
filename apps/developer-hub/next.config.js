@@ -258,7 +258,7 @@ const config = {
       },
 
       {
-        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|migration(?:/|$|\.mdx?$)).*)`,
+        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)).*)`,
         destination: "/price-feeds/core/:path",
         permanent: true,
       },
