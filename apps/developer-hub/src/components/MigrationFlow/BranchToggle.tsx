@@ -21,7 +21,7 @@ const OPTIONS: Option[] = [
   {
     value: "wait",
     title: "Wait for automatic",
-    caption: "DAO handles July 31 · deploy required at cutover",
+    caption: "DAO upgrades contract on July 31",
   },
 ];
 

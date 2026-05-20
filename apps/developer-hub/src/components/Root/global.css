@@ -86,22 +86,16 @@
   transition: background-color 600ms ease, outline-color 600ms ease;
 }
 
-/* Persistent violet accent on the Pyth Core upgrade entry in the sidebar.
-   Only applies when not the active page — fumadocs already highlights active. */
+/* Solid violet ribbon for the Pyth Core upgrade entry in the sidebar.
+   Only applied when not the active page — fumadocs already styles active.
+   White text + icon inherits via currentColor. */
 a[data-active="false"][href="/price-feeds/core/upgrade"] {
-  background-color: color-mix(in oklab, var(--color-fd-primary) 8%, transparent);
-  color: var(--color-fd-primary);
+  background-color: var(--color-fd-primary);
+  color: white;
+  font-weight: 500;
 }
 
 a[data-active="false"][href="/price-feeds/core/upgrade"]:hover {
-  background-color: color-mix(in oklab, var(--color-fd-primary) 16%, transparent);
-}
-
-a[data-active="false"][href="/price-feeds/core/upgrade"]::before {
-  content: "";
-  position: absolute;
-  inset: 0.625rem auto 0.625rem 0.625rem;
-  width: 2px;
-  background-color: var(--color-fd-primary);
-  border-radius: 1px;
+  background-color: color-mix(in oklab, var(--color-fd-primary) 88%, black);
+  color: white;
 }
