@@ -187,31 +187,21 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
 
 <Accordions type="single">
   <Accordion title="What happens if I do nothing?">
-    **Your Hermes calls will start getting rejected at the cutover on July 31, 2026** — `hermes.pyth.network` will require an API key from that point on. To stay live, two things you need to do:
-
-    1. Have a Pyth API Key (Step 1) by July 31.
-    2. Push a code change adding `Authorization: Bearer $PYTH_API_KEY` header to your Hermes requests, around the cutover.
-
-    Your on-chain contract is handled for you — the Pyth DAO upgrades it on July 31, no action needed there.
-
-    Most users avoid this last-minute risk by upgrading early (see Steps 2 and 3) and switching to the upgraded Hermes endpoint, which already accepts the API key today.
+    **Your Hermes calls will start getting rejected at the cutover on July 31, 2026** — `hermes.pyth.network` will require an API key from that point on. To stay live, please follow the steps mentioned [above](#if-youre-waiting-for-the-automatic-upgrade).
   </Accordion>
   <Accordion title="Will my existing code break?">
     On-chain code is fine: the upgrade is fully backward-compatible with the existing Pyth Core interface via the upgraded Pyth Core Contract.
 
-    Hermes code breaks at the cutover *if* your client is still pointed at `hermes.pyth.network` without an API key. Either upgrade early (Step 2) or plan a deploy around July 31 to add the header.
+    Hermes code breaks at the cutover *if* your client is still pointed at `hermes.pyth.network` without an API key. Please follow the steps mentioned [above](#if-youre-waiting-for-the-automatic-upgrade).
   </Accordion>
   <Accordion title="When exactly does Hermes redirect?">
-    On July 31, 2026. Exact switch timing is announced closer to the date. From that point, `hermes.pyth.network` serves the upgraded data and requires API key authentication — unauthenticated requests will be rejected.
+    On July 31, 2026. Exact switch timing is announced closer to the date. From that point, `hermes.pyth.network` serves the upgraded data and requires API key authentication.
   </Accordion>
   <Accordion title="Can I test before upgrading?">
-    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the upgraded Pyth Core Contract are both available on testnets today. See the chain support section above for testnet contract addresses.
-  </Accordion>
-  <Accordion title="Will it cost me more?">
-    Yes. The upgrade introduces a subscription-based plan for ongoing Hermes access. A free trial is included on signup; paid plans cover continued use. Custom plans are available — [contact the team](#get-help). This is the most significant change for many Pyth Core users.
+    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the upgraded Pyth Core Contract are both available on testnets today. See the upgraded [Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts) for addresses.
   </Accordion>
   <Accordion title="What if my chain isn't supported?">
-    Contact the team. Several chains are in active discussion and may be supported by July 31. For others, custom arrangements are possible.
+    Contact the team. Several chains are in active discussion and may be supported by July 31. For others, custom arrangements are possible. See the [upgraded Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts) for the full list.
   </Accordion>
   <Accordion title="Are all my feeds available after the upgrade?">
     Nearly all current Pyth Core feeds remain available after the upgrade, with new ones added. Look up your specific feeds on the [feed explorer](https://pythdata.app/explore). If a feed you depend on isn't listed, [contact the team](#get-help).
@@ -220,9 +210,9 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     No. The API key is only required for Hermes (REST/SSE) requests. If your integration reads prices directly from the Pyth contract on-chain and never calls Hermes, you don't need to register. Your contract will be upgraded automatically on July 31, or you can swap it early (Step 3).
   </Accordion>
   <Accordion title="My code uses the Hermes REST/SSE API directly — what changes for me?">
-    Routes and response shapes are unchanged — the upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send an API key*:
+    Routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send an API key*:
 
-    - **Upgrade early (recommended):** switch your base URL to `pyth.dourolabs.app/hermes` and add `Authorization: Bearer $PYTH_API_KEY` header today. The data is identical; only auth changes.
+    - **Upgrade early (recommended):** switch your base URL to `pyth.dourolabs.app/hermes` and add `Authorization: Bearer $PYTH_API_KEY` header today. The data is identical; only auth changes. See the [upgrade guide](/price-feeds/core/upgrade) for the full path.
     - **Wait:** stay on `hermes.pyth.network` today (unauthenticated). On July 31, push a deploy that adds the API key header on the same URL.
 
     See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
@@ -245,9 +235,9 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     external
   />
   <Card
-    title="Production incidents"
-    description="Existing escalation path for paying customers."
-    href="mailto:contact@pyth.network"
+    title="Developer Forum Discussion"
+    description="Discussion about the Pyth Core upgrade and how to prepare for it."
+    href="https://dev-forum.pyth.network/c/announcements/7"
     external
   />
 </Cards>
