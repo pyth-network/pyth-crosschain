@@ -26,6 +26,13 @@ const OPTIONS: Option[] = [
   },
 ];
 
+// Fumadocs auto-generates these from the H2 headings inside each
+// BranchSection. Update if those headings change.
+const HEADING_IDS: Record<MigrationPath, string> = {
+  now: "upgrading-now",
+  wait: "waiting-for-the-automatic-upgrade",
+};
+
 const BranchToggleInner = () => {
   const [path, setPath] = useMigrationPath();
   return (
@@ -40,7 +47,11 @@ const BranchToggleInner = () => {
             aria-checked={selected}
             className={clsx(styles.toggleOption, selected && styles.toggleOptionSelected)}
             onClick={() => {
+              if (selected) return;
               void setPath(option.value);
+              document
+                .getElementById(HEADING_IDS[option.value])
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
           >
             <span className={styles.toggleTitle}>{option.title}</span>
