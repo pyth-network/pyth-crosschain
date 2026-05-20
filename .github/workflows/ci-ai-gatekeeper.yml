@@ -22,7 +22,7 @@ on:
 jobs:
   gatekeeper:
     name: Bot Proxy Gatekeeper
-    uses: pyth-network/shared-actions/.github/workflows/ai-gatekeeper.yaml@main
+    uses: pyth-network/shared-actions-public/.github/workflows/ai-gatekeeper.yaml@main
     permissions:
       contents: read
       pull-requests: write
