@@ -316,20 +316,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "USR/USD.RR",
-      "id": "512a79cc65f49531f0bbb72956353e79ecdc1e4a6e5241847196c1f9a11d8a52",
-      "time_difference": 3600,
-      "price_deviation": 0.05,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "USR/USD",
-      "id": "10b013adec14c0fe839ca0fe54cec9e4d0b6c1585ac6d7e70010dac015e57f9c",
-      "time_difference": 3600,
-      "price_deviation": 0.05,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "EBTC/USD",
       "id": "be3dd0cf4a168f82e4912952b24420211ad52641b7365d49866d59e20c948288",
       "time_difference": 3600,
