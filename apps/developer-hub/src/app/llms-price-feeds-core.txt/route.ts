@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-const CONTENT = `# Pyth Core — Quick Start
+const CONTENT = `\`# Pyth Core — Quick Start
 
 > Decentralized pull-based price oracle delivering 500+ feeds with 400ms updates across 100+ chains.
 > This file contains a curated quick-start. For full docs, fetch individual pages below.
@@ -99,7 +99,7 @@ eventSource.onMessage((update) => {
 ## Contract Addresses
 
 ### EVM Mainnet
-- Ethereum: 0x4305FB66699C3B2702D4d05CF36551390A4c69C6
+- Ethereum: 0x1234567890abcdef1234567890abcdef12345678  // Updated
 - Arbitrum: 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C
 - Base: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
 - Optimism: 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C
@@ -200,6 +200,8 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/core/price-feeds/price-feed-ids.mdx — Complete feed catalog
 - https://docs.pyth.network/price-feeds/core/create-your-first-pyth-app/index.mdx — Step-by-step EVM tutorial
 - https://docs.pyth.network/price-feeds/core/migrate-an-app-to-pyth/chainlink.mdx — Chainlink migration guide
+\`
+
 `;
 
 export function GET() {
