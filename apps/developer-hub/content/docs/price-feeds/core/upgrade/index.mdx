@@ -21,13 +21,15 @@ import {
 
 ## What's changing
 
-Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**. This upgrade replaces Pyth Core's underlying data infrastructure with an improved version, enabling new features:
+Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**.
+This upgrade replaces Pyth Core's underlying data infrastructure with an improved version, enabling new features:
 
 - Higher-frequency updates
 - Customizable channels
 - Access to Pyth Terminal
 
-Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically. The one new requirement is authentication on Hermes — every Hermes user needs a Pyth API Key by July 31.
+Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically.
+The one new requirement is authentication on Hermes — every Hermes user needs a Pyth API Key by **July 31**.
 
 <Callout type="warn">
   **All Hermes users need a Pyth API Key by July 31, 2026** — the upgraded
@@ -35,33 +37,23 @@ Your existing integration keeps working: the on-chain Pyth contract is upgraded 
   automatic upgrade. [Register at Pyth Terminal →](https://pythdata.app/signup)
 </Callout>
 
-<Callout type="info">
-  **What you should know going in**
-
-  This is a one-time upgrade. Your on-chain code stays compatible — you only swap an address, you don't change interfaces. The Hermes API surface (routes, response shapes, SDK) is unchanged; the only required code change for everyone is adding the bearer header. There is no breaking SDK upgrade, no schema migration, and no destructive operation. If anything goes wrong, the old `hermes.pyth.network` URL and your current contract continue to work until the July 31 cutover.
-
-  Terminology used on this page:
-  - **Pyth API Key** — bearer token for the upgraded Hermes endpoint. Obtained from Pyth Terminal.
-  - **Upgraded Pyth Core Contract** — the on-chain contract you swap to. Preserves the existing Pyth Core interface.
-  - **Upgraded Hermes endpoint** — `pyth.dourolabs.app/hermes`. Serves the upgraded data with auth, available today.
-</Callout>
-
 ## Does this apply to you?
 
-If you call [`hermes.pyth.network`](https://hermes.pyth.network/docs/) from your application, **yes** — you need a Pyth API Key (Step 1).
-
-If you use any [Pyth Core contracts](/price-feeds/core/contract-addresses) on-chain, the contract upgrade also applies — but you can choose whether to swap the address yourself or wait for the automatic upgrade. See the decision section below.
-
-If you only consume prices through another protocol that already integrates Pyth (for example, a lending market), that protocol handles the upgrade — no action needed from you.
+- **Your app calls [`hermes.pyth.network`](https://hermes.pyth.network/docs/)?**
+  Get a Pyth API Key in Step 1.
+- **You use [Pyth Core contracts](/price-feeds/core/contract-addresses) on-chain?**
+  Choose: swap addresses now, or wait for the automatic upgrade (see the decision section below).
+- **You only use a protocol that already integrates Pyth?**
+  No action needed from your side.
 
 ## Your upgrade path
 
-<Steps>
-<Step>
 
-### Get a Pyth API Key
 
-Required for everyone who calls Hermes. Sign up at Pyth Terminal — a free trial is included; paid plans cover ongoing use.
+### Step 1: Get a Pyth API Key
+
+Required for everyone who calls Hermes.
+Sign up at Pyth Terminal: a free trial is included, paid plans cover ongoing use.
 
 <Button
   href="https://pythdata.app/signup"
@@ -73,10 +65,7 @@ Required for everyone who calls Hermes. Sign up at Pyth Terminal — a free tria
   Sign up at Pyth Terminal
 </Button>
 
-</Step>
-</Steps>
-
-## Upgrade now or wait for automatic?
+### Step 2: Upgrade now or wait for automatic?
 
 After Step 1, choose how and when to move to the upgraded infrastructure. Your choice is saved in the URL so you can share or bookmark a specific path.
 
@@ -87,14 +76,14 @@ After Step 1, choose how and when to move to the upgraded infrastructure. Your c
 | Timing           | You choose                                 | July 31, 2026                                                        |
 | Downtime         | None                                       | Brief, during the switch                                             |
 | Hermes endpoint  | Switch to the upgraded URL now             | Push `Bearer` auth on `hermes.pyth.network` at cutover               |
-| Contract address | You swap to an upgraded Pyth Core Contract       | DAO upgrades it for you                                              |
+| Contract address | You swap to the upgraded Pyth Core Contract       | DAO upgrades it for you                                              |
 
 <BranchSection path="now">
-**Upgrade now (recommended)** — Continue with Steps 2 and 3 below. You move to the upgraded Hermes endpoint and the upgraded Pyth Core Contract today, on your own schedule, with zero downtime.
+**Upgrade now (recommended)**: Continue with Steps 2 and 3 below. You move to the [upgraded Hermes endpoint](https://pyth.dourolabs.app/hermes) and the [upgraded Pyth Core Contract](/price-feeds/core/upgrade/contracts) today, on your own schedule, with zero downtime.
 </BranchSection>
 
 <BranchSection path="wait">
-**Wait for automatic** — You're done after Step 1. On July 31, the Pyth DAO upgrades your contract and `hermes.pyth.network` starts requiring authentication. You'll need to push a code change adding the `Authorization: Bearer $PYTH_API_KEY` header at that point — until you do, Hermes calls will fail. Plan a deploy around the cutover.
+**Wait for automatic**: You're done after Step 1. On July 31, the Pyth DAO upgrades your contract and `hermes.pyth.network` starts requiring authentication. You'll need to push a code change adding the `Authorization: Bearer $PYTH_API_KEY` header at that point. For a safer rollout, start using the authenticated Hermes API (`https://pyth.dourolabs.app/hermes`) before cutover as a fallback path. Plan a deploy around the cutover.
 </BranchSection>
 
 <BranchSection path="now">
@@ -106,7 +95,7 @@ After Step 1, choose how and when to move to the upgraded infrastructure. Your c
 
 ### Move your Hermes calls to the upgraded endpoint
 
-Switch your Hermes base URL from `hermes.pyth.network` to `pyth.dourolabs.app/hermes` and add your API key as a bearer token. The two URLs serve the same data today — the upgraded endpoint just requires authentication.
+Switch your Hermes base URL from `hermes.pyth.network` to `pyth.dourolabs.app/hermes` and add your API key as a bearer token. The two URLs serve the same data today. The upgraded endpoint requires authentication.
 
 <Tabs items={["curl", "TypeScript SDK"]}>
 <Tab value="curl">
@@ -154,16 +143,17 @@ const client = new HermesClient("https://pyth.dourolabs.app/hermes", {
   ```
 </Callout>
 
-Routes and response shapes are unchanged — the upgraded endpoint is a drop-in replacement. See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
+Routes and response shapes are unchanged.
+The upgraded endpoint is a drop-in replacement. See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
 
 </Step>
 <Step>
 
 ### Swap your contract address
 
-Swap your existing Pyth contract address for the upgraded Pyth Core Contract on your chain. The upgraded Pyth Core Contract preserves the Pyth Core interface — no other code changes are needed.
+Swap your existing Pyth contract address for the [upgraded Pyth Core Contract](/price-feeds/core/upgrade/contracts) on your chain. The upgraded Pyth Core Contract preserves the Pyth Core interface. No other code changes are needed.
 
-[View all upgraded Pyth Core Contract addresses →](/price-feeds/core/upgrade/contracts) Publishing closer to the deadline.
+View all upgraded [Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts).
 
 </Step>
 </Steps>
