@@ -1,0 +1,70 @@
+@use "@pythnetwork/component-library/theme";
+
+.toggle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(3);
+  margin: theme.spacing(6) 0;
+
+  @include theme.breakpoint("md") {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.toggleOption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: theme.spacing(1);
+  padding: theme.spacing(4) theme.spacing(5);
+  border-radius: theme.border-radius("xl");
+  border: 1px solid theme.color("border");
+  background-color: theme.color("background", "primary");
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+  font: inherit;
+
+  &:hover {
+    border-color: theme.color("states", "data", "normal");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("states", "data", "normal");
+    outline-offset: 2px;
+  }
+}
+
+.toggleOptionSelected {
+  border-color: theme.color("states", "data", "normal");
+  background-color: theme.color("background", "card-highlight");
+  box-shadow: inset 0 0 0 1px theme.color("states", "data", "normal");
+}
+
+.toggleTitle {
+  @include theme.text("base", "semibold");
+
+  color: theme.color("heading");
+}
+
+.toggleCaption {
+  @include theme.text("sm", "normal");
+
+  color: theme.color("paragraph");
+}
+
+.branchSection {
+  transition: opacity 200ms ease;
+  border-left: 3px solid transparent;
+  padding-left: theme.spacing(4);
+  margin-left: calc(theme.spacing(4) * -1);
+}
+
+.branchActive {
+  opacity: 1;
+  border-left-color: theme.color("states", "data", "normal");
+}
+
+.branchMuted {
+  opacity: 0.55;
+}

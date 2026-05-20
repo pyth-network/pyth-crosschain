@@ -10,6 +10,13 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { Card, Cards } from "fumadocs-ui/components/card";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import {
+  ActiveStepHighlighter,
+  BranchSection,
+  BranchToggle,
+} from "../../../../src/components/MigrationFlow";
+
+<ActiveStepHighlighter />
 
 ## What's changing
 
@@ -25,6 +32,17 @@ Your existing integration keeps working: the on-chain Pyth contract is upgraded 
   **All Hermes users need a Pyth API Key by July 31, 2026** — the upgraded
   Hermes endpoint requires authentication, even for users who wait for the
   automatic upgrade. [Register at Pyth Terminal →](https://pythdata.app/signup)
+</Callout>
+
+<Callout type="info">
+  **What you should know going in**
+
+  This is a one-time upgrade. Your on-chain code stays compatible — you only swap an address, you don't change interfaces. The Hermes API surface (routes, response shapes, SDK) is unchanged; the only required code change for everyone is adding the bearer header. There is no breaking SDK upgrade, no schema migration, and no destructive operation. If anything goes wrong, the old `hermes.pyth.network` URL and your current contract continue to work until the July 31 cutover.
+
+  Terminology used on this page:
+  - **Pyth API Key** — bearer token for the upgraded Hermes endpoint. Obtained from Pyth Terminal.
+  - **Upgraded Pyth Core Contract** — the on-chain contract you swap to. Preserves the existing Pyth Core interface.
+  - **Upgraded Hermes endpoint** — `pyth.dourolabs.app/hermes`. Serves the upgraded data with auth, available today.
 </Callout>
 
 ## Does this apply to you?
@@ -59,18 +77,26 @@ Required for everyone who calls Hermes. Sign up at Pyth Terminal — a free tria
 
 ## Upgrade now or wait for automatic?
 
-After Step 1, choose how and when to move to the upgraded infrastructure.
+After Step 1, choose how and when to move to the upgraded infrastructure. Your choice is saved in the URL so you can share or bookmark a specific path.
+
+<BranchToggle />
 
 |                  | Upgrade now (recommended)                  | Wait for automatic                                                   |
 | ---------------- | ------------------------------------------ | -------------------------------------------------------------------- |
 | Timing           | You choose                                 | July 31, 2026                                                        |
 | Downtime         | None                                       | Brief, during the switch                                             |
 | Hermes endpoint  | Switch to the upgraded URL now             | Push `Bearer` auth on `hermes.pyth.network` at cutover               |
-| Contract address | You swap to a new Pyth Core Contract       | DAO upgrades it for you                                              |
+| Contract address | You swap to an upgraded Pyth Core Contract       | DAO upgrades it for you                                              |
 
-**Upgrade now (recommended)** — Continue with Steps 2 and 3 below. You move to the upgraded Hermes endpoint and Pyth Classic Contract today, on your own schedule, with zero downtime.
+<BranchSection path="now">
+**Upgrade now (recommended)** — Continue with Steps 2 and 3 below. You move to the upgraded Hermes endpoint and the upgraded Pyth Core Contract today, on your own schedule, with zero downtime.
+</BranchSection>
 
+<BranchSection path="wait">
 **Wait for automatic** — You're done after Step 1. On July 31, the Pyth DAO upgrades your contract and `hermes.pyth.network` starts requiring authentication. You'll need to push a code change adding the `Authorization: Bearer $PYTH_API_KEY` header at that point — until you do, Hermes calls will fail. Plan a deploy around the cutover.
+</BranchSection>
+
+<BranchSection path="now">
 
 ## If you're upgrading early
 
@@ -134,28 +160,18 @@ Routes and response shapes are unchanged — the upgraded endpoint is a drop-in 
 
 ### Swap your contract address
 
-Swap your existing Pyth contract address for the Pyth Classic Contract on your chain. The Pyth Classic Contract preserves the Pyth Core interface — no other code changes are needed.
+Swap your existing Pyth contract address for the upgraded Pyth Core Contract on your chain. The upgraded Pyth Core Contract preserves the Pyth Core interface — no other code changes are needed.
 
-[View all Pyth Classic Contract addresses →](/price-feeds/migration/contracts) Publishing closer to the deadline.
+[View all upgraded Pyth Core Contract addresses →](/price-feeds/migration/contracts) Publishing closer to the deadline.
 
 </Step>
 </Steps>
 
+</BranchSection>
+
 ## Chain support
 
-Pyth Core will be supported on these chains after the upgrade. Others are in active discussion or available via custom arrangement.
-
-### Supported
-
-Arbitrum, Base, Ethereum, Optimism, Solana, Sui
-
-### In negotiation
-
-Aptos, Avalanche, Movement, Near, TON, Stacks
-
-### Other chains
-
-Custom support arrangements are possible. [Get in touch with the team.](#get-help)
+Pyth Core will be supported on the chains listed on the [upgraded Pyth Core Contract addresses page](/price-feeds/migration/contracts). If your chain isn't listed, [contact the team](#get-help) — additional support is available by custom arrangement.
 
 ### Feed support
 
@@ -173,7 +189,7 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     Most users avoid this risk by upgrading early (see Steps 2 and 3) and switching to the upgraded Hermes endpoint, which already accepts the bearer header today.
   </Accordion>
   <Accordion title="Will my existing code break?">
-    On-chain code is fine: the upgrade is fully backward-compatible with the existing Pyth Core interface via the Pyth Classic Contract.
+    On-chain code is fine: the upgrade is fully backward-compatible with the existing Pyth Core interface via the upgraded Pyth Core Contract.
 
     Hermes code breaks at the cutover *if* your client is still pointed at `hermes.pyth.network` without a bearer header. Either upgrade early (Step 2) or plan a deploy around July 31 to add the header.
   </Accordion>
@@ -181,7 +197,7 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     On July 31, 2026. Exact switch timing is announced closer to the date. From that point, `hermes.pyth.network` serves the upgraded data and requires bearer authentication — unauthenticated requests will be rejected.
   </Accordion>
   <Accordion title="Can I test before upgrading?">
-    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the Pyth Classic Contract are both available on testnets today. See the chain support section above for testnet contract addresses.
+    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the upgraded Pyth Core Contract are both available on testnets today. See the chain support section above for testnet contract addresses.
   </Accordion>
   <Accordion title="Will it cost me more?">
     Yes. The upgrade introduces a subscription-based plan for ongoing Hermes access. A free trial is included on signup; paid plans cover continued use. Custom plans are available — [contact the team](#get-help). This is the most significant change for many Pyth Core users.
