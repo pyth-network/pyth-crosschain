@@ -9,7 +9,26 @@ import { Card, Cards } from "fumadocs-ui/components/card";
 
 These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Sui consumers. Start with [Step 1: Get a Pyth API Key](/price-feeds/core/upgrade/preparing#step-1-get-a-pyth-api-key) on the main guide.
 
-## Upgrade the Pyth Core package
+## Move your Hermes calls to the new Hermes endpoint
+
+If you use `SuiPriceServiceConnection` from [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js), point it at the upgraded endpoint and pass your Pyth API key:
+
+```ts
+import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
+
+const connection = new SuiPriceServiceConnection(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+```
+
+<Callout type="info">
+  If your `SuiPriceServiceConnection` doesn't accept an `accessToken` in its second constructor argument, you're on an outdated version of [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js). Upgrade to the latest.
+</Callout>
+
+## Swap your contract address
+
+On Sui, swapping the Pyth Core contract address means updating the Pyth package `rev` in your `Move.toml`. The full list of upgraded Pyth State, Pyth Package, Wormhole State, and Wormhole Package IDs is on the [contract addresses page](/price-feeds/core/upgrade/contracts#sui).
 
 Current Pyth Core users reference the Pyth package in their `Move.toml`:
 
@@ -51,27 +70,6 @@ rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-te
   use pyth_pro_compatible::price_info::PriceInfoObject;
   ```
 </Callout>
-
-## Upgrade the Hermes endpoint
-
-If you use `SuiPriceServiceConnection` from [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js), point it at the upgraded endpoint and pass your Pyth API key:
-
-```ts
-import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
-
-const connection = new SuiPriceServiceConnection(
-  "https://pyth.dourolabs.app/hermes",
-  { accessToken: process.env.PYTH_API_KEY },
-);
-```
-
-<Callout type="info">
-  If your `SuiPriceServiceConnection` doesn't accept an `accessToken` in its second constructor argument, you're on an outdated version of [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js). Upgrade to the latest.
-</Callout>
-
-## Contract addresses
-
-Sui-specific Pyth State, Pyth Package, Wormhole State, and Wormhole Package IDs for both mainnet and testnet are on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#sui).
 
 ## Next
 
