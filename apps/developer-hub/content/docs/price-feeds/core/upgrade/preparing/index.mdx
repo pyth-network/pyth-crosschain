@@ -18,20 +18,9 @@ import {
 
 <ActiveStepHighlighter />
 
-## What's changing
+Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**. Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically. The one new requirement is authentication on Hermes: every Hermes user needs a Pyth API Key by **July 31**.
 
-Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**.
-This upgrade replaces Pyth Core's underlying data infrastructure with an improved version, enabling new features:
-
-- Higher-frequency updates
-- Additional price feeds
-- Lower latency
-- Customizable channels
-
-Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically.
-The one new requirement is authentication on Hermes — every Hermes user needs a Pyth API Key by **July 31**.
-
-For a walkthrough of the signers, data flow, and contracts behind the upgrade, see [How the Pyth Core upgrade works](/price-feeds/core/upgrade/how-it-works).
+For background on what's changing and why, see the [upgrade overview](/price-feeds/core/upgrade). For a walkthrough of the signers, data flow, and contracts behind the upgrade, see [How the Pyth Core upgrade works](/price-feeds/core/upgrade/how-it-works).
 
 <Callout type="warn">
   **All Hermes users need a Pyth API Key by July 31, 2026** — the upgraded
@@ -224,7 +213,7 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     Routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send the `Authorization: Bearer $PYTH_API_KEY` header*:
 
     - **Upgrade early (recommended):** switch your base URL to `pyth.dourolabs.app/hermes` and start sending the `Authorization: Bearer $PYTH_API_KEY` header today. The data format is identical; only auth changes. See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full path.
-    - **Automatic upgrade:** keep calling `hermes.pyth.network` without the header today. At the cutover on July 31, push a deploy that adds the `Authorization: Bearer $PYTH_API_KEY` header on the same URL. See [Waiting for the Automatic Upgrade](/price-feeds/core/upgrade/preparing#waiting-for-the-automatic-upgrade) for the gap-handling pattern.
+    - **Automatic upgrade:** See [Waiting for the Automatic Upgrade](/price-feeds/core/upgrade/preparing#waiting-for-the-automatic-upgrade) for the gap-handling pattern.
 
     See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
   </Accordion>
