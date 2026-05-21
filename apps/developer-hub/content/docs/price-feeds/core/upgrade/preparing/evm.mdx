@@ -4,7 +4,6 @@ description: "EVM-specific notes for the Pyth Core upgrade."
 full: true
 ---
 
-import { Card, Cards } from "fumadocs-ui/components/card";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for EVM consumers.
@@ -48,13 +47,6 @@ const hermes = new HermesClient(
 
 The contract call itself follows your ABI library. Use `pythContract.write.updatePriceFeeds(...)` in viem, `pythContract.updatePriceFeeds(...)` in ethers.
 
-## Supported EVM chains
+## Upgraded EVM Addresses
 
-Each supported EVM chain has its own upgraded Pyth Core Contract address. Look up your chain on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#evm).
-
-## Next
-
-<Cards>
-  <Card title="Main upgrade guide" description="Full step-by-step upgrade flow with the API key step and the upgrade-now vs wait decision." href="/price-feeds/core/upgrade/preparing" />
-  <Card title="Contract addresses" description="Per-chain upgraded Pyth Core Contract addresses for all supported EVM chains." href="/price-feeds/core/upgrade/contracts#evm" />
-</Cards>
+[View on the contract addresses page →](/price-feeds/core/upgrade/contracts#evm)
