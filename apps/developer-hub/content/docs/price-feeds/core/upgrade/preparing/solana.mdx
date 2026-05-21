@@ -9,7 +9,22 @@ import { Card, Cards } from "fumadocs-ui/components/card";
 
 These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Solana consumers. Start with [Step 1: Get a Pyth API Key](/price-feeds/core/upgrade/preparing#step-1-get-a-pyth-api-key) on the main guide.
 
-## Upgrade the Pyth Core program
+## Move your Hermes calls to the new Hermes endpoint
+
+If you use `@pythnetwork/price-service-client` as your Hermes client, switch to [`@pythnetwork/hermes-client`](https://www.npmjs.com/package/@pythnetwork/hermes-client). Point it at the upgraded endpoint and pass your Pyth API key:
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+```
+
+## Swap your contract address
+
+On Solana, swapping the Pyth Core contract address means pointing your program and TS SDK at the upgraded program IDs. The full mapping is on the [contract addresses page](/price-feeds/core/upgrade/contracts#solana).
 
 ### On-chain program (Rust)
 
@@ -44,23 +59,6 @@ const pythSolanaReceiver = new PythSolanaReceiver({
 <Callout type="warn">
   Replace any additional reference to the current Core program IDs with the upgraded program IDs in your codebase. See the [contract addresses page](/price-feeds/core/upgrade/contracts#solana) for the full mapping.
 </Callout>
-
-## Upgrade the Hermes endpoint
-
-If you use `@pythnetwork/price-service-client` as your Hermes client, switch to [`@pythnetwork/hermes-client`](https://www.npmjs.com/package/@pythnetwork/hermes-client). Point it at the upgraded endpoint and pass your Pyth API key:
-
-```ts
-import { HermesClient } from "@pythnetwork/hermes-client";
-
-const hermes = new HermesClient(
-  "https://pyth.dourolabs.app/hermes",
-  { accessToken: process.env.PYTH_API_KEY },
-);
-```
-
-## Contract addresses
-
-Solana-specific Wormhole receiver, Solana receiver, and Price feed program IDs are on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#solana).
 
 ## Next
 
