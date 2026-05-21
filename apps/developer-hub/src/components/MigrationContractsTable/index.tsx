@@ -53,7 +53,7 @@ const buildDeployments = (
   for (const contract of evmPriceFeedContracts) {
     if (
       !("deploymentType" in contract) ||
-      contract.deploymentType !== "lazer-prod"
+      contract.deploymentType !== "pro-compatible-production"
     ) {
       continue;
     }
