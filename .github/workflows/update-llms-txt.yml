@@ -338,8 +338,19 @@ jobs:
             # Extract the new header content from the JSON decision
             echo "$DECISIONS" | jq -r --arg key "$product" '.[$key]' > /tmp/new-header.txt
 
-            # Escape any unescaped backticks for JS template literal safety
-            sed -i 's/\\`/__ESC__/g; s/`/\\`/g; s/__ESC__/\\`/g' /tmp/new-header.txt
+            # Normalize backtick escaping for JS template literal safety.
+            # Strip ALL levels of backslash-escaping from backticks, then
+            # re-escape them uniformly. This prevents double-escaping (\\`)
+            # which would prematurely close the template literal and break
+            # the build.
+            sed -i ':a; s/\\`/`/g; ta; s/`/\\`/g' /tmp/new-header.txt
+
+            # Sanity-check: reject content that looks like GPT wrapped the
+            # markdown in a JS function expression (observed failure mode).
+            if head -1 /tmp/new-header.txt | grep -qE '^\s*function\s*\('; then
+              echo "::warning::GPT-4o returned content wrapped in a function expression for $product, skipping"
+              continue
+            fi
 
             # Use Python to safely replace the CONTENT content in the route file
             cat > /tmp/replace-header.py << 'PYEOF'
@@ -373,6 +384,13 @@ jobs:
           print(f"Updated {file_path}")
           PYEOF
             python3 /tmp/replace-header.py "$ROUTE_FILE" "/tmp/new-header.txt"
+
+            # Verify the updated route file has no syntax errors
+            if ! node --check "$ROUTE_FILE" 2>/dev/null; then
+              echo "::error::Updated $ROUTE_FILE has syntax errors, reverting"
+              git checkout -- "$ROUTE_FILE"
+              continue
+            fi
           done
 
       - name: Format updated files
