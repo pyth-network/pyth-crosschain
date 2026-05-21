@@ -25,16 +25,16 @@ export const Homepage = () => {
         <div className={styles.migrationFeature}>
           <div className={styles.migrationFeatureText}>
             <h2 className={styles.migrationFeatureTitle}>
-              Changes are coming to Pyth Core
+              Pyth Core is upgrading on July 31, 2026
             </h2>
             <p className={styles.migrationFeatureBody}>
-              Existing integrations need three small updates by{" "}
-              <strong>July 31, 2026</strong> to keep working.
+              Pyth API Key required for everyone using Pyth Core, new or
+              existing.
             </p>
           </div>
           <div className={styles.migrationFeatureActions}>
             <Button href="/price-feeds/core/upgrade/preparing" size="md" variant="primary">
-              See what&rsquo;s changing
+              Learn more
             </Button>
           </div>
         </div>
