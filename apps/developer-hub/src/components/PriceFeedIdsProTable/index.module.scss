@@ -84,7 +84,7 @@
   color: theme.color("muted");
   cursor: help;
   font-size: theme.font-size("xs");
-  line-height: 1;
+  line-height: 1.2;
   text-align: center;
   text-overflow: clip;
   white-space: nowrap;
@@ -125,6 +125,12 @@
   display: flex;
   align-items: center;
   gap: theme.spacing(4);
+
+  .channelIndicator {
+    flex: 0 0 9rem;
+    width: 9rem;
+    min-width: 9rem;
+  }
 }
 
 .legendText {
