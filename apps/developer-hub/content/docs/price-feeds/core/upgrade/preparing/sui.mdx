@@ -45,7 +45,7 @@ rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-te
   rename-from = "pyth"
   ```
 
-  Then use the renamed package in your source:
+  Then use the renamed package in your source code:
 
   ```move
   use pyth_pro_compatible::price_info::PriceInfoObject;
@@ -66,7 +66,7 @@ const connection = new SuiPriceServiceConnection(
 ```
 
 <Callout type="info">
-  If your `SuiPriceServiceConnection` doesn't accept an `accessToken` in its second constructor argument, you're on an outdated version of `@pythnetwork/pyth-sui-js`. Upgrade to the latest.
+  If your `SuiPriceServiceConnection` doesn't accept an `accessToken` in its second constructor argument, you're on an outdated version of [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js). Upgrade to the latest.
 </Callout>
 
 ## Contract addresses
