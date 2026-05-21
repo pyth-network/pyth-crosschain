@@ -1,0 +1,70 @@
+---
+title: "Solana"
+description: "Solana-specific notes for the Pyth Core upgrade."
+full: true
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+
+These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Solana consumers. Start with [Step 1: Get a Pyth API Key](/price-feeds/core/upgrade/preparing#step-1-get-a-pyth-api-key) on the main guide.
+
+## Upgrade the Pyth Core program
+
+### On-chain program (Rust)
+
+[`pyth-solana-receiver-sdk`](https://crates.io/crates/pyth-solana-receiver-sdk) hardcodes the Pyth program addresses. If your program depends on this crate, upgrade to the latest version and enable the `pro-compatible` feature in your `Cargo.toml`:
+
+```toml
+pyth-solana-receiver-sdk = { version = "1.2.0", features = ["pro-compatible"] }
+```
+
+### TypeScript client
+
+The TS SDK [`@pythnetwork/pyth-solana-receiver`](https://www.npmjs.com/package/@pythnetwork/pyth-solana-receiver) defaults to the current program IDs. Point it at the upgraded ones instead:
+
+```ts
+import {
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+  PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+  PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+  PythSolanaReceiver,
+} from "@pythnetwork/pyth-solana-receiver";
+
+const pythSolanaReceiver = new PythSolanaReceiver({
+  connection,
+  pushOracleProgramId: PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+  receiverProgramId: PRO_COMPATIBLE_RECEIVER_PROGRAM_ID,
+  treasuryId,
+  wallet,
+  wormholeProgramId: PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+});
+```
+
+<Callout type="warn">
+  Replace every hardcoded reference to the current Core program IDs with the upgraded program IDs. See the [contract addresses page](/price-feeds/core/upgrade/contracts#solana) for the full mapping.
+</Callout>
+
+## Upgrade the Hermes endpoint
+
+If you use `@pythnetwork/price-service-client` as your Hermes client, switch to [`@pythnetwork/hermes-client`](https://www.npmjs.com/package/@pythnetwork/hermes-client). Point it at the upgraded endpoint and pass your Pyth API key:
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+```
+
+## Contract addresses
+
+Solana-specific Wormhole receiver, Solana receiver, and Price feed program IDs are on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#solana).
+
+## Next
+
+<Cards>
+  <Card title="Main upgrade guide" description="Full step-by-step upgrade flow with the API key step and the upgrade-now vs wait decision." href="/price-feeds/core/upgrade/preparing" />
+  <Card title="Contract addresses" description="Per-chain upgraded Pyth Core Contract addresses, including Solana." href="/price-feeds/core/upgrade/contracts#solana" />
+</Cards>

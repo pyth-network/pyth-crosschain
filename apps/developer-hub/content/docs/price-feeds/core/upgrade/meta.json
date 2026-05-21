@@ -1,0 +1,11 @@
+{
+  "title": "Pyth Core Upgrade",
+  "icon": "RocketLaunch",
+  "defaultOpen": true,
+  "pages": [
+    "preparing",
+    "---References---",
+    "contracts",
+    "how-it-works"
+  ]
+}
