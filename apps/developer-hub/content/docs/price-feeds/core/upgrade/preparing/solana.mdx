@@ -4,12 +4,33 @@ description: "Solana-specific notes for the Pyth Core upgrade."
 full: true
 ---
 
+import { Button } from "@pythnetwork/component-library/Button";
 import { Callout } from "fumadocs-ui/components/callout";
-import { Card, Cards } from "fumadocs-ui/components/card";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
-These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Solana consumers. Start with [Step 1: Get a Pyth API Key](/price-feeds/core/upgrade/preparing#step-1-get-a-pyth-api-key) on the main guide.
+These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Solana consumers.
 
-## Move your Hermes calls to the new Hermes endpoint
+<Steps>
+<Step>
+
+### Get a Pyth API Key
+
+Required for everyone who calls Hermes. Sign up at Pyth Terminal: a free trial is included, paid plans cover ongoing use.
+
+<Button
+  href="https://pythdata.app/signup?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=solana-step1"
+  rel="noopener noreferrer"
+  size="md"
+  target="_blank"
+  variant="primary"
+>
+  Sign up at Pyth Terminal
+</Button>
+
+</Step>
+<Step>
+
+### Move your Hermes calls to the new Hermes endpoint
 
 If you use `@pythnetwork/price-service-client` as your Hermes client, switch to [`@pythnetwork/hermes-client`](https://www.npmjs.com/package/@pythnetwork/hermes-client). Point it at the upgraded endpoint and pass your Pyth API key:
 
@@ -22,11 +43,14 @@ const hermes = new HermesClient(
 );
 ```
 
-## Swap your contract address
+</Step>
+<Step>
+
+### Swap your contract address
 
 On Solana, swapping the Pyth Core contract address means pointing your program and TS SDK at the upgraded program IDs. The full mapping is on the [contract addresses page](/price-feeds/core/upgrade/contracts#solana).
 
-### On-chain program (Rust)
+#### On-chain program (Rust)
 
 [`pyth-solana-receiver-sdk`](https://crates.io/crates/pyth-solana-receiver-sdk) hardcodes the Pyth program addresses. If your program depends on this crate, upgrade to the latest version and enable the `pro-compatible` feature in your `Cargo.toml`:
 
@@ -34,7 +58,7 @@ On Solana, swapping the Pyth Core contract address means pointing your program a
 pyth-solana-receiver-sdk = { version = "1.2.0", features = ["pro-compatible"] }
 ```
 
-### TypeScript client
+#### TypeScript client
 
 The TS SDK [`@pythnetwork/pyth-solana-receiver`](https://www.npmjs.com/package/@pythnetwork/pyth-solana-receiver) defaults to the current program IDs. Point it at the upgraded ones instead:
 
@@ -60,9 +84,5 @@ const pythSolanaReceiver = new PythSolanaReceiver({
   Replace any additional reference to the current Core program IDs with the upgraded program IDs in your codebase. See the [contract addresses page](/price-feeds/core/upgrade/contracts#solana) for the full mapping.
 </Callout>
 
-## Next
-
-<Cards>
-  <Card title="Main upgrade guide" description="Full step-by-step upgrade flow with the API key step and the upgrade-now vs wait decision." href="/price-feeds/core/upgrade/preparing" />
-  <Card title="Contract addresses" description="Per-chain upgraded Pyth Core Contract addresses, including Solana." href="/price-feeds/core/upgrade/contracts#solana" />
-</Cards>
+</Step>
+</Steps>
