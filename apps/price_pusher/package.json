@@ -219,5 +219,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "10.4.0"
+  "version": "10.5.0"
 }
