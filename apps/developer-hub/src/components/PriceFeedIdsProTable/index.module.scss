@@ -47,8 +47,8 @@
 
 .channelIndicator {
   display: flex;
-  width: 8.25rem;
-  min-width: 8.25rem;
+  width: 9rem;
+  min-width: 9rem;
   flex-direction: column;
   gap: theme.spacing(1);
 }
@@ -125,12 +125,6 @@
   display: flex;
   align-items: center;
   gap: theme.spacing(4);
-
-  .channelIndicator {
-    flex: 0 0 9rem;
-    width: 9rem;
-    min-width: 9rem;
-  }
 }
 
 .legendText {
