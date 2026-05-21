@@ -17,7 +17,7 @@ const OPTIONS: Option[] = [
   {
     value: "now",
     title: "Upgrade now",
-    caption: "Recommended · zero downtime · ~15 min",
+    caption: "Recommended · zero downtime · ~30 min",
   },
   {
     value: "wait",
