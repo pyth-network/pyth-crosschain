@@ -12,14 +12,36 @@ explains the new architecture and how it works.
 ## Architecture Overview
 
 ```mermaid
-flowchart LR
-  R1[Router 1] --> H[Upgraded Hermes endpoint]
-  R2[Router 2] --> H
-  R3[Router 3] --> H
-  R4[Router 4] --> H
-  R5[Router 5] --> H
-  H --> C[Consumer]
-  C --> P[Upgraded Pyth Core Contract]
+graph LR
+  subgraph PythPro ["<span style='color:#71717a'>Pyth Pro</span>"]
+    R1[Router 1]
+    R2[Router 2]
+    R3[Router 3]
+    R4[Router 4]
+    R5[Router 5]
+  end
+
+  subgraph OffChain ["<span style='color:#71717a'>Off-Chain</span>"]
+    H[Upgraded Hermes]
+    C[Consumer]
+  end
+
+  subgraph OnChain ["<span style='color:#71717a'>On-Chain</span>"]
+    P[Upgraded Pyth Core Contract]
+  end
+
+  R1 --> H
+  R2 --> H
+  R3 --> H
+  R4 --> H
+  R5 --> H
+
+  H --> C
+  C --> P
+
+  style PythPro fill:none,stroke:#71717a,stroke-opacity:0.4
+  style OffChain fill:none,stroke:#71717a,stroke-opacity:0.4
+  style OnChain fill:none,stroke:#71717a,stroke-opacity:0.4
 ```
 
 ## Data flow
