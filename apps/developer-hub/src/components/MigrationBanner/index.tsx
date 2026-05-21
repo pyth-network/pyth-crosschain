@@ -1,7 +1,6 @@
 "use client";
 
 import { Banner } from "fumadocs-ui/components/banner";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const isMigrationBannerRoute = (pathname: string): boolean => {
@@ -18,9 +17,14 @@ export const MigrationBanner = () => {
   }
   return (
     <Banner className="bg-violet-950 text-violet-100 hover:bg-violet-900">
-      <Link href="/price-feeds/core/upgrade/preparing" className="hover:underline">
-        Pyth Core is upgrading on July 31, 2026 — see how to prepare →
-      </Link>
+      <a
+        href="https://pythdata.app/signup?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=banner"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:underline"
+      >
+        Pyth Core upgrade July 31, 2026. Get your API Key →
+      </a>
     </Banner>
   );
 };
