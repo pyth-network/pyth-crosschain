@@ -91,7 +91,7 @@ This is the recommended path, as it makes the **July 31 cutover a non-event for 
 
 ### Move your Hermes calls to the new Hermes endpoint
 
-Switch your Hermes base URL from [`hermes.pyth.network`](https://hermes.pyth.network/docs/) to [`pyth.dourolabs.app/hermes`](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API) and add your API key that you got in Step 1. The two URLs serve the same data today. The upgraded endpoint requires authentication.
+Switch your Hermes base URL from [`hermes.pyth.network`](https://hermes.pyth.network/docs/) to [`pyth.dourolabs.app/hermes`](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API) and add your API key that you got in Step 1. The routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement.
 
 <Tabs items={["curl", "TypeScript SDK"]}>
 <Tab value="curl">
@@ -221,9 +221,10 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     No. The API key is only required for Hermes (REST/SSE) requests. If your integration reads prices directly from the Pyth contract on-chain and never calls Hermes, you don't need to register. Your contract will be upgraded automatically on July 31, or you can swap it early (Step 3).
   </Accordion>
   <Accordion title="My code uses the Hermes REST/SSE API directly — what changes for me?">
-    Routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send an API key*:
+    Routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send the `Authorization: Bearer $PYTH_API_KEY` header*:
 
-    - **Upgrade early (recommended):** switch your base URL to `pyth.dourolabs.app/hermes` and start sending the API key with your requests. The data format is identical; only auth changes. See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full path.
+    - **Upgrade early (recommended):** switch your base URL to `pyth.dourolabs.app/hermes` and start sending the `Authorization: Bearer $PYTH_API_KEY` header today. The data format is identical; only auth changes. See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full path.
+    - **Automatic upgrade:** keep calling `hermes.pyth.network` without the header today. At the cutover on July 31, push a deploy that adds the `Authorization: Bearer $PYTH_API_KEY` header on the same URL. See [Waiting for the Automatic Upgrade](/price-feeds/core/upgrade/preparing#waiting-for-the-automatic-upgrade) for the gap-handling pattern.
 
     See the [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
   </Accordion>
