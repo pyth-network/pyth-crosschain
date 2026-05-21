@@ -70,7 +70,6 @@ Install: \`npm install @pythnetwork/pyth-sdk-solidity\`
 ### TypeScript (Hermes Client)
 
 \`\`\`typescript
-
 import { HermesClient } from "@pythnetwork/hermes-client";
 
 const client = new HermesClient("https://hermes.pyth.network");
@@ -204,6 +203,8 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/core/migrate-an-app-to-pyth/chainlink.mdx — Chainlink migration guide
 
 \`) };
+
+
 
 
 
