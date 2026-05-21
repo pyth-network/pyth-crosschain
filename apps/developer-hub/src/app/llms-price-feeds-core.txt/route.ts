@@ -21,22 +21,22 @@ Supported chains: EVM, Solana, Sui, Aptos, CosmWasm, NEAR, Starknet, Fuel, IOTA,
 **Pull Oracle Model**: Your app requests price updates from Hermes (off-chain API), submits them on-chain for verification, and reads the result — all in one transaction. Cheaper and fresher than push oracles.
 
 **Price Structure**: Each price contains four fields:
-- \\`price\\` (int64) — Price as integer, multiply by 10^expo for actual value
-- \\`conf\\` (uint64) — Confidence interval (same scale as price)
-- \\`expo\\` (int32) — Exponent, typically -8 (divide by 10^8)
-- \\`publishTime\\` (uint) — Unix timestamp of publication
+- \`price\` (int64) — Price as integer, multiply by 10^expo for actual value
+- \`conf\` (uint64) — Confidence interval (same scale as price)
+- \`expo\` (int32) — Exponent, typically -8 (divide by 10^8)
+- \`publishTime\` (uint) — Unix timestamp of publication
 
 **Confidence Intervals**: Statistical range where the true price likely falls (95% coverage). Use (price - conf) for conservative valuations, (price + conf) for liability protection. Pause activity if conf/price ratio exceeds your threshold.
 
-**Staleness**: Prices become stale if not recently updated or outside market hours. Always use \\`getPriceNoOlderThan()\\` with an appropriate age threshold rather than \\`getPriceUnsafe()\\`.
+**Staleness**: Prices become stale if not recently updated or outside market hours. Always use \`getPriceNoOlderThan()\` with an appropriate age threshold rather than \`getPriceUnsafe()\`.
 
-**Update Fees**: Each on-chain price update costs a small fee (typically 1 wei on EVM). Call \\`getUpdateFee()\\` to get the exact amount before submitting.
+**Update Fees**: Each on-chain price update costs a small fee (typically 1 wei on EVM). Call \`getUpdateFee()\` to get the exact amount before submitting.
 
 ## Integration Code
 
 ### EVM (Solidity)
 
-\\`\\`\\`solidity
+\`\`\`solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -63,13 +63,13 @@ contract MyContract {
         return (p.price, p.conf, p.expo);
     }
 }
-\\`\\`\\`
+\`\`\`
 
-Install: \\`npm install @pythnetwork/pyth-sdk-solidity\\`
+Install: \`npm install @pythnetwork/pyth-sdk-solidity\`
 
 ### TypeScript (Hermes Client)
 
-\\`\\`\\`typescript
+\`\`\`typescript
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 
@@ -84,19 +84,19 @@ console.log("Confidence:", parsed.price.conf);
 
 // The binary data to submit on-chain
 const updateData = priceUpdates.binary.data;
-\\`\\`\\`
+\`\`\`
 
-Install: \\`npm install @pythnetwork/hermes-client\\`
+Install: \`npm install @pythnetwork/hermes-client\`
 
 ### Streaming (Server-Sent Events)
 
-\\`\\`\\`typescript
+\`\`\`typescript
 const eventSource = await client.getPriceUpdatesStream([ETH_USD]);
 eventSource.onMessage((update) => {
   console.log("New price:", update.parsed[0].price.price);
 });
 // Note: SSE streams auto-close after 24 hours — implement reconnection logic
-\\`\\`\\`
+\`\`\`
 
 ## Contract Addresses
 
@@ -142,7 +142,7 @@ Full list: https://docs.pyth.network/price-feeds/core/upgrade/contract-addresses
 ## Common Patterns
 
 ### Stale Price Handling
-Always use \\`getPriceNoOlderThan(priceId, maxAge)\\` instead of \\`getPrice()\\` or \\`getPriceUnsafe()\\`. Recommended maxAge values:
+Always use \`getPriceNoOlderThan(priceId, maxAge)\` instead of \`getPrice()\` or \`getPriceUnsafe()\`. Recommended maxAge values:
 - DeFi lending/borrowing: 60 seconds
 - Derivatives/perpetuals: 10–30 seconds
 - Display/analytics: 300+ seconds
@@ -154,12 +154,12 @@ For lending protocols, use conservative pricing:
 Pause activity if the confidence-to-price ratio exceeds your threshold (e.g., conf/price > 2%).
 
 ### Multi-Feed Batch Updates
-Submit multiple feeds in a single \\`updatePriceFeeds()\\` call to save gas:
-\\`\\`\\`typescript
+Submit multiple feeds in a single \`updatePriceFeeds()\` call to save gas:
+\`\`\`typescript
 const ids = [ETH_USD, BTC_USD, SOL_USD];
 const updates = await client.getLatestPriceUpdates(ids);
 // Submit updates.binary.data on-chain — one transaction updates all feeds
-\\`\\`\\`
+\`\`\`
 
 ### Delayed Settlement for Derivatives
 Separate order commitment from execution to prevent latency exploitation:
@@ -171,20 +171,20 @@ Separate order commitment from execution to prevent latency exploitation:
 
 ### StalePrice (0x19_ab_f4_0e)
 Price hasn't been updated within the specified age parameter.
-**Fix**: Call \\`updatePriceFeeds()\\` with fresh data from Hermes before reading the price.
+**Fix**: Call \`updatePriceFeeds()\` with fresh data from Hermes before reading the price.
 
 ### PriceFeedNotFound (0x14_ae_be_68)
 Price feed doesn't exist on-chain or the feed ID is wrong.
-**Fix**: Verify the price feed ID is correct. Call \\`updatePriceFeeds()\\` first. Verify the Pyth contract address matches the chain.
+**Fix**: Verify the price feed ID is correct. Call \`updatePriceFeeds()\` first. Verify the Pyth contract address matches the chain.
 
 ### InsufficientFee (0x025dbdd4)
 Not enough native token sent for the update fee.
-**Fix**: Call \\`getUpdateFee(priceUpdateData)\\` and pass the result as \\`msg.value\\`.
+**Fix**: Call \`getUpdateFee(priceUpdateData)\` and pass the result as \`msg.value\`.
 
 ### Anchor Version Mismatch (Solana)
-\\`E0277: PriceUpdateV2: anchor_lang::AccountDeserialize not satisfied\\`
+\`E0277: PriceUpdateV2: anchor_lang::AccountDeserialize not satisfied\`
 **Fix**: Align anchor-lang versions between your program and pyth-solana-receiver-sdk:
-\\`cargo update -p anchor-lang@[SDK_VERSION] --precise [YOUR_VERSION]\\`
+\`cargo update -p anchor-lang@[SDK_VERSION] --precise [YOUR_VERSION]\`
 
 ## Deep Dive Pages
 
