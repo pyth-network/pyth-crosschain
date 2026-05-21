@@ -47,8 +47,8 @@
 
 .channelIndicator {
   display: flex;
-  width: 9rem;
-  min-width: 9rem;
+  width: 10rem;
+  min-width: 10rem;
   flex-direction: column;
   gap: theme.spacing(1);
 }
@@ -76,7 +76,7 @@
 }
 
 .channelLabels {
-  column-gap: theme.spacing(1);
+  column-gap: 2px;
 }
 
 .channelLabel {
