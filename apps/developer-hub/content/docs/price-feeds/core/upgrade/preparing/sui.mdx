@@ -1,0 +1,81 @@
+---
+title: "Sui"
+description: "Sui-specific notes for the Pyth Core upgrade."
+full: true
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+
+These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for Sui consumers. Start with [Step 1: Get a Pyth API Key](/price-feeds/core/upgrade/preparing#step-1-get-a-pyth-api-key) on the main guide.
+
+## Upgrade the Pyth Core package
+
+Current Pyth Core users reference the Pyth package in their `Move.toml`:
+
+```toml
+[dependencies.pyth]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts"
+rev = "sui-contract-mainnet"
+```
+
+The upgraded Pyth Core package is available at a new `rev`:
+
+```toml
+[dependencies.pyth]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts"
+rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-testnet
+```
+
+<Callout type="warn">
+  **Sui package compatibility may force you to keep both.** Per Sui's [custom package upgrade policies](https://docs.sui.io/develop/publish-upgrade-packages/custom-policies), you may need to keep the original Pyth package alongside the upgraded one in your `Move.toml`. Rename one to avoid a naming conflict:
+
+  ```toml
+  [dependencies.pyth]
+  git = "https://github.com/pyth-network/pyth-crosschain.git"
+  subdir = "target_chains/sui/contracts"
+  rev = "sui-contract-mainnet"
+
+  [dependencies.pyth_pro_compatible]
+  git = "https://github.com/pyth-network/pyth-crosschain.git"
+  subdir = "target_chains/sui/contracts"
+  rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-testnet
+  rename-from = "pyth"
+  ```
+
+  Then use the renamed package in your source:
+
+  ```move
+  use pyth_pro_compatible::price_info::PriceInfoObject;
+  ```
+</Callout>
+
+## Upgrade the Hermes endpoint
+
+If you use `SuiPriceServiceConnection` from [`@pythnetwork/pyth-sui-js`](https://www.npmjs.com/package/@pythnetwork/pyth-sui-js), point it at the upgraded endpoint and pass your Pyth API key:
+
+```ts
+import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
+
+const connection = new SuiPriceServiceConnection(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+```
+
+<Callout type="info">
+  If your `SuiPriceServiceConnection` doesn't accept an `accessToken` in its second constructor argument, you're on an outdated version of `@pythnetwork/pyth-sui-js`. Upgrade to the latest.
+</Callout>
+
+## Contract addresses
+
+Sui-specific Pyth State, Pyth Package, Wormhole State, and Wormhole Package IDs for both mainnet and testnet are on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#sui).
+
+## Next
+
+<Cards>
+  <Card title="Main upgrade guide" description="Full step-by-step upgrade flow with the API key step and the upgrade-now vs wait decision." href="/price-feeds/core/upgrade/preparing" />
+  <Card title="Contract addresses" description="Per-chain upgraded Pyth Core Contract addresses, including Sui." href="/price-feeds/core/upgrade/contracts#sui" />
+</Cards>

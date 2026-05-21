@@ -18,7 +18,7 @@ export const MigrationBanner = () => {
   }
   return (
     <Banner className="bg-violet-950 text-violet-100 hover:bg-violet-900">
-      <Link href="/price-feeds/core/upgrade" className="hover:underline">
+      <Link href="/price-feeds/core/upgrade/preparing" className="hover:underline">
         Pyth Core is upgrading on July 31, 2026 — see how to prepare →
       </Link>
     </Banner>

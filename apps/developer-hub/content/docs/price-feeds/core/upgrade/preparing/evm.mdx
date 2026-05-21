@@ -1,0 +1,60 @@
+---
+title: "EVM"
+description: "EVM-specific notes for the Pyth Core upgrade."
+full: true
+---
+
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for EVM consumers. The main guide covers the full step-by-step flow with viem; this page collects EVM-specific notes and points you at the right table for your chain's addresses.
+
+## Hermes client (viem and ethers)
+
+The Hermes client is the same shape regardless of which contract library you use. Instantiate `HermesClient` with the upgraded endpoint and your API key:
+
+<Tabs items={["viem", "ethers"]}>
+<Tab value="viem">
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+
+// Pass the resulting payload to your viem contract:
+// await pythContract.write.updatePriceFeeds([update.binary.data], { value: fee });
+```
+
+</Tab>
+<Tab value="ethers">
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+
+// Pass the resulting payload to your ethers contract:
+// await pythContract.updatePriceFeeds([update.binary.data], { value: fee });
+```
+
+</Tab>
+</Tabs>
+
+The contract call itself follows your ABI library. Use `pythContract.write.updatePriceFeeds(...)` in viem, `pythContract.updatePriceFeeds(...)` in ethers.
+
+## Supported EVM chains
+
+Each supported EVM chain has its own upgraded Pyth Core Contract address. Look up your chain on the [Upgraded Pyth Core Contract addresses page](/price-feeds/core/upgrade/contracts#evm).
+
+## Next
+
+<Cards>
+  <Card title="Main upgrade guide" description="Full step-by-step upgrade flow with the API key step and the upgrade-now vs wait decision." href="/price-feeds/core/upgrade/preparing" />
+  <Card title="Contract addresses" description="Per-chain upgraded Pyth Core Contract addresses for all supported EVM chains." href="/price-feeds/core/upgrade/contracts#evm" />
+</Cards>
