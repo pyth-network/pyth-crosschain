@@ -6,6 +6,8 @@ full: true
 
 import { Callout } from "fumadocs-ui/components/callout";
 import MigrationContractsTable from "../../../../../src/components/MigrationContractsTable";
+import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
+import solanaMainnet from "../push-feeds/data/svm/solana-mainnet.json";
 
 These are the **upgraded Pyth Core Contract** addresses for each supported chain. To upgrade your Pyth Core integration, swap your existing Pyth contract address for the one listed below for your chain. The interface is unchanged. No other code changes are needed.
 
@@ -43,13 +45,24 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 ## Solana
 
-### Mainnet and Testnet
+### Programs (Mainnet and Testnet)
 
 | Program           | Current                                                                                                                              | Upgraded                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
 | Wormhole receiver | [`HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ`](https://explorer.solana.com/address/HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ)   | [`HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL`](https://explorer.solana.com/address/HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL) |
 | Solana receiver   | [`rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ`](https://explorer.solana.com/address/rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ)   | [`rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp`](https://explorer.solana.com/address/rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp) |
 | Price feed        | [`pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT`](https://explorer.solana.com/address/pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT)   | [`pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou`](https://explorer.solana.com/address/pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou) |
+
+### Push Feed Accounts (Mainnet)
+
+Each Solana push feed lives at a PDA derived from the Pyth push-oracle program ID and the price feed ID. The push-oracle program ID changes at the upgrade, so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
+
+<SponsoredFeedsTable
+  feeds={solanaMainnet.feeds}
+  networkName="Solana mainnet and devnet"
+  showUpgradedAccountAddress
+  hideAccountAddress
+/>
 
 <Callout type="info">
   **Don't see your chain?** We're adding chains regularly and can discuss
