@@ -47,8 +47,8 @@
 
 .channelIndicator {
   display: flex;
-  width: 8.25rem;
-  min-width: 8.25rem;
+  width: 11rem;
+  min-width: 11rem;
   flex-direction: column;
   gap: theme.spacing(1);
 }
@@ -76,7 +76,7 @@
 }
 
 .channelLabels {
-  column-gap: theme.spacing(1);
+  column-gap: 2px;
 }
 
 .channelLabel {
@@ -84,7 +84,7 @@
   color: theme.color("muted");
   cursor: help;
   font-size: theme.font-size("xs");
-  line-height: 1;
+  line-height: 1.2;
   text-align: center;
   text-overflow: clip;
   white-space: nowrap;
