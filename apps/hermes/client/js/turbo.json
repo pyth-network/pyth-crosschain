@@ -3,15 +3,10 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["build:typescript", "build:schemas"]
-    },
-    "build:schemas": {
-      "dependsOn": ["//#install:modules", "pull:schema"],
-      "inputs": ["schema.json"],
-      "outputs": ["src/zodSchemas.ts"]
+      "dependsOn": ["build:typescript"]
     },
     "build:typescript": {
-      "dependsOn": ["//#install:modules", "build:schemas", "^build"],
+      "dependsOn": ["//#install:modules", "^build"],
       "outputs": ["lib/**"]
     },
     "example": {
