@@ -17,7 +17,7 @@ import {
   publicActions,
   webSocket,
 } from "viem";
-import { mnemonicToAccount } from "viem/accounts";
+import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
 
 import { isWsEndpoint } from "../utils.js";
@@ -68,7 +68,7 @@ export const createClient = async (
   }).getChainId();
 
   return createWalletClient({
-    account: mnemonicToAccount(mnemonic),
+    account: privateKeyToAccount(mnemonic as `0x${string}`),
     chain: getChainById(chainId),
     transport,
   }).extend(publicActions);
