@@ -80,10 +80,9 @@ export const UpgradeCallout = ({ chain }: Props) => {
 
   return (
     <Callout type="warn">
-      <strong>Pyth Core upgrades on July 31, 2026.</strong> {label} is not part
-      of the upgrade. See the <Link href={upgradeGuide}>upgrade guide</Link> to
-      learn more, or <a href={contactMail}>contact the team</a> for support on
-      this chain.
+      <strong>Pyth Core upgrades on July 31, 2026.</strong> Pyth Core on {label}{" "}
+      will be dropped at the upgrade. <a href={contactMail}>Contact the team</a>{" "}
+      if you need support.
     </Callout>
   );
 };
