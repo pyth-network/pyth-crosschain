@@ -85,6 +85,7 @@
   },
   "scripts": {
     "build": "ts-duality",
+    "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
     "clean": "rm -rf ./dist",
     "example": "node lib/examples/HermesClient.js",
     "prepublishOnly": "pnpm run build",
