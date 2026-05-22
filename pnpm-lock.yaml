@@ -15661,8 +15661,8 @@ packages:
     resolution: {integrity: sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==}
     deprecated: This library has been deprecated and usage is discouraged.
 
-  ethereumjs-abi@git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
-    resolution: {commit: ee3994657fa7a427238e6ba92a84d0b529bbcde0, repo: git@github.com:ethereumjs/ethereumjs-abi.git, type: git}
+  ethereumjs-abi@git+https://github.com/ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
+    resolution: {commit: ee3994657fa7a427238e6ba92a84d0b529bbcde0, repo: https://github.com/ethereumjs/ethereumjs-abi.git, type: git}
     version: 0.6.8
 
   ethereumjs-account@2.0.5:
@@ -42544,7 +42544,7 @@ snapshots:
 
   eth-sig-util@1.4.2:
     dependencies:
-      ethereumjs-abi: git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0
+      ethereumjs-abi: git+https://github.com/ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0
       ethereumjs-util: 5.2.1
 
   ethereum-bloom-filters@1.2.0:
@@ -42601,7 +42601,7 @@ snapshots:
       bn.js: 4.12.1
       ethereumjs-util: 6.2.1
 
-  ethereumjs-abi@git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
+  ethereumjs-abi@git+https://github.com/ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
     dependencies:
       bn.js: 4.12.1
       ethereumjs-util: 6.2.1

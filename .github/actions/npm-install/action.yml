@@ -25,6 +25,10 @@ runs:
       with:
         version: 10.28.0
 
+    - name: Setup | use HTTPS for GitHub git dependencies
+      run: git config --global url."https://github.com/".insteadOf git@github.com:
+      shell: bash
+
     - name: Setup | install dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: pnpm install
