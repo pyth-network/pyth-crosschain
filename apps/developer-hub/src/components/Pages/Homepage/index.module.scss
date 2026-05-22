@@ -19,13 +19,20 @@
 }
 
 .sectionHeroContent {
+  --max-width-padding: #{theme.spacing(4)};
+
   display: flex;
   flex-direction: column;
   gap: theme.spacing(10);
-  padding-top: theme.spacing(18);
-  padding-bottom: theme.spacing(18);
+  padding: theme.spacing(10) var(--max-width-padding);
+  width: 100%;
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
 
-  @include theme.max-width;
+  @include theme.breakpoint("sm") {
+    --max-width-padding: #{theme.spacing(6)};
+  }
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
@@ -65,7 +72,18 @@
 }
 
 .sectionProducts {
-  @include theme.max-width;
+  --max-width-padding: #{theme.spacing(4)};
+
+  padding-left: var(--max-width-padding);
+  padding-right: var(--max-width-padding);
+  width: 100%;
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  @include theme.breakpoint("sm") {
+    --max-width-padding: #{theme.spacing(6)};
+  }
 }
 
 .sectionHeaderTitle {
@@ -91,8 +109,64 @@
   gap: theme.spacing(8);
 
   @include theme.breakpoint("lg") {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.sectionEntropy {
+  --max-width-padding: #{theme.spacing(4)};
+
+  padding-left: var(--max-width-padding);
+  padding-right: var(--max-width-padding);
+  width: 100%;
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  @include theme.breakpoint("sm") {
+    --max-width-padding: #{theme.spacing(6)};
+  }
+}
+
+.entropyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: theme.spacing(4);
+  padding: theme.spacing(6) theme.spacing(8);
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+
+  @include theme.breakpoint("md") {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: theme.spacing(8);
+  }
+}
+
+.entropyContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+}
+
+.entropyTitle {
+  @include theme.text("xl", "semibold");
+
+  color: theme.color("heading");
+  margin: 0;
+}
+
+.entropyDescription {
+  @include theme.text("base", "normal");
+
+  color: light-dark(
+    theme.pallette-color("stone", 500),
+    theme.pallette-color("steel", 400)
+  );
+  margin: 0;
 }
 
 .productsCardWrapper {
