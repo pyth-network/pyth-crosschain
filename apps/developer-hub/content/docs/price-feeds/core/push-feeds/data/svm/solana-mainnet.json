@@ -2,7 +2,7 @@
   "feeds": [
     {
       "alias": "SOL/USD",
-      "account_address": "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
+      "account_address": "DrxgPXETqQzcG6PsC5L1D661VweL9f43S3c2owwArT94",
       "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -34,7 +34,7 @@
     },
     {
       "alias": "BONK/USD",
-      "account_address": "DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX",
+      "account_address": "9Dbh3SFDrWd6sqMiqx3kVBK3xbqWtpvmdEzroycGKqDA",
       "id": "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -66,7 +66,7 @@
     },
     {
       "alias": "BTC/USD",
-      "account_address": "4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo",
+      "account_address": "T2TyMwxE6YfCK9PqhYReRo5XkGXKUnfbaczEmviU2r9",
       "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -82,7 +82,7 @@
     },
     {
       "alias": "JUP/USD",
-      "account_address": "7dbob1psH1iZBS7qPsm3Kwbf5DzSXK8Jyg31CTgTnxH5",
+      "account_address": "8yhuPuPzw7ri1uNy48x6H9bU4Uzb3ceVzYx5q568MNW7",
       "id": "0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -114,7 +114,7 @@
     },
     {
       "alias": "ORCA/USD",
-      "account_address": "4CBshVeNBEXz24GZpoj8SrqP5L7VGG3qjGd6tCST1pND",
+      "account_address": "4gH6DAXn8KDmeJC1j4So3Drbwc7AxPho4zSKUzsnPANt",
       "id": "37505261e557e251290b8c8899453064e8d760ed5c65a779726f2490980da74c",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -122,7 +122,7 @@
     },
     {
       "alias": "SAMO/USD",
-      "account_address": "2eUVzcYccqXzsDU1iBuatUaDCbRKBjegEaPPeChzfocG",
+      "account_address": "6VJna4MoYRTmQs6v8U1gqdbCCf4AJYEwpJRGqDk6jeLx",
       "id": "49601625e1a342c1f90c3fe6a03ae0251991a1d76e480d2741524c29037be28a",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -170,7 +170,7 @@
     },
     {
       "alias": "WBTC/USD",
-      "account_address": "9gNX5vguzarZZPjTnE1hWze3s6UsZ7dsU3UnAmKPnMHG",
+      "account_address": "7D5RZEeQMGDHPbJJzgnMzfhMjak7JvFg6HgdjCnMsf9Z",
       "id": "c9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -234,7 +234,7 @@
     },
     {
       "alias": "NAV.USCC/USD",
-      "account_address": "823Y4cV7XH2TzkB9NdHfTRoCKLrqXv8EgQP5nzEG43Hp",
+      "account_address": "2wge1BZ9FYKLddcu55wR2Br4LSXZj4i7GDcTGD2fH2LF",
       "id": "5d73a5953dc86c4773adc778c30e8a6dfc94c5c3a74d7ebb56dd5e70350f044a",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -242,7 +242,7 @@
     },
     {
       "alias": "ZBTC/USD",
-      "account_address": "7qFJxM2GefbY2td7cXb6bmXmwVqkeF7kYjaypgZWLBng",
+      "account_address": "HSFdyJt8Rk3cEPkfzRSwmoN7ZWaYhWqYq3KoUbfrBJzw",
       "id": "3d824c7f7c26ed1c85421ecec8c754e6b52d66a4e45de20a9c9ea91de8b396f9",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -250,7 +250,7 @@
     },
     {
       "alias": "LBTC/USD",
-      "account_address": "HENev4WeM2VhJ2b9tFCQsWdHGU6fTvgW68MsvBeYpxYn",
+      "account_address": "Et5sPYubiQ1uxYf2YCrdSU7hFnYzh4mtXw9XU57DcTQD",
       "id": "8f257aab6e7698bb92b15511915e593d6f8eae914452f781874754b03d0c612b",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -258,15 +258,15 @@
     },
     {
       "alias": "INF/SOL",
-      "account_address": "4MbCk4vH47K2gHee6nTg62KScpGu2bV3YDeTZtpQm3ro",
-      "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
+      "account_address": "HXhEHzDWvMEH8KLZikA9vTUdQiu9HFFCDmSbcxBJVwfr",
+      "id": "3e9961b890c4e77e9009c1a6d81dc556e24a3c190b02d1682c8f545c53b1d4a2",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
     },
     {
-      "alias": "INDEX.FORD/USD",
-      "account_address": "GUq4JEVMgC5AmZpKxjh1aJsabB9X7mBwPavKSsnz11DS",
+      "alias": "INDEX.FWDI/USD",
+      "account_address": "FN8qWAxjNZ1j3XhFMQRoLaRxyWtbsB5Kpf6gKXJve7Ki",
       "id": "84d8c84bfbe6f71af527493f9aaee09950ee3e09c8460b2b781ce65ea341c10a",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -282,7 +282,7 @@
     },
     {
       "alias": "SYRUPUSDC/USDC.RR",
-      "account_address": "GWdwWDhYFUc8ZD6uCTtEAAwx97V1ZCsxPWGL7vhSha6w",
+      "account_address": "3oLNAk3zmAee3yBvkLJAbYgN7JQRYUcpdAqdLCHJcQ7K",
       "id": "2ad31d1c4a85fbf2156ce57fab4104124c5ef76a6386375ecfc8da1ed5ce1486",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -290,7 +290,7 @@
     },
     {
       "alias": "ORE/USD",
-      "account_address": "GYYQ8gbX4Tndc4WMJ7jSjZTePTvbmgRRxByt54ZQYqvZ",
+      "account_address": "EBJCUERjDJTAbkX4bYD2SrKksurJT6VryqDC2GV1p7F3",
       "id": "142b804c658e14ff60886783e46e5a51bdf398b4871d9d8f7c28aa1585cad504",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -298,7 +298,7 @@
     },
     {
       "alias": "NOPAL/USD.RR",
-      "account_address": "3GDZNVfeYJupHxj65tyCC44HW5NHPTycBihFrCEcDTBj",
+      "account_address": "xizcHY7DXipiqSYLj3s45zTWNYkoS5DNiGbQRzoqLwk",
       "id": "8858dfaa8998ff44681aa145a8aa5b7772979b1d044a1bbf3cf5d971168baa85",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -306,7 +306,7 @@
     },
     {
       "alias": "NTBILL/USD.RR",
-      "account_address": "FrJxRfRkaktSWrEPsBaJhx7fdofPZZsuNHoh4E9YxZjn",
+      "account_address": "8rDNAdbzC7BDKE3prk5eA3Qb3HVtVznM3C2iowVrE6DZ",
       "id": "f03015f29e6c90d5fe62da7d1a13c912c8bf7523d90c981387f82ee0c83332bd",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -330,7 +330,7 @@
     },
     {
       "alias": "NALPHA/USD.RR",
-      "account_address": "DihTptVgZNyfxN5ya1V5XThRJHhzZ4V2RAPpwvNXkxUK",
+      "account_address": "CvVWbCWJvcQugLVe2stWaz47vQcGsGkKMGFj81U6qg1D",
       "id": "57d1e11bea1316c2f7263a39c2780685691585aae34eff39300f5db564501b17",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -346,7 +346,7 @@
     },
     {
       "alias": "CASH/RD.RR",
-      "account_address": "7ELVkNXhZLJGdwPGps8sEBgs583TewjZoRzgf9Zdp5T8",
+      "account_address": "7zfo535pZ9so6549RTRxFvhX47JgowJDgksY5FjTtvmJ",
       "id": "64c74ffd61574170cfaee65c54c8810adcf83f6c31f3c256d9a290dcbf4ff1a9",
       "time_difference": 30,
       "price_deviation": 0.5,
@@ -378,7 +378,7 @@
     },
     {
       "alias": "WSTUSR/USR.RR",
-      "account_address": "4iG7tnQXmhPfUHxn7F54T6g3j3UZEFyYcoD6PWeF1YVF",
+      "account_address": "8mKWjTDrR3k9pahmJcR7ZyyYThtjGHZeENFRwn4HqhwC",
       "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
       "time_difference": 540,
       "price_deviation": 0.001,
