@@ -33,7 +33,7 @@ For background on what's changing and why, see the [upgrade overview](/price-fee
 - **Your app calls [`hermes.pyth.network`](https://hermes.pyth.network/docs/)?**
   Get a Pyth API Key in Step 1.
 - **You use [Pyth Core contracts](/price-feeds/core/contract-addresses) on-chain?**
-  Choose: swap addresses now, or wait for the automatic upgrade (see the decision section below).
+  Choose: do an early upgrade, or wait for the automatic upgrade (see the decision section below).
 - **You only use a protocol that already integrates Pyth?**
   No action needed from your side.
 
@@ -56,7 +56,7 @@ Sign up at Pyth Terminal: a free trial is included, paid plans cover ongoing use
   Sign up at Pyth Terminal
 </Button>
 
-### Step 2: Upgrade now or wait for automatic?
+### Step 2: Early upgrade or wait for automatic?
 
 After Step 1, choose how and when to move to the upgraded infrastructure. Your choice is saved in the URL so you can share or bookmark a specific path.
 
@@ -74,18 +74,18 @@ After Step 1, choose how and when to move to the upgraded infrastructure. Your c
 
 <BranchToggle />
 
-|                  | Upgrade now (recommended)                  | Wait for automatic                                                   |
+|                  | Early upgrade (recommended)                | Wait for automatic                                                   |
 | ---------------- | ------------------------------------------ | -------------------------------------------------------------------- |
 | Timing           | You choose                                 | July 31, 2026                                                        |
-| Downtime         | Up to you                                       | Brief, during the switch                                             |
-| Hermes endpoint  | Switch to the new Hermes endpoint now             | Start using `hermes.pyth.network` with an API key before the cutover               |
-| Contract address | You swap to the upgraded Pyth Core Contract       | DAO upgrades the current Pyth Core Contract for you                             |
+| Downtime         | Up to you                                  | Brief, during the switch                                             |
+| Hermes endpoint  | Switch to the new Hermes endpoint now      | Start using `hermes.pyth.network` with an API key before the cutover |
+| Contract address | You swap to the upgraded Pyth Core Contract | DAO upgrades the current Pyth Core Contract for you                  |
 
 <BranchSection path="now">
 
-## Upgrading Now
+## Early upgrade
 
-This is the recommended path, as it makes the **July 31 cutover a non-event for your integration**. Please note that if you swap the endpoint but not the contract address or vice versa you won't be able to verify price updates. 
+This is the recommended path: it makes the **July 31 cutover a non-event for your integration**. If you switch the endpoint but not the contract address, or vice versa, your app will not be able to verify price updates.
 
 <Steps>
 <Step>
