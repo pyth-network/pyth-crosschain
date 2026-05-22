@@ -71,7 +71,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
         <strong>Pyth Core upgrades on July 31, 2026.</strong> Check the{" "}
         <Link href={upgradedAddresses}>upgraded {label} addresses</Link> for
         chains in the upgrade and the{" "}
-        <Link href={upgradeGuide}>upgrade guide</Link> for the full path.{" "}
+        <Link href={upgradeGuide}>upgrade guide</Link> for how to upgrade.{" "}
         <a href={contactMail}>Contact the team</a> if your chain isn&apos;t
         listed.
       </Callout>
