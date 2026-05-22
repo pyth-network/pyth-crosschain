@@ -8,6 +8,8 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 This guide explains how to use real-time Pyth data in Solana applications.
 
+<UpgradeCallout chain="solana" />
+
 ## Install Pyth SDKs
 
 Pyth provides two SDKs for Solana applications to cover the on- and off-chain portions of the integration:
@@ -155,18 +157,37 @@ To use price update accounts, the frontend code needs to perform two different t
 
 #### Fetch price updates
 
-Use `PriceServiceConnection` from `@pythnetwork/hermes-client` to fetch Pyth price updates from Hermes:
+Use `HermesClient` from `@pythnetwork/hermes-client` to fetch Pyth price updates from Hermes. The new endpoint `pyth.dourolabs.app/hermes` is the upgraded backend (recommended); the current `hermes.pyth.network` keeps working until cutover and requires an API key from July 31, 2026:
+
+<Tabs items={["Upgraded endpoint", "Current endpoint"]}>
+<Tab value="Upgraded endpoint">
 
 ```typescript copy
 import { HermesClient } from "@pythnetwork/hermes-client";
 
-// The URL below is a public Hermes instance operated by the Pyth Data Association.
-// Hermes is also available from several third-party providers listed here:
-// https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
 const priceServiceConnection = new HermesClient(
-  "https://hermes.pyth.network/",
-  {},
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
 );
+```
+
+</Tab>
+<Tab value="Current endpoint">
+
+```typescript copy
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+// Authentication becomes required on July 31, 2026.
+const priceServiceConnection = new HermesClient(
+  "https://hermes.pyth.network",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+```
+
+</Tab>
+</Tabs>
+
+```typescript copy
 
 // Hermes provides other methods for retrieving price updates. See
 // https://hermes.pyth.network/docs for more information.

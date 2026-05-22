@@ -7,6 +7,8 @@ slug: /price-feeds/core/best-practices
 This page provides some technical details about Pyth price feeds that are necessary to use them safely and correctly.
 Please read this page before using Pyth price feeds in your application.
 
+<UpgradeCallout chain="index" />
+
 ## Fixed-Point Numeric Representation
 
 Price feeds represent numbers in a fixed-point format. The same exponent is used for both the price and confidence interval. The integer representation of these values can be computed by multiplying by `10^exponent`. As an example, imagine Pyth reported the following values for AAPL/USD:
@@ -64,7 +66,7 @@ Derivative protocols are encouraged to consider the following strategies to miti
 
 1. **Use Delayed Settlement**: Derivative protocols can introduce a delay between the time an order is created and the time it is executed. This delay gives the protocol time to observe price changes and reject trades/transactions that profit over latency.
    Suppose a user submits a trade transaction at a time `t`. The protocol should execute the trade by using the price at the time `t`, which will be available to the protocol after a short delay.
-   The protocol can fetch this price update of a specific timestamp from [Hermes](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates) and can use [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) to parse the prices and submit to prevent price frontrunning.
+   The protocol can fetch this price update of a specific timestamp from [Hermes](https://pyth.dourolabs.app/hermes/docs/#/rest/timestamp_price_updates) and can use [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) to parse the prices and submit to prevent price frontrunning.
 
 1. **Use a Spread**: Pyth provides a confidence interval for each price update. Derivative protocols can use this confidence interval to determine the range in which the true price probably lies.
    By using the lower bound of the confidence interval, derivative protocols can protect themselves from price manipulation that drives the price down. By using the upper bound of the confidence interval, derivative protocols can protect themselves from price manipulation that drives the price up.
@@ -89,7 +91,7 @@ Protocols offering executable prices are encouraged to consider the following ri
 1. **Staleness in Executable Prices**: Adversaries may see price updates before your protocol does, or they may select favorable historical price updates that satisfy staleness constraints.
    This latency advantage allows sophisticated traders to exploit price differences.
    **Use `getPriceNoOlderThan()` with strict staleness thresholds** when filling orders.
-   For delayed execution models, fetch the price at the order timestamp from [Hermes](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates) and parse it using [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates).
+   For delayed execution models, fetch the price at the order timestamp from [Hermes](https://pyth.dourolabs.app/hermes/docs/#/rest/timestamp_price_updates) and parse it using [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates).
 
 1. **High Volatility and Wide Confidence Intervals**: During periods of high volatility, large price moves widen confidence intervals and can cause significant slippage relative to your executable quote.
    The executable price you quote may not reflect the true market price when confidence intervals are wide.
