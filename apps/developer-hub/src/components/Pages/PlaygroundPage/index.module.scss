@@ -30,7 +30,7 @@
 }
 
 .title {
-  @include theme.text("2xl", "semibold");
+  @include theme.text("4xl", "semibold");
 
   line-height: 120%;
   letter-spacing: theme.letter-spacing("tight");
@@ -39,7 +39,7 @@
 }
 
 .subtitle {
-  @include theme.text("sm", "normal");
+  @include theme.text("lg", "normal");
 
   line-height: 140%;
   color: theme.color("paragraph");

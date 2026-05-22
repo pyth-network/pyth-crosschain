@@ -122,12 +122,12 @@ export class PythWrapperExecutor {
 
     return await this.chainExecutor.executeContract({
       contractAddr: contractAddr,
+      funds: [fund],
       msg: {
         update_price_feeds: {
           data: vaas,
         },
       },
-      funds: [fund],
     });
   }
 

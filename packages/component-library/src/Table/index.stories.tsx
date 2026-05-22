@@ -3,46 +3,20 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Table as TableComponent } from "./index.jsx";
 
 const meta = {
-  component: TableComponent,
-  parameters: {
-    layout: "padded",
-  },
   argTypes: {
-    columns: {
-      table: {
-        disable: true,
-      },
-    },
-    rows: {
-      table: {
-        disable: true,
-      },
-    },
-    renderEmptyState: {
-      table: {
-        disable: true,
-      },
-    },
     className: {
       table: {
         disable: true,
       },
     },
-    label: {
+    columns: {
       table: {
-        category: "Accessibility",
+        disable: true,
       },
     },
-    isUpdating: {
-      control: "boolean",
+    dependencies: {
       table: {
-        category: "State",
-      },
-    },
-    isLoading: {
-      control: "boolean",
-      table: {
-        category: "State",
+        disable: true,
       },
     },
     fill: {
@@ -51,75 +25,101 @@ const meta = {
         category: "Variant",
       },
     },
+    isLoading: {
+      control: "boolean",
+      table: {
+        category: "State",
+      },
+    },
+    isUpdating: {
+      control: "boolean",
+      table: {
+        category: "State",
+      },
+    },
+    label: {
+      table: {
+        category: "Accessibility",
+      },
+    },
+    renderEmptyState: {
+      table: {
+        disable: true,
+      },
+    },
     rounded: {
       control: "boolean",
       table: {
         category: "Variant",
       },
     },
-    dependencies: {
+    rows: {
       table: {
         disable: true,
       },
     },
+  },
+  component: TableComponent,
+  parameters: {
+    layout: "padded",
   },
 } satisfies Meta<typeof TableComponent>;
 export default meta;
 
 export const Table = {
   args: {
-    label: "A Table",
-    isUpdating: false,
-    isLoading: false,
-    fill: true,
-    rounded: true,
     columns: [
       {
-        name: "PRICE FEED",
         id: "feed",
         isRowHeader: true,
         loadingSkeletonWidth: 16,
+        name: "PRICE FEED",
       },
       {
-        name: "PRICE",
-        id: "price",
         fill: true,
+        id: "price",
         loadingSkeletonWidth: 30,
+        name: "PRICE",
       },
       {
-        name: "CONFIDENCE",
+        alignment: "right",
         id: "confidence",
         loadingSkeletonWidth: 20,
-        alignment: "right",
+        name: "CONFIDENCE",
       },
     ],
+    fill: true,
+    isLoading: false,
+    isUpdating: false,
+    label: "A Table",
+    rounded: true,
     rows: [
       {
-        id: "BTC/USD",
-        href: "#",
         data: {
+          confidence: "+/- 5%",
           feed: "BTC/USD",
           price: "$100,000",
-          confidence: "+/- 5%",
         },
+        href: "#",
+        id: "BTC/USD",
       },
       {
-        id: "ETH/USD",
-        href: "#",
         data: {
+          confidence: "+/- 10%",
           feed: "ETH/USD",
           price: "$1,000",
-          confidence: "+/- 10%",
         },
+        href: "#",
+        id: "ETH/USD",
       },
       {
-        id: "SOL/USD",
-        href: "#",
         data: {
+          confidence: "+/- 0.1%",
           feed: "SOL/USD",
           price: "$1,000,000,000",
-          confidence: "+/- 0.1%",
         },
+        href: "#",
+        id: "SOL/USD",
       },
     ],
   },

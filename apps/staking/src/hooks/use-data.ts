@@ -36,18 +36,18 @@ export enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
-  Loaded: <T>(data: T, mutate: KeyedMutator<T>) => ({
-    type: StateType.Loaded as const,
-    mutate,
-    data,
-  }),
   ErrorState: (error: UseDataError, reset: () => void) => ({
-    type: StateType.Error as const,
     error,
     reset,
+    type: StateType.Error as const,
   }),
+  Loaded: <T>(data: T, mutate: KeyedMutator<T>) => ({
+    data,
+    mutate,
+    type: StateType.Loaded as const,
+  }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 
 class UseDataError extends Error {

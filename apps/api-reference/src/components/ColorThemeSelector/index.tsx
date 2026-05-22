@@ -2,9 +2,9 @@
 
 import { ListboxButton } from "@headlessui/react";
 import {
-  SunIcon,
-  MoonIcon,
   ComputerDesktopIcon,
+  MoonIcon,
+  SunIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
@@ -16,14 +16,14 @@ import { Select } from "../Select";
 const VALID_THEMES = ["system", "light", "dark"] as const;
 
 const THEME_ICONS = {
-  light: SunIcon,
   dark: MoonIcon,
+  light: SunIcon,
   system: ComputerDesktopIcon,
 };
 
 const THEME_TEXT = {
-  light: "Light",
   dark: "Dark",
+  light: "Light",
   system: "System",
 };
 
@@ -46,18 +46,8 @@ export const ColorThemeSelector = () => {
 
   return isMounted ? (
     <Select
-      value={theme}
       onChange={setTheme}
       options={VALID_THEMES}
-      renderOption={(theme) => (
-        <>
-          {createElement(THEME_ICONS[theme], {
-            className:
-              "h-5 text-neutral-500 group-data-[selected]:text-pythpurple-600 dark:text-neutral-400 dark:group-data-[selected]:text-pythpurple-400",
-          })}
-          <div>{THEME_TEXT[theme]}</div>
-        </>
-      )}
       renderButton={() => (
         <ListboxButton
           className={clsx(
@@ -71,6 +61,16 @@ export const ColorThemeSelector = () => {
           <div className="sr-only">Select theme</div>
         </ListboxButton>
       )}
+      renderOption={(theme) => (
+        <>
+          {createElement(THEME_ICONS[theme], {
+            className:
+              "h-5 text-neutral-500 group-data-[selected]:text-pythpurple-600 dark:text-neutral-400 dark:group-data-[selected]:text-pythpurple-400",
+          })}
+          <div>{THEME_TEXT[theme]}</div>
+        </>
+      )}
+      value={theme}
     />
   ) : (
     <div className={buttonClasses} />

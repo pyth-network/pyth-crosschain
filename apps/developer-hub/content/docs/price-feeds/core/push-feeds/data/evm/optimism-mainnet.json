@@ -1,0 +1,39 @@
+{
+  "feeds": [
+    {
+      "alias": "SETHFI/ETHFI.RR",
+      "id": "6d5216dab65051b9242a6ec458ea917e6a8f2cd122eebc25d8ab00dbe703612a",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "ETHFI/USD",
+      "id": "b27578a9654246cb0a2950842b92330e9ace141c52b63829cc72d5c45a5a595a",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "BEHYPE/HYPE.RR",
+      "id": "0f150eddafc98344c37f6ebe90fe303c12136436baf242f3c5ab412dbf91312c",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "HYPE/USD",
+      "id": "4279e31cc369bbcc2faf022b382b080e32a8e689ff20fbc530d2a603eb6cd98b",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "EURC/USD",
+      "id": "76fa85158bf14ede77087fe3ae472f66213f6ea2f5b411cb2de472794990fa5c",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    }
+  ]
+}

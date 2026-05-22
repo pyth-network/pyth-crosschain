@@ -12,12 +12,12 @@ export const Date = ({ children, options, ...props }: Props) => {
   const formatter = useDateFormatter(
     options === "time"
       ? {
-          year: "numeric",
-          month: "numeric",
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
+          month: "numeric",
           second: "numeric",
+          year: "numeric",
         }
       : options,
   );

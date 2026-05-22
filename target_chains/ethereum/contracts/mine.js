@@ -7,9 +7,9 @@ advanceBlock = () => {
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
+        id: new Date().getTime(),
         jsonrpc: "2.0",
         method: "evm_mine",
-        id: new Date().getTime(),
       },
       (err, result) => {
         if (err) {

@@ -60,18 +60,18 @@ test("getMetadata returns PriceFeedMetadata as expected", () => {
       publish_time: 11,
     },
     id: "abcdef0123456789",
-    price: {
-      conf: "1",
-      expo: 4,
-      price: "10",
-      publish_time: 11,
-    },
     metadata: {
       attestation_time: 7,
       emitter_chain: 8,
       price_service_receive_time: 9,
       sequence_number: 10,
       something_else: 11, // Ensuring the code is future compatible.
+    },
+    price: {
+      conf: "1",
+      expo: 4,
+      price: "10",
+      publish_time: 11,
     },
   };
 

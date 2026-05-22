@@ -7,7 +7,7 @@ import type { Logger } from "pino";
 import { parseGwei } from "viem";
 
 import type { CustomGasChainId, TxSpeed } from "../utils.js";
-import { verifyValidOption, txSpeeds, customGasChainIds } from "../utils.js";
+import { customGasChainIds, txSpeeds, verifyValidOption } from "../utils.js";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
 

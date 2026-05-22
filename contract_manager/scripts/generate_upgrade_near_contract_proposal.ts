@@ -18,21 +18,21 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --network <mainnet|testnet> --code-hash <hash> --ops-key-path <ops_key_path>\n",
   )
   .options({
-    network: {
-      type: "string",
-      choices: ["mainnet", "testnet"],
-      description: "Network to deploy to",
-      demandOption: true,
-    },
     "code-hash": {
-      type: "string",
-      description: "Sha-256 HEX of the wasm file",
       demandOption: true,
+      description: "Sha-256 HEX of the wasm file",
+      type: "string",
+    },
+    network: {
+      choices: ["mainnet", "testnet"],
+      demandOption: true,
+      description: "Network to deploy to",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
-      description: "Path to operations key file",
       demandOption: true,
+      description: "Path to operations key file",
+      type: "string",
     },
   });
 

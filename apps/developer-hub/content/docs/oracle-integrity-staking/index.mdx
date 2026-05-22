@@ -2,7 +2,7 @@
 title: "Oracle Integrity Staking (OIS)"
 description: >-
   Oracle Integrity Staking enhances Pyth Price Feeds with decentralized staking 
-  rewards and slashing mechanisms to improve data source accountability.
+  and slashing mechanisms to improve data source accountability.
 full: false
 index: true
 ---
@@ -11,15 +11,15 @@ This document outlines the design principles and implementation details of the [
 
 ## Design Principles
 
-OIS's economic design focuses on awarding and penalizing stakers over the primary dimension of data accuracy.
+OIS's economic design focuses on penalizing stakers over the primary dimension of data accuracy.
 
-Stakers are incentivized to help maintain data quality by receiving rewards from an open-ended pool. However, they also face the risk of having their stake slashed as a penalty for failing to maintain data accuracy.
+Stakers help secure data quality with their stake at risk of slashing for inaccurate data.
 
 The core design principles behind OIS include the following:
 
 - Oracle Integrity Staking secures all current and future price feeds produced by the Pyth Network.
 - Data Publishers are individually responsible for data accuracy.
-- Rewards and penalties are proportionate to the stake assigned to each publisher. Delegators share the risks and rewards of the publisher(s) to whom they assign their stake.
+- Penalties are proportionate to the stake assigned to each publisher. Delegators share the risks of the publisher(s) to whom they assign their stake.
 - A higher number of publishers for each price feed contributes positively to the security of such feed.
 - Staking for **OIS** is complementary to staking for **governance**, and eligible $PYTH tokens can be used for both purposes.
 - The ability to slash stake in OIS requires **unlocked** \$PYTH tokens, whereas staking for governance can use both locked and unlocked $PYTH tokens.
@@ -35,9 +35,7 @@ OIS implements the design principles above through the following structure:
    - The staking pool assigned to each publisher covers all price feeds/symbols they publish.
    - Each staking pool has a soft cap. This soft cap dynamically expands and shrinks given the number of symbols published by the assigned publisher.
    - Price feeds with a low number of publishers contribute more to the cap's expansion.
-   - Staking into the pool can exceed the soft cap. However no rewards are paid for the excess amount. On the contrary, the excess amount is subject to the penalty if the assigned publisher's data is inaccurate.
-   - The OIS protocol prioritizes self-stake attributed to the **publisher's stake** when distributing rewards to the publisher's pool.
+   - Staking into the pool can exceed the soft cap. The excess amount is subject to the penalty if the assigned publisher's data is inaccurate.
+   - The OIS protocol prioritizes self-stake attributed to the **publisher's stake** when calculating pool contributions.
    - All staking pools charge the same delegation fee for stakers who are delegating stake to one or many pools.
-3. Each pool has a maximum reward rate per epoch, which applies only to the staked amount within the soft cap.
-4. The total amount of rewards paid to all pools is bound by the same cap relative to the amount of rewards available to the OIS protocol.
-5. Slashing of stake has a hard percentage cap and only impacts pools that assigned to publishers responsible for the poor data quality. Both self-stakers and delegators are also slashed proportionally to their staked amount in the impacted pools.
+3. Slashing of stake has a hard percentage cap and only impacts pools that assigned to publishers responsible for the poor data quality. Both self-stakers and delegators are slashed proportionally to their staked amount in the impacted pools.

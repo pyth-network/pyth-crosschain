@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-misused-spread */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { EventSource } from "eventsource";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { camelToSnakeCaseObject } from "./utils.js";
 import { schemas } from "./zodSchemas.js";
@@ -86,12 +86,12 @@ export class HermesClient {
 
       const response = await fetch(url, {
         ...options,
+
+        headers: { ...authHeaders, ...this.headers, ...options?.headers },
         signal: AbortSignal.any([
           ...(options?.signal ? [options.signal] : []),
           AbortSignal.timeout(this.timeout),
         ]),
-
-        headers: { ...authHeaders, ...this.headers, ...options?.headers },
       });
       if (!response.ok) {
         const errorBody = await response.text();

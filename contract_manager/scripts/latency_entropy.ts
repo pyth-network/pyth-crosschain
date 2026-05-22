@@ -5,11 +5,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -19,9 +18,9 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "test latency for the contract on this chain",
+      type: "string",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   });

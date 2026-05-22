@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { HermesClient, PriceUpdate } from "../HermesClient";
+import type { PriceUpdate } from "../HermesClient";
+import { HermesClient } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,15 +11,15 @@ const argv = yargs(hideBin(process.argv))
   .option("endpoint", {
     description:
       "Endpoint URL for the price service. e.g: https://endpoint/example",
-    type: "string",
     required: true,
+    type: "string",
   })
   .option("price-ids", {
     description:
       "Space separated price feed ids (in hex without leading 0x) to fetch." +
       " e.g: f9c0172ba10dfa4d19088d...",
-    type: "array",
     required: true,
+    type: "array",
   })
   .help()
   .alias("help", "h")
@@ -61,8 +61,8 @@ async function run() {
   // Get price feeds
   console.log(`Price feeds matching "btc" with asset type "crypto":`);
   const priceFeeds = await connection.getPriceFeeds({
-    query: "btc",
     assetType: "crypto",
+    query: "btc",
   });
   console.log(priceFeeds);
 
@@ -74,10 +74,10 @@ async function run() {
   // Streaming price updates
   console.log(`Streaming latest prices for price IDs ${priceIds}...`);
   const eventSource = await connection.getPriceUpdatesStream(priceIds, {
-    encoding: "hex",
-    parsed: true,
     allowUnordered: false,
     benchmarksOnly: true,
+    encoding: "hex",
+    parsed: true,
   });
 
   eventSource.onmessage = (event: MessageEvent<string>) => {

@@ -4,14 +4,13 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { House } from "@phosphor-icons/react/dist/ssr/House";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import { Link } from "../Link/index.jsx";
 import {
-  Breadcrumbs as UnstyledBreadcrumbs,
   Breadcrumb,
+  Breadcrumbs as UnstyledBreadcrumbs,
 } from "../unstyled/Breadcrumbs/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   label: string;
@@ -39,16 +38,16 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
             <>
               {item.href === "/" ? (
                 <Button
-                  size="xs"
-                  variant="outline"
                   beforeIcon={<House />}
                   hideText
                   href="/"
+                  size="xs"
+                  variant="outline"
                 >
                   {item.label}
                 </Button>
               ) : (
-                <Link href={item.href} className={styles.crumb ?? ""} invert>
+                <Link className={styles.crumb ?? ""} href={item.href} invert>
                   {item.label}
                 </Link>
               )}

@@ -3,8 +3,19 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInput as SearchInputComponent, SIZES } from "./index.jsx";
 
 const meta = {
-  component: SearchInputComponent,
   argTypes: {
+    isDisabled: {
+      control: "boolean",
+      table: {
+        category: "State",
+      },
+    },
+    isPending: {
+      control: "boolean",
+      table: {
+        category: "State",
+      },
+    },
     label: {
       table: {
         disable: true,
@@ -23,27 +34,16 @@ const meta = {
         category: "Size",
       },
     },
-    isPending: {
-      control: "boolean",
-      table: {
-        category: "State",
-      },
-    },
-    isDisabled: {
-      control: "boolean",
-      table: {
-        category: "State",
-      },
-    },
   },
+  component: SearchInputComponent,
 } satisfies Meta<typeof SearchInputComponent>;
 export default meta;
 
 export const SearchInput = {
   args: {
+    isDisabled: false,
+    isPending: false,
     size: "md",
     width: 60,
-    isPending: false,
-    isDisabled: false,
   },
 } satisfies StoryObj<typeof SearchInputComponent>;

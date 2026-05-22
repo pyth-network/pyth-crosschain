@@ -1,24 +1,250 @@
 {
+  "accounts": [
+    {
+      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217],
+      "name": "GlobalConfig"
+    },
+    {
+      "discriminator": [157, 95, 242, 151, 16, 98, 26, 118],
+      "name": "MaxVoterWeightRecord"
+    },
+    {
+      "discriminator": [85, 195, 241, 79, 124, 192, 79, 11],
+      "name": "PositionData"
+    },
+    {
+      "discriminator": [80, 85, 187, 143, 62, 147, 234, 248],
+      "name": "SplitRequest"
+    },
+    {
+      "discriminator": [192, 51, 203, 19, 76, 177, 136, 97],
+      "name": "StakeAccountMetadataV2"
+    },
+    {
+      "discriminator": [157, 23, 139, 117, 181, 44, 197, 130],
+      "name": "TargetMetadata"
+    },
+    {
+      "discriminator": [46, 249, 155, 75, 153, 248, 116, 9],
+      "name": "VoterWeightRecord"
+    }
+  ],
   "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
-  "metadata": {
-    "name": "staking",
-    "version": "2.1.0",
-    "spec": "0.1.0",
-    "description": "Created with Anchor"
-  },
+  "errors": [
+    {
+      "code": 6000,
+      "msg": "Too much exposure to integrity pool",
+      "name": "TooMuchExposureToIntegrityPool"
+    },
+    {
+      "code": 6001,
+      "msg": "Too much exposure to governance",
+      "name": "TooMuchExposureToGovernance"
+    },
+    {
+      "code": 6002,
+      "msg": "Tokens not yet vested",
+      "name": "TokensNotYetVested"
+    },
+    {
+      "code": 6003,
+      "msg": "Risk limit exceeded",
+      "name": "RiskLimitExceeded"
+    },
+    {
+      "code": 6004,
+      "msg": "Number of position limit reached",
+      "name": "TooManyPositions"
+    },
+    {
+      "code": 6005,
+      "msg": "Position not in use",
+      "name": "PositionNotInUse"
+    },
+    {
+      "code": 6006,
+      "msg": "New position needs to have positive balance",
+      "name": "CreatePositionWithZero"
+    },
+    {
+      "code": 6007,
+      "msg": "Closing a position of 0 is not allowed",
+      "name": "ClosePositionWithZero"
+    },
+    {
+      "code": 6008,
+      "msg": "Invalid product/publisher pair",
+      "name": "InvalidPosition"
+    },
+    {
+      "code": 6009,
+      "msg": "Amount to unlock bigger than position",
+      "name": "AmountBiggerThanPosition"
+    },
+    {
+      "code": 6010,
+      "msg": "Position already unlocking",
+      "name": "AlreadyUnlocking"
+    },
+    {
+      "code": 6011,
+      "msg": "Epoch duration is 0",
+      "name": "ZeroEpochDuration"
+    },
+    {
+      "code": 6012,
+      "msg": "Owner needs to own destination account",
+      "name": "WithdrawToUnauthorizedAccount"
+    },
+    {
+      "code": 6013,
+      "msg": "Insufficient balance to cover the withdrawal",
+      "name": "InsufficientWithdrawableBalance"
+    },
+    {
+      "code": 6014,
+      "msg": "Target in position doesn't match target in instruction data",
+      "name": "WrongTarget"
+    },
+    {
+      "code": 6015,
+      "msg": "An arithmetic operation unexpectedly overflowed",
+      "name": "GenericOverflow"
+    },
+    {
+      "code": 6016,
+      "msg": "Locked balance must be positive",
+      "name": "NegativeBalance"
+    },
+    {
+      "code": 6017,
+      "msg": "Protocol is frozen",
+      "name": "Frozen"
+    },
+    {
+      "code": 6018,
+      "msg": "Not allowed when not debugging",
+      "name": "DebuggingOnly"
+    },
+    {
+      "code": 6019,
+      "msg": "Proposal too long",
+      "name": "ProposalTooLong"
+    },
+    {
+      "code": 6020,
+      "msg": "Voting epoch is either too old or hasn't started",
+      "name": "InvalidVotingEpoch"
+    },
+    {
+      "code": 6021,
+      "msg": "Voting hasn't started",
+      "name": "ProposalNotActive"
+    },
+    {
+      "code": 6022,
+      "msg": "Extra governance account required",
+      "name": "NoRemainingAccount"
+    },
+    {
+      "code": 6023,
+      "msg": "Unauthorized caller",
+      "name": "Unauthorized"
+    },
+    {
+      "code": 6024,
+      "msg": "Precondition to upgrade account violated",
+      "name": "AccountUpgradeFailed"
+    },
+    {
+      "code": 6025,
+      "msg": "Not implemented",
+      "name": "NotImplemented"
+    },
+    {
+      "code": 6026,
+      "msg": "Error deserializing position",
+      "name": "PositionSerDe"
+    },
+    {
+      "code": 6027,
+      "msg": "Position out of bounds",
+      "name": "PositionOutOfBounds"
+    },
+    {
+      "code": 6028,
+      "msg": "Can't vote during an account's transfer epoch",
+      "name": "VoteDuringTransferEpoch"
+    },
+    {
+      "code": 6029,
+      "msg": "You need to be an LLC member to perform this action",
+      "name": "NotLlcMember"
+    },
+    {
+      "code": 6030,
+      "msg": "Invalid LLC agreement",
+      "name": "InvalidLlcAgreement"
+    },
+    {
+      "code": 6031,
+      "msg": "Can't split 0 tokens from an account",
+      "name": "SplitZeroTokens"
+    },
+    {
+      "code": 6032,
+      "msg": "Can't split more tokens than are in the account",
+      "name": "SplitTooManyTokens"
+    },
+    {
+      "code": 6033,
+      "msg": "Can't split a token account with staking positions. Unstake your tokens first.",
+      "name": "SplitWithStake"
+    },
+    {
+      "code": 6034,
+      "msg": "The approval arguments do not match the split request.",
+      "name": "InvalidApproval"
+    },
+    {
+      "code": 6035,
+      "msg": "Can't recover account with staking positions. Unstake your tokens first.",
+      "name": "RecoverWithStake"
+    },
+    {
+      "code": 6036,
+      "msg": "The pool authority hasn't been passed or doesn't match the target",
+      "name": "InvalidPoolAuthority"
+    },
+    {
+      "code": 6037,
+      "msg": "The target account is missing",
+      "name": "MissingTargetAccount"
+    },
+    {
+      "code": 6038,
+      "msg": "The slash ratio should be between 0 and 1",
+      "name": "InvalidSlashRatio"
+    },
+    {
+      "code": 6039,
+      "msg": "The target account is only expected when dealing with the governance target",
+      "name": "UnexpectedTargetAccount"
+    },
+    {
+      "code": 6040,
+      "msg": "Other",
+      "name": "Other"
+    }
+  ],
   "instructions": [
     {
-      "name": "accept_split",
-      "docs": [
-        "* A split request can only be accepted by the `pda_authority` from\n     * the config account. If accepted, `amount` tokens are transferred to a new stake account\n     * owned by the `recipient` and the split request is reset (by setting `amount` to 0).\n     * The recipient of a transfer can't vote during the epoch of the transfer.\n     *\n     * The `pda_authority` must explicitly approve both the amount of tokens and recipient, and\n     * these parameters must match the request (in the `split_request` account)."
-      ],
-      "discriminator": [177, 172, 17, 93, 193, 86, 54, 222],
       "accounts": [
         {
           "name": "pda_authority",
-          "writable": true,
+          "relations": ["config"],
           "signer": true,
-          "relations": ["config"]
+          "writable": true
         },
         {
           "name": "source_stake_account_positions",
@@ -26,7 +252,6 @@
         },
         {
           "name": "source_stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -41,11 +266,11 @@
                 "path": "source_stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "source_stake_account_split_request",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -59,11 +284,11 @@
                 "path": "source_stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "source_stake_account_custody",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -75,13 +300,14 @@
                 "path": "source_stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "source_custody_authority",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
           ],
+          "name": "source_custody_authority",
           "pda": {
             "seeds": [
               {
@@ -101,7 +327,6 @@
         },
         {
           "name": "new_stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -116,11 +341,11 @@
                 "path": "new_stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "new_stake_account_custody",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -132,13 +357,14 @@
                 "path": "new_stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "new_custody_authority",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
           ],
+          "name": "new_custody_authority",
           "pda": {
             "seeds": [
               {
@@ -168,16 +394,16 @@
           "relations": ["config"]
         },
         {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "address": "SysvarRent111111111111111111111111111111111",
+          "name": "rent"
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -189,15 +415,17 @@
           "name": "recipient",
           "type": "pubkey"
         }
-      ]
+      ],
+      "discriminator": [177, 172, 17, 93, 193, 86, 54, 222],
+      "docs": [
+        "* A split request can only be accepted by the `pda_authority` from\n     * the config account. If accepted, `amount` tokens are transferred to a new stake account\n     * owned by the `recipient` and the split request is reset (by setting `amount` to 0).\n     * The recipient of a transfer can't vote during the epoch of the transfer.\n     *\n     * The `pda_authority` must explicitly approve both the amount of tokens and recipient, and\n     * these parameters must match the request (in the `split_request` account)."
+      ],
+      "name": "accept_split"
     },
     {
-      "name": "advance_clock",
-      "discriminator": [52, 57, 147, 111, 56, 227, 33, 127],
       "accounts": [
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -205,7 +433,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -213,17 +442,17 @@
           "name": "seconds",
           "type": "i64"
         }
-      ]
+      ],
+      "discriminator": [52, 57, 147, 111, 56, 227, 33, 127],
+      "name": "advance_clock"
     },
     {
-      "name": "close_position",
-      "discriminator": [123, 134, 81, 0, 49, 68, 98, 98],
       "accounts": [
         {
           "name": "owner",
-          "writable": true,
+          "relations": ["stake_account_metadata"],
           "signer": true,
-          "relations": ["stake_account_metadata"]
+          "writable": true
         },
         {
           "name": "stake_account_positions",
@@ -231,7 +460,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -246,7 +474,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "stake_account_custody",
@@ -276,7 +505,6 @@
         },
         {
           "name": "target_account",
-          "writable": true,
           "optional": true,
           "pda": {
             "seeds": [
@@ -289,16 +517,17 @@
                 "value": [118, 111, 116, 105, 110, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "pool_authority",
-          "signer": true,
-          "optional": true
+          "optional": true,
+          "signer": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -318,22 +547,17 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [123, 134, 81, 0, 49, 68, 98, 98],
+      "name": "close_position"
     },
     {
-      "name": "create_position",
-      "docs": [
-        "Creates a position",
-        "Looks for the first available place in the array, fails if array is full",
-        "Computes risk and fails if new positions exceed risk limit"
-      ],
-      "discriminator": [48, 215, 197, 153, 96, 203, 180, 133],
       "accounts": [
         {
           "name": "owner",
-          "writable": true,
+          "relations": ["stake_account_metadata"],
           "signer": true,
-          "relations": ["stake_account_metadata"]
+          "writable": true
         },
         {
           "name": "stake_account_positions",
@@ -341,7 +565,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -356,7 +579,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "stake_account_custody",
@@ -386,7 +610,6 @@
         },
         {
           "name": "target_account",
-          "writable": true,
           "optional": true,
           "pda": {
             "seeds": [
@@ -399,16 +622,17 @@
                 "value": [118, 111, 116, 105, 110, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "pool_authority",
-          "signer": true,
-          "optional": true
+          "optional": true,
+          "signer": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -424,21 +648,21 @@
           "name": "amount",
           "type": "u64"
         }
-      ]
+      ],
+      "discriminator": [48, 215, 197, 153, 96, 203, 180, 133],
+      "docs": [
+        "Creates a position",
+        "Looks for the first available place in the array, fails if array is full",
+        "Computes risk and fails if new positions exceed risk limit"
+      ],
+      "name": "create_position"
     },
     {
-      "name": "create_stake_account",
-      "docs": [
-        "Trustless instruction that creates a stake account for a user",
-        "The main account i.e. the position accounts needs to be initialized outside of the program",
-        "otherwise we run into stack limits"
-      ],
-      "discriminator": [105, 24, 131, 19, 201, 250, 157, 73],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "stake_account_positions",
@@ -446,7 +670,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -461,11 +684,11 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "stake_account_custody",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -477,13 +700,14 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "custody_authority",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
           ],
+          "name": "custody_authority",
           "pda": {
             "seeds": [
               {
@@ -513,16 +737,16 @@
           "relations": ["config"]
         },
         {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "address": "SysvarRent111111111111111111111111111111111",
+          "name": "rent"
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -538,21 +762,26 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [105, 24, 131, 19, 201, 250, 157, 73],
+      "docs": [
+        "Trustless instruction that creates a stake account for a user",
+        "The main account i.e. the position accounts needs to be initialized outside of the program",
+        "otherwise we run into stack limits"
+      ],
+      "name": "create_stake_account"
     },
     {
-      "name": "create_target",
-      "discriminator": [76, 144, 128, 239, 121, 210, 123, 39],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
@@ -567,7 +796,6 @@
         },
         {
           "name": "target_account",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -579,30 +807,30 @@
                 "value": [118, 111, 116, 105, 110, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [76, 144, 128, 239, 121, 210, 123, 39],
+      "name": "create_target"
     },
     {
-      "name": "create_voter_record",
-      "discriminator": [3, 12, 113, 222, 177, 4, 152, 165],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "stake_account_positions"
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -617,11 +845,11 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "voter_record",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -635,7 +863,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -649,24 +878,23 @@
           }
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [3, 12, 113, 222, 177, 4, 152, 165],
+      "name": "create_voter_record"
     },
     {
-      "name": "export_position_type",
-      "discriminator": [219, 172, 149, 212, 103, 230, 164, 179],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "config_account",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -674,15 +902,16 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "address": "SysvarRent111111111111111111111111111111111",
+          "name": "rent"
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -694,20 +923,19 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [219, 172, 149, 212, 103, 230, 164, 179],
+      "name": "export_position_type"
     },
     {
-      "name": "init_config",
-      "discriminator": [23, 235, 115, 232, 168, 96, 1, 231],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "config_account",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -715,15 +943,16 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
+          "address": "SysvarRent111111111111111111111111111111111",
+          "name": "rent"
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -735,26 +964,22 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [23, 235, 115, 232, 168, 96, 1, 231],
+      "name": "init_config"
     },
     {
-      "name": "join_dao_llc",
-      "docs": [
-        "* Accept to join the DAO LLC\n     * This must happen before create_position or update_voter_weight\n     * The user signs a hash of the agreement and the program checks that the hash matches the\n     * agreement"
-      ],
-      "discriminator": [79, 241, 203, 177, 232, 143, 124, 14],
       "accounts": [
         {
           "name": "owner",
-          "signer": true,
-          "relations": ["stake_account_metadata"]
+          "relations": ["stake_account_metadata"],
+          "signer": true
         },
         {
           "name": "stake_account_positions"
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -769,7 +994,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -790,19 +1016,22 @@
             "array": ["u8", 32]
           }
         }
-      ]
+      ],
+      "discriminator": [79, 241, 203, 177, 232, 143, 124, 14],
+      "docs": [
+        "* Accept to join the DAO LLC\n     * This must happen before create_position or update_voter_weight\n     * The user signs a hash of the agreement and the program checks that the hash matches the\n     * agreement"
+      ],
+      "name": "join_dao_llc"
     },
     {
-      "name": "merge_target_positions",
-      "discriminator": [21, 136, 57, 2, 204, 219, 242, 141],
       "accounts": [
         {
-          "name": "owner",
           "docs": [
             "CHECK : This AccountInfo is safe because it's checked against stake_account_metadata"
           ],
-          "writable": true,
-          "relations": ["stake_account_metadata"]
+          "name": "owner",
+          "relations": ["stake_account_metadata"],
+          "writable": true
         },
         {
           "name": "stake_account_positions",
@@ -810,7 +1039,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -825,7 +1053,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -840,8 +1069,8 @@
         },
         {
           "name": "pool_authority",
-          "signer": true,
-          "optional": true
+          "optional": true,
+          "signer": true
         }
       ],
       "args": [
@@ -853,19 +1082,16 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [21, 136, 57, 2, 204, 219, 242, 141],
+      "name": "merge_target_positions"
     },
     {
-      "name": "recover_account",
-      "docs": [
-        "Recovers a user's `stake account` ownership by transferring ownership\n     * from a token account to the `owner` of that token account.\n     *\n     * This functionality addresses the scenario where a user mistakenly\n     * created a stake account using their token account address as the owner."
-      ],
-      "discriminator": [240, 223, 246, 118, 26, 121, 34, 128],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "owner",
@@ -877,7 +1103,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -892,11 +1117,11 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "voter_record",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -910,7 +1135,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -924,20 +1150,20 @@
           }
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [240, 223, 246, 118, 26, 121, 34, 128],
+      "docs": [
+        "Recovers a user's `stake account` ownership by transferring ownership\n     * from a token account to the `owner` of that token account.\n     *\n     * This functionality addresses the scenario where a user mistakenly\n     * created a stake account using their token account address as the owner."
+      ],
+      "name": "recover_account"
     },
     {
-      "name": "request_split",
-      "docs": [
-        "* Any user of the staking program can request to split their account and\n     * give a part of it to another user.\n     * This is mostly useful to transfer unvested tokens. Each user can only have one active\n     * request at a time.\n     * In the first step, the user requests a split by specifying the `amount` of tokens\n     * they want to give to the other user and the `recipient`'s pubkey."
-      ],
-      "discriminator": [133, 146, 228, 165, 251, 207, 146, 23],
       "accounts": [
         {
           "name": "owner",
-          "writable": true,
+          "relations": ["stake_account_metadata"],
           "signer": true,
-          "relations": ["stake_account_metadata"]
+          "writable": true
         },
         {
           "name": "stake_account_positions"
@@ -962,7 +1188,6 @@
         },
         {
           "name": "stake_account_split_request",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -976,7 +1201,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -990,8 +1216,8 @@
           }
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
       "args": [
@@ -1003,22 +1229,25 @@
           "name": "recipient",
           "type": "pubkey"
         }
-      ]
+      ],
+      "discriminator": [133, 146, 228, 165, 251, 207, 146, 23],
+      "docs": [
+        "* Any user of the staking program can request to split their account and\n     * give a part of it to another user.\n     * This is mostly useful to transfer unvested tokens. Each user can only have one active\n     * request at a time.\n     * In the first step, the user requests a split by specifying the `amount` of tokens\n     * they want to give to the other user and the `recipient`'s pubkey."
+      ],
+      "name": "request_split"
     },
     {
-      "name": "slash_account",
-      "discriminator": [185, 97, 8, 208, 118, 205, 166, 2],
       "accounts": [
         {
           "name": "pool_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
-          "name": "publisher",
           "docs": [
             "CHECK : This AccountInfo is just used to construct the target that will get slashed"
-          ]
+          ],
+          "name": "publisher"
         },
         {
           "name": "stake_account_positions",
@@ -1026,7 +1255,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1041,11 +1269,11 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "stake_account_custody",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1057,7 +1285,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -1072,7 +1301,6 @@
         },
         {
           "name": "governance_target_account",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1084,17 +1312,18 @@
                 "value": [118, 111, 116, 105, 110, 103]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "destination",
           "writable": true
         },
         {
-          "name": "custody_authority",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
           ],
+          "name": "custody_authority",
           "pda": {
             "seeds": [
               {
@@ -1109,8 +1338,8 @@
           }
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
         }
       ],
       "args": [
@@ -1118,25 +1347,22 @@
           "name": "slash_ratio",
           "type": "u64"
         }
-      ]
+      ],
+      "discriminator": [185, 97, 8, 208, 118, 205, 166, 2],
+      "name": "slash_account"
     },
     {
-      "name": "transfer_account",
-      "docs": [
-        "Transfers a user's stake account to a new owner provided by the `governance_authority`.\n     *\n     * This functionality addresses the scenario where a user doesn't have access to their owner\n     * key. Only accounts without any staked tokens can be transferred."
-      ],
-      "discriminator": [219, 120, 55, 105, 3, 139, 205, 6],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
-          "name": "new_owner",
           "docs": [
             "CHECK : A new arbitrary owner provided by the governance_authority"
-          ]
+          ],
+          "name": "new_owner"
         },
         {
           "name": "stake_account_positions",
@@ -1144,7 +1370,6 @@
         },
         {
           "name": "stake_account_metadata",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1159,11 +1384,11 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "voter_record",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1177,7 +1402,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -1191,20 +1417,22 @@
           }
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [219, 120, 55, 105, 3, 139, 205, 6],
+      "docs": [
+        "Transfers a user's stake account to a new owner provided by the `governance_authority`.\n     *\n     * This functionality addresses the scenario where a user doesn't have access to their owner\n     * key. Only accounts without any staked tokens can be transferred."
+      ],
+      "name": "transfer_account"
     },
     {
-      "name": "update_agreement_hash",
-      "discriminator": [86, 232, 181, 137, 158, 110, 129, 238],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1212,7 +1440,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1222,20 +1451,19 @@
             "array": ["u8", 32]
           }
         }
-      ]
+      ],
+      "discriminator": [86, 232, 181, 137, 158, 110, 129, 238],
+      "name": "update_agreement_hash"
     },
     {
-      "name": "update_governance_authority",
-      "discriminator": [11, 185, 227, 55, 39, 32, 168, 14],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1243,7 +1471,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1251,20 +1480,19 @@
           "name": "new_authority",
           "type": "pubkey"
         }
-      ]
+      ],
+      "discriminator": [11, 185, 227, 55, 39, 32, 168, 14],
+      "name": "update_governance_authority"
     },
     {
-      "name": "update_max_voter_weight",
-      "discriminator": [248, 36, 229, 234, 11, 132, 145, 20],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "max_voter_record",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1272,7 +1500,8 @@
                 "value": [109, 97, 120, 95, 118, 111, 116, 101, 114]
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -1286,24 +1515,23 @@
           }
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [248, 36, 229, 234, 11, 132, 145, 20],
+      "name": "update_max_voter_weight"
     },
     {
-      "name": "update_pda_authority",
-      "discriminator": [178, 112, 199, 196, 59, 40, 140, 61],
       "accounts": [
         {
           "name": "pda_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1311,7 +1539,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1319,20 +1548,19 @@
           "name": "new_authority",
           "type": "pubkey"
         }
-      ]
+      ],
+      "discriminator": [178, 112, 199, 196, 59, 40, 140, 61],
+      "name": "update_pda_authority"
     },
     {
-      "name": "update_pool_authority",
-      "discriminator": [160, 162, 113, 9, 99, 187, 23, 239],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1340,7 +1568,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1348,20 +1577,19 @@
           "name": "pool_authority",
           "type": "pubkey"
         }
-      ]
+      ],
+      "discriminator": [160, 162, 113, 9, 99, 187, 23, 239],
+      "name": "update_pool_authority"
     },
     {
-      "name": "update_token_list_time",
-      "discriminator": [38, 217, 99, 222, 253, 253, 31, 83],
       "accounts": [
         {
           "name": "governance_authority",
-          "signer": true,
-          "relations": ["config"]
+          "relations": ["config"],
+          "signer": true
         },
         {
           "name": "config",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1369,7 +1597,8 @@
                 "value": [99, 111, 110, 102, 105, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1379,16 +1608,16 @@
             "option": "i64"
           }
         }
-      ]
+      ],
+      "discriminator": [38, 217, 99, 222, 253, 253, 31, 83],
+      "name": "update_token_list_time"
     },
     {
-      "name": "update_voter_weight",
-      "discriminator": [92, 35, 133, 94, 230, 70, 14, 157],
       "accounts": [
         {
           "name": "owner",
-          "signer": true,
-          "relations": ["stake_account_metadata"]
+          "relations": ["stake_account_metadata"],
+          "signer": true
         },
         {
           "name": "stake_account_positions"
@@ -1428,7 +1657,6 @@
         },
         {
           "name": "voter_record",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1442,7 +1670,8 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
           "name": "config",
@@ -1457,7 +1686,6 @@
         },
         {
           "name": "governance_target",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1469,7 +1697,8 @@
                 "value": [118, 111, 116, 105, 110, 103]
               }
             ]
-          }
+          },
+          "writable": true
         }
       ],
       "args": [
@@ -1481,16 +1710,16 @@
             }
           }
         }
-      ]
+      ],
+      "discriminator": [92, 35, 133, 94, 230, 70, 14, 157],
+      "name": "update_voter_weight"
     },
     {
-      "name": "withdraw_stake",
-      "discriminator": [153, 8, 22, 138, 105, 176, 87, 66],
       "accounts": [
         {
           "name": "owner",
-          "signer": true,
-          "relations": ["stake_account_metadata"]
+          "relations": ["stake_account_metadata"],
+          "signer": true
         },
         {
           "name": "destination",
@@ -1519,7 +1748,6 @@
         },
         {
           "name": "stake_account_custody",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1531,13 +1759,14 @@
                 "path": "stake_account_positions"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "custody_authority",
           "docs": [
             "CHECK : This AccountInfo is safe because it's a checked PDA"
           ],
+          "name": "custody_authority",
           "pda": {
             "seeds": [
               {
@@ -1563,8 +1792,8 @@
           }
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
         }
       ],
       "args": [
@@ -1572,251 +1801,21 @@
           "name": "amount",
           "type": "u64"
         }
-      ]
+      ],
+      "discriminator": [153, 8, 22, 138, 105, 176, 87, 66],
+      "name": "withdraw_stake"
     }
   ],
-  "accounts": [
-    {
-      "name": "GlobalConfig",
-      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217]
-    },
-    {
-      "name": "MaxVoterWeightRecord",
-      "discriminator": [157, 95, 242, 151, 16, 98, 26, 118]
-    },
-    {
-      "name": "PositionData",
-      "discriminator": [85, 195, 241, 79, 124, 192, 79, 11]
-    },
-    {
-      "name": "SplitRequest",
-      "discriminator": [80, 85, 187, 143, 62, 147, 234, 248]
-    },
-    {
-      "name": "StakeAccountMetadataV2",
-      "discriminator": [192, 51, 203, 19, 76, 177, 136, 97]
-    },
-    {
-      "name": "TargetMetadata",
-      "discriminator": [157, 23, 139, 117, 181, 44, 197, 130]
-    },
-    {
-      "name": "VoterWeightRecord",
-      "discriminator": [46, 249, 155, 75, 153, 248, 116, 9]
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "TooMuchExposureToIntegrityPool",
-      "msg": "Too much exposure to integrity pool"
-    },
-    {
-      "code": 6001,
-      "name": "TooMuchExposureToGovernance",
-      "msg": "Too much exposure to governance"
-    },
-    {
-      "code": 6002,
-      "name": "TokensNotYetVested",
-      "msg": "Tokens not yet vested"
-    },
-    {
-      "code": 6003,
-      "name": "RiskLimitExceeded",
-      "msg": "Risk limit exceeded"
-    },
-    {
-      "code": 6004,
-      "name": "TooManyPositions",
-      "msg": "Number of position limit reached"
-    },
-    {
-      "code": 6005,
-      "name": "PositionNotInUse",
-      "msg": "Position not in use"
-    },
-    {
-      "code": 6006,
-      "name": "CreatePositionWithZero",
-      "msg": "New position needs to have positive balance"
-    },
-    {
-      "code": 6007,
-      "name": "ClosePositionWithZero",
-      "msg": "Closing a position of 0 is not allowed"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidPosition",
-      "msg": "Invalid product/publisher pair"
-    },
-    {
-      "code": 6009,
-      "name": "AmountBiggerThanPosition",
-      "msg": "Amount to unlock bigger than position"
-    },
-    {
-      "code": 6010,
-      "name": "AlreadyUnlocking",
-      "msg": "Position already unlocking"
-    },
-    {
-      "code": 6011,
-      "name": "ZeroEpochDuration",
-      "msg": "Epoch duration is 0"
-    },
-    {
-      "code": 6012,
-      "name": "WithdrawToUnauthorizedAccount",
-      "msg": "Owner needs to own destination account"
-    },
-    {
-      "code": 6013,
-      "name": "InsufficientWithdrawableBalance",
-      "msg": "Insufficient balance to cover the withdrawal"
-    },
-    {
-      "code": 6014,
-      "name": "WrongTarget",
-      "msg": "Target in position doesn't match target in instruction data"
-    },
-    {
-      "code": 6015,
-      "name": "GenericOverflow",
-      "msg": "An arithmetic operation unexpectedly overflowed"
-    },
-    {
-      "code": 6016,
-      "name": "NegativeBalance",
-      "msg": "Locked balance must be positive"
-    },
-    {
-      "code": 6017,
-      "name": "Frozen",
-      "msg": "Protocol is frozen"
-    },
-    {
-      "code": 6018,
-      "name": "DebuggingOnly",
-      "msg": "Not allowed when not debugging"
-    },
-    {
-      "code": 6019,
-      "name": "ProposalTooLong",
-      "msg": "Proposal too long"
-    },
-    {
-      "code": 6020,
-      "name": "InvalidVotingEpoch",
-      "msg": "Voting epoch is either too old or hasn't started"
-    },
-    {
-      "code": 6021,
-      "name": "ProposalNotActive",
-      "msg": "Voting hasn't started"
-    },
-    {
-      "code": 6022,
-      "name": "NoRemainingAccount",
-      "msg": "Extra governance account required"
-    },
-    {
-      "code": 6023,
-      "name": "Unauthorized",
-      "msg": "Unauthorized caller"
-    },
-    {
-      "code": 6024,
-      "name": "AccountUpgradeFailed",
-      "msg": "Precondition to upgrade account violated"
-    },
-    {
-      "code": 6025,
-      "name": "NotImplemented",
-      "msg": "Not implemented"
-    },
-    {
-      "code": 6026,
-      "name": "PositionSerDe",
-      "msg": "Error deserializing position"
-    },
-    {
-      "code": 6027,
-      "name": "PositionOutOfBounds",
-      "msg": "Position out of bounds"
-    },
-    {
-      "code": 6028,
-      "name": "VoteDuringTransferEpoch",
-      "msg": "Can't vote during an account's transfer epoch"
-    },
-    {
-      "code": 6029,
-      "name": "NotLlcMember",
-      "msg": "You need to be an LLC member to perform this action"
-    },
-    {
-      "code": 6030,
-      "name": "InvalidLlcAgreement",
-      "msg": "Invalid LLC agreement"
-    },
-    {
-      "code": 6031,
-      "name": "SplitZeroTokens",
-      "msg": "Can't split 0 tokens from an account"
-    },
-    {
-      "code": 6032,
-      "name": "SplitTooManyTokens",
-      "msg": "Can't split more tokens than are in the account"
-    },
-    {
-      "code": 6033,
-      "name": "SplitWithStake",
-      "msg": "Can't split a token account with staking positions. Unstake your tokens first."
-    },
-    {
-      "code": 6034,
-      "name": "InvalidApproval",
-      "msg": "The approval arguments do not match the split request."
-    },
-    {
-      "code": 6035,
-      "name": "RecoverWithStake",
-      "msg": "Can't recover account with staking positions. Unstake your tokens first."
-    },
-    {
-      "code": 6036,
-      "name": "InvalidPoolAuthority",
-      "msg": "The pool authority hasn't been passed or doesn't match the target"
-    },
-    {
-      "code": 6037,
-      "name": "MissingTargetAccount",
-      "msg": "The target account is missing"
-    },
-    {
-      "code": 6038,
-      "name": "InvalidSlashRatio",
-      "msg": "The slash ratio should be between 0 and 1"
-    },
-    {
-      "code": 6039,
-      "name": "UnexpectedTargetAccount",
-      "msg": "The target account is only expected when dealing with the governance target"
-    },
-    {
-      "code": 6040,
-      "name": "Other",
-      "msg": "Other"
-    }
-  ],
+  "metadata": {
+    "description": "Created with Anchor",
+    "name": "staking",
+    "spec": "0.1.0",
+    "version": "2.1.0"
+  },
   "types": [
     {
       "name": "GlobalConfig",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "bump",
@@ -1855,12 +1854,12 @@
             "type": "pubkey"
           },
           {
-            "name": "pyth_token_list_time",
             "docs": [
               "Once the pyth token is listed, governance can update the config to set this value.",
               "Once this value is set, vesting schedules that depend on the token list date can start",
               "vesting."
             ],
+            "name": "pyth_token_list_time",
             "type": {
               "option": "i64"
             }
@@ -1879,41 +1878,40 @@
             "name": "pool_authority",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "MaxVoterWeightRecord",
       "docs": [
         "Copied this struct from https://github.com/solana-labs/solana-program-library/blob/master/governance/addin-api/src/max_voter_weight.rs"
       ],
+      "name": "MaxVoterWeightRecord",
       "type": {
-        "kind": "struct",
         "fields": [
           {
-            "name": "realm",
             "docs": ["The Realm the MaxVoterWeightRecord belongs to"],
+            "name": "realm",
             "type": "pubkey"
           },
           {
-            "name": "governing_token_mint",
             "docs": [
               "Governing Token Mint the MaxVoterWeightRecord is associated with",
               "Note: The addin can take deposits of any tokens and is not restricted to the community or",
               "council tokens only"
             ],
+            "name": "governing_token_mint",
             "type": "pubkey"
           },
           {
-            "name": "max_voter_weight",
             "docs": [
               "Max voter weight",
               "The max voter weight provided by the addin for the given realm and governing_token_mint"
             ],
+            "name": "max_voter_weight",
             "type": "u64"
           },
           {
-            "name": "max_voter_weight_expiry",
             "docs": [
               "The slot when the max voting weight expires",
               "It should be set to None if the weight never expires",
@@ -1922,30 +1920,31 @@
               "be invoked before governance instruction within the same transaction and the expiry set",
               "to the current slot to provide up to date weight"
             ],
+            "name": "max_voter_weight_expiry",
             "type": {
               "option": "u64"
             }
           },
           {
-            "name": "reserved",
             "docs": ["Reserved space for future versions"],
+            "name": "reserved",
             "type": {
               "array": ["u8", 8]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "Position",
       "docs": [
         "This represents a staking position, i.e. an amount that someone has staked to a particular",
         "target. This is one of the core pieces of our staking design, and stores all",
         "of the state related to a position The voting position is a position where the",
         "target_with_parameters is VOTING"
       ],
+      "name": "Position",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "amount",
@@ -1969,30 +1968,30 @@
               }
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "PositionData",
       "docs": ["The header of DynamicPositionArray"],
-      "serialization": "bytemuck",
+      "name": "PositionData",
       "repr": {
         "kind": "c"
       },
+      "serialization": "bytemuck",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "owner",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "SplitRequest",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "amount",
@@ -2002,18 +2001,18 @@
             "name": "recipient",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "StakeAccountMetadataV2",
       "docs": [
         "This is the metadata account for each staker",
         "It is derived from the positions account with seeds \"stake_metadata\" and the positions account",
         "pubkey It stores some PDA bumps, the owner of the account and the vesting schedule"
       ],
+      "name": "StakeAccountMetadataV2",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "metadata_bump",
@@ -2061,18 +2060,18 @@
               }
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "TargetMetadata",
       "docs": [
         "This represents a target that users can stake to",
         "Currently we store the last time the target account was updated, the current locked balance",
         "and the amount by which the locked balance will change in the next epoch"
       ],
+      "name": "TargetMetadata",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "bump",
@@ -2094,7 +2093,8 @@
             "name": "delta_locked",
             "type": "i64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -2106,23 +2106,23 @@
             "name": "Voting"
           },
           {
-            "name": "IntegrityPool",
             "fields": [
               {
                 "name": "publisher",
                 "type": "pubkey"
               }
-            ]
+            ],
+            "name": "IntegrityPool"
           }
         ]
       }
     },
     {
-      "name": "VestingSchedule",
       "docs": [
         "Represents how a given initial balance vests over time",
         "It is unit-less, but units must be consistent"
       ],
+      "name": "VestingSchedule",
       "repr": {
         "kind": "rust"
       },
@@ -2133,7 +2133,6 @@
             "name": "FullyVested"
           },
           {
-            "name": "PeriodicVesting",
             "fields": [
               {
                 "name": "initial_balance",
@@ -2151,10 +2150,10 @@
                 "name": "num_periods",
                 "type": "u64"
               }
-            ]
+            ],
+            "name": "PeriodicVesting"
           },
           {
-            "name": "PeriodicVestingAfterListing",
             "fields": [
               {
                 "name": "initial_balance",
@@ -2168,14 +2167,15 @@
                 "name": "num_periods",
                 "type": "u64"
               }
-            ]
+            ],
+            "name": "PeriodicVestingAfterListing"
           }
         ]
       }
     },
     {
-      "name": "VoterWeightAction",
       "docs": ["The governance action VoterWeight is evaluated for"],
+      "name": "VoterWeightAction",
       "type": {
         "kind": "enum",
         "variants": [
@@ -2198,7 +2198,6 @@
       }
     },
     {
-      "name": "VoterWeightRecord",
       "docs": [
         "Copied this struct from https://github.com/solana-labs/solana-program-library/blob/master/governance/addin-api/src/voter_weight.rs",
         "Anchor has a macro (vote_weight_record) that is supposed to generate this struct, but it doesn't",
@@ -2207,11 +2206,10 @@
         "means that means we'd need the equivalent of this code on the client side.",
         "If Anchor fixes the macro, we might consider changing it"
       ],
+      "name": "VoterWeightRecord",
       "type": {
-        "kind": "struct",
         "fields": [
           {
-            "name": "realm",
             "docs": [
               "VoterWeightRecord discriminator sha256(\"account:VoterWeightRecord\")[..8]",
               "Note: The discriminator size must match the addin implementing program discriminator size",
@@ -2219,36 +2217,36 @@
               "pub account_discriminator: [u8; 8],",
               "The Realm the VoterWeightRecord belongs to"
             ],
+            "name": "realm",
             "type": "pubkey"
           },
           {
-            "name": "governing_token_mint",
             "docs": [
               "Governing Token Mint the VoterWeightRecord is associated with",
               "Note: The addin can take deposits of any tokens and is not restricted to the community or",
               "council tokens only"
             ],
+            "name": "governing_token_mint",
             "type": "pubkey"
           },
           {
-            "name": "governing_token_owner",
             "docs": [
               "The owner of the governing token and voter",
               "This is the actual owner (voter) and corresponds to TokenOwnerRecord.governing_token_owner"
             ],
+            "name": "governing_token_owner",
             "type": "pubkey"
           },
           {
-            "name": "voter_weight",
             "docs": [
               "Voter's weight",
               "The weight of the voter provided by the addin for the given realm, governing_token_mint and",
               "governing_token_owner (voter)"
             ],
+            "name": "voter_weight",
             "type": "u64"
           },
           {
-            "name": "voter_weight_expiry",
             "docs": [
               "The slot when the voting weight expires",
               "It should be set to None if the weight never expires",
@@ -2257,18 +2255,19 @@
               "be invoked before governance instruction within the same transaction and the expiry set",
               "to the current slot to provide up to date weight"
             ],
+            "name": "voter_weight_expiry",
             "type": {
               "option": "u64"
             }
           },
           {
-            "name": "weight_action",
             "docs": [
               "The governance action the voter's weight pertains to",
               "It allows to provided voter's weight specific to the particular action the weight is",
               "evaluated for When the action is provided then the governance program asserts the",
               "executing action is the same as specified by the addin"
             ],
+            "name": "weight_action",
             "type": {
               "option": {
                 "defined": {
@@ -2278,7 +2277,6 @@
             }
           },
           {
-            "name": "weight_action_target",
             "docs": [
               "The target the voter's weight  action pertains to",
               "It allows to provided voter's weight specific to the target the weight is evaluated for",
@@ -2286,18 +2284,20 @@
               "specify the proposal as the action target When the target is provided then the",
               "governance program asserts the target is the same as specified by the addin"
             ],
+            "name": "weight_action_target",
             "type": {
               "option": "pubkey"
             }
           },
           {
-            "name": "reserved",
             "docs": ["Reserved space for future versions"],
+            "name": "reserved",
             "type": {
               "array": ["u8", 8]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     }
   ]

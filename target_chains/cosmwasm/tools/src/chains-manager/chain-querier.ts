@@ -1,9 +1,7 @@
-import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+import type { WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { setupWasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
-import {
-  type WasmExtension,
-  setupWasmExtension,
-} from "@cosmjs/cosmwasm-stargate";
+import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 
 // TODO: expose the querier and consume them in price pusher
 
@@ -121,8 +119,8 @@ export class CosmwasmQuerier implements ChainQuerier {
 
     return {
       ...contractInfo,
-      codeId: Number(contractInfo.codeId),
       adminAddr: contractInfo.admin,
+      codeId: Number(contractInfo.codeId),
     };
   }
 

@@ -10,8 +10,8 @@ function deserializeCommitmentMetadata(data: Buffer) {
   const chainLength = data.readBigInt64LE(32);
 
   return {
-    seed,
     chainLength,
+    seed,
   };
 }
 
@@ -19,9 +19,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch the provider registration data for the testnet contracts.",
+      type: "boolean",
     },
   });
 

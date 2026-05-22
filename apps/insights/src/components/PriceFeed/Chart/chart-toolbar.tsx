@@ -61,25 +61,25 @@ export const ChartToolbar = () => {
   return (
     <>
       <Select
-        label="Resolution"
         hideLabel={true}
+        label="Resolution"
+        onSelectionChange={handleResolutionChanged}
         options={RESOLUTIONS.map((resolution) => ({
           id: resolution,
           label: resolution,
         }))}
         selectedKey={resolution}
-        onSelectionChange={handleResolutionChanged}
         size="sm"
         variant="outline"
       />
       <SingleToggleGroup
-        selectedKey={quickSelectWindow}
+        items={QUICK_SELECT_WINDOWS.map((quickSelectWindow) => ({
+          children: quickSelectWindow,
+          id: quickSelectWindow,
+        }))}
         onSelectionChange={handleQuickSelectWindowChange}
         rounded
-        items={QUICK_SELECT_WINDOWS.map((quickSelectWindow) => ({
-          id: quickSelectWindow,
-          children: quickSelectWindow,
-        }))}
+        selectedKey={quickSelectWindow}
       />
     </>
   );

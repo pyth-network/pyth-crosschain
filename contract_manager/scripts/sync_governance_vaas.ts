@@ -7,7 +7,8 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
-import { SubmittedWormholeMessage, Vault } from "../src/node/utils/governance";
+import type { Vault } from "../src/node/utils/governance";
+import { SubmittedWormholeMessage } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
@@ -18,18 +19,18 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     contract: {
-      type: "string",
       demandOption: true,
       desc: "Contract to execute governance vaas for",
-    },
-    "private-key": {
       type: "string",
-      demandOption: true,
-      desc: "Private key to sign the transactions executing the governance VAAs. Hex format, without 0x prefix.",
     },
     offset: {
-      type: "number",
       desc: "Starting sequence number to use, if not provided will start from contract last executed governance sequence number",
+      type: "number",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions executing the governance VAAs. Hex format, without 0x prefix.",
+      type: "string",
     },
   });
 

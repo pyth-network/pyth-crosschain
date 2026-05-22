@@ -26,7 +26,7 @@ The Pyth MCP server gives AI assistants direct, structured access to Pyth market
 Recommended workflow: `get_symbols` → `get_latest_price` / `get_historical_price` → `get_candlestick_data`
 
 <Callout type="warning">
-  `get_latest_price` requires a Pyth Pro access token passed as `access_token`. Get one at [acquire access token guide](./acquire-access-token). All other tools work without a token.
+  `get_latest_price` requires a Pyth Pro API key passed as `access_token`. Get one at [acquire API key guide](./acquire-api-key). All other tools work without a key.
 </Callout>
 
 ## Setup
@@ -139,7 +139,7 @@ Fetch latest prices for one or more feeds.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `access_token` | string | **Yes** | Pyth Pro token |
+| `access_token` | string | **Yes** | Pyth Pro API key |
 | `symbols` | string[] | No\* | Full symbols like `Crypto.BTC/USD` |
 | `price_feed_ids` | number[] | No\* | Feed IDs from `get_symbols` |
 | `channel` | string | No | `real_time` or `fixed_rate@{N}ms` |
@@ -190,10 +190,10 @@ Fetch OHLC candlestick data for a single feed.
 
 ## Troubleshooting
 
-### Invalid or expired token
+### Invalid or expired API key
 
 - **Symptom:** `get_latest_price` returns an auth error
-- **Fix:** Verify or regenerate your token and pass it as `access_token`
+- **Fix:** Verify or regenerate your API key and pass it as `access_token`
 
 ### Symbol not found
 
@@ -244,7 +244,7 @@ Then configure your client with stdio transport:
       "command": "node",
       "args": ["<path-to-repo>/apps/mcp/dist/index.js"],
       "env": {
-        "PYTH_PRO_ACCESS_TOKEN": "<your-token>"
+        "PYTH_PRO_ACCESS_TOKEN": "<your-api-key>"
       }
     }
   }

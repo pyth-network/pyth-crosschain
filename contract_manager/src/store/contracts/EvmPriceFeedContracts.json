@@ -948,5 +948,143 @@
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "fluent",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xBb86bCc951A62DF86826219d9251Ee05F2c1e286",
+    "chain": "sepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x6b81963B9302091910852337d0071aECe9c0775c",
+    "chain": "abstract",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xcc17C35f739da767C231A34a17986876C56AaCe4",
+    "chain": "abstract_testnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xe15357fB7ab31E091583b9c4b4135BB2f176f38e",
+    "chain": "arbitrum",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x0B73614636C855Bf23F342F307FB981A3e47f42B",
+    "chain": "arbitrum_sepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xbC16aee60f64864882BC6C4E428e148Fc0E272F5",
+    "chain": "base",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x5f52e4DBEA21f5b23523B6e20d50c29ae0a4EB83",
+    "chain": "base_sepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x2F968931d1B7326d2875E9500980211dcc535eE5",
+    "chain": "berachain_mainnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xFfb6DE2684C1259Bc02E1bc66625de1c80fE708C",
+    "chain": "berachain_bepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x99fA5f405b795cA03F2AE47Cd48FEd22029892a2",
+    "chain": "hyperevm_testnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x298B2f0ae8Efa7f90D845da02ef2E3a88A9BbC02",
+    "chain": "hyperevm",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xed7701a8649d202E52CC3Fdf2ba07AEE745a5f95",
+    "chain": "linea_sepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x986c00a290D1767651723c7cF9e5bD7bD745f6f9",
+    "chain": "linea",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
+    "chain": "monad_testnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
+    "chain": "monad",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xa78951b6bADC9F4740f6f456E9144705D5C5E4B2",
+    "chain": "optimism",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xEAef40A4d9b04B511e11DdDc1c16037Da49E3e35",
+    "chain": "optimism_sepolia",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x5c470034117339f4426cc1A005543002D333ce75",
+    "chain": "soneium_minato_testnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xC0F566304A44d27c40d4F81D629520Ac4eD1850E",
+    "chain": "soneium",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x0402833A00e734821f74fA4bbdeD2F1759540519",
+    "chain": "sonic_evm_testnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x2b9Bb0042dB2F30650d73BB83CBAE584807d2FE4",
+    "chain": "fantom_sonic_mainnet",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0x14b9932cc9AC8Ee03301665a8644A753f46D8552",
+    "chain": "ethereum",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "chain": "injective_inevm",
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   }
 ]

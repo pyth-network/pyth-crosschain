@@ -4,10 +4,10 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import type { ReactNode, ComponentType, SVGProps, ComponentProps } from "react";
-import { useCallback, useState, useRef, useEffect } from "react";
-import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
-
+import type { ComponentProps, ComponentType, ReactNode, SVGProps } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import { Button } from "../Button";
 import governance from "./governance.png";
 import Info from "./info.svg";
 import ObtainRewards from "./obtain-rewards.svg";
@@ -15,7 +15,6 @@ import ois from "./ois.png";
 import Safebox from "./safebox.svg";
 import SelectPublishers from "./select-publishers.svg";
 import TokenWarmup from "./token-warmup.svg";
-import { Button } from "../Button";
 
 export const NoWalletHome = () => {
   const modal = useWalletModal();
@@ -51,28 +50,26 @@ export const NoWalletHome = () => {
           Choose Your Journey
         </h1>
         <p className="text-lg">You can participate in both programs.</p>
-        <Button onPress={showModal} className="px-10 py-4" size="nopad">
+        <Button className="px-10 py-4" onPress={showModal} size="nopad">
           <WalletIcon className="size-4" />
           <div>Connect wallet</div>
         </Button>
       </div>
 
-      <Tabs selectedKey={tab} onSelectionChange={setTab}>
+      <Tabs onSelectionChange={setTab} selectedKey={tab}>
         <div ref={scrollTarget} />
 
         <div className="relative mx-auto max-h-96 overflow-hidden md:hidden">
           <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
           <Image
-            src={tab === TabId.IntegrityStaking ? ois : governance}
             alt=""
             className="size-full sm:-mt-28"
+            src={tab === TabId.IntegrityStaking ? ois : governance}
           />
           <div className="absolute inset-0 top-12 text-center text-2xl text-pythpurple-800">
             {tab === TabId.IntegrityStaking ? (
               <>
                 <span>Secure the Oracle</span>
-                <br />
-                <span className="font-semibold">to Earn Rewards</span>
               </>
             ) : (
               <>
@@ -86,21 +83,17 @@ export const NoWalletHome = () => {
 
         <TabList className="sticky top-header-height -mx-4 mb-8 flex max-w-7xl flex-row items-stretch justify-center gap-2 border border-neutral-600/50 bg-pythpurple-800 px-4 py-2 md:static md:border-none md:bg-transparent md:p-0">
           <ProgramTab
-            id={TabId.IntegrityStaking}
-            image={ois}
             description={
               <>
                 <span>Secure the Oracle</span>
-                <br />
-                <span className="font-semibold">to Earn Rewards</span>
               </>
             }
+            id={TabId.IntegrityStaking}
+            image={ois}
           >
             Oracle Integrity Staking
           </ProgramTab>
           <ProgramTab
-            id={TabId.Governance}
-            image={governance}
             description={
               <>
                 <span>Gain Voting Power</span>
@@ -108,58 +101,60 @@ export const NoWalletHome = () => {
                 <span className="font-semibold">for Governance</span>
               </>
             }
+            id={TabId.Governance}
+            image={governance}
           >
             Pyth Governance
           </ProgramTab>
         </TabList>
 
         <ProgramPanel
-          id={TabId.IntegrityStaking}
+          eyebrow="SECURE THE ORACLE"
           header="Oracle Integrity Staking"
-          eyebrow="SECURE THE ORACLE TO EARN REWARDS"
+          id={TabId.IntegrityStaking}
           steps={[
             {
-              title: "Add Tokens",
               body: "Add your PYTH tokens into the Staking Dashboard smart contract. Staking these tokens in Oracle Integrity Staking lets you secure Pyth’s price oracle and protect DeFi.",
               icon: Safebox,
+              title: "Add Tokens",
             },
             {
-              title: "Select Publishers",
               body: "Choose which data publishers to support by staking your tokens towards them to help secure the oracle. You can sort publishers by their stake pool details, quality ranking, and more.",
               icon: SelectPublishers,
+              title: "Select Publishers",
             },
             {
-              title: "Token Warmup",
-              body: "Once you confirm your choice to stake to a publisher, your tokens will first enter a brief warmup period before they become staked. Staked tokens are subject to programmatic rewards and slashing penalties based on publisher performance.",
+              body: "Once you confirm your choice to stake to a publisher, your tokens will first enter a brief warmup period before they become staked. Staked tokens are subject to programmatic slashing penalties based on publisher performance.",
               icon: TokenWarmup,
+              title: "Token Warmup",
             },
             {
-              title: "Secure Pyth to Obtain Rewards",
-              body: "The protocol programmatically distributes rewards to publishers who contributed high quality data, and then distributes remaining rewards to the stakers who supported these publishers. Rewards are calculated every epoch (i.e. one week period).",
+              body: "",
               icon: ObtainRewards,
+              title: "Secure Pyth",
             },
           ]}
         />
 
         <ProgramPanel
-          id={TabId.Governance}
-          header="Pyth Governance"
           eyebrow="GAIN VOTING POWER FOR GOVERNANCE"
+          header="Pyth Governance"
+          id={TabId.Governance}
           steps={[
             {
-              title: "Add Tokens",
               body: "Add your PYTH tokens into the Staking Dashboard smart contract. Staking these tokens in Pyth Governance gives you voting power for key decisions in helping shape the oracle network.",
               icon: Safebox,
+              title: "Add Tokens",
             },
             {
-              title: "Token Warmup",
               body: "Once you confirm your choice to stake, your tokens will first enter a brief warmup period before they become staked. Once your tokens become staked, they will confer voting power.",
               icon: TokenWarmup,
+              title: "Token Warmup",
             },
             {
-              title: "Vote & Govern",
               body: "You can cast your vote on Pyth Improvement Proposals (PIPs) in the Pyth Network Realm. By participating in governance, you help shape the direction of the Pyth Network and ensure its continued growth and stability.",
               icon: SelectPublishers,
+              title: "Vote & Govern",
             },
           ]}
         />
@@ -173,7 +168,7 @@ export const NoWalletHome = () => {
             Staking or Pyth Governance.
           </p>
         </div>
-        <Button onPress={showModal} className="px-10 py-4" size="nopad">
+        <Button className="px-10 py-4" onPress={showModal} size="nopad">
           <WalletIcon className="size-4" />
           <span>Connect wallet</span>
         </Button>
@@ -212,7 +207,7 @@ const ProgramTab = ({
   >
     <div className="relative hidden w-4/5 opacity-30 transition group-hover:opacity-60 group-data-[selected]:opacity-100 md:block">
       <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
-      <Image src={image} alt="" className="size-full" />
+      <Image alt="" className="size-full" src={image} />
       <div className="absolute inset-0 top-16 text-center text-2xl text-pythpurple-800 lg:text-3xl">
         {description}
       </div>
@@ -256,8 +251,8 @@ const ProgramPanel = ({
     <ol className="divide-y divide-neutral-600/50 bg-pythpurple-800">
       {steps.map(({ icon: Icon, title, body }, i) => (
         <li
-          key={i}
           className="px-8 py-10 md:flex md:flex-row md:items-center md:gap-8 md:px-12"
+          key={i}
         >
           <Icon className="hidden size-20 flex-none md:block" />
           <div className="flex flex-col gap-8 md:gap-6">

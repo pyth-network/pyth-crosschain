@@ -23,11 +23,7 @@ impl Config {
 
 #[cfg(test)]
 pub mod tests {
-    use {
-        super::DataSource,
-        crate::config::Config,
-        anchor_lang::prelude::*
-    };
+    use {super::DataSource, crate::config::Config, anchor_lang::prelude::*};
 
     #[test]
     fn check_size() {

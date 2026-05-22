@@ -1,10 +1,21 @@
-import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
+import { ethersJS, readApi, solidity } from "./common";
 
 export const getEmaPriceUnsafe = readApi<"id">({
-  name: "getEmaPriceUnsafe",
-  summary:
-    "Get the **last updated** exponentially weighted moving average (EMA) price object for the requested price feed ID. _Caution: This function may return a price arbitrarily in the past_",
+  code: [
+    solidity(
+      ({ id }) => `
+bytes32 priceId = ${id ?? "/* <id> */"};
+PythStructs.Price memory currentBasePrice = pyth.getEmaPriceUnsafe(priceId);
+    `,
+    ),
+    ethersJS(
+      ({ id }) => `
+const priceId = ${id ? `'${id}'` : "/* <id> */"};
+const [price, conf, expo, timestamp] = await contract.getEmaPriceUnsafe(priceId);
+    `,
+    ),
+  ],
   description: `
   This method returns the price object containing **last updated** exponentially-weighted moving average(EMA) price for the requested price feed ID.
 
@@ -43,25 +54,14 @@ export const getEmaPriceUnsafe = readApi<"id">({
     update or does not exist. Try calling
     [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed.
   `,
+  name: "getEmaPriceUnsafe",
   parameters: [
     {
+      description: "The ID of the price feed you want to read",
       name: "id",
       type: ParameterType.PriceFeedId,
-      description: "The ID of the price feed you want to read",
     },
   ],
-  code: [
-    solidity(
-      ({ id }) => `
-bytes32 priceId = ${id ?? "/* <id> */"};
-PythStructs.Price memory currentBasePrice = pyth.getEmaPriceUnsafe(priceId);
-    `,
-    ),
-    ethersJS(
-      ({ id }) => `
-const priceId = ${id ? `'${id}'` : "/* <id> */"};
-const [price, conf, expo, timestamp] = await contract.getEmaPriceUnsafe(priceId);
-    `,
-    ),
-  ],
+  summary:
+    "Get the **last updated** exponentially weighted moving average (EMA) price object for the requested price feed ID. _Caution: This function may return a price arbitrarily in the past_",
 });

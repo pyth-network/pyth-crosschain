@@ -1,33 +1,33 @@
-import { ProgramType } from '@pythnetwork/xc-admin-common'
+import { ProgramType } from "@pythnetwork/xc-admin-common";
 
-import { useProgramContext } from '../../contexts/ProgramContext'
-import ProgramSwitch from '../ProgramSwitch'
-import PythCore from '../programs/PythCore'
-import PythLazer from '../programs/PythLazer'
+import { useProgramContext } from "../../contexts/ProgramContext";
+import ProgramSwitch from "../ProgramSwitch";
+import PythCore from "../programs/PythCore";
+import PythLazer from "../programs/PythLazer";
 
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
-  const { programType } = useProgramContext()
+  const { programType } = useProgramContext();
 
   // Function to render the appropriate program component
   const renderProgramComponent = () => {
     try {
       switch (programType) {
         case ProgramType.PYTH_CORE: {
-          return <PythCore proposerServerUrl={proposerServerUrl} />
+          return <PythCore proposerServerUrl={proposerServerUrl} />;
         }
         case ProgramType.PYTH_LAZER: {
-          return <PythLazer proposerServerUrl={proposerServerUrl} />
+          return <PythLazer proposerServerUrl={proposerServerUrl} />;
         }
         default: {
-          return <div>Unknown program type</div>
+          return <div>Unknown program type</div>;
         }
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error rendering program component:', error)
-      return <div>An error occurred loading the program component</div>
+      console.error("Error rendering program component:", error);
+      return <div>An error occurred loading the program component</div>;
     }
-  }
+  };
 
   return (
     <div className="relative">
@@ -47,7 +47,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         {renderProgramComponent()}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default General
+export default General;

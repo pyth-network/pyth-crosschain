@@ -1,5 +1,3 @@
-import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
-
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
@@ -14,20 +12,16 @@ import {
   getAssociatedTokenAddressSync,
   getMint,
 } from "@solana/spl-token";
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import type { Connection, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { JSONParser } from "@streamparser/json";
+import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 import { z } from "zod";
 
 import {
+  FRACTION_PRECISION_N,
   GOVERNANCE_ADDRESS,
   MAX_VOTER_WEIGHT,
-  FRACTION_PRECISION_N,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
 } from "./constants.js";
@@ -49,12 +43,12 @@ import type {
   GlobalConfig,
   PoolConfig,
   PoolDataAccount,
+  PositionState,
   StakeAccountPositions,
   TargetAccount,
-  VoterWeightAction,
   VestingSchedule,
+  VoterWeightAction,
 } from "./types.js";
-import { PositionState } from "./types.js";
 import { bigintMax, bigintMin } from "./utils/bigint.js";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn.js";
 import { epochToDate, getCurrentEpoch } from "./utils/clock.js";
@@ -140,8 +134,8 @@ export class PythStakingClient {
             },
             {
               memcmp: {
-                offset: 8,
                 bytes: owner?.toBase58() ?? this.wallet.publicKey.toBase58(),
+                offset: 8,
               },
             },
           ],
@@ -309,7 +303,7 @@ export class PythStakingClient {
     const instructionPromises: Promise<TransactionInstruction>[] = [];
 
     const eligiblePositions = stakeAccountPositionsData.data.positions
-      .map((p, i) => ({ position: p, index: i }))
+      .map((p, i) => ({ index: i, position: p }))
       .reverse()
       .filter(
         ({ position }) =>
@@ -364,7 +358,7 @@ export class PythStakingClient {
     const instructionPromises: Promise<TransactionInstruction>[] = [];
 
     const eligiblePositions = stakeAccountPositionsData.data.positions
-      .map((p, i) => ({ position: p, index: i }))
+      .map((p, i) => ({ index: i, position: p }))
       .reverse()
       .filter(
         ({ position }) =>
@@ -382,8 +376,8 @@ export class PythStakingClient {
           this.integrityPoolProgram.methods
             .undelegate(index, convertBigIntToBN(position.amount))
             .accounts({
-              stakeAccountPositions,
               publisher,
+              stakeAccountPositions,
             })
             .instruction(),
         );
@@ -393,8 +387,8 @@ export class PythStakingClient {
           this.integrityPoolProgram.methods
             .undelegate(index, convertBigIntToBN(remainingAmount))
             .accounts({
-              stakeAccountPositions,
               publisher,
+              stakeAccountPositions,
             })
             .instruction(),
         );
@@ -422,7 +416,7 @@ export class PythStakingClient {
             position.targetWithParameters.integrityPool?.publisher;
           return publisher === undefined
             ? undefined
-            : { position, index, publisher };
+            : { index, position, publisher };
         })
         // By separating this filter from the next, typescript can narrow the
         // type and automatically infer that there will be no `undefined` values
@@ -438,7 +432,7 @@ export class PythStakingClient {
         .map(({ position, index, publisher }) =>
           this.integrityPoolProgram.methods
             .undelegate(index, convertBigIntToBN(position.amount))
-            .accounts({ stakeAccountPositions, publisher })
+            .accounts({ publisher, stakeAccountPositions })
             .instruction(),
         ),
     );
@@ -486,13 +480,13 @@ export class PythStakingClient {
 
     instructions.push(
       SystemProgram.createAccountWithSeed({
-        fromPubkey: this.wallet.publicKey,
-        newAccountPubkey: stakeAccountPositions,
         basePubkey: this.wallet.publicKey,
-        seed: nonce,
+        fromPubkey: this.wallet.publicKey,
         lamports: minimumBalance,
-        space: POSITIONS_ACCOUNT_SIZE,
+        newAccountPubkey: stakeAccountPositions,
         programId: this.stakingProgram.programId,
+        seed: nonce,
+        space: POSITIONS_ACCOUNT_SIZE,
       }),
       await this.stakingProgram.methods
         .createStakeAccount(this.wallet.publicKey, { fullyVested: {} })
@@ -651,9 +645,9 @@ export class PythStakingClient {
     }
 
     return getUnlockSchedule({
-      vestingSchedule,
-      pythTokenListTime: config.pythTokenListTime,
       includePastPeriods,
+      pythTokenListTime: config.pythTokenListTime,
+      vestingSchedule,
     });
   }
 
@@ -673,9 +667,9 @@ export class PythStakingClient {
     }
 
     const unlockSchedule = getUnlockSchedule({
-      vestingSchedule,
-      pythTokenListTime: config.pythTokenListTime,
       includePastPeriods: false,
+      pythTokenListTime: config.pythTokenListTime,
+      vestingSchedule,
     });
 
     const totalLocked = unlockSchedule.schedule.reduce(
@@ -749,14 +743,14 @@ export class PythStakingClient {
           .accountsPartial({
             payer: payer ?? this.wallet.publicKey,
             publisher: pubkey,
-            publisherStakeAccountPositions: stakeAccount,
             publisherStakeAccountCustody: stakeAccount
               ? getStakeAccountCustodyAddress(stakeAccount)
               : null, // eslint-disable-line unicorn/no-null
-            stakeAccountPositions,
+            publisherStakeAccountPositions: stakeAccount,
             stakeAccountCustody: getStakeAccountCustodyAddress(
               stakeAccountPositions,
             ),
+            stakeAccountPositions,
           })
           .instruction(),
       ),
@@ -777,8 +771,8 @@ export class PythStakingClient {
 
     return {
       advanceDelegationRecordInstructions,
-      mergePositionsInstruction,
       lowestEpoch,
+      mergePositionsInstruction,
     };
   }
 
@@ -822,11 +816,11 @@ export class PythStakingClient {
     }
 
     return {
-      totalRewards,
       expiry:
         instructions.lowestEpoch === undefined
           ? undefined
           : epochToDate(instructions.lowestEpoch + 53n),
+      totalRewards,
     };
   }
 
@@ -896,8 +890,8 @@ export class PythStakingClient {
     return this.stakingProgram.methods
       .recoverAccount()
       .accountsPartial({
-        stakeAccountPositions,
         governanceAuthority,
+        stakeAccountPositions,
       })
       .instruction();
   }
@@ -910,9 +904,9 @@ export class PythStakingClient {
     return this.stakingProgram.methods
       .transferAccount()
       .accountsPartial({
-        stakeAccountPositions,
         governanceAuthority,
         newOwner,
+        stakeAccountPositions,
       })
       .instruction();
   }
@@ -943,9 +937,9 @@ export class PythStakingClient {
         remainingAccount
           ? [
               {
-                pubkey: remainingAccount,
-                isWritable: false,
                 isSigner: false,
+                isWritable: false,
+                pubkey: remainingAccount,
               },
             ]
           : [],
@@ -1064,13 +1058,9 @@ export class PythStakingClient {
     StakeAccountPositions[]
   > {
     const res = await fetch(this.connection.rpcEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
-        jsonrpc: "2.0",
         id: 1,
+        jsonrpc: "2.0",
         method: "getProgramAccounts",
         params: [
           this.stakingProgram.programId.toBase58(),
@@ -1089,6 +1079,10 @@ export class PythStakingClient {
           },
         ],
       }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
     });
 
     if (res.ok) {

@@ -11,12 +11,11 @@ import {
 import { useCallback } from "react";
 import { parse } from "superjson";
 import { z } from "zod";
-
-import { WEB_API_BASE_URL } from "./constants";
-import type { Interval } from "./types";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
 import { priceFeedsSchema } from "../../schemas/pyth/price-feeds-schema";
-import { CLUSTER_NAMES } from "../../services/pyth";
+import type { CLUSTER_NAMES } from "../../services/pyth";
+import { WEB_API_BASE_URL } from "./constants";
+import type { Interval } from "./types";
 
 // If interval is 'daily', set interval_days=1
 // If interval is 'weekly', get the previous Sunday and set interval_days=7
@@ -73,13 +72,13 @@ const getFeeds = async (cluster: (typeof CLUSTER_NAMES)[number]) => {
 };
 
 const publisherQualityScoreSchema = z.object({
-  symbol: z.string(),
-  uptime_score: z.string(),
   deviation_penalty: z.string(),
   deviation_score: z.string(),
+  final_score: z.string(),
   stalled_penalty: z.string(),
   stalled_score: z.string(),
-  final_score: z.string(),
+  symbol: z.string(),
+  uptime_score: z.string(),
 });
 
 const publisherQuantityScoreSchema = z.object({
@@ -116,12 +115,12 @@ const fetchRankingData = async (
   ]);
 
   return {
-    quantityRankData: publisherQuantityScoreSchema
-      .array()
-      .parse(await quantityRankRes.json()),
     qualityRankData: publisherQualityScoreSchema
       .array()
       .parse(await qualityRankRes.json()),
+    quantityRankData: publisherQuantityScoreSchema
+      .array()
+      .parse(await quantityRankRes.json()),
   };
 };
 const csvHeaders = [
@@ -175,9 +174,9 @@ export const useDownloadReportForPublisher = () => {
         );
         const feedMetadata = allFeeds.find((f) => f.symbol === feed);
         return {
-          priceFeed: feedMetadata?.product.display_symbol ?? "",
           assetType: feedMetadata?.product.asset_type ?? "",
           description: feedMetadata?.product.description ?? "",
+          priceFeed: feedMetadata?.product.display_symbol ?? "",
           ...rankData,
         };
       };
@@ -204,19 +203,19 @@ export const useDownloadReportForPublisher = () => {
       const data = [
         ...activePriceFeeds.map((feed) => ({
           ...getPriceFeedData(feed),
-          status: "active",
           permissioned: "permissioned",
+          status: "active",
         })),
         ...inactivePriceFeeds.map((feed) => ({
           ...getPriceFeedData(feed),
-          status: "inactive",
           permissioned: isPermissioned(feed)
             ? "permissioned"
             : "unpermissioned",
+          status: "inactive",
         })),
       ];
 
-      const csv = stringifyCsv(data, { header: true, columns: csvHeaders });
+      const csv = stringifyCsv(data, { columns: csvHeaders, header: true });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
       download(blob, `${publisher}-${cluster}-price-feeds.csv`);
     },

@@ -295,7 +295,7 @@ describe("get_historical_price tool", () => {
     expect(data.hint).toContain("2025-04-01");
     expect(data.hint).not.toContain("future");
     expect(data.requested_timestamp_iso).toBe("2023-11-14T22:13:20.000Z");
-    expect(data.valid_range.from_unix).toBe(1743465600);
+    expect(data.valid_range.from_unix).toBe(1_743_465_600);
   });
 
   it("returns specific error for nonexistent feed ID (400/404)", async () => {
@@ -307,7 +307,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
-        price_feed_ids: [999999],
+        price_feed_ids: [999_999],
         timestamp: 1_708_300_800,
       },
       name: "get_historical_price",

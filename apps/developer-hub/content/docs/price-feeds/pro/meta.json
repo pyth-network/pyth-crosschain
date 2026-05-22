@@ -1,8 +1,10 @@
 {
   "pages": [
     "getting-started",
+    "pyth-terminal",
+    "external:[Pyth Playground](https://docs.pyth.network/playground)",
     "---How-To Guides---",
-    "acquire-access-token",
+    "acquire-api-key",
     "subscribe-to-prices",
     "integrate-as-consumer",
     "mcp",

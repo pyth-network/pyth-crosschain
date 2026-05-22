@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use config::{Environment, File};
+use derivative::Derivative;
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
 
@@ -16,21 +17,26 @@ pub enum ConfigError {
     Invalid(String),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[derive(Clone, Derivative, Eq, PartialEq, Deserialize)]
+#[derivative(Debug)]
 pub struct ClickHouseTarget {
     pub host: String,
     pub port: u16,
     pub username: String,
+    #[derivative(Debug = "ignore")]
     pub password: String,
     pub secure: bool,
     pub database: String,
     pub l2_snapshots_table: String,
     pub trades_table: String,
+    pub funding_rates_table: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Derivative)]
+#[derivative(Debug)]
 pub struct AppConfig {
     pub quicknode_endpoint: String,
+    #[derivative(Debug = "ignore")]
     pub quicknode_auth_token: String,
     pub markets: Vec<MarketSubscription>,
     pub clickhouse: ClickHouseTarget,
@@ -43,6 +49,9 @@ pub struct AppConfig {
     pub retention_days: u16,
     pub insert_async: bool,
     pub reconnect_max_backoff_seconds: u64,
+    pub info_api_url: String,
+    pub funding_poll_seconds: u64,
+    pub funding_lookback_seconds: u64,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -73,6 +82,8 @@ struct ClickHouseConfig {
     l2_snapshots_table: String,
     #[serde(default = "default_clickhouse_trades_table")]
     trades_table: String,
+    #[serde(default = "default_clickhouse_funding_rates_table")]
+    funding_rates_table: String,
 }
 
 impl AppConfig {
@@ -130,12 +141,41 @@ impl AppConfig {
                 "reconnect_max_backoff_seconds",
                 default_reconnect_max_backoff_seconds,
             )?,
+            info_api_url: get_or_default(&loaded, "info_api_url", default_info_api_url)?,
+            funding_poll_seconds: {
+                let value: u64 = get_or_default(
+                    &loaded,
+                    "funding_poll_seconds",
+                    default_funding_poll_seconds,
+                )?;
+                if value < 30 {
+                    return Err(ConfigError::Invalid(
+                        "funding_poll_seconds must be >= 30".to_string(),
+                    ));
+                }
+                value
+            },
+            funding_lookback_seconds: {
+                let value: u64 = get_or_default(
+                    &loaded,
+                    "funding_lookback_seconds",
+                    default_funding_lookback_seconds,
+                )?;
+                let poll: u64 = get_or_default(
+                    &loaded,
+                    "funding_poll_seconds",
+                    default_funding_poll_seconds,
+                )?;
+                if value < poll {
+                    return Err(ConfigError::Invalid(
+                        "funding_lookback_seconds must be >= funding_poll_seconds".to_string(),
+                    ));
+                }
+                value
+            },
         })
     }
 
-    pub fn from_env() -> Result<Self, ConfigError> {
-        Self::from_sources(None)
-    }
 }
 
 fn get_or_default<T, F>(cfg: &config::Config, key: &str, default: F) -> Result<T, ConfigError>
@@ -217,6 +257,7 @@ fn parse_clickhouse_target(input: ClickHouseConfig) -> Result<ClickHouseTarget, 
         database: input.database,
         l2_snapshots_table: input.l2_snapshots_table,
         trades_table: input.trades_table,
+        funding_rates_table: input.funding_rates_table,
     })
 }
 
@@ -290,4 +331,20 @@ fn default_clickhouse_l2_snapshots_table() -> String {
 
 fn default_clickhouse_trades_table() -> String {
     "hyperliquid_trades".to_string()
+}
+
+fn default_clickhouse_funding_rates_table() -> String {
+    "hyperliquid_funding_rates".to_string()
+}
+
+fn default_info_api_url() -> String {
+    "https://api.hyperliquid.xyz/info".to_string()
+}
+
+fn default_funding_poll_seconds() -> u64 {
+    300
+}
+
+fn default_funding_lookback_seconds() -> u64 {
+    21_600
 }

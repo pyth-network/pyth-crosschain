@@ -2,7 +2,6 @@
 
 import { Play, Stop } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
-import { Callout } from "fumadocs-ui/components/callout";
 import { useCallback, useMemo, useRef } from "react";
 import { AccessTokenInput } from "../../Playground/AccessTokenInput";
 import { ChainSelector } from "../../Playground/ChainSelector";
@@ -68,14 +67,11 @@ export function PlaygroundContent() {
     <div className={styles.playground}>
       <section className={styles.header}>
         <div className={styles.headerContent}>
-          <h1 className={styles.title}>Pyth Pro Playground</h1>
+          <h1 className={styles.title}>Pyth Playground</h1>
           <p className={styles.subtitle}>
             Configure subscription parameters, generate code, and test real-time
             price streams.
           </p>
-          <Callout className={styles.disclaimer} type="warning">
-            This playground is for internal preview only and may contain bugs.
-          </Callout>
         </div>
       </section>
 

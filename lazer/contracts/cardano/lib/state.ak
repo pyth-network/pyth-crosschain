@@ -1,0 +1,174 @@
+// Utilities for implementing state "home" validators, tracking validated state
+// as a UTxO datum in a specific "home" spending script together with state NFT,
+// and only allowing priviledged updates using matching owner NFT. Inspired by:
+// https://plutonomicon.github.io/plutonomicon/cngproof
+use aiken/collection/list
+use aiken/crypto.{ScriptHash}
+use aiken/option
+use cardano/address.{Script}
+use cardano/assets.{AssetName, PolicyId}
+use cardano/transaction.{
+  InlineDatum, Input, Output, OutputReference, Transaction,
+}
+
+pub type StateId =
+  PolicyId
+
+pub fn find(config: StateConfig, id: StateId, inputs: List<Input>) -> Data {
+  expect Some(state) =
+    list.find_map(
+      inputs,
+      fn(input) {
+        if assets.has_nft_strict(input.output.value, id, config.state_nft) {
+          // state token outside of script address would imply a bug
+          expect Script(_) = input.output.address.payment_credential
+          expect InlineDatum(state) = input.output.datum
+          Some(state)
+        } else {
+          None
+        }
+      },
+    )
+  state
+}
+
+pub type StateConfig {
+  state_nft: AssetName,
+  owner_nft: AssetName,
+}
+
+pub type State<a> {
+  home: ScriptHash,
+  data: a,
+  reference_script: Option<ScriptHash>,
+}
+
+pub fn new(
+  home: ScriptHash,
+  data: Data,
+  reference_script: Option<ScriptHash>,
+) -> State<Data> {
+  State { home, data, reference_script }
+}
+
+/// `mint` callback handler, to be used in backpassing style:
+/// ```
+/// validator my_state(origin: OutputReference) {
+///   mint(_: Data, id: PolicyId, self: Transaction) {
+///     let state <- state.mint(origin, id, self)
+///     // ...check initial `state`...
+///   }
+/// }
+/// ```
+pub fn mint(
+  config: StateConfig,
+  origin: OutputReference,
+  id: PolicyId,
+  self: Transaction,
+  with_initial: fn(State<Data>) -> Bool,
+) -> Bool {
+  when assets.quantity_of(self.mint, id, config.state_nft) is {
+    1 -> mint_state(config, origin, id, self, with_initial)
+    -1 -> burn_state(config, id, self)
+    _ -> fail @"invalid home state NFT quantity"
+  }
+}
+
+fn mint_state(
+  config: StateConfig,
+  origin: OutputReference,
+  id: PolicyId,
+  self: Transaction,
+  with_initial: fn(State<Data>) -> Bool,
+) {
+  // state and owner NFTs should be minted in lockstep
+  expect assets.quantity_of(self.mint, id, config.owner_nft) == 1
+  // inputs should contain origin to enforce uniqueness
+  expect transaction.find_input(self.inputs, origin) |> option.is_some()
+
+  // output with the NFT should contain nothing more than ADA
+  expect Some(output) =
+    list.find(
+      self.outputs,
+      fn(o) { assets.has_nft_strict(o.value, id, config.state_nft) },
+    )
+  // output is locked to a script to enforce valid datum updates
+  expect Script(home) = output.address.payment_credential
+  // output should initialize the state
+  expect InlineDatum(data) = output.datum
+  let reference_script = output.reference_script
+  with_initial(State { home, data, reference_script })
+}
+
+fn burn_state(config: StateConfig, id: PolicyId, self: Transaction) {
+  // state and owner NFTs should be burned in lockstep
+  assets.quantity_of(self.mint, id, config.owner_nft) == -1
+}
+
+/// `spend` callback handler, to be used in backpassing style:
+/// ```
+/// spend(
+///   old: Option<MyDatum>,
+///   redeemer: MyRedeemer,
+///   utxo: OutputReference,
+///   self: Transaction,
+/// ) {
+///   let state, is_owner <- state.spend(old, utxo, self)
+///   // `is_owner` is `True` if transaction contains owner NFT
+///   // ...compute expected `home` address and new `datum`...
+///   state.new(home, datum)
+/// }
+/// ```
+pub fn spend(
+  config: StateConfig,
+  data: Option<a>,
+  utxo: OutputReference,
+  self: Transaction,
+  with_old: fn(State<a>, Bool) -> State<Data>,
+) {
+  expect Some(data) = data
+  let Output { address, value, reference_script, datum: _ } =
+    transaction.resolve_input(self.inputs, utxo)
+  expect Script(home) = address.payment_credential
+  let old = State { home, data, reference_script }
+
+  // The output contains state NFT and nothing else, except ADA. We can't
+  // check policy ID (minting script hash) here without introducing circular
+  // dependency, so malicious entity (or different deployment of our contract)
+  // could send here a token from a different policy, but as long as we only
+  // trust state tied to a well known policy ID, this spending script will
+  // always ensure that updates to it are valid.
+  expect [(id, asset, 1)] = assets.without_lovelace(value) |> assets.flatten()
+  expect asset == config.state_nft
+
+  when
+    list.find(
+      self.outputs,
+      fn(o) { assets.quantity_of(o.value, id, config.state_nft) != 0 },
+    )
+  is {
+    // state was burned, it's up to mint to ensure validity
+    None -> True
+    // state is preserved, it should be updated correctly
+    Some(Output { address, value, datum, reference_script }) -> {
+      // output with the state NFT should contain nothing more than ADA
+      expect assets.has_nft_strict(value, id, config.state_nft)
+      // output is locked to a script to enforce valid datum updates
+      expect Script(new_home) = address.payment_credential
+      // output should correctly update the state
+      expect InlineDatum(new_data) = datum
+
+      let is_owner =
+        list.any(
+          self.inputs,
+          fn(i) { assets.has_nft(i.output.value, id, config.owner_nft) },
+        )
+      let updated = with_old(old, is_owner)
+      and {
+        new_home == updated.home,
+        new_data == updated.data,
+        reference_script == updated.reference_script,
+      }
+    }
+  }
+}

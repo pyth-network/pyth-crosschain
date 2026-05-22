@@ -1,26 +1,32 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { TabList as TabListComponent } from "./index.jsx";
 import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
+import { TabList as TabListComponent } from "./index.jsx";
 
 const meta = {
-  component: TabListComponent,
   argTypes: {
-    items: {
-      table: {
-        disable: true,
-      },
-    },
     currentTab: {
       table: {
         disable: true,
       },
     },
+    items: {
+      table: {
+        disable: true,
+      },
+    },
   },
+  component: TabListComponent,
 } satisfies Meta<typeof TabListComponent>;
 export default meta;
 
 export const TabList = {
+  args: {
+    items: [
+      { children: "Foo", id: "foo" },
+      { children: "Bar", id: "bar" },
+    ],
+    label: "Tab List",
+  },
   decorators: [
     (Story) => (
       <UnstyledTabs>
@@ -28,11 +34,4 @@ export const TabList = {
       </UnstyledTabs>
     ),
   ],
-  args: {
-    label: "Tab List",
-    items: [
-      { id: "foo", children: "Foo" },
-      { id: "bar", children: "Bar" },
-    ],
-  },
 } satisfies StoryObj<typeof TabListComponent>;

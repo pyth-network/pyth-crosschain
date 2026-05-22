@@ -1,19 +1,17 @@
+import { fromBech32, toHex } from "@cosmjs/encoding";
+import type { Msg, WaitTxBroadcastResult, Wallet } from "@terra-money/terra.js";
 import {
+  isTxError,
   LCDClient,
   MnemonicKey,
-  Msg,
   MsgInstantiateContract,
   MsgMigrateContract,
   MsgStoreCode,
   MsgUpdateContractAdmin,
-  type WaitTxBroadcastResult,
-  Wallet,
-  isTxError,
 } from "@terra-money/terra.js";
-import { readFileSync } from "fs";
-import { fromBech32, toHex } from "@cosmjs/encoding";
-import { ethers } from "ethers";
 import assert from "assert";
+import { ethers } from "ethers";
+import { readFileSync } from "fs";
 import type { ContractInfo, Deployer } from "./index.js";
 
 export type TerraHost = {
@@ -33,8 +31,8 @@ export class TerraDeployer implements Deployer {
 
   private async signAndBroadcastMsg(msg: Msg): Promise<WaitTxBroadcastResult> {
     const tx = await this.wallet.createAndSignTx({
-      msgs: [msg],
       feeDenoms: this.feeDenoms,
+      msgs: [msg],
     });
     const res = await this.wallet.lcd.tx.broadcast(tx);
 
@@ -64,7 +62,7 @@ export class TerraDeployer implements Deployer {
     try {
       // {"key":"code_id","value":"14"}
       const ci = extractFromRawLog(rs.raw_log, "code_id");
-      codeId = parseInt(ci);
+      codeId = Number.parseInt(ci);
     } catch (e) {
       console.error(
         "Encountered an error in parsing deploy code result. Printing raw log",
@@ -91,7 +89,7 @@ export class TerraDeployer implements Deployer {
     );
     const rs = await this.signAndBroadcastMsg(instMsg);
 
-    var address: string = "";
+    var address = "";
 
     try {
       // {"key":"_contract_address","value":"terra1xxx3ps3gm3wceg4g300hvggdv7ga0hmsk64srccffmfy4wvcrugqnlvt8w"}
@@ -125,7 +123,9 @@ export class TerraDeployer implements Deployer {
     const rs = await this.signAndBroadcastMsg(migrateMsg);
     try {
       // {"key":"code_id","value":"13"}
-      let resultCodeId = parseInt(extractFromRawLog(rs.raw_log, "code_id"));
+      const resultCodeId = Number.parseInt(
+        extractFromRawLog(rs.raw_log, "code_id"),
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
@@ -156,10 +156,10 @@ export class TerraDeployer implements Deployer {
       await this.wallet.lcd.wasm.contractInfo(contract);
 
     return {
-      codeId: code_id,
       address: address ?? contract,
-      creator: creator,
       admin: admin,
+      codeId: code_id,
+      creator: creator,
       initMsg: init_msg,
     };
   }

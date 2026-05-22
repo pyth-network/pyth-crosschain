@@ -36,7 +36,7 @@ export const PriceFeedHeader = ({ params }: Props) => (
 );
 
 const ResolvedPriceFeedHeader = async ({ params }: Props) => (
-  <PriceFeedHeaderImpl {...await getFeed(params)} />
+  <PriceFeedHeaderImpl {...(await getFeed(params))} />
 );
 
 type PriceFeedHeaderImplProps =
@@ -49,7 +49,6 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
   <section className={styles.header}>
     <div className={styles.headerRow}>
       <Breadcrumbs
-        label="Breadcrumbs"
         items={[
           { href: "/", label: "Home" },
           { href: "/price-feeds", label: "Price Feeds" },
@@ -61,6 +60,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
             ),
           },
         ]}
+        label="Breadcrumbs"
       />
       {props.isLoading ? (
         <Skeleton width={15} />
@@ -79,12 +79,12 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               feeds: props.feeds
                 .filter((item) => item.symbol !== props.symbol)
                 .map((item) => ({
-                  symbol: item.symbol,
                   assetClass: item.product.asset_type,
                   description: item.product.description,
                   displaySymbol: item.product.display_symbol,
-                  key: item.product.price_account,
                   icon: <PriceFeedIcon assetClass={item.product.asset_type} />,
+                  key: item.product.price_account,
+                  symbol: item.symbol,
                 })),
             })}
       >
@@ -92,9 +92,9 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
           {...(props.isLoading
             ? { isLoading: true }
             : {
-                grow: true,
                 description: props.feed.product.description,
                 displaySymbol: props.feed.product.display_symbol,
+                grow: true,
                 icon: (
                   <PriceFeedIcon assetClass={props.feed.product.asset_type} />
                 ),
@@ -123,42 +123,42 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
           />
         )}
         <Button
-          variant="outline"
-          size="sm"
           beforeIcon={<ListDashes />}
           isPending={props.isLoading}
+          size="sm"
+          variant="outline"
           {...(!props.isLoading && {
             drawer: {
-              fill: true,
-              title: "Reference Data",
               contents: (
                 <ReferenceData
                   feed={{
-                    symbol: props.feed.symbol,
-                    feedKey: props.feed.product.price_account,
                     assetClass: props.feed.product.asset_type,
                     base: props.feed.product.base,
-                    description: props.feed.product.description,
-                    country: props.feed.product.country,
-                    quoteCurrency: props.feed.product.quote_currency,
-                    tenor: props.feed.product.tenor,
                     cmsSymbol: props.feed.product.cms_symbol,
-                    cqsSymbol: props.feed.product.cqs_symbol,
-                    nasdaqSymbol: props.feed.product.nasdaq_symbol,
-                    genericSymbol: props.feed.product.generic_symbol,
-                    weeklySchedule: props.feed.product.weekly_schedule,
-                    schedule: props.feed.product.schedule,
                     contractId: props.feed.product.contract_id,
+                    country: props.feed.product.country,
+                    cqsSymbol: props.feed.product.cqs_symbol,
+                    description: props.feed.product.description,
                     displaySymbol: props.feed.product.display_symbol,
                     exponent: props.feed.price.exponent,
+                    feedKey: props.feed.product.price_account,
+                    genericSymbol: props.feed.product.generic_symbol,
+                    lastSlot: props.feed.price.lastSlot,
+                    minPublishers: props.feed.price.minPublishers,
+                    nasdaqSymbol: props.feed.product.nasdaq_symbol,
                     numComponentPrices: props.feed.price.numComponentPrices,
                     numQuoters: props.feed.price.numQuoters,
-                    minPublishers: props.feed.price.minPublishers,
-                    lastSlot: props.feed.price.lastSlot,
+                    quoteCurrency: props.feed.product.quote_currency,
+                    schedule: props.feed.product.schedule,
+                    symbol: props.feed.symbol,
+                    tenor: props.feed.product.tenor,
                     validSlot: props.feed.price.validSlot,
+                    weeklySchedule: props.feed.product.weekly_schedule,
                   }}
                 />
               ),
+              fill: true,
+              title: "Reference Data",
             },
           })}
         >
@@ -168,7 +168,6 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
     </div>
     <Cards>
       <StatCard
-        variant="primary"
         header={
           props.isLoading ? (
             <Skeleton width={30} />
@@ -184,25 +183,15 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
             <Skeleton width={20} />
           ) : (
             <LivePrice
-              feedKey={props.feed.product.price_account}
               cluster={Cluster.Pythnet}
+              feedKey={props.feed.product.price_account}
               updatePageTitle
             />
           )
         }
+        variant="primary"
       />
       <StatCard
-        header="Confidence"
-        stat={
-          props.isLoading ? (
-            <Skeleton width={20} />
-          ) : (
-            <LiveConfidence
-              feedKey={props.feed.product.price_account}
-              cluster={Cluster.Pythnet}
-            />
-          )
-        }
         corner={
           <Explain size="xs" title="Confidence">
             <p>
@@ -212,14 +201,25 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               agree with each other.
             </p>
             <Button
-              size="xs"
-              variant="solid"
               href="https://docs.pyth.network/price-feeds/best-practices#confidence-intervals"
+              size="xs"
               target="_blank"
+              variant="solid"
             >
               Learn more
             </Button>
           </Explain>
+        }
+        header="Confidence"
+        stat={
+          props.isLoading ? (
+            <Skeleton width={20} />
+          ) : (
+            <LiveConfidence
+              cluster={Cluster.Pythnet}
+              feedKey={props.feed.product.price_account}
+            />
+          )
         }
       />
       <StatCard
@@ -254,8 +254,8 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
             <Skeleton width={20} />
           ) : (
             <LiveLastUpdated
-              feedKey={props.feed.product.price_account}
               cluster={Cluster.Pythnet}
+              feedKey={props.feed.product.price_account}
             />
           )
         }

@@ -8,15 +8,14 @@ import { readFileSync } from "node:fs";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { toPrivateKey } from "../src/core/base";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { toPrivateKey } from "../src/core/base";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
 
 const EXECUTOR_CACHE_FILE = ".cache-upgrade-evm-executor-contract";
 const ENTROPY_CACHE_FILE = ".cache-upgrade-evm-entropy-contract";
@@ -30,18 +29,18 @@ const parser = yargs(hideBin(process.argv))
   .options({
     ...COMMON_UPGRADE_OPTIONS,
     "contract-type": {
-      type: "string",
       choices: ["executor", "entropy"],
       demandOption: true,
+      type: "string",
     },
   });
 
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
 const RPCS = {
+  devnet: "https://api.devnet.solana.com",
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
-  devnet: "https://api.devnet.solana.com",
 } as Record<PythCluster, string>;
 
 function registry(cluster: PythCluster): string {

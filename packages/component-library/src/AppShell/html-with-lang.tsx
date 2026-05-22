@@ -7,5 +7,5 @@ type HtmlWithLangProps = Omit<ComponentProps<"html">, "lang">;
 
 export const HtmlWithLang = (props: HtmlWithLangProps) => {
   const locale = useLocale();
-  return <html lang={locale.locale} dir={locale.direction} {...props} />;
+  return <html dir={locale.direction} lang={locale.locale} {...props} />;
 };

@@ -3,9 +3,9 @@
 import type { ComponentProps } from "react";
 
 import Commodities from "./commodities.svg";
+import Crypto from "./crypto.svg";
 import CryptoIndex from "./crypto-index.svg";
 import CryptoRedemptionRate from "./crypto-redemption-rate.svg";
-import Crypto from "./crypto.svg";
 import Eco from "./eco.svg";
 import Equity from "./equity.svg";
 import Fx from "./fx.svg";
@@ -42,10 +42,10 @@ const GenericIcon = ({ assetClass, ...props }: GenericProps) => {
   const Icon = ASSET_CLASS_TO_ICON[assetClass];
   return (
     <Icon
-      width="100%"
-      height="100%"
       className={styles.generic}
       data-asset-class={assetClass}
+      height="100%"
+      width="100%"
       {...(!(assetClass in ASSET_CLASS_TO_ICON) && {
         viewBox: "0 0 32 32",
       })}
@@ -58,9 +58,9 @@ type SVGProps = ComponentProps<"svg">;
 
 const ASSET_CLASS_TO_ICON = {
   Commodities,
+  Crypto,
   "Crypto Index": CryptoIndex,
   "Crypto Redemption Rate": CryptoRedemptionRate,
-  Crypto,
   ECO: Eco,
   Equity,
   FX: Fx,

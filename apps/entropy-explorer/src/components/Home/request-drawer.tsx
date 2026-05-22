@@ -12,13 +12,11 @@ import type { OpenDrawerArgs } from "@pythnetwork/component-library/useDrawer";
 import type { ComponentProps } from "react";
 import { useNumberFormatter } from "react-aria";
 import TimeAgo from "react-timeago";
-
-import styles from "./request-drawer.module.scss";
 import { getErrorDetails } from "../../errors";
 import type {
-  Request,
   CallbackErrorRequest,
   FailedRequest,
+  Request,
 } from "../../requests";
 import { Status } from "../../requests";
 import { truncate } from "../../truncate";
@@ -26,16 +24,17 @@ import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
 import { ChainTag } from "./chain-tag";
+import styles from "./request-drawer.module.scss";
 
 export const mkRequestDrawer = (
   request: Request,
   now: Date,
 ): OpenDrawerArgs => ({
-  title: `Request ${truncate(request.requestTxHash)}`,
-  headingExtra: <StatusComponent status={request.status} />,
   bodyClassName: styles.requestDrawer ?? "",
+  contents: <RequestDrawerBody now={now} request={request} />,
   fill: true,
-  contents: <RequestDrawerBody request={request} now={now} />,
+  headingExtra: <StatusComponent status={request.status} />,
+  title: `Request ${truncate(request.requestTxHash)}`,
 });
 
 const RequestDrawerBody = ({
@@ -51,10 +50,9 @@ const RequestDrawerBody = ({
     <>
       <div className={styles.cards}>
         <StatCard
-          nonInteractive
           header="Random Number"
+          nonInteractive
           small
-          variant="primary"
           stat={
             "randomNumber" in request ? (
               <CopyButton text={request.randomNumber}>
@@ -64,10 +62,11 @@ const RequestDrawerBody = ({
               <StatusComponent status={request.status} />
             )
           }
+          variant="primary"
         />
         <StatCard
-          nonInteractive
           header="Sequence Number"
+          nonInteractive
           small
           stat={request.sequenceNumber}
         />
@@ -79,76 +78,76 @@ const RequestDrawerBody = ({
         <FailureInfo header="Reveal failed!" request={request} />
       )}
       <Table
-        label="Details"
-        fill
         className={styles.details ?? ""}
         columns={[
           {
-            id: "field",
-            name: "Field",
             alignment: "left",
+            id: "field",
             isRowHeader: true,
+            name: "Field",
             sticky: true,
           },
           {
+            alignment: "left",
+            fill: true,
             id: "value",
             name: "Value",
-            fill: true,
-            alignment: "left",
           },
         ]}
+        fill
+        label="Details"
         rows={[
           {
-            id: "chain",
             field: "Chain",
+            id: "chain",
             value: <ChainTag chain={request.chain} />,
           },
           {
-            id: "requestTimestamp",
             field: "Request Timestamp",
-            value: <Timestamp timestamp={request.requestTimestamp} now={now} />,
+            id: "requestTimestamp",
+            value: <Timestamp now={now} timestamp={request.requestTimestamp} />,
           },
           ...("callbackTimestamp" in request
             ? [
                 {
-                  id: "callbackTimestamp",
                   field: "Callback Timestamp",
+                  id: "callbackTimestamp",
                   value: (
                     <Timestamp
-                      timestamp={request.callbackTimestamp}
                       now={now}
+                      timestamp={request.callbackTimestamp}
                     />
                   ),
                 },
                 {
-                  id: "duration",
                   field: (
                     <Term term="Duration">
                       The amount of time between the request transaction and the
                       callback transaction.
                     </Term>
                   ),
+                  id: "duration",
                   value: (
                     <TimeAgo
-                      now={() => request.callbackTimestamp.getTime()}
                       date={request.requestTimestamp}
-                      live={false}
                       formatter={(value, unit) =>
                         `${value.toString()} ${unit}${value === 1 ? "" : "s"}`
                       }
+                      live={false}
+                      now={() => request.callbackTimestamp.getTime()}
                     />
                   ),
                 },
               ]
             : []),
           {
-            id: "requestTx",
             field: (
               <Term term="Request Transaction">
                 The transaction that requests a new random number from the
                 Entropy protocol.
               </Term>
             ),
+            id: "requestTx",
             value: (
               <Transaction
                 chain={request.chain}
@@ -157,20 +156,20 @@ const RequestDrawerBody = ({
             ),
           },
           {
-            id: "sender",
             field: "Sender",
+            id: "sender",
             value: <Account chain={request.chain} value={request.sender} />,
           },
           ...(request.status === Status.Complete
             ? [
                 {
-                  id: "callbackTx",
                   field: (
                     <Term term="Callback Transaction">
                       Entropy’s response transaction that returns the random
                       number to the requester.
                     </Term>
                   ),
+                  id: "callbackTx",
                   value: (
                     <Transaction
                       chain={request.chain}
@@ -181,17 +180,17 @@ const RequestDrawerBody = ({
               ]
             : []),
           {
-            id: "provider",
             field: "Provider",
+            id: "provider",
             value: <Account chain={request.chain} value={request.provider} />,
           },
           {
-            id: "userContribution",
             field: (
               <Term term="User Contribution">
                 User-submitted randomness included in the request.
               </Term>
             ),
+            id: "userContribution",
             value: (
               <CopyButton text={request.userContribution}>
                 <code>{truncate(request.userContribution)}</code>
@@ -201,13 +200,13 @@ const RequestDrawerBody = ({
           ...("providerContribution" in request
             ? [
                 {
-                  id: "providerContribution",
                   field: (
                     <Term term="Provider Contribution">
                       Provider-submitted randomness used to calculate the random
                       number.
                     </Term>
                   ),
+                  id: "providerContribution",
                   value: (
                     <CopyButton text={request.providerContribution}>
                       <code>{truncate(request.providerContribution)}</code>
@@ -217,18 +216,18 @@ const RequestDrawerBody = ({
               ]
             : []),
           {
-            id: "gas",
             field: "Gas",
+            id: "gas",
             value:
               "gasUsed" in request ? (
                 <Meter
-                  label="Gas"
-                  value={request.gasUsed}
-                  maxValue={request.gasLimit}
                   className={styles.gasMeter ?? ""}
-                  startLabel={`${gasFormatter.format(request.gasUsed)} used`}
                   endLabel={`${gasFormatter.format(request.gasLimit)} max`}
+                  label="Gas"
                   labelClassName={styles.gasMeterLabel ?? ""}
+                  maxValue={request.gasLimit}
+                  startLabel={`${gasFormatter.format(request.gasUsed)} used`}
+                  value={request.gasUsed}
                   variant={
                     request.gasUsed > request.gasLimit ? "error" : "default"
                   }
@@ -238,11 +237,11 @@ const RequestDrawerBody = ({
               ),
           },
         ].map((data) => ({
-          id: data.id,
           data: {
             field: <span className={styles.field}>{data.field}</span>,
             value: data.value,
           },
+          id: data.id,
         }))}
       />
     </>
@@ -256,9 +255,9 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
     <>
       <FailureInfo header="Callback failed!" request={request} />
       <InfoBox
+        className={styles.message}
         header="Retry the callback yourself"
         icon={<Code />}
-        className={styles.message}
         variant="info"
       >
         {`If you'd like to execute your callback, you can run the command in your
@@ -267,21 +266,21 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
           style={{
             display: "flex",
             flexFlow: "row nowrap",
-            justifyContent: "end",
             gap: "16px",
+            justifyContent: "end",
             marginTop: "16px",
           }}
         >
           <CopyButton text={retryCommand}>Copy Cast Command</CopyButton>
           <Button
-            size="sm"
-            variant="ghost"
             beforeIcon={<Question />}
-            rounded
+            className={styles.helpButton ?? ""}
             hideText
             href="https://docs.pyth.network/entropy/debug-callback-failures"
+            rounded
+            size="sm"
             target="_blank"
-            className={styles.helpButton ?? ""}
+            variant="ghost"
           >
             Help
           </Button>
@@ -298,20 +297,20 @@ const FailureInfo = ({
   request: CallbackErrorRequest | FailedRequest;
 }) => (
   <InfoBox
-    icon={<Warning />}
     className={styles.message}
+    icon={<Warning />}
     variant="warning"
     {...props}
   >
     <Button
-      hideText
       beforeIcon={<Question />}
+      className={styles.helpButton ?? ""}
+      hideText
+      href={getHelpLink(request)}
       rounded
       size="sm"
-      variant="ghost"
-      className={styles.helpButton ?? ""}
-      href={getHelpLink(request)}
       target="_blank"
+      variant="ghost"
     >
       Help
     </Button>

@@ -73,12 +73,16 @@ const httpServer = createHttpServer(async (req, res) => {
           res.end("Internal Server Error");
         }
       } finally {
-        await transport.close().catch((err: unknown) =>
-          logger.error({ err }, "transport close failed"),
-        );
-        await server.close().catch((err: unknown) =>
-          logger.error({ err }, "server close failed"),
-        );
+        await transport
+          .close()
+          .catch((err: unknown) =>
+            logger.error({ err }, "transport close failed"),
+          );
+        await server
+          .close()
+          .catch((err: unknown) =>
+            logger.error({ err }, "server close failed"),
+          );
       }
       return;
     }

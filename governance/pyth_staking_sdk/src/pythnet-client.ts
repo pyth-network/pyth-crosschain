@@ -5,9 +5,11 @@ import {
   parseBaseData,
   parsePriceData,
 } from "@pythnetwork/client";
-import { Connection } from "@solana/web3.js";
+import type { Connection } from "@solana/web3.js";
 
-import StakeCapsParametersIdl from "./idl/stake-caps-parameters.json" with { type: "json" };
+import StakeCapsParametersIdl from "./idl/stake-caps-parameters.json" with {
+  type: "json",
+};
 import { getStakeCapsParametersAddress } from "./pdas.js";
 import type { StakeCapsParameters } from "./types/stake-caps-parameters.js";
 import { convertBNToBigInt } from "./utils/bn.js";

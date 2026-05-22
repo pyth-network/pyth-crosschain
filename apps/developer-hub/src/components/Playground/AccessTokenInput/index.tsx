@@ -21,13 +21,13 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <Key className={styles.icon} weight="duotone" />
-          <span className={styles.label}>Access Token</span>
+          <span className={styles.label}>API Key</span>
         </div>
         <Button
           beforeIcon={<ArrowSquareOut weight="regular" />}
           onPress={() => {
             window.open(
-              "https://docs.pyth.network/price-feeds/pro/acquire-access-token#request-access-token",
+              "https://docs.pyth.network/price-feeds/pro/acquire-api-key#request-api-key",
               "_blank",
               "noopener,noreferrer",
             );
@@ -35,14 +35,14 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
           size="sm"
           variant="secondary"
         >
-          Get your Access Token
+          Get your API Key
         </Button>
       </div>
 
       <div className={styles.content}>
         <div className={styles.inputWrapper}>
           <Input
-            aria-label="Access Token"
+            aria-label="API Key"
             className={styles.input ?? ""}
             fullWidth
             onChange={(event) => {
@@ -54,11 +54,11 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
           />
         </div>
 
-        {isUsingDemoToken && (
-          <span className={styles.hint}>
-            Using demo token (rate limited for testing)
-          </span>
-        )}
+        <span className={styles.hint}>
+          {isUsingDemoToken
+            ? "Using a shared demo token is rate-limited for fair use. Paste your own API key for unlimited streams."
+            : "Using your API key. Sent only to authorize your stream and never stored."}
+        </span>
       </div>
     </div>
   );

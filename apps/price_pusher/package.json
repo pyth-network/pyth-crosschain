@@ -9,7 +9,7 @@
     "@injectivelabs/sdk-ts": "1.14.50",
     "@injectivelabs/utils": "^1.14.48",
     "@mysten/sui": "^1.3.0",
-    "@pythnetwork/hermes-client": "^1.3.1",
+    "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
@@ -200,7 +200,6 @@
   ],
   "license": "Apache-2.0",
   "main": "./dist/index.cjs",
-  "module": "./dist/esm/index.js",
   "name": "@pythnetwork/price-pusher",
   "publishConfig": {
     "access": "public"
@@ -211,14 +210,14 @@
     "url": "https://github.com/pyth-network/pyth-crosschain"
   },
   "scripts": {
-    "build": "ts-duality",
+    "build": "ts-duality --noEsm",
     "clean": "rm -rf ./dist",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build",
-    "start": "node dist/cjs/index.cjs",
-    "version": "pnpm run test:format && git add -A src"
+    "start": "node dist/index.cjs",
+    "test:types": "tsc"
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "10.3.1"
+  "version": "10.5.0"
 }

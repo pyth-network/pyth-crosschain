@@ -89,8 +89,8 @@ export const PriceFeedChangePercent = ({ feedKey, className }: Props) => {
       ) : (
         <PriceFeedChangePercentLoaded
           className={className}
-          priorPrice={yesterdaysPrice}
           feedKey={feedKey}
+          priorPrice={yesterdaysPrice}
         />
       );
     }

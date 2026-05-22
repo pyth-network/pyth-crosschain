@@ -11,13 +11,13 @@ export const KEYSTORE = [
 
 // wallets
 export const WALLET_PRIVATE_KEY = Buffer.from(KEYSTORE[0], "base64").subarray(
-  1
+  1,
 );
 export const RELAYER_PRIVATE_KEY = Buffer.from(KEYSTORE[1], "base64").subarray(
-  1
+  1,
 );
 export const CREATOR_PRIVATE_KEY = Buffer.from(KEYSTORE[2], "base64").subarray(
-  1
+  1,
 );
 
 // guardian signer

@@ -52,7 +52,7 @@ pub mod pyth_push_oracle {
         let seeds = &[
             &shard_id.to_le_bytes(),
             feed_id.as_ref(),
-            &[*ctx.bumps.get("price_feed_account").unwrap()],
+            &[ctx.bumps.price_feed_account],
         ];
         let signer_seeds = &[&seeds[..]];
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);

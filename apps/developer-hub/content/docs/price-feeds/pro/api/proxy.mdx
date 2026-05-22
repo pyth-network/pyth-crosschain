@@ -11,13 +11,17 @@ import { Callout } from "fumadocs-ui/components/callout";
   might go down and all interfaces, URLs, etc. might change without notice.
 </Callout>
 
-## Base URL
+## Base URLs
 
-```
-https://pyth-lazer-proxy-3.dourolabs.app
-```
+For improved reliability, it is recommended to use all three proxy instances. Your application should be configured to fall back to the other URLs if one is unavailable.
 
-**API Documentation**: [https://pyth-lazer-proxy-3.dourolabs.app/docs/](https://pyth-lazer-proxy-3.dourolabs.app/docs/)
+| Instance | URL                                              |
+| -------- | ------------------------------------------------ |
+| Proxy 1  | `https://pyth-lazer-proxy-1.dourolabs.app`       |
+| Proxy 2  | `https://pyth-lazer-proxy-2.dourolabs.app`       |
+| Proxy 3  | `https://pyth-lazer-proxy-3.dourolabs.app`       |
+
+**API Documentation**: [https://pyth-lazer-proxy-1.dourolabs.app/docs/](https://pyth-lazer-proxy-1.dourolabs.app/docs/)
 
 ## Endpoints
 
@@ -37,7 +41,7 @@ https://pyth-lazer-proxy-3.dourolabs.app
 **Example**
 
 ```
-https://pyth-lazer-proxy-3.dourolabs.app/v1/latest_price?price_feed_ids=1&price_feed_ids=2
+https://pyth-lazer-proxy-1.dourolabs.app/v1/latest_price?price_feed_ids=1&price_feed_ids=2
 ```
 
 ### GET /v1/stream
@@ -51,7 +55,7 @@ https://pyth-lazer-proxy-3.dourolabs.app/v1/latest_price?price_feed_ids=1&price_
 **Example**
 
 ```
-https://pyth-lazer-proxy-3.dourolabs.app/v1/stream?price_feed_ids=1&price_feed_ids=2
+https://pyth-lazer-proxy-1.dourolabs.app/v1/stream?price_feed_ids=1&price_feed_ids=2
 ```
 
 Returns Server-Sent Events (SSE) stream of continuous price updates.

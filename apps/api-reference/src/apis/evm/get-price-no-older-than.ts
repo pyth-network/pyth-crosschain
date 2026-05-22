@@ -1,10 +1,23 @@
-import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
+import { ethersJS, readApi, solidity } from "./common";
 
 export const getPriceNoOlderThan = readApi<"id" | "age">({
-  name: "getPriceNoOlderThan",
-  summary:
-    "Get the price object with a published timestamp from before than `age` seconds in the past.",
+  code: [
+    solidity(
+      ({ id, age }) => `
+bytes32 priceId = ${id ?? "/* <id> */"};
+uint256 age = ${age ?? "/* <age> */"};
+PythStructs.Price memory currentBasePrice = pyth.getPriceNoOlderThan(priceId, age);
+    `,
+    ),
+    ethersJS(
+      ({ id, age }) => `
+const priceId = ${id ? `'${id}'` : "/* <id> */"};
+const age = ${age ? `'${age}'` : "/* <age> */"};
+const [price, conf, expo, timestamp] = await contract.getPriceNoOlderThan(priceId, age);
+    `,
+    ),
+  ],
   description: `
 This method returns the latest price object for the requested price feed ID, if
 it has been updated sufficiently recently.
@@ -42,32 +55,19 @@ The above method can return the following error response:
   update or does not exist. Try calling
   [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed.
   `,
+  name: "getPriceNoOlderThan",
   parameters: [
     {
+      description: "The ID of the price feed you want to read",
       name: "id",
       type: ParameterType.PriceFeedId,
-      description: "The ID of the price feed you want to read",
     },
     {
+      description: "Maximum age of the on-chain price in seconds.",
       name: "age",
       type: ParameterType.Int,
-      description: "Maximum age of the on-chain price in seconds.",
     },
   ],
-  code: [
-    solidity(
-      ({ id, age }) => `
-bytes32 priceId = ${id ?? "/* <id> */"};
-uint256 age = ${age ?? "/* <age> */"};
-PythStructs.Price memory currentBasePrice = pyth.getPriceNoOlderThan(priceId, age);
-    `,
-    ),
-    ethersJS(
-      ({ id, age }) => `
-const priceId = ${id ? `'${id}'` : "/* <id> */"};
-const age = ${age ? `'${age}'` : "/* <age> */"};
-const [price, conf, expo, timestamp] = await contract.getPriceNoOlderThan(priceId, age);
-    `,
-    ),
-  ],
+  summary:
+    "Get the price object with a published timestamp from before than `age` seconds in the past.",
 });

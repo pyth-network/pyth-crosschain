@@ -28,21 +28,21 @@ const parser = yargs(hideBin(process.argv))
       "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet",
   )
   .options({
-    network: {
-      type: "string",
-      choices: ["mainnet", "testnet"],
-      description: "Network to deploy to",
-      demandOption: true,
-    },
     "contract-address": {
-      type: "string",
-      description: "Address of the contract to upgrade",
       demandOption: true,
+      description: "Address of the contract to upgrade",
+      type: "string",
+    },
+    network: {
+      choices: ["mainnet", "testnet"],
+      demandOption: true,
+      description: "Network to deploy to",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
-      description: "Path to operations key file",
       demandOption: true,
+      description: "Path to operations key file",
+      type: "string",
     },
   });
 

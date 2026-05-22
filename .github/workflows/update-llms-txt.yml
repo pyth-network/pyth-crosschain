@@ -1,0 +1,545 @@
+name: Update llms.txt
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/developer-hub/content/docs/**/*.mdx"
+    types: [opened, synchronize]
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: llms-txt-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash # -eo pipefail catch-all
+
+jobs:
+  update-llms-txt:
+    # Only run if PR is from the same repo (not forks) and targets main
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: |
+          cd apps/developer-hub
+          pnpm install --frozen-lockfile
+
+      - name: Get changed files and detect affected products
+        id: changed-files
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # Get list of changed doc files
+          CHANGED_FILES=$(git diff --name-only "origin/$BASE_REF...HEAD" -- 'apps/developer-hub/content/docs/**/*.mdx' | head -20)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Count changes - handle empty case explicitly to avoid integer comparison issues
+          if [ -z "$CHANGED_FILES" ]; then
+            FILE_COUNT=0
+          else
+            FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
+          fi
+          echo "file_count=$FILE_COUNT" >> $GITHUB_OUTPUT
+
+          # Check for significant changes
+          SIGNIFICANT="false"
+
+          if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE "(index|getting-started|contract-addresses)"; then
+            SIGNIFICANT="true"
+          fi
+
+          # New files added?
+          NEW_FILES=$(git diff --name-only --diff-filter=A "origin/$BASE_REF...HEAD" -- 'apps/developer-hub/content/docs/**/*.mdx')
+          if [ -n "$NEW_FILES" ]; then
+            SIGNIFICANT="true"
+          fi
+
+          # Many files changed?
+          if [ "$FILE_COUNT" -gt 5 ]; then
+            SIGNIFICANT="true"
+          fi
+
+          echo "significant=$SIGNIFICANT" >> $GITHUB_OUTPUT
+
+          # Determine which product route files are affected by the doc changes
+          AFFECTED=""
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/price-feeds/core/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-core.txt llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/price-feeds/pro/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-pro.txt llms-price-feeds.txt"
+          fi
+
+          # Top-level price-feeds pages (not under core/ or pro/)
+          if echo "$CHANGED_FILES" | grep "content/docs/price-feeds/" | grep -qvE "content/docs/price-feeds/(core|pro)/"; then
+            AFFECTED="$AFFECTED llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/entropy/"; then
+            AFFECTED="$AFFECTED llms-entropy.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/api-reference/pyth-core/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-core.txt llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/api-reference/entropy/"; then
+            AFFECTED="$AFFECTED llms-entropy.txt"
+          fi
+
+          # Deduplicate
+          AFFECTED=$(echo "$AFFECTED" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
+
+          # Include SKILL.md if key pages or product files are affected
+          INCLUDE_SKILL="false"
+          if echo "$CHANGED_FILES" | grep -qE "(getting-started|index|contract-addresses)"; then
+            INCLUDE_SKILL="true"
+          fi
+          if [ -n "$AFFECTED" ]; then
+            INCLUDE_SKILL="true"
+          fi
+          echo "include_skill=$INCLUDE_SKILL" >> $GITHUB_OUTPUT
+          echo "affected_products=$AFFECTED" >> $GITHUB_OUTPUT
+
+          # Check for new top-level doc directories that don't map to existing products
+          NEW_PRODUCT="false"
+          if [ -n "$NEW_FILES" ]; then
+            NEW_DIRS=$(echo "$NEW_FILES" \
+              | sed 's|apps/developer-hub/content/docs/||' \
+              | cut -d'/' -f1 \
+              | sort -u)
+            KNOWN_DIRS="price-feeds entropy api-reference express-relay oracle-integrity-staking metrics pyth-token"
+            for dir in $NEW_DIRS; do
+              if ! echo "$KNOWN_DIRS" | grep -qw "$dir"; then
+                NEW_PRODUCT="true"
+                break
+              fi
+            done
+          fi
+          echo "new_product=$NEW_PRODUCT" >> $GITHUB_OUTPUT
+
+          echo "Significant: $SIGNIFICANT | Affected: $AFFECTED | New product: $NEW_PRODUCT"
+
+      - name: Skip if no significant changes
+        if: steps.changed-files.outputs.significant != 'true'
+        run: |
+          echo "No significant documentation changes detected. Skipping."
+
+      - name: Read content from affected product files
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
+        id: headers
+        env:
+          AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
+          INCLUDE_SKILL: ${{ steps.changed-files.outputs.include_skill }}
+        run: |
+          ROUTE_DIR="apps/developer-hub/src/app"
+
+          # Build a JSON object mapping product filename -> current CONTENT content
+          HEADERS_JSON="{}"
+
+          for product in $AFFECTED; do
+            ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
+            if [ -f "$ROUTE_FILE" ]; then
+              # Extract CONTENT content (between opening backtick and closing `; line)
+              sed -n '/const CONTENT = `/{s/const CONTENT = `//;:a;/^`;/q;p;n;ba}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
+              HEADERS_JSON=$(jq --arg key "$product" --rawfile val "/tmp/header-${product}.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
+            fi
+          done
+
+          # Also extract SKILL.md content if flagged
+          if [ "$INCLUDE_SKILL" = "true" ]; then
+            SKILL_FILE="$ROUTE_DIR/SKILL.md/route.ts"
+            if [ -f "$SKILL_FILE" ]; then
+              sed -n '/const CONTENT = `/{s/const CONTENT = `//;:a;/^`;/q;p;n;ba}' "$SKILL_FILE" > "/tmp/header-SKILL.md.txt"
+              HEADERS_JSON=$(jq --arg key "SKILL.md" --rawfile val "/tmp/header-SKILL.md.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
+            fi
+          fi
+
+          echo "$HEADERS_JSON" > /tmp/current-headers.json
+          echo "Extracted headers for: $AFFECTED"
+
+      - name: Gather context
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
+        id: context
+        env:
+          CHANGED_FILES_LIST: ${{ steps.changed-files.outputs.files }}
+        run: |
+          # Save files list to temp file to avoid shell expansion issues
+          echo "$CHANGED_FILES_LIST" > /tmp/changed_files.txt
+
+          # Get summaries of changed files
+          CHANGES=""
+          while IFS= read -r file; do
+            # Skip empty lines
+            [ -z "$file" ] && continue
+            if [ -f "$file" ]; then
+              # Extract title and description from frontmatter
+              TITLE=$(grep -m1 "^title:" "$file" | sed 's/title: //' | tr -d '"' || echo "")
+              DESC=$(grep -m1 "^description:" "$file" | sed 's/description: //' | tr -d '"' || echo "")
+              CHANGES="$CHANGES
+          - $file
+            Title: $TITLE
+            Description: $DESC"
+            fi
+          done < /tmp/changed_files.txt
+
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Review curated content with GPT-4o
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
+        env:
+          OPENAI_API_KEY: ${{ secrets.PYTH_NETWORK_PYTH_CROSSCHAIN_OPENAI_API_KEY }}
+          DOC_CHANGES: ${{ steps.context.outputs.changes }}
+        run: |
+          # Write system prompt to file (avoids shell quoting issues)
+          cat > /tmp/system-msg.txt << 'SYSMSG'
+          You review documentation changes and determine if product-specific llms.txt files need updating.
+
+          Architecture: Each product has a route file with a CONTENT constant containing a FULLY CURATED quick-start guide. There is no dynamic content section — the entire file is hand-curated. Each file follows a consistent template: Overview, Key Concepts, Integration Code, Contract Addresses, Common Patterns, Troubleshooting, and Deep Dive Pages.
+
+          Be VERY CONSERVATIVE. Most changes do NOT require updates. Only update for:
+          - New or changed contract addresses
+          - New or changed API endpoints or base URLs
+          - New or changed SDK package names or imports
+          - Major restructuring of quick-start code examples
+          - New key features that should be highlighted
+          - Corrections to errors in the curated content
+
+          Do NOT update for: typos in deep-dive pages, expanded explanations, new tutorial pages, minor doc fixes, clarifications in pages not directly referenced.
+
+          Return a JSON object where each key is a product filename and the value is either the string "NO_UPDATE_NEEDED" or the complete updated content string.
+
+          CRITICAL FORMATTING RULES for updated content:
+          - The content is placed inside a JavaScript template literal (backtick string)
+          - You MUST escape ALL backticks as \` (backslash backtick)
+          - Code blocks must use \`\`\` instead of raw backticks
+          - Preserve the consistent template structure (Overview, Key Concepts, etc.)
+          - Make MINIMAL targeted edits — do not rewrite unaffected sections
+          - Keep the Deep Dive Pages section URLs accurate
+          SYSMSG
+
+          # Write user message to file
+          CURRENT_HEADERS=$(cat /tmp/current-headers.json)
+          cat > /tmp/user-msg.txt << USRMSG
+          Current static headers for affected product files:
+
+          $CURRENT_HEADERS
+
+          Documentation changes in this PR:
+          $DOC_CHANGES
+
+          For each product file listed above, determine if its static header needs updating. Return ONLY valid JSON.
+          USRMSG
+
+          # Assemble JSON request using jq with --rawfile to avoid shell quoting issues
+          jq -n \
+            --rawfile sys_msg /tmp/system-msg.txt \
+            --rawfile usr_msg /tmp/user-msg.txt \
+            '{
+              model: "gpt-4o",
+              max_tokens: 8192,
+              response_format: { type: "json_object" },
+              messages: [
+                { role: "system", content: $sys_msg },
+                { role: "user", content: $usr_msg }
+              ]
+            }' > /tmp/request.json
+
+          # Call OpenAI API
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d @/tmp/request.json)
+
+          # Check for HTTP-level errors (rate limit, server error)
+          HTTP_ERROR=$(echo "$RESPONSE" | jq -r '.error.message // empty')
+          if [ -n "$HTTP_ERROR" ]; then
+            echo "::warning::OpenAI API error: $HTTP_ERROR"
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Extract response content
+          RESULT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "ERROR"')
+
+          if [ "$RESULT" = "ERROR" ]; then
+            echo "::warning::Failed to extract response from OpenAI API"
+            echo "$RESPONSE"
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Validate response is valid JSON
+          if ! echo "$RESULT" | jq empty 2>/dev/null; then
+            echo "::warning::OpenAI returned invalid JSON, skipping update"
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          echo "$RESULT" > /tmp/update-decisions.json
+
+          # Check if any updates are needed
+          ANY_UPDATES=$(echo "$RESULT" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | head -1)
+          if [ -z "$ANY_UPDATES" ]; then
+            echo "no_update=true" >> $GITHUB_ENV
+            echo "No header updates needed"
+          else
+            UPDATED_LIST=$(echo "$RESULT" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | tr '\n' ', ' | sed 's/,$//')
+            echo "no_update=false" >> $GITHUB_ENV
+            echo "updated_products=$UPDATED_LIST" >> $GITHUB_ENV
+            echo "Updates needed for: $UPDATED_LIST"
+          fi
+
+      - name: Update product route files
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
+        run: |
+          ROUTE_DIR="apps/developer-hub/src/app"
+          DECISIONS=$(cat /tmp/update-decisions.json)
+
+          # Process each file that needs updating
+          echo "$DECISIONS" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | while read -r product; do
+            ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
+
+            if [ ! -f "$ROUTE_FILE" ]; then
+              echo "Warning: $ROUTE_FILE not found, skipping"
+              continue
+            fi
+
+            # Extract the new header content from the JSON decision
+            echo "$DECISIONS" | jq -r --arg key "$product" '.[$key]' > /tmp/new-header.txt
+
+            # Normalize backtick escaping for JS template literal safety.
+            # Strip ALL levels of backslash-escaping from backticks, then
+            # re-escape them uniformly. This prevents double-escaping (\\`)
+            # which would prematurely close the template literal and break
+            # the build.
+            sed -i ':a; s/\\`/`/g; ta; s/`/\\`/g' /tmp/new-header.txt
+
+            # Sanity-check: reject content that looks like GPT wrapped the
+            # markdown in a JS function expression (observed failure mode).
+            if head -1 /tmp/new-header.txt | grep -qE '^\s*function\s*\('; then
+              echo "::warning::GPT-4o returned content wrapped in a function expression for $product, skipping"
+              continue
+            fi
+
+            # Use Python to safely replace the CONTENT content in the route file
+            cat > /tmp/replace-header.py << 'PYEOF'
+          import sys
+
+          file_path = sys.argv[1]
+          header_path = sys.argv[2]
+
+          with open(file_path) as f:
+              source = f.read()
+
+          with open(header_path) as f:
+              new_header = f.read()
+
+          start_marker = "const CONTENT = `"
+
+          if start_marker not in source:
+              print(f"ERROR: No CONTENT marker found in {file_path}")
+              sys.exit(1)
+
+          end_marker = "\n`;"
+
+          start = source.index(start_marker) + len(start_marker)
+          end = source.index(end_marker, start)
+
+          result = source[:start] + new_header + source[end:]
+
+          with open(file_path, "w") as f:
+              f.write(result)
+
+          print(f"Updated {file_path}")
+          PYEOF
+            python3 /tmp/replace-header.py "$ROUTE_FILE" "/tmp/new-header.txt"
+
+            # Verify the updated route file has no syntax errors
+            if ! node --check "$ROUTE_FILE" 2>/dev/null; then
+              echo "::error::Updated $ROUTE_FILE has syntax errors, reverting"
+              git checkout -- "$ROUTE_FILE"
+              continue
+            fi
+          done
+
+      - name: Format updated files
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
+        env:
+          AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
+          INCLUDE_SKILL: ${{ steps.changed-files.outputs.include_skill }}
+        run: |
+          cd apps/developer-hub
+          for product in $AFFECTED; do
+            npx biome check --write "src/app/$product/route.ts" || true
+          done
+          # Also format SKILL.md if it was updated
+          if [ "$INCLUDE_SKILL" = "true" ]; then
+            npx biome check --write "src/app/SKILL.md/route.ts" || true
+          fi
+
+      - name: Re-run token counter
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
+        run: |
+          cd apps/developer-hub
+          npx tsx scripts/count-llm-tokens.ts
+
+      - name: Commit and push changes
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
+        env:
+          AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
+          INCLUDE_SKILL: ${{ steps.changed-files.outputs.include_skill }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          for product in $AFFECTED; do
+            git add "apps/developer-hub/src/app/$product/route.ts"
+          done
+          # Also stage SKILL.md if updated
+          if [ "$INCLUDE_SKILL" = "true" ]; then
+            git add "apps/developer-hub/src/app/SKILL.md/route.ts"
+          fi
+          # Stage updated token counts
+          git add "apps/developer-hub/src/data/llm-token-counts.json"
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(developer-hub): auto-update llms.txt curated content
+
+          Updated curated content based on documentation changes."
+
+            git push
+            echo "Changes committed and pushed"
+          fi
+
+      - name: Comment on PR
+        if: steps.changed-files.outputs.significant == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          AFFECTED_PRODUCTS: ${{ steps.changed-files.outputs.affected_products }}
+          NEW_PRODUCT: ${{ steps.changed-files.outputs.new_product }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        with:
+          script: |
+            const noUpdate = process.env.no_update === 'true';
+            const affectedRaw = process.env.AFFECTED_PRODUCTS || '';
+            const affectedProducts = affectedRaw.split(' ').filter(Boolean);
+            const newProduct = process.env.NEW_PRODUCT === 'true';
+            const updatedProducts = (process.env.updated_products || '').split(',').filter(Boolean);
+            const changedFiles = process.env.CHANGED_FILES || '';
+
+            const newProductWarning = newProduct
+              ? `\n> ⚠️ **New product directory detected.** Please check if the \`llms.txt\` routing hub needs a new entry.\n`
+              : '';
+
+            let body;
+
+            const dynamicContentNote = '\n\n> Note: Product files contain curated content. Deep dive page URLs in each file link to individual `.mdx` pages for full detail.';
+
+            if (affectedProducts.length === 0) {
+              body = `## 🤖 llms.txt Content Review
+
+            Documentation changes detected, but no product-specific llms.txt files were affected.
+            ${dynamicContentNote}
+            ${newProductWarning}
+            <details>
+            <summary>Files analyzed</summary>
+
+            \`\`\`
+            ${changedFiles}
+            \`\`\`
+            </details>`;
+            } else if (noUpdate) {
+              body = `## 🤖 llms.txt Content Review
+
+            Analyzed documentation changes — no updates to curated content required.
+
+            **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
+            ${dynamicContentNote}
+            ${newProductWarning}
+            <details>
+            <summary>Files analyzed</summary>
+
+            \`\`\`
+            ${changedFiles}
+            \`\`\`
+            </details>`;
+            } else {
+              body = `## 🤖 llms.txt Content Updated
+
+            I've automatically updated curated content in product-specific llms.txt files based on documentation changes.
+
+            **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
+            **Products updated:** ${updatedProducts.map(p => `\`${p.trim()}\``).join(', ') || 'none'}
+
+            Please review the changes to the route files in \`apps/developer-hub/src/app/\`.
+            ${dynamicContentNote}
+            ${newProductWarning}
+            <details>
+            <summary>Files that triggered this update</summary>
+
+            \`\`\`
+            ${changedFiles}
+            \`\`\`
+            </details>`;
+            }
+
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('llms.txt')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

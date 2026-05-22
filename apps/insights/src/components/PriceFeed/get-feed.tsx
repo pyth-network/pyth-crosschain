@@ -9,13 +9,13 @@ export const getFeed = async (params: Promise<{ slug: string }>) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
   const feed = await getFeedForSymbolRequest({
-    symbol,
     cluster: Cluster.Pythnet,
+    symbol,
   });
 
   return {
-    feeds,
     feed: feed ?? notFound(),
+    feeds,
     symbol,
   } as const;
 };

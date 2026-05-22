@@ -11,10 +11,3 @@ scrape_configs:
         target_label: instance
         replacement: "hyperliquid_recorder"
 
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: []
-
-rule_files:
-  - "alerts.sample.yml"

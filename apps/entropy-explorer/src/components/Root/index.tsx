@@ -3,9 +3,9 @@ import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { ReactNode } from "react";
 
 import {
+  AMPLITUDE_API_KEY,
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
-  AMPLITUDE_API_KEY,
 } from "../../config/server";
 
 type Props = {
@@ -14,13 +14,13 @@ type Props = {
 
 export const Root = ({ children }: Props) => (
   <AppShell
-    appName="Entropy Explorer"
     amplitudeApiKey={AMPLITUDE_API_KEY}
-    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
+    appName="Entropy Explorer"
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
+    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
     mainCta={{
-      label: "Entropy Docs",
       href: "https://docs.pyth.network/entropy",
+      label: "Entropy Docs",
     }}
     providers={[NuqsAdapter]}
   >

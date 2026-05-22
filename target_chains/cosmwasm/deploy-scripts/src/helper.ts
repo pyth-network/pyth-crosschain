@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync } from "fs";
-import { rimrafSync } from "rimraf";
 import AdmZip from "adm-zip";
-import path from "path";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { DownloaderHelper } from "node-downloader-helper";
+import path from "path";
+import { rimrafSync } from "rimraf";
 
 export type DeploymentType = "stable" | "beta";
 
@@ -61,8 +61,8 @@ export async function getContractBytesDict(
     zip.extractAllTo(path.resolve(tmpCodeStorageDir));
   });
 
-  let contractBytesDict: { [fileName: string]: Buffer } = {};
-  for (let uniqueArtifactZipName of uniqueArtifactsZipName) {
+  const contractBytesDict: { [fileName: string]: Buffer } = {};
+  for (const uniqueArtifactZipName of uniqueArtifactsZipName) {
     const contractBytes = readFileSync(
       tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm",
     );

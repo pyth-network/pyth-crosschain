@@ -8,16 +8,15 @@ import { fileURLToPath } from "node:url";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { EvmLazerContract } from "../src/core/contracts";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
+import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { EvmLazerContract } from "../src/core/contracts";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
-import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 
 const LAZER_CACHE_FILE = ".cache-upgrade-evm-lazer-contract";
 
@@ -34,9 +33,9 @@ const parser = yargs(hideBin(process.argv))
 // Override these URLs to use a different RPC node for mainnet / testnet.
 // TODO: extract these RPCs to a config file (?)
 const RPCS = {
+  devnet: "https://api.devnet.solana.com",
   "mainnet-beta": "https://api.mainnet-beta.solana.com",
   testnet: "https://api.testnet.solana.com",
-  devnet: "https://api.devnet.solana.com",
 } as Record<PythCluster, string>;
 
 function registry(cluster: PythCluster): string {

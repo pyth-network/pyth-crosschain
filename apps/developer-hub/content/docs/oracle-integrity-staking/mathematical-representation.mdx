@@ -4,6 +4,12 @@ description: >-
   This section outlines the mathematical representation of the Oracle Integrity Staking (OIS) protocol.
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="info" title="OP-PIP-103">
+  Per [OP-PIP-103](https://proposals.pyth.network/proposals/103), the reward rate $y$ is currently set to **0**. The staking and slashing mechanisms remain active.
+</Callout>
+
 As explained in the [implementation](../oracle-integrity-staking#implementation) section, every publisher is assigned a staking pool where they can self-stake and to which other stakers can delegate.
 
 ## Pool Cap
@@ -33,9 +39,13 @@ $$
 
 Where:
 
-- $y$ is the cap to the rate of rewards for any pool
-- $S_p$ be the stake assigned to the publisher p pool , made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$ , or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
+- $y$ is the cap to the rate of rewards for any pool (currently $y = 0$)
+- $S_p$ be the stake assigned to the publisher p pool, made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$, or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
 - $C_p$ be the stake cap for the pool assigned to publisher p.
+
+<Callout type="info">
+  Since $y = 0$, no rewards are currently distributed to any pool.
+</Callout>
 
 The total amount of rewards distributed to all pools is bound by the same cap relative to the amount of rewards available to the OIS protocol.
 
@@ -72,25 +82,24 @@ Where:
 
 - $SL_p$ is the slashed amount for the publisher $p$ pool.
 - $w$ is the slashing rate.
-- $S_p$ is the stake assigned to the publisher $p$ pool , made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$ , or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
+- $S_p$ is the stake assigned to the publisher $p$ pool, made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$, or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
 
 Here $SL_p$ is uniformly allocated to both the self-staking publisher and delegators in the pool, pro-rata to their respective stake.
 
-Subsequently, the rewards received by a publisher and delegators into a pool, net of any slashed amounts can be expressed as below:
+Subsequently, the net position of a publisher and delegators in a pool can be expressed as below:
 
 $$
-\large{\bold{\Pi^p_p} = ( R^p_p + f \cdot R^d_p ) - w \cdot S^p_p}
+\large{\bold{\Pi^p_p} = S^p_p - w \cdot S^p_p}
 $$
 
 $$
-\large{\bold{\Pi^d_p} = R^d_p - ( f \cdot R^d_p + w \cdot S^d_p )}
+\large{\bold{\Pi^d_p} = S^d_p - w \cdot S^d_p}
 $$
 
 Where:
 
-- $\Pi^p_p$ is the net reward received by the publisher $p$ after slashing.
-- $\Pi^d_p$ is the net reward received by the delegators after slashing.
-- $f$ is the delegation fee charged by the pool.
+- $\Pi^p_p$ is the net position of the publisher $p$ after slashing.
+- $\Pi^d_p$ is the net position of the delegators after slashing.
 - $w$ is the slashing rate.
 - $S^p_p$ is the amount self-staked by the publisher $p$.
 - $S^d_p$ is the amount delegated to the publisher $p$.

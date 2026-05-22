@@ -1,22 +1,21 @@
-import { readFileSync } from "fs";
-import { toHex, fromBech32 } from "@cosmjs/encoding";
-import { ethers } from "ethers";
-import assert from "assert";
-import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { fromBech32, toHex } from "@cosmjs/encoding";
+import type { Network } from "@injectivelabs/networks";
+import { getNetworkInfo } from "@injectivelabs/networks";
+import type { ContractInfo, Msgs, TxResponse } from "@injectivelabs/sdk-ts";
 import {
+  ChainGrpcWasmApi,
+  createTransactionForAddressAndMsg,
   DEFAULT_STD_FEE,
-  MsgStoreCode,
   MsgInstantiateContract,
+  MsgMigrateContract,
+  MsgStoreCode,
+  MsgUpdateAdmin,
   PrivateKey,
   TxGrpcClient,
-  type TxResponse,
-  type Msgs,
-  MsgMigrateContract,
-  MsgUpdateAdmin,
-  createTransactionForAddressAndMsg,
-  ChainGrpcWasmApi,
-  type ContractInfo,
 } from "@injectivelabs/sdk-ts";
+import assert from "assert";
+import { ethers } from "ethers";
+import { readFileSync } from "fs";
 import type { Deployer } from "./index.js";
 
 export type InjectiveHost = {
@@ -49,11 +48,11 @@ export class InjectiveDeployer implements Deployer {
     const networkInfo = getNetworkInfo(this.network);
 
     const { signBytes, txRaw } = await createTransactionForAddressAndMsg({
-      message: msg,
       address: this.injectiveAddress(),
-      endpoint: networkInfo.rest,
       chainId: networkInfo.chainId,
+      endpoint: networkInfo.rest,
       fee,
+      message: msg,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
 
@@ -89,7 +88,7 @@ export class InjectiveDeployer implements Deployer {
       amount: [
         {
           // gas = 5000000 & gasPrice = 160000000
-          amount: String(160000000 * 5000000),
+          amount: String(160_000_000 * 5_000_000),
           denom: "inj",
         },
       ],
@@ -105,7 +104,7 @@ export class InjectiveDeployer implements Deployer {
     try {
       // {"key":"code_id","value":"\"14\""}
       const ci = extractFromRawLog(txResponse.rawLog, "code_id");
-      codeId = parseInt(ci);
+      codeId = Number.parseInt(ci);
     } catch (e) {
       console.error(
         "Encountered an error in parsing deploy code result. Printing raw log",
@@ -123,16 +122,16 @@ export class InjectiveDeployer implements Deployer {
     label: string,
   ): Promise<string> {
     const instantiate_msg = MsgInstantiateContract.fromJSON({
-      sender: this.injectiveAddress(),
       admin: this.injectiveAddress(),
       codeId,
       label,
       msg: inst_msg,
+      sender: this.injectiveAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(instantiate_msg);
 
-    let address: string = "";
+    let address = "";
     try {
       address = extractFromRawLog(txResponse.rawLog, "contract_address");
     } catch (e) {
@@ -154,19 +153,21 @@ export class InjectiveDeployer implements Deployer {
 
   async migrate(contract: string, codeId: number): Promise<void> {
     const migrate_msg = MsgMigrateContract.fromJSON({
-      sender: this.injectiveAddress(),
-      contract,
       codeId,
+      contract,
       msg: {
         action: "",
       },
+      sender: this.injectiveAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
     let resultCodeId: number;
     try {
-      resultCodeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
+      resultCodeId = Number.parseInt(
+        extractFromRawLog(txResponse.rawLog, "code_id"),
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
@@ -181,9 +182,9 @@ export class InjectiveDeployer implements Deployer {
     const currAdmin = this.injectiveAddress();
 
     const updateAdminMsg = new MsgUpdateAdmin({
-      sender: currAdmin,
-      newAdmin,
       contract,
+      newAdmin,
+      sender: currAdmin,
     });
 
     await this.signAndBroadcastMsg(updateAdminMsg);
@@ -201,10 +202,10 @@ export class InjectiveDeployer implements Deployer {
     const { codeId, creator, admin } = contractInfo;
 
     return {
-      codeId,
       address: contract,
-      creator: creator,
       admin: admin,
+      codeId,
+      creator: creator,
       initMsg: undefined,
     } as unknown as ContractInfo;
   }

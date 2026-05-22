@@ -36,19 +36,17 @@ export const { classes } = createStyles("v2-spinner", (theme) => {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-size="${size}"]`]: {
-        fontSize: rules.fontSize,
-
         "& > $spinner": {
-          borderWidth: rules.borderWidth,
-          height: rules.height,
-          width: rules.height,
-
           "&:after": {
             borderWidth: rules.borderWidth,
             height: `calc(${rules.height} * 0.7)`, // always scale the inner circle relative to the outer
             width: `calc(${rules.height} * 0.7)`,
           },
+          borderWidth: rules.borderWidth,
+          height: rules.height,
+          width: rules.height,
         },
+        fontSize: rules.fontSize,
       },
     };
   }
@@ -68,16 +66,6 @@ export const { classes } = createStyles("v2-spinner", (theme) => {
     },
 
     spinner: {
-      animation: `${rotation} 1s linear infinite`,
-      backfaceVisibility: "hidden",
-      border: `4px solid`,
-      borderColor: `${spinnerNegativeColor} ${spinnerNegativeColor} transparent`,
-      borderRadius: "50%",
-      boxSizing: "border-box",
-      display: "inline-block",
-      position: "relative",
-      transform: "translateZ(0)",
-
       "&:after": {
         animation: `${rotationback} 0.5s linear infinite`,
         backfaceVisibility: "hidden",
@@ -95,6 +83,15 @@ export const { classes } = createStyles("v2-spinner", (theme) => {
         transform: "translateZ(0)",
         transformOrigin: "center center",
       },
+      animation: `${rotation} 1s linear infinite`,
+      backfaceVisibility: "hidden",
+      border: `4px solid`,
+      borderColor: `${spinnerNegativeColor} ${spinnerNegativeColor} transparent`,
+      borderRadius: "50%",
+      boxSizing: "border-box",
+      display: "inline-block",
+      position: "relative",
+      transform: "translateZ(0)",
     },
   };
 });

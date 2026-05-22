@@ -54,16 +54,13 @@ const httpRequestsTotal = new Counter({
 // ---------------------------------------------------------------------------
 
 export function recordToolCallMetrics(metrics: ToolCallMetrics): void {
-  toolCallsTotal.inc({ tool: metrics.tool, status: metrics.status });
-  toolCallDuration.observe(
-    { tool: metrics.tool },
-    metrics.latencyMs / 1000,
-  );
+  toolCallsTotal.inc({ status: metrics.status, tool: metrics.tool });
+  toolCallDuration.observe({ tool: metrics.tool }, metrics.latencyMs / 1000);
 
   if (metrics.status === "error" && metrics.errorType) {
     toolCallErrorsTotal.inc({
-      tool: metrics.tool,
       error_type: metrics.errorType,
+      tool: metrics.tool,
     });
   }
 }

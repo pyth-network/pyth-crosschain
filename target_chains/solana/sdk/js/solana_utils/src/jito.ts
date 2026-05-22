@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { Wallet } from "@coral-xyz/anchor";
-import type { Signer } from "@solana/web3.js";
-import {
-  PublicKey,
-  SystemProgram,
+import type { Wallet } from "@coral-xyz/anchor";
+import type {
+  Signer,
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import bs58 from "bs58";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
@@ -37,8 +36,8 @@ export function buildJitoTipInstruction(
 ): TransactionInstruction {
   return SystemProgram.transfer({
     fromPubkey: payer,
-    toPubkey: getRandomTipAccount(),
     lamports,
+    toPubkey: getRandomTipAccount(),
   });
 }
 
@@ -106,7 +105,7 @@ export async function sendTransactionsJito(
       } catch (error: unknown) {
         lastError = error as Error;
         logger.error(
-          { clientIndex: i, totalAttempts, err: lastError.message },
+          { clientIndex: i, err: lastError.message, totalAttempts },
           `Attempt ${totalAttempts.toString()}: Error sending bundle to Jito client ${i.toString()}`,
         );
       }
@@ -129,10 +128,10 @@ export async function sendTransactionsJito(
 
   logger.error(
     {
+      lastError: lastError?.message,
+      maxRetryTimeMs,
       totalAttempts,
       totalTimeMs,
-      maxRetryTimeMs,
-      lastError: lastError?.message,
     },
     errorMsg,
   );

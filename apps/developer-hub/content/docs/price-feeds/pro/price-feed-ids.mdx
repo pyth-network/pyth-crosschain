@@ -2,24 +2,24 @@
 title: Price Feed IDs
 description: List of price feed IDs for all the assets supported by Pyth Pro
 slug: /price-feeds/pro/price-feed-ids
+full: true
 ---
 
 import { Suspense } from "react";
-import { PriceFeedIdsProTable } from "../../../../src/components/PriceFeedIdsProTable";
+import {
+  ChannelLegend,
+  PriceFeedIdsProTable,
+} from "../../../../src/components/PriceFeedIdsProTable";
 
 import { Callout } from "fumadocs-ui/components/callout";
 
 <Callout type="info">
   You can also access the list of symbols programmatically via the [Symbols List
   API](https://pyth.dourolabs.app/v1/symbols).
+</Callout>
 
-You can optionally filter results using:
-
-- `query`: filter by symbol name (e.g., [?query=AAPL](https://pyth.dourolabs.app/v1/symbols?query=AAPL))
-- `asset_type`: filter by asset type (e.g., [?asset_type=crypto](https://pyth.dourolabs.app/v1/symbols?asset_type=crypto))
-
-You can use either parameter, both, or neither.
-
+<Callout type="info" title="Channels legend">
+  <ChannelLegend />
 </Callout>
 
 <Suspense>
