@@ -35,6 +35,7 @@ import { products } from "../src/lib/openapi";
 const OUTPUT_DIR = "./content/docs/api-reference/";
 
 const generatedEndpoints: Record<string, string[]> = {};
+const failedServices = new Set<string>();
 
 type ApiCardData = {
   href: string;
@@ -96,49 +97,62 @@ async function generateMdxFilesFromOpenApi(): Promise<void> {
 
     generatedEndpoints[serviceName] = [];
 
-    const serviceOpenapi = createOpenAPI({
-      input: [config.openApiUrl],
-    });
+    try {
+      const serviceOpenapi = createOpenAPI({
+        input: [config.openApiUrl],
+      });
 
-    // Generate MDX files using fumadocs-openapi
-    await generateFiles({
-      input: serviceOpenapi,
-      output: OUTPUT_DIR,
-      per: "operation", // One file per API operation
-      name: (output, document) => {
-        // Generate file name based on operation type
-        if (output.type === "operation") {
-          return generateOperationFileName(
-            output,
-            document,
-            serviceName,
-            config.product,
-          );
-        }
+      // Generate MDX files using fumadocs-openapi
+      await generateFiles({
+        input: serviceOpenapi,
+        output: OUTPUT_DIR,
+        per: "operation", // One file per API operation
+        name: (output, document) => {
+          // Generate file name based on operation type
+          if (output.type === "operation") {
+            return generateOperationFileName(
+              output,
+              document,
+              serviceName,
+              config.product,
+            );
+          }
 
-        return `${config.product}/${serviceName}/webhooks/${output.item.name}`;
-      },
-      frontmatter: (context) => {
-        const ctx = context as { type?: string; path?: string };
-        if (ctx.type === "operation" && ctx.path) {
-          return {
-            title: ctx.path,
-          };
-        }
-        return {};
-      },
-      index: {
-        url: {
-          baseUrl: "/api-reference/",
-          contentDir: "./content/docs/api-reference",
+          return `${config.product}/${serviceName}/webhooks/${output.item.name}`;
         },
-        items: [
-          {
-            path: `${config.product}/${serviceName}/index.mdx`,
+        frontmatter: (context) => {
+          const ctx = context as { type?: string; path?: string };
+          if (ctx.type === "operation" && ctx.path) {
+            return {
+              title: ctx.path,
+            };
+          }
+          return {};
+        },
+        index: {
+          url: {
+            baseUrl: "/api-reference/",
+            contentDir: "./content/docs/api-reference",
           },
-        ],
-      },
-    });
+          items: [
+            {
+              path: `${config.product}/${serviceName}/index.mdx`,
+            },
+          ],
+        },
+      });
+    } catch (error) {
+      // Generation for this service failed (e.g. upstream OpenAPI URL is down).
+      // Leave previously-committed content on disk intact and continue with
+      // other services so the build doesn't fail.
+      const message = error instanceof Error ? error.message : String(error);
+      // eslint-disable-next-line no-console
+      console.warn(
+        `  ⚠ Skipping ${serviceName}: failed to generate docs (${message})`,
+      );
+      failedServices.add(serviceName);
+      delete generatedEndpoints[serviceName];
+    }
   }
 }
 
@@ -233,6 +247,16 @@ async function generateProductAndServiceMetaFiles(
 
     // Generate service-level meta.json files
     for (const serviceName of services) {
+      if (failedServices.has(serviceName)) {
+        // Generation failed for this service — keep the previously-committed
+        // meta.json so the nav entries don't get wiped to "index" only.
+        // eslint-disable-next-line no-console
+        console.log(
+          `  ⚠ ${productName}/${serviceName}/meta.json (kept existing — generation failed)`,
+        );
+        continue;
+      }
+
       const endpoints = generatedEndpoints[serviceName] ?? [];
       const serviceMeta: MetaFile = {
         title: formatServiceTitle(serviceName),
@@ -433,6 +457,11 @@ async function updateIndexCards(): Promise<void> {
   console.log("\nUpdating index pages with APICard components...");
 
   for (const [serviceName, config] of Object.entries(products)) {
+    if (failedServices.has(serviceName)) {
+      // Keep the previously-committed index.mdx so the cards don't get wiped.
+      continue;
+    }
+
     const serviceDir = path.join(OUTPUT_DIR, config.product, serviceName);
     const indexPath = path.join(serviceDir, "index.mdx");
 
@@ -590,4 +619,14 @@ async function writeJson(filePath: string, data: object): Promise<void> {
   await fs.writeFile(filePath, jsonContent);
 }
 
-await generateDocs();
+try {
+  await generateDocs();
+} catch (error) {
+  // Doc generation is best-effort: previously-committed MDX content stays on
+  // disk and is sufficient for the build. Never fail the build on this script.
+  const message = error instanceof Error ? error.stack ?? error.message : error;
+  // eslint-disable-next-line no-console
+  console.warn("\n⚠ Documentation generation failed, continuing anyway:");
+  // eslint-disable-next-line no-console
+  console.warn(message);
+}
