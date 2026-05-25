@@ -9,6 +9,12 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 
 This guide explains how to integrate **Pyth Benchmarks** to access historical price data across applications. The Benchmarks API is available on all Pythnet chains.
 
+<UpgradeCallout chain="index" />
+
+<Callout type="warn">
+  The Benchmarks endpoints stay at the same URLs after the upgrade, but from **July 31, 2026** every request must include an `Authorization: Bearer $PYTH_API_KEY` header. Sign up for a Pyth API Key on the [upgrade guide](/price-feeds/core/upgrade/preparing).
+</Callout>
+
 <Callout type="info" title="Benchmarks Terminology">
   Throughout this guide, **Benchmarks** refers to Pyth’s historical price data
   service.
@@ -28,7 +34,7 @@ Benchmarks supports two complementary flows:
 <Steps>
   <Step title="Fetch historical prices via the Benchmarks API">
     Retrieve data from the [Benchmarks API](https://benchmarks.pyth.network/docs#/Updates/price_updates_timestamp_route_v1_updates_price__timestamp__get) or through the
-    [Hermes timestamp API](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates).
+    [Hermes timestamp API](https://pyth.dourolabs.app/hermes/docs/#/rest/timestamp_price_updates).
     Two REST endpoints are available:
 
     - [`/v1/updates/price/{timestamp}`](https://benchmarks.pyth.network/docs#/Updates/price_updates_timestamp_route_v1_updates_price__timestamp__get): returns prices for the requested feeds at a given timestamp.
