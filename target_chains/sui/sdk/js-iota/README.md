@@ -67,7 +67,7 @@ const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // s
 // It is either injected from browser or instantiated in backend via some private key
 const wallet: SignerWithProvider = getWallet();
 // Get the state ids of the Pyth and Wormhole contracts from
-// https://docs.pyth.network/price-feeds/core/contract-addresses/sui
+// https://docs.pyth.network/price-feeds/core/contract-addresses/iota
 const wormholeStateId = " 0xFILL_ME";
 const pythStateId = "0xFILL_ME";
 
