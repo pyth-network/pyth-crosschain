@@ -34,6 +34,8 @@ const SUPPORTED_PARTIAL = new Set<Chain>(["evm"]);
 
 type Props = { chain: Chain };
 
+const TITLE = "Pyth Core upgrades on July 31, 2026";
+
 export const UpgradeCallout = ({ chain }: Props) => {
   const upgradeGuide = "/price-feeds/core/upgrade/preparing";
   const upgradedAddressesRoot = "/price-feeds/core/upgrade/contracts";
@@ -41,12 +43,20 @@ export const UpgradeCallout = ({ chain }: Props) => {
 
   if (chain === "index") {
     return (
-      <Callout type="warn">
-        <strong>Pyth Core upgrades on July 31, 2026.</strong> See the{" "}
-        <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
-        <Link href={upgradedAddressesRoot}>upgraded contract addresses</Link>{" "}
-        for chains in the upgrade. <a href={contactMail}>Contact the team</a>{" "}
-        if your chain isn&apos;t listed.
+      <Callout type="warn" title={TITLE}>
+        <ul className="list-disc pl-5 my-0! space-y-1">
+          <li>
+            See the <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
+            <Link href={upgradedAddressesRoot}>
+              upgraded contract addresses
+            </Link>{" "}
+            for chains in the upgrade.
+          </li>
+          <li>
+            <a href={contactMail}>Contact the team</a> if your chain
+            isn&apos;t listed.
+          </li>
+        </ul>
       </Callout>
     );
   }
@@ -56,33 +66,48 @@ export const UpgradeCallout = ({ chain }: Props) => {
 
   if (SUPPORTED_SIMPLE.has(chain)) {
     return (
-      <Callout type="warn">
-        <strong>Pyth Core upgrades on July 31, 2026.</strong> The addresses
-        below are auto-upgraded by the DAO at cutover. See the{" "}
-        <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
-        <Link href={upgradedAddresses}>upgraded {label} addresses</Link>.
+      <Callout type="warn" title={TITLE}>
+        <ul className="list-disc pl-5 my-0! space-y-1">
+          <li>The addresses below are auto-upgraded by the DAO at cutover.</li>
+          <li>
+            See the <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
+            <Link href={upgradedAddresses}>upgraded {label} addresses</Link>.
+          </li>
+        </ul>
       </Callout>
     );
   }
 
   if (SUPPORTED_PARTIAL.has(chain)) {
     return (
-      <Callout type="warn">
-        <strong>Pyth Core upgrades on July 31, 2026.</strong> Check the{" "}
-        <Link href={upgradedAddresses}>upgraded {label} addresses</Link> for
-        chains in the upgrade and the{" "}
-        <Link href={upgradeGuide}>upgrade guide</Link> for how to upgrade.{" "}
-        <a href={contactMail}>Contact the team</a> if your chain isn&apos;t
-        listed.
+      <Callout type="warn" title={TITLE}>
+        <ul className="list-disc pl-5 my-0! space-y-1">
+          <li>
+            Check the{" "}
+            <Link href={upgradedAddresses}>upgraded {label} addresses</Link>{" "}
+            for chains in the upgrade.
+          </li>
+          <li>
+            See the <Link href={upgradeGuide}>upgrade guide</Link> for how to
+            upgrade.
+          </li>
+          <li>
+            <a href={contactMail}>Contact the team</a> if your chain
+            isn&apos;t listed.
+          </li>
+        </ul>
       </Callout>
     );
   }
 
   return (
-    <Callout type="warn">
-      <strong>Pyth Core upgrades on July 31, 2026.</strong> Pyth Core on {label}{" "}
-      will be dropped at the upgrade. <a href={contactMail}>Contact the team</a>{" "}
-      if you need support.
+    <Callout type="warn" title={TITLE}>
+      <ul className="list-disc pl-5 my-0! space-y-1">
+        <li>Pyth Core on {label} will be dropped at the upgrade.</li>
+        <li>
+          <a href={contactMail}>Contact the team</a> if you need support.
+        </li>
+      </ul>
     </Callout>
   );
 };
