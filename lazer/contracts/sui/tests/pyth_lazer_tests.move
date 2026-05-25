@@ -6,20 +6,20 @@ use std::unit_test::{assert_eq, destroy};
 use sui::clock;
 
 use pyth_lazer::{
-    channel::new_fixed_rate_200ms,
     feed::Feed,
     governance,
     i16,
     i64,
     pyth_lazer::{
-        parse_and_verify_le_ecdsa_update, verify_le_ecdsa_message,
-        ESignerNotTrusted, ESignerExpired, EInvalidUpdateMagic,
+        parse_and_verify_le_ecdsa_update, parse_and_verify_le_ecdsa_update_v2,
+        verify_le_ecdsa_message, ESignerNotTrusted, ESignerExpired, EInvalidUpdateMagic,
         EInvalidPayloadMagic, EInvalidPayloadLength
     },
     state,
+    channel::EInvalidChannel,
 };
 
-/* Test data from the Lazer subscription:
+/* Test data from a Lazer subscription:
 > Request
 {
   "subscriptionId": 1,
@@ -29,74 +29,80 @@ use pyth_lazer::{
     "price",
     "bestBidPrice",
     "bestAskPrice",
+    "confidence",
     "exponent",
+    "publisherCount",
     "fundingRate",
     "fundingTimestamp",
     "fundingRateInterval",
     "marketSession",
     "emaPrice",
     "emaConfidence",
-    "feedUpdateTimestamp",
+    "feedUpdateTimestamp"
   ],
   "formats": ["leEcdsa"],
-  "channel": "fixed_rate@200ms",
-  "jsonBinaryEncoding": "hex",
+  "channel": "fixed_rate@1000ms",
+  "jsonBinaryEncoding": "hex"
 }
 < Response
 {
-  "type": "streamUpdated",
-  "subscriptionId": 1,
   "parsed": {
-    "timestampUs": "1771252161800000",
+    "timestampUs": "1778594100000000",
     "priceFeeds": [
       {
         "priceFeedId": 1,
-        "price": "6828284601313",
-        "bestBidPrice": "6828243494234",
-        "bestAskPrice": "6828830067583",
+        "price": "8063953748222",
+        "bestBidPrice": "8063927547164",
+        "bestAskPrice": "8064518785063",
+        "publisherCount": 16,
         "exponent": -8,
+        "confidence": 1783407191,
         "marketSession": "regular",
-        "emaPrice": "6866807100000",
-        "emaConfidence": 6866706200000,
-        "feedUpdateTimestamp": 1771252161800000
+        "emaPrice": "8071363900000",
+        "emaConfidence": 1946443420,
+        "feedUpdateTimestamp": 1778594100000000
       },
       {
         "priceFeedId": 2,
-        "price": "195892878231",
-        "bestBidPrice": "195881010500",
-        "bestAskPrice": "195897850776",
+        "price": "227676960645",
+        "bestBidPrice": "227672112231",
+        "bestAskPrice": "227695946107",
+        "publisherCount": 17,
         "exponent": -8,
+        "confidence": 69539855,
         "marketSession": "regular",
-        "emaPrice": "197455529000",
-        "emaConfidence": 197451517000,
-        "feedUpdateTimestamp": 1771252161800000
+        "emaPrice": "228268947000",
+        "emaConfidence": 57689210,
+        "feedUpdateTimestamp": 1778594100000000
       },
       {
         "priceFeedId": 112,
-        "price": "68554377427540000",
+        "price": "80813667608700000",
+        "publisherCount": 3,
         "exponent": -12,
-        "fundingRate": -32770000,
-        "fundingTimestamp": 1771228800003000,
+        "fundingRate": 38770000,
+        "fundingTimestamp": 1778594099726525,
         "fundingRateInterval": 28800000000,
         "marketSession": "regular",
-        "feedUpdateTimestamp": 1771252161800000
+        "feedUpdateTimestamp": 1778594100000000
       }
     ]
   },
   "leEcdsa": {
     "encoding": "hex",
-    "data": "e4bd474d73a7e70a8e2b8de236b55dcc6a771b4a8a1533fe492f424fae162369fa14103e04c1c93302cef8a052110a950da031f9dc5eade9e6099e95668aff2592ec1f7900fe0075d3c7934067e9c7f14a06000303010000000b00e1637ad535060000015a2507d335060000027f8bfdf53506000004f8ff0600070008000900000a601299cd3e0600000bc07595c73e0600000c014067e9c7f14a0600020000000b00971b209c2d0000000144056b9b2d0000000298fb6b9c2d00000004f8ff0600070008000900000a284444f92d0000000b480c07f92d0000000c014067e9c7f14a0600700000000b0020d85dd2d78df30001000000000000000002000000000000000004f4ff060130f80bfeffffffff0701b8ab7057ec4a0600080100209db4060000000900000a00000000000000000b00000000000000000c014067e9c7f14a0600"
+    "data": "e4bd474da72e1daf244e50635f473fcb0e595e3643302f976c95f7fabfc0660f5a612d2d55bdb94f5a2fe926932ce9d9da338d05969b5a8b8c94024c86399005cc547fd001220175d3c79300b587359f5106000403010000000d00fe40198955070000011c75898755070000022708c7aa550700000557a24c6a0000000004f8ff0310000600070008000900000a6032c742570700000b9c5e0474000000000c0100b587359f510600020000000d0085b79a02350000000167bc500235000000027b69bc0335000000050f1825040000000004f8ff0311000600070008000900000a38b6e325350000000b7a447003000000000c0100b587359f510600700000000d006024d03e9a1b1f0101000000000000000002000000000000000005000000000000000004f4ff030300060150954f02000000000701bd8883359f510600080100209db4060000000900000a00000000000000000b00000000000000000c0100b587359f510600"
   }
 }
 */
-const TEST_LAZER_UPDATE: vector<u8> = x"e4bd474d73a7e70a8e2b8de236b55dcc6a771b4a8a1533fe492f424fae162369fa14103e04c1c93302cef8a052110a950da031f9dc5eade9e6099e95668aff2592ec1f7900fe0075d3c7934067e9c7f14a06000303010000000b00e1637ad535060000015a2507d335060000027f8bfdf53506000004f8ff0600070008000900000a601299cd3e0600000bc07595c73e0600000c014067e9c7f14a0600020000000b00971b209c2d0000000144056b9b2d0000000298fb6b9c2d00000004f8ff0600070008000900000a284444f92d0000000b480c07f92d0000000c014067e9c7f14a0600700000000b0020d85dd2d78df30001000000000000000002000000000000000004f4ff060130f80bfeffffffff0701b8ab7057ec4a0600080100209db4060000000900000a00000000000000000b00000000000000000c014067e9c7f14a0600";
+const TEST_LAZER_UPDATE: vector<u8> = x"e4bd474da72e1daf244e50635f473fcb0e595e3643302f976c95f7fabfc0660f5a612d2d55bdb94f5a2fe926932ce9d9da338d05969b5a8b8c94024c86399005cc547fd001220175d3c79300b587359f5106000403010000000d00fe40198955070000011c75898755070000022708c7aa550700000557a24c6a0000000004f8ff0310000600070008000900000a6032c742570700000b9c5e0474000000000c0100b587359f510600020000000d0085b79a02350000000167bc500235000000027b69bc0335000000050f1825040000000004f8ff0311000600070008000900000a38b6e325350000000b7a447003000000000c0100b587359f510600700000000d006024d03e9a1b1f0101000000000000000002000000000000000005000000000000000004f4ff030300060150954f02000000000701bd8883359f510600080100209db4060000000900000a00000000000000000b00000000000000000c0100b587359f510600";
 
-const TEST_PAYLOAD: vector<u8> = x"75d3c793c0f4295fbb3c060003030100000007005986bacb520a00000162e937ca520a000002a5087bd4520a000004f8ff06000700080002000000070078625c456100000001aba11b456100000002ba8ac0456100000004f8ff060007000800700000000700d8c3e1445a1c940101000000000000000002000000000000000004f4ff0601f03ee30100000000070100e0c6f2b93c0600080100209db406000000";
-const TEST_SIGNATURE: vector<u8> = x"42e3c9c3477b30f2c5527ebe2fb2c8adadadacaddfa7d95243b80fb8f0d813b453e587f140cf40a1120d75f1ffee8ad4337267e4fcbd23eabb2a555804f85ec101";
+const TEST_PAYLOAD: vector<u8> = x"75d3c79300b587359f5106000403010000000d00fe40198955070000011c75898755070000022708c7aa550700000557a24c6a0000000004f8ff0310000600070008000900000a6032c742570700000b9c5e0474000000000c0100b587359f510600020000000d0085b79a02350000000167bc500235000000027b69bc0335000000050f1825040000000004f8ff0311000600070008000900000a38b6e325350000000b7a447003000000000c0100b587359f510600700000000d006024d03e9a1b1f0101000000000000000002000000000000000005000000000000000004f4ff030300060150954f02000000000701bd8883359f510600080100209db4060000000900000a00000000000000000b00000000000000000c0100b587359f510600";
+const TEST_SIGNATURE: vector<u8> = x"a72e1daf244e50635f473fcb0e595e3643302f976c95f7fabfc0660f5a612d2d55bdb94f5a2fe926932ce9d9da338d05969b5a8b8c94024c86399005cc547fd001";
 const TEST_TRUSTED_SIGNER_PUBKEY: vector<u8> = x"03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b";
 
+#[allow(deprecated_usage)]
 #[test]
-public fun test_parse_and_verify_le_ecdsa_update() {
+public fun test_parse_and_verify_le_ecdsa_compatible_update() {
     let mut ctx = tx_context::dummy();
     let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
@@ -107,15 +113,60 @@ public fun test_parse_and_verify_le_ecdsa_update() {
     let expiry_time = 2_000_000_000_000; // Far in the future
     state.update_trusted_signer(&current_cap, trusted_pubkey, expiry_time);
 
-    let update = parse_and_verify_le_ecdsa_update(&state, &clock, TEST_LAZER_UPDATE);
+    let update = parse_and_verify_le_ecdsa_update(&state, &clock, x"e4bd474dd87d2ef4d2d3ba283fb68ceeaea1fc2b1544061e8058036a38e56801481785aa0a92b4c1bd1fcecefec37919871b1254b4cdbcd3b70b22b2da0261d65d4dbfb000220175d3c793006f40a49f5106000303010000000d00c417492f5907000001ece9d31e5907000002a818b5675907000005fb6670680000000004f8ff0310000600070008000900000a403b5739560700000b60a7f476000000000c01006f40a49f510600020000000d001ef7c10e3500000001e72f860c35000000025edd430f350000000522f876020000000004f8ff0311000600070008000900000ac076720d350000000b5f047403000000000c01006f40a49f510600700000000d006024d03e9a1b1f0101000000000000000002000000000000000005000000000000000004f4ff030300060150954f020000000007016daf37a49f510600080100209db4060000000900000a00000000000000000b00000000000000000c01006f40a49f510600");
 
     // If we reach this point, the function successfully verified & parsed the payload (no assertion failures)
     // Validate that the fields have correct values
-    assert_eq!(update.timestamp(), 1771252161800000);
-    assert_eq!(update.channel(), new_fixed_rate_200ms());
+    assert_eq!(update.timestamp(), 1778595957600000);
+    assert!(update.channel().is_fixed_rate_200ms());
     assert_eq!(update.feeds_ref().length(), 3);
 
-    // Separated into another function to get past function size limit
+    // Clean up
+    destroy(state);
+    clock.destroy_for_testing();
+}
+
+#[allow(deprecated_usage)]
+#[test, expected_failure(abort_code = EInvalidChannel)]
+public fun test_parse_and_verify_le_ecdsa_incompatible_update() {
+    let mut ctx = tx_context::dummy();
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
+    let current_cap = state.current_cap();
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer that matches the test data
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2_000_000_000_000; // Far in the future
+    state.update_trusted_signer(&current_cap, trusted_pubkey, expiry_time);
+
+    // Should fail because of unsupported channel ID
+    parse_and_verify_le_ecdsa_update(&state, &clock, TEST_LAZER_UPDATE);
+
+    // Clean up
+    destroy(state);
+    clock.destroy_for_testing();
+}
+
+#[test]
+public fun test_parse_and_verify_le_ecdsa_update_v2() {
+    let mut ctx = tx_context::dummy();
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
+    let current_cap = state.current_cap();
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer that matches the test data
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2_000_000_000_000; // Far in the future
+    state.update_trusted_signer(&current_cap, trusted_pubkey, expiry_time);
+
+    let update = parse_and_verify_le_ecdsa_update_v2(&state, &clock, TEST_LAZER_UPDATE);
+
+    // If we reach this point, the function successfully verified & parsed the payload (no assertion failures)
+    // Validate that the fields have correct values
+    assert_eq!(update.timestamp(), 1778594100000000);
+    assert!(update.channel().is_fixed_rate_1000ms());
+    assert_eq!(update.feeds_ref().length(), 3);
+
     test_parse_and_verify_le_ecdsa_update__feeds(update.feeds_ref());
 
     // Clean up
@@ -129,58 +180,58 @@ fun test_parse_and_verify_le_ecdsa_update__feeds(feeds: &vector<Feed>) {
     assert_eq!(feed_1.feed_id(), 1);
     assert_eq!(
         feed_1.price(),
-        option::some(option::some(i64::from_u64(6828284601313)))
+        option::some(option::some(i64::from_u64(8063953748222)))
     );
     assert_eq!(
         feed_1.best_bid_price(),
-        option::some(option::some(i64::from_u64(6828243494234))),
+        option::some(option::some(i64::from_u64(8063927547164))),
     );
     assert_eq!(
         feed_1.best_ask_price(),
-        option::some(option::some(i64::from_u64(6828830067583))),
+        option::some(option::some(i64::from_u64(8064518785063))),
     );
     assert_eq!(feed_1.exponent(), option::some(i16::new(8, true)));
-    assert_eq!(feed_1.publisher_count(), option::none());
-    assert_eq!(feed_1.confidence(), option::none());
+    assert_eq!(feed_1.publisher_count(), option::some(16));
+    assert_eq!(feed_1.confidence(), option::some(option::some(i64::from_u64(1783407191))));
     assert_eq!(feed_1.funding_rate(), option::some(option::none()));
     assert_eq!(feed_1.funding_timestamp(), option::some(option::none()));
     assert_eq!(feed_1.funding_rate_interval(), option::some(option::none()));
     assert!(feed_1.market_session().is_some_and!(|s| s.is_regular()));
-    assert_eq!(feed_1.ema_price(), option::some(option::some(i64::from_u64(6866807100000))));
-    assert_eq!(feed_1.ema_confidence(), option::some(option::some(6866706200000)));
-    assert_eq!(feed_1.feed_update_timestamp(), option::some(option::some(1771252161800000)));
+    assert_eq!(feed_1.ema_price(), option::some(option::some(i64::from_u64(8071363900000))));
+    assert_eq!(feed_1.ema_confidence(), option::some(option::some(1946443420)));
+    assert_eq!(feed_1.feed_update_timestamp(), option::some(option::some(1778594100000000)));
 
     let feed_2 = &feeds[1];
     assert_eq!(feed_2.feed_id(), 2);
-    assert_eq!(feed_2.price(), option::some(option::some(i64::from_u64(195892878231))));
-    assert_eq!(feed_2.best_bid_price(), option::some(option::some(i64::from_u64(195881010500))));
-    assert_eq!(feed_2.best_ask_price(), option::some(option::some(i64::from_u64(195897850776))));
+    assert_eq!(feed_2.price(), option::some(option::some(i64::from_u64(227676960645))));
+    assert_eq!(feed_2.best_bid_price(), option::some(option::some(i64::from_u64(227672112231))));
+    assert_eq!(feed_2.best_ask_price(), option::some(option::some(i64::from_u64(227695946107))));
     assert_eq!(feed_2.exponent(), option::some(i16::new(8, true)));
-    assert_eq!(feed_2.publisher_count(), option::none());
-    assert_eq!(feed_2.confidence(), option::none());
+    assert_eq!(feed_2.publisher_count(), option::some(17));
+    assert_eq!(feed_2.confidence(), option::some(option::some(i64::from_u64(69539855))));
     assert_eq!(feed_2.funding_rate(), option::some(option::none()));
     assert_eq!(feed_2.funding_timestamp(), option::some(option::none()));
     assert_eq!(feed_2.funding_rate_interval(), option::some(option::none()));
     assert!(feed_2.market_session().is_some_and!(|s| s.is_regular()));
-    assert_eq!(feed_2.ema_price(), option::some(option::some(i64::from_u64(197455529000))));
-    assert_eq!(feed_2.ema_confidence(), option::some(option::some(197451517000)));
-    assert_eq!(feed_2.feed_update_timestamp(), option::some(option::some(1771252161800000)));
+    assert_eq!(feed_2.ema_price(), option::some(option::some(i64::from_u64(228268947000))));
+    assert_eq!(feed_2.ema_confidence(), option::some(option::some(57689210)));
+    assert_eq!(feed_2.feed_update_timestamp(), option::some(option::some(1778594100000000)));
 
     let feed_3 = &feeds[2];
     assert_eq!(feed_3.feed_id(), 112);
-    assert_eq!(feed_3.price(), option::some(option::some(i64::from_u64(68554377427540000))));
+    assert_eq!(feed_3.price(), option::some(option::some(i64::from_u64(80813667608700000))));
     assert_eq!(feed_3.best_bid_price(), option::some(option::none()));
     assert_eq!(feed_3.best_ask_price(), option::some(option::none()));
     assert_eq!(feed_3.exponent(), option::some(i16::new(12, true)));
-    assert_eq!(feed_3.publisher_count(), option::none());
-    assert_eq!(feed_3.confidence(), option::none());
-    assert_eq!(feed_3.funding_rate(), option::some(option::some(i64::new(32770000, true))));
-    assert_eq!(feed_3.funding_timestamp(), option::some(option::some(1771228800003000)));
+    assert_eq!(feed_3.publisher_count(), option::some(3));
+    assert_eq!(feed_3.confidence(), option::some(option::none()));
+    assert_eq!(feed_3.funding_rate(), option::some(option::some(i64::from_u64(38770000))));
+    assert_eq!(feed_3.funding_timestamp(), option::some(option::some(1778594099726525)));
     assert_eq!(feed_3.funding_rate_interval(), option::some(option::some(28800000000)));
     assert!(feed_3.market_session().is_some_and!(|s| s.is_regular()));
     assert_eq!(feed_3.ema_price(), option::some(option::none()));
     assert_eq!(feed_3.ema_confidence(), option::some(option::none()));
-    assert_eq!(feed_3.feed_update_timestamp(), option::some(option::some(1771252161800000)));
+    assert_eq!(feed_3.feed_update_timestamp(), option::some(option::some(1778594100000000)));
 }
 
 #[test]
@@ -342,7 +393,7 @@ public fun test_parse_invalid_update_magic() {
     *vector::borrow_mut(&mut invalid_update, 0) = 0xFF; // Corrupt the magic
 
     // This should fail with EInvalidUpdateMagic
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -367,7 +418,7 @@ public fun test_parse_invalid_payload_magic() {
     *invalid_update.borrow_mut(71) = 0xFF; // Corrupt the payload magic
 
     // This corrupts the payload magic, so expect EInvalidMagic
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -393,7 +444,7 @@ public fun test_parse_invalid_payload_length() {
     *invalid_update.borrow_mut(69) = 0xFF; // Set payload length too high
 
     // This should fail with EInvalidPayloadLength because payload length validation happens before signature verification
-    parse_and_verify_le_ecdsa_update(&state, &clock, invalid_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, invalid_update);
 
     // Clean up
     destroy(state);
@@ -416,7 +467,7 @@ public fun test_parse_truncated_data() {
     let truncated_update = TEST_LAZER_UPDATE.take(50);
 
     // This should fail with BCS EOutOfRange error when trying to read beyond available data
-    parse_and_verify_le_ecdsa_update(&state, &clock, truncated_update);
+    parse_and_verify_le_ecdsa_update_v2(&state, &clock, truncated_update);
 
     // Clean up
     destroy(state);

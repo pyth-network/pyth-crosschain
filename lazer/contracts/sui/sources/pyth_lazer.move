@@ -6,10 +6,9 @@ use sui::{
     ecdsa_k1::secp256k1_ecrecover,
 };
 
-use pyth_lazer::{
-    state::State,
-    update::{Self, Update},
-};
+use pyth_lazer::state::State;
+use pyth_lazer::update as update_v1;
+use pyth_lazer::update_v2::{Self, Update};
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
@@ -64,6 +63,12 @@ public(package) fun verify_le_ecdsa_message(
     assert!(clock.timestamp_ms() < expires_at_ms, ESignerExpired);
 }
 
+#[deprecated(note = b"Use `pyth_lazer::parse_and_verify_le_ecdsa_update_v2` instead.")]
+public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: vector<u8>): update_v1::Update {
+    let update = parse_and_verify_le_ecdsa_update_v2(s, clock, update);
+    update_v1::from_v2(update)
+}
+
 /// Parse the Lazer update message and validate the signature within.
 /// The parsing logic is based on the Lazer rust protocol definition defined here:
 /// https://docs.rs/pyth-lazer-protocol/latest/pyth_lazer_protocol/payload/index.html
@@ -79,7 +84,7 @@ public(package) fun verify_le_ecdsa_message(
 /// * `EInvalidPayloadLength` - Payload length doesn't match actual data
 /// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
 /// * `ESignerExpired` - The signer's certificate has expired
-public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: vector<u8>): Update {
+public fun parse_and_verify_le_ecdsa_update_v2(s: &State, clock: &Clock, update: vector<u8>): Update {
     let mut cursor = bcs::new(update);
 
     // Parse and validate message magic
@@ -109,5 +114,5 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
     // Verify the signature against trusted signers
     verify_le_ecdsa_message(s, clock, &signature, &payload);
 
-    update::parse_from_cursor(payload_cursor)
+    update_v2::parse_from_cursor(payload_cursor)
 }

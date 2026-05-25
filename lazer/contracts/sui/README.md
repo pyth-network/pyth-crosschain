@@ -18,7 +18,7 @@ Run tests:
 ```bash
 sui move test
 # run a specific test
-sui move test test_parse_and_verify_le_ecdsa_update
+sui move test test_parse_and_verify_le_ecdsa_update_v2
 ```
 
 Deploy:

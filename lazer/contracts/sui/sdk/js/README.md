@@ -16,7 +16,7 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 
 - connects to Lazer via `@pythnetwork/pyth-lazer-sdk`,
 - fetches a single `leEcdsa` payload,
-- composes a Sui transaction calling `parse_and_verify_le_ecdsa_update`.
+- composes a Sui transaction calling `parse_and_verify_le_ecdsa_update_v2`.
 
 ### Run the example
 
