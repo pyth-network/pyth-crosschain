@@ -283,5 +283,10 @@
     "address": "0x9DF02366A266D79DA5E978aDBEe8B8502117ee1a",
     "chain": "injective_evm_testnet",
     "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0xd74CdD8Eef0E97a5a7678F907991316f88E7965A",
+    "chain": "injective_evm",
+    "type": "EvmExecutorContract"
   }
 ]
