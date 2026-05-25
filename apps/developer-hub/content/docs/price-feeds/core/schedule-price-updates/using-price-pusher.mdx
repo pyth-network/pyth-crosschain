@@ -10,4 +10,8 @@ The [Price Pusher](https://github.com/pyth-network/pyth-crosschain/tree/main/app
 is an off-chain service that continuously pulls price updates onto a blockchain.
 Anyone can operate this service to keep on-chain Pyth prices current based on configurable criteria such as minimum update intervals or price change thresholds.
 
-Running the Price Pusher is a straightforward way to migrate from a push oracle: protocols that depend on regular updates can achieve the same behavior by operating this service. Refer to the project README for setup instructions and configuration details.
+<UpgradeCallout chain="index" />
+
+From **July 31, 2026** onward the Price Pusher must be configured with a Pyth API Key (set the `PYTH_API_KEY` environment variable) so its Hermes calls can authenticate against the upgraded backend. Refer to the project README for setup instructions and configuration details.
+
+Running the Price Pusher is a straightforward way to migrate from a push oracle: protocols that depend on regular updates can achieve the same behavior by operating this service.
