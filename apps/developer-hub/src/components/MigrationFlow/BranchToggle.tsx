@@ -16,7 +16,7 @@ type Option = {
 const OPTIONS: Option[] = [
   {
     value: "now",
-    title: "Upgrade now",
+    title: "Early upgrade",
     caption: "Recommended · zero downtime · ~30 min",
   },
   {
@@ -29,7 +29,7 @@ const OPTIONS: Option[] = [
 // Fumadocs auto-generates these from the H2 headings inside each
 // BranchSection. Update if those headings change.
 const HEADING_IDS: Record<MigrationPath, string> = {
-  now: "upgrading-now",
+  now: "early-upgrade",
   wait: "waiting-for-the-automatic-upgrade",
 };
 
