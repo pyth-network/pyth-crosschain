@@ -67,6 +67,7 @@ export function readMnemonic(mnemonicFile: string | undefined): string {
     return fs.readFileSync(mnemonicFile, "utf8").trim();
   }
 
+  // biome-ignore lint/style/noProcessEnv: MNEMONIC is the documented env-var entry point for this helper (CLI / docker users without a mnemonic file path)
   const envMnemonic = process.env.MNEMONIC;
   if (envMnemonic !== undefined && envMnemonic !== "") {
     return envMnemonic.trim();
