@@ -1,7 +1,6 @@
 {
   "author": "",
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.8",
     "@coral-xyz/anchor": "^0.29.0",
     "@cosmjs/cosmwasm-stargate": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
@@ -31,7 +30,9 @@
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/yargs": "catalog:",
-    "@wormhole-foundation/sdk-solana-core": "^4.18.0",
+    "@wormhole-foundation/sdk-base": "^4.19.0",
+    "@wormhole-foundation/sdk-definitions": "^4.19.0",
+    "@wormhole-foundation/sdk-solana-core": "^4.19.0",
     "aptos": "^1.5.0",
     "axios": "^0.24.0",
     "bs58": "^5.0.0",
@@ -239,16 +240,6 @@
       "require": {
         "default": "./dist/cjs/node/utils/governance.cjs",
         "types": "./dist/cjs/node/utils/governance.d.ts"
-      }
-    },
-    "./node/utils/preserve-native-fetch": {
-      "import": {
-        "default": "./dist/esm/node/utils/preserve-native-fetch.mjs",
-        "types": "./dist/esm/node/utils/preserve-native-fetch.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/node/utils/preserve-native-fetch.cjs",
-        "types": "./dist/cjs/node/utils/preserve-native-fetch.d.ts"
       }
     },
     "./node/utils/shell": {

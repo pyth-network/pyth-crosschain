@@ -1,13 +1,6 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
-import { parseVaa } from "@certusone/wormhole-sdk";
+/** biome-ignore-all lint/suspicious/noConsole: CLI script */
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
+import { deserialize } from "@wormhole-foundation/sdk-definitions";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { toPrivateKey } from "../src/core/base";
@@ -61,7 +54,12 @@ async function main() {
           "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
         ]
       : DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
-  console.log("Executing VAAs for vault", vault?.getId());
+
+  if (!vault) {
+    throw new Error(`Could not retrieve vault '${argv.vault}'`);
+  }
+
+  console.log("Executing VAAs for vault", vault.getId());
   console.log(
     "Executing VAAs for emitter",
     // eslint-disable-next-line unicorn/no-await-expression-member
@@ -93,12 +91,13 @@ async function main() {
     seqNumber++
   ) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
-      await vault!.getEmitter(),
+      await vault.getEmitter(),
       seqNumber,
-      vault!.cluster,
+      vault.cluster,
     );
     const vaa = await submittedWormholeMessage.fetchVaa();
-    const decodedAction = decodeGovernancePayload(parseVaa(vaa).payload);
+    const { payload } = deserialize("Uint8Array", new Uint8Array(vaa));
+    const decodedAction = decodeGovernancePayload(Buffer.from(payload));
     if (!decodedAction) {
       console.log("Skipping unknown action for vaa", seqNumber);
       continue;

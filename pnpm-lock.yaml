@@ -1363,9 +1363,6 @@ importers:
 
   contract_manager:
     dependencies:
-      '@certusone/wormhole-sdk':
-        specifier: ^0.9.8
-        version: 0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: ^0.29.0
         version: 0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -1453,8 +1450,14 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 17.0.33
+      '@wormhole-foundation/sdk-base':
+        specifier: ^4.19.0
+        version: 4.19.0
+      '@wormhole-foundation/sdk-definitions':
+        specifier: ^4.19.0
+        version: 4.19.0
       '@wormhole-foundation/sdk-solana-core':
-        specifier: ^4.18.0
+        specifier: ^4.19.0
         version: 4.19.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       aptos:
         specifier: ^1.5.0

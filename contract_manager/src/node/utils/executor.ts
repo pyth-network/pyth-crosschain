@@ -1,10 +1,11 @@
-/* eslint-disable no-console */
-import { parseVaa } from "@certusone/wormhole-sdk";
+/** biome-ignore-all lint/suspicious/noConsole: CLI helpers */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   decodeGovernancePayload,
   EvmExecute,
 } from "@pythnetwork/xc-admin-common";
+import { chainToChainId } from "@wormhole-foundation/sdk-base";
+import { deserialize } from "@wormhole-foundation/sdk-definitions";
 import type { PrivateKey, TxResult } from "../../core/base.js";
 import { EvmChain } from "../../core/chains.js";
 import { EvmExecutorContract } from "../../core/contracts/evm.js";
@@ -27,16 +28,15 @@ async function executeForGovernanceContract(
   vaa: Buffer,
   senderPrivateKey: PrivateKey,
 ) {
-  const parsedVaa = parseVaa(vaa);
+  const parsedVaa = deserialize("Uint8Array", new Uint8Array(vaa));
   const governanceSource = await contract.getGovernanceDataSource();
   if (
-    governanceSource.emitterAddress ===
-      parsedVaa.emitterAddress.toString("hex") &&
-    governanceSource.emitterChain === parsedVaa.emitterChain
+    governanceSource.emitterAddress === parsedVaa.emitterAddress.toString() &&
+    governanceSource.emitterChain === chainToChainId(parsedVaa.emitterChain)
   ) {
     const lastExecutedSequence =
       await contract.getLastExecutedGovernanceSequence();
-    if (lastExecutedSequence >= parsedVaa.sequence) {
+    if (BigInt(lastExecutedSequence) >= parsedVaa.sequence) {
       console.log(
         `Skipping on contract ${contract.getId()} as it was already executed`,
       );
@@ -56,8 +56,8 @@ async function executeForGovernanceContract(
  * @param vaa - src/node/utils/executor.tsthe VAA to execute
  */
 export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
-  const parsedVaa = parseVaa(vaa);
-  const action = decodeGovernancePayload(parsedVaa.payload);
+  const { payload } = deserialize("Uint8Array", new Uint8Array(vaa));
+  const action = decodeGovernancePayload(Buffer.from(payload));
   if (!action) return; //TODO: handle other actions
 
   if (action instanceof EvmExecute) {

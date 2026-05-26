@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
 
-import { parseVaa } from "@certusone/wormhole-sdk";
 import type { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import {
@@ -9,6 +8,7 @@ import {
   UpgradeCardanoSpendScript,
   UpgradeCardanoWithdrawScript,
 } from "@pythnetwork/xc-admin-common";
+import { deserialize } from "@wormhole-foundation/sdk-definitions";
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -287,7 +287,8 @@ parser.command(
         process.stderr.write(`Sequence ${seq}: not found, skipping\n`);
         continue;
       }
-      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      const { payload } = deserialize("Uint8Array", new Uint8Array(vaa));
+      const action = decodeGovernancePayload(Buffer.from(payload));
       if (!action || action.targetChainId !== chain) {
         process.stderr.write(
           `Sequence ${seq}: could not decode as action for this chain, skipping\n`,

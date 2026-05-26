@@ -1,15 +1,5 @@
-/* eslint-disable no-empty */
-/* eslint-disable tsdoc/syntax */
-/* eslint-disable unicorn/no-array-for-each */
-/* eslint-disable unicorn/no-array-push-push */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* biome-ignore-all lint/suspicious/noExplicitAny: legacy code */
 /* biome-ignore-all lint/style/noNonNullAssertion: legacy code */
-import "./preserve-native-fetch";
-
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import type { PriceFeedContract, Storable } from "../../core/base";
 import type { Chain } from "../../core/chains";

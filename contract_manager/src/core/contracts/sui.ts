@@ -1,14 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-base-to-string */
-import { parseVaa } from "@certusone/wormhole-sdk";
-import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
+import { bcs } from "@mysten/sui/bcs";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
@@ -19,6 +9,7 @@ import {
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
+import { deserialize } from "@wormhole-foundation/sdk-definitions";
 import type { Vault } from "../../node/utils/governance";
 import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
@@ -26,6 +17,9 @@ import { PriceFeedContract, Storable, toDeploymentType } from "../base";
 import type { Chain, SuiLazerMeta } from "../chains";
 import { SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
+
+const uint8ArrayToBCS = (arr: Uint8Array): Uint8Array =>
+  bcs.vector(bcs.u8()).serialize(arr).toBytes();
 
 type ObjectId = string;
 
@@ -99,7 +93,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param objectId - the object id to get
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    return this.client.getPackageId(objectId);
+    return await this.client.getPackageId(objectId);
   }
 
   async getPythPackageId(): Promise<ObjectId> {
@@ -114,7 +108,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     return `${this.chain.getId()}_${this.stateId}`;
   }
 
-  private async parsePrice(priceInfo: {
+  private parsePrice(priceInfo: {
     type: string;
     fields: {
       expo: { fields: { magnitude: string; negative: boolean } };
@@ -154,14 +148,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       );
     }
     return {
-      emaPrice: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      emaPrice: this.parsePrice(
         // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields
           .ema_price,
       ),
-      price: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      price: this.parsePrice(
         // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields.price,
       ),
@@ -191,7 +183,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeUpdatePriceFeed(): Promise<TxResult> {
+  executeUpdatePriceFeed(): Promise<TxResult> {
     // We need the feed ids to be able to execute the transaction
     // it may be possible to get them from the VAA but in batch transactions,
     // it is also possible to hava fewer feeds that user wants to update compared to
@@ -339,7 +331,6 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getValidTimePeriod() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return Number(fields.stale_price_threshold);
   }
@@ -361,7 +352,6 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Data Sources type mismatch");
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return result.data.content.fields.value.fields.keys.map(
       ({
@@ -384,7 +374,6 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const governanceFields = fields.governance_data_source.fields;
     const chainId = governanceFields.emitter_chain;
@@ -398,14 +387,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return { amount: fields.base_update_fee };
   }
 
   async getLastExecutedGovernanceSequence() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return Number(fields.last_executed_governance_sequence);
   }
@@ -492,8 +479,8 @@ export class SuiWormholeContract extends WormholeContract {
   // via a Sui transaction due to the linear nature of the language, this is
   // enforced at the TransactionBlock level by only allowing you to receive
   // receipts.
-  async getChainId(): Promise<number> {
-    return this.chain.getWormholeChainId();
+  getChainId(): Promise<number> {
+    return Promise.resolve(this.chain.getWormholeChainId());
   }
 
   // NOTE: There's no way to getChain() on the main interface, should update
@@ -553,7 +540,6 @@ export class SuiWormholeContract extends WormholeContract {
     return { id: result.digest, info: result };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getStateFields(): Promise<any> {
     const provider = this.chain.getProvider();
     const result = await provider.getObject({
@@ -667,7 +653,8 @@ export class SuiLazerContract extends Storable {
         console_.warn(`Could not find VAA #${i.toString()}, ending.`);
         break;
       }
-      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      const { payload } = deserialize("Uint8Array", new Uint8Array(vaa));
+      const action = decodeGovernancePayload(Buffer.from(payload));
       if (!action) {
         console_.warn(
           `Could not parse VAA #${i.toString()} action, skipping...`,
