@@ -28,8 +28,7 @@ export const Homepage = () => {
               Pyth Core is upgrading on July 31, 2026
             </h2>
             <p className={styles.migrationFeatureBody}>
-              Pyth API Key required for everyone using Pyth Core, new or
-              existing.
+              All Pyth Core users must register for an API Key
             </p>
           </div>
           <div className={styles.migrationFeatureActions}>
