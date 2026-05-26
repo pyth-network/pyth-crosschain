@@ -12,6 +12,7 @@ type Chain =
   | "iota"
   | "movement"
   | "near"
+  | "stacks"
   | "starknet"
   | "ton";
 
@@ -25,6 +26,7 @@ const CHAIN_LABELS: Record<Exclude<Chain, "index">, string> = {
   iota: "IOTA",
   movement: "Movement",
   near: "NEAR",
+  stacks: "Stacks",
   starknet: "Starknet",
   ton: "TON",
 };
@@ -101,11 +103,18 @@ export const UpgradeCallout = ({ chain }: Props) => {
   }
 
   return (
-    <Callout type="warn" title={TITLE}>
+    <Callout
+      type="warn"
+      title={`Pyth Core will no longer support ${label} after July 31, 2026`}
+    >
       <ul className="list-disc pl-5 my-0! space-y-1">
-        <li>Pyth Core on {label} will be dropped at the upgrade.</li>
         <li>
-          <a href={contactMail}>Contact the team</a> if you need support.
+          See the <Link href={upgradeGuide}>upgrade guide</Link> to learn about
+          the upgrade.
+        </li>
+        <li>
+          <a href={contactMail}>Contact the team</a> to request a Pyth Core
+          contract deployment on {label}.
         </li>
       </ul>
     </Callout>
