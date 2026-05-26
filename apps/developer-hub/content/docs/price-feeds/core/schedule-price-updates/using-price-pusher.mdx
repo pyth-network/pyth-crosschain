@@ -12,6 +12,8 @@ Anyone can operate this service to keep on-chain Pyth prices current based on co
 
 <UpgradeCallout chain="index" />
 
-From **July 31, 2026** onward the Price Pusher must be configured with a Pyth API Key. Pass it via the `--hermes-access-token <YOUR_KEY>` command-line flag so its Hermes calls can authenticate against the upgraded backend. Refer to the project README for setup instructions and configuration details.
+From **July 31, 2026** onward the Price Pusher must be configured with a Pyth API Key. Pass it via the `--hermes-access-token <YOUR_KEY>` command-line flag so its Hermes calls can authenticate against the upgraded backend.
+
+The `--hermes-access-token` flag was added in [Price Pusher v10.5.0](https://github.com/pyth-network/pyth-crosschain/commit/bab960de82fc881fd3c9397627d4e1831aeec934). Make sure you are running v10.5.0 or later. Refer to the project README for setup instructions and configuration details.
 
 Running the Price Pusher is a straightforward way to migrate from a push oracle: protocols that depend on regular updates can achieve the same behavior by operating this service.
