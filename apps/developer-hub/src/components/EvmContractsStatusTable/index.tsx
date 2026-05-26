@@ -85,6 +85,16 @@ const buildStatuses = (
   return statuses.sort((a, b) => a.name.localeCompare(b.name));
 };
 
+const partitionStatuses = (statuses: ChainStatus[]) => {
+  const upgraded: ChainStatus[] = [];
+  const dropped: ChainStatus[] = [];
+  for (const s of statuses) {
+    if (s.upgradedAddress !== null) upgraded.push(s);
+    else dropped.push(s);
+  }
+  return { upgraded, dropped };
+};
+
 const renderAddress = (address: string, explorer?: string) =>
   explorer ? (
     <CopyAddress
@@ -112,54 +122,70 @@ const EvmContractsStatusTable = async ({
     );
   }
 
+  const { upgraded, dropped } = partitionStatuses(statuses);
+
+  const renderRow = (s: ChainStatus, droppedSection: boolean) => (
+    <tr
+      key={s.chainId}
+      className={
+        droppedSection
+          ? "bg-red-100/70 dark:bg-red-950/40"
+          : "bg-green-100/60 dark:bg-green-950/30"
+      }
+    >
+      <td>{s.name}</td>
+      <td>{renderAddress(s.currentAddress, s.explorer)}</td>
+      <td>
+        {s.upgradedAddress !== null
+          ? renderAddress(s.upgradedAddress, s.explorer)
+          : "—"}
+      </td>
+    </tr>
+  );
+
   return (
     <>
-      <div className="flex gap-4 text-sm my-2">
+      <div className="flex flex-wrap gap-4 text-sm my-3 font-medium">
         <span className="inline-flex items-center gap-2">
           <span
             aria-hidden
-            className="inline-block w-3 h-3 rounded-sm border bg-green-50 dark:bg-green-950/30"
+            className="inline-block w-4 h-4 rounded-sm border bg-green-100/60 dark:bg-green-950/30"
           />
-          Upgraded
+          Upgraded ({upgraded.length})
         </span>
         <span className="inline-flex items-center gap-2">
           <span
             aria-hidden
-            className="inline-block w-3 h-3 rounded-sm border bg-red-50 dark:bg-red-950/30"
+            className="inline-block w-4 h-4 rounded-sm border bg-red-100/70 dark:bg-red-950/40"
           />
-          Will be dropped
+          Not upgraded ({dropped.length})
         </span>
       </div>
       <div className="overflow-x-auto">
         <table>
           <thead>
-          <tr>
-            <th>Network</th>
-            <th>Current Address</th>
-            <th>Upgraded Address</th>
-          </tr>
-        </thead>
-        <tbody>
-          {statuses.map((s) => {
-            const isUpgraded = s.upgradedAddress !== null;
-            const bgClass = isUpgraded
-              ? "bg-green-50 dark:bg-green-950/30"
-              : "bg-red-50 dark:bg-red-950/30";
-            return (
-              <tr key={s.chainId} className={bgClass}>
-                <td>{s.name}</td>
-                <td>{renderAddress(s.currentAddress, s.explorer)}</td>
-                <td>
-                  {isUpgraded && s.upgradedAddress !== null
-                    ? renderAddress(s.upgradedAddress, s.explorer)
-                    : null}
+            <tr>
+              <th>Network</th>
+              <th>Current Address</th>
+              <th>Upgraded Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {upgraded.map((s) => renderRow(s, false))}
+            {dropped.length > 0 && (
+              <tr className="bg-red-200/80 dark:bg-red-900/60">
+                <td
+                  colSpan={3}
+                  className="text-center font-semibold py-3 text-red-900 dark:text-red-100 border-y-2 border-red-300 dark:border-red-700"
+                >
+                  Chains not in the upgrade ({dropped.length})
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+            )}
+            {dropped.map((s) => renderRow(s, true))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 };
