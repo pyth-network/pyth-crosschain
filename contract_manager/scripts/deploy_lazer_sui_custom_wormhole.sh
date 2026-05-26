@@ -108,7 +108,7 @@ fi
 cd "$WH_PKG_DIR"
 rm Published.toml
 WORM_DEPLOY_OUT=$(
-    sui client publish --environment "$ENV_ALIAS" --json 2>/dev/null
+    sui client publish --build-env "$ENV_ALIAS" --json 2>/dev/null
 )
 
 re='({.+})'
