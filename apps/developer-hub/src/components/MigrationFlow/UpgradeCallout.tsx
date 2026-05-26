@@ -48,15 +48,16 @@ export const UpgradeCallout = ({ chain }: Props) => {
       <Callout type="warn" title={TITLE}>
         <ul className="list-disc pl-5 my-0! space-y-1">
           <li>
-            See the <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
+            We recommend new integrations use the{" "}
             <Link href={upgradedAddressesRoot}>
               upgraded contract addresses
-            </Link>{" "}
-            for chains in the upgrade.
+            </Link>
+            .
           </li>
           <li>
-            <a href={contactMail}>Contact the team</a> if your chain
-            isn&apos;t listed.
+            Existing integrations using the current addresses will be
+            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
         </ul>
       </Callout>
@@ -68,12 +69,19 @@ export const UpgradeCallout = ({ chain }: Props) => {
 
   if (SUPPORTED_SIMPLE.has(chain)) {
     return (
-      <Callout type="warn" title={TITLE}>
+      <Callout
+        type="warn"
+        title={`Pyth Core on ${label} is upgrading on July 31, 2026`}
+      >
         <ul className="list-disc pl-5 my-0! space-y-1">
-          <li>The addresses below are auto-upgraded by the DAO at cutover.</li>
           <li>
-            See the <Link href={upgradeGuide}>upgrade guide</Link> and the{" "}
-            <Link href={upgradedAddresses}>upgraded {label} addresses</Link>.
+            We recommend new integrations use the{" "}
+            <Link href={upgradedAddresses}>upgraded {label} contracts</Link>.
+          </li>
+          <li>
+            Existing integrations using the current addresses will be
+            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
         </ul>
       </Callout>
@@ -82,20 +90,23 @@ export const UpgradeCallout = ({ chain }: Props) => {
 
   if (SUPPORTED_PARTIAL.has(chain)) {
     return (
-      <Callout type="warn" title={TITLE}>
+      <Callout
+        type="warn"
+        title={`Pyth Core on ${label} chains is upgrading on July 31, 2026`}
+      >
         <ul className="list-disc pl-5 my-0! space-y-1">
           <li>
-            Check the{" "}
-            <Link href={upgradedAddresses}>upgraded {label} addresses</Link>{" "}
-            for chains in the upgrade.
+            We recommend new integrations use the{" "}
+            <Link href={upgradedAddresses}>upgraded {label} contracts</Link>.
           </li>
           <li>
-            See the <Link href={upgradeGuide}>upgrade guide</Link> for how to
-            upgrade.
+            Existing integrations on {label} chains in the upgrade will be
+            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
           <li>
-            <a href={contactMail}>Contact the team</a> if your chain
-            isn&apos;t listed.
+            <a href={contactMail}>Contact the team</a> if your chain isn&apos;t
+            in the upgrade list.
           </li>
         </ul>
       </Callout>
