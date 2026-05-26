@@ -440,7 +440,7 @@ export class SuiChain extends Chain {
         "--dump-bytecode-as-base64",
         "--path",
         path,
-        "--environment",
+        "--build-env",
         activeEnv,
       ],
       { encoding: "utf8" },
