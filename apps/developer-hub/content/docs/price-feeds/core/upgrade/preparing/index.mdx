@@ -69,7 +69,7 @@ After Step 1, choose how and when to move to the upgraded infrastructure. Your c
     </>
   }
 >
-  The "Wait for automatic" path does not apply on Sui. This is because Sui restricts how the Pyth package can be upgraded. See the [Sui upgrade guide](/price-feeds/core/upgrade/preparing/sui).
+  The "Wait for automatic" path does not apply on Sui. Apps reference the Pyth package by object ID, and the DAO cannot swap that for you. See the [Sui upgrade guide](/price-feeds/core/upgrade/preparing/sui).
 </Callout>
 
 <BranchToggle />
@@ -163,7 +163,7 @@ After the swap, you're done before the July 31 cutover.
     </>
   }
 >
-  This path does not apply on Sui. This is because . Follow the [Sui upgrade guide](/price-feeds/core/upgrade/preparing/sui) instead.
+  This path does not apply on Sui. Apps reference the Pyth package by object ID, and the DAO cannot swap that for you. Follow the [Sui upgrade guide](/price-feeds/core/upgrade/preparing/sui) instead.
 </Callout>
 
 At the cutover on July 31, the Pyth DAO upgrades your on-chain contract a few moments *before* `hermes.pyth.network` starts serving the upgraded payload.
