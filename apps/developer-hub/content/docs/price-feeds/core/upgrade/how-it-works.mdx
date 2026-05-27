@@ -47,14 +47,14 @@ graph LR
 ## Data flow
 
 1. **Aggregate & Sign**: Each tick, the five Pyth Pro routers independently
-   compute the price aggregates for all price feeds, compress them into a Merkle tree using Pythnet's leaf
-   format, and sign the resulting Merkle root.
+   compute the price aggregates for all price feeds, compress them into a 
+   Merkle tree using Pythnet's leaf format, and sign the resulting Merkle root.
 2. **Data Collection**: The upgraded Hermes endpoint gathers the signed roots and
    price messages from all routers.
 3. **Update Submission**: Consumers fetch the signed root and Merkle proofs from
    Hermes and submit them to the upgraded contract.
 4. **On-Chain Verification**: The upgraded contracts verify that the router
-   signatures meet the quorum and validate the requested price update against the Merkle
+   signatures meet the quorum and validate the requested price aggregate against the Merkle
    root.
 
 ## Components
