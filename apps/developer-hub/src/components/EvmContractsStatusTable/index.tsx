@@ -21,7 +21,13 @@ type ChainStatus = {
   explorer?: string;
 };
 
-const HIDDEN_CHAIN_IDS = new Set<string>();
+// Caldera's inEVM rollup is superseded by Injective's native EVM
+// (injective_evm, chain ID 1776). Hide the inEVM rows so users land on the
+// supported deployment.
+const HIDDEN_CHAIN_IDS = new Set<string>([
+  "injective_inevm",
+  "injective_inevm_testnet",
+]);
 const CHAIN_REGISTRY_URL = "https://chainid.network/chains.json";
 const CHAIN_REGISTRY_REVALIDATE_SECONDS = 60 * 60 * 24;
 
