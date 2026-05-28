@@ -27,4 +27,8 @@ export const MigrationDeploymentsConfig: Record<string, ChainOverride> = {
     name: "HyperEVM",
     explorer: "https://hyperevmscan.io",
   },
+
+  "2525": {
+    name: "Injective EVM",
+  },
 };
