@@ -20,8 +20,13 @@ type LazerDeployment = {
   explorer?: string;
 };
 
-// Chains we never want to show in the docs (e.g. internal devnets).
-const HIDDEN_CHAIN_IDS = new Set<string>(["ethereal_devnet"]);
+// Chains we never want to show in the docs (e.g. internal devnets or sunset
+// networks).
+const HIDDEN_CHAIN_IDS = new Set<string>([
+  "ethereal_devnet",
+  "polynomial",
+  "polynomial_testnet",
+]);
 
 // Community-maintained EVM chain registry (https://github.com/ethereum-lists/chains).
 // Same data source as chainlist.org. Re-fetched at most once per day per build.
