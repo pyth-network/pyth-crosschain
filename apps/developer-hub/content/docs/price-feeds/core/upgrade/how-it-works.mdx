@@ -47,14 +47,14 @@ graph LR
 ## Data flow
 
 1. **Aggregate & Sign**: Each tick, the five Pyth Pro routers independently
-   compute the price aggregate, build a Merkle tree using Pythnet's leaf
-   format, and sign the resulting Merkle root.
+   compute the price aggregates for all price feeds, compress them into a
+   Merkle tree using Pythnet's leaf format, and sign the resulting Merkle root.
 2. **Data Collection**: The upgraded Hermes endpoint gathers the signed roots and
    price messages from all routers.
 3. **Update Submission**: Consumers fetch the signed root and Merkle proofs from
    Hermes and submit them to the upgraded contract.
 4. **On-Chain Verification**: The upgraded contracts verify that the router
-   signatures meet the quorum and validate the requested price against the Merkle
+   signatures meet the quorum and validate the requested price aggregate against the Merkle
    root.
 
 ## Components
@@ -90,7 +90,7 @@ Here is a side-by-side comparison of the two architectures:
 | **Signer Network** | Wormhole Guardians | 5 Independent Routers |
 | **Quorum Threshold** | **13/19** Signatures | **3/5** Signatures |
 | **Signature Scheme** | ECDSA (Secp256k1) | ECDSA (Secp256k1) *(Same)* |
-| **Hermes Compatibility** | Standard Hermes Endpoint | Upgraded Hermes Endpoint (Byte-Compatible API) |
+| **Hermes Compatibility** | Standard Hermes Endpoint | Upgraded Hermes Endpoint (Same API) |
 | **Contract ABI** | Existing ABI | Identical ABI (Deployed at New Addresses) |
 
 ## What this means for consumers
