@@ -28,7 +28,11 @@ export const MigrationDeploymentsConfig: Record<string, ChainOverride> = {
     explorer: "https://hyperevmscan.io",
   },
 
-  "2525": {
+  // chainid.network calls network 1776 just "Injective"; Injective's own docs
+  // call this chain "Injective EVM" (their native L1 EVM). Network 2525
+  // (Caldera's inEVM rollup) is a different chain and keeps its upstream
+  // "inEVM Mainnet" label.
+  "1776": {
     name: "Injective EVM",
   },
 };
