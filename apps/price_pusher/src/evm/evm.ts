@@ -25,7 +25,15 @@ import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
 import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
-import type { CustomGasStation } from "./custom-gas-station";
+import type { GasPriceConfig } from "./gas-price.js";
+import {
+  describeGasPrice,
+  gasPriceToTxParams,
+  getGasPrice,
+  maxGasPrice,
+  minGasPrice,
+  scaleGasPrice,
+} from "./gas-price.js";
 import type { PythAbi } from "./pyth-abi.js";
 import type { PythContract } from "./pyth-contract.js";
 import type { SuperWalletClient } from "./super-wallet.js";
@@ -132,9 +140,8 @@ export class EvmPricePusher implements IPricePusher {
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
+    private gasPriceConfig: GasPriceConfig,
     private gasLimit?: number,
-    private customGasStation?: CustomGasStation,
-    private gasPrice?: number,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -180,16 +187,15 @@ export class EvmPricePusher implements IPricePusher {
       throw error;
     }
 
-    // Gas price in networks with transaction type eip1559 represents the
-    // addition of baseFee and priorityFee required to land the transaction. We
-    // are using this to remain compatible with the networks that doesn't
-    // support this transaction type.
-    let gasPrice =
-      this.gasPrice ??
-      Number(
-        await (this.customGasStation?.getCustomGasPrice() ??
-          this.client.getGasPrice()),
-      );
+    // Fetch a fresh gas price. With the eip1559 strategy this is sourced from
+    // the chain base fee and priority fee (avoiding the deprecated eth_gasPrice
+    // RPC); with the legacy strategy it falls back to the single gasPrice model
+    // for chains that don't support eip1559 transactions.
+    let gasPrice = await getGasPrice(
+      this.client,
+      this.gasPriceConfig,
+      this.logger,
+    );
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     this.pusherAddress ??= this.client.account.address;
@@ -205,24 +211,27 @@ export class EvmPricePusher implements IPricePusher {
       if (this.lastPushAttempt.nonce <= lastExecutedNonce) {
         this.lastPushAttempt = undefined;
       } else {
-        gasPriceToOverride =
-          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier;
+        gasPriceToOverride = scaleGasPrice(
+          this.lastPushAttempt.gasPrice,
+          this.overrideGasPriceMultiplier,
+        );
       }
     }
 
-    if (
-      gasPriceToOverride !== undefined &&
-      gasPriceToOverride > Number(gasPrice)
-    ) {
-      gasPrice = Math.min(
-        gasPriceToOverride,
-        gasPrice * this.overrideGasPriceMultiplierCap,
+    if (gasPriceToOverride !== undefined) {
+      // Bump the gas price to override the stuck transaction, but cap the bump
+      // relative to the fresh gas price returned by the RPC.
+      gasPrice = minGasPrice(
+        maxGasPrice(gasPriceToOverride, gasPrice),
+        scaleGasPrice(gasPrice, this.overrideGasPriceMultiplierCap),
       );
     }
 
     const txNonce = lastExecutedNonce + 1;
 
-    this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
+    this.logger.debug(
+      `Using ${describeGasPrice(gasPrice)} and nonce: ${txNonce}`,
+    );
 
     const pubTimesToPushParam = pubTimesToPush.map(BigInt);
 
@@ -243,7 +252,7 @@ export class EvmPricePusher implements IPricePusher {
               this.gasLimit === undefined
                 ? undefined
                 : BigInt(Math.ceil(this.gasLimit)),
-            gasPrice: BigInt(Math.ceil(gasPrice)),
+            ...gasPriceToTxParams(gasPrice),
             nonce: txNonce,
             value: updateFee,
           },

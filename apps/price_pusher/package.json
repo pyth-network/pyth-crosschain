@@ -89,6 +89,10 @@
       "default": "./dist/evm/evm.cjs",
       "types": "./dist/evm/evm.d.ts"
     },
+    "./evm/gas-price": {
+      "default": "./dist/evm/gas-price.cjs",
+      "types": "./dist/evm/gas-price.d.ts"
+    },
     "./evm/pyth-abi": {
       "default": "./dist/evm/pyth-abi.cjs",
       "types": "./dist/evm/pyth-abi.d.ts"
@@ -215,9 +219,10 @@
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build",
     "start": "node dist/index.cjs",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "test:unit": "test-unit"
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "10.5.0"
+  "version": "10.6.0"
 }

@@ -104,7 +104,18 @@ pnpm run start evm --endpoint wss://example-rpc.com \
     [--override-gas-price-multiplier 1.1] \
     [--override-gas-price-multiplier-cap 5] \
     [--gas-limit 1000000] \
+    [--gas-pricing-strategy eip1559] \
+    [--base-fee-multiplier 1.2] \
+    [--priority-fee-multiplier 1] \
     [--gas-price 160000000]
+
+# The EVM pusher prices transactions with the `eip1559` strategy by default. It
+# computes `maxFeePerGas` from the chain base fee (padded by `--base-fee-multiplier`
+# to leave headroom for the base fee growing between blocks) plus an estimated
+# priority fee (scaled by `--priority-fee-multiplier`). This avoids the deprecated
+# `eth_gasPrice` RPC, which some RPCs mishandle. For chains that do not support
+# EIP-1559 transactions, pass `--gas-pricing-strategy legacy`, which falls back to
+# the single `gasPrice` model and where `--gas-price` / `--custom-gas-station` apply.
 
 # For Injective
 pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \

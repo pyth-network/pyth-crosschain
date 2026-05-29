@@ -23,6 +23,15 @@ import { createClient } from "./super-wallet.js";
 
 export default {
   builder: {
+    "base-fee-multiplier": {
+      default: 1.2,
+      description:
+        "[eip1559 strategy only] Multiplier applied to the chain base fee when computing " +
+        "maxFeePerGas. Values above 1 leave headroom for the base fee to grow between blocks. " +
+        "Default to 1.2",
+      required: false,
+      type: "number",
+    } as Options,
     "custom-gas-station": {
       description:
         "If using a custom gas station, chainId of custom gas station to use",
@@ -45,9 +54,20 @@ export default {
       type: "number",
     } as Options,
     "gas-price": {
-      description: "Override the gas price that would be received from the RPC",
+      description:
+        "[legacy strategy only] Override the gas price (in wei) that would be received from the RPC",
       required: false,
       type: "number",
+    } as Options,
+    "gas-pricing-strategy": {
+      choices: ["eip1559", "legacy"],
+      default: "eip1559",
+      description:
+        "How to price transactions. 'eip1559' (default and recommended) sources the " +
+        "gas from the chain base fee and a priority fee, which is more robust as it " +
+        "avoids the deprecated eth_gasPrice RPC. Use 'legacy' for chains that do not " +
+        "support eip1559 transactions.",
+      required: false,
     } as Options,
     "override-gas-price-multiplier": {
       default: 1.1,
@@ -64,6 +84,14 @@ export default {
       description:
         "Maximum gas price multiplier to use in override compared to the RPC returned " +
         "gas price. Default to 5",
+      required: false,
+      type: "number",
+    } as Options,
+    "priority-fee-multiplier": {
+      default: 1,
+      description:
+        "[eip1559 strategy only] Multiplier applied to the priority fee (tip) estimated from " +
+        "the RPC. Default to 1",
       required: false,
       type: "number",
     } as Options,
@@ -112,7 +140,10 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       gasLimit,
+      gasPricingStrategy,
       gasPrice,
+      baseFeeMultiplier,
+      priorityFeeMultiplier,
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
@@ -188,6 +219,23 @@ export default {
       customGasStation,
       txSpeed,
     );
+
+    if (gasPricingStrategy === "eip1559" && (gasStation || gasPrice)) {
+      logger.warn(
+        "`--custom-gas-station`/`--tx-speed` and `--gas-price` only apply to the 'legacy' " +
+          "gas pricing strategy and will be ignored. Use `--base-fee-multiplier` and " +
+          "`--priority-fee-multiplier` to tune the 'eip1559' strategy.",
+      );
+    }
+
+    const gasPriceConfig = {
+      baseFeeMultiplier,
+      customGasStation: gasStation,
+      gasPrice,
+      priorityFeeMultiplier,
+      strategy: gasPricingStrategy,
+    };
+
     const evmPusher = new EvmPricePusher(
       hermesClient,
       client,
@@ -196,9 +244,8 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
+      gasPriceConfig,
       gasLimit,
-      gasStation,
-      gasPrice,
     );
 
     const controller = new Controller(
