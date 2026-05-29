@@ -59,7 +59,7 @@ jobs:
       - name: Copy anchor target files
         run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
       - name: Fix formatting (to avoid pre-commit failures)
-        run: npx biome check --write idl/
+        run: pnpm --dir ../.. exec biome check --write idl/
       - name: Check IDL changes
         # Fails if the IDL files are not up to date. Please use anchor build to regenerate the IDL files for
         # the current version of the contract and update idl directory.
