@@ -20,7 +20,7 @@ import {
   TransactionExecutionError,
 } from "viem";
 
-import type { PushAttempt } from "../common.js";
+import type { GasParams, PushAttempt } from "../common.js";
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
@@ -132,10 +132,116 @@ export class EvmPricePusher implements IPricePusher {
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
+    private legacy: boolean,
     private gasLimit?: number,
     private customGasStation?: CustomGasStation,
-    private gasPrice?: number,
+    private gasPriceOverride?: number,
   ) {}
+
+  private async getGasParams(): Promise<GasParams> {
+    if (this.customGasStation) {
+      const custom = await this.customGasStation.getCustomGasPrice();
+      if (custom) {
+        if ("gasPrice" in custom) {
+          return { type: "legacy", gasPrice: Number(custom.gasPrice) };
+        }
+        return {
+          type: "eip1559",
+          maxFeePerGas: Number(custom.maxFeePerGas),
+          maxPriorityFeePerGas: Number(custom.maxPriorityFeePerGas),
+        };
+      }
+    }
+
+    if (this.legacy) {
+      const gasPrice = await this.client.getGasPrice();
+      return { type: "legacy", gasPrice: Number(gasPrice) };
+    }
+
+    const fees = await this.client.estimateFeesPerGas();
+    return {
+      type: "eip1559",
+      maxFeePerGas: Number(fees.maxFeePerGas),
+      maxPriorityFeePerGas: Number(fees.maxPriorityFeePerGas),
+    };
+  }
+
+  private applyStaticOverride(gas: GasParams): GasParams {
+    if (this.gasPriceOverride === undefined) return gas;
+
+    if (gas.type === "legacy") {
+      return { type: "legacy", gasPrice: this.gasPriceOverride };
+    }
+
+    // In EIP-1559 mode, use the override as maxFeePerGas and keep fetched priority fee
+    return {
+      type: "eip1559",
+      maxFeePerGas: this.gasPriceOverride,
+      maxPriorityFeePerGas: gas.maxPriorityFeePerGas,
+    };
+  }
+
+  private escalateGas(gas: GasParams, multiplier: number): GasParams {
+    if (gas.type === "legacy") {
+      return { type: "legacy", gasPrice: gas.gasPrice * multiplier };
+    }
+    return {
+      type: "eip1559",
+      maxFeePerGas: gas.maxFeePerGas * multiplier,
+      maxPriorityFeePerGas: gas.maxPriorityFeePerGas * multiplier,
+    };
+  }
+
+  private capGas(escalated: GasParams, base: GasParams): GasParams {
+    if (escalated.type === "legacy" && base.type === "legacy") {
+      return {
+        type: "legacy",
+        gasPrice: Math.min(
+          escalated.gasPrice,
+          base.gasPrice * this.overrideGasPriceMultiplierCap,
+        ),
+      };
+    }
+    if (escalated.type === "eip1559" && base.type === "eip1559") {
+      return {
+        type: "eip1559",
+        maxFeePerGas: Math.min(
+          escalated.maxFeePerGas,
+          base.maxFeePerGas * this.overrideGasPriceMultiplierCap,
+        ),
+        maxPriorityFeePerGas: Math.min(
+          escalated.maxPriorityFeePerGas,
+          base.maxPriorityFeePerGas * this.overrideGasPriceMultiplierCap,
+        ),
+      };
+    }
+    // Mismatched types shouldn't happen, return escalated as-is
+    return escalated;
+  }
+
+  private gasIsHigherThan(a: GasParams, b: GasParams): boolean {
+    if (a.type === "legacy" && b.type === "legacy") {
+      return a.gasPrice > b.gasPrice;
+    }
+    if (a.type === "eip1559" && b.type === "eip1559") {
+      return a.maxFeePerGas > b.maxFeePerGas;
+    }
+    return false;
+  }
+
+  private gasToTxParams(
+    gas: GasParams,
+  ):
+    | { gasPrice: bigint }
+    | { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } {
+    if (gas.type === "legacy") {
+      return { gasPrice: BigInt(Math.ceil(gas.gasPrice)) };
+    }
+    return {
+      maxFeePerGas: BigInt(Math.ceil(gas.maxFeePerGas)),
+      maxPriorityFeePerGas: BigInt(Math.ceil(gas.maxPriorityFeePerGas)),
+    };
+  }
 
   // The pubTimes are passed here to use the values that triggered the push.
   // This is an optimization to avoid getting a newer value (as an update comes)
@@ -180,16 +286,7 @@ export class EvmPricePusher implements IPricePusher {
       throw error;
     }
 
-    // Gas price in networks with transaction type eip1559 represents the
-    // addition of baseFee and priorityFee required to land the transaction. We
-    // are using this to remain compatible with the networks that doesn't
-    // support this transaction type.
-    let gasPrice =
-      this.gasPrice ??
-      Number(
-        await (this.customGasStation?.getCustomGasPrice() ??
-          this.client.getGasPrice()),
-      );
+    let gas = this.applyStaticOverride(await this.getGasParams());
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     this.pusherAddress ??= this.client.account.address;
@@ -199,30 +296,27 @@ export class EvmPricePusher implements IPricePusher {
         address: this.pusherAddress,
       })) - 1;
 
-    let gasPriceToOverride = undefined;
-
     if (this.lastPushAttempt !== undefined) {
       if (this.lastPushAttempt.nonce <= lastExecutedNonce) {
         this.lastPushAttempt = undefined;
       } else {
-        gasPriceToOverride =
-          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier;
+        const escalated = this.escalateGas(
+          this.lastPushAttempt.gas,
+          this.overrideGasPriceMultiplier,
+        );
+        if (this.gasIsHigherThan(escalated, gas)) {
+          gas = this.capGas(escalated, gas);
+        }
       }
-    }
-
-    if (
-      gasPriceToOverride !== undefined &&
-      gasPriceToOverride > Number(gasPrice)
-    ) {
-      gasPrice = Math.min(
-        gasPriceToOverride,
-        gasPrice * this.overrideGasPriceMultiplierCap,
-      );
     }
 
     const txNonce = lastExecutedNonce + 1;
 
-    this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
+    const gasLogInfo =
+      gas.type === "eip1559"
+        ? `maxFeePerGas: ${gas.maxFeePerGas}, maxPriorityFeePerGas: ${gas.maxPriorityFeePerGas}`
+        : `gasPrice: ${gas.gasPrice}`;
+    this.logger.debug(`Using ${gasLogInfo} and nonce: ${txNonce}`);
 
     const pubTimesToPushParam = pubTimesToPush.map(BigInt);
 
@@ -230,7 +324,7 @@ export class EvmPricePusher implements IPricePusher {
 
     // Update lastAttempt
     this.lastPushAttempt = {
-      gasPrice: gasPrice,
+      gas,
       nonce: txNonce,
     };
 
@@ -243,7 +337,7 @@ export class EvmPricePusher implements IPricePusher {
               this.gasLimit === undefined
                 ? undefined
                 : BigInt(Math.ceil(this.gasLimit)),
-            gasPrice: BigInt(Math.ceil(gasPrice)),
+            ...this.gasToTxParams(gas),
             nonce: txNonce,
             value: updateFee,
           },

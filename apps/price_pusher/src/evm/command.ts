@@ -49,6 +49,14 @@ export default {
       required: false,
       type: "number",
     } as Options,
+    legacy: {
+      default: false,
+      description:
+        "Use legacy (type-0) transactions with gasPrice instead of EIP-1559 (type-2). " +
+        "Enable this for chains that don't support EIP-1559.",
+      required: false,
+      type: "boolean",
+    } as Options,
     "override-gas-price-multiplier": {
       default: 1.1,
       description:
@@ -113,6 +121,7 @@ export default {
       overrideGasPriceMultiplierCap,
       gasLimit,
       gasPrice,
+      legacy,
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
@@ -187,6 +196,7 @@ export default {
       logger.child({ module: "CustomGasStation" }),
       customGasStation,
       txSpeed,
+      legacy,
     );
     const evmPusher = new EvmPricePusher(
       hermesClient,
@@ -196,6 +206,7 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
+      legacy,
       gasLimit,
       gasStation,
       gasPrice,

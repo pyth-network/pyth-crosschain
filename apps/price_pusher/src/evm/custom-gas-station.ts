@@ -9,7 +9,14 @@ import { parseGwei } from "viem";
 import type { CustomGasChainId, TxSpeed } from "../utils.js";
 import { customGasChainIds, txSpeeds, verifyValidOption } from "../utils.js";
 
-type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
+export type CustomGasResult =
+  | { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }
+  | { gasPrice: bigint };
+
+type chainMethods = Record<
+  CustomGasChainId,
+  () => Promise<CustomGasResult | undefined>
+>;
 
 export class CustomGasStation {
   private chain: CustomGasChainId;
@@ -18,23 +25,38 @@ export class CustomGasStation {
     137: this.fetchMaticMainnetGasPrice.bind(this),
   };
   private logger: Logger;
-  constructor(logger: Logger, chain: number, speed: string) {
+  private legacy: boolean;
+  constructor(logger: Logger, chain: number, speed: string, legacy: boolean) {
     this.logger = logger;
     this.speed = verifyValidOption(speed, txSpeeds);
     this.chain = verifyValidOption(chain, customGasChainIds);
+    this.legacy = legacy;
   }
 
-  async getCustomGasPrice() {
+  async getCustomGasPrice(): Promise<CustomGasResult | undefined> {
     return this.chainMethods[this.chain]();
   }
 
-  private async fetchMaticMainnetGasPrice() {
+  private async fetchMaticMainnetGasPrice(): Promise<
+    CustomGasResult | undefined
+  > {
     try {
       const res = await fetch("https://gasstation.polygon.technology/v2");
       // TODO: improve the typing specificity here
       const jsonRes = (await res.json()) as any;
-      const gasPrice = jsonRes[this.speed].maxFee;
-      return parseGwei(gasPrice.toFixed(2));
+      const speedData = jsonRes[this.speed];
+
+      if (this.legacy) {
+        const gasPrice = speedData.maxFee;
+        return { gasPrice: parseGwei(gasPrice.toFixed(2)) };
+      }
+
+      const maxFee = speedData.maxFee;
+      const maxPriorityFee = speedData.maxPriorityFee;
+      return {
+        maxFeePerGas: parseGwei(maxFee.toFixed(2)),
+        maxPriorityFeePerGas: parseGwei(maxPriorityFee.toFixed(2)),
+      };
     } catch (error) {
       this.logger.error(
         error,
@@ -49,9 +71,10 @@ export function getCustomGasStation(
   logger: Logger,
   customGasStation?: number,
   txSpeed?: string,
+  legacy?: boolean,
 ) {
   if (customGasStation && txSpeed) {
-    return new CustomGasStation(logger, customGasStation, txSpeed);
+    return new CustomGasStation(logger, customGasStation, txSpeed, !!legacy);
   }
   return;
 }
