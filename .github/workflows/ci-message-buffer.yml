@@ -36,6 +36,8 @@ jobs:
         run: |
           sudo apt-get install g++-12
           echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
+      - uses: pnpm/action-setup@v5
+        name: Install pnpm
       - uses: actions/setup-node@v5
         with:
           node-version-file: "package.json"
@@ -44,10 +46,9 @@ jobs:
       # precompiled binary isn't found.
       - name: Install libusb
         run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
-      - uses: pnpm/action-setup@v5
-        name: Install pnpm
-        with:
-          run_install: true
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: .
       - name: Build and generate IDLs
         run: |
           unset CARGO_UNSTABLE_SPARSE_REGISTRY
