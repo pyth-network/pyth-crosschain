@@ -1,5 +1,6 @@
 use {
     super::{
+        metrics_middleware::stream_protocol_label,
         token,
         types::{PriceIdInput, RpcPriceFeed},
         ApiState,
@@ -45,6 +46,7 @@ use {
         sync::{broadcast::Receiver, watch},
         time::Instant,
     },
+    tungstenite::Error as WsError,
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -224,8 +226,12 @@ where
     let api_token = token::extract_token_from_headers_and_uri(&headers, &uri);
     let token_suffix = token::get_token_suffix(api_token.as_deref());
 
-    ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
-        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, token_suffix))
+    let mut ws = ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE);
+    if state.streaming.disconnect_slow_consumers {
+        ws = ws.max_write_buffer_size(state.streaming.ws_max_write_buffer_bytes);
+    }
+
+    ws.on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, token_suffix))
 }
 
 #[tracing::instrument(skip(stream, state, subscriber_ip, token_suffix))]
@@ -259,12 +265,21 @@ async fn websocket_handler<S>(
 
     let notify_receiver = Aggregates::subscribe(&*state.state);
     let (sender, receiver) = stream.split();
+
+    state
+        .metrics
+        .stream_active_connections
+        .get_or_create(&stream_protocol_label("ws"))
+        .inc();
+
     let mut subscriber = Subscriber::new(
         id,
         subscriber_ip,
         token_suffix,
         state.state.clone(),
         state.ws.clone(),
+        state.metrics.clone(),
+        state.streaming.disconnect_slow_consumers,
         notify_receiver,
         receiver,
         sender,
@@ -275,6 +290,15 @@ async fn websocket_handler<S>(
 
 pub type SubscriberId = usize;
 
+fn is_write_buffer_full(err: &anyhow::Error) -> bool {
+    err.chain().any(|cause| {
+        matches!(
+            cause.downcast_ref::<WsError>(),
+            Some(WsError::WriteBufferFull(_))
+        )
+    })
+}
+
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the store for updates and sends them to the client.
 pub struct Subscriber<S> {
@@ -284,6 +308,8 @@ pub struct Subscriber<S> {
     closed: bool,
     state: Arc<S>,
     ws_state: Arc<WsState>,
+    metrics: Arc<super::metrics_middleware::ApiMetrics>,
+    disconnect_slow_consumers: bool,
     notify_receiver: Receiver<AggregationEvent>,
     receiver: SplitStream<WebSocket>,
     sender: SplitSink<WebSocket, Message>,
@@ -292,6 +318,15 @@ pub struct Subscriber<S> {
     connection_deadline: Instant,
     exit: watch::Receiver<bool>,
     responded_to_ping: bool,
+}
+
+impl<S> Drop for Subscriber<S> {
+    fn drop(&mut self) {
+        self.metrics
+            .stream_active_connections
+            .get_or_create(&stream_protocol_label("ws"))
+            .dec();
+    }
 }
 
 impl<S> Subscriber<S>
@@ -308,6 +343,8 @@ where
         token_suffix: String,
         state: Arc<S>,
         ws_state: Arc<WsState>,
+        metrics: Arc<super::metrics_middleware::ApiMetrics>,
+        disconnect_slow_consumers: bool,
         notify_receiver: Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
@@ -319,6 +356,8 @@ where
             closed: false,
             state,
             ws_state,
+            metrics,
+            disconnect_slow_consumers,
             notify_receiver,
             receiver,
             sender,
@@ -330,11 +369,27 @@ where
         }
     }
 
+    fn record_slow_consumer_disconnect(&self) {
+        self.metrics
+            .stream_slow_consumer_disconnects
+            .get_or_create(&stream_protocol_label("ws"))
+            .inc();
+    }
+
     #[tracing::instrument(skip(self))]
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
+                if self.disconnect_slow_consumers && is_write_buffer_full(&e) {
+                    tracing::info!(
+                        subscriber = self.id,
+                        ip = ?self.ip_addr,
+                        "Slow consumer disconnected (WebSocket write buffer full)."
+                    );
+                    self.record_slow_consumer_disconnect();
+                } else {
+                    tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
+                }
                 break;
             }
         }
@@ -693,5 +748,33 @@ where
             .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests")]
+mod tests {
+    use {super::*, anyhow::anyhow, tungstenite::Message as TungsteniteMessage};
+
+    #[test]
+    fn detects_write_buffer_full_error() {
+        let err = anyhow!(WsError::WriteBufferFull(TungsteniteMessage::Text(
+            "test".into()
+        )));
+        assert!(is_write_buffer_full(&err));
+    }
+
+    #[test]
+    fn detects_write_buffer_full_error_through_axum_error() {
+        let err = anyhow!(axum::Error::new(WsError::WriteBufferFull(
+            TungsteniteMessage::Text("test".into()),
+        )));
+        assert!(is_write_buffer_full(&err));
+    }
+
+    #[test]
+    fn ignores_unrelated_errors() {
+        let err = anyhow!("some other error");
+        assert!(!is_write_buffer_full(&err));
     }
 }
