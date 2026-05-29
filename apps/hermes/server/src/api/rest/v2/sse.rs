@@ -39,6 +39,7 @@ use {
 // Constants
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 const SLOW_CONSUMER_DISCONNECT_MESSAGE: &str = "Slow consumer: disconnected";
+const CONNECTION_TIMEOUT_MESSAGE: &str = "Connection timeout reached (24h)";
 
 struct SseConnectionGuard {
     metrics: Arc<crate::api::metrics_middleware::ApiMetrics>,
@@ -138,6 +139,7 @@ where
     let start_time = Instant::now();
     let disconnect_slow_consumers = state.streaming.disconnect_slow_consumers;
     let should_end = Arc::new(AtomicBool::new(false));
+    let should_end_for_chain = should_end.clone();
     let metrics = state.metrics.clone();
 
     let mut inner_stream = futures::stream::StreamExt::boxed(
@@ -179,7 +181,9 @@ where
                                 state_clone.metrics.sse_broadcast_lagged.inc();
                             }
                             if should_disconnect_slow_sse_consumer(&e, disconnect_slow_consumers) {
-                                tracing::info!("Slow consumer disconnected (SSE broadcast lagged).");
+                                tracing::info!(
+                                    "Slow consumer disconnected (SSE broadcast lagged)."
+                                );
                                 state_clone
                                     .metrics
                                     .stream_slow_consumer_disconnects
@@ -195,11 +199,12 @@ where
                 }
             })
             .filter_map(|x| x)
-            .chain(futures::stream::once(async {
-                Ok(Event::default()
-                    .event("error")
-                    .data("Connection timeout reached (24h)"))
-            })),
+            .chain(
+                futures::stream::once(async move { should_end_for_chain.load(Ordering::Relaxed) })
+                    .filter_map(|ended_due_to_slow_consumer| {
+                        timeout_event_if_needed(ended_due_to_slow_consumer)
+                    }),
+            ),
     );
 
     let guard = SseConnectionGuard::new(metrics);
@@ -315,6 +320,16 @@ fn slow_consumer_disconnect_event() -> Event {
         .data(SLOW_CONSUMER_DISCONNECT_MESSAGE)
 }
 
+fn timeout_event_if_needed(ended_due_to_slow_consumer: bool) -> Option<Result<Event, Infallible>> {
+    if ended_due_to_slow_consumer {
+        None
+    } else {
+        Some(Ok(Event::default()
+            .event("error")
+            .data(CONNECTION_TIMEOUT_MESSAGE)))
+    }
+}
+
 fn should_disconnect_slow_sse_consumer(
     err: &BroadcastStreamRecvError,
     disconnect_slow_consumers: bool,
@@ -353,5 +368,18 @@ mod tests {
             &BroadcastStreamRecvError::Lagged(3),
             false,
         ));
+    }
+
+    #[test]
+    fn skips_timeout_event_after_slow_consumer_disconnect() {
+        assert!(timeout_event_if_needed(true).is_none());
+    }
+
+    #[test]
+    fn emits_timeout_event_when_stream_ends_on_duration() {
+        let event = timeout_event_if_needed(false)
+            .expect("timeout event")
+            .expect("infallible");
+        assert!(format!("{event:?}").contains(CONNECTION_TIMEOUT_MESSAGE));
     }
 }

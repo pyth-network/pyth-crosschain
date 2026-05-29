@@ -754,11 +754,7 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used, reason = "tests")]
 mod tests {
-    use {
-        super::*,
-        anyhow::anyhow,
-        tokio_tungstenite::tungstenite::Message as TungsteniteMessage,
-    };
+    use {super::*, anyhow::anyhow, tokio_tungstenite::tungstenite::Message as TungsteniteMessage};
 
     #[test]
     fn detects_write_buffer_full_error() {

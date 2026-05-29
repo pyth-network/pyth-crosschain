@@ -9,12 +9,7 @@ use {
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            counter::Counter,
-            family::Family,
-            gauge::Gauge,
-            histogram::Histogram,
-        },
+        metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
     },
     std::sync::Arc,
     tokio::time::Instant,

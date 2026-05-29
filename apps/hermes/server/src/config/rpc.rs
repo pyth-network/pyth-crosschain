@@ -29,6 +29,7 @@ pub struct Options {
     /// When true, disconnect WebSocket and SSE clients that cannot keep up with price updates.
     #[arg(long = "rpc-disconnect-slow-consumers")]
     #[arg(default_value = "true")]
+    #[arg(action = clap::ArgAction::Set)]
     #[arg(env = "RPC_DISCONNECT_SLOW_CONSUMERS")]
     pub disconnect_slow_consumers: bool,
 
