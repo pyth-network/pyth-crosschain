@@ -13,7 +13,7 @@ jobs:
       run:
         working-directory: target_chains/starknet/tools/test_vaas
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
@@ -34,7 +34,7 @@ jobs:
       - name: Check test data
         run: |
           . ~/.config/.starkli/env && cargo run --bin generate_test_data > ../../contracts/data.cairo
-          cd ../../contracts && scarb fmt data.cairo
+          cd ../../contracts && RUSTFLAGS="" scarb fmt data.cairo
           if ! diff ./tests/data.cairo data.cairo; then
             >&2 echo "Re-run generate_test_data to update data.cairo"
             exit 1
