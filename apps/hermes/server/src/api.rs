@@ -24,6 +24,7 @@ mod ws;
 pub struct StreamingConfig {
     pub disconnect_slow_consumers: bool,
     pub ws_max_write_buffer_bytes: usize,
+    pub ws_send_timeout: std::time::Duration,
 }
 
 pub struct ApiState<S> {
@@ -88,6 +89,7 @@ where
             StreamingConfig {
                 disconnect_slow_consumers: opts.rpc.disconnect_slow_consumers,
                 ws_max_write_buffer_bytes: opts.rpc.ws_max_write_buffer_bytes,
+                ws_send_timeout: std::time::Duration::from_secs(opts.rpc.ws_send_timeout_secs),
             },
         )
     };

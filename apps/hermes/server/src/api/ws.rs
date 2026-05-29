@@ -280,6 +280,7 @@ async fn websocket_handler<S>(
         state.ws.clone(),
         state.metrics.clone(),
         state.streaming.disconnect_slow_consumers,
+        state.streaming.ws_send_timeout,
         notify_receiver,
         receiver,
         sender,
@@ -299,6 +300,28 @@ fn is_write_buffer_full(err: &anyhow::Error) -> bool {
     })
 }
 
+#[derive(Debug)]
+struct WsSendTimeout;
+
+impl std::fmt::Display for WsSendTimeout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("WebSocket send timed out")
+    }
+}
+
+impl std::error::Error for WsSendTimeout {}
+
+fn ws_send_timeout_error() -> anyhow::Error {
+    anyhow!(WsSendTimeout)
+}
+
+fn is_slow_consumer_error(err: &anyhow::Error) -> bool {
+    is_write_buffer_full(err)
+        || err
+            .chain()
+            .any(|cause| cause.downcast_ref::<WsSendTimeout>().is_some())
+}
+
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the store for updates and sends them to the client.
 pub struct Subscriber<S> {
@@ -310,6 +333,7 @@ pub struct Subscriber<S> {
     ws_state: Arc<WsState>,
     metrics: Arc<super::metrics_middleware::ApiMetrics>,
     disconnect_slow_consumers: bool,
+    ws_send_timeout: Duration,
     notify_receiver: Receiver<AggregationEvent>,
     receiver: SplitStream<WebSocket>,
     sender: SplitSink<WebSocket, Message>,
@@ -345,6 +369,7 @@ where
         ws_state: Arc<WsState>,
         metrics: Arc<super::metrics_middleware::ApiMetrics>,
         disconnect_slow_consumers: bool,
+        ws_send_timeout: Duration,
         notify_receiver: Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
@@ -358,6 +383,7 @@ where
             ws_state,
             metrics,
             disconnect_slow_consumers,
+            ws_send_timeout,
             notify_receiver,
             receiver,
             sender,
@@ -376,15 +402,43 @@ where
             .inc();
     }
 
+    async fn ws_send(&mut self, message: Message) -> Result<()> {
+        tokio::time::timeout(self.ws_send_timeout, self.sender.send(message))
+            .await
+            .map_err(|_| ws_send_timeout_error())?
+            .map_err(Into::into)
+    }
+
+    async fn ws_feed(&mut self, message: Message) -> Result<()> {
+        tokio::time::timeout(self.ws_send_timeout, self.sender.feed(message))
+            .await
+            .map_err(|_| ws_send_timeout_error())?
+            .map_err(Into::into)
+    }
+
+    async fn ws_flush(&mut self) -> Result<()> {
+        tokio::time::timeout(self.ws_send_timeout, self.sender.flush())
+            .await
+            .map_err(|_| ws_send_timeout_error())?
+            .map_err(Into::into)
+    }
+
+    async fn ws_close(&mut self) -> Result<()> {
+        tokio::time::timeout(self.ws_send_timeout, self.sender.close())
+            .await
+            .map_err(|_| ws_send_timeout_error())?
+            .map_err(Into::into)
+    }
+
     #[tracing::instrument(skip(self))]
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                if self.disconnect_slow_consumers && is_write_buffer_full(&e) {
+                if self.disconnect_slow_consumers && is_slow_consumer_error(&e) {
                     tracing::info!(
                         subscriber = self.id,
                         ip = ?self.ip_addr,
-                        "Slow consumer disconnected (WebSocket write buffer full)."
+                        "Slow consumer disconnected (WebSocket write buffer full or send timeout)."
                     );
                     self.record_slow_consumer_disconnect();
                 } else {
@@ -423,7 +477,7 @@ where
                     return Err(anyhow!("Subscriber did not respond to ping. Closing connection."));
                 }
                 self.responded_to_ping = false;
-                self.sender.send(Message::Ping(vec![])).await?;
+                self.ws_send(Message::Ping(vec![])).await?;
                 Ok(())
             },
             _ = tokio::time::sleep_until(self.connection_deadline) => {
@@ -432,8 +486,7 @@ where
                     ip = ?self.ip_addr,
                     "Connection timeout reached (24h). Closing connection.",
                 );
-                self.sender
-                    .send(
+                self.ws_send(
                         serde_json::to_string(&ServerMessage::Response(
                             ServerResponseMessage::Err {
                                 error: "Connection timeout reached (24h)".to_string(),
@@ -442,12 +495,12 @@ where
                         .into(),
                     )
                     .await?;
-                self.sender.close().await?;
+                self.ws_close().await?;
                 self.closed = true;
                 Ok(())
             },
             _ = self.exit.changed() => {
-                self.sender.close().await?;
+                self.ws_close().await?;
                 self.closed = true;
                 Err(anyhow!("Application is shutting down. Closing connection."))
             }
@@ -554,15 +607,14 @@ where
                         })
                         .inc();
 
-                    self.sender
-                        .send(
+                    self.ws_send(
                             serde_json::to_string(&ServerResponseMessage::Err {
                                 error: "Rate limit exceeded".to_string(),
                             })?
                             .into(),
                         )
                         .await?;
-                    self.sender.close().await?;
+                    self.ws_close().await?;
                     self.closed = true;
                     return Ok(());
                 }
@@ -570,7 +622,7 @@ where
 
             // `sender.feed` buffers a message to the client but does not flush it, so we can send
             // multiple messages and flush them all at once.
-            self.sender.feed(message.into()).await?;
+            self.ws_feed(message.into()).await?;
 
             self.ws_state
                 .metrics
@@ -583,7 +635,7 @@ where
                 .inc();
         }
 
-        self.sender.flush().await?;
+        self.ws_flush().await?;
 
         // Record latency from receive to ws send after flushing
         if let Some(min_received_at) = min_received_at {
@@ -624,7 +676,7 @@ where
                 // Send the close message to gracefully shut down the connection
                 // Otherwise the client might get an abnormal Websocket closure
                 // error.
-                self.sender.close().await?;
+                self.ws_close().await?;
                 self.closed = true;
                 return Ok(());
             }
@@ -662,8 +714,7 @@ where
                         token_suffix: self.token_suffix.clone(),
                     })
                     .inc();
-                self.sender
-                    .send(
+                self.ws_send(
                         serde_json::to_string(&ServerMessage::Response(
                             ServerResponseMessage::Err {
                                 error: e.to_string(),
@@ -696,8 +747,7 @@ where
                 // asked correct price feed ids and return an error to be more explicit and clear,
                 // unless the client explicitly asked to ignore invalid ids
                 if !not_found_price_ids.is_empty() && !ignore_invalid_price_ids {
-                    self.sender
-                        .send(
+                    self.ws_send(
                             serde_json::to_string(&ServerMessage::Response(
                                 ServerResponseMessage::Err {
                                     error: format!(
@@ -740,8 +790,7 @@ where
             })
             .inc();
 
-        self.sender
-            .send(
+        self.ws_send(
                 serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?
                     .into(),
             )
@@ -757,6 +806,14 @@ mod tests {
     use {super::*, anyhow::anyhow, tungstenite::Message as TungsteniteMessage};
 
     #[test]
+    fn detects_write_buffer_full_as_slow_consumer_error() {
+        let err = anyhow!(WsError::WriteBufferFull(TungsteniteMessage::Text(
+            "test".into()
+        )));
+        assert!(is_slow_consumer_error(&err));
+    }
+
+    #[test]
     fn detects_write_buffer_full_error() {
         let err = anyhow!(WsError::WriteBufferFull(TungsteniteMessage::Text(
             "test".into()
@@ -770,11 +827,20 @@ mod tests {
             TungsteniteMessage::Text("test".into()),
         )));
         assert!(is_write_buffer_full(&err));
+        assert!(is_slow_consumer_error(&err));
+    }
+
+    #[test]
+    fn detects_ws_send_timeout_as_slow_consumer_error() {
+        let err = ws_send_timeout_error();
+        assert!(is_slow_consumer_error(&err));
+        assert!(!is_write_buffer_full(&err));
     }
 
     #[test]
     fn ignores_unrelated_errors() {
         let err = anyhow!("some other error");
         assert!(!is_write_buffer_full(&err));
+        assert!(!is_slow_consumer_error(&err));
     }
 }

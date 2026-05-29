@@ -139,7 +139,7 @@ mod tests {
             price_feeds_metadata::PriceFeedMetaState,
         },
         anyhow::Result,
-        std::{collections::HashSet, sync::Arc},
+        std::{collections::HashSet, sync::Arc, time::Duration},
         tokio::sync::broadcast::Receiver,
     };
 
@@ -223,6 +223,7 @@ mod tests {
             StreamingConfig {
                 disconnect_slow_consumers: true,
                 ws_max_write_buffer_bytes: 2 * 1024 * 1024,
+                ws_send_timeout: Duration::from_secs(5),
             },
         );
 
@@ -250,6 +251,7 @@ mod tests {
             StreamingConfig {
                 disconnect_slow_consumers: true,
                 ws_max_write_buffer_bytes: 2 * 1024 * 1024,
+                ws_send_timeout: Duration::from_secs(5),
             },
         );
 
@@ -277,6 +279,7 @@ mod tests {
             StreamingConfig {
                 disconnect_slow_consumers: true,
                 ws_max_write_buffer_bytes: 2 * 1024 * 1024,
+                ws_send_timeout: Duration::from_secs(5),
             },
         );
 
