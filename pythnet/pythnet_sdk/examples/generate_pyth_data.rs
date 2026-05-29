@@ -113,7 +113,8 @@ fn main() {
         for i in 0..10_000u32 {
             let (accumulator_account, _) = Pubkey::find_program_address(
                 &[b"AccumulatorState", &PYTH_PID, &i.to_be_bytes()],
-                &solana_sdk::system_program::id(),
+                // System Program ID is the zero pubkey.
+                &Pubkey::default(),
             );
             file.write_all(format!("{accumulator_account}\n").as_bytes())
                 .unwrap();

@@ -14,7 +14,7 @@ jobs:
       run:
         working-directory: pythnet/pythnet_sdk
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Format check
         run: cargo fmt --all -- --check

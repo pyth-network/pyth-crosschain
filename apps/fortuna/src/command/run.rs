@@ -12,7 +12,7 @@ use {
     anyhow::{anyhow, Error, Result},
     axum::Router,
     ethers::types::Address,
-    prometheus_client::{encoding::EncodeLabelSet, registry::Registry},
+    prometheus_client::registry::Registry,
     std::{collections::HashMap, net::SocketAddr, sync::Arc},
     tokio::{
         spawn,
@@ -331,9 +331,4 @@ async fn setup_chain_state(
         confirmed_block_status: chain_config.confirmed_block_status,
     };
     Ok(state)
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct ChainLabel {
-    pub chain_id: String,
 }
