@@ -20,11 +20,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: "package.json"
+          package-manager-cache: false
       # Libusb is a build requirement for the node-hid package and so pnpm
       # install will fail if this isn't in the build environment and if a
       # precompiled binary isn't found.
@@ -35,13 +36,13 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: v0.3.0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: true
       - name: Install Forge dependencies
         run: cd target_chains/ethereum/contracts && pnpm run install-forge-deps
       - name: Cache for Turbo
-        uses: rharkor/caching-for-turbo@v1.5
+        uses: rharkor/caching-for-turbo@v2.3.12
       - name: Build
         run: pnpm run turbo build
