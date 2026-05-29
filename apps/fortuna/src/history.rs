@@ -3,7 +3,7 @@ use {
     anyhow::Result,
     chrono::DateTime,
     ethers::{
-        core::utils::hex::ToHex,
+        core::utils::hex::ToHexExt,
         prelude::TxHash,
         types::{Address, Bytes, U256},
         utils::keccak256,
@@ -417,7 +417,7 @@ impl History {
         }
     }
 
-    pub fn query(&self) -> RequestQueryBuilder {
+    pub fn query(&self) -> RequestQueryBuilder<'_> {
         RequestQueryBuilder::new(&self.pool)
     }
 }
@@ -770,10 +770,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(format!(
-                "0x{}",
-                status.request_tx_hash.encode_hex::<String>()
-            ))
+            .search(format!("0x{}", status.request_tx_hash.encode_hex()))
             .unwrap()
             .execute()
             .await
@@ -782,7 +779,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(status.request_tx_hash.encode_hex::<String>().to_uppercase())
+            .search(status.request_tx_hash.encode_hex().to_uppercase())
             .unwrap()
             .execute()
             .await
@@ -793,7 +790,7 @@ mod test {
             .query()
             .search(format!(
                 "0x{}",
-                status.request_tx_hash.encode_hex::<String>().to_uppercase()
+                status.request_tx_hash.encode_hex().to_uppercase()
             ))
             .unwrap()
             .execute()
@@ -822,7 +819,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(format!("0x{}", reveal_tx_hash.encode_hex::<String>()))
+            .search(format!("0x{}", reveal_tx_hash.encode_hex()))
             .unwrap()
             .execute()
             .await
@@ -831,7 +828,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(reveal_tx_hash.encode_hex::<String>().to_uppercase())
+            .search(reveal_tx_hash.encode_hex().to_uppercase())
             .unwrap()
             .execute()
             .await
@@ -840,10 +837,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(format!(
-                "0x{}",
-                reveal_tx_hash.encode_hex::<String>().to_uppercase()
-            ))
+            .search(format!("0x{}", reveal_tx_hash.encode_hex().to_uppercase()))
             .unwrap()
             .execute()
             .await
@@ -872,7 +866,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(format!("0x{}", status.sender.encode_hex::<String>()))
+            .search(format!("0x{}", status.sender.encode_hex()))
             .unwrap()
             .network_id(status.network_id)
             .execute()
@@ -882,7 +876,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(status.sender.encode_hex::<String>().to_uppercase())
+            .search(status.sender.encode_hex().to_uppercase())
             .unwrap()
             .network_id(status.network_id)
             .execute()
@@ -892,10 +886,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(format!(
-                "0x{}",
-                status.sender.encode_hex::<String>().to_uppercase()
-            ))
+            .search(format!("0x{}", status.sender.encode_hex().to_uppercase()))
             .unwrap()
             .network_id(status.network_id)
             .execute()
