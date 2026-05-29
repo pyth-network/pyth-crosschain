@@ -1931,6 +1931,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "tungstenite 0.20.1",
  "utoipa",
  "utoipa-swagger-ui",
  "wormhole-sdk",

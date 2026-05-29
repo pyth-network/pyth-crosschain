@@ -46,7 +46,7 @@ use {
         sync::{broadcast::Receiver, watch},
         time::Instant,
     },
-    tokio_tungstenite::tungstenite::Error as WsError,
+    tungstenite::Error as WsError,
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -754,12 +754,20 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used, reason = "tests")]
 mod tests {
-    use {super::*, anyhow::anyhow, tokio_tungstenite::tungstenite::Message as TungsteniteMessage};
+    use {super::*, anyhow::anyhow, tungstenite::Message as TungsteniteMessage};
 
     #[test]
     fn detects_write_buffer_full_error() {
         let err = anyhow!(WsError::WriteBufferFull(TungsteniteMessage::Text(
             "test".into()
+        )));
+        assert!(is_write_buffer_full(&err));
+    }
+
+    #[test]
+    fn detects_write_buffer_full_error_through_axum_error() {
+        let err = anyhow!(axum::Error::new(WsError::WriteBufferFull(
+            TungsteniteMessage::Text("test".into()),
         )));
         assert!(is_write_buffer_full(&err));
     }
