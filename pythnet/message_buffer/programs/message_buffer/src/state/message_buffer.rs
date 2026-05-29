@@ -25,7 +25,6 @@ use anchor_lang::prelude::*;
 /// for cross-platform compatibility.
 #[account(zero_copy)]
 #[derive(InitSpace, Debug)]
-#[allow(dead_code)]
 pub struct MessageBuffer {
     /* header */
     pub bump: u8,    // 1
