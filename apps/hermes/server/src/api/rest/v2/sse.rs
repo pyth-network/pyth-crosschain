@@ -20,13 +20,30 @@ use {
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     std::{convert::Infallible, time::Duration},
-    tokio::{sync::broadcast, time::Instant},
-    tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
+    tokio::{
+        sync::{broadcast, mpsc},
+        time::Instant,
+    },
+    tokio_stream::{
+        wrappers::{errors::BroadcastStreamRecvError, BroadcastStream, ReceiverStream},
+        StreamExt as _,
+    },
     utoipa::IntoParams,
 };
 
 // Constants
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
+
+/// How long a single SSE event may wait to be accepted by the client before the
+/// client is treated as a slow consumer and the connection is closed. This
+/// bounds how long the producer task may park while trying to hand an event to a
+/// client that has stopped draining the channel.
+const SSE_SEND_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Bounded buffer of pending SSE events between the producer task and the
+/// response body. Caps per-connection buffering; once it stays full for
+/// [`SSE_SEND_TIMEOUT`] the client is treated as a slow consumer.
+const SSE_CHANNEL_CAPACITY: usize = 16;
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
@@ -80,7 +97,10 @@ fn default_true() -> bool {
 /// SSE route handler for streaming price updates.
 ///
 /// The connection will automatically close after 24 hours to prevent resource leaks.
-/// Clients should implement reconnection logic to maintain continuous price updates.
+/// It is also closed if the client cannot keep up with the update stream (a "slow
+/// consumer"): a final `error` event describing the reason is sent on a best-effort
+/// basis before the stream ends. Clients should implement reconnection logic to
+/// maintain continuous price updates.
 pub async fn price_stream_sse_handler<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
@@ -93,53 +113,108 @@ where
     let price_ids: Vec<PriceIdentifier> =
         validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
-    // Clone the update_tx receiver to listen for new price updates
+    // Subscribe to price updates and wrap the broadcast receiver in a Stream.
     let update_rx: broadcast::Receiver<AggregationEvent> = Aggregates::subscribe(&*state.state);
+    let mut stream = BroadcastStream::new(update_rx);
 
-    // Convert the broadcast receiver into a Stream
-    let stream = BroadcastStream::new(update_rx);
+    // Copy out the request options so the producer task can own them.
+    let encoding = params.encoding;
+    let parsed = params.parsed;
+    let benchmarks_only = params.benchmarks_only;
+    let allow_unordered = params.allow_unordered;
 
-    // Set connection start time
-    let start_time = Instant::now();
+    // Bounded channel between the producer task and the response body. Its
+    // capacity caps how many events we buffer for a connection.
+    let (tx, rx) = mpsc::channel::<Result<Event, Infallible>>(SSE_CHANNEL_CAPACITY);
 
-    let sse_stream = stream
-        .take_while(move |_| start_time.elapsed() < MAX_CONNECTION_DURATION)
-        .then(move |message| {
-            let state_clone = state.clone(); // Clone again to use inside the async block
-            let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
-            async move {
-                match message {
-                    Ok(event) => {
-                        match handle_aggregation_event(
-                            event,
-                            state_clone,
-                            price_ids_clone,
-                            params.encoding,
-                            params.parsed,
-                            params.benchmarks_only,
-                            params.allow_unordered,
-                        )
-                        .await
-                        {
-                            Ok(Some(update)) => Some(Ok(Event::default()
-                                .json_data(update)
-                                .unwrap_or_else(error_event))),
-                            Ok(None) => None,
-                            Err(e) => Some(Ok(error_event(e))),
+    // Drive the broadcast stream from an independent task rather than from the
+    // response body itself. An axum/hyper response body is only polled while the
+    // socket can accept more bytes, so a client that stops reading would freeze a
+    // body-driven stream — and any deadline or slow-consumer logic inside it —
+    // pinning the connection (its task and broadcast receiver) until the OS TCP
+    // timeout, which is the source of the unbounded memory growth. Producing
+    // events in a spawned task that forwards into the bounded channel keeps both
+    // the 24h deadline and slow-consumer detection working regardless of whether
+    // the client is reading: the channel fills, the send below times out, and we
+    // tear the connection down, dropping the broadcast receiver promptly.
+    tokio::spawn(async move {
+        // Hard wall-clock deadline, driven by the runtime independently of the body.
+        let deadline = tokio::time::sleep_until(Instant::now() + MAX_CONNECTION_DURATION);
+        tokio::pin!(deadline);
+
+        loop {
+            let event = tokio::select! {
+                biased;
+                // The response body (and thus the receiver) was dropped: the
+                // client disconnected, so there is nothing left to stream.
+                _ = tx.closed() => break,
+                // 24h hard deadline reached.
+                _ = &mut deadline => {
+                    let _ = tx.try_send(Ok(Event::default()
+                        .event("error")
+                        .data("Connection timeout reached (24h)")));
+                    state.metrics.sse_connection_timeouts.inc();
+                    break;
+                }
+                maybe_message = stream.next() => {
+                    match maybe_message {
+                        // Broadcast sender dropped; nothing left to stream.
+                        None => break,
+                        // The broadcast channel dropped `skipped` updates for this
+                        // receiver because the task itself fell behind (its sends to
+                        // a slow client backed up). Treat it as a slow consumer.
+                        Some(Err(BroadcastStreamRecvError::Lagged(skipped))) => {
+                            tracing::info!(
+                                skipped,
+                                "SSE client is a slow consumer (broadcast lag); closing connection.",
+                            );
+                            state.metrics.sse_slow_consumer_disconnects.inc();
+                            let _ = tx.try_send(Ok(Event::default().event("error").data(format!(
+                                "Slow consumer: dropped {skipped} updates. Closing connection.",
+                            ))));
+                            break;
+                        }
+                        Some(Ok(event)) => {
+                            match handle_aggregation_event(
+                                event,
+                                state.clone(),
+                                price_ids.clone(),
+                                encoding,
+                                parsed,
+                                benchmarks_only,
+                                allow_unordered,
+                            )
+                            .await
+                            {
+                                Ok(Some(update)) => {
+                                    Event::default().json_data(update).unwrap_or_else(error_event)
+                                }
+                                // No update for the subscribed feeds at this slot.
+                                Ok(None) => continue,
+                                Err(e) => error_event(e),
+                            }
                         }
                     }
-                    Err(e) => Some(Ok(error_event(e))),
+                }
+            };
+
+            // Forward the event to the client, bounded by SSE_SEND_TIMEOUT. If the
+            // client stops draining the channel it fills up and this send blocks;
+            // once it exceeds the timeout the client is a slow consumer and we close.
+            match tokio::time::timeout(SSE_SEND_TIMEOUT, tx.send(Ok(event))).await {
+                Ok(Ok(())) => {}
+                // Receiver dropped: client disconnected.
+                Ok(Err(_)) => break,
+                Err(_) => {
+                    tracing::info!("SSE client is a slow consumer (send timeout); closing connection.");
+                    state.metrics.sse_slow_consumer_disconnects.inc();
+                    break;
                 }
             }
-        })
-        .filter_map(|x| x)
-        .chain(futures::stream::once(async {
-            Ok(Event::default()
-                .event("error")
-                .data("Connection timeout reached (24h)"))
-        }));
+        }
+    });
 
-    Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
+    Ok(Sse::new(ReceiverStream::new(rx)).keep_alive(KeepAlive::default()))
 }
 
 async fn handle_aggregation_event<S>(

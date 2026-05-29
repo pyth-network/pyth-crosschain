@@ -19,6 +19,12 @@ pub struct ApiMetrics {
     pub requests: Family<Labels, Counter>,
     pub latencies: Family<LatencyLabels, Histogram>,
     pub sse_broadcast_latency: Histogram,
+    /// Number of SSE connections closed because the client could not keep up
+    /// with the price update stream (slow consumer).
+    pub sse_slow_consumer_disconnects: Counter,
+    /// Number of SSE connections closed because they reached the 24h hard
+    /// connection deadline.
+    pub sse_connection_timeouts: Counter,
 }
 
 impl ApiMetrics {
@@ -43,12 +49,16 @@ impl ApiMetrics {
                 ]
                 .into_iter(),
             ),
+            sse_slow_consumer_disconnects: Counter::default(),
+            sse_connection_timeouts: Counter::default(),
         };
 
         {
             let requests = new.requests.clone();
             let latencies = new.latencies.clone();
             let sse_broadcast_latency = new.sse_broadcast_latency.clone();
+            let sse_slow_consumer_disconnects = new.sse_slow_consumer_disconnects.clone();
+            let sse_connection_timeouts = new.sse_connection_timeouts.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -73,6 +83,26 @@ impl ApiMetrics {
                         "sse_broadcast_latency_seconds",
                         "Latency from Hermes receive_time to SSE send in seconds",
                         sse_broadcast_latency,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "sse_slow_consumer_disconnects",
+                        "Number of SSE connections closed due to a slow consumer",
+                        sse_slow_consumer_disconnects,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "sse_connection_timeouts",
+                        "Number of SSE connections closed after reaching the 24h deadline",
+                        sse_connection_timeouts,
                     ),
                 )
                 .await;
