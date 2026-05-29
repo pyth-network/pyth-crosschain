@@ -1,6 +1,7 @@
 use {
     crate::{
         api::{
+            metrics_middleware::stream_protocol_label,
             rest::{validate_price_ids, RestError},
             types::{
                 BinaryUpdate, EncodingType, ParsedPriceUpdate, PriceIdInput, PriceUpdate,
@@ -19,14 +20,48 @@ use {
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
-    std::{convert::Infallible, time::Duration},
-    tokio::{sync::broadcast, time::Instant},
-    tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
+    std::{
+        convert::Infallible,
+        sync::{
+            atomic::{AtomicBool, Ordering},
+            Arc,
+        },
+        time::Duration,
+    },
+    tokio::time::Instant,
+    tokio_stream::{
+        wrappers::{errors::BroadcastStreamRecvError, BroadcastStream},
+        StreamExt as _,
+    },
     utoipa::IntoParams,
 };
 
 // Constants
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
+const SLOW_CONSUMER_DISCONNECT_MESSAGE: &str = "Slow consumer: disconnected";
+
+struct SseConnectionGuard {
+    metrics: Arc<crate::api::metrics_middleware::ApiMetrics>,
+}
+
+impl SseConnectionGuard {
+    fn new(metrics: Arc<crate::api::metrics_middleware::ApiMetrics>) -> Self {
+        metrics
+            .stream_active_connections
+            .get_or_create(&stream_protocol_label("sse"))
+            .inc();
+        Self { metrics }
+    }
+}
+
+impl Drop for SseConnectionGuard {
+    fn drop(&mut self) {
+        self.metrics
+            .stream_active_connections
+            .get_or_create(&stream_protocol_label("sse"))
+            .dec();
+    }
+}
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
@@ -94,52 +129,86 @@ where
         validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
     // Clone the update_tx receiver to listen for new price updates
-    let update_rx: broadcast::Receiver<AggregationEvent> = Aggregates::subscribe(&*state.state);
+    let update_rx = Aggregates::subscribe(&*state.state);
 
     // Convert the broadcast receiver into a Stream
     let stream = BroadcastStream::new(update_rx);
 
     // Set connection start time
     let start_time = Instant::now();
+    let disconnect_slow_consumers = state.streaming.disconnect_slow_consumers;
+    let should_end = Arc::new(AtomicBool::new(false));
+    let metrics = state.metrics.clone();
 
-    let sse_stream = stream
-        .take_while(move |_| start_time.elapsed() < MAX_CONNECTION_DURATION)
-        .then(move |message| {
-            let state_clone = state.clone(); // Clone again to use inside the async block
-            let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
-            async move {
-                match message {
-                    Ok(event) => {
-                        match handle_aggregation_event(
-                            event,
-                            state_clone,
-                            price_ids_clone,
-                            params.encoding,
-                            params.parsed,
-                            params.benchmarks_only,
-                            params.allow_unordered,
-                        )
-                        .await
-                        {
-                            Ok(Some(update)) => Some(Ok(Event::default()
-                                .json_data(update)
-                                .unwrap_or_else(error_event))),
-                            Ok(None) => None,
-                            Err(e) => Some(Ok(error_event(e))),
+    let mut inner_stream = futures::stream::StreamExt::boxed(
+        stream
+            .take_while({
+                let should_end = should_end.clone();
+                move |_| {
+                    !should_end.load(Ordering::Relaxed)
+                        && start_time.elapsed() < MAX_CONNECTION_DURATION
+                }
+            })
+            .then(move |message| {
+                let state_clone = state.clone();
+                let price_ids_clone = price_ids.clone();
+                let should_end = should_end.clone();
+                async move {
+                    match message {
+                        Ok(event) => {
+                            match handle_aggregation_event(
+                                event,
+                                state_clone,
+                                price_ids_clone,
+                                params.encoding,
+                                params.parsed,
+                                params.benchmarks_only,
+                                params.allow_unordered,
+                            )
+                            .await
+                            {
+                                Ok(Some(update)) => Some(Ok(Event::default()
+                                    .json_data(update)
+                                    .unwrap_or_else(error_event))),
+                                Ok(None) => None,
+                                Err(e) => Some(Ok(error_event(e))),
+                            }
+                        }
+                        Err(e) => {
+                            if matches!(e, BroadcastStreamRecvError::Lagged(_)) {
+                                state_clone.metrics.sse_broadcast_lagged.inc();
+                            }
+                            if should_disconnect_slow_sse_consumer(&e, disconnect_slow_consumers) {
+                                tracing::info!("Slow consumer disconnected (SSE broadcast lagged).");
+                                state_clone
+                                    .metrics
+                                    .stream_slow_consumer_disconnects
+                                    .get_or_create(&stream_protocol_label("sse"))
+                                    .inc();
+                                should_end.store(true, Ordering::Relaxed);
+                                Some(Ok(slow_consumer_disconnect_event()))
+                            } else {
+                                Some(Ok(error_event(e)))
+                            }
                         }
                     }
-                    Err(e) => Some(Ok(error_event(e))),
                 }
-            }
-        })
-        .filter_map(|x| x)
-        .chain(futures::stream::once(async {
-            Ok(Event::default()
-                .event("error")
-                .data("Connection timeout reached (24h)"))
-        }));
+            })
+            .filter_map(|x| x)
+            .chain(futures::stream::once(async {
+                Ok(Event::default()
+                    .event("error")
+                    .data("Connection timeout reached (24h)"))
+            })),
+    );
 
-    Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
+    let guard = SseConnectionGuard::new(metrics);
+    let guarded_stream = futures::stream::poll_fn(move |cx| {
+        let _ = &guard;
+        futures::stream::StreamExt::poll_next_unpin(&mut inner_stream, cx)
+    });
+
+    Ok(Sse::new(guarded_stream).keep_alive(KeepAlive::default()))
 }
 
 async fn handle_aggregation_event<S>(
@@ -240,8 +309,49 @@ where
     }))
 }
 
+fn slow_consumer_disconnect_event() -> Event {
+    Event::default()
+        .event("error")
+        .data(SLOW_CONSUMER_DISCONNECT_MESSAGE)
+}
+
+fn should_disconnect_slow_sse_consumer(
+    err: &BroadcastStreamRecvError,
+    disconnect_slow_consumers: bool,
+) -> bool {
+    matches!(err, BroadcastStreamRecvError::Lagged(_)) && disconnect_slow_consumers
+}
+
 fn error_event<E: std::fmt::Debug>(e: E) -> Event {
     Event::default()
         .event("error")
         .data(format!("Error receiving update: {e:?}"))
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests")]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn slow_consumer_disconnect_event_has_expected_message() {
+        let event = slow_consumer_disconnect_event();
+        assert!(format!("{event:?}").contains(SLOW_CONSUMER_DISCONNECT_MESSAGE));
+    }
+
+    #[test]
+    fn disconnects_lagging_sse_clients_when_enabled() {
+        assert!(should_disconnect_slow_sse_consumer(
+            &BroadcastStreamRecvError::Lagged(3),
+            true,
+        ));
+    }
+
+    #[test]
+    fn keeps_lagging_sse_clients_when_disabled() {
+        assert!(!should_disconnect_slow_sse_consumer(
+            &BroadcastStreamRecvError::Lagged(3),
+            false,
+        ));
+    }
 }

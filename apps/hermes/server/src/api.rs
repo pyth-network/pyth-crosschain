@@ -20,10 +20,17 @@ pub mod token;
 pub mod types;
 mod ws;
 
+#[derive(Clone, Debug)]
+pub struct StreamingConfig {
+    pub disconnect_slow_consumers: bool,
+    pub ws_max_write_buffer_bytes: usize,
+}
+
 pub struct ApiState<S> {
     pub state: Arc<S>,
     pub ws: Arc<ws::WsState>,
     pub metrics: Arc<metrics_middleware::ApiMetrics>,
+    pub streaming: StreamingConfig,
 }
 
 /// Manually implement `Clone` as the derive macro will try and slap `Clone` on
@@ -34,12 +41,18 @@ impl<S> Clone for ApiState<S> {
             state: self.state.clone(),
             ws: self.ws.clone(),
             metrics: self.metrics.clone(),
+            streaming: self.streaming.clone(),
         }
     }
 }
 
 impl<S> ApiState<S> {
-    pub fn new(state: Arc<S>, ws_whitelist: Vec<IpNet>, requester_ip_header_name: String) -> Self
+    pub fn new(
+        state: Arc<S>,
+        ws_whitelist: Vec<IpNet>,
+        requester_ip_header_name: String,
+        streaming: StreamingConfig,
+    ) -> Self
     where
         S: Metrics,
         S: Send + Sync + 'static,
@@ -52,6 +65,7 @@ impl<S> ApiState<S> {
                 state.clone(),
             )),
             state,
+            streaming,
         }
     }
 }
@@ -71,6 +85,10 @@ where
             state,
             opts.rpc.ws_whitelist,
             opts.rpc.requester_ip_header_name,
+            StreamingConfig {
+                disconnect_slow_consumers: opts.rpc.disconnect_slow_consumers,
+                ws_max_write_buffer_bytes: opts.rpc.ws_max_write_buffer_bytes,
+            },
         )
     };
 

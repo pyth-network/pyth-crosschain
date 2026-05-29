@@ -9,16 +9,29 @@ use {
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{counter::Counter, family::Family, histogram::Histogram},
+        metrics::{
+            counter::Counter,
+            family::Family,
+            gauge::Gauge,
+            histogram::Histogram,
+        },
     },
     std::sync::Arc,
     tokio::time::Instant,
 };
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
+pub struct StreamProtocolLabel {
+    pub protocol: String,
+}
+
 pub struct ApiMetrics {
     pub requests: Family<Labels, Counter>,
     pub latencies: Family<LatencyLabels, Histogram>,
     pub sse_broadcast_latency: Histogram,
+    pub stream_active_connections: Family<StreamProtocolLabel, Gauge>,
+    pub stream_slow_consumer_disconnects: Family<StreamProtocolLabel, Counter>,
+    pub sse_broadcast_lagged: Counter,
 }
 
 impl ApiMetrics {
@@ -43,12 +56,18 @@ impl ApiMetrics {
                 ]
                 .into_iter(),
             ),
+            stream_active_connections: Family::default(),
+            stream_slow_consumer_disconnects: Family::default(),
+            sse_broadcast_lagged: Counter::default(),
         };
 
         {
             let requests = new.requests.clone();
             let latencies = new.latencies.clone();
             let sse_broadcast_latency = new.sse_broadcast_latency.clone();
+            let stream_active_connections = new.stream_active_connections.clone();
+            let stream_slow_consumer_disconnects = new.stream_slow_consumer_disconnects.clone();
+            let sse_broadcast_lagged = new.sse_broadcast_lagged.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -73,6 +92,36 @@ impl ApiMetrics {
                         "sse_broadcast_latency_seconds",
                         "Latency from Hermes receive_time to SSE send in seconds",
                         sse_broadcast_latency,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "stream_active_connections",
+                        "Number of active WebSocket and SSE streaming connections",
+                        stream_active_connections,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "stream_slow_consumer_disconnects_total",
+                        "Total streaming connections closed due to slow consumption",
+                        stream_slow_consumer_disconnects,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "sse_broadcast_lagged_total",
+                        "Total SSE broadcast lag events (client missed updates)",
+                        sse_broadcast_lagged,
                     ),
                 )
                 .await;
@@ -140,4 +189,10 @@ pub async fn track_metrics<B, S>(
         .observe(latency);
 
     response
+}
+
+pub fn stream_protocol_label(protocol: &str) -> StreamProtocolLabel {
+    StreamProtocolLabel {
+        protocol: protocol.to_string(),
+    }
 }
