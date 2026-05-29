@@ -1,6 +1,5 @@
 use {
     super::{
-        metrics_middleware::stream_protocol_label,
         token,
         types::{PriceIdInput, RpcPriceFeed},
         ApiState,
@@ -46,12 +45,23 @@ use {
         sync::{broadcast::Receiver, watch},
         time::Instant,
     },
-    tungstenite::Error as WsError,
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
 const MAX_CLIENT_MESSAGE_SIZE: usize = 1025 * 1024; // 1 MiB
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
+
+/// Maximum time a single websocket write (feed/flush/send/close) may take before
+/// the client is treated as a slow consumer and the connection is closed.
+///
+/// Without this bound, a client that stops reading parks the connection task
+/// inside `flush().await` (or `feed().await`) indefinitely — until the OS TCP
+/// timeout, which can be hours. While parked there, none of the sibling
+/// `tokio::select!` branches (the ping check and the 24h deadline) can fire, so
+/// the connection — its task, its write buffer, and its broadcast receiver slot
+/// — stays pinned in memory. Accumulating such stalled connections is the source
+/// of the server's unbounded memory growth, so we cap every write here.
+const WS_SEND_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// The maximum number of bytes that can be sent per second per IP address.
 /// If the limit is exceeded, the connection is closed.
@@ -72,6 +82,8 @@ pub enum Interaction {
     PriceUpdate,
     ClientMessage,
     RateLimit,
+    SlowConsumer,
+    ConnectionTimeout,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelValue)]
@@ -226,12 +238,8 @@ where
     let api_token = token::extract_token_from_headers_and_uri(&headers, &uri);
     let token_suffix = token::get_token_suffix(api_token.as_deref());
 
-    let mut ws = ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE);
-    if state.streaming.disconnect_slow_consumers {
-        ws = ws.max_write_buffer_size(state.streaming.ws_max_write_buffer_bytes);
-    }
-
-    ws.on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, token_suffix))
+    ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
+        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, token_suffix))
 }
 
 #[tracing::instrument(skip(stream, state, subscriber_ip, token_suffix))]
@@ -265,21 +273,12 @@ async fn websocket_handler<S>(
 
     let notify_receiver = Aggregates::subscribe(&*state.state);
     let (sender, receiver) = stream.split();
-
-    state
-        .metrics
-        .stream_active_connections
-        .get_or_create(&stream_protocol_label("ws"))
-        .inc();
-
     let mut subscriber = Subscriber::new(
         id,
         subscriber_ip,
         token_suffix,
         state.state.clone(),
         state.ws.clone(),
-        state.metrics.clone(),
-        state.streaming.disconnect_slow_consumers,
         notify_receiver,
         receiver,
         sender,
@@ -290,15 +289,6 @@ async fn websocket_handler<S>(
 
 pub type SubscriberId = usize;
 
-fn is_write_buffer_full(err: &anyhow::Error) -> bool {
-    err.chain().any(|cause| {
-        matches!(
-            cause.downcast_ref::<WsError>(),
-            Some(WsError::WriteBufferFull(_))
-        )
-    })
-}
-
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the store for updates and sends them to the client.
 pub struct Subscriber<S> {
@@ -308,8 +298,6 @@ pub struct Subscriber<S> {
     closed: bool,
     state: Arc<S>,
     ws_state: Arc<WsState>,
-    metrics: Arc<super::metrics_middleware::ApiMetrics>,
-    disconnect_slow_consumers: bool,
     notify_receiver: Receiver<AggregationEvent>,
     receiver: SplitStream<WebSocket>,
     sender: SplitSink<WebSocket, Message>,
@@ -318,15 +306,6 @@ pub struct Subscriber<S> {
     connection_deadline: Instant,
     exit: watch::Receiver<bool>,
     responded_to_ping: bool,
-}
-
-impl<S> Drop for Subscriber<S> {
-    fn drop(&mut self) {
-        self.metrics
-            .stream_active_connections
-            .get_or_create(&stream_protocol_label("ws"))
-            .dec();
-    }
 }
 
 impl<S> Subscriber<S>
@@ -343,8 +322,6 @@ where
         token_suffix: String,
         state: Arc<S>,
         ws_state: Arc<WsState>,
-        metrics: Arc<super::metrics_middleware::ApiMetrics>,
-        disconnect_slow_consumers: bool,
         notify_receiver: Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
@@ -356,8 +333,6 @@ where
             closed: false,
             state,
             ws_state,
-            metrics,
-            disconnect_slow_consumers,
             notify_receiver,
             receiver,
             sender,
@@ -369,27 +344,76 @@ where
         }
     }
 
-    fn record_slow_consumer_disconnect(&self) {
-        self.metrics
-            .stream_slow_consumer_disconnects
-            .get_or_create(&stream_protocol_label("ws"))
+    /// Sends a message to the client, closing the connection (by returning an
+    /// error) if the write does not complete within [`WS_SEND_TIMEOUT`]. See the
+    /// constant's docs for why this slow-consumer bound is required.
+    async fn send_to_client(&mut self, message: Message) -> Result<()> {
+        match tokio::time::timeout(WS_SEND_TIMEOUT, self.sender.send(message)).await {
+            Ok(result) => result.map_err(anyhow::Error::from),
+            Err(_) => Err(self.slow_consumer_error()),
+        }
+    }
+
+    /// Buffers a message for the client (without flushing), bounded by
+    /// [`WS_SEND_TIMEOUT`] for slow-consumer protection.
+    async fn feed_to_client(&mut self, message: Message) -> Result<()> {
+        match tokio::time::timeout(WS_SEND_TIMEOUT, self.sender.feed(message)).await {
+            Ok(result) => result.map_err(anyhow::Error::from),
+            Err(_) => Err(self.slow_consumer_error()),
+        }
+    }
+
+    /// Flushes buffered messages to the client, bounded by [`WS_SEND_TIMEOUT`].
+    /// This is where backpressure from a slow consumer surfaces, so the timeout
+    /// here is what actually reclaims a stalled connection.
+    async fn flush_to_client(&mut self) -> Result<()> {
+        match tokio::time::timeout(WS_SEND_TIMEOUT, self.sender.flush()).await {
+            Ok(result) => result.map_err(anyhow::Error::from),
+            Err(_) => Err(self.slow_consumer_error()),
+        }
+    }
+
+    /// Closes the connection, bounded by [`WS_SEND_TIMEOUT`] so that flushing the
+    /// close frame to a slow consumer cannot block shutdown indefinitely. A
+    /// timeout here is *not* attributed as a slow consumer: closing is
+    /// best-effort teardown (e.g. mass closes during a deploy can legitimately
+    /// back up), and the connection is dropped regardless.
+    async fn close_client(&mut self) -> Result<()> {
+        match tokio::time::timeout(WS_SEND_TIMEOUT, self.sender.close()).await {
+            Ok(result) => result.map_err(anyhow::Error::from),
+            Err(_) => {
+                tracing::debug!(id = self.id, ip = ?self.ip_addr, "Websocket close timed out.");
+                Err(anyhow!("websocket close timed out"))
+            }
+        }
+    }
+
+    /// Records a slow-consumer disconnect (log + metric) and builds the error
+    /// returned from the write helpers to tear the connection down.
+    fn slow_consumer_error(&self) -> anyhow::Error {
+        tracing::info!(
+            id = self.id,
+            ip = ?self.ip_addr,
+            "Slow consumer detected (write exceeded {:?}). Closing connection.",
+            WS_SEND_TIMEOUT,
+        );
+        self.ws_state
+            .metrics
+            .interactions
+            .get_or_create(&Labels {
+                interaction: Interaction::SlowConsumer,
+                status: Status::Error,
+                token_suffix: self.token_suffix.clone(),
+            })
             .inc();
+        anyhow!("Slow consumer: websocket write exceeded {:?}", WS_SEND_TIMEOUT)
     }
 
     #[tracing::instrument(skip(self))]
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                if self.disconnect_slow_consumers && is_write_buffer_full(&e) {
-                    tracing::info!(
-                        subscriber = self.id,
-                        ip = ?self.ip_addr,
-                        "Slow consumer disconnected (WebSocket write buffer full)."
-                    );
-                    self.record_slow_consumer_disconnect();
-                } else {
-                    tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
-                }
+                tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
                 break;
             }
         }
@@ -423,7 +447,7 @@ where
                     return Err(anyhow!("Subscriber did not respond to ping. Closing connection."));
                 }
                 self.responded_to_ping = false;
-                self.sender.send(Message::Ping(vec![])).await?;
+                self.send_to_client(Message::Ping(vec![])).await?;
                 Ok(())
             },
             _ = tokio::time::sleep_until(self.connection_deadline) => {
@@ -432,22 +456,31 @@ where
                     ip = ?self.ip_addr,
                     "Connection timeout reached (24h). Closing connection.",
                 );
-                self.sender
-                    .send(
-                        serde_json::to_string(&ServerMessage::Response(
-                            ServerResponseMessage::Err {
-                                error: "Connection timeout reached (24h)".to_string(),
-                            },
-                        ))?
-                        .into(),
-                    )
-                    .await?;
-                self.sender.close().await?;
+                self.ws_state
+                    .metrics
+                    .interactions
+                    .get_or_create(&Labels {
+                        interaction: Interaction::ConnectionTimeout,
+                        status: Status::Success,
+                        token_suffix: self.token_suffix.clone(),
+                    })
+                    .inc();
+                // Best-effort final message + close. A deadline teardown is
+                // attributed to ConnectionTimeout only: we do NOT route these
+                // through the slow-consumer helpers, so an idle/slow client at the
+                // 24h mark is not also miscounted as a slow consumer.
+                let goodbye = serde_json::to_string(&ServerMessage::Response(
+                    ServerResponseMessage::Err {
+                        error: "Connection timeout reached (24h)".to_string(),
+                    },
+                ))?;
+                let _ = tokio::time::timeout(WS_SEND_TIMEOUT, self.sender.send(goodbye.into())).await;
+                let _ = self.close_client().await;
                 self.closed = true;
                 Ok(())
             },
             _ = self.exit.changed() => {
-                self.sender.close().await?;
+                self.close_client().await?;
                 self.closed = true;
                 Err(anyhow!("Application is shutting down. Closing connection."))
             }
@@ -554,15 +587,14 @@ where
                         })
                         .inc();
 
-                    self.sender
-                        .send(
-                            serde_json::to_string(&ServerResponseMessage::Err {
-                                error: "Rate limit exceeded".to_string(),
-                            })?
-                            .into(),
-                        )
-                        .await?;
-                    self.sender.close().await?;
+                    self.send_to_client(
+                        serde_json::to_string(&ServerResponseMessage::Err {
+                            error: "Rate limit exceeded".to_string(),
+                        })?
+                        .into(),
+                    )
+                    .await?;
+                    self.close_client().await?;
                     self.closed = true;
                     return Ok(());
                 }
@@ -570,7 +602,7 @@ where
 
             // `sender.feed` buffers a message to the client but does not flush it, so we can send
             // multiple messages and flush them all at once.
-            self.sender.feed(message.into()).await?;
+            self.feed_to_client(message.into()).await?;
 
             self.ws_state
                 .metrics
@@ -583,7 +615,7 @@ where
                 .inc();
         }
 
-        self.sender.flush().await?;
+        self.flush_to_client().await?;
 
         // Record latency from receive to ws send after flushing
         if let Some(min_received_at) = min_received_at {
@@ -624,7 +656,7 @@ where
                 // Send the close message to gracefully shut down the connection
                 // Otherwise the client might get an abnormal Websocket closure
                 // error.
-                self.sender.close().await?;
+                self.close_client().await?;
                 self.closed = true;
                 return Ok(());
             }
@@ -662,16 +694,15 @@ where
                         token_suffix: self.token_suffix.clone(),
                     })
                     .inc();
-                self.sender
-                    .send(
-                        serde_json::to_string(&ServerMessage::Response(
-                            ServerResponseMessage::Err {
-                                error: e.to_string(),
-                            },
-                        ))?
-                        .into(),
-                    )
-                    .await?;
+                self.send_to_client(
+                    serde_json::to_string(&ServerMessage::Response(
+                        ServerResponseMessage::Err {
+                            error: e.to_string(),
+                        },
+                    ))?
+                    .into(),
+                )
+                .await?;
                 return Ok(());
             }
 
@@ -696,18 +727,17 @@ where
                 // asked correct price feed ids and return an error to be more explicit and clear,
                 // unless the client explicitly asked to ignore invalid ids
                 if !not_found_price_ids.is_empty() && !ignore_invalid_price_ids {
-                    self.sender
-                        .send(
-                            serde_json::to_string(&ServerMessage::Response(
-                                ServerResponseMessage::Err {
-                                    error: format!(
-                                        "Price feed(s) with id(s) {not_found_price_ids:?} not found",
-                                    ),
-                                },
-                            ))?
-                            .into(),
-                        )
-                        .await?;
+                    self.send_to_client(
+                        serde_json::to_string(&ServerMessage::Response(
+                            ServerResponseMessage::Err {
+                                error: format!(
+                                    "Price feed(s) with id(s) {not_found_price_ids:?} not found",
+                                ),
+                            },
+                        ))?
+                        .into(),
+                    )
+                    .await?;
                     return Ok(());
                 } else {
                     for price_id in found_price_ids {
@@ -740,41 +770,12 @@ where
             })
             .inc();
 
-        self.sender
-            .send(
-                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?
-                    .into(),
-            )
-            .await?;
+        self.send_to_client(
+            serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?
+                .into(),
+        )
+        .await?;
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used, reason = "tests")]
-mod tests {
-    use {super::*, anyhow::anyhow, tungstenite::Message as TungsteniteMessage};
-
-    #[test]
-    fn detects_write_buffer_full_error() {
-        let err = anyhow!(WsError::WriteBufferFull(TungsteniteMessage::Text(
-            "test".into()
-        )));
-        assert!(is_write_buffer_full(&err));
-    }
-
-    #[test]
-    fn detects_write_buffer_full_error_through_axum_error() {
-        let err = anyhow!(axum::Error::new(WsError::WriteBufferFull(
-            TungsteniteMessage::Text("test".into()),
-        )));
-        assert!(is_write_buffer_full(&err));
-    }
-
-    #[test]
-    fn ignores_unrelated_errors() {
-        let err = anyhow!("some other error");
-        assert!(!is_write_buffer_full(&err));
     }
 }

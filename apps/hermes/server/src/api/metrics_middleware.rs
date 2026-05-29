@@ -9,24 +9,22 @@ use {
     },
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
+        metrics::{counter::Counter, family::Family, histogram::Histogram},
     },
     std::sync::Arc,
     tokio::time::Instant,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
-pub struct StreamProtocolLabel {
-    pub protocol: String,
-}
-
 pub struct ApiMetrics {
     pub requests: Family<Labels, Counter>,
     pub latencies: Family<LatencyLabels, Histogram>,
     pub sse_broadcast_latency: Histogram,
-    pub stream_active_connections: Family<StreamProtocolLabel, Gauge>,
-    pub stream_slow_consumer_disconnects: Family<StreamProtocolLabel, Counter>,
-    pub sse_broadcast_lagged: Counter,
+    /// Number of SSE connections closed because the client could not keep up
+    /// with the price update stream (slow consumer).
+    pub sse_slow_consumer_disconnects: Counter,
+    /// Number of SSE connections closed because they reached the 24h hard
+    /// connection deadline.
+    pub sse_connection_timeouts: Counter,
 }
 
 impl ApiMetrics {
@@ -51,18 +49,16 @@ impl ApiMetrics {
                 ]
                 .into_iter(),
             ),
-            stream_active_connections: Family::default(),
-            stream_slow_consumer_disconnects: Family::default(),
-            sse_broadcast_lagged: Counter::default(),
+            sse_slow_consumer_disconnects: Counter::default(),
+            sse_connection_timeouts: Counter::default(),
         };
 
         {
             let requests = new.requests.clone();
             let latencies = new.latencies.clone();
             let sse_broadcast_latency = new.sse_broadcast_latency.clone();
-            let stream_active_connections = new.stream_active_connections.clone();
-            let stream_slow_consumer_disconnects = new.stream_slow_consumer_disconnects.clone();
-            let sse_broadcast_lagged = new.sse_broadcast_lagged.clone();
+            let sse_slow_consumer_disconnects = new.sse_slow_consumer_disconnects.clone();
+            let sse_connection_timeouts = new.sse_connection_timeouts.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -94,9 +90,9 @@ impl ApiMetrics {
                 Metrics::register(
                     &*state,
                     (
-                        "stream_active_connections",
-                        "Number of active WebSocket and SSE streaming connections",
-                        stream_active_connections,
+                        "sse_slow_consumer_disconnects",
+                        "Number of SSE connections closed due to a slow consumer",
+                        sse_slow_consumer_disconnects,
                     ),
                 )
                 .await;
@@ -104,19 +100,9 @@ impl ApiMetrics {
                 Metrics::register(
                     &*state,
                     (
-                        "stream_slow_consumer_disconnects_total",
-                        "Total streaming connections closed due to slow consumption",
-                        stream_slow_consumer_disconnects,
-                    ),
-                )
-                .await;
-
-                Metrics::register(
-                    &*state,
-                    (
-                        "sse_broadcast_lagged_total",
-                        "Total SSE broadcast lag events (client missed updates)",
-                        sse_broadcast_lagged,
+                        "sse_connection_timeouts",
+                        "Number of SSE connections closed after reaching the 24h deadline",
+                        sse_connection_timeouts,
                     ),
                 )
                 .await;
@@ -184,10 +170,4 @@ pub async fn track_metrics<B, S>(
         .observe(latency);
 
     response
-}
-
-pub fn stream_protocol_label(protocol: &str) -> StreamProtocolLabel {
-    StreamProtocolLabel {
-        protocol: protocol.to_string(),
-    }
 }

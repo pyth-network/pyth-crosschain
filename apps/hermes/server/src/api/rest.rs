@@ -127,7 +127,6 @@ where
 mod tests {
     use {
         super::*,
-        crate::api::StreamingConfig,
         crate::state::{
             aggregate::{
                 AggregationEvent, PriceFeedsWithUpdateData, PublisherStakeCapsWithUpdateData,
@@ -216,15 +215,7 @@ mod tests {
         available_ids.insert(id2);
 
         let mock_state = MockAggregates { available_ids };
-        let api_state = ApiState::new(
-            Arc::new(mock_state),
-            vec![],
-            String::new(),
-            StreamingConfig {
-                disconnect_slow_consumers: true,
-                ws_max_write_buffer_bytes: 2 * 1024 * 1024,
-            },
-        );
+        let api_state = ApiState::new(Arc::new(mock_state), vec![], String::new());
 
         let input_ids = vec![id1, id2];
         let result = validate_price_ids(&api_state, &input_ids, false).await;
@@ -243,15 +234,7 @@ mod tests {
         available_ids.insert(id2);
 
         let mock_state = MockAggregates { available_ids };
-        let api_state = ApiState::new(
-            Arc::new(mock_state),
-            vec![],
-            String::new(),
-            StreamingConfig {
-                disconnect_slow_consumers: true,
-                ws_max_write_buffer_bytes: 2 * 1024 * 1024,
-            },
-        );
+        let api_state = ApiState::new(Arc::new(mock_state), vec![], String::new());
 
         let input_ids = vec![id1, id2, id3];
         let result = validate_price_ids(&api_state, &input_ids, true).await;
@@ -270,15 +253,7 @@ mod tests {
         available_ids.insert(id2);
 
         let mock_state = MockAggregates { available_ids };
-        let api_state = ApiState::new(
-            Arc::new(mock_state),
-            vec![],
-            String::new(),
-            StreamingConfig {
-                disconnect_slow_consumers: true,
-                ws_max_write_buffer_bytes: 2 * 1024 * 1024,
-            },
-        );
+        let api_state = ApiState::new(Arc::new(mock_state), vec![], String::new());
 
         let input_ids = vec![id1, id2, id3];
         let result = validate_price_ids(&api_state, &input_ids, false).await;
