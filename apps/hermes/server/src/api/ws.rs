@@ -608,12 +608,12 @@ where
                         .inc();
 
                     self.ws_send(
-                            serde_json::to_string(&ServerResponseMessage::Err {
-                                error: "Rate limit exceeded".to_string(),
-                            })?
-                            .into(),
-                        )
-                        .await?;
+                        serde_json::to_string(&ServerResponseMessage::Err {
+                            error: "Rate limit exceeded".to_string(),
+                        })?
+                        .into(),
+                    )
+                    .await?;
                     self.ws_close().await?;
                     self.closed = true;
                     return Ok(());
@@ -715,14 +715,12 @@ where
                     })
                     .inc();
                 self.ws_send(
-                        serde_json::to_string(&ServerMessage::Response(
-                            ServerResponseMessage::Err {
-                                error: e.to_string(),
-                            },
-                        ))?
-                        .into(),
-                    )
-                    .await?;
+                    serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Err {
+                        error: e.to_string(),
+                    }))?
+                    .into(),
+                )
+                .await?;
                 return Ok(());
             }
 
@@ -748,16 +746,16 @@ where
                 // unless the client explicitly asked to ignore invalid ids
                 if !not_found_price_ids.is_empty() && !ignore_invalid_price_ids {
                     self.ws_send(
-                            serde_json::to_string(&ServerMessage::Response(
-                                ServerResponseMessage::Err {
-                                    error: format!(
-                                        "Price feed(s) with id(s) {not_found_price_ids:?} not found",
-                                    ),
-                                },
-                            ))?
-                            .into(),
-                        )
-                        .await?;
+                        serde_json::to_string(&ServerMessage::Response(
+                            ServerResponseMessage::Err {
+                                error: format!(
+                                    "Price feed(s) with id(s) {not_found_price_ids:?} not found",
+                                ),
+                            },
+                        ))?
+                        .into(),
+                    )
+                    .await?;
                     return Ok(());
                 } else {
                     for price_id in found_price_ids {
@@ -791,10 +789,9 @@ where
             .inc();
 
         self.ws_send(
-                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?
-                    .into(),
-            )
-            .await?;
+            serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?.into(),
+        )
+        .await?;
 
         Ok(())
     }
