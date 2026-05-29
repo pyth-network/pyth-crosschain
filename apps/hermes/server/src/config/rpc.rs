@@ -3,6 +3,7 @@ use {clap::Args, ipnet::IpNet, std::net::SocketAddr};
 const DEFAULT_RPC_LISTEN_ADDR: &str = "127.0.0.1:33999";
 const DEFAULT_RPC_REQUESTER_IP_HEADER_NAME: &str = "X-Forwarded-For";
 const DEFAULT_RPC_WS_MAX_WRITE_BUFFER_BYTES: &str = "2097152";
+const DEFAULT_RPC_WS_SEND_TIMEOUT_SECS: &str = "5";
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "RPC Options")]
@@ -39,4 +40,11 @@ pub struct Options {
     #[arg(default_value = DEFAULT_RPC_WS_MAX_WRITE_BUFFER_BYTES)]
     #[arg(env = "RPC_WS_MAX_WRITE_BUFFER_BYTES")]
     pub ws_max_write_buffer_bytes: usize,
+
+    /// Maximum time in seconds to wait for a WebSocket send, feed, or flush
+    /// operation before treating the client as a slow consumer.
+    #[arg(long = "rpc-ws-send-timeout-secs")]
+    #[arg(default_value = DEFAULT_RPC_WS_SEND_TIMEOUT_SECS)]
+    #[arg(env = "RPC_WS_SEND_TIMEOUT_SECS")]
+    pub ws_send_timeout_secs: u64,
 }
