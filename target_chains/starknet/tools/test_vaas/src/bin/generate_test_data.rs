@@ -336,13 +336,18 @@ fn main() {
     );
 
     let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts");
-    let status = Command::new("scarb")
+    let output = Command::new("scarb")
         .arg("build")
         .current_dir(&contracts_dir)
+        .env_remove("RUSTFLAGS")
         .output()
-        .unwrap()
-        .status;
-    assert!(status.success(), "scarb failed with {status:?}");
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "scarb failed with {:?}\nstderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     let upgrade_hashes = [
         ("fake1", get_class_hash("fake_upgrade1", &contracts_dir)),
