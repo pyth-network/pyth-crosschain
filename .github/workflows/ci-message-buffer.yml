@@ -16,7 +16,7 @@ jobs:
         working-directory: pythnet/message_buffer
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache-workspaces: "pythnet/message_buffer -> target"
@@ -36,7 +36,7 @@ jobs:
         run: |
           sudo apt-get install g++-12
           echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: "package.json"
       # Libusb is a build requirement for the node-hid package and so pnpm
@@ -44,7 +44,7 @@ jobs:
       # precompiled binary isn't found.
       - name: Install libusb
         run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: true
@@ -58,7 +58,7 @@ jobs:
       - name: Copy anchor target files
         run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
       - name: Fix formatting (to avoid pre-commit failures)
-        run: pnpm turbo --filter message_buffer fix:format
+        run: npx biome check --write idl/
       - name: Check IDL changes
         # Fails if the IDL files are not up to date. Please use anchor build to regenerate the IDL files for
         # the current version of the contract and update idl directory.
