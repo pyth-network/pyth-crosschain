@@ -28,10 +28,9 @@ import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
 import type { GasPriceConfig } from "./gas-price.js";
 import {
   describeGasPrice,
+  escalateGasPrice,
   gasPriceToTxParams,
   getGasPrice,
-  maxGasPrice,
-  minGasPrice,
   scaleGasPrice,
 } from "./gas-price.js";
 import type { PythAbi } from "./pyth-abi.js";
@@ -219,11 +218,12 @@ export class EvmPricePusher implements IPricePusher {
     }
 
     if (gasPriceToOverride !== undefined) {
-      // Bump the gas price to override the stuck transaction, but cap the bump
-      // relative to the fresh gas price returned by the RPC.
-      gasPrice = minGasPrice(
-        maxGasPrice(gasPriceToOverride, gasPrice),
-        scaleGasPrice(gasPrice, this.overrideGasPriceMultiplierCap),
+      // Bump every fee component to override the stuck transaction, capping the
+      // bump relative to the fresh gas price returned by the RPC.
+      gasPrice = escalateGasPrice(
+        gasPrice,
+        gasPriceToOverride,
+        this.overrideGasPriceMultiplierCap,
       );
     }
 

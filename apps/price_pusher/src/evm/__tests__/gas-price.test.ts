@@ -4,10 +4,9 @@ import type { CustomGasStation } from "../custom-gas-station.js";
 import type { GasPrice } from "../gas-price.js";
 import {
   describeGasPrice,
+  escalateGasPrice,
   gasPriceToTxParams,
   getGasPrice,
-  maxGasPrice,
-  minGasPrice,
   scaleGasPrice,
 } from "../gas-price.js";
 import type { SuperWalletClient } from "../super-wallet.js";
@@ -136,47 +135,16 @@ describe("scaleGasPrice", () => {
   });
 });
 
-describe("maxGasPrice / minGasPrice", () => {
-  const low: GasPrice = { gasPrice: 100n, strategy: "legacy" };
-  const high: GasPrice = { gasPrice: 200n, strategy: "legacy" };
-
-  it("max picks the higher bid", () => {
-    expect(maxGasPrice(low, high)).toBe(high);
-  });
-
-  it("min picks the lower bid", () => {
-    expect(minGasPrice(low, high)).toBe(low);
-  });
-
-  it("compares eip1559 prices by maxFeePerGas", () => {
-    const a: GasPrice = {
-      maxFeePerGas: 300n,
-      maxPriorityFeePerGas: 5n,
-      strategy: "eip1559",
-    };
-    const b: GasPrice = {
-      maxFeePerGas: 250n,
-      maxPriorityFeePerGas: 50n,
-      strategy: "eip1559",
-    };
-    expect(maxGasPrice(a, b)).toBe(a);
-    expect(minGasPrice(a, b)).toBe(b);
-  });
-});
-
-describe("override + cap composition (as used by the pusher)", () => {
-  // Mirrors the escalation logic in evm.ts: bump the last attempt by the
-  // override multiplier, but cap it relative to the fresh gas price.
+describe("escalateGasPrice (override a stuck tx, as used by the pusher)", () => {
+  // The pusher escalates the last attempt by the override multiplier before
+  // calling escalateGasPrice with the fresh price and the cap.
   const escalate = (
     fresh: GasPrice,
     lastAttempt: GasPrice,
     multiplier: number,
     cap: number,
   ): GasPrice =>
-    minGasPrice(
-      maxGasPrice(scaleGasPrice(lastAttempt, multiplier), fresh),
-      scaleGasPrice(fresh, cap),
-    );
+    escalateGasPrice(fresh, scaleGasPrice(lastAttempt, multiplier), cap);
 
   it("keeps the fresh price when the override is not higher", () => {
     const fresh: GasPrice = { gasPrice: 200n, strategy: "legacy" };
@@ -202,6 +170,50 @@ describe("override + cap composition (as used by the pusher)", () => {
     expect(escalate(fresh, lastAttempt, 2, 3)).toStrictEqual({
       gasPrice: 300n,
       strategy: "legacy",
+    });
+  });
+
+  it("escalates maxPriorityFeePerGas independently so the replacement is accepted", () => {
+    // Regression test: base fee rose but the tip dropped. Selecting purely by
+    // maxFeePerGas would pick the fresh price and leave the tip below the stuck
+    // tx's, which nodes reject as an underpriced replacement.
+    const fresh: GasPrice = {
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 10n,
+      strategy: "eip1559",
+    };
+    const lastAttempt: GasPrice = {
+      maxFeePerGas: 150n,
+      maxPriorityFeePerGas: 50n,
+      strategy: "eip1559",
+    };
+    // override = {165, 55}. Per component: maxFee = max(165,200)=200;
+    // priority = max(55,10)=55. Both exceed the stuck tx, so the replacement
+    // is accepted. Cap (5x) does not bind.
+    expect(escalate(fresh, lastAttempt, 1.1, 5)).toStrictEqual({
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 55n,
+      strategy: "eip1559",
+    });
+  });
+
+  it("caps total spend via maxFeePerGas and bounds the tip by it", () => {
+    const fresh: GasPrice = {
+      maxFeePerGas: 100n,
+      maxPriorityFeePerGas: 10n,
+      strategy: "eip1559",
+    };
+    const lastAttempt: GasPrice = {
+      maxFeePerGas: 1000n,
+      maxPriorityFeePerGas: 1000n,
+      strategy: "eip1559",
+    };
+    // override = {2000, 2000}; maxFeePerGas capped at 100 * 3 = 300; the tip is
+    // bounded by the capped maxFeePerGas (priority <= maxFee), so it lands at 300.
+    expect(escalate(fresh, lastAttempt, 2, 3)).toStrictEqual({
+      maxFeePerGas: 300n,
+      maxPriorityFeePerGas: 300n,
+      strategy: "eip1559",
     });
   });
 });

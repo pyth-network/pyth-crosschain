@@ -93,18 +93,63 @@ export const scaleGasPrice = (gasPrice: GasPrice, factor: number): GasPrice => {
   };
 };
 
-// The scalar that represents how much we are bidding to land the transaction.
-// Used to compare two gas prices when deciding whether to override.
-export const gasPriceBid = (gasPrice: GasPrice): bigint =>
-  gasPrice.strategy === "legacy" ? gasPrice.gasPrice : gasPrice.maxFeePerGas;
+// Combine a freshly-fetched gas price with the (already escalated) gas price of
+// a stuck transaction so the stuck transaction can be replaced.
+//
+// For legacy, the single gasPrice is raised to at least the escalated value and
+// bounded at the fresh value scaled by `cap`.
+//
+// For eip1559, nodes (e.g. Geth) require *both* maxFeePerGas and
+// maxPriorityFeePerGas to increase (typically by >=10%) for a replacement to be
+// accepted, so the priority fee must be escalated independently rather than
+// only bumping the larger maxFeePerGas. We cap the total spend via maxFeePerGas
+// (fresh maxFeePerGas scaled by `cap`) and raise the tip enough to outbid the
+// stuck tx, bounding it only by that capped maxFeePerGas — bounding the tip by
+// the fresh tip scaled by `cap` would stall escalation whenever the market tip
+// drops, leaving the replacement underpriced.
+export const escalateGasPrice = (
+  fresh: GasPrice,
+  escalated: GasPrice,
+  cap: number,
+): GasPrice => {
+  // The strategy is fixed for the lifetime of the pusher, so fresh and escalated
+  // always share it. The guards keep the discriminated union narrow.
+  if (fresh.strategy === "legacy" && escalated.strategy === "legacy") {
+    return {
+      gasPrice: capComponent(fresh.gasPrice, escalated.gasPrice, cap),
+      strategy: "legacy",
+    };
+  }
+  if (fresh.strategy === "eip1559" && escalated.strategy === "eip1559") {
+    // Cap the total spend via maxFeePerGas. The priority fee (tip) only needs
+    // to be raised enough to outbid the stuck tx; it is bounded by the capped
+    // maxFeePerGas (the EIP-1559 invariant priority <= maxFee), NOT by the fresh
+    // tip scaled by `cap` — when the market tip drops, that would stop the tip
+    // from escalating and leave the replacement underpriced.
+    const maxFeePerGas = capComponent(
+      fresh.maxFeePerGas,
+      escalated.maxFeePerGas,
+      cap,
+    );
+    const bumpedPriority = maxBigInt(
+      escalated.maxPriorityFeePerGas,
+      fresh.maxPriorityFeePerGas,
+    );
+    return {
+      maxFeePerGas,
+      maxPriorityFeePerGas: minBigInt(bumpedPriority, maxFeePerGas),
+      strategy: "eip1559",
+    };
+  }
+  return fresh;
+};
 
-// Pick the gas price with the higher bid (used to override a stuck tx).
-export const maxGasPrice = (a: GasPrice, b: GasPrice): GasPrice =>
-  gasPriceBid(a) >= gasPriceBid(b) ? a : b;
+// Raise `fresh` to at least `escalated`, but never above `fresh * cap`.
+const capComponent = (fresh: bigint, escalated: bigint, cap: number): bigint =>
+  minBigInt(maxBigInt(escalated, fresh), scaleBigInt(fresh, cap));
 
-// Pick the gas price with the lower bid (used to cap an override).
-export const minGasPrice = (a: GasPrice, b: GasPrice): GasPrice =>
-  gasPriceBid(a) <= gasPriceBid(b) ? a : b;
+const maxBigInt = (a: bigint, b: bigint): bigint => (a > b ? a : b);
+const minBigInt = (a: bigint, b: bigint): bigint => (a < b ? a : b);
 
 // Convert to the fee fields understood by viem's transaction methods.
 export const gasPriceToTxParams = (gasPrice: GasPrice) =>
