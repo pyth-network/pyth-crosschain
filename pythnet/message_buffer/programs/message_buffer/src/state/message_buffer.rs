@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use anchor_lang::prelude::*;
 
 /// A MessageBuffer will have the following structure
