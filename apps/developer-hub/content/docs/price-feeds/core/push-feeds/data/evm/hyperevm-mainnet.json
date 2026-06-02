@@ -246,20 +246,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "WSTUSR/USR.RR",
-      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "RLP/USD.RR",
-      "id": "796bcb684fdfbba2b071c165251511ab61f08c8949afd9e05665a26f69d9a839",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "KHYPE/USD",
       "id": "2837a61ae8165c018b0e406ac32b1527270e57b81f0069260afbef71b9cf8ffe",
       "time_difference": 3600,
