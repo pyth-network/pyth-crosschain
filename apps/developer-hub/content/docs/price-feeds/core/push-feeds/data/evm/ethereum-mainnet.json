@@ -8,20 +8,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "USR/USD",
-      "id": "10b013adec14c0fe839ca0fe54cec9e4d0b6c1585ac6d7e70010dac015e57f9c",
-      "time_difference": 3600,
-      "price_deviation": 2,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WSTUSR/USR",
-      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
-      "time_difference": 3600,
-      "price_deviation": 2,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "LINEA/USD",
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
       "time_difference": 3600,
