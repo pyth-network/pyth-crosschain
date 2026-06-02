@@ -20,12 +20,11 @@ import {
   TransactionExecutionError,
 } from "viem";
 
-import type { PushAttempt } from "../common.js";
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
 import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
-import type { GasPriceConfig } from "./gas-price.js";
+import type { GasPrice, GasPriceConfig } from "./gas-price.js";
 import {
   describeGasPrice,
   escalateGasPrice,
@@ -36,6 +35,11 @@ import {
 import type { PythAbi } from "./pyth-abi.js";
 import type { PythContract } from "./pyth-contract.js";
 import type { SuperWalletClient } from "./super-wallet.js";
+
+type PushAttempt = {
+  nonce: number;
+  gasPrice: GasPrice;
+};
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
