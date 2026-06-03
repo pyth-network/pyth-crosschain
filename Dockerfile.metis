@@ -56,7 +56,7 @@ RUN curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
 RUN op --version
 
 # Install hydra CLI binary
-RUN curl -fsSL https://github.com/dourolabs/metis-releases/releases/download/v0.22.0/hydra-x86_64-unknown-linux-gnu \
+RUN curl -fsSL https://github.com/dourolabs/metis-releases/releases/download/v0.24.1/hydra-x86_64-unknown-linux-gnu \
       -o /usr/local/bin/hydra \
     && chmod +x /usr/local/bin/hydra
 
