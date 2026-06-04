@@ -106,7 +106,7 @@ export function shouldUpdate(
 
   // There is no price to update the target with. So we should not update it.
   if (sourceLatestPrice === undefined) {
-    logger.info(
+    logger.warn(
       `${priceConfig.alias} (${priceId}) is not available on the source network. Ignoring it.`,
     );
     return UpdateCondition.NO;
@@ -114,7 +114,7 @@ export function shouldUpdate(
 
   // It means that price never existed there. So we should push the latest price feed.
   if (targetLatestPrice === undefined) {
-    logger.info(
+    logger.debug(
       `${priceConfig.alias} (${priceId}) is not available on the target network. Pushing the price.`,
     );
     return UpdateCondition.YES;

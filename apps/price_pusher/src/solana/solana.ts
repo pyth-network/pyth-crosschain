@@ -43,7 +43,7 @@ export class SolanaPriceListener extends ChainPriceListener {
           blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS) &&
         blockTime !== null
       ) {
-        this.logger.info(
+        this.logger.warn(
           `Solana connection is behind by ${(
             Date.now() / 1000 - blockTime
           ).toString()} seconds`,
@@ -149,7 +149,7 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.connection,
         this.pythSolanaReceiver.wallet,
       );
-      this.logger.info({ signatures }, "updatePriceFeed successful");
+      this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
       return;
@@ -178,7 +178,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         "https://bundles.jito.wtf/api/v1/bundles/tip_floor",
       );
       if (!response.ok) {
-        this.logger.error(
+        this.logger.warn(
           { status: response.status, statusText: response.statusText },
           "getRecentJitoTips http request failed",
         );
@@ -191,7 +191,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       );
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      this.logger.error({ err: error }, "getRecentJitoTips failed");
+      this.logger.warn({ err: error }, "getRecentJitoTips failed");
       return undefined;
     }
   }
@@ -204,7 +204,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         : this.defaultJitoTipLamports;
 
     const cappedJitoTip = Math.min(jitoTip, this.maxJitoTipLamports);
-    this.logger.info({ cappedJitoTip }, "using jito tip of");
+    this.logger.debug({ cappedJitoTip }, "using jito tip of");
 
     let priceFeedUpdateData: string[];
     try {

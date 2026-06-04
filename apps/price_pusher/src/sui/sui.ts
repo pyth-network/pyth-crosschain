@@ -280,7 +280,7 @@ export class SuiPricePusher implements IPricePusher {
         ?.map((obj) => obj.reference)
         .find((ref) => ref.objectId === gasObject.objectId);
 
-      this.logger.info(
+      this.logger.debug(
         { hash: result.digest },
         "Successfully updated price with transaction digest",
       );
