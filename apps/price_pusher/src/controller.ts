@@ -58,14 +58,12 @@ export class Controller {
 
         if (this.metrics && targetLatestPrice && sourceLatestPrice) {
           this.metrics.updateTimestamps(
-            priceId,
             alias,
             targetLatestPrice.publishTime,
             sourceLatestPrice.publishTime,
             priceConfig.timeDifference,
           );
           this.metrics.updatePriceValues(
-            priceId,
             alias,
             sourceLatestPrice.price,
             targetLatestPrice.price,
@@ -81,7 +79,7 @@ export class Controller {
 
         // Record update condition in metrics
         if (this.metrics) {
-          this.metrics.recordUpdateCondition(priceId, alias, priceShouldUpdate);
+          this.metrics.recordUpdateCondition(alias, priceShouldUpdate);
         }
 
         if (priceShouldUpdate == UpdateCondition.YES) {
@@ -129,11 +127,7 @@ export class Controller {
                   ? "yes"
                   : "early";
 
-              this.metrics.recordPriceUpdate(
-                config.id,
-                config.alias,
-                triggerValue,
-              );
+              this.metrics.recordPriceUpdate(config.alias, triggerValue);
             }
           }
         } catch (error) {
@@ -155,17 +149,16 @@ export class Controller {
                   ? "yes"
                   : "early";
 
-              this.metrics.recordPriceUpdateError(
-                config.id,
-                config.alias,
-                triggerValue,
-              );
+              this.metrics.recordPriceUpdateError(config.alias, triggerValue);
             }
           }
         }
       } else {
         this.logger.info("None of the checks were triggered. No push needed.");
       }
+
+      // Liveness heartbeat: mark this loop iteration as completed.
+      this.metrics?.recordLoopIteration();
 
       await sleep(this.pushingFrequency * 1000);
     }
