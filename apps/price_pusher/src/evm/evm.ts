@@ -266,7 +266,7 @@ export class EvmPricePusher implements IPricePusher {
 
       const hash = await this.client.writeContract(request);
 
-      this.logger.info({ hash }, "Price update sent");
+      this.logger.debug({ hash }, "Price update sent");
 
       void this.waitForTransactionReceipt(hash);
     } catch (error: any) {
@@ -283,7 +283,7 @@ export class EvmPricePusher implements IPricePusher {
               e.data?.errorName === "NoFreshUpdate",
           )
         ) {
-          this.logger.info(
+          this.logger.debug(
             "Simulation reverted because none of the updates are fresh. This is an expected behaviour to save gas. Skipping this push.",
           );
           return;
@@ -323,7 +323,7 @@ export class EvmPricePusher implements IPricePusher {
                 e.message.includes("Nonce provided for the transaction")),
           )
         ) {
-          this.logger.info(
+          this.logger.debug(
             "The nonce is incorrect. This is an expected behaviour in high frequency or multi-instance setup. Skipping this push.",
           );
           return;
@@ -342,7 +342,7 @@ export class EvmPricePusher implements IPricePusher {
         // We normally crash on unknown failures but we believe that this type of error is safe to skip. The other reason is that
         // wometimes we see a TransactionExecutionError because of the nonce without any details and it is not catchable.
         if (error.walk((e) => e instanceof TransactionExecutionError)) {
-          this.logger.error(
+          this.logger.warn(
             { err: error },
             "Transaction execution failed. This is an expected behaviour in high frequency or multi-instance setup. " +
               "Please review this error and file an issue if it is a bug. Skipping this push.",
@@ -357,7 +357,7 @@ export class EvmPricePusher implements IPricePusher {
           error.message.includes("nonce too low") ||
           error.message.includes("invalid nonce")
         ) {
-          this.logger.info(
+          this.logger.debug(
             "The nonce is incorrect (are multiple users using this account?). Skipping this push.",
           );
           return;
@@ -385,7 +385,7 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         if (error.message.includes("could not replace existing tx")) {
-          this.logger.error(
+          this.logger.debug(
             "A transaction with the same nonce has been mined and this one is no longer needed. Skipping this push.",
           );
           return;
@@ -411,11 +411,10 @@ export class EvmPricePusher implements IPricePusher {
       switch (receipt.status) {
         case "success": {
           this.logger.debug({ hash, receipt }, "Price update successful");
-          this.logger.info({ hash }, "Price update successful");
           break;
         }
         default: {
-          this.logger.info(
+          this.logger.debug(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
               "This is an expected behaviour in high frequency or multi-instance setup.",
