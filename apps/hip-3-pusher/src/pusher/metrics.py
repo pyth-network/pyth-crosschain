@@ -37,6 +37,11 @@ class Metrics:
     push_interval_histogram: Histogram
     price_config_counter: Counter
     user_request_balance: "Gauge"
+    push_submitted_total: Counter
+    last_submit_time: "Gauge"
+    seda_poll_total: Counter
+    seda_last_success_time: "Gauge"
+    price_source_unavailable_total: Counter
 
     def __init__(self, config: Config) -> None:
         # Adapted from opentelemetry-exporter-prometheus example code.
@@ -80,6 +85,31 @@ class Metrics:
         self.user_request_balance = self.meter.create_gauge(
             name="hip_3_relayer_user_request_balance",
             description="Number of update requests left before rate limit",
+        )
+        # labels: dex, outcome (ok|rate_limited|rejected|send_failed)
+        self.push_submitted_total = self.meter.create_counter(
+            name="hip_3_relayer_push_submitted_total",
+            description="setOracle submissions by outcome (ok|rate_limited|rejected|send_failed)",
+        )
+        # labels: dex
+        self.last_submit_time = self.meter.create_gauge(
+            name="hip_3_relayer_last_submit_time",
+            description="Time of last healthy setOracle submission (landed or rate-limited)",
+        )
+        # labels: dex, feed, status (success|http_error|error|parse_error)
+        self.seda_poll_total = self.meter.create_counter(
+            name="hip_3_relayer_seda_poll_total",
+            description="SEDA poll attempts by outcome",
+        )
+        # labels: dex, feed
+        self.seda_last_success_time = self.meter.create_gauge(
+            name="hip_3_relayer_seda_last_success_time",
+            description="Time of last successful SEDA poll+parse per feed",
+        )
+        # labels: dex, source, source_id, reason (stale|missing|error)
+        self.price_source_unavailable_total = self.meter.create_counter(
+            name="hip_3_relayer_price_source_unavailable_total",
+            description="Waterfall source unavailable (stale/missing/error) per cycle",
         )
 
     def set_price_configs(self, dex: str, price_config: PriceConfig) -> None:

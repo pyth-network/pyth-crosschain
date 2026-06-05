@@ -24,14 +24,18 @@ during vs outside trading sessions (e.g., for equity index perpetuals).
 import asyncio
 import datetime
 import json
+import time
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import httpx
 from loguru import logger
 
 from pusher.config import Config, SedaFeedConfig
 from pusher.price_state import PriceSourceState, PriceUpdate
+
+if TYPE_CHECKING:
+    from pusher.metrics import Metrics
 
 
 class PollResult(TypedDict, total=False):
@@ -73,7 +77,10 @@ class SedaListener:
         seda_mark_state: PriceSourceState,
         seda_external_state: PriceSourceState,
         api_key_override: str | None = None,
+        metrics: "Metrics | None" = None,
     ) -> None:
+        self.metrics = metrics
+        self.dex = config.hyperliquid.market_name
         self.url = config.seda.url
         self.api_key = api_key_override or (
             Path(config.seda.api_key_path).read_text().strip()
@@ -169,11 +176,42 @@ class SedaListener:
         if result["ok"]:
             json_data = result.get("json")
             if json_data is not None:
-                self._parse_seda_message(feed_name, json_data)
+                try:
+                    self._parse_seda_message(feed_name, json_data)
+                except Exception as e:
+                    logger.opt(exception=True).info(
+                        "SEDA parse error for {}: {}", feed_name, repr(e)
+                    )
+                    self._record_poll(feed_name, "parse_error")
+                    return {
+                        "ok": False,
+                        "status": result.get("status"),
+                        "error": f"parse error: {e!r}",
+                    }
+                self._record_poll(feed_name, "success")
+                self._record_seda_success_time(feed_name)
+            else:
+                self._record_poll(feed_name, "error")
         else:
-            logger.error("SEDA poll request for {} failed: {}", feed_name, result)
+            status = result.get("status")
+            self._record_poll(
+                feed_name, "http_error" if status is not None else "error"
+            )
+            logger.debug("SEDA poll request for {} failed: {}", feed_name, result)
 
         return result
+
+    def _record_poll(self, feed_name: str, status: str) -> None:
+        if self.metrics is not None:
+            self.metrics.seda_poll_total.add(
+                1, {"dex": self.dex, "feed": feed_name, "status": status}
+            )
+
+    def _record_seda_success_time(self, feed_name: str) -> None:
+        if self.metrics is not None:
+            self.metrics.seda_last_success_time.set(
+                int(time.time()), {"dex": self.dex, "feed": feed_name}
+            )
 
     async def _poll(
         self,
