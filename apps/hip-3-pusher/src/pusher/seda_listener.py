@@ -26,7 +26,7 @@ import datetime
 import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import Any, TypedDict
 
 import httpx
 from loguru import logger
@@ -34,9 +34,6 @@ from loguru import logger
 from pusher.config import Config, SedaFeedConfig
 from pusher.metrics import Metrics
 from pusher.price_state import PriceSourceState, PriceUpdate
-
-if TYPE_CHECKING:
-    from pusher.metrics import Metrics
 
 
 class PollResult(TypedDict, total=False):

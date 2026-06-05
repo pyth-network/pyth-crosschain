@@ -20,7 +20,7 @@ This provides automatic failover when primary sources go down.
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from loguru import logger
 
@@ -35,9 +35,6 @@ from pusher.config import (
     SingleSourceConfig,
 )
 from pusher.metrics import Metrics
-
-if TYPE_CHECKING:
-    from pusher.metrics import Metrics
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
