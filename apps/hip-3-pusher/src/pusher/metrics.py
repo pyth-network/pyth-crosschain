@@ -96,17 +96,17 @@ class Metrics:
             name="hip_3_relayer_last_submit_time",
             description="Time of last healthy setOracle submission (landed or rate-limited)",
         )
-        # labels: dex, feed, status (success|http_error|error|parse_error)
+        # labels: dex, status (success|http_error|error|parse_error)
         self.seda_poll_total = self.meter.create_counter(
             name="hip_3_relayer_seda_poll_total",
             description="SEDA poll attempts by outcome",
         )
-        # labels: dex, feed
+        # labels: dex
         self.seda_last_success_time = self.meter.create_gauge(
             name="hip_3_relayer_seda_last_success_time",
-            description="Time of last successful SEDA poll+parse per feed",
+            description="Time of last successful SEDA poll+parse",
         )
-        # labels: dex, source, source_id, reason (stale|missing|error)
+        # labels: dex, source, reason (stale|missing|error)
         self.price_source_unavailable_total = self.meter.create_counter(
             name="hip_3_relayer_price_source_unavailable_total",
             description="Waterfall source unavailable (stale/missing/error) per cycle",

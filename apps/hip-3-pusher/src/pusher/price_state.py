@@ -20,7 +20,7 @@ This provides automatic failover when primary sources go down.
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from loguru import logger
 
@@ -34,9 +34,7 @@ from pusher.config import (
     SessionEMASourceConfig,
     SingleSourceConfig,
 )
-
-if TYPE_CHECKING:
-    from pusher.metrics import Metrics
+from pusher.metrics import Metrics
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
@@ -129,7 +127,7 @@ class PriceState:
     SEDA_MARK = "seda_mark"
     SEDA_EXTERNAL = "seda_external"
 
-    def __init__(self, config: Config, metrics: "Metrics | None" = None) -> None:
+    def __init__(self, config: Config, metrics: Metrics | None = None) -> None:
         self.metrics = metrics
         self.market_name = config.hyperliquid.market_name
         self.stale_price_threshold_seconds = config.stale_price_threshold_seconds
@@ -164,16 +162,13 @@ class PriceState:
             self.SEDA_EXTERNAL: self.seda_external_state,
         }
 
-    def _record_unavailable(
-        self, source: str, source_id: str | int, reason: str
-    ) -> None:
+    def _record_unavailable(self, source: str, reason: str) -> None:
         if self.metrics is not None:
             self.metrics.price_source_unavailable_total.add(
                 1,
                 {
                     "dex": self.market_name,
                     "source": source,
-                    "source_id": str(source_id),
                     "reason": reason,
                 },
             )
@@ -230,7 +225,7 @@ class PriceState:
                         pxs[f"{self.market_name}:{symbol}"] = px
                         break  # Found valid price, stop waterfall
                 except Exception as e:
-                    self._record_unavailable("waterfall", symbol, "error")
+                    self._record_unavailable("waterfall", "error")
                     logger.opt(exception=True).debug(
                         "get_price exception for symbol: {} source_config: {} error: {}",
                         symbol,
@@ -290,7 +285,7 @@ class PriceState:
         update = source_state.get(source.source_id)
 
         if update is None:
-            self._record_unavailable(source.source_name, source.source_id, "missing")
+            self._record_unavailable(source.source_name, "missing")
             logger.debug(
                 "source {} id {} is missing", source.source_name, source.source_id
             )
@@ -309,7 +304,7 @@ class PriceState:
         # STALENESS CHECK: Reject prices older than threshold
         time_diff = update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
-            self._record_unavailable(source.source_name, source.source_id, "stale")
+            self._record_unavailable(source.source_name, "stale")
             logger.debug(
                 "source {} id {} is stale by {} seconds",
                 source.source_name,
@@ -370,12 +365,12 @@ class PriceState:
 
         mid_price_update = self.hl_mid_state.get(symbol)
         if mid_price_update is None:
-            self._record_unavailable(self.HL_MID, symbol, "missing")
+            self._record_unavailable(self.HL_MID, "missing")
             logger.debug("mid price for {} is missing", symbol)
             return None
         time_diff = mid_price_update.time_diff(time.time())
         if time_diff >= self.stale_price_threshold_seconds:
-            self._record_unavailable(self.HL_MID, symbol, "stale")
+            self._record_unavailable(self.HL_MID, "stale")
             logger.debug("mid price for {} is stale by {} seconds", symbol, time_diff)
             return None
 
@@ -418,9 +413,7 @@ class PriceState:
         oracle_update = source_state.get(oracle_source.source_id)
 
         if oracle_update is None:
-            self._record_unavailable(
-                oracle_source.source_name, oracle_source.source_id, "missing"
-            )
+            self._record_unavailable(oracle_source.source_name, "missing")
             logger.debug(
                 "source {} id {} is missing",
                 oracle_source.source_name,
@@ -431,9 +424,7 @@ class PriceState:
         # Check staleness
         time_diff = oracle_update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
-            self._record_unavailable(
-                oracle_source.source_name, oracle_source.source_id, "stale"
-            )
+            self._record_unavailable(oracle_source.source_name, "stale")
             logger.debug(
                 "source {} id {} is stale by {} seconds",
                 oracle_source.source_name,

@@ -78,11 +78,7 @@ def test_seda_parse_error_returns_failure_and_does_not_raise() -> None:
 
     assert result["ok"] is False
     assert "parse error" in result["error"]
-    assert {
-        "dex": "pyth",
-        "feed": "VXX",
-        "status": "parse_error",
-    } in metrics.seda_poll_total.calls
+    assert {"dex": "pyth", "status": "parse_error"} in metrics.seda_poll_total.calls
     assert metrics.seda_last_success_time.calls == []
 
 
@@ -102,9 +98,5 @@ def test_seda_poll_success_records_metrics() -> None:
     result = asyncio.run(listener.poll_single_feed(None, "VXX", _FEED))
 
     assert result["ok"] is True
-    assert {
-        "dex": "pyth",
-        "feed": "VXX",
-        "status": "success",
-    } in metrics.seda_poll_total.calls
-    assert {"dex": "pyth", "feed": "VXX"} in metrics.seda_last_success_time.calls
+    assert {"dex": "pyth", "status": "success"} in metrics.seda_poll_total.calls
+    assert {"dex": "pyth"} in metrics.seda_last_success_time.calls
