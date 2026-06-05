@@ -34,6 +34,7 @@ from pusher.config import (
     SessionEMASourceConfig,
     SingleSourceConfig,
 )
+from pusher.metrics import Metrics
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
@@ -126,7 +127,8 @@ class PriceState:
     SEDA_MARK = "seda_mark"
     SEDA_EXTERNAL = "seda_external"
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, metrics: Metrics | None = None) -> None:
+        self.metrics = metrics
         self.market_name = config.hyperliquid.market_name
         self.stale_price_threshold_seconds = config.stale_price_threshold_seconds
         self.price_config = config.price
@@ -159,6 +161,17 @@ class PriceState:
             self.SEDA_MARK: self.seda_mark_state,
             self.SEDA_EXTERNAL: self.seda_external_state,
         }
+
+    def _record_unavailable(self, source: str, reason: str) -> None:
+        if self.metrics is not None:
+            self.metrics.price_source_unavailable_total.add(
+                1,
+                {
+                    "dex": self.market_name,
+                    "source": source,
+                    "reason": reason,
+                },
+            )
 
     def get_all_prices(self) -> OracleUpdate:
         """
@@ -212,7 +225,8 @@ class PriceState:
                         pxs[f"{self.market_name}:{symbol}"] = px
                         break  # Found valid price, stop waterfall
                 except Exception as e:
-                    logger.exception(
+                    self._record_unavailable("waterfall", "error")
+                    logger.opt(exception=True).debug(
                         "get_price exception for symbol: {} source_config: {} error: {}",
                         symbol,
                         source_config,
@@ -271,7 +285,8 @@ class PriceState:
         update = source_state.get(source.source_id)
 
         if update is None:
-            logger.warning(
+            self._record_unavailable(source.source_name, "missing")
+            logger.debug(
                 "source {} id {} is missing", source.source_name, source.source_id
             )
             return None
@@ -289,7 +304,8 @@ class PriceState:
         # STALENESS CHECK: Reject prices older than threshold
         time_diff = update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
-            logger.warning(
+            self._record_unavailable(source.source_name, "stale")
+            logger.debug(
                 "source {} id {} is stale by {} seconds",
                 source.source_name,
                 source.source_id,
@@ -349,11 +365,13 @@ class PriceState:
 
         mid_price_update = self.hl_mid_state.get(symbol)
         if mid_price_update is None:
-            logger.warning("mid price for {} is missing", symbol)
+            self._record_unavailable(self.HL_MID, "missing")
+            logger.debug("mid price for {} is missing", symbol)
             return None
         time_diff = mid_price_update.time_diff(time.time())
         if time_diff >= self.stale_price_threshold_seconds:
-            logger.warning("mid price for {} is stale by {} seconds", symbol, time_diff)
+            self._record_unavailable(self.HL_MID, "stale")
+            logger.debug("mid price for {} is stale by {} seconds", symbol, time_diff)
             return None
 
         return (float(oracle_price) + float(mid_price_update.price)) / 2.0
@@ -395,7 +413,8 @@ class PriceState:
         oracle_update = source_state.get(oracle_source.source_id)
 
         if oracle_update is None:
-            logger.warning(
+            self._record_unavailable(oracle_source.source_name, "missing")
+            logger.debug(
                 "source {} id {} is missing",
                 oracle_source.source_name,
                 oracle_source.source_id,
@@ -405,7 +424,8 @@ class PriceState:
         # Check staleness
         time_diff = oracle_update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
-            logger.warning(
+            self._record_unavailable(oracle_source.source_name, "stale")
+            logger.debug(
                 "source {} id {} is stale by {} seconds",
                 oracle_source.source_name,
                 oracle_source.source_id,
@@ -423,7 +443,7 @@ class PriceState:
         if ema_price is None:
             # FALLBACK: EMA missing during market hours - use oracle for both
             # This is unlikely since SEDA typically returns both fields together
-            logger.warning(
+            logger.debug(
                 "source {} id {} ema price is missing",
                 oracle_source.source_name,
                 oracle_source.source_id,
