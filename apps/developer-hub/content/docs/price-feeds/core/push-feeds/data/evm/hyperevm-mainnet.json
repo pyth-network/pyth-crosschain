@@ -176,13 +176,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "USR/USD.RR",
-      "id": "512a79cc65f49531f0bbb72956353e79ecdc1e4a6e5241847196c1f9a11d8a52",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "USOL/USD",
       "id": "974c7a77dbace44d229be17fc176975e06404b004476aeaff37641818cb0c55a",
       "time_difference": 3600,
@@ -241,20 +234,6 @@
     {
       "alias": "KHYPE/HYPE.RR",
       "id": "983b7cabc6fab548e15a5b05500da9b99c1682107b3e2ff289344116c10ac02c",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WSTUSR/USR.RR",
-      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "RLP/USD.RR",
-      "id": "796bcb684fdfbba2b071c165251511ab61f08c8949afd9e05665a26f69d9a839",
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100
