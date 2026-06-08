@@ -2,7 +2,7 @@
 #![allow(clippy::result_large_err)]
 
 use {
-    anchor_lang::{declare_id, prelude::*},
+    anchor_lang::{declare_id, prelude::Pubkey, pubkey},
     borsh::{BorshDeserialize, BorshSerialize},
     pythnet_sdk::wire::v1::MerklePriceUpdate,
 };
