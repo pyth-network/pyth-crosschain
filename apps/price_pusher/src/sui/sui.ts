@@ -280,7 +280,10 @@ export class SuiPricePusher implements IPricePusher {
         ?.map((obj) => obj.reference)
         .find((ref) => ref.objectId === gasObject.objectId);
 
-      this.logger.debug(
+      // Keep at INFO: the bundled Grafana "Tx Hash" panel scrapes this message
+      // from Loki and extracts {{.hash}}; debug is not emitted under the default
+      // log level, which would hide successful Sui hashes from the dashboard.
+      this.logger.info(
         { hash: result.digest },
         "Successfully updated price with transaction digest",
       );
