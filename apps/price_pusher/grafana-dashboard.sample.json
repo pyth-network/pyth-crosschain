@@ -369,7 +369,7 @@
         "sortBy": [
           {
             "desc": false,
-            "displayName": "Price ID"
+            "displayName": "Symbol"
           }
         ]
       },
@@ -422,7 +422,7 @@
         {
           "id": "joinByField",
           "options": {
-            "byField": "price_id",
+            "byField": "alias",
             "mode": "outer"
           }
         },
@@ -446,16 +446,12 @@
               "job": true,
               "job#B": true,
               "job#C": true,
-              "price_id": false,
-              "price_id#B": true,
-              "price_id#C": true,
               "Time": true,
               "Value #A": true,
               "Value #C": false
             },
             "includeByName": {
-              "alias 1": true,
-              "price_id": true,
+              "alias": true,
               "Value #B": true,
               "Value #C": true
             },
@@ -473,15 +469,14 @@
               "job 1": 8,
               "job 2": 14,
               "job 3": 20,
-              "price_id": 0,
+              "alias": 0,
               "Time 1": 4,
               "Time 2": 10,
               "Time 3": 15,
               "Value #A": 9
             },
             "renameByName": {
-              "alias 1": "Symbol",
-              "price_id": "Price ID",
+              "alias": "Symbol",
               "Value #B": "Time Since Update",
               "Value #C": "Total Updates"
             }
