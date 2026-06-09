@@ -24,6 +24,9 @@ export class PricePusherMetrics {
   public walletBalance: Gauge;
   // Liveness heartbeat
   public loopIterations: Counter;
+  // Liveness state for the /live endpoint (threshold set by the controller)
+  private lastLoopIterationAt: number | undefined;
+  private livenessThresholdMs = 60_000;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -103,6 +106,20 @@ export class PricePusherMetrics {
       res.set("Content-Type", this.registry.contentType);
       res.end(await this.registry.metrics());
     });
+
+    // Liveness endpoint for the k8s livenessProbe: 200 while the control loop is
+    // progressing, 503 once no iteration has completed within the threshold (hung),
+    // so Kubernetes restarts a hung-but-not-crashed pod.
+    this.server.get("/live", (_, res) => {
+      const last = this.lastLoopIterationAt;
+      const healthy =
+        last !== undefined && Date.now() - last <= this.livenessThresholdMs;
+      res.status(healthy ? 200 : 503).json({
+        lastLoopIterationAt: last ?? null,
+        status: healthy ? "ok" : "stale",
+        thresholdMs: this.livenessThresholdMs,
+      });
+    });
   }
 
   // Start the metrics server
@@ -155,7 +172,14 @@ export class PricePusherMetrics {
 
   // Record a completed controller loop iteration (liveness heartbeat)
   public recordLoopIteration(): void {
+    this.lastLoopIterationAt = Date.now();
     this.loopIterations.inc();
+  }
+
+  // Configure how long without a completed loop iteration before /live reports
+  // unhealthy (used by the k8s livenessProbe to restart a hung pod).
+  public setLivenessThresholdSeconds(seconds: number): void {
+    this.livenessThresholdMs = seconds * 1000;
   }
 
   // Update source, target and configured time difference timestamps

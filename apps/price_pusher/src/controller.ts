@@ -28,6 +28,12 @@ export class Controller {
 
     // Set the number of price feeds if metrics are enabled
     this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);
+
+    // Report unhealthy on /live if no loop iteration completes within a few
+    // pushing cycles (min 60s), so the k8s livenessProbe restarts a hung pod.
+    this.metrics?.setLivenessThresholdSeconds(
+      Math.max(this.pushingFrequency * 5, 60),
+    );
   }
 
   async start() {
