@@ -39,7 +39,7 @@ pub struct PostMessage<'info> {
     /// been created yet, the instruction handler will create this account (and in this case, the
     /// message account will be required as a signer).
     #[account(mut)]
-    message: AccountInfo<'info>,
+    message: UncheckedAccount<'info>,
 
     /// Core Bridge Emitter (optional, read-only signer).
     ///
@@ -69,7 +69,7 @@ pub struct PostMessage<'info> {
         ],
         bump
     )]
-    emitter_sequence: AccountInfo<'info>,
+    emitter_sequence: UncheckedAccount<'info>,
 
     /// Payer (mut signer).
     ///
@@ -87,7 +87,7 @@ pub struct PostMessage<'info> {
         seeds = [crate::constants::FEE_COLLECTOR_SEED_PREFIX],
         bump,
     )]
-    fee_collector: Option<AccountInfo<'info>>,
+    fee_collector: Option<UncheckedAccount<'info>>,
 
     /// Previously needed sysvar.
     ///
@@ -335,7 +335,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
 fn handle_message_fee<'info>(
     config: &Account<'info, LegacyAnchorized<Config>>,
     payer: &AccountInfo<'info>,
-    fee_collector: &Option<AccountInfo<'info>>,
+    fee_collector: &Option<UncheckedAccount<'info>>,
     system_program: &Program<'info, System>,
 ) -> Result<()> {
     if config.fee_lamports > 0 {
@@ -367,7 +367,7 @@ fn handle_message_fee<'info>(
 }
 
 fn create_or_realloc_emitter_sequence<'info>(
-    emitter_sequence: &AccountInfo<'info>,
+    emitter_sequence: &UncheckedAccount<'info>,
     payer: &AccountInfo<'info>,
     system_program: &Program<'info, System>,
     emitter: &Pubkey,

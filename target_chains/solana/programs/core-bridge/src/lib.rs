@@ -1,4 +1,10 @@
-#![allow(clippy::result_large_err, unexpected_cfgs)]
+// `clippy::diverging_sub_expression` fires inside anchor 1.x's `#[program]`
+// macro expansion (upstream codegen issue), so suppress it crate-wide.
+#![allow(
+    clippy::result_large_err,
+    unexpected_cfgs,
+    clippy::diverging_sub_expression
+)]
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "pro-compatible")] {

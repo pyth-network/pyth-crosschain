@@ -1,3 +1,9 @@
+// The `ClaimVaa` struct below is a hand-written CPI mirror; its fields stay as
+// `AccountInfo<'info>` to match anchor's generated CPI accounts shape so
+// callers can pass `AccountInfo` directly. The anchor 1.x deprecation lint for
+// raw `AccountInfo` in `#[derive(Accounts)]` does not apply to this CPI helper.
+#![allow(deprecated)]
+
 mod zero_copy;
 pub use zero_copy::*;
 

@@ -63,7 +63,7 @@ pub struct VerifySignatures<'info> {
     #[account(
         address = sysvar::instructions::id() @ ErrorCode::AccountSysvarMismatch
     )]
-    instructions: AccountInfo<'info>,
+    instructions: UncheckedAccount<'info>,
 
     /// Previously needed sysvar.
     ///

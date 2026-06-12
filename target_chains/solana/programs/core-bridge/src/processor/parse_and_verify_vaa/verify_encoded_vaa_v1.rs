@@ -19,7 +19,7 @@ pub struct VerifyEncodedVaaV1<'info> {
         owner = crate::ID,
         constraint = EncodedVaa::require_draft_vaa(&draft_vaa, &write_authority)?
     )]
-    draft_vaa: AccountInfo<'info>,
+    draft_vaa: UncheckedAccount<'info>,
 
     /// Guardian set account, which should be the same one that was used to attest for the VAA. The
     /// signatures in the encoded VAA are verified against this guardian set.

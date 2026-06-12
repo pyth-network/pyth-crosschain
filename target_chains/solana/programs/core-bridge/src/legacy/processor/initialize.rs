@@ -51,7 +51,7 @@ pub struct Initialize<'info> {
         bump,
         owner = system_program.key(),
     )]
-    fee_collector: AccountInfo<'info>,
+    fee_collector: UncheckedAccount<'info>,
 
     #[account(mut)]
     payer: Signer<'info>,

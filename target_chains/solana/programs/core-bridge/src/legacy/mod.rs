@@ -21,6 +21,11 @@ pub(crate) mod utils;
 /// [program][anchor_lang::prelude::program] macro.
 #[cfg(feature = "cpi")]
 pub mod cpi {
+    // The structs below mirror anchor's generated CPI accounts shape so
+    // callers can pass `AccountInfo` directly. The anchor 1.x deprecation lint
+    // for raw `AccountInfo` in `#[derive(Accounts)]` does not apply here.
+    #![allow(deprecated)]
+
     use super::instruction as legacy_instruction;
     use anchor_lang::prelude::*;
     use solana_program::program::invoke_signed;

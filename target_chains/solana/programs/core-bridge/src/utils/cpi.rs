@@ -1,3 +1,9 @@
+// This module exposes a hand-written CPI mirror struct; its fields stay as
+// `AccountInfo<'info>` to match anchor's generated CPI accounts shape so
+// callers can pass `AccountInfo` directly. The anchor 1.x deprecation lint for
+// raw `AccountInfo` in `#[derive(Accounts)]` does not apply to this CPI helper.
+#![allow(deprecated)]
+
 use anchor_lang::{prelude::*, system_program};
 
 #[derive(Accounts)]

@@ -13,7 +13,7 @@ pub struct FinalizeMessageV1<'info> {
         owner = crate::ID,
         constraint = PostedMessageV1::require_draft_message(&draft_message, &emitter_authority)?
     )]
-    draft_message: AccountInfo<'info>,
+    draft_message: UncheckedAccount<'info>,
 }
 
 pub fn finalize_message_v1(ctx: Context<FinalizeMessageV1>) -> Result<()> {

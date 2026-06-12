@@ -1,3 +1,8 @@
+// AccountInfo here mirrors the anchor-generated CPI accounts struct shape;
+// callers wire raw `AccountInfo`s in. The anchor 1.x deprecation lint for raw
+// `AccountInfo` in `#[derive(Accounts)]` does not apply to this CPI helper.
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]

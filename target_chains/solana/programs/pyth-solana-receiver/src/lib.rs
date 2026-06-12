@@ -1,5 +1,11 @@
 // We can't do much about the size of `anchor_lang::error::Error`.
-#![allow(clippy::result_large_err, unexpected_cfgs)]
+// `clippy::diverging_sub_expression` fires inside anchor 1.x's `#[program]`
+// macro expansion (upstream codegen issue), so suppress it crate-wide.
+#![allow(
+    clippy::result_large_err,
+    unexpected_cfgs,
+    clippy::diverging_sub_expression
+)]
 
 pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
@@ -326,12 +332,12 @@ pub struct PostUpdate<'info> {
     pub payer: Signer<'info>,
     #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
-    pub encoded_vaa: AccountInfo<'info>,
+    pub encoded_vaa: UncheckedAccount<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
-    pub treasury: AccountInfo<'info>,
+    pub treasury: UncheckedAccount<'info>,
     /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV2::LEN)]
@@ -347,15 +353,15 @@ pub struct PostTwapUpdate<'info> {
     pub payer: Signer<'info>,
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
     #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
-    pub start_encoded_vaa: AccountInfo<'info>,
+    pub start_encoded_vaa: UncheckedAccount<'info>,
     /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
     #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
-    pub end_encoded_vaa: AccountInfo<'info>,
+    pub end_encoded_vaa: UncheckedAccount<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
-    pub treasury: AccountInfo<'info>,
+    pub treasury: UncheckedAccount<'info>,
     /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = twap_update_account.write_authority == Pubkey::default() || twap_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = TwapUpdate::LEN)]
@@ -373,12 +379,12 @@ pub struct PostUpdateAtomic<'info> {
     /// Instead we do the same steps in deserialize_guardian_set_checked.
     #[account(
         owner = config.wormhole @ ReceiverError::WrongGuardianSetOwner)]
-    pub guardian_set: AccountInfo<'info>,
+    pub guardian_set: UncheckedAccount<'info>,
     #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
     pub config: Account<'info, Config>,
     #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
     /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
-    pub treasury: AccountInfo<'info>,
+    pub treasury: UncheckedAccount<'info>,
     /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority, payer = payer, space = PriceUpdateV2::LEN)]
