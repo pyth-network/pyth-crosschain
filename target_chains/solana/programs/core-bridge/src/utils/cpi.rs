@@ -32,7 +32,7 @@ pub fn create_account_safe<'info>(
     if current_lamports == 0 {
         system_program::create_account(
             CpiContext::new_with_signer(
-                ctx.program,
+                *ctx.program_id,
                 system_program::CreateAccount {
                     from: ctx.accounts.payer,
                     to: ctx.accounts.new_account,
@@ -62,7 +62,7 @@ fn allocate_and_assign_account<'info>(
     if required_lamports > 0 {
         system_program::transfer(
             CpiContext::new(
-                ctx.program.to_account_info(),
+                *ctx.program_id,
                 system_program::Transfer {
                     from: ctx.accounts.payer,
                     to: ctx.accounts.new_account.to_account_info(),
@@ -75,7 +75,7 @@ fn allocate_and_assign_account<'info>(
     // Allocate space.
     system_program::allocate(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            *ctx.program_id,
             system_program::Allocate {
                 account_to_allocate: ctx.accounts.new_account.to_account_info(),
             },
@@ -87,7 +87,7 @@ fn allocate_and_assign_account<'info>(
     // Assign to the owner.
     system_program::assign(
         CpiContext::new_with_signer(
-            ctx.program,
+            *ctx.program_id,
             system_program::Assign {
                 account_to_assign: ctx.accounts.new_account.to_account_info(),
             },

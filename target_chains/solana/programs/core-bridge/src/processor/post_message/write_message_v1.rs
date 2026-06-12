@@ -53,11 +53,13 @@ pub fn write_message_v1(ctx: Context<WriteMessageV1>, args: WriteMessageV1Args) 
     let WriteMessageV1Args { index, data } = args;
 
     let acc_data = &mut ctx.accounts.draft_message.data.borrow_mut();
-    sol_memcpy(
-        &mut acc_data[(PostedMessageV1::PAYLOAD_START + usize::try_from(index).unwrap())..],
-        &data,
-        data.len(),
-    );
+    unsafe {
+        sol_memcpy(
+            &mut acc_data[(PostedMessageV1::PAYLOAD_START + usize::try_from(index).unwrap())..],
+            &data,
+            data.len(),
+        );
+    }
 
     // Done.
     Ok(())

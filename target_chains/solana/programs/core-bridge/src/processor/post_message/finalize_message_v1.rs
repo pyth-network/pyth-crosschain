@@ -18,11 +18,13 @@ pub struct FinalizeMessageV1<'info> {
 
 pub fn finalize_message_v1(ctx: Context<FinalizeMessageV1>) -> Result<()> {
     let acc_data = &mut ctx.accounts.draft_message.data.borrow_mut();
-    sol_memset(
-        &mut acc_data[37..],
-        MessageStatus::ReadyForPublishing as u8,
-        1,
-    );
+    unsafe {
+        sol_memset(
+            &mut acc_data[37..],
+            MessageStatus::ReadyForPublishing as u8,
+            1,
+        );
+    }
 
     // Done.
     Ok(())

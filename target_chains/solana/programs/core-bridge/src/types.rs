@@ -212,7 +212,9 @@ impl From<[u8; 32]> for MessageHash {
 
 impl From<keccak::Hash> for MessageHash {
     fn from(hash: keccak::Hash) -> Self {
-        Self { bytes: hash.0 }
+        Self {
+            bytes: hash.to_bytes(),
+        }
     }
 }
 
