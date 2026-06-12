@@ -122,7 +122,7 @@ pub mod wormhole_core_bridge_solana {
 
     /// Process legacy Core Bridge instructions. See [legacy](crate::legacy) for more info.
     pub fn process_legacy_instruction<'info>(
-        program_id: &Pubkey,
+        program_id: &'info Pubkey,
         account_infos: &'info [AccountInfo<'info>],
         ix_data: &[u8],
     ) -> Result<()> {

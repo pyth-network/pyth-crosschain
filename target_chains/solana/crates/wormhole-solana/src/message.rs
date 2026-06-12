@@ -6,6 +6,7 @@ use {
         account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
         program_error::ProgramError, pubkey::Pubkey,
     },
+    solana_system_interface::instruction as system_instruction,
 };
 
 /// Solana-specific Consistency Level: 1 for optimistic confirmation, 32 for full confirmation.
@@ -115,7 +116,7 @@ pub fn post_message(
     // Pay Wormhole transfer fee (if there is one).
     if config.params.fee > 0 {
         invoke_signed(
-            &solana_program::system_instruction::transfer(
+            &system_instruction::transfer(
                 &payer,
                 &fee_collector,
                 config.params.fee,

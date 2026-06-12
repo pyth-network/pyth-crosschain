@@ -83,7 +83,7 @@ fn handle_claim_vaa_prefixed<'info>(
 
     super::cpi::create_account_safe(
         CpiContext::new_with_signer(
-            ctx.program,
+            ctx.program_id,
             super::cpi::CreateAccountSafe {
                 payer: ctx.accounts.payer,
                 new_account: ctx.accounts.claim.to_account_info(),
@@ -133,7 +133,7 @@ fn handle_claim_vaa<'info>(
 
     super::cpi::create_account_safe(
         CpiContext::new_with_signer(
-            ctx.program,
+            ctx.program_id,
             super::cpi::CreateAccountSafe {
                 payer: ctx.accounts.payer,
                 new_account: ctx.accounts.claim.to_account_info(),

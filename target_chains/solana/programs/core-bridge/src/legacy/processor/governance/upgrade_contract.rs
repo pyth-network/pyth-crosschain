@@ -149,7 +149,7 @@ fn upgrade_contract(ctx: Context<UpgradeContract>, _args: EmptyArgs) -> Result<(
     // address, chain and sequence combination.
     utils::vaa::claim_vaa(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::vaa::ClaimVaa {
                 claim: ctx.accounts.claim.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),

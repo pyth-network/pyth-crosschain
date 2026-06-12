@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "pyth_solana_receiver"
 
 [features]
-no-entrypoint = []
+no-entrypoint = ["dep:rand"]
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
@@ -29,7 +29,7 @@ byteorder = "1.4.3"
 wormhole-core-bridge-solana = { workspace = true }
 wormhole-raw-vaas = { workspace = true }
 pyth-solana-receiver-sdk = { workspace = true }
-rand = "0.8.5"
+rand = { version = "0.8.5", optional = true }
 
 [dev-dependencies]
 cfg-if = { workspace = true }

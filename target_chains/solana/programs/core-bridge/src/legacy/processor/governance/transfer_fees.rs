@@ -140,7 +140,7 @@ fn transfer_fees(ctx: Context<TransferFees>, _args: EmptyArgs) -> Result<()> {
     // address, chain and sequence combination.
     utils::vaa::claim_vaa(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::vaa::ClaimVaa {
                 claim: ctx.accounts.claim.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),
@@ -161,7 +161,7 @@ fn transfer_fees(ctx: Context<TransferFees>, _args: EmptyArgs) -> Result<()> {
     // Finally transfer collected fees to recipient.
     system_program::transfer(
         CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             Transfer {
                 from: fee_collector.to_account_info(),
                 to: ctx.accounts.recipient.to_account_info(),

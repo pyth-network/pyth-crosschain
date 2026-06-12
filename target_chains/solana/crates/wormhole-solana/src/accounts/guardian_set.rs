@@ -2,7 +2,7 @@
 
 use {
     super::Account,
-    borsh::{maybestd::io::Result, BorshDeserialize, BorshSerialize},
+    borsh::{io::Result, BorshDeserialize, BorshSerialize},
     solana_program::{account_info::AccountInfo, pubkey::Pubkey},
 };
 

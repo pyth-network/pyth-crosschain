@@ -22,7 +22,7 @@ use anchor_lang::prelude::*;
 use super::instruction::LegacyInstruction;
 
 pub fn process_legacy_instruction<'info>(
-    program_id: &Pubkey,
+    program_id: &'info Pubkey,
     account_infos: &'info [AccountInfo<'info>],
     mut ix_data: &[u8],
 ) -> Result<()> {

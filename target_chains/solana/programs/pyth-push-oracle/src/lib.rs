@@ -38,7 +38,7 @@ pub mod pyth_push_oracle {
         shard_id: u16,
         feed_id: FeedId,
     ) -> Result<()> {
-        let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
+        let cpi_program = ctx.accounts.pyth_solana_receiver.key();
         let cpi_accounts = PostUpdate {
             payer: ctx.accounts.payer.to_account_info().clone(),
             encoded_vaa: ctx.accounts.encoded_vaa.to_account_info().clone(),

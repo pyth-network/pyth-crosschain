@@ -9,6 +9,7 @@ base64 = "0.13.0"
 shellexpand = "2.1.2"
 solana-sdk = { workspace = true }
 solana-client = { workspace = true }
+solana-commitment-config = { workspace = true }
 solana-system-interface = { workspace = true }
 solana-compute-budget-interface = { workspace = true }
 anchor-client = { workspace = true }

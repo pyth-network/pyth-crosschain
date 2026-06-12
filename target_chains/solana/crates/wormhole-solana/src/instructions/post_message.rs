@@ -39,17 +39,16 @@ pub fn post_message(
             AccountMeta::new(fee_collector, false),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk_ids::system_program::id(), false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             Instruction::PostMessage,
             PostMessageData {
                 nonce,
                 payload,
                 consistency_level,
             },
-        )
-            .try_to_vec()?,
+        ))?,
     })
 }
 
@@ -77,16 +76,15 @@ pub fn post_message_unreliable(
             AccountMeta::new(fee_collector, false),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk_ids::system_program::id(), false),
         ],
-        data: (
+        data: borsh::to_vec(&(
             Instruction::PostMessageUnreliable,
             PostMessageData {
                 nonce,
                 payload,
                 consistency_level,
             },
-        )
-            .try_to_vec()?,
+        ))?,
     })
 }

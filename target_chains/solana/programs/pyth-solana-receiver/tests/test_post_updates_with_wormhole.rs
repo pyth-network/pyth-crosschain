@@ -1,5 +1,5 @@
 use {
-    anchor_lang::{InstructionData, ToAccountMetas},
+    anchor_lang::{InstructionData, ToAccountMetas, prelude::system_instruction},
     common_test_utils::{default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX},
     program_simulator::{into_transaction_error, ProgramSimulator},
     pyth_solana_receiver::{
@@ -103,7 +103,7 @@ async fn test_post_update_with_wormhole() {
     // TX1: Create account for encoded VAA
     program_simulator
         .process_ix_with_default_compute_limit(
-            solana_sdk::system_instruction::create_account(
+            system_instruction::create_account(
                 &write_authority.pubkey(),
                 &encoded_vaa_keypair.pubkey(),
                 Rent::default().minimum_balance(encoded_vaa_size),
@@ -321,7 +321,7 @@ async fn test_wormhole_insufficient_signatures() {
     // TX1: Create account for encoded VAA
     program_simulator
         .process_ix_with_default_compute_limit(
-            solana_sdk::system_instruction::create_account(
+            system_instruction::create_account(
                 &write_authority.pubkey(),
                 &encoded_vaa_keypair.pubkey(),
                 Rent::default().minimum_balance(encoded_vaa_size),
