@@ -35,7 +35,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v2.2.20/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
         run: cargo fmt --all -- --check
@@ -44,7 +44,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo-build-sbf ${{ matrix.features }}
+        run: cargo build-sbf -- ${{ matrix.features }} -p pyth-solana-receiver -p pyth-push-oracle -p wormhole-core-bridge-solana
         if: success() || failure()
       - name: Run tests
         run: cargo-test-sbf ${{ matrix.features }}
