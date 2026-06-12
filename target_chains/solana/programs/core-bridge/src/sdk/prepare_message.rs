@@ -30,7 +30,7 @@ pub fn prepare_message<'info>(
 ) -> Result<()> {
     crate::cpi::init_message_v1(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             crate::cpi::accounts::InitMessageV1 {
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
                 draft_message: ctx.accounts.message.to_account_info(),
@@ -42,7 +42,7 @@ pub fn prepare_message<'info>(
 
     crate::cpi::write_message_v1(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             crate::cpi::accounts::WriteMessageV1 {
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
                 draft_message: ctx.accounts.message.to_account_info(),
@@ -53,7 +53,7 @@ pub fn prepare_message<'info>(
     )?;
 
     crate::cpi::finalize_message_v1(CpiContext::new_with_signer(
-        ctx.program,
+        ctx.program_id,
         crate::cpi::accounts::FinalizeMessageV1 {
             emitter_authority: ctx.accounts.emitter_authority,
             draft_message: ctx.accounts.message,
@@ -74,7 +74,7 @@ pub fn init_and_write_message<'info>(
 ) -> Result<()> {
     crate::cpi::init_message_v1(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             crate::cpi::accounts::InitMessageV1 {
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
                 draft_message: ctx.accounts.message.to_account_info(),
@@ -86,7 +86,7 @@ pub fn init_and_write_message<'info>(
 
     crate::cpi::write_message_v1(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             crate::cpi::accounts::WriteMessageV1 {
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
                 draft_message: ctx.accounts.message.to_account_info(),
@@ -107,7 +107,7 @@ pub fn write_and_finalize_message<'info>(
 ) -> Result<()> {
     crate::cpi::write_message_v1(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             crate::cpi::accounts::WriteMessageV1 {
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
                 draft_message: ctx.accounts.message.to_account_info(),
@@ -118,7 +118,7 @@ pub fn write_and_finalize_message<'info>(
     )?;
 
     crate::cpi::finalize_message_v1(CpiContext::new_with_signer(
-        ctx.program,
+        ctx.program_id,
         crate::cpi::accounts::FinalizeMessageV1 {
             emitter_authority: ctx.accounts.emitter_authority,
             draft_message: ctx.accounts.message,

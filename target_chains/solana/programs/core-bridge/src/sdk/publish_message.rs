@@ -112,7 +112,7 @@ pub fn publish_message<'info>(
             commitment,
         } => crate::legacy::cpi::post_message(
             CpiContext::new_with_signer(
-                ctx.program,
+                ctx.program_id,
                 crate::legacy::cpi::PostMessage {
                     config: ctx.accounts.config,
                     message: ctx.accounts.message,
@@ -138,7 +138,7 @@ pub fn publish_message<'info>(
         } => handle_post_program_message_v1(ctx, program_id, nonce, payload, commitment),
         PublishMessageDirective::PreparedMessage => crate::legacy::cpi::post_message(
             CpiContext::new_with_signer(
-                ctx.program,
+                ctx.program_id,
                 crate::legacy::cpi::PostMessage {
                     config: ctx.accounts.config,
                     message: ctx.accounts.message,
@@ -169,7 +169,7 @@ fn handle_post_program_message_v1<'info>(
     // Create message account.
     super::system_program::create_account_safe(
         CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             super::system_program::CreateAccountSafe {
                 payer: ctx.accounts.payer.to_account_info(),
                 new_account: ctx.accounts.message.to_account_info(),
@@ -183,7 +183,7 @@ fn handle_post_program_message_v1<'info>(
     // Prepare (calling init and process instructions).
     super::prepare_message(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             super::PrepareMessage {
                 message: ctx.accounts.message.to_account_info(),
                 emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
@@ -201,7 +201,7 @@ fn handle_post_program_message_v1<'info>(
     // Finally post.
     crate::legacy::cpi::post_message(
         CpiContext::new(
-            ctx.program,
+            ctx.program_id,
             crate::legacy::cpi::PostMessage {
                 config: ctx.accounts.config,
                 message: ctx.accounts.message,

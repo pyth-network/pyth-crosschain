@@ -200,7 +200,7 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
         )?;
 
         // This looks horrible but it's actually how Anchor does it internally https://github.com/otter-sec/anchor/blob/25be6d5/lang/syn/src/codegen/program/handlers.rs#L156
-        unsafe fn __shrink_lifetime<'from, 'to, T>(value: &'from mut T) -> &'to mut T {
+        unsafe fn __shrink_lifetime<'to, T>(value: &mut T) -> &'to mut T {
             unsafe { ::core::mem::transmute(value) }
         }
         Self::ANCHOR_IX_FN(
