@@ -6,6 +6,7 @@ use crate::{
     utils::{self, vaa::VaaAccount},
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::bpf_loader_upgradeable;
 use solana_program::program::invoke_signed;
 
 #[derive(Accounts)]
@@ -73,7 +74,7 @@ pub struct UpgradeContract<'info> {
         mut,
         seeds = [crate::ID.as_ref()],
         bump,
-        seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::id(),
+        seeds::program = bpf_loader_upgradeable::id(),
     )]
     program_data: AccountInfo<'info>,
 
@@ -96,7 +97,7 @@ pub struct UpgradeContract<'info> {
     ///
     /// CHECK: In order to upgrade the program, we need to invoke the BPF Loader Upgradeable
     /// program.
-    #[account(address = anchor_lang::solana_program::bpf_loader_upgradeable::id())]
+    #[account(address = bpf_loader_upgradeable::id())]
     bpf_loader_upgradeable_program: AccountInfo<'info>,
 
     system_program: Program<'info, System>,
