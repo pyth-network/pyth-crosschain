@@ -1,5 +1,3 @@
-#[cfg(feature = "solana-program")]
-use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "solana-program"))]
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "quickcheck")]
@@ -83,7 +81,10 @@ pub type Pubkey = [u8; 32];
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
-#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(
+    feature = "solana-program",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 #[cfg_attr(
     not(feature = "solana-program"),
     derive(BorshSerialize, BorshDeserialize)

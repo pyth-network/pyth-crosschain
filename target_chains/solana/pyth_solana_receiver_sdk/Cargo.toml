@@ -1,6 +1,6 @@
 [package]
 name = "pyth-solana-receiver-sdk"
-version = "1.2.0"
+version = "1.2.1"
 description = "SDK for the Pyth Solana Receiver program"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pyth-crosschain"
@@ -12,13 +12,15 @@ crate-type = ["lib"]
 name = "pyth_solana_receiver_sdk"
 
 [features]
+idl-build = ["anchor-lang/idl-build", "pythnet-sdk/idl-build"]
 pro-compatible = []
 
 [dependencies]
-anchor-lang = { workspace = true }
+anchor-lang = "1.0.2"
 cfg-if = { workspace = true }
 hex = { workspace = true }
 pythnet-sdk = { workspace = true, features = ["solana-program"]}
+borsh = "1.6.1"
 
 [dev-dependencies]
-solana-borsh = "2.2.1" # Needed for borsh0_10 compatibility
+solana-borsh = "3.0.2"
