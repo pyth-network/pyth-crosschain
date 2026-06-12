@@ -112,7 +112,7 @@ impl<'info> PostVaa<'info> {
         );
 
         // Recompute the message hash and compare it to the one in the signature set account.
-        let recomputed = solana_program::keccak::hashv(&[
+        let recomputed = solana_keccak_hasher::hashv(&[
             &args.timestamp.to_be_bytes(),
             &args.nonce.to_be_bytes(),
             &args.emitter_chain.to_be_bytes(),

@@ -1,6 +1,5 @@
 use crate::{error::CoreBridgeError, state::EncodedVaa};
-use anchor_lang::prelude::*;
-use solana_program::program_memory::sol_memcpy;
+use anchor_lang::{prelude::*, solana_program::program_memory::sol_memcpy};
 
 #[derive(Accounts)]
 pub struct WriteEncodedVaa<'info> {

@@ -4,7 +4,7 @@ use crate::{state::POSTED_VAA_V1_SEED_PREFIX, types::Timestamp};
 use anchor_lang::prelude::{
     error, require, require_eq, require_keys_eq, AccountInfo, ErrorCode, Pubkey, Result,
 };
-use solana_program::keccak;
+use solana_keccak_hasher as keccak;
 
 const PAYLOAD_START: usize = 95;
 

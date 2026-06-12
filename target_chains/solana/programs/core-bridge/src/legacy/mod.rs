@@ -22,8 +22,7 @@ pub(crate) mod utils;
 #[cfg(feature = "cpi")]
 pub mod cpi {
     use super::instruction as legacy_instruction;
-    use anchor_lang::prelude::*;
-    use solana_program::program::invoke_signed;
+    use anchor_lang::{prelude::*, solana_program::program::invoke_signed};
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
     /// Guardian observation.

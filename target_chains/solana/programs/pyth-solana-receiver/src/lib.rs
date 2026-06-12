@@ -5,6 +5,7 @@ pub use pythnet_sdk::wire::v1::MerklePriceUpdate;
 use {
     crate::error::ReceiverError,
     anchor_lang::prelude::*,
+    anchor_lang::solana_program::program_memory::sol_memcpy,
     pyth_solana_receiver_sdk::{
         config::{Config, DataSource},
         pda::{CONFIG_SEED, TREASURY_SEED},
@@ -20,7 +21,8 @@ use {
             v1::{WormholeMessage, WormholePayload},
         },
     },
-    solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover},
+    solana_keccak_hasher as keccak,
+    solana_secp256k1_recover::secp256k1_recover,
     wormhole_core_bridge_solana::{
         sdk::{legacy::AccountVariant, quorum, VaaAccount},
         state::GuardianSet,

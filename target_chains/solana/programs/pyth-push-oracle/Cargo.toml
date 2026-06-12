@@ -19,7 +19,6 @@ pro-compatible = ["pyth-solana-receiver-sdk/pro-compatible"]
 [dependencies]
 anchor-lang = { workspace = true }
 pythnet-sdk = { workspace = true }
-solana-program = { workspace = true }
 byteorder = "1.4.3"
 pyth-solana-receiver-sdk = { workspace = true }
 

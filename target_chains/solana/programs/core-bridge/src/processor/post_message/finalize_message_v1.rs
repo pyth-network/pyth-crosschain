@@ -1,6 +1,5 @@
 use crate::state::{MessageStatus, PostedMessageV1};
-use anchor_lang::prelude::*;
-use solana_program::program_memory::sol_memset;
+use anchor_lang::{prelude::*, solana_program::program_memory::sol_memset};
 
 #[derive(Accounts)]
 pub struct FinalizeMessageV1<'info> {

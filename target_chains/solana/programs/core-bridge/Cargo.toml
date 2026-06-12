@@ -13,7 +13,6 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
-anchor-debug = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
@@ -26,7 +25,9 @@ pro-compatible = []
 wormhole-io.workspace = true
 wormhole-raw-vaas.workspace = true
 anchor-lang = { workspace = true, features = ["init-if-needed", "derive"] }
-solana-program.workspace = true
+solana-keccak-hasher = { workspace = true }
+solana-sdk-ids = { workspace = true }
+solana-secp256k1-recover = { workspace = true }
 hex.workspace = true
 ruint.workspace = true
 cfg-if.workspace = true

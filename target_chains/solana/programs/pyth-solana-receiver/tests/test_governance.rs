@@ -1,4 +1,5 @@
 use {
+    anchor_lang::solana_program::pubkey::Pubkey,
     common_test_utils::{setup_pyth_receiver, ProgramTestFixtures, WrongSetupOption},
     program_simulator::into_transaction_error,
     pyth_solana_receiver::{
@@ -14,8 +15,7 @@ use {
         pda::get_config_address,
     },
     pythnet_sdk::test_utils::SECONDARY_DATA_SOURCE,
-    solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
-    solana_sdk::signer::Signer,
+    solana_sdk::{native_token::LAMPORTS_PER_SOL, signer::Signer},
 };
 
 #[tokio::test]

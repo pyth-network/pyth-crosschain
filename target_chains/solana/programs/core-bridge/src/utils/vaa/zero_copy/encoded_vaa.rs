@@ -2,7 +2,7 @@ use std::cell::Ref;
 
 use crate::{error::CoreBridgeError, state};
 use anchor_lang::prelude::*;
-use solana_program::keccak;
+use solana_keccak_hasher as keccak;
 use wormhole_raw_vaas::Vaa;
 
 pub(super) const ENCODED_VAA_DISCRIMINATOR: &[u8] =

@@ -39,7 +39,7 @@ pub struct PostVaaV1<'info> {
         ),
         seeds = [
             PostedVaaV1::SEED_PREFIX,
-            solana_program::keccak::hash(
+            solana_keccak_hasher::hash(
                 encoded_vaa
                     .as_vaa()?
                     .to_v1()?

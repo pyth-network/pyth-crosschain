@@ -5,8 +5,7 @@ use crate::{
     state::Config,
     utils::{self, vaa::VaaAccount},
 };
-use anchor_lang::prelude::*;
-use solana_program::program::invoke_signed;
+use anchor_lang::{prelude::*, solana_program::program::invoke_signed};
 
 #[derive(Accounts)]
 pub struct UpgradeContract<'info> {
@@ -73,7 +72,7 @@ pub struct UpgradeContract<'info> {
         mut,
         seeds = [crate::ID.as_ref()],
         bump,
-        seeds::program = solana_program::bpf_loader_upgradeable::id(),
+        seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::id(),
     )]
     program_data: AccountInfo<'info>,
 
@@ -85,18 +84,18 @@ pub struct UpgradeContract<'info> {
     this_program: AccountInfo<'info>,
 
     /// CHECK: BPF Loader Upgradeable program needs this sysvar.
-    #[account(address = solana_program::sysvar::rent::id())]
+    #[account(address = anchor_lang::solana_program::sysvar::rent::id())]
     rent: AccountInfo<'info>,
 
     /// CHECK: BPF Loader Upgradeable program needs this sysvar.
-    #[account(address = solana_program::sysvar::clock::id())]
+    #[account(address = anchor_lang::solana_program::sysvar::clock::id())]
     clock: AccountInfo<'info>,
 
     /// BPF Loader Upgradeable program.
     ///
     /// CHECK: In order to upgrade the program, we need to invoke the BPF Loader Upgradeable
     /// program.
-    #[account(address = solana_program::bpf_loader_upgradeable::id())]
+    #[account(address = anchor_lang::solana_program::bpf_loader_upgradeable::id())]
     bpf_loader_upgradeable_program: AccountInfo<'info>,
 
     system_program: Program<'info, System>,

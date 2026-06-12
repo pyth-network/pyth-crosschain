@@ -4,8 +4,7 @@
 //! NOTE: This is similar to how [accounts](mod@crate::accounts) is generated via Anchor's
 //! [program][anchor_lang::prelude::program] macro.
 
-use anchor_lang::{prelude::Pubkey, ToAccountMetas};
-use solana_program::instruction::AccountMeta;
+use anchor_lang::{prelude::Pubkey, solana_program::instruction::AccountMeta, ToAccountMetas};
 
 /// Context to post a new Core Bridge message.
 pub struct PostMessage {

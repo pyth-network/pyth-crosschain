@@ -1,4 +1,5 @@
 use {
+    anchor_lang::solana_program::instruction::Instruction,
     anchor_lang::{InstructionData, ToAccountMetas},
     common_test_utils::{default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX},
     program_simulator::{into_transaction_error, ProgramSimulator},
@@ -19,7 +20,6 @@ use {
             trim_vaa_signatures,
         },
     },
-    solana_program::instruction::Instruction,
     solana_program_test::ProgramTest,
     solana_sdk::{pubkey::Pubkey, rent::Rent, signature::Keypair, signer::Signer},
     wormhole_core_bridge_solana::{

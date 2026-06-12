@@ -82,7 +82,7 @@ impl<'a> VaaAccount<'a> {
         }
     }
 
-    pub fn try_digest(&self) -> Result<solana_program::keccak::Hash> {
+    pub fn try_digest(&self) -> Result<solana_keccak_hasher::Hash> {
         match self {
             Self::EncodedVaa(inner) => inner.digest(),
             Self::PostedVaaV1(inner) => Ok(inner.digest()),

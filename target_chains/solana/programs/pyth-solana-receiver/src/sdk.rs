@@ -1,6 +1,8 @@
 use {
     crate::{accounts, instruction, ID},
-    anchor_lang::{prelude::*, system_program, InstructionData},
+    anchor_lang::{
+        prelude::*, solana_program::instruction::Instruction, system_program, InstructionData,
+    },
     pyth_solana_receiver_sdk::{
         config::{Config, DataSource},
         pda::{get_config_address, get_treasury_address},
@@ -8,7 +10,6 @@ use {
     },
     pythnet_sdk::wire::v1::{AccumulatorUpdateData, MerklePriceUpdate, Proof},
     rand::Rng,
-    solana_program::instruction::Instruction,
     wormhole_core_bridge_solana::state::GuardianSet,
 };
 

@@ -4,8 +4,10 @@ use crate::{
     state::{GuardianSet, SignatureSet},
     types::MessageHash,
 };
-use anchor_lang::{prelude::*, solana_program::sysvar};
-use solana_program::program_memory::sol_memcpy;
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program_memory::sol_memcpy, sysvar},
+};
 
 /// Offset schema used by the Sig Verify native program.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, InitSpace)]
@@ -206,12 +208,12 @@ fn verify_signatures(ctx: Context<VerifySignatures>, args: VerifySignaturesArgs)
 /// this data.
 fn deserialize_secp256k1_ix(
     sig_verify_index: u16,
-    ix: &solana_program::instruction::Instruction,
+    ix: &anchor_lang::solana_program::instruction::Instruction,
 ) -> Result<SigVerifyParameters> {
     // Check that the program invoked is the secp256k1 program.
     require_keys_eq!(
         ix.program_id,
-        solana_program::secp256k1_program::id(),
+        solana_sdk_ids::secp256k1_program::id(),
         CoreBridgeError::InvalidSigVerifyInstruction
     );
 

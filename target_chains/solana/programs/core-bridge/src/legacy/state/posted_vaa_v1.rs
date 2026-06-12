@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use crate::types::Timestamp;
 use anchor_lang::prelude::*;
-use solana_program::keccak;
+use solana_keccak_hasher as keccak;
 
 pub const POSTED_VAA_V1_SEED_PREFIX: &[u8] = b"PostedVAA";
 pub const POSTED_VAA_V1_DISCRIMINATOR: [u8; 4] = *b"vaa\x01";

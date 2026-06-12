@@ -1,4 +1,5 @@
 use {
+    anchor_lang::solana_program::pubkey::Pubkey,
     common_test_utils::{
         assert_treasury_balance, setup_pyth_receiver, ProgramTestFixtures, WrongSetupOption,
     },
@@ -13,7 +14,6 @@ use {
         messages::Message,
         test_utils::{create_accumulator_message, create_dummy_price_feed_message},
     },
-    solana_program::pubkey::Pubkey,
     solana_sdk::{rent::Rent, signature::Keypair, signer::Signer},
 };
 

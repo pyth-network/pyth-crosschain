@@ -105,8 +105,7 @@ pub struct EmptyArgs {}
 #[cfg(feature = "no-entrypoint")]
 mod __no_entrypoint {
     use crate::legacy::instruction::{LegacyInstruction, PostMessageArgs};
-    use anchor_lang::{prelude::borsh, ToAccountMetas};
-    use solana_program::instruction::Instruction;
+    use anchor_lang::{prelude::borsh, solana_program::instruction::Instruction, ToAccountMetas};
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
     /// Guardian observation.

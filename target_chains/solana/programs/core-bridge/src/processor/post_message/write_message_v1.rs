@@ -1,6 +1,5 @@
 use crate::{error::CoreBridgeError, state::PostedMessageV1};
-use anchor_lang::prelude::*;
-use solana_program::program_memory::sol_memcpy;
+use anchor_lang::{prelude::*, solana_program::program_memory::sol_memcpy};
 
 #[derive(Accounts)]
 pub struct WriteMessageV1<'info> {

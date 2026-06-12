@@ -1,9 +1,10 @@
 use {
     crate::{accounts, instruction, PostUpdateParams, ID},
-    anchor_lang::{prelude::*, system_program, InstructionData},
+    anchor_lang::{
+        prelude::*, solana_program::instruction::Instruction, system_program, InstructionData,
+    },
     pyth_solana_receiver_sdk::pda::{get_config_address, get_treasury_address},
     pythnet_sdk::{messages::FeedId, wire::v1::MerklePriceUpdate},
-    solana_program::instruction::Instruction,
 };
 
 pub fn get_price_feed_address(shard_id: u16, feed_id: FeedId) -> Pubkey {

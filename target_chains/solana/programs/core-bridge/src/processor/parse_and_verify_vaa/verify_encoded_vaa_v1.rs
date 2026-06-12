@@ -3,8 +3,9 @@ use crate::{
     legacy::utils::AccountVariant,
     state::{EncodedVaa, GuardianSet, ProcessingStatus},
 };
-use anchor_lang::prelude::*;
-use solana_program::{keccak, program_memory::sol_memcpy, secp256k1_recover::secp256k1_recover};
+use anchor_lang::{prelude::*, solana_program::program_memory::sol_memcpy};
+use solana_keccak_hasher as keccak;
+use solana_secp256k1_recover::secp256k1_recover;
 use std::io::Write;
 use wormhole_raw_vaas::{GuardianSetSig, Vaa};
 

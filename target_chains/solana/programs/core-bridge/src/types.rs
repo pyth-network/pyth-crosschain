@@ -3,7 +3,7 @@
 use std::fmt;
 
 use anchor_lang::prelude::*;
-use solana_program::keccak;
+use solana_keccak_hasher as keccak;
 use wormhole_io::{Readable, Writeable};
 
 /// Representation of Solana's commitment levels. This enum is not exhaustive because Wormhole only

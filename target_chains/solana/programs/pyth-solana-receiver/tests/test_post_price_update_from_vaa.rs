@@ -1,4 +1,5 @@
 use {
+    anchor_lang::solana_program::pubkey::Pubkey,
     common_test_utils::{
         assert_treasury_balance, setup_pyth_receiver, ProgramTestFixtures, WrongSetupOption,
         DEFAULT_GUARDIAN_SET_INDEX,
@@ -20,8 +21,7 @@ use {
             trim_vaa_signatures, DEFAULT_DATA_SOURCE, SECONDARY_DATA_SOURCE,
         },
     },
-    solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
-    solana_sdk::{rent::Rent, signature::Keypair, signer::Signer},
+    solana_sdk::{native_token::LAMPORTS_PER_SOL, rent::Rent, signature::Keypair, signer::Signer},
     wormhole_core_bridge_solana::ID as BRIDGE_ID,
 };
 
