@@ -16,10 +16,10 @@ pro-compatible = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-borsh = { version = "1.5.3", features = ["derive", "unstable__schema"] }
+borsh = "1.5.3"
 cfg-if = { workspace = true }
 hex = { workspace = true }
 pythnet-sdk = { workspace = true, features = ["solana-program"]}
 
 [dev-dependencies]
-solana-borsh = "2.2.1" # Needed for borsh0_10 compatibility
+solana-borsh = "3.0.2"

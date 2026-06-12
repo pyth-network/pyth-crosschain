@@ -4309,12 +4309,12 @@ dependencies = [
  "cfg-if",
  "hex",
  "pythnet-sdk",
- "solana-borsh 2.2.1",
+ "solana-borsh",
 ]
 
 [[package]]
 name = "pythnet-sdk"
-version = "2.3.1"
+version = "3.0.0"
 dependencies = [
  "anchor-lang",
  "bincode",
@@ -5652,16 +5652,6 @@ dependencies = [
 
 [[package]]
 name = "solana-borsh"
-version = "2.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "718333bcd0a1a7aed6655aa66bef8d7fb047944922b2d3a18f49cbc13e73d004"
-dependencies = [
- "borsh 0.10.4",
- "borsh 1.5.7",
-]
-
-[[package]]
-name = "solana-borsh"
 version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c04abbae16f57178a163125805637b8a076175bb5c0002fb04f4792bea901cf7"
@@ -5876,7 +5866,7 @@ checksum = "d6bf47dcc57b770cee0432899ac89cd7e85896f9e28e3d5e5542a0b8a8f5839f"
 dependencies = [
  "agave-feature-set",
  "log",
- "solana-borsh 3.0.2",
+ "solana-borsh",
  "solana-builtins-default-costs",
  "solana-compute-budget",
  "solana-compute-budget-interface",
@@ -5959,7 +5949,7 @@ dependencies = [
  "ahash 0.8.12",
  "log",
  "solana-bincode",
- "solana-borsh 3.0.2",
+ "solana-borsh",
  "solana-builtins-default-costs",
  "solana-clock",
  "solana-compute-budget",
@@ -6653,7 +6643,7 @@ dependencies = [
  "solana-account-info",
  "solana-big-mod-exp",
  "solana-blake3-hasher",
- "solana-borsh 3.0.2",
+ "solana-borsh",
  "solana-clock",
  "solana-cpi",
  "solana-define-syscall 3.0.0",
@@ -8449,7 +8439,7 @@ dependencies = [
  "borsh 1.5.7",
  "num-derive",
  "num-traits",
- "solana-borsh 3.0.2",
+ "solana-borsh",
  "solana-instruction",
  "solana-program-error",
  "solana-pubkey 3.0.0",
