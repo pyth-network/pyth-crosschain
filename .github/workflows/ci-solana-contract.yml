@@ -44,10 +44,15 @@ jobs:
         run: cargo clippy --all-targets --all-features -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo build-sbf -- ${{ matrix.features }} -p pyth-solana-receiver -p pyth-push-oracle -p wormhole-core-bridge-solana
+        run: |
+          cargo build-sbf --manifest-path programs/pyth-solana-receiver/Cargo.toml ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/pyth-push-oracle/Cargo.toml ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/core-bridge/Cargo.toml ${{ matrix.features }}
         if: success() || failure()
       - name: Run tests
-        run: cargo-test-sbf ${{ matrix.features }}
+        env:
+          SBF_OUT_DIR: ${{ github.workspace }}/target_chains/solana/target/deploy
+        run: cargo test -p pyth-solana-receiver -p pyth-push-oracle ${{ matrix.features }}
         if: success() || failure()
       - name: Run sdk tests
         run: cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
