@@ -16,7 +16,6 @@ pro-compatible = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-borsh = { workspace = true }
 cfg-if = { workspace = true }
 hex = { workspace = true }
 pythnet-sdk = { workspace = true, features = ["solana-program"]}
