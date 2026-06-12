@@ -7420,7 +7420,7 @@ dependencies = [
  "anchor-lang",
  "base64 0.21.7",
  "bincode",
- "borsh 0.10.4",
+ "borsh 1.6.0",
  "bytemuck",
  "byteorder",
  "fast-math",
