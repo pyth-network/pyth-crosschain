@@ -22,6 +22,6 @@ serde_wormhole = { workspace = true }
 pythnet-sdk = { workspace = true, features = ["test-utils"] }
 anchor-lang = { workspace = true }
 solana-program = { workspace = true }
-pyth-solana-receiver = { path = "../programs/pyth-solana-receiver", features = ["no-entrypoint"] }
+pyth-solana-receiver = { workspace = true }
 wormhole-core-bridge-solana = {workspace = true}
 pyth-solana-receiver-sdk = { workspace = true }
