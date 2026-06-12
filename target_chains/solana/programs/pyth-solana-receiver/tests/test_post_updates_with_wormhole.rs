@@ -1,5 +1,5 @@
 use {
-    anchor_lang::{InstructionData, ToAccountMetas, prelude::system_instruction},
+    anchor_lang::{prelude::system_instruction, InstructionData, ToAccountMetas},
     common_test_utils::{default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX},
     program_simulator::{into_transaction_error, ProgramSimulator},
     pyth_solana_receiver::{

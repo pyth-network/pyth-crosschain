@@ -12,8 +12,8 @@ pub fn post_update<'info>(
     params: PostUpdateParams,
 ) -> anchor_lang::Result<()> {
     let ix = {
-        let mut ix_data = borsh::to_vec(&params)
-            .map_err(|_| ErrorCode::InstructionDidNotSerialize)?;
+        let mut ix_data =
+            borsh::to_vec(&params).map_err(|_| ErrorCode::InstructionDidNotSerialize)?;
         let mut data = [133, 95, 207, 175, 11, 79, 118, 44].to_vec();
         data.append(&mut ix_data);
         let accounts = ctx.to_account_metas(None);
@@ -34,8 +34,8 @@ pub fn post_update_atomic<'info>(
     params: PostUpdateAtomicParams,
 ) -> anchor_lang::Result<()> {
     let ix = {
-        let mut ix_data = borsh::to_vec(&params)
-            .map_err(|_| ErrorCode::InstructionDidNotSerialize)?;
+        let mut ix_data =
+            borsh::to_vec(&params).map_err(|_| ErrorCode::InstructionDidNotSerialize)?;
         let mut data = [49, 172, 84, 192, 175, 180, 52, 234].to_vec();
         data.append(&mut ix_data);
         let accounts = ctx.to_account_metas(None);

@@ -162,7 +162,11 @@ where
 /// Trait used for legacy instruction handlers. It is used to process instructions from
 /// legacy programs, where an enum defines the instruction type (one byte selector).
 pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
-    Accounts<'info, Self::Bumps> + AccountsExit<'info> + ToAccountInfos<'info> + Bumps<Bumps: Default> + 'info
+    Accounts<'info, Self::Bumps>
+    + AccountsExit<'info>
+    + ToAccountInfos<'info>
+    + Bumps<Bumps: Default>
+    + 'info
 {
     /// This name is what gets written to in a program log similar to how Anchor instructions are
     /// logged. This name is logged in the process instruction method.
@@ -195,14 +199,19 @@ pub trait ProcessLegacyInstruction<'info, T: AnchorDeserialize>:
             &mut std::collections::BTreeSet::new(),
         )?;
 
+        // This looks horrible but it's actually how Anchor does it internally https://github.com/otter-sec/anchor/blob/25be6d5/lang/syn/src/codegen/program/handlers.rs#L156
         unsafe fn __shrink_lifetime<'from, 'to, T>(value: &'from mut T) -> &'to mut T {
             unsafe { ::core::mem::transmute(value) }
         }
-        // Create new context of these accounts.
-        let ctx = Context::new(program_id, unsafe { __shrink_lifetime(&mut accounts) }, account_infos, bumps);
-
-        // Execute method that takes this context with specified instruction arguments.
-        Self::ANCHOR_IX_FN(ctx, T::deserialize(&mut ix_data)?)?;
+        Self::ANCHOR_IX_FN(
+            Context::new(
+                program_id,
+                unsafe { __shrink_lifetime(&mut accounts) },
+                account_infos,
+                bumps,
+            ),
+            T::deserialize(&mut ix_data)?,
+        )?;
 
         // Finally clean up (this sets data from account struct members into account data).
         accounts.exit(program_id)

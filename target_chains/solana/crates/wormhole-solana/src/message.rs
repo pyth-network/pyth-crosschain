@@ -116,11 +116,7 @@ pub fn post_message(
     // Pay Wormhole transfer fee (if there is one).
     if config.params.fee > 0 {
         invoke_signed(
-            &system_instruction::transfer(
-                &payer,
-                &fee_collector,
-                config.params.fee,
-            ),
+            &system_instruction::transfer(&payer, &fee_collector, config.params.fee),
             accounts,
             &[],
         )?;
