@@ -45,9 +45,9 @@ jobs:
         if: success() || failure()
       - name: Build
         run: |
-          cargo build-sbf -- -p pyth-solana-receiver ${{ matrix.features }}
-          cargo build-sbf -- -p pyth-push-oracle ${{ matrix.features }}
-          cargo build-sbf -- -p wormhole-core-bridge-solana ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/pyth-solana-receiver/Cargo.toml ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/pyth-push-oracle/Cargo.toml ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/core-bridge/Cargo.toml ${{ matrix.features }}
         if: success() || failure()
       - name: Run tests
         run: cargo-test-sbf ${{ matrix.features }}
