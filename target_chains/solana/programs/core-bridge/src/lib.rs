@@ -3,7 +3,6 @@
 #![allow(
     clippy::result_large_err,
     clippy::diverging_sub_expression,
-    unexpected_cfgs
 )]
 
 cfg_if::cfg_if! {

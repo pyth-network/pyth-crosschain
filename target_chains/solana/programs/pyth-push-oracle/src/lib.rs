@@ -3,8 +3,7 @@
 // fixed upstream (anchor PR #4403) but not yet released as of anchor-lang 1.0.2.
 #![allow(
     clippy::result_large_err,
-    clippy::diverging_sub_expression,
-    unexpected_cfgs
+    clippy::diverging_sub_expression
 )]
 
 use {
