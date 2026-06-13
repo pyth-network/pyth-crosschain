@@ -44,7 +44,10 @@ jobs:
         run: cargo clippy --all-targets --all-features -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo build-sbf -- ${{ matrix.features }} -p pyth-solana-receiver -p pyth-push-oracle -p wormhole-core-bridge-solana
+        run: |
+          cargo build-sbf -p pyth-solana-receiver ${{ matrix.features }}
+          cargo build-sbf -p pyth-push-oracle ${{ matrix.features }}
+          cargo build-sbf -p wormhole-core-bridge-solana ${{ matrix.features }}
         if: success() || failure()
       - name: Run tests
         run: cargo-test-sbf ${{ matrix.features }}

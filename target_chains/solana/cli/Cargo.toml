@@ -14,7 +14,7 @@ solana-system-interface = { workspace = true }
 solana-compute-budget-interface = { workspace = true }
 anchor-client = { workspace = true }
 clap = { version = "3.2.22", features = ["derive"] }
-pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
+pyth-solana-receiver = { workspace = true }
 wormhole-solana = { workspace = true }
 pythnet-sdk = { workspace = true }
 wormhole-vaas-serde = { workspace = true }

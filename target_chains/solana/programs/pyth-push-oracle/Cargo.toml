@@ -24,9 +24,7 @@ byteorder = "1.4.3"
 pyth-solana-receiver-sdk = { workspace = true }
 
 [dev-dependencies]
-pyth-solana-receiver = { path = "../pyth-solana-receiver", features = [
-    "no-entrypoint",
-] }
+pyth-solana-receiver = { workspace = true }
 solana-sdk = { workspace = true }
 tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
