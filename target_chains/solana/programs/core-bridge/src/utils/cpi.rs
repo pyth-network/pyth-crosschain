@@ -1,6 +1,8 @@
 use anchor_lang::{prelude::*, system_program};
 
-#[derive(Accounts)]
+// NOTE: This struct is only used as a CPI account container (it is never deserialized as an
+// instruction context), so we implement the traits `CpiContext` requires manually instead of
+// using `#[derive(Accounts)]`, which would warn about `AccountInfo` usage.
 pub struct CreateAccountSafe<'info> {
     /// Payer (mut signer).
     ///
@@ -11,6 +13,27 @@ pub struct CreateAccountSafe<'info> {
     ///
     /// CHECK: This account will be created by the System program.
     pub new_account: AccountInfo<'info>,
+}
+
+impl ToAccountMetas for CreateAccountSafe<'_> {
+    fn to_account_metas(
+        &self,
+        _is_signer: Option<bool>,
+    ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
+        let mut account_metas = Vec::new();
+        account_metas.extend(self.payer.to_account_metas(None));
+        account_metas.extend(self.new_account.to_account_metas(None));
+        account_metas
+    }
+}
+
+impl<'info> ToAccountInfos<'info> for CreateAccountSafe<'info> {
+    fn to_account_infos(&self) -> Vec<AccountInfo<'info>> {
+        let mut account_infos = Vec::new();
+        account_infos.extend(self.payer.to_account_infos());
+        account_infos.extend(self.new_account.to_account_infos());
+        account_infos
+    }
 }
 
 /// Method for invoking the System program's create account instruction. This method may be useful

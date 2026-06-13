@@ -3,7 +3,9 @@ pub use zero_copy::*;
 
 use anchor_lang::prelude::*;
 
-#[derive(Accounts)]
+// NOTE: This struct is only used as a CPI account container (it is never deserialized as an
+// instruction context), so we implement the traits `CpiContext` requires manually instead of
+// using `#[derive(Accounts)]`, which would warn about `AccountInfo` usage.
 pub struct ClaimVaa<'info> {
     /// Claim account, which acts as replay protection after consuming data from the VAA
     /// account.
@@ -22,6 +24,27 @@ pub struct ClaimVaa<'info> {
     ///
     /// CHECK: This account's lamports will be used to create the new account.
     pub payer: AccountInfo<'info>,
+}
+
+impl ToAccountMetas for ClaimVaa<'_> {
+    fn to_account_metas(
+        &self,
+        _is_signer: Option<bool>,
+    ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
+        let mut account_metas = Vec::new();
+        account_metas.extend(self.claim.to_account_metas(None));
+        account_metas.extend(self.payer.to_account_metas(None));
+        account_metas
+    }
+}
+
+impl<'info> ToAccountInfos<'info> for ClaimVaa<'info> {
+    fn to_account_infos(&self) -> Vec<AccountInfo<'info>> {
+        let mut account_infos = Vec::new();
+        account_infos.extend(self.claim.to_account_infos());
+        account_infos.extend(self.payer.to_account_infos());
+        account_infos
+    }
 }
 
 /// This method provides a way to prevent replay attacks on VAAs. It creates a PDA for your program

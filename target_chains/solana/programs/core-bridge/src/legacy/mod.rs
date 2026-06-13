@@ -22,7 +22,7 @@ pub(crate) mod utils;
 #[cfg(feature = "cpi")]
 pub mod cpi {
     use super::instruction as legacy_instruction;
-    use anchor_lang::prelude::*;
+    use anchor_lang::{accounts::unchecked_account::UncheckedAccount, prelude::*};
     use solana_program::program::invoke_signed;
 
     /// Processor to post (publish) a Wormhole message by setting up the message account for
@@ -90,18 +90,18 @@ pub mod cpi {
         /// Seeds = \["Bridge"\], seeds::program = core_bridge_program.
         ///
         /// CHECK: This account is used to determine how many lamports to transfer for Wormhole fee.
-        pub config: AccountInfo<'info>,
+        pub config: UncheckedAccount<'info>,
 
         /// Core Bridge Message (mut).
         ///
         /// CHECK: This message will be created if it does not exist.
-        pub message: AccountInfo<'info>,
+        pub message: UncheckedAccount<'info>,
 
         /// Core Bridge Emitter (optional, read-only signer).
         ///
         /// CHECK: This account pubkey will be used as the emitter address. This account is required
         /// if the message account has not been prepared beforehand.
-        pub emitter: Option<AccountInfo<'info>>,
+        pub emitter: Option<UncheckedAccount<'info>>,
 
         /// Core Bridge Emitter Sequence (mut).
         ///
@@ -109,24 +109,24 @@ pub mod cpi {
         ///
         /// CHECK: This account is used to determine the sequence of the Wormhole message for the
         /// provided emitter.
-        pub emitter_sequence: AccountInfo<'info>,
+        pub emitter_sequence: UncheckedAccount<'info>,
 
         /// Payer (mut signer).
         ///
         /// CHECK: This account pays for new accounts created and pays for the Wormhole fee.
-        pub payer: AccountInfo<'info>,
+        pub payer: UncheckedAccount<'info>,
 
         /// Core Bridge Fee Collector (optional, read-only).
         ///
         /// Seeds = \["fee_collector"\], seeds::program = core_bridge_program.
         ///
         /// CHECK: This account is used to collect fees.
-        pub fee_collector: Option<AccountInfo<'info>>,
+        pub fee_collector: Option<UncheckedAccount<'info>>,
 
         /// System Program.
         ///
         /// CHECK: Required to create accounts and transfer lamports to the fee collector.
-        pub system_program: AccountInfo<'info>,
+        pub system_program: UncheckedAccount<'info>,
     }
 
     /// Context to post a new or reuse an existing Core Bridge message.
@@ -137,17 +137,17 @@ pub mod cpi {
         /// seeds = \["Bridge"\], seeds::program = core_bridge_program
         ///
         /// CHECK: This account is used to determine how many lamports to transfer for Wormhole fee.
-        pub config: AccountInfo<'info>,
+        pub config: UncheckedAccount<'info>,
 
         /// Core Bridge Message (mut).
         ///
         /// CHECK: This message will be created if it does not exist.
-        pub message: AccountInfo<'info>,
+        pub message: UncheckedAccount<'info>,
 
         /// Core Bridge Emitter (read-only signer).
         ///
         /// CHECK: This account pubkey will be used as the emitter address.
-        pub emitter: AccountInfo<'info>,
+        pub emitter: UncheckedAccount<'info>,
 
         /// Core Bridge Emitter Sequence (mut).
         ///
@@ -155,23 +155,23 @@ pub mod cpi {
         ///
         /// CHECK: This account is used to determine the sequence of the Wormhole message for the
         /// provided emitter.
-        pub emitter_sequence: AccountInfo<'info>,
+        pub emitter_sequence: UncheckedAccount<'info>,
 
         /// Payer (mut signer).
         ///
         /// CHECK: This account pays for new accounts created and pays for the Wormhole fee.
-        pub payer: AccountInfo<'info>,
+        pub payer: UncheckedAccount<'info>,
 
         /// Core Bridge Fee Collector (optional, read-only).
         ///
         /// Seeds = \["fee_collector"\], seeds::program = core_bridge_program.
         ///
         /// CHECK: This account is used to collect fees.
-        pub fee_collector: Option<AccountInfo<'info>>,
+        pub fee_collector: Option<UncheckedAccount<'info>>,
 
         /// System Program.
         ///
         /// CHECK: Required to create accounts and transfer lamports to the fee collector.
-        pub system_program: AccountInfo<'info>,
+        pub system_program: UncheckedAccount<'info>,
     }
 }

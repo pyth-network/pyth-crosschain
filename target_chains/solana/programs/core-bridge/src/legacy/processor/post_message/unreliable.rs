@@ -59,7 +59,7 @@ pub struct PostMessageUnreliable<'info> {
         ],
         bump,
     )]
-    emitter_sequence: AccountInfo<'info>,
+    emitter_sequence: UncheckedAccount<'info>,
 
     /// Payer (mut signer).
     ///
@@ -76,7 +76,7 @@ pub struct PostMessageUnreliable<'info> {
         seeds = [crate::constants::FEE_COLLECTOR_SEED_PREFIX],
         bump,
     )]
-    fee_collector: Option<AccountInfo<'info>>,
+    fee_collector: Option<UncheckedAccount<'info>>,
 
     /// Previously needed sysvar.
     ///

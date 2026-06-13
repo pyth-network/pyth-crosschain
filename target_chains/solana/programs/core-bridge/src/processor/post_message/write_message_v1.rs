@@ -13,7 +13,7 @@ pub struct WriteMessageV1<'info> {
         owner = crate::ID,
         constraint = PostedMessageV1::require_draft_message(&draft_message, &emitter_authority)?
     )]
-    draft_message: AccountInfo<'info>,
+    draft_message: UncheckedAccount<'info>,
 }
 
 impl<'info> WriteMessageV1<'info> {

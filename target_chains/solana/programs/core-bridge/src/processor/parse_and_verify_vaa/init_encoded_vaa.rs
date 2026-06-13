@@ -17,7 +17,7 @@ pub struct InitEncodedVaa<'info> {
         mut,
         owner = crate::ID
     )]
-    encoded_vaa: AccountInfo<'info>,
+    encoded_vaa: UncheckedAccount<'info>,
 }
 
 impl<'info> InitEncodedVaa<'info> {

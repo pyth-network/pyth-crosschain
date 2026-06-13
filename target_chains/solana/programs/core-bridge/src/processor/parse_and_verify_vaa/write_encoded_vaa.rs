@@ -14,7 +14,7 @@ pub struct WriteEncodedVaa<'info> {
         owner = crate::ID,
         constraint = EncodedVaa::require_draft_vaa(&draft_vaa, &write_authority)?
     )]
-    draft_vaa: AccountInfo<'info>,
+    draft_vaa: UncheckedAccount<'info>,
 }
 
 impl<'info> WriteEncodedVaa<'info> {

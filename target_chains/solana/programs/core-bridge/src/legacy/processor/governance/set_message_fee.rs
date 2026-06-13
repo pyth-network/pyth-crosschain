@@ -31,7 +31,7 @@ pub struct SetMessageFee<'info> {
     /// is the legacy PostedVaaV1 account, its PDA address will be verified by this zero-copy
     /// reader.
     #[account(owner = crate::ID)]
-    vaa: AccountInfo<'info>,
+    vaa: UncheckedAccount<'info>,
 
     /// Claim account (mut), which acts as replay protection after consuming data from the VAA
     /// account.
@@ -42,7 +42,7 @@ pub struct SetMessageFee<'info> {
     /// CHECK: This account is created via [claim_vaa](crate::utils::vaa::claim_vaa).
     /// This account can only be created once for this VAA.
     #[account(mut)]
-    claim: AccountInfo<'info>,
+    claim: UncheckedAccount<'info>,
 
     system_program: Program<'info, System>,
 }
