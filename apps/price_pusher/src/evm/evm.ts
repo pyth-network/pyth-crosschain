@@ -16,7 +16,6 @@ import {
   ContractFunctionRevertedError,
   FeeCapTooLowError,
   InsufficientFundsError,
-  InternalRpcError,
   TransactionExecutionError,
 } from "viem";
 
@@ -40,6 +39,19 @@ type PushAttempt = {
   nonce: number;
   gasPrice: GasPrice;
 };
+
+// Some RPC providers surface the same underlying failure through different viem
+// error classes. For example "replacement transaction underpriced" comes back as
+// an `InternalRpcError` (code -32000) on most chains, but Soneium/Alchemy returns
+// it as an `InvalidInputRpcError` (code -32602, "Missing or invalid parameters").
+// Matching on the error text across the whole cause chain (rather than on a
+// specific class) keeps the detection robust across providers.
+const errorChainIncludes = (error: BaseError, needle: string): boolean =>
+  error.walk(
+    (e) =>
+      (e instanceof BaseError && e.details.includes(needle)) ||
+      (e instanceof Error && e.message.includes(needle)),
+  ) !== null;
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -300,11 +312,7 @@ export class EvmPricePusher implements IPricePusher {
 
         if (
           error.walk((e) => e instanceof FeeCapTooLowError) ||
-          error.walk(
-            (e) =>
-              e instanceof InternalRpcError &&
-              e.details.includes("replacement transaction underpriced"),
-          )
+          errorChainIncludes(error, "replacement transaction underpriced")
         ) {
           this.logger.warn(
             "The gas price of the transaction is too low or there is an existing transaction with higher gas with the same nonce. " +
