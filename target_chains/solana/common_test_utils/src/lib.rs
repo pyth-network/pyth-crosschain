@@ -89,7 +89,8 @@ pub fn build_guardian_set_account(wrong_setup_option: WrongSetupOption) -> Accou
             .map(|x| {
                 let mut result: [u8; 20] = [0u8; 20];
                 result.copy_from_slice(
-                    &keccak::hashv(&[&PublicKey::from_secret_key(x).serialize()[1..]]).0[12..],
+                    &keccak::hashv(&[&PublicKey::from_secret_key(x).serialize()[1..]]).to_bytes()
+                        [12..],
                 );
                 result
             })

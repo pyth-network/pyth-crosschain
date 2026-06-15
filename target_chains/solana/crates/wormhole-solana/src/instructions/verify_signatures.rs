@@ -31,10 +31,10 @@ pub fn verify_signatures(
             AccountMeta::new(signature_set, true),
             AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk_ids::system_program::id(), false),
         ],
 
-        data: (Instruction::VerifySignatures, data).try_to_vec()?,
+        data: borsh::to_vec(&(Instruction::VerifySignatures, data))?,
     })
 }
 

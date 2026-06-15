@@ -1,6 +1,8 @@
 use anchor_lang::{prelude::*, system_program};
 
-#[derive(Accounts)]
+// NOTE: This struct is only used as a CPI account container (it is never deserialized as an
+// instruction context), so we implement the traits `CpiContext` requires manually instead of
+// using `#[derive(Accounts)]`, which would warn about `AccountInfo` usage.
 pub struct CreateAccountSafe<'info> {
     /// Payer (mut signer).
     ///
@@ -11,6 +13,27 @@ pub struct CreateAccountSafe<'info> {
     ///
     /// CHECK: This account will be created by the System program.
     pub new_account: AccountInfo<'info>,
+}
+
+impl ToAccountMetas for CreateAccountSafe<'_> {
+    fn to_account_metas(
+        &self,
+        _is_signer: Option<bool>,
+    ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
+        let mut account_metas = Vec::new();
+        account_metas.extend(self.payer.to_account_metas(None));
+        account_metas.extend(self.new_account.to_account_metas(None));
+        account_metas
+    }
+}
+
+impl<'info> ToAccountInfos<'info> for CreateAccountSafe<'info> {
+    fn to_account_infos(&self) -> Vec<AccountInfo<'info>> {
+        let mut account_infos = Vec::new();
+        account_infos.extend(self.payer.to_account_infos());
+        account_infos.extend(self.new_account.to_account_infos());
+        account_infos
+    }
 }
 
 /// Method for invoking the System program's create account instruction. This method may be useful
@@ -32,7 +55,7 @@ pub fn create_account_safe<'info>(
     if current_lamports == 0 {
         system_program::create_account(
             CpiContext::new_with_signer(
-                ctx.program,
+                ctx.program_id,
                 system_program::CreateAccount {
                     from: ctx.accounts.payer,
                     to: ctx.accounts.new_account,
@@ -62,7 +85,7 @@ fn allocate_and_assign_account<'info>(
     if required_lamports > 0 {
         system_program::transfer(
             CpiContext::new(
-                ctx.program.to_account_info(),
+                ctx.program_id,
                 system_program::Transfer {
                     from: ctx.accounts.payer,
                     to: ctx.accounts.new_account.to_account_info(),
@@ -75,7 +98,7 @@ fn allocate_and_assign_account<'info>(
     // Allocate space.
     system_program::allocate(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             system_program::Allocate {
                 account_to_allocate: ctx.accounts.new_account.to_account_info(),
             },
@@ -87,7 +110,7 @@ fn allocate_and_assign_account<'info>(
     // Assign to the owner.
     system_program::assign(
         CpiContext::new_with_signer(
-            ctx.program,
+            ctx.program_id,
             system_program::Assign {
                 account_to_assign: ctx.accounts.new_account.to_account_info(),
             },

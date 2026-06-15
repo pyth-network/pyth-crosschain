@@ -33,7 +33,7 @@ pub struct GuardianSetUpdate<'info> {
     /// is the legacy PostedVaaV1 account, its PDA address will be verified by this zero-copy
     /// reader.
     #[account(owner = crate::ID)]
-    vaa: AccountInfo<'info>,
+    vaa: UncheckedAccount<'info>,
 
     /// Claim account (mut), which acts as replay protection after consuming data from the VAA
     /// account.
@@ -44,7 +44,7 @@ pub struct GuardianSetUpdate<'info> {
     /// CHECK: This account is created via [claim_vaa](crate::utils::vaa::claim_vaa).
     /// This account can only be created once for this VAA.
     #[account(mut)]
-    claim: AccountInfo<'info>,
+    claim: UncheckedAccount<'info>,
 
     /// Existing guardian set, whose guardian set index is the same one found in the [Config]. This
     /// address is derived using the config's guardian set index.
@@ -116,7 +116,7 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
     // address, chain and sequence combination.
     utils::vaa::claim_vaa(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::vaa::ClaimVaa {
                 claim: ctx.accounts.claim.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),

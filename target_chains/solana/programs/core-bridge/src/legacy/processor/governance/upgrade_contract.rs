@@ -6,6 +6,7 @@ use crate::{
     utils::{self, vaa::VaaAccount},
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::bpf_loader_upgradeable;
 use solana_program::program::invoke_signed;
 
 #[derive(Accounts)]
@@ -30,7 +31,7 @@ pub struct UpgradeContract<'info> {
     /// is the legacy PostedVaaV1 account, its PDA address will be verified by this zero-copy
     /// reader.
     #[account(owner = crate::ID)]
-    vaa: AccountInfo<'info>,
+    vaa: UncheckedAccount<'info>,
 
     /// Claim account (mut), which acts as replay protection after consuming data from the VAA
     /// account.
@@ -41,7 +42,7 @@ pub struct UpgradeContract<'info> {
     /// CHECK: This account is created via [claim_vaa](crate::utils::vaa::claim_vaa).
     /// This account can only be created once for this VAA.
     #[account(mut)]
-    claim: AccountInfo<'info>,
+    claim: UncheckedAccount<'info>,
 
     /// CHECK: We need this upgrade authority to invoke the BPF Loader Upgradeable program to
     /// upgrade this program's executable. We verify this PDA address here out of convenience to get
@@ -50,20 +51,20 @@ pub struct UpgradeContract<'info> {
         seeds = [UPGRADE_SEED_PREFIX],
         bump,
     )]
-    upgrade_authority: AccountInfo<'info>,
+    upgrade_authority: UncheckedAccount<'info>,
 
     /// Spill account to collect excess lamports.
     ///
     /// CHECK: This account receives any lamports after the result of the upgrade.
     #[account(mut)]
-    spill: AccountInfo<'info>,
+    spill: UncheckedAccount<'info>,
 
     /// Deployed implementation.
     ///
     /// CHECK: The pubkey of this account is checked in access control against the one encoded in
     /// the governance VAA.
     #[account(mut)]
-    buffer: AccountInfo<'info>,
+    buffer: UncheckedAccount<'info>,
 
     /// Core Bridge program data needed for BPF Loader Upgradable program.
     ///
@@ -73,31 +74,31 @@ pub struct UpgradeContract<'info> {
         mut,
         seeds = [crate::ID.as_ref()],
         bump,
-        seeds::program = solana_program::bpf_loader_upgradeable::id(),
+        seeds::program = bpf_loader_upgradeable::id(),
     )]
-    program_data: AccountInfo<'info>,
+    program_data: UncheckedAccount<'info>,
 
     /// CHECK: This must equal the Core Bridge program ID for the BPF Loader Upgradeable program.
     #[account(
         mut,
         address = crate::ID
     )]
-    this_program: AccountInfo<'info>,
+    this_program: UncheckedAccount<'info>,
 
     /// CHECK: BPF Loader Upgradeable program needs this sysvar.
     #[account(address = solana_program::sysvar::rent::id())]
-    rent: AccountInfo<'info>,
+    rent: UncheckedAccount<'info>,
 
     /// CHECK: BPF Loader Upgradeable program needs this sysvar.
     #[account(address = solana_program::sysvar::clock::id())]
-    clock: AccountInfo<'info>,
+    clock: UncheckedAccount<'info>,
 
     /// BPF Loader Upgradeable program.
     ///
     /// CHECK: In order to upgrade the program, we need to invoke the BPF Loader Upgradeable
     /// program.
-    #[account(address = solana_program::bpf_loader_upgradeable::id())]
-    bpf_loader_upgradeable_program: AccountInfo<'info>,
+    #[account(address = bpf_loader_upgradeable::id())]
+    bpf_loader_upgradeable_program: UncheckedAccount<'info>,
 
     system_program: Program<'info, System>,
 }
@@ -149,7 +150,7 @@ fn upgrade_contract(ctx: Context<UpgradeContract>, _args: EmptyArgs) -> Result<(
     // address, chain and sequence combination.
     utils::vaa::claim_vaa(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::vaa::ClaimVaa {
                 claim: ctx.accounts.claim.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),

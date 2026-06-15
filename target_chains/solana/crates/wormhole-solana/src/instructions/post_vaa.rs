@@ -69,6 +69,6 @@ pub fn post_vaa(
             AccountMeta::new_readonly(sysvar::rent::id(), false),
             AccountMeta::new_readonly(system_program::id(), false),
         ],
-        data: (Instruction::PostVAA, post_vaa_data).try_to_vec()?,
+        data: borsh::to_vec(&(Instruction::PostVAA, post_vaa_data))?,
     })
 }

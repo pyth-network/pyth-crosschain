@@ -39,8 +39,8 @@ pub fn set_fees(
             AccountMeta::new(bridge, false),
             AccountMeta::new_readonly(message, false),
             AccountMeta::new(claim, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk_ids::system_program::id(), false),
         ],
-        data: (Instruction::SetFees, SetFeesData {}).try_to_vec()?,
+        data: borsh::to_vec(&(Instruction::SetFees, SetFeesData {}))?,
     })
 }

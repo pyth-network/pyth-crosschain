@@ -14,27 +14,27 @@ pub struct PublishMessage<'info> {
     ///
     /// CHECK: This account's lamports will be used to create various accounts when publishing a
     /// Wormhole message.
-    pub payer: AccountInfo<'info>,
+    pub payer: UncheckedAccount<'info>,
 
     /// Core Bridge Message (mut).
     ///
     /// CHECK: This account can either be a generated keypair or an integrator's PDA. This message
     /// account can be closed only when it is in writing status.
-    pub message: AccountInfo<'info>,
+    pub message: UncheckedAccount<'info>,
 
     /// Emitter authority (signer), who acts as the authority for crafting a Wormhole mesage.
     ///
     /// CHECK: This account is written to in the message that acts as the authority to continue
     /// writing to the message account. Once this authority is set, no one else can write and
     /// finalize this message.
-    pub emitter_authority: AccountInfo<'info>,
+    pub emitter_authority: UncheckedAccount<'info>,
 
     /// Core Bridge config account (mut).
     ///
     /// seeds: \["Bridge"\], seeds::program = core_bridge_program
     ///
     /// CHECK: This account is used to determine the Wormhole fee and the fee collector.
-    pub config: AccountInfo<'info>,
+    pub config: UncheckedAccount<'info>,
 
     /// Emitter sequence tracker (mut).
     ///
@@ -42,19 +42,19 @@ pub struct PublishMessage<'info> {
     ///
     /// CHECK: This account is used to determine the sequence number for a particular emitter's
     /// message. It will be created if it does not exist.
-    pub emitter_sequence: AccountInfo<'info>,
+    pub emitter_sequence: UncheckedAccount<'info>,
 
     /// Core Bridge Fee Collector (mut).
     ///
     /// seeds = \["fee_collector"\], seeds::program = core_bridge_program.
     ///
     /// CHECK: This system account is used to collect the Wormhole fee.
-    pub fee_collector: Option<AccountInfo<'info>>,
+    pub fee_collector: Option<UncheckedAccount<'info>>,
 
     /// System program used to create accounts for this instruction.
     ///
     /// CHECK:
-    pub system_program: AccountInfo<'info>,
+    pub system_program: UncheckedAccount<'info>,
 }
 
 /// Directive used to determine how to post a Core Bridge message.
@@ -112,7 +112,7 @@ pub fn publish_message<'info>(
             commitment,
         } => crate::legacy::cpi::post_message(
             CpiContext::new_with_signer(
-                ctx.program,
+                ctx.program_id,
                 crate::legacy::cpi::PostMessage {
                     config: ctx.accounts.config,
                     message: ctx.accounts.message,
@@ -138,7 +138,7 @@ pub fn publish_message<'info>(
         } => handle_post_program_message_v1(ctx, program_id, nonce, payload, commitment),
         PublishMessageDirective::PreparedMessage => crate::legacy::cpi::post_message(
             CpiContext::new_with_signer(
-                ctx.program,
+                ctx.program_id,
                 crate::legacy::cpi::PostMessage {
                     config: ctx.accounts.config,
                     message: ctx.accounts.message,
@@ -169,7 +169,7 @@ fn handle_post_program_message_v1<'info>(
     // Create message account.
     super::system_program::create_account_safe(
         CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             super::system_program::CreateAccountSafe {
                 payer: ctx.accounts.payer.to_account_info(),
                 new_account: ctx.accounts.message.to_account_info(),
@@ -183,10 +183,10 @@ fn handle_post_program_message_v1<'info>(
     // Prepare (calling init and process instructions).
     super::prepare_message(
         CpiContext::new_with_signer(
-            ctx.program.to_account_info(),
+            ctx.program_id,
             super::PrepareMessage {
-                message: ctx.accounts.message.to_account_info(),
-                emitter_authority: ctx.accounts.emitter_authority.to_account_info(),
+                message: ctx.accounts.message.clone(),
+                emitter_authority: ctx.accounts.emitter_authority.clone(),
             },
             ctx.signer_seeds,
         ),
@@ -201,7 +201,7 @@ fn handle_post_program_message_v1<'info>(
     // Finally post.
     crate::legacy::cpi::post_message(
         CpiContext::new(
-            ctx.program,
+            ctx.program_id,
             crate::legacy::cpi::PostMessage {
                 config: ctx.accounts.config,
                 message: ctx.accounts.message,

@@ -1,5 +1,5 @@
 use {
-    borsh::maybestd::io::Result,
+    borsh::io::Result,
     solana_program::{account_info::AccountInfo, pubkey::Pubkey},
 };
 

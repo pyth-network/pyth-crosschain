@@ -33,7 +33,7 @@ pub struct TransferFees<'info> {
     /// is the legacy PostedVaaV1 account, its PDA address will be verified by this zero-copy
     /// reader.
     #[account(owner = crate::ID)]
-    vaa: AccountInfo<'info>,
+    vaa: UncheckedAccount<'info>,
 
     /// Claim account (mut), which acts as replay protection after consuming data from the VAA
     /// account.
@@ -44,7 +44,7 @@ pub struct TransferFees<'info> {
     /// CHECK: This account is created via [claim_vaa](crate::utils::vaa::claim_vaa).
     /// This account can only be created once for this VAA.
     #[account(mut)]
-    claim: AccountInfo<'info>,
+    claim: UncheckedAccount<'info>,
 
     /// Core Bridge Fee Collector (optional, read-only).
     ///
@@ -56,14 +56,14 @@ pub struct TransferFees<'info> {
         seeds = [FEE_COLLECTOR_SEED_PREFIX],
         bump,
     )]
-    fee_collector: AccountInfo<'info>,
+    fee_collector: UncheckedAccount<'info>,
 
     /// Fee recipient.
     ///
     /// CHECK: This account will receive lamports from the fee collector by the specified (encoded)
     /// amount in the governance VAA.
     #[account(mut)]
-    recipient: AccountInfo<'info>,
+    recipient: UncheckedAccount<'info>,
 
     /// Previously needed sysvar.
     ///
@@ -140,7 +140,7 @@ fn transfer_fees(ctx: Context<TransferFees>, _args: EmptyArgs) -> Result<()> {
     // address, chain and sequence combination.
     utils::vaa::claim_vaa(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::vaa::ClaimVaa {
                 claim: ctx.accounts.claim.to_account_info(),
                 payer: ctx.accounts.payer.to_account_info(),
@@ -161,7 +161,7 @@ fn transfer_fees(ctx: Context<TransferFees>, _args: EmptyArgs) -> Result<()> {
     // Finally transfer collected fees to recipient.
     system_program::transfer(
         CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             Transfer {
                 from: fee_collector.to_account_info(),
                 to: ctx.accounts.recipient.to_account_info(),
