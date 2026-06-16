@@ -305,7 +305,7 @@ class PriceState:
         time_diff = update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
             self._record_unavailable(source.source_name, "stale")
-            logger.debug(
+            logger.info(
                 "source {} id {} is stale by {} seconds",
                 source.source_name,
                 source.source_id,
@@ -371,7 +371,7 @@ class PriceState:
         time_diff = mid_price_update.time_diff(time.time())
         if time_diff >= self.stale_price_threshold_seconds:
             self._record_unavailable(self.HL_MID, "stale")
-            logger.debug("mid price for {} is stale by {} seconds", symbol, time_diff)
+            logger.info("mid price for {} is stale by {} seconds", symbol, time_diff)
             return None
 
         return (float(oracle_price) + float(mid_price_update.price)) / 2.0
@@ -425,7 +425,7 @@ class PriceState:
         time_diff = oracle_update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
             self._record_unavailable(oracle_source.source_name, "stale")
-            logger.debug(
+            logger.info(
                 "source {} id {} is stale by {} seconds",
                 oracle_source.source_name,
                 oracle_source.source_id,
