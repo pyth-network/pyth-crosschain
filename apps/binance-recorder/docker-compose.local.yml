@@ -1,0 +1,17 @@
+services:
+  clickhouse-local:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: binance-recorder-clickhouse-local
+    environment:
+      CLICKHOUSE_USER: recorder
+      CLICKHOUSE_PASSWORD: recorder
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8223:8123"
+      - "9100:9000"
+    volumes:
+      - clickhouse-local-data:/var/lib/clickhouse
+      - ./sql/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+
+volumes:
+  clickhouse-local-data:

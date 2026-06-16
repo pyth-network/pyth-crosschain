@@ -1,0 +1,21 @@
+[package]
+name = "binance-recorder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.75"
+chrono = { version = "0.4.38", features = ["clock", "serde"] }
+clap = { version = "4.5.38", features = ["derive"] }
+clickhouse = { version = "0.15", default-features = false, features = ["rustls-tls", "chrono"] }
+config = { version = "0.14.1", default-features = false, features = ["yaml"] }
+derivative = "2.2.0"
+reqwest = { version = "0.11.22", default-features = false, features = ["rustls-tls"] }
+rust_decimal = { version = "=1.37.1", default-features = false, features = ["serde", "std"] }
+serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "1.0.61"
+tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+[workspace]

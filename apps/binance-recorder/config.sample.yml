@@ -1,0 +1,39 @@
+binance:
+  # SBE combined-stream host:port. A single connection is valid for ~24h.
+  endpoint: "stream-sbe.binance.com:9443"
+  # Ed25519 API key, sent in the X-MBX-APIKEY header on the upgrade request.
+  api_key: "replace-me"
+
+# Symbols to record top-of-book for (<symbol>@bestBidAsk). There is no compiled
+# default set — the operator must configure symbols explicitly, or the recorder
+# fails fast on startup. The intended set is the tokenized commodity/equity
+# markets below.
+symbols:
+  - "xauusdt"
+  - "xagusdt"
+  - "clusdt"
+  - "bzusdt"
+  - "crclusdt"
+  - "mstrusdt"
+  - "nvdausdt"
+  - "tslausdt"
+  - "spcxusdt"
+
+clickhouse:
+  url: "http://clickhouse-local:8123"
+  user: "recorder"
+  password: "recorder"
+  database: "pyth_analytics"
+  best_bid_ask_table: "binance_best_bid_ask"
+
+metrics_port: 9092
+health_port: 8082
+ready_stale_seconds: 30
+queue_max_rows: 50000
+batch_max_rows: 10000
+batch_flush_seconds: 2.0
+retention_days: 90
+insert_async: true
+reconnect_max_backoff_seconds: 60
+# Recycle the SBE connection before Binance's hard 24h cap (~23h).
+ws_recycle_seconds: 82800
