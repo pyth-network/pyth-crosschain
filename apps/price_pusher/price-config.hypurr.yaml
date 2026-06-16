@@ -1,95 +1,183 @@
+# Pyth price-pusher config (HyperEVM / chain 999)
+#
+# Cost note: each on-chain feed update costs a fixed Pyth fee
+# (singleUpdateFeeInWei = 0.0003 HYPE). The only way to reduce spend is to
+# write each feed fewer times. Every feed below carries an `early_update`
+# block set EQUAL to its main thresholds: this opts the feed OUT of the
+# default "batch everything on any push" behaviour, so it is written ONLY
+# when it is independently due (its own heartbeat or deviation). Without
+# `early_update`, a single volatile feed crossing its threshold drags all
+# other feeds into the (per-feed-charged) batch.
+#
+# Tiers:
+#   volatile  -> 1%   deviation, 1800s (30m) heartbeat
+#   stable    -> 0.5% deviation, 3600s (60m) heartbeat
+#   redemption-> 0.5% deviation, 3600s (60m) heartbeat
+# confidence_ratio is left at 100 (effectively disabled) on every feed.
+
+# ----------------------------------------------------------------------------
+# Volatile assets (1% / 30m)
+# ----------------------------------------------------------------------------
   - alias: HYPE/USD
     id: 4279e31cc369bbcc2faf022b382b080e32a8e689ff20fbc530d2a603eb6cd98b
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: LHYPE/USD
     id: 9e3cadc2a8a0ebfd765b34d5ee5de77a4add3114672fc0b8d3ad09ac56940069
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: UBTC/USD
     id: 42bfb26778f3504a9f359a92c731f77d0c24aed9b7745276e3ad0c2d840b74c2
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: UETH/USD
     id: 08c73e187b45ecb2ab8375b975865d3c4a225fef1ccc7f326ad6eec66a24567a
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
-  - alias: USDC/USD
-    id: eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: USDT0/USD
-    id: cfc1303ea9f083b1b4f99e1369fb9d2611f3230d5ea33a6abf2f86071c089fdc
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: USDXL/USD
-    id: e10593860e9ee1c204e4f9569e877502f098dd1a4d84cc5bad06f23f77dcbfe2
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: USDe/USD
-    id: 6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: PURR/USD
     id: e0154bf4dfbcf835fad3428c0d8c1078b83f687e4d6afafb827f7f9af70ec326
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
-  - alias: HFUN/USD
-    id: 61db931fcfd322223fb84dc4bfc9c6481bd5610a31403782bc396df213e3ce12
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: mHYPE/HYPE/USD
-    id: e35aebd2d35795acaa2b0e59f3b498510e8ef334986d151d1502adb9e26234f7
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: feUSD/USD
-    id: 7f2e9a7365eb634c543e9ca72683a9cf778cdc16ee5b8bca73abe6d08c1410d5
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: cmETH/mETH/USD
-    id: cef5ad3be493afef85e77267cb0c07d048f3d54055409a34782996607e48cf0a
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: mETH/ETH/USD
-    id: ee279eeb2fec830e3f535ad4d6524eb35eb1c6890cb1afc0b64554d08c88727e
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: XAU/USD
-    id: 765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: PUMP/USD
     id: 7a01fca212788bba7c5bf8c9efd576a8a722f070d2c17596ff7bb609b8d5c3b9
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
-  - alias: haHYPE/HYPE.RR
-    id: 19aec77cb70be18c66df7afd33da651d7b376fd26f7c06f2e8b77536c820a281
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
-  - alias: BBHLP/USDC.RR
-    id: c9a2320d42eec4ba0fcfa753c97676330486854c27b4ee812bc4a9b4635e210d
-    time_difference: 600
-    price_deviation: 1
-    confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
   - alias: UFART/USD
     id: a210f55ff119d315002b5dc4f763b4e4114197028e45d6aca16498ab1433fb6d
-    time_difference: 600
+    time_difference: 1800
     price_deviation: 1
     confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
+  - alias: XAU/USD
+    id: 765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2
+    time_difference: 1800
+    price_deviation: 1
+    confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
+  # HFUN/USD is currently unavailable on Hermes (filtered out at startup, so it
+  # costs nothing today). Kept here so it resumes with these thresholds if/when
+  # the source feed returns.
+  - alias: HFUN/USD
+    id: 61db931fcfd322223fb84dc4bfc9c6481bd5610a31403782bc396df213e3ce12
+    time_difference: 1800
+    price_deviation: 1
+    confidence_ratio: 100
+    early_update:
+      time_difference: 1800
+      price_deviation: 1
+
+# ----------------------------------------------------------------------------
+# Stablecoins (~$1 peg) (0.5% / 60m)
+# ----------------------------------------------------------------------------
+  - alias: USDC/USD
+    id: eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: USDT0/USD
+    id: cfc1303ea9f083b1b4f99e1369fb9d2611f3230d5ea33a6abf2f86071c089fdc
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: USDXL/USD
+    id: e10593860e9ee1c204e4f9569e877502f098dd1a4d84cc5bad06f23f77dcbfe2
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: USDe/USD
+    id: 6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: feUSD/USD
+    id: 7f2e9a7365eb634c543e9ca72683a9cf778cdc16ee5b8bca73abe6d08c1410d5
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+
+# ----------------------------------------------------------------------------
+# Redemption-rate / ratio feeds (slow-moving) (0.5% / 60m)
+# ----------------------------------------------------------------------------
+  - alias: mHYPE/HYPE/USD
+    id: e35aebd2d35795acaa2b0e59f3b498510e8ef334986d151d1502adb9e26234f7
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: cmETH/mETH/USD
+    id: cef5ad3be493afef85e77267cb0c07d048f3d54055409a34782996607e48cf0a
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: mETH/ETH/USD
+    id: ee279eeb2fec830e3f535ad4d6524eb35eb1c6890cb1afc0b64554d08c88727e
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: haHYPE/HYPE.RR
+    id: 19aec77cb70be18c66df7afd33da651d7b376fd26f7c06f2e8b77536c820a281
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
+  - alias: BBHLP/USDC.RR
+    id: c9a2320d42eec4ba0fcfa753c97676330486854c27b4ee812bc4a9b4635e210d
+    time_difference: 3600
+    price_deviation: 0.5
+    confidence_ratio: 100
+    early_update:
+      time_difference: 3600
+      price_deviation: 0.5
