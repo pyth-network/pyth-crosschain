@@ -32,3 +32,4 @@ dist/
 apps/mcp/docs/
 CLAUDE.md
 .claude/**
+.vscode/**
