@@ -18,6 +18,11 @@
         "PLAYGROUND_MAX_STREAM_DURATION_MS",
         "PLAYGROUND_RATE_LIMIT_WINDOW_MS",
         "PLAYGROUND_RATE_LIMIT_MAX_REQUESTS"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".source/**"
       ]
     },
     "fix:lint": {
