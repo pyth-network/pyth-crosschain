@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
 use anyhow::{anyhow, Context, Result};
 use binance_sdk::config::ConfigurationWebsocketStreams;
 use binance_sdk::spot::websocket_streams::BookTickerParams;
 use binance_sdk::spot::SpotWsStreams;
 use chrono::Utc;
 use tokio::sync::mpsc;
+use tokio::sync::mpsc::error::TrySendError;
 use tokio_util::sync::CancellationToken;
 
+use crate::metrics::RecorderMetrics;
 use crate::models::BookTicker;
 
 /// Bridge the SDK's callback-based `bookTicker` streams into the recorder's
@@ -17,11 +21,13 @@ use crate::models::BookTicker;
 /// there is no on/off toggle, reconnection is always enabled. The per-symbol
 /// `on_message` callback is a synchronous `Fn`, so it cannot `.await`; it stamps
 /// `received_at`, converts to [`BookTicker`], and `try_send`s into the channel.
-/// A full or closed channel drops the row (bounded buffer, observable via logs).
+/// A full channel increments the per-symbol `queue_drops` metric and drops the
+/// row (bounded buffer, observable drops) rather than blocking the callback.
 pub async fn run_stream_worker(
     symbols: Vec<String>,
     reconnect_delay_ms: u64,
     sender: mpsc::Sender<BookTicker>,
+    metrics: Arc<RecorderMetrics>,
     stop_token: CancellationToken,
 ) -> Result<()> {
     let config = ConfigurationWebsocketStreams::builder()
@@ -48,18 +54,20 @@ pub async fn run_stream_worker(
 
         let tx = sender.clone();
         let sym = symbol.clone();
+        let metrics = metrics.clone();
         stream.on_message(move |resp| {
             let received_at = Utc::now();
             match BookTicker::from_sdk(resp, received_at) {
-                Ok(ticker) => {
-                    if let Err(err) = tx.try_send(ticker) {
-                        tracing::warn!(
-                            symbol = %sym,
-                            error = %err,
-                            "dropping book ticker (channel full or closed)"
-                        );
+                Ok(ticker) => match tx.try_send(ticker) {
+                    Ok(()) => {}
+                    Err(TrySendError::Full(_)) => {
+                        metrics.record_queue_drop(&sym);
+                        tracing::debug!(symbol = %sym, "dropping book ticker (queue full)");
                     }
-                }
+                    Err(TrySendError::Closed(_)) => {
+                        tracing::debug!(symbol = %sym, "dropping book ticker (channel closed)");
+                    }
+                },
                 Err(err) => {
                     tracing::warn!(
                         symbol = %sym,

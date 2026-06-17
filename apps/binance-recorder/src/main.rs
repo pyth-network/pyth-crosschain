@@ -1,16 +1,14 @@
-use std::{path::PathBuf, process::ExitCode, time::Duration};
+use std::{path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use binance_recorder::{
-    clickhouse::ClickHouseClient, config::AppConfig, models::BookTicker,
-    stream_client::run_stream_worker,
+    clickhouse::ClickHouseClient,
+    config::AppConfig,
+    metrics::RecorderMetrics,
+    recorder::{RecorderRuntime, WriterRuntimeConfig},
 };
 use clap::Parser;
-use tokio::{
-    signal::unix::{signal, SignalKind},
-    sync::mpsc,
-};
-use tokio_util::sync::CancellationToken;
+use tokio::signal::unix::{signal, SignalKind};
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -29,38 +27,24 @@ async fn run() -> Result<()> {
     let cli = Cli::parse();
     let config = AppConfig::from_sources(cli.config.as_deref())?;
 
-    let client = create_client_with_retry(config.clone(), 30).await?;
+    tracing::info!(markets = ?config.markets, "starting binance-recorder");
 
-    let stop = CancellationToken::new();
-    // Tracer slice: direct per-message inserts, no dedupe/batching yet (that
-    // lands in the next slice). A small buffer is plenty for one symbol.
-    let (tx, mut rx) = mpsc::channel::<BookTicker>(10_000);
+    let writer_client = create_client_with_retry(config.clone(), 30).await?;
+    let metrics = Arc::new(RecorderMetrics::new()?);
 
-    let writer_client = client.clone();
-    let insert_async = config.insert_async;
-    let writer = tokio::spawn(async move {
-        while let Some(ticker) = rx.recv().await {
-            match writer_client.insert_batch(&[ticker], insert_async).await {
-                Ok((rows, latency)) => {
-                    tracing::info!(
-                        rows,
-                        latency_seconds = latency,
-                        "inserted book ticker row(s)"
-                    )
-                }
-                Err(err) => tracing::error!(error = ?err, "failed to insert book ticker row"),
-            }
-        }
-    });
-
-    let symbols = vec![config.symbol.clone()];
-    let reconnect_delay_ms = config.ws_reconnect_delay_ms;
-    let stream_stop = stop.clone();
-    let worker = tokio::spawn(async move {
-        if let Err(err) = run_stream_worker(symbols, reconnect_delay_ms, tx, stream_stop).await {
-            tracing::error!(error = ?err, "stream worker failed");
-        }
-    });
+    let mut runtime = RecorderRuntime::new(
+        config.markets,
+        config.reconnect_max_backoff_seconds,
+        writer_client,
+        WriterRuntimeConfig {
+            batch_max_rows: config.batch_max_rows,
+            batch_flush_seconds: config.batch_flush_seconds,
+            queue_max_rows: config.queue_max_rows,
+        },
+        metrics,
+        config.insert_async,
+    );
+    runtime.start();
 
     let mut sigint = signal(SignalKind::interrupt())?;
     let mut sigterm = signal(SignalKind::terminate())?;
@@ -69,11 +53,8 @@ async fn run() -> Result<()> {
         _ = sigterm.recv() => tracing::info!("shutdown signal received (SIGTERM)"),
     }
 
-    stop.cancel();
-    // Worker drops its senders on exit, which closes the channel and lets the
-    // writer drain and finish.
-    let _ = worker.await;
-    let _ = writer.await;
+    runtime.stop().await;
+    runtime.wait_forever().await;
     Ok(())
 }
 
