@@ -239,5 +239,5 @@ fn record_insert_success(metrics: &RecorderMetrics, rows: usize, latency: f64) {
         .inc();
     metrics.insert_rows.inc_by(rows as f64);
     metrics.insert_latency_seconds.observe(latency);
-    tracing::info!("inserted {} book ticker rows into ClickHouse", rows);
+    tracing::debug!("inserted {} book ticker rows into ClickHouse", rows);
 }
