@@ -9,7 +9,7 @@ use rust_decimal::Decimal;
 ///
 /// `bookTicker` carries no exchange timestamp, so `received_at` is stamped
 /// client-side in the stream callback. The per-symbol monotonic `update_id`
-/// (`u` in the raw payload) is the ordering tiebreaker and the dedupe key.
+/// (`u` in the raw payload) is the ordering tiebreaker.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookTicker {
     pub symbol: String,
@@ -46,12 +46,6 @@ impl BookTicker {
             ask_qty: parse_decimal(msg.a_uppercase.as_deref(), "A")?,
             received_at,
         })
-    }
-
-    /// Dedupe key: distinct quote changes have distinct `update_id`s per symbol,
-    /// so only exact resends (e.g. a reconnect replay) collapse.
-    pub fn dedupe_key(&self) -> (String, u64) {
-        (self.symbol.clone(), self.update_id)
     }
 }
 

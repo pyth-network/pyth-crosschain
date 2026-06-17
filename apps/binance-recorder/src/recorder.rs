@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use tokio::{
     sync::mpsc,
@@ -20,10 +20,12 @@ pub struct WriterRuntimeConfig {
 }
 
 /// Orchestrates the recorder pipeline: a single combined websocket worker feeds
-/// an mpsc channel, and a writer loop dedupes and batch-inserts into ClickHouse.
-/// Ported from `ondo-recorder`'s `RecorderRuntime`, with the poller replaced by
-/// the SDK stream worker and the writer's buffer keyed by `(symbol, update_id)`
-/// for de-duplication.
+/// an mpsc channel, and a writer loop batch-inserts into ClickHouse. Ported from
+/// `ondo-recorder`'s `RecorderRuntime`, with the poller replaced by the SDK
+/// stream worker. The writer buffers every update — `bookTicker` is a
+/// forward-only push stream with unique per-symbol `update_id`s, so there are no
+/// stream-level duplicates to collapse; `ReplacingMergeTree` absorbs any
+/// insert-retry duplicates.
 pub struct RecorderRuntime {
     markets: Vec<String>,
     reconnect_delay_ms: u64,
@@ -102,11 +104,12 @@ impl RecorderRuntime {
         let insert_async = self.insert_async;
 
         let handle = tokio::spawn(async move {
-            // Keyed by (symbol, update_id): `update_id` is monotonic per symbol,
-            // so distinct quote changes all survive; only exact resends (e.g. a
-            // reconnect replay) collapse within the batch window.
-            let mut buffer: HashMap<(String, u64), BookTicker> =
-                HashMap::with_capacity(batch_max_rows);
+            // Buffer every update: `bookTicker` is a forward-only push stream
+            // with unique per-symbol `update_id`s, so there are no stream-level
+            // duplicates to collapse. Insert-retry duplicates (a flush that
+            // times out client-side but commits server-side) are absorbed by
+            // ClickHouse's `ReplacingMergeTree`.
+            let mut buffer: Vec<BookTicker> = Vec::with_capacity(batch_max_rows);
             let mut last_flush = Instant::now();
 
             loop {
@@ -119,7 +122,7 @@ impl RecorderRuntime {
                     .await
                 {
                     Ok(Some(ticker)) => {
-                        buffer.insert(ticker.dedupe_key(), ticker);
+                        buffer.push(ticker);
                         let size = receiver.len();
                         metrics.queue_depth.set(size as f64);
                         metrics
@@ -178,8 +181,8 @@ impl RecorderRuntime {
     }
 }
 
-fn drain_batch(buffer: &mut HashMap<(String, u64), BookTicker>) -> Vec<BookTicker> {
-    buffer.drain().map(|(_, ticker)| ticker).collect()
+fn drain_batch(buffer: &mut Vec<BookTicker>) -> Vec<BookTicker> {
+    std::mem::take(buffer)
 }
 
 async fn flush_with_retry(

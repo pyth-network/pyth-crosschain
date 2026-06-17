@@ -63,9 +63,3 @@ fn from_sdk_errors_on_negative_update_id() {
     resp.u = Some(-1);
     assert!(BookTicker::from_sdk(resp, Utc::now()).is_err());
 }
-
-#[test]
-fn dedupe_key_is_symbol_and_update_id() {
-    let ticker = BookTicker::from_sdk(sample_response(), Utc::now()).unwrap();
-    assert_eq!(ticker.dedupe_key(), ("BTCUSDT".to_string(), 400_900_217));
-}
