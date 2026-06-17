@@ -53,7 +53,7 @@
       "alias": "USH/USD",
       "id": "eaa30c1ef2d9f4fde45d6e699bfda5187b3de200ea4cbab25d676b260ab728c1",
       "time_difference": 3600,
-      "price_deviation": 1,
+      "price_deviation": 2,
       "confidence_ratio": 100
     },
     {
@@ -137,7 +137,7 @@
       "alias": "MHYPE/USD",
       "id": "a7fb4cdafed5130e8731b8da7c9208881f24e9b671bb92438b1fbf361d578112",
       "time_difference": 3600,
-      "price_deviation": 1,
+      "price_deviation": 2,
       "confidence_ratio": 100
     },
     {
