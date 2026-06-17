@@ -34,7 +34,7 @@ clickhouse:
   url: "http://127.0.0.1:8123"
   user: "recorder"
   password: "recorder"
-  database: "pyth_analytics"
+  database: "default"
   table: "binance_book_ticker"
 metrics_port: 9094
 health_port: 8084
@@ -87,7 +87,7 @@ clickhouse:
     assert!(config.insert_async);
     // ClickHouse target falls back to the default user/database/table.
     assert_eq!(config.clickhouse.username, "default");
-    assert_eq!(config.clickhouse.database, "pyth_analytics");
+    assert_eq!(config.clickhouse.database, "default");
     assert_eq!(config.clickhouse.table, "binance_book_ticker");
 
     let _ = fs::remove_file(config_file);

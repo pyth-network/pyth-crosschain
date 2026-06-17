@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 axum = { version = "0.6.20", features = ["json"] }
-binance-sdk = { version = "56.0.0", default-features = false, features = ["spot", "rustls-tls"] }
+binance-sdk = { version = "56.0.0", default-features = false, features = ["derivatives_trading_usds_futures", "rustls-tls"] }
 chrono = { version = "0.4.38", features = ["clock", "serde"] }
 clap = { version = "4.5.38", features = ["derive"] }
 clickhouse = { version = "0.15", default-features = false, features = ["rustls-tls", "chrono"] }

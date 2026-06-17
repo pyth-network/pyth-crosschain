@@ -4,7 +4,7 @@ set -euo pipefail
 container_name="${CLICKHOUSE_CONTAINER_NAME:-binance-recorder-clickhouse-local}"
 user_name="${CLICKHOUSE_USER:-${CLICKHOUSE_LOCAL_USER:-recorder}}"
 password="${CLICKHOUSE_PASSWORD:-${CLICKHOUSE_LOCAL_PASSWORD:-recorder}}"
-database_name="${CLICKHOUSE_DATABASE:-pyth_analytics}"
+database_name="${CLICKHOUSE_DATABASE:-default}"
 table_name="${CLICKHOUSE_TABLE:-binance_book_ticker}"
 
 # Host ports the recorder publishes (see docker-compose.local.yml).

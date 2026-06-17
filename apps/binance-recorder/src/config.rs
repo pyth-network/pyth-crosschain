@@ -231,7 +231,7 @@ fn default_clickhouse_user() -> String {
 }
 
 fn default_clickhouse_database() -> String {
-    "pyth_analytics".to_string()
+    "default".to_string()
 }
 
 fn default_clickhouse_table() -> String {

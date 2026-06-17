@@ -29,7 +29,11 @@ impl ClickHouseClient {
 
         Self {
             client,
-            table: format!("{}.{}", target.database, target.table),
+            // Bare table name: the client is already scoped to the database via
+            // `with_database`, so the insert target must NOT be qualified (a
+            // dotted name gets quoted as a single identifier and then prefixed
+            // with the connected database, yielding `db.`db.table``).
+            table: target.table,
         }
     }
 
@@ -76,6 +80,8 @@ struct BookTickerRow {
     ask_px: i128,
     ask_qty: i128,
     #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    event_time: DateTime<Utc>,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
     received_at: DateTime<Utc>,
 }
 
@@ -88,6 +94,7 @@ impl From<&BookTicker> for BookTickerRow {
             bid_qty: decimal_to_d128(&t.bid_qty),
             ask_px: decimal_to_d128(&t.ask_px),
             ask_qty: decimal_to_d128(&t.ask_qty),
+            event_time: t.event_time,
             received_at: t.received_at,
         }
     }

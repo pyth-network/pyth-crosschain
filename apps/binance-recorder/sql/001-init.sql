@@ -1,6 +1,4 @@
-CREATE DATABASE IF NOT EXISTS pyth_analytics;
-
-CREATE TABLE IF NOT EXISTS pyth_analytics.binance_book_ticker
+CREATE TABLE IF NOT EXISTS default.binance_book_ticker
 (
     symbol      LowCardinality(String),
     update_id   UInt64,
@@ -8,6 +6,7 @@ CREATE TABLE IF NOT EXISTS pyth_analytics.binance_book_ticker
     bid_qty     Decimal(38, 12),
     ask_px      Decimal(38, 12),
     ask_qty     Decimal(38, 12),
+    event_time  DateTime64(3),
     received_at DateTime64(3),
     ingested_at DateTime64(3) DEFAULT now64(3)
 )

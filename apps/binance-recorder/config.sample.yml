@@ -1,10 +1,10 @@
 # Markets to subscribe on the single combined bookTicker connection. Stored
 # upper-cased; subscribed lower-cased. Seeded with the tokenized
-# equities/commodities basket tracked on Binance spot.
+# equity/commodity USDⓈ-M perpetuals on Binance futures.
 #
-# NOTE: Binance accepts a subscribe for an unlisted symbol but never sends data
-# for it, so an unlisted symbol shows up as perpetual staleness in /ready rather
-# than an error. Verify each symbol is actually listed on Binance spot.
+# NOTE: Binance accepts a subscribe for a symbol that isn't listed but never
+# sends data for it, so it shows up as perpetual staleness in /ready rather than
+# an error. Verify each symbol is actually listed on Binance USDⓈ-M futures.
 markets:
   - "XAUUSDT"
   - "XAGUSDT"
@@ -20,7 +20,7 @@ clickhouse:
   url: "http://clickhouse-local:8123"
   user: "recorder"
   password: "recorder"
-  database: "pyth_analytics"
+  database: "default"
   table: "binance_book_ticker"
 
 metrics_port: 9094
