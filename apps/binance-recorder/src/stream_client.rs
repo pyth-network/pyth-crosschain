@@ -9,6 +9,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio_util::sync::CancellationToken;
 
+use crate::health::HealthState;
 use crate::metrics::RecorderMetrics;
 use crate::models::BookTicker;
 
@@ -28,6 +29,7 @@ pub async fn run_stream_worker(
     reconnect_delay_ms: u64,
     sender: mpsc::Sender<BookTicker>,
     metrics: Arc<RecorderMetrics>,
+    health: HealthState,
     stop_token: CancellationToken,
 ) -> Result<()> {
     let config = ConfigurationWebsocketStreams::builder()
@@ -55,19 +57,27 @@ pub async fn run_stream_worker(
         let tx = sender.clone();
         let sym = symbol.clone();
         let metrics = metrics.clone();
+        let health = health.clone();
         stream.on_message(move |resp| {
             let received_at = Utc::now();
             match BookTicker::from_sdk(resp, received_at) {
-                Ok(ticker) => match tx.try_send(ticker) {
-                    Ok(()) => {}
-                    Err(TrySendError::Full(_)) => {
-                        metrics.record_queue_drop(&sym);
-                        tracing::debug!(symbol = %sym, "dropping book ticker (queue full)");
+                Ok(ticker) => {
+                    // Freshness keys on receipt, not insert success: an update
+                    // arriving for `sym` proves the stream is live even if the
+                    // bounded queue later drops it.
+                    health.set_symbol_seen(&sym);
+                    metrics.record_symbol_seen(&sym);
+                    match tx.try_send(ticker) {
+                        Ok(()) => {}
+                        Err(TrySendError::Full(_)) => {
+                            metrics.record_queue_drop(&sym);
+                            tracing::debug!(symbol = %sym, "dropping book ticker (queue full)");
+                        }
+                        Err(TrySendError::Closed(_)) => {
+                            tracing::debug!(symbol = %sym, "dropping book ticker (channel closed)");
+                        }
                     }
-                    Err(TrySendError::Closed(_)) => {
-                        tracing::debug!(symbol = %sym, "dropping book ticker (channel closed)");
-                    }
-                },
+                }
                 Err(err) => {
                     tracing::warn!(
                         symbol = %sym,

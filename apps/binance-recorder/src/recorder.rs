@@ -1,11 +1,15 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use tokio::{sync::mpsc, task::JoinHandle, time::Instant};
+use tokio::{
+    sync::mpsc,
+    task::JoinHandle,
+    time::{Instant, MissedTickBehavior},
+};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    clickhouse::ClickHouseClient, metrics::RecorderMetrics, models::BookTicker,
-    stream_client::run_stream_worker,
+    clickhouse::ClickHouseClient, health::HealthState, metrics::RecorderMetrics,
+    models::BookTicker, stream_client::run_stream_worker,
 };
 
 #[derive(Clone, Debug)]
@@ -26,18 +30,21 @@ pub struct RecorderRuntime {
     writer: ClickHouseClient,
     writer_config: WriterRuntimeConfig,
     metrics: Arc<RecorderMetrics>,
+    health: HealthState,
     insert_async: bool,
     stop_token: CancellationToken,
     handles: Vec<JoinHandle<()>>,
 }
 
 impl RecorderRuntime {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         markets: Vec<String>,
         reconnect_max_backoff_seconds: u64,
         writer: ClickHouseClient,
         writer_config: WriterRuntimeConfig,
         metrics: Arc<RecorderMetrics>,
+        health: HealthState,
         insert_async: bool,
     ) -> Self {
         Self {
@@ -46,6 +53,7 @@ impl RecorderRuntime {
             writer,
             writer_config,
             metrics,
+            health,
             insert_async,
             stop_token: CancellationToken::new(),
             handles: Vec::new(),
@@ -59,15 +67,19 @@ impl RecorderRuntime {
         let markets = self.markets.clone();
         let reconnect_delay_ms = self.reconnect_delay_ms;
         let metrics = self.metrics.clone();
+        let health = self.health.clone();
         let stop_token = self.stop_token.clone();
         let handle = tokio::spawn(async move {
             if let Err(err) =
-                run_stream_worker(markets, reconnect_delay_ms, tx, metrics, stop_token).await
+                run_stream_worker(markets, reconnect_delay_ms, tx, metrics, health, stop_token)
+                    .await
             {
                 tracing::error!(error = ?err, "stream worker failed");
             }
         });
         self.handles.push(handle);
+
+        self.spawn_health_probe_loop();
     }
 
     pub async fn stop(&self) {
@@ -134,6 +146,32 @@ impl RecorderRuntime {
             if !buffer.is_empty() {
                 let batch = drain_batch(&mut buffer);
                 flush_with_retry(&writer, &metrics, batch, stop_token, insert_async).await;
+            }
+        });
+        self.handles.push(handle);
+    }
+
+    /// Periodically ping ClickHouse and refresh the readiness gauges. Per-symbol
+    /// freshness is driven from the stream callback; this loop owns only the
+    /// ClickHouse-up and overall-ready signals (the SDK owns reconnection, so
+    /// there is no separate connection-liveness probe).
+    fn spawn_health_probe_loop(&mut self) {
+        let writer = self.writer.clone();
+        let metrics = self.metrics.clone();
+        let health = self.health.clone();
+        let stop_token = self.stop_token.clone();
+
+        let handle = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(5));
+            interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
+            while !stop_token.is_cancelled() {
+                interval.tick().await;
+                let healthy = writer.ping().await;
+                health.set_clickhouse_ok(healthy);
+                metrics.clickhouse_up.set(if healthy { 1.0 } else { 0.0 });
+                metrics
+                    .ready_state
+                    .set(if health.is_ready() { 1.0 } else { 0.0 });
             }
         });
         self.handles.push(handle);

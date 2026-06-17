@@ -4,6 +4,7 @@ use anyhow::Result;
 use binance_recorder::{
     clickhouse::ClickHouseClient,
     config::AppConfig,
+    health::{start_http_servers, HealthState},
     metrics::RecorderMetrics,
     recorder::{RecorderRuntime, WriterRuntimeConfig},
 };
@@ -31,6 +32,13 @@ async fn run() -> Result<()> {
 
     let writer_client = create_client_with_retry(config.clone(), 30).await?;
     let metrics = Arc::new(RecorderMetrics::new()?);
+    let health = HealthState::new(config.markets.clone(), config.ready_stale_seconds);
+    let (health_server, metrics_server) = start_http_servers(
+        config.health_port,
+        config.metrics_port,
+        metrics.clone(),
+        health.clone(),
+    );
 
     let mut runtime = RecorderRuntime::new(
         config.markets,
@@ -42,6 +50,7 @@ async fn run() -> Result<()> {
             queue_max_rows: config.queue_max_rows,
         },
         metrics,
+        health,
         config.insert_async,
     );
     runtime.start();
@@ -55,6 +64,8 @@ async fn run() -> Result<()> {
 
     runtime.stop().await;
     runtime.wait_forever().await;
+    health_server.abort();
+    metrics_server.abort();
     Ok(())
 }
 

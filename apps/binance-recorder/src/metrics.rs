@@ -1,16 +1,18 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use anyhow::Result;
 use prometheus::{
-    Counter, CounterVec, Encoder, Gauge, Histogram, HistogramOpts, Opts, Registry, TextEncoder,
+    Counter, CounterVec, Encoder, Gauge, GaugeVec, Histogram, HistogramOpts, Opts, Registry,
+    TextEncoder,
 };
 
-/// Write-path metrics for the recorder pipeline.
+/// Metrics for the recorder pipeline.
 ///
-/// This slice covers the queue and ClickHouse-insert surface that the stream
-/// worker and writer loop emit. The readiness/liveness gauges (ClickHouse-up,
-/// ready state, per-symbol last-seen) and the `/metrics` HTTP exposition land
-/// with the health surface in a later slice; the registry and
-/// [`to_prometheus_payload`](RecorderMetrics::to_prometheus_payload) are wired
-/// here so that addition is purely additive.
+/// Covers the queue and ClickHouse-insert surface emitted by the stream worker
+/// and writer loop, plus the readiness/liveness surface emitted by the health
+/// probe and stream callback: a ClickHouse-up gauge, a ready-state gauge, and a
+/// per-symbol last-seen timestamp. `/metrics` exposition is served from
+/// [`crate::health`].
 #[derive(Clone)]
 pub struct RecorderMetrics {
     registry: Registry,
@@ -20,6 +22,9 @@ pub struct RecorderMetrics {
     pub insert_attempts: CounterVec,
     pub insert_rows: Counter,
     pub insert_latency_seconds: Histogram,
+    pub symbol_last_seen_unix_seconds: GaugeVec,
+    pub clickhouse_up: Gauge,
+    pub ready_state: Gauge,
 }
 
 impl RecorderMetrics {
@@ -59,6 +64,21 @@ impl RecorderMetrics {
             )
             .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
         )?;
+        let symbol_last_seen_unix_seconds = GaugeVec::new(
+            Opts::new(
+                "binance_recorder_symbol_last_seen_unix_seconds",
+                "Unix timestamp of the last received book-ticker update per symbol",
+            ),
+            &["symbol"],
+        )?;
+        let clickhouse_up = Gauge::with_opts(Opts::new(
+            "binance_recorder_clickhouse_up",
+            "Whether ClickHouse is currently reachable (1/0)",
+        ))?;
+        let ready_state = Gauge::with_opts(Opts::new(
+            "binance_recorder_ready",
+            "Readiness status (1=ready, 0=not ready)",
+        ))?;
 
         registry.register(Box::new(queue_depth.clone()))?;
         registry.register(Box::new(queue_fill_ratio.clone()))?;
@@ -66,6 +86,9 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_attempts.clone()))?;
         registry.register(Box::new(insert_rows.clone()))?;
         registry.register(Box::new(insert_latency_seconds.clone()))?;
+        registry.register(Box::new(symbol_last_seen_unix_seconds.clone()))?;
+        registry.register(Box::new(clickhouse_up.clone()))?;
+        registry.register(Box::new(ready_state.clone()))?;
 
         Ok(Self {
             registry,
@@ -75,6 +98,9 @@ impl RecorderMetrics {
             insert_attempts,
             insert_rows,
             insert_latency_seconds,
+            symbol_last_seen_unix_seconds,
+            clickhouse_up,
+            ready_state,
         })
     }
 
@@ -83,10 +109,24 @@ impl RecorderMetrics {
         self.queue_drops.with_label_values(&[symbol]).inc();
     }
 
+    /// Stamp the per-symbol last-seen gauge when a fresh update is received.
+    pub fn record_symbol_seen(&self, symbol: &str) {
+        self.symbol_last_seen_unix_seconds
+            .with_label_values(&[symbol])
+            .set(unix_seconds_now());
+    }
+
     pub fn to_prometheus_payload(&self) -> Result<Vec<u8>> {
         let metric_families = self.registry.gather();
         let mut buffer = Vec::new();
         TextEncoder::new().encode(&metric_families, &mut buffer)?;
         Ok(buffer)
     }
+}
+
+fn unix_seconds_now() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0)
 }
