@@ -1,0 +1,150 @@
+---
+title: Consume Data on Stellar
+description: Consume and verify Pyth Pro price updates in Stellar Soroban smart contracts
+slug: /price-feeds/pro/integrate-as-consumer/stellar
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+This guide is intended to serve users who want to consume prices from Pyth Pro on **Stellar** (via [Soroban](https://soroban.stellar.org/) smart contracts).
+
+Integrating with Pyth Pro in Soroban smart contracts as a consumer is a three-step process:
+
+1. **Subscribe** to Pyth Pro to receive signed price updates off-chain.
+2. **Verify** price updates by cross-contract calling `pyth-lazer-stellar`'s `verify_update` from your own Soroban contract.
+3. **Consume** the verified payload using the Pyth Lazer Stellar SDK crate.
+
+<Steps>
+  <Step>
+  ### Subscribe to Pyth Pro to receive Price Updates
+
+Pyth Pro provides a websocket endpoint to receive price updates and a [TypeScript SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) to subscribe to it.
+
+Consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices) for a complete step-by-step guide.
+
+When subscribing, request the `leEcdsa` format which is compatible with Soroban's host-side secp256k1 signature verification:
+
+```typescript copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2], // BTC/USD, ETH/USD
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  formats: ["leEcdsa"], // Required for Stellar
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+```
+
+  </Step>
+  <Step>
+  ### Verify price updates from your Soroban contract
+
+Pyth Pro provides a [Soroban contract](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar) deployed on Stellar that verifies signed Lazer updates. Your own Soroban contract calls it via cross-contract invocation:
+
+```rust copy
+use pyth_lazer_stellar_sdk::PythLazerClient;
+use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+
+#[contract]
+pub struct ExampleConsumer;
+
+#[contractimpl]
+impl ExampleConsumer {
+    /// Receives a signed Lazer update, asks `pyth-lazer-stellar` to verify it,
+    /// and returns the verified payload bytes.
+    pub fn update_price(env: Env, lazer: Address, update: Bytes) -> Bytes {
+        let lazer = PythLazerClient::new(&env, &lazer);
+        lazer.verify_update(&update)
+    }
+}
+```
+
+<Callout type="warning">
+  Always call `verify_update` from inside your own contract — don't trust verified bytes passed in by the off-chain caller.
+  The cross-contract call is what gives your contract a trust boundary against an unsigned update.
+</Callout>
+
+  </Step>
+  <Step>
+  ### Consume the verified payload
+
+The Pyth Lazer Stellar SDK exposes the verified payload as a typed `Update` value. Add it to your contract's `Cargo.toml`:
+
+```toml copy
+[dependencies]
+soroban-sdk = "22"
+pyth-lazer-stellar-sdk = "0.1"
+```
+
+Parse the payload and read the feeds you need:
+
+```rust copy
+use pyth_lazer_stellar_sdk::{parse_payload, PythLazerClient};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Bytes, Env};
+
+#[contracttype]
+#[derive(Clone)]
+pub struct StoredPrice {
+    pub price: i64,
+    pub exponent: i16,
+    pub timestamp_us: u64,
+}
+
+#[contract]
+pub struct ExampleConsumer;
+
+#[contractimpl]
+impl ExampleConsumer {
+    pub fn update_price(env: Env, lazer: Address, update: Bytes) -> StoredPrice {
+        // 1. Verify the signed update via cross-contract call.
+        let lazer = PythLazerClient::new(&env, &lazer);
+        let verified_payload = lazer.verify_update(&update);
+
+        // 2. Parse the verified payload into a typed Update.
+        let parsed = parse_payload(&verified_payload).expect("invalid payload");
+
+        // 3. Find the feed you care about (BTC/USD, feed_id = 1) and read its fields.
+        let feed = parsed
+            .feeds
+            .iter()
+            .find(|f| f.feed_id == 1)
+            .expect("BTC/USD feed missing");
+
+        StoredPrice {
+            price: feed.price.expect("price missing"),
+            exponent: feed.exponent.expect("exponent missing"),
+            timestamp_us: parsed.timestamp,
+        }
+    }
+}
+```
+
+Feed properties that are not requested in the subscription return `None`. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
+
+<Callout type="info">
+  Submit the transaction from your off-chain client using
+  [`@stellar/stellar-sdk`](https://www.npmjs.com/package/@stellar/stellar-sdk),
+  passing the binary update bytes as the `update` argument to
+  `ExampleConsumer::update_price` (and the deployed
+  [`pyth-lazer-stellar` contract id](/price-feeds/pro/contract-addresses#stellar)
+  as `lazer`).
+</Callout>
+
+  </Step>
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for consuming prices from Pyth Pro in Stellar Soroban smart contracts.
+
+### Price Feed IDs
+
+Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page for a complete list of supported price feeds.
+
+### Contract Sources
+
+The Stellar Soroban contract implementation lives in [`contracts/stellar`](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar) in the `pyth-network/pyth-lazer` repository.
+
+The user-facing Rust SDK ([`pyth-lazer-stellar-sdk`](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar/sdk/rust)) exposes the typed `Update` and `Feed` types plus the `parse_payload` helper shown above.

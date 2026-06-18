@@ -4,7 +4,8 @@
     "[in SVM programs](/price-feeds/pro/integrate-as-consumer/svm)",
     "[in EVM contracts](/price-feeds/pro/integrate-as-consumer/evm)",
     "[in Sui contracts](/price-feeds/pro/integrate-as-consumer/sui)",
-    "[in Cardano contracts](/price-feeds/pro/integrate-as-consumer/cardano)"
+    "[in Cardano contracts](/price-feeds/pro/integrate-as-consumer/cardano)",
+    "[in Stellar contracts](/price-feeds/pro/integrate-as-consumer/stellar)"
   ],
   "defaultOpen": false
 }
