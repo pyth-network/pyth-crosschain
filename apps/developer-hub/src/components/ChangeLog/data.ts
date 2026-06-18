@@ -8,7 +8,7 @@ import { GENERATED_CHANGE_LOG } from "./generated-data";
 
 // ─── Public types ────────────────────────────────────────────────────────
 
-export type ChangeType = "added" | "went_live" | "expiring_soon" | "removed";
+export type ChangeType = "added" | "went_live" | "removed";
 
 export type ChangeLogEntry = {
   id: string;
@@ -19,13 +19,11 @@ export type ChangeLogEntry = {
   hermesId?: string;
   changeType: ChangeType;
   date: string;
-  daysToExpiry?: number;
 };
 
 export type DaySummary = {
   added: number;
   went_live: number;
-  expiring: number;
   removed: number;
 };
 
@@ -58,8 +56,8 @@ export const getChangeLog = (): Promise<ChangeLog> =>
 export const fmtDateShort = (iso: string): string => {
   const d = new Date(`${iso}T00:00:00Z`);
   return d.toLocaleDateString("en-US", {
-    month: "short",
     day: "2-digit",
+    month: "short",
     timeZone: "UTC",
   });
 };
@@ -67,9 +65,9 @@ export const fmtDateShort = (iso: string): string => {
 export const fmtDateLong = (iso: string): string => {
   const d = new Date(`${iso}T00:00:00Z`);
   return d.toLocaleDateString("en-US", {
-    month: "long",
     day: "numeric",
-    year: "numeric",
+    month: "long",
     timeZone: "UTC",
+    year: "numeric",
   });
 };

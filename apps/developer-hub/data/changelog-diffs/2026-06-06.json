@@ -1,0 +1,54 @@
+{
+  "date": "2026-06-06",
+  "label": "Saturday",
+  "summary": {
+    "added": 1,
+    "went_live": 4,
+    "removed": 0
+  },
+  "hero": "1 new feed announced, 4 went live.",
+  "events": [
+    {
+      "id": "Crypto.SILV/USD",
+      "lazerId": 3304,
+      "asset": "Dominion Silver",
+      "assetType": "crypto",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-06"
+    },
+    {
+      "id": "InterestRate.3MSZ6",
+      "lazerId": 3253,
+      "asset": "Pyth Price For Three Month Sofr 16 March 2027",
+      "assetType": "rates",
+      "changeType": "went_live",
+      "date": "2026-06-06"
+    },
+    {
+      "id": "InterestRate.3MSU6",
+      "lazerId": 3252,
+      "asset": "Pyth Price For Three Month Sofr 15 December 2026",
+      "assetType": "rates",
+      "changeType": "went_live",
+      "date": "2026-06-06"
+    },
+    {
+      "id": "InterestRate.3MSM6",
+      "lazerId": 3251,
+      "asset": "Pyth Price For Three Month Sofr 15 September 2026",
+      "assetType": "rates",
+      "changeType": "went_live",
+      "date": "2026-06-06"
+    },
+    {
+      "id": "Equity.US.SPCX/USD",
+      "lazerId": 3314,
+      "asset": "Space Exploration Technology Corp",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-06"
+    }
+  ]
+}

@@ -150,10 +150,6 @@
     color: theme.color("highlight");
   }
 
-  &_expiring {
-    color: theme.color("states", "warning", "normal");
-  }
-
   &_removed {
     color: theme.color("states", "error", "base");
   }
@@ -285,10 +281,6 @@
   background: theme.color("highlight");
 }
 
-.dotExpiring {
-  background: theme.color("states", "warning", "normal");
-}
-
 .dotRemoved {
   background: theme.color("states", "error", "base");
 }
@@ -319,54 +311,6 @@
 
 .eventAssetType {
   font-size: 0.75rem;
-  color: theme.color("muted");
-  white-space: nowrap;
-}
-
-// ─── Expiring callout ──────────────────────────────────────────────────
-
-.expiringCallout {
-  margin-top: theme.spacing(6);
-  padding-left: theme.spacing(4.5);
-  border-left: 2px solid theme.color("states", "warning", "normal");
-}
-
-.expiringCalloutFirst {
-  margin-top: 0;
-}
-
-.expiringHeading {
-  margin: 0 0 theme.spacing(2.5) 0;
-  font-size: 0.9375rem;
-  font-weight: theme.font-weight("medium");
-  letter-spacing: theme.letter-spacing("tight");
-  line-height: 1;
-  color: theme.color("foreground");
-}
-
-.expiringHeadingMuted {
-  font-weight: theme.font-weight("normal");
-  font-size: 0.875rem;
-  color: theme.color("muted");
-}
-
-.expiringList {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(1.5);
-}
-
-.expiringRow {
-  display: flex;
-  align-items: baseline;
-  gap: theme.spacing(2.5);
-  font-size: 0.8125rem;
-}
-
-.expiringDays {
-  margin-left: auto;
-  font-family: theme.font-family("monospace");
-  font-size: 0.6875rem;
   color: theme.color("muted");
   white-space: nowrap;
 }

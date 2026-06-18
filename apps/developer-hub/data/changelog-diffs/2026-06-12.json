@@ -1,0 +1,362 @@
+{
+  "date": "2026-06-12",
+  "label": "Friday",
+  "summary": {
+    "added": 21,
+    "went_live": 17,
+    "removed": 1
+  },
+  "hero": "21 new feeds announced, 17 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Crypto.SILV/USD",
+      "lazerId": 3304,
+      "asset": "Dominion Silver",
+      "assetType": "crypto",
+      "quote": "USD",
+      "changeType": "removed",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Crypto.Index.SILV/USD",
+      "lazerId": 3304,
+      "asset": "Dominion Silver",
+      "assetType": "crypto-index",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.MU/USD",
+      "lazerId": 3263,
+      "asset": "Pyth Price In Usd For Mu 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.INTC/USD",
+      "lazerId": 3261,
+      "asset": "Pyth Price In Usd For Intc 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.MSFT/USD",
+      "lazerId": 3196,
+      "asset": "Pyth Price In Usd For Msft 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.GOOGL/USD",
+      "lazerId": 3194,
+      "asset": "Pyth Price In Usd For Googl 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.AAPL/USD",
+      "lazerId": 3191,
+      "asset": "Pyth Price In Usd For Aapl 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.HOOD/USD",
+      "lazerId": 3189,
+      "asset": "Pyth Price In Usd For Hood 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.NVDA/USD",
+      "lazerId": 3188,
+      "asset": "Pyth Price In Usd For Nvda 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.MSTR/USD",
+      "lazerId": 3187,
+      "asset": "Pyth Price In Usd For Mstr 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.CRCL/USD",
+      "lazerId": 3186,
+      "asset": "Pyth Price In Usd For Crcl 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.TSLA/USD",
+      "lazerId": 3185,
+      "asset": "Pyth Price In Usd For Tsla 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "FX.Index.USD/JPY",
+      "lazerId": 3184,
+      "asset": "Pyth Price In Jpy For Usd 24",
+      "assetType": "fx",
+      "quote": "JPY",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "FX.Index.EUR/USD",
+      "lazerId": 3183,
+      "asset": "Pyth Price In Usd For Eur 24",
+      "assetType": "fx",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Metal.Index.SILVER/USD",
+      "lazerId": 3154,
+      "asset": "Pyth Price In Usd For Silver 24",
+      "assetType": "metal",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Metal.Index.GOLD/USD",
+      "lazerId": 3153,
+      "asset": "Pyth Price In Usd For Gold 24",
+      "assetType": "metal",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Commodities.Index.PYTHOIL/USD",
+      "lazerId": 3063,
+      "asset": "Pyth Price In Usd For Pythoil 24",
+      "assetType": "commodity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Crypto.FLR/USD",
+      "lazerId": 191,
+      "asset": "Flare Network",
+      "assetType": "crypto",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Crypto.MSFTX/MSFT.RR",
+      "lazerId": 3323,
+      "asset": "Microsoft Xstock",
+      "assetType": "crypto-redemption-rate",
+      "quote": "MSFT",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Crypto.AMZNX/AMZN.RR",
+      "lazerId": 3322,
+      "asset": "Amazon Xstock",
+      "assetType": "crypto-redemption-rate",
+      "quote": "AMZN",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Crypto.AMZNX/USD",
+      "lazerId": 3321,
+      "asset": "Amazon Xstock",
+      "assetType": "crypto",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.US.TZA/USD",
+      "lazerId": 3320,
+      "asset": "Direxion Daily Small Cap Bear 3x Etf",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.US.MVLL/USD",
+      "lazerId": 3319,
+      "asset": "Graniteshares 2x Long Mrvl Daily Etf",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.US.MUU/USD",
+      "lazerId": 3318,
+      "asset": "Direxion Daily Mu Bull 2x Etf",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "InterestRate.US20Y",
+      "lazerId": 3317,
+      "asset": "United States 20 Year Government Bonds Yield",
+      "assetType": "rates",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.SPCX/USD",
+      "lazerId": 3316,
+      "asset": "Pyth Price In Usd For Spcx 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.US30/USD",
+      "lazerId": 3292,
+      "asset": "Pyth Price In Usd For Us30 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.US100/USD",
+      "lazerId": 3291,
+      "asset": "Pyth Price In Usd For Us100 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.US500/USD",
+      "lazerId": 3290,
+      "asset": "Pyth Price In Usd For Us500 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.DRAM/USD",
+      "lazerId": 3268,
+      "asset": "Pyth Price In Usd For Dram 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.EWY/USD",
+      "lazerId": 3267,
+      "asset": "Pyth Price In Usd For Ewy 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Commodities.Index.COPPER/USD",
+      "lazerId": 3266,
+      "asset": "Pyth Price In Usd For Copper 24",
+      "assetType": "commodity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Commodities.Index.NATGAS/USD",
+      "lazerId": 3265,
+      "asset": "Pyth Price In Usd For Natgas 24",
+      "assetType": "commodity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.SNDK/USD",
+      "lazerId": 3264,
+      "asset": "Pyth Price In Usd For Sndk 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.META/USD",
+      "lazerId": 3262,
+      "asset": "Pyth Price In Usd For Meta 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.ORCL/USD",
+      "lazerId": 3195,
+      "asset": "Pyth Price In Usd For Orcl 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.PLTR/USD",
+      "lazerId": 3193,
+      "asset": "Pyth Price In Usd For Pltr 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.AMZN/USD",
+      "lazerId": 3192,
+      "asset": "Pyth Price In Usd For Amzn 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "Equity.Index.COIN/USD",
+      "lazerId": 3190,
+      "asset": "Pyth Price In Usd For Coin 24",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-12"
+    }
+  ]
+}

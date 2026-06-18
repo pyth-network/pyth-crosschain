@@ -1,0 +1,21 @@
+{
+  "date": "2026-06-15",
+  "label": "Monday",
+  "summary": {
+    "added": 0,
+    "went_live": 0,
+    "removed": 1
+  },
+  "hero": "1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.GOM6/USD",
+      "lazerId": 3056,
+      "asset": "Pyth Price In Usd For Ls Gasoil 11 June 2026",
+      "assetType": "commodity",
+      "quote": "USD",
+      "changeType": "removed",
+      "date": "2026-06-15"
+    }
+  ]
+}
