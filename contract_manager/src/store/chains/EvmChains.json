@@ -1225,6 +1225,20 @@
     "type": "EvmChain"
   },
   {
+    "id": "swellchain_testnet",
+    "mainnet": false,
+    "networkId": 1924,
+    "rpcUrl": "https://swell-testnet.alt.technology",
+    "type": "EvmChain"
+  },
+  {
+    "id": "swellchain",
+    "mainnet": true,
+    "networkId": 1923,
+    "rpcUrl": "https://swell-mainnet.alt.technology",
+    "type": "EvmChain"
+  },
+  {
     "id": "mezo_testnet",
     "mainnet": false,
     "networkId": 31611,

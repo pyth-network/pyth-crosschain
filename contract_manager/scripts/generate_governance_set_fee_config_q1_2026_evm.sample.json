@@ -290,6 +290,11 @@
     "fee": 3
   },
   {
+    "chainName": "swellchain",
+    "exponent": 12,
+    "fee": 3
+  },
+  {
     "chainName": "taiko_mainnet",
     "exponent": 12,
     "fee": 3

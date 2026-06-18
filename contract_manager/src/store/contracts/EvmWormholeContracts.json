@@ -795,6 +795,16 @@
     "type": "EvmWormholeContract"
   },
   {
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "chain": "swellchain",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "chain": "swellchain_testnet",
+    "type": "EvmWormholeContract"
+  },
+  {
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "chain": "worldchain_testnet",
     "type": "EvmWormholeContract"
