@@ -805,16 +805,6 @@
     "type": "EvmPriceFeedContract"
   },
   {
-    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
-    "chain": "swellchain_testnet",
-    "type": "EvmPriceFeedContract"
-  },
-  {
-    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
-    "chain": "swellchain",
-    "type": "EvmPriceFeedContract"
-  },
-  {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "worldchain_testnet",
     "type": "EvmPriceFeedContract"
