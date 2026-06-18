@@ -32,7 +32,9 @@ Returns the most recent price data for the requested feeds. The request body fol
 <Callout type="info">
   Each feed has a minimum supported channel (`min_channel`), discoverable via
   [`/v1/symbols`](https://pyth-lazer-0.dourolabs.app/docs). You must use a
-  channel at or above the feed's `min_channel`.
+  channel at or above the feed's `min_channel`. See [Symbology & Reference
+  Data](/price-feeds/pro/symbology-reference) for every field the symbols
+  endpoint returns.
 </Callout>
 
 ### POST /v1/price

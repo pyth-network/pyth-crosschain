@@ -1,0 +1,159 @@
+---
+title: Symbology & Reference Data
+description: Field-by-field reference for Pyth Pro symbol metadata, including futures chain, expiration, and availability patterns
+slug: /price-feeds/pro/symbology-reference
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Pyth Pro publishes **reference data** describing every feed it offers: identifiers, classification, data-quality parameters, trading schedules, and (for derivatives) expiration metadata. This data is distinct from the real-time price [payload](/price-feeds/pro/payload-reference) — it describes _what_ a feed is, not its current value.
+
+Reference data is served by the **Symbology & Reference Data API**:
+
+```
+GET https://pyth.dourolabs.app/v1/symbols
+```
+
+The endpoint returns one JSON object per feed. This page documents every field on that object.
+
+## Field reference
+
+### Identity & naming
+
+| Field           | Type      | Description                                                                                          |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `pyth_lazer_id` | `u32`     | Stable numeric identifier for the feed in Pyth Pro. Use it when subscribing to prices.               |
+| `name`          | `string`  | Short symbol name, e.g. `BTCUSD`. For futures this includes the month/year code, e.g. `EMH6`.        |
+| `symbol`        | `string`  | Fully-qualified Pyth symbol, e.g. `Crypto.BTC/USD` or `Equity.US.EMH6/USD`. Encodes asset class, optional region, root, and quote currency. |
+| `description`   | `string`  | Human-readable description, e.g. `BITCOIN / US DOLLAR`.                                               |
+| `hermes_id`     | `string`  | Hex feed ID used by Pyth Core / Hermes for the same underlying, where one exists.                    |
+| `nasdaq_symbol` | `string?` | Nasdaq ticker, for equities sourced via Nasdaq. `null` when not applicable.                          |
+| `cmc_id`        | `integer?`| CoinMarketCap ID, for crypto assets. `null` when not applicable.                                     |
+
+### Classification
+
+| Field             | Type       | Description                                                                                                                            |
+| ----------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `asset_type`      | `string`   | Broad asset class. One of `crypto`, `equity`, `fx`, `commodity`, `metal`, `interest-rate`, `crypto-index`, `crypto-redemption-rate`, `funding-rate`, `nav`, `kalshi`. |
+| `instrument_type` | `string`   | Instrument form: `spot`, `future`, `perp`, `rate`, `index`, or `nav`. May be an empty string when unspecified.                          |
+| `quote_currency`  | `string`   | Currency the price is quoted in, e.g. `USD`, `EUR`, `KRW`, `JPY`.                                                                       |
+| `groups`          | `string[]` | Discovery/grouping tags, e.g. `pyth-indices`. Empty for most feeds.                                                                     |
+
+### Pricing & data quality
+
+| Field            | Type      | Description                                                                                                          |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `exponent`       | `i16`     | Decimal exponent: `actual_price = mantissa × 10^exponent`. Same meaning as in the price payload.                     |
+| `min_publishers` | `u16`     | Minimum number of publishers required for the feed to produce a price.                                               |
+| `min_channel`    | `string`  | Lowest-latency channel the feed supports: `real_time`, `fixed_rate@50ms`, or `fixed_rate@200ms`. You must subscribe at or above this channel. |
+| `state`          | `string`  | Lifecycle state: `stable` (live), `coming_soon` (announced, not yet publishing), or `inactive` (retired/expired).    |
+| `interval`       | `string?` | Funding interval for perpetual and funding-rate feeds, e.g. `8h`. `null` otherwise.                                  |
+
+### Scheduling
+
+| Field                     | Type     | Description                                                                                                            |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `schedule`                | `string` | Compact trading schedule in the form `TZ;<weekly>;<holidays>`. Each day is open (`O`), closed (`C`), or a set of hour ranges (e.g. `0000-1700&1800-2400`). |
+| `market_session_schedule` | `object` | A schedule string per session, keyed by session name (`regular`, `preMarket`, `postMarket`, `overNight`).             |
+| `market_sessions`         | `object` | The full per-session configuration: each session carries its own `schedule`, `min_pub`, and `state`.                  |
+
+<Callout type="info" title="Three schedule fields, three altitudes">
+  These describe the same trading calendar at increasing detail:
+  - **`schedule`** — a single default schedule string for the feed.
+  - **`market_session_schedule`** — that schedule broken out **per session** (regular, pre-market, etc.).
+  - **`market_sessions`** — the richest form: per-session `schedule` **plus** `min_pub` and `state`.
+
+  The price payload's `marketSession` field tells you which of these sessions is **currently active** for a given update.
+</Callout>
+
+### Futures & derivatives
+
+| Field                  | Type       | Description                                                                                             |
+| ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
+| `expiration_time`      | `string?`  | Expiration timestamp (RFC 3339) for a dated futures contract, e.g. `2026-06-11T17:00:00-04:00`.         |
+| `corporate_actions`    | `object[]?`| Corporate actions (e.g. a stock `SPLIT`) affecting an equity feed, with activation dates.               |
+| `chain_id`             | `string`   | Stable root identifying the family of feeds for a derivative product. See [Futures metadata](#futures-metadata). |
+| `expiration_pattern`   | `string[]` | All expirations the contract administrator lists. See [Futures metadata](#futures-metadata).            |
+| `availability_pattern` | `string[]` | The subset of expirations Pyth publishes. See [Futures metadata](#futures-metadata).                    |
+
+## Futures metadata
+
+Dated futures come in **families** — a series of contracts on the same underlying that expire on a recurring monthly cadence. Three fields describe that family.
+
+<Callout type="info">
+  `chain_id`, `expiration_pattern`, and `availability_pattern` are being added
+  to the symbology response across futures families. They apply to `future`
+  instruments; spot feeds do not carry them.
+</Callout>
+
+### `chain_id`
+
+The stable base Pyth identifier for the family of price feeds of a derivative product. The root is appended by qualifiers (e.g. month and year) that pin down a specific instrument priced.
+
+For example, `EM` is the root for the E-mini S&P 500 family; individual contracts such as `EMH6` (March 2026) and `EMM6` (June 2026) share the same `chain_id`. Use it to group, navigate between, and roll over related contracts.
+
+### `expiration_pattern`
+
+The complete set of expirations applicable to the product as identified by the contract administrator — that is, **every monthly contract the underlying exchange lists**.
+
+Encoded as a list of **lowercase three-letter month abbreviations**:
+
+```json
+"expiration_pattern": ["mar", "jun", "sep", "dec"]
+```
+
+### `availability_pattern`
+
+The set of price feeds expected to be available from Pyth, as a **subset of `expiration_pattern`**, given the liquidity profile and the market trading conventions. In other words, the contracts Pyth actually publishes, chosen by volume patterns on the exchange.
+
+Encoded as a list of **single-letter month codes**:
+
+```json
+"availability_pattern": ["H", "M", "U", "Z"]
+```
+
+### Month codes
+
+`availability_pattern` uses the standard single-letter futures month codes. `expiration_pattern` uses the lowercase month abbreviation for the same month.
+
+| Code | Month     | Abbrev |
+| ---- | --------- | ------ |
+| F    | January   | jan    |
+| G    | February  | feb    |
+| H    | March     | mar    |
+| J    | April     | apr    |
+| K    | May       | may    |
+| M    | June      | jun    |
+| N    | July      | jul    |
+| Q    | August    | aug    |
+| U    | September | sep    |
+| V    | October   | oct    |
+| X    | November  | nov    |
+| Z    | December  | dec    |
+
+See [Futures Terminology](/price-feeds/pro/futures-terminology) for how these codes combine with year digits to form a ticker (e.g. `EMH6`).
+
+### Worked example
+
+For the E-mini S&P 500 family:
+
+```json
+{
+  "chain_id": "EM",
+  "expiration_pattern": ["mar", "jun", "sep", "dec"],
+  "availability_pattern": ["H", "M", "U", "Z"]
+}
+```
+
+The exchange lists quarterly contracts — March, June, September, and December — so `expiration_pattern` is `["mar", "jun", "sep", "dec"]`. Pyth publishes that same quarterly set, which in month-code form is `["H", "M", "U", "Z"]`. When Pyth lists fewer contracts than the exchange offers (for example, only the most liquid quarter-end contracts of a monthly product), `availability_pattern` is a strict subset of `expiration_pattern`.
+
+## Accessing the data
+
+- **Symbology & Reference Data API** — [`GET /v1/symbols`](https://pyth.dourolabs.app/v1/symbols) returns the full catalog.
+- **Interactive docs** — explore the schema in the [OpenAPI docs](https://pyth-lazer-0.dourolabs.app/docs).
+
+## Related
+
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) — browsable table of every available feed.
+- [Futures Terminology](/price-feeds/pro/futures-terminology) — ticker format, month/year codes, and rollover.
+- [Payload Reference](/price-feeds/pro/payload-reference) — the real-time price payload (distinct from reference data).

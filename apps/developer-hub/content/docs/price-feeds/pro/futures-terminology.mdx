@@ -135,11 +135,12 @@ Futures contracts expire on specific dates. When a contract approaches expiratio
 
 1. **Liquidity shifts** to the next contract month
 2. **Price feeds transition** to the new front-month contract
-3. **Rollover dates** vary by commodity — check the [Symbols List API](https://pyth.dourolabs.app/v1/symbols) for exact expiration dates
+3. **Rollover dates** vary by commodity — check the [Symbology and Reference Data API](https://pyth.dourolabs.app/v1/symbols) for exact expiration dates, or see [Symbology & Reference Data](/price-feeds/pro/symbology-reference) for the field definitions
 
 **Expiration Handling:** Ensure your application handles contract rollovers gracefully. Monitor for feed transitions as contracts approach expiration.
 
 ## Additional Resources
 
-- [Symbols List API](https://pyth.dourolabs.app/v1/symbols) — Full list of available futures feeds with expiration dates
+- [Symbology & Reference Data](/price-feeds/pro/symbology-reference) — Field reference for symbol metadata, including `chain_id`, `expiration_pattern`, and `availability_pattern`
+- [Symbology and Reference Data API](https://pyth.dourolabs.app/v1/symbols) — Full list of available futures feeds with expiration dates
 - [Market Hours](/price-feeds/pro/market-hours) — Trading hours for futures markets
