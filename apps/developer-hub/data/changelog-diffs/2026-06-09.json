@@ -1,0 +1,146 @@
+{
+  "date": "2026-06-09",
+  "label": "Tuesday",
+  "summary": {
+    "added": 1,
+    "went_live": 13,
+    "removed": 1
+  },
+  "hero": "1 new feed announced, 13 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.K/USD",
+      "lazerId": 1224,
+      "asset": "Kellanova",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "removed",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.RVI/USD",
+      "lazerId": 3313,
+      "asset": "Robinhood Ventures Fund I",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.FDXF/USD",
+      "lazerId": 3312,
+      "asset": "Fedex Freight Holding Company Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.QNT/USD",
+      "lazerId": 3311,
+      "asset": "Quantinuum Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.USAR/USD",
+      "lazerId": 3307,
+      "asset": "Usa Rare Earth Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.LPTH/USD",
+      "lazerId": 3300,
+      "asset": "Lightpath Technologies Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.ABCL/USD",
+      "lazerId": 3299,
+      "asset": "Abcellera Biologics Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.AMBA/USD",
+      "lazerId": 3298,
+      "asset": "Ambarella Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.IOVA/USD",
+      "lazerId": 3297,
+      "asset": "Iovance Biotherapeutics Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.XPRO/USD",
+      "lazerId": 3296,
+      "asset": "Xpro Group Holdings",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.SIRI/USD",
+      "lazerId": 3294,
+      "asset": "Siriusxm Holdings Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.WOLF/USD",
+      "lazerId": 3293,
+      "asset": "Wolfspeed Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "InterestRate.10YU6",
+      "lazerId": 3255,
+      "asset": "Pyth Price For 10 Year T-Note 21 September 2026",
+      "assetType": "rates",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Metal.OGQ6/USD",
+      "lazerId": 3217,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 29 July 2026",
+      "assetType": "metal",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "Equity.US.AMPG/USD",
+      "lazerId": 3315,
+      "asset": "Amplitech Group Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-09"
+    }
+  ]
+}

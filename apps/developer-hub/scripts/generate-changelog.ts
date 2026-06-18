@@ -17,7 +17,13 @@
 
 /* eslint-disable no-console */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -46,20 +52,20 @@ const main = (): void => {
 
   const recent = filenames.slice(-DAYS_TO_RENDER);
 
-  const days: Day[] = recent.map((date) =>
-    JSON.parse(
-      readFileSync(resolve(DIFFS_DIR, `${date}.json`), "utf8"),
-    ) as Day,
+  const days: Day[] = recent.map(
+    (date) =>
+      JSON.parse(
+        readFileSync(resolve(DIFFS_DIR, `${date}.json`), "utf8"),
+      ) as Day,
   );
 
   const totals: DaySummary = days.reduce<DaySummary>(
     (acc, d) => ({
       added: acc.added + d.summary.added,
-      went_live: acc.went_live + d.summary.went_live,
-      expiring: acc.expiring + d.summary.expiring,
       removed: acc.removed + d.summary.removed,
+      went_live: acc.went_live + d.summary.went_live,
     }),
-    { added: 0, went_live: 0, expiring: 0, removed: 0 },
+    { added: 0, removed: 0, went_live: 0 },
   );
 
   const start = days[0]?.date ?? "";
@@ -71,7 +77,7 @@ const main = (): void => {
     banner,
     `import type { ChangeLog } from "./data";\n`,
     `export const GENERATED_CHANGE_LOG: ChangeLog = ${JSON.stringify(
-      { days, weekRollup: { start, end, totals } },
+      { days, weekRollup: { end, start, totals } },
       undefined,
       2,
     )};\n`,

@@ -1,0 +1,66 @@
+{
+  "date": "2026-06-05",
+  "label": "Friday",
+  "summary": {
+    "added": 6,
+    "went_live": 0,
+    "removed": 0
+  },
+  "hero": "6 new feeds announced.",
+  "events": [
+    {
+      "id": "Equity.US.RVI/USD",
+      "lazerId": 3313,
+      "asset": "Robinhood Ventures Fund I",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-05"
+    },
+    {
+      "id": "Equity.US.FDXF/USD",
+      "lazerId": 3312,
+      "asset": "Fedex Freight Holding Company Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-05"
+    },
+    {
+      "id": "Equity.US.QNT/USD",
+      "lazerId": 3311,
+      "asset": "Quantinuum Inc",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "added",
+      "date": "2026-06-05"
+    },
+    {
+      "id": "Equity.CN.601857/CNY",
+      "lazerId": 3310,
+      "asset": "Petrochina Co Ltd",
+      "assetType": "equity",
+      "quote": "CNY",
+      "changeType": "added",
+      "date": "2026-06-05"
+    },
+    {
+      "id": "Equity.CN.600519/CNY",
+      "lazerId": 3309,
+      "asset": "Kweichow Moutai Co Ltd",
+      "assetType": "equity",
+      "quote": "CNY",
+      "changeType": "added",
+      "date": "2026-06-05"
+    },
+    {
+      "id": "Equity.CN.601398/CNY",
+      "lazerId": 3308,
+      "asset": "Industrial And Commerical Bank Of China",
+      "assetType": "equity",
+      "quote": "CNY",
+      "changeType": "added",
+      "date": "2026-06-05"
+    }
+  ]
+}

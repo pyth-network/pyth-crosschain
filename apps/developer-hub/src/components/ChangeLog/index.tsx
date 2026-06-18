@@ -3,18 +3,15 @@
 import clsx from "clsx";
 import { Callout } from "fumadocs-ui/components/callout";
 import { useEffect, useMemo, useState } from "react";
-
-import {
-  fmtDateLong,
-  fmtDateShort,
-  getChangeLog,
-  type ChangeLog as ChangeLogData,
-  type ChangeLogEntry,
-  type ChangeType,
-  type Day,
-  type DaySummary,
-  type WeekRollup,
+import type {
+  ChangeLog as ChangeLogData,
+  ChangeLogEntry,
+  ChangeType,
+  Day,
+  DaySummary,
+  WeekRollup,
 } from "./data";
+import { fmtDateLong, fmtDateShort, getChangeLog } from "./data";
 import styles from "./index.module.scss";
 
 type Mode = "day" | "stream";
@@ -37,10 +34,7 @@ export const ChangeLog = () => {
     return <Callout type="error">{errorToString(state.error)}</Callout>;
   }
 
-  if (
-    state.type === StateType.NotLoaded ||
-    state.type === StateType.Loading
-  ) {
+  if (state.type === StateType.NotLoaded || state.type === StateType.Loading) {
     return <div className={styles.loading}>Loading change log…</div>;
   }
 
@@ -51,26 +45,34 @@ const ChangeLogView = ({ log }: { log: ChangeLogData }) => {
   const [mode, setMode] = useState<Mode>("day");
   const lastDay = log.days.at(-1);
 
-  return (
-    <div className={styles.root}>
-      <MetaBar mode={mode} setMode={setMode} lastUpdated={lastDay?.date} />
-
-      <WeekSummary rollup={log.weekRollup} />
-
-      {log.days.length === 0 ? (
+  const renderBody = () => {
+    if (log.days.length === 0) {
+      return (
         <div className={styles.emptyState}>
           No transitions yet — daily snapshots are accumulating. Check back
           tomorrow.
         </div>
-      ) : mode === "day" ? (
+      );
+    }
+    if (mode === "day") {
+      return (
         <div className={styles.days}>
           {[...log.days].reverse().map((day) => (
-            <DayView key={day.date} day={day} />
+            <DayView day={day} key={day.date} />
           ))}
         </div>
-      ) : (
-        <StreamView log={log} />
-      )}
+      );
+    }
+    return <StreamView log={log} />;
+  };
+
+  return (
+    <div className={styles.root}>
+      <MetaBar lastUpdated={lastDay?.date} mode={mode} setMode={setMode} />
+
+      <WeekSummary rollup={log.weekRollup} />
+
+      {renderBody()}
 
       <Footer />
     </div>
@@ -86,16 +88,20 @@ const Footer = () => (
       <a
         className={styles.footerLink}
         href="https://pyth.dourolabs.app/docs/"
-        target="_blank"
         rel="noopener noreferrer"
+        target="_blank"
       >
         Symbols API
       </a>
     </span>
     <span className={styles.footerSpacer} />
-    {/* TODO: link to the actual file in GitHub once a public URL is decided. */}
-    <a className={styles.footerEdit} href="#">
-      Edit this page on GitHub →
+    <a
+      className={styles.footerEdit}
+      href="https://github.com/pyth-network/pyth-crosschain/tree/main/apps/developer-hub/data/changelog-diffs"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      View source data on GitHub →
     </a>
   </footer>
 );
@@ -107,21 +113,19 @@ type StatKey = keyof DaySummary;
 const STATS: { key: StatKey; label: string; modifier: string }[] = [
   { key: "added", label: "added", modifier: "added" },
   { key: "went_live", label: "went live", modifier: "wentLive" },
-  { key: "expiring", label: "expiring", modifier: "expiring" },
   { key: "removed", label: "removed", modifier: "removed" },
 ];
 
-const sumTotals = (t: DaySummary) =>
-  t.added + t.went_live + t.expiring + t.removed;
+const sumTotals = (t: DaySummary) => t.added + t.went_live + t.removed;
 
 const WeekSummary = ({ rollup }: { rollup: WeekRollup }) => {
   const total = sumTotals(rollup.totals);
 
   return (
-    <section className={styles.weekSummary} aria-labelledby="changelog-week">
+    <section aria-labelledby="changelog-week" className={styles.weekSummary}>
       <div className={styles.weekTotal}>
-        <h2 id="changelog-week" className={styles.weekHeading}>
-          This week
+        <h2 className={styles.weekHeading} id="changelog-week">
+          Last 14 days
         </h2>
         <div className={styles.weekNumber}>{total}</div>
         <div className={styles.weekRange}>
@@ -129,13 +133,13 @@ const WeekSummary = ({ rollup }: { rollup: WeekRollup }) => {
         </div>
       </div>
 
-      <div className={styles.weekDivider} aria-hidden="true" />
+      <div aria-hidden="true" className={styles.weekDivider} />
 
       <div className={styles.weekStats}>
         {STATS.map(({ key, label, modifier }) => {
           const value = rollup.totals[key];
           return (
-            <div key={key} className={styles.weekStat}>
+            <div className={styles.weekStat} key={key}>
               <div
                 className={clsx(
                   styles.weekStatValue,
@@ -157,9 +161,8 @@ const WeekSummary = ({ rollup }: { rollup: WeekRollup }) => {
 
 const CHANGE_LABELS: Record<ChangeType, string> = {
   added: "added",
-  went_live: "went live",
-  expiring_soon: "expiring soon",
   removed: "removed",
+  went_live: "went live",
 };
 
 const dotClassFor = (type: ChangeType): string | undefined => {
@@ -170,9 +173,6 @@ const dotClassFor = (type: ChangeType): string | undefined => {
     case "went_live": {
       return styles.dotWentLive;
     }
-    case "expiring_soon": {
-      return styles.dotExpiring;
-    }
     case "removed": {
       return styles.dotRemoved;
     }
@@ -181,11 +181,9 @@ const dotClassFor = (type: ChangeType): string | undefined => {
 
 const DayView = ({ day }: { day: Day }) => {
   const total = day.events.length;
-  const regular = day.events.filter((e) => e.changeType !== "expiring_soon");
-  const expiring = day.events.filter((e) => e.changeType === "expiring_soon");
 
   return (
-    <section id={day.date} className={styles.day}>
+    <section className={styles.day} id={day.date}>
       <div className={styles.dayHeader}>
         <h2 className={styles.dayDate}>{fmtDateLong(day.date)}</h2>
         <span className={styles.dayLabel}>{day.label.toLowerCase()}</span>
@@ -202,20 +200,11 @@ const DayView = ({ day }: { day: Day }) => {
         <>
           <p className={styles.dayHero}>{day.hero}</p>
 
-          {regular.length > 0 && (
-            <div className={styles.eventsList}>
-              {regular.map((e) => (
-                <EventRow key={`${e.id}-${e.changeType}`} entry={e} />
-              ))}
-            </div>
-          )}
-
-          {expiring.length > 0 && (
-            <ExpiringCallout
-              events={expiring}
-              hasRegular={regular.length > 0}
-            />
-          )}
+          <div className={styles.eventsList}>
+            {day.events.map((e) => (
+              <EventRow entry={e} key={`${e.id}-${e.changeType}`} />
+            ))}
+          </div>
         </>
       )}
     </section>
@@ -245,48 +234,6 @@ const EventRow = ({
   </div>
 );
 
-const ExpiringCallout = ({
-  events,
-  hasRegular,
-}: {
-  events: ChangeLogEntry[];
-  hasRegular: boolean;
-}) => {
-  const maxDays = events.reduce(
-    (max, e) => Math.max(max, e.daysToExpiry ?? 0),
-    0,
-  );
-
-  return (
-    <div
-      className={clsx(
-        styles.expiringCallout,
-        !hasRegular && styles.expiringCalloutFirst,
-      )}
-    >
-      <h3 className={styles.expiringHeading}>
-        Expiring soon
-        <span className={styles.expiringHeadingMuted}>
-          {" "}
-          — within {maxDays} day{maxDays === 1 ? "" : "s"}
-        </span>
-      </h3>
-      <div className={styles.expiringList}>
-        {events.map((e) => (
-          <div key={e.id} className={styles.expiringRow}>
-            <span className={styles.eventId}>{e.id}</span>
-            <span className={styles.eventAsset}>{e.asset}</span>
-            <span className={styles.eventAssetType}>· {e.assetType}</span>
-            <span className={styles.expiringDays}>
-              {e.daysToExpiry} day{e.daysToExpiry === 1 ? "" : "s"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // ─── Stream view ─────────────────────────────────────────────────────────
 
 type FilterKey = "all" | ChangeType;
@@ -295,7 +242,6 @@ const FILTERS: { key: FilterKey; label: string; type: ChangeType | null }[] = [
   { key: "all", label: "All", type: null },
   { key: "added", label: "Added", type: "added" },
   { key: "went_live", label: "Went live", type: "went_live" },
-  { key: "expiring_soon", label: "Expiring", type: "expiring_soon" },
   { key: "removed", label: "Removed", type: "removed" },
 ];
 
@@ -309,12 +255,10 @@ const StreamView = ({ log }: { log: ChangeLogData }) => {
 
   const counts = useMemo<Record<FilterKey, number>>(
     () => ({
-      all: allEntries.length,
       added: allEntries.filter((e) => e.changeType === "added").length,
-      went_live: allEntries.filter((e) => e.changeType === "went_live").length,
-      expiring_soon: allEntries.filter((e) => e.changeType === "expiring_soon")
-        .length,
+      all: allEntries.length,
       removed: allEntries.filter((e) => e.changeType === "removed").length,
+      went_live: allEntries.filter((e) => e.changeType === "went_live").length,
     }),
     [allEntries],
   );
@@ -327,30 +271,30 @@ const StreamView = ({ log }: { log: ChangeLogData }) => {
   return (
     <div>
       <div
+        aria-label="Filter by change type"
         className={styles.filterRow}
         role="tablist"
-        aria-label="Filter by change type"
       >
         {FILTERS.map(({ key, label, type }) => {
           const active = filter === key;
           return (
             <button
-              key={key}
-              type="button"
-              role="tab"
               aria-selected={active}
-              onClick={() => {
-                setFilter(key);
-              }}
               className={clsx(
                 styles.filterChip,
                 active && styles.filterChipActive,
               )}
+              key={key}
+              onClick={() => {
+                setFilter(key);
+              }}
+              role="tab"
+              type="button"
             >
               {type && (
                 <span
-                  className={clsx(styles.filterDot, dotClassFor(type))}
                   aria-hidden="true"
+                  className={clsx(styles.filterDot, dotClassFor(type))}
                 />
               )}
               <span>{label}</span>
@@ -366,8 +310,8 @@ const StreamView = ({ log }: { log: ChangeLogData }) => {
         <div className={styles.eventsList}>
           {filtered.map((e, i) => (
             <EventRow
-              key={`${e.date}-${e.id}-${e.changeType}-${i.toString()}`}
               entry={e}
+              key={`${e.date}-${e.id}-${e.changeType}-${i.toString()}`}
               showDate
             />
           ))}
@@ -393,7 +337,7 @@ const MetaBar = ({
 
     {lastUpdated && (
       <span className={styles.updated}>
-        <span className={styles.updatedDot} aria-hidden />
+        <span aria-hidden className={styles.updatedDot} />
         Updated {fmtDateShort(lastUpdated)} UTC
       </span>
     )}
@@ -407,20 +351,20 @@ const ModeToggle = ({
   mode: Mode;
   setMode: (m: Mode) => void;
 }) => (
-  <div className={styles.modeToggle} role="tablist" aria-label="View mode">
+  <div aria-label="View mode" className={styles.modeToggle} role="tablist">
     {(["day", "stream"] as const).map((m) => (
       <button
-        key={m}
-        type="button"
-        role="tab"
         aria-selected={mode === m}
-        onClick={() => {
-          setMode(m);
-        }}
         className={clsx(
           styles.modeToggleButton,
           mode === m && styles.modeToggleButtonActive,
         )}
+        key={m}
+        onClick={() => {
+          setMode(m);
+        }}
+        role="tab"
+        type="button"
       >
         {m === "day" ? "By day" : "Stream"}
       </button>
@@ -438,13 +382,13 @@ enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
+  Failed: (error: unknown) => ({ error, type: StateType.Error as const }),
   Loaded: (log: ChangeLogData) => ({
-    type: StateType.Loaded as const,
     log,
+    type: StateType.Loaded as const,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 

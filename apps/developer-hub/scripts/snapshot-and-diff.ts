@@ -23,16 +23,11 @@
 
 /* eslint-disable no-console */
 
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { diffPair, type Symbol } from "./changelog-lib";
+import type { PythSymbol } from "./changelog-lib";
+import { diffPair } from "./changelog-lib";
 
 const SYMBOLS_ENDPOINT = "https://pyth.dourolabs.app/v1/symbols";
 
@@ -75,14 +70,10 @@ const main = async () => {
   if (!Array.isArray(current)) {
     throw new TypeError("Expected the symbols API to return a JSON array");
   }
-  const currentSymbols = current as Symbol[];
+  const currentSymbols = current as PythSymbol[];
 
   if (!existsSync(baselineFile)) {
-    writeFileSync(
-      baselineFile,
-      `${JSON.stringify(currentSymbols)}\n`,
-      "utf8",
-    );
+    writeFileSync(baselineFile, `${JSON.stringify(currentSymbols)}\n`, "utf8");
     console.log(
       `No baseline yet — wrote initial baseline (${currentSymbols.length.toString()} symbols). Diff begins tomorrow.`,
     );
@@ -91,10 +82,14 @@ const main = async () => {
 
   const previous = JSON.parse(
     readFileSync(baselineFile, "utf8"),
-  ) as Symbol[];
+  ) as PythSymbol[];
   const day = diffPair(previous, currentSymbols, date);
 
-  writeFileSync(todayDiffFile, `${JSON.stringify(day, undefined, 2)}\n`, "utf8");
+  writeFileSync(
+    todayDiffFile,
+    `${JSON.stringify(day, undefined, 2)}\n`,
+    "utf8",
+  );
   console.log(
     `Wrote diff for ${date}: ${day.events.length.toString()} event(s) ` +
       `(added ${day.summary.added.toString()}, went_live ${day.summary.went_live.toString()}, ` +
