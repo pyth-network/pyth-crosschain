@@ -1,7 +1,8 @@
-import { CONFIG_TYPE, type NetworkConfig } from "./config.js";
-import { TerraDeployer } from "./terra.js";
+import type { NetworkConfig } from "./config.js";
+import { CONFIG_TYPE } from "./config.js";
 import { InjectiveDeployer } from "./injective.js";
 import { OsmosisDeployer } from "./osmosis.js";
+import { TerraDeployer } from "./terra.js";
 
 export type ContractInfo = {
   codeId: number;

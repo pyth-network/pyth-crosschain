@@ -1,0 +1,56 @@
+groups:
+  - name: binance_recorder
+    rules:
+      - alert: BinanceRecorderDown
+        expr: up{job="binance_recorder"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Binance recorder is down"
+          description: "Prometheus cannot scrape the binance-recorder instance."
+
+      - alert: BinanceRecorderNotReady
+        expr: binance_recorder_ready == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Binance recorder is not ready"
+          description: "The recorder reports not-ready (ClickHouse unreachable or all symbols stale)."
+
+      - alert: BinanceRecorderInsertErrors
+        expr: sum(increase(binance_recorder_insert_attempts_total{status="error"}[10m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Binance recorder ClickHouse insert errors"
+          description: "Insert errors detected in the last 10 minutes."
+
+      - alert: BinanceRecorderNoSuccessfulInserts
+        expr: sum(increase(binance_recorder_insert_attempts_total{status="success"}[15m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Binance recorder has no successful inserts"
+          description: "No successful ClickHouse inserts in the last 15 minutes."
+
+      - alert: BinanceRecorderQueueSaturated
+        expr: binance_recorder_queue_fill_ratio > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Binance recorder queue is saturated"
+          description: "Queue fill ratio is above 90%."
+
+      - alert: BinanceRecorderSymbolStale
+        expr: time() - binance_recorder_symbol_last_seen_unix_seconds > 60
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Binance recorder symbol is stale"
+          description: "A symbol has not received a book-ticker update for over 60 seconds (may be unlisted on Binance spot)."

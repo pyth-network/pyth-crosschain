@@ -75,7 +75,7 @@ fn is_body_expired(body: &Body<Payload>, observation_lifetime: u32) -> bool {
 }
 
 impl Observation {
-    fn get_body(&self) -> Result<Body<Payload>, serde_wormhole::Error> {
+    fn get_body(&self) -> Result<Body<Payload<'_>>, serde_wormhole::Error> {
         serde_wormhole::from_slice(self.body.as_slice())
     }
 }

@@ -1,9 +1,8 @@
 import { useCallback } from "react";
-
+import { useDownloadBlob } from "../../hooks/use-download-blob";
+import type { CLUSTER_NAMES } from "../../services/pyth";
 import { WEB_API_BASE_URL } from "./constants";
 import type { Interval } from "./types";
-import { useDownloadBlob } from "../../hooks/use-download-blob";
-import { CLUSTER_NAMES } from "../../services/pyth";
 
 const PYTHTEST_CONFORMANCE_REFERENCE_PUBLISHER =
   "HUZu4xMSHbxTWbkXR6jkGdjvDPJLjrpSNXSoUFBRgjWs";

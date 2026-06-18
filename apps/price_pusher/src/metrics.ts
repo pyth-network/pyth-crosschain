@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import express from "express";
 import type { Logger } from "pino";
-import { Registry, Counter, Gauge } from "prom-client";
+import { Counter, Gauge, Registry } from "prom-client";
 
 import { UpdateCondition } from "./price-config.js";
 
@@ -22,6 +22,11 @@ export class PricePusherMetrics {
   public targetPriceValue: Gauge;
   // Wallet metrics
   public walletBalance: Gauge;
+  // Liveness heartbeat
+  public loopIterations: Counter;
+  // Liveness state for the /live endpoint (threshold set by the controller)
+  private lastLoopIterationAt: number | undefined;
+  private livenessThresholdMs = 60_000;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -33,58 +38,66 @@ export class PricePusherMetrics {
 
     // Create metrics
     this.lastPublishedTime = new Gauge({
-      name: "pyth_price_last_published_time",
       help: "The last published time of a price feed in unix timestamp",
-      labelNames: ["price_id", "alias"],
+      labelNames: ["alias"],
+      name: "pyth_price_last_published_time",
       registers: [this.registry],
     });
 
     this.priceUpdateAttempts = new Counter({
-      name: "pyth_price_update_attempts_total",
       help: "Total number of price update attempts with their trigger condition and status",
-      labelNames: ["price_id", "alias", "trigger", "status"],
+      labelNames: ["alias", "trigger", "status"],
+      name: "pyth_price_update_attempts_total",
       registers: [this.registry],
     });
 
     this.priceFeedsTotal = new Gauge({
-      name: "pyth_price_feeds_total",
       help: "Total number of price feeds being monitored",
+      name: "pyth_price_feeds_total",
       registers: [this.registry],
     });
 
     this.sourceTimestamp = new Gauge({
-      name: "pyth_source_timestamp",
       help: "Latest source chain price publish timestamp",
-      labelNames: ["price_id", "alias"],
+      labelNames: ["alias"],
+      name: "pyth_source_timestamp",
       registers: [this.registry],
     });
 
     this.configuredTimeDifference = new Gauge({
-      name: "pyth_configured_time_difference",
       help: "Configured time difference threshold between source and target chains",
-      labelNames: ["price_id", "alias"],
+      labelNames: ["alias"],
+      name: "pyth_configured_time_difference",
       registers: [this.registry],
     });
 
     this.sourcePriceValue = new Gauge({
-      name: "pyth_source_price",
       help: "Latest price value from Pyth source",
-      labelNames: ["price_id", "alias"],
+      labelNames: ["alias"],
+      name: "pyth_source_price",
       registers: [this.registry],
     });
 
     this.targetPriceValue = new Gauge({
-      name: "pyth_target_price",
       help: "Latest price value from target chain",
-      labelNames: ["price_id", "alias"],
+      labelNames: ["alias"],
+      name: "pyth_target_price",
       registers: [this.registry],
     });
 
     // Wallet balance metric
     this.walletBalance = new Gauge({
-      name: "pyth_wallet_balance",
       help: "Current wallet balance of the price pusher in native token units",
       labelNames: ["wallet_address", "network"],
+      name: "pyth_wallet_balance",
+      registers: [this.registry],
+    });
+
+    // Liveness heartbeat: increments once per controller loop iteration so a
+    // hung (but not crashed) process is detectable via the metric going flat.
+    this.loopIterations = new Counter({
+      help: "Total number of controller loop iterations completed (liveness heartbeat)",
+      name: "pyth_pusher_loop_iterations_total",
       registers: [this.registry],
     });
 
@@ -92,6 +105,20 @@ export class PricePusherMetrics {
     this.server.get("/metrics", async (_, res) => {
       res.set("Content-Type", this.registry.contentType);
       res.end(await this.registry.metrics());
+    });
+
+    // Liveness endpoint for the k8s livenessProbe: 200 while the control loop is
+    // progressing, 503 once no iteration has completed within the threshold (hung),
+    // so Kubernetes restarts a hung-but-not-crashed pod.
+    this.server.get("/live", (_, res) => {
+      const last = this.lastLoopIterationAt;
+      const healthy =
+        last !== undefined && Date.now() - last <= this.livenessThresholdMs;
+      res.status(healthy ? 200 : 503).json({
+        lastLoopIterationAt: last ?? null,
+        status: healthy ? "ok" : "stale",
+        thresholdMs: this.livenessThresholdMs,
+      });
     });
   }
 
@@ -103,22 +130,16 @@ export class PricePusherMetrics {
   }
 
   // Record a successful price update
-  public recordPriceUpdate(
-    priceId: string,
-    alias: string,
-    trigger = "yes",
-  ): void {
+  public recordPriceUpdate(alias: string, trigger = "yes"): void {
     this.priceUpdateAttempts.inc({
-      price_id: priceId,
       alias,
-      trigger: trigger.toLowerCase(),
       status: "success",
+      trigger: trigger.toLowerCase(),
     });
   }
 
   // Record update condition status (YES/NO/EARLY)
   public recordUpdateCondition(
-    priceId: string,
     alias: string,
     condition: UpdateCondition,
   ): void {
@@ -126,10 +147,9 @@ export class PricePusherMetrics {
     // Only record as 'skipped' when the condition is NO
     if (condition === UpdateCondition.NO) {
       this.priceUpdateAttempts.inc({
-        price_id: priceId,
         alias,
-        trigger: triggerLabel,
         status: "skipped",
+        trigger: triggerLabel,
       });
     }
     // YES and EARLY don't increment the counter here - they'll be counted
@@ -137,16 +157,11 @@ export class PricePusherMetrics {
   }
 
   // Record a price update error
-  public recordPriceUpdateError(
-    priceId: string,
-    alias: string,
-    trigger = "yes",
-  ): void {
+  public recordPriceUpdateError(alias: string, trigger = "yes"): void {
     this.priceUpdateAttempts.inc({
-      price_id: priceId,
       alias,
-      trigger: trigger.toLowerCase(),
       status: "error",
+      trigger: trigger.toLowerCase(),
     });
   }
 
@@ -155,46 +170,41 @@ export class PricePusherMetrics {
     this.priceFeedsTotal.set(count);
   }
 
+  // Record a completed controller loop iteration (liveness heartbeat)
+  public recordLoopIteration(): void {
+    this.lastLoopIterationAt = Date.now();
+    this.loopIterations.inc();
+  }
+
+  // Configure how long without a completed loop iteration before /live reports
+  // unhealthy (used by the k8s livenessProbe to restart a hung pod).
+  public setLivenessThresholdSeconds(seconds: number): void {
+    this.livenessThresholdMs = seconds * 1000;
+  }
+
   // Update source, target and configured time difference timestamps
   public updateTimestamps(
-    priceId: string,
     alias: string,
     targetLatestPricePublishTime: number,
     sourceLatestPricePublishTime: number,
     priceConfigTimeDifference: number,
   ): void {
-    this.sourceTimestamp.set(
-      { price_id: priceId, alias },
-      sourceLatestPricePublishTime,
-    );
-    this.lastPublishedTime.set(
-      { price_id: priceId, alias },
-      targetLatestPricePublishTime,
-    );
-    this.configuredTimeDifference.set(
-      { price_id: priceId, alias },
-      priceConfigTimeDifference,
-    );
+    this.sourceTimestamp.set({ alias }, sourceLatestPricePublishTime);
+    this.lastPublishedTime.set({ alias }, targetLatestPricePublishTime);
+    this.configuredTimeDifference.set({ alias }, priceConfigTimeDifference);
   }
 
   // Update price values
   public updatePriceValues(
-    priceId: string,
     alias: string,
     sourcePrice: string | undefined,
     targetPrice: string | undefined,
   ): void {
     if (sourcePrice !== undefined) {
-      this.sourcePriceValue.set(
-        { price_id: priceId, alias },
-        Number(sourcePrice),
-      );
+      this.sourcePriceValue.set({ alias }, Number(sourcePrice));
     }
     if (targetPrice !== undefined) {
-      this.targetPriceValue.set(
-        { price_id: priceId, alias },
-        Number(targetPrice),
-      );
+      this.targetPriceValue.set({ alias }, Number(targetPrice));
     }
   }
 
@@ -208,7 +218,7 @@ export class PricePusherMetrics {
     const balanceNum =
       typeof balance === "bigint" ? Number(balance) / 1e18 : balance;
     this.walletBalance.set(
-      { wallet_address: walletAddress, network },
+      { network, wallet_address: walletAddress },
       balanceNum,
     );
     this.logger.debug(

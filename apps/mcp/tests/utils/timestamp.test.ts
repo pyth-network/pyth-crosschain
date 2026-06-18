@@ -1,7 +1,7 @@
 import {
+  alignTimestampToChannel,
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
-  alignTimestampToChannel,
   getServerTime,
   normalizeTimestampToMicroseconds,
   unixSecondsToISO,
@@ -69,7 +69,7 @@ describe("alignTimestampToChannel", () => {
 
 describe("unixSecondsToISO", () => {
   it("converts Unix seconds to ISO 8601 string", () => {
-    expect(unixSecondsToISO(1767225600)).toBe("2026-01-01T00:00:00.000Z");
+    expect(unixSecondsToISO(1_767_225_600)).toBe("2026-01-01T00:00:00.000Z");
   });
 
   it("converts epoch 0 correctly", () => {
@@ -93,7 +93,7 @@ describe("getServerTime", () => {
 
 describe("DATA_AVAILABLE_FROM constants", () => {
   it("has consistent Unix/ISO values", () => {
-    expect(DATA_AVAILABLE_FROM_UNIX).toBe(1743465600);
+    expect(DATA_AVAILABLE_FROM_UNIX).toBe(1_743_465_600);
     expect(DATA_AVAILABLE_FROM_ISO).toBe("2025-04-01T00:00:00Z");
     expect(unixSecondsToISO(DATA_AVAILABLE_FROM_UNIX)).toBe(
       "2025-04-01T00:00:00.000Z",

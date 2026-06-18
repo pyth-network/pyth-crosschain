@@ -494,12 +494,12 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
-    #[cfg(feature = "lazer")]
+    #[cfg(feature = "pro-compatible")]
     assert_eq!(
         price_update_account.verification_level,
         VerificationLevel::Full
     );
-    #[cfg(not(feature = "lazer"))]
+    #[cfg(not(feature = "pro-compatible"))]
     assert_eq!(
         price_update_account.verification_level,
         VerificationLevel::Partial { num_signatures: 12 }
@@ -559,7 +559,7 @@ async fn test_post_price_update_from_vaa() {
         into_transaction_error(ReceiverError::WrongWriteAuthority)
     );
 
-    // This one is partial for both lazer and non-lazer
+    // This one is partial for both pro compatible and non-pro compatible
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
         9,

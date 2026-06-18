@@ -2,7 +2,7 @@ import type { UnixTimestamp } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
 import type { IPriceListener, IPricePusher } from "./interface.js";
-import { PricePusherMetrics } from "./metrics.js";
+import type { PricePusherMetrics } from "./metrics.js";
 import type { PriceConfig } from "./price-config.js";
 import { shouldUpdate, UpdateCondition } from "./price-config.js";
 import type { DurationInSeconds } from "./utils.js";
@@ -28,6 +28,12 @@ export class Controller {
 
     // Set the number of price feeds if metrics are enabled
     this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);
+
+    // Report unhealthy on /live if no loop iteration completes within a few
+    // pushing cycles (min 60s), so the k8s livenessProbe restarts a hung pod.
+    this.metrics?.setLivenessThresholdSeconds(
+      Math.max(this.pushingFrequency * 5, 60),
+    );
   }
 
   async start() {
@@ -58,14 +64,12 @@ export class Controller {
 
         if (this.metrics && targetLatestPrice && sourceLatestPrice) {
           this.metrics.updateTimestamps(
-            priceId,
             alias,
             targetLatestPrice.publishTime,
             sourceLatestPrice.publishTime,
             priceConfig.timeDifference,
           );
           this.metrics.updatePriceValues(
-            priceId,
             alias,
             sourceLatestPrice.price,
             targetLatestPrice.price,
@@ -81,7 +85,7 @@ export class Controller {
 
         // Record update condition in metrics
         if (this.metrics) {
-          this.metrics.recordUpdateCondition(priceId, alias, priceShouldUpdate);
+          this.metrics.recordUpdateCondition(alias, priceShouldUpdate);
         }
 
         if (priceShouldUpdate == UpdateCondition.YES) {
@@ -100,8 +104,8 @@ export class Controller {
         this.logger.info(
           {
             priceIds: pricesToPush.map((priceConfig) => ({
-              id: priceConfig.id,
               alias: priceConfig.alias,
+              id: priceConfig.id,
             })),
           },
           "Some of the checks triggered pushing update. Will push the updates for some feeds.",
@@ -129,11 +133,7 @@ export class Controller {
                   ? "yes"
                   : "early";
 
-              this.metrics.recordPriceUpdate(
-                config.id,
-                config.alias,
-                triggerValue,
-              );
+              this.metrics.recordPriceUpdate(config.alias, triggerValue);
             }
           }
         } catch (error) {
@@ -155,17 +155,16 @@ export class Controller {
                   ? "yes"
                   : "early";
 
-              this.metrics.recordPriceUpdateError(
-                config.id,
-                config.alias,
-                triggerValue,
-              );
+              this.metrics.recordPriceUpdateError(config.alias, triggerValue);
             }
           }
         }
       } else {
         this.logger.info("None of the checks were triggered. No push needed.");
       }
+
+      // Liveness heartbeat: mark this loop iteration as completed.
+      this.metrics?.recordLoopIteration();
 
       await sleep(this.pushingFrequency * 1000);
     }

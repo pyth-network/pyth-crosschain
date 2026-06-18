@@ -1,43 +1,43 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
-import { getWormholeConfig } from "./configs.js";
+import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
 } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
-import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
-import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
-import type { DeploymentType } from "./helper.js";
 import {
   DefaultStore,
   Store,
 } from "@pythnetwork/contract-manager/node/utils/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common/chains";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
+import { getWormholeConfig } from "./configs.js";
+import type { DeploymentType } from "./helper.js";
 
 const yargs = createCLI(hideBin(process.argv));
 
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("private-key", {
-    type: "string",
     demandOption: "Please provide the private key",
+    type: "string",
   })
   .option("contract-version", {
-    type: "string",
+    default: "2.14.9",
     desc: `Please input the contract-version of the wormhole contract.
     There should be a compiled code at the path - "../wormhole-stub/artifacts/wormhole-\${contract-version}.wasm"`,
-    default: "2.14.9",
+    type: "string",
   })
   .option("deploy", {
-    type: "string",
-    desc: "Execute this script for the given deployment type.",
     choices: ["stable", "beta"],
     demandOption: "Please provide the deployment type",
+    desc: "Execute this script for the given deployment type.",
+    type: "string",
   })
   .option("chain", {
-    type: "string",
-    desc: "Deploy the wormhole contract to the given chain",
     demandOption: "Please provide a chain to deploy the contract to",
+    desc: "Deploy the wormhole contract to the given chain",
+    type: "string",
   })
   .help()
   .alias("help", "h")
@@ -64,10 +64,10 @@ async function run() {
   const instantiateContractRes = await chainExecutor.instantiateContract({
     codeId: storeCodeRes.codeId,
     instMsg: getWormholeConfig({
+      deploymentType: argv.deploy as DeploymentType, // TODO: use branded types
       feeDenom: chain.feeDenom,
       // @ts-expect-error - Chains can be safely indexed
       wormholeChainId: CHAINS[chain.wormholeChainName],
-      deploymentType: argv.deploy as DeploymentType, // TODO: use branded types
     }),
     label: "wormhole",
   });
@@ -76,8 +76,8 @@ async function run() {
   );
 
   await chainExecutor.updateContractAdmin({
-    newAdminAddr: instantiateContractRes.contractAddr,
     contractAddr: instantiateContractRes.contractAddr,
+    newAdminAddr: instantiateContractRes.contractAddr,
   });
   console.log(`Contract admin set to ${instantiateContractRes.contractAddr}`);
 

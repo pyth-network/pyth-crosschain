@@ -2,33 +2,33 @@
 
 import type { Placement } from "@floating-ui/react";
 import {
+  arrow,
+  autoPlacement,
+  autoUpdate,
   FloatingArrow,
   FloatingPortal,
-  useFloating,
-  useInteractions,
-  useHover,
-  useFocus,
-  useRole,
-  useDismiss,
-  useTransitionStyles,
-  useMergeRefs,
-  useDelayGroup,
-  autoPlacement,
-  arrow,
-  offset,
-  autoUpdate,
   flip,
+  offset,
   shift,
+  useDelayGroup,
+  useDismiss,
+  useFloating,
+  useFocus,
+  useHover,
+  useInteractions,
+  useMergeRefs,
+  useRole,
+  useTransitionStyles,
 } from "@floating-ui/react";
 import type { ComponentProps, ElementType, Ref } from "react";
 import {
-  useState,
-  useMemo,
   createContext,
-  useContext,
-  forwardRef,
-  useRef,
   createElement,
+  forwardRef,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 
 type TooltipOptions = {
@@ -72,15 +72,15 @@ const useTooltip = ({
 
   const data = useFloating({
     ...(placement && { placement }),
-    open,
-    onOpenChange: setOpen,
-    whileElementsMounted: autoUpdate,
     middleware: [
       offset(gap + (arrowConfig?.width ?? 0)),
       placement ? flip() : autoPlacement(),
       shift(),
       ...(arrowConfig ? [arrow({ element: arrowRef })] : []),
     ],
+    onOpenChange: setOpen,
+    open,
+    whileElementsMounted: autoUpdate,
   });
 
   const context = data.context;
@@ -88,9 +88,9 @@ const useTooltip = ({
   const { delay } = useDelayGroup(context);
 
   const hover = useHover(context, {
-    move: false,
-    enabled: controlledOpen == undefined,
     delay,
+    enabled: controlledOpen == undefined,
+    move: false,
   });
   const focus = useFocus(context, {
     enabled: controlledOpen == undefined,
@@ -129,8 +129,8 @@ const TooltipTrigger = <T extends ElementType = "button">(
   const state = useTooltipState();
 
   return createElement(as ?? "button", {
-    ref: useMergeRefs([state.refs.setReference, propRef]),
     "data-state": state.open ? "open" : "closed",
+    ref: useMergeRefs([state.refs.setReference, propRef]),
     ...state.getReferenceProps(props),
   });
 };
@@ -151,13 +151,13 @@ const TooltipContent = <T extends ElementType = "div">(
   const { isMounted, styles } = useTransitionStyles(state.context, {
     duration: delayGroupContext.isInstantPhase
       ? {
-          open: instantDuration,
           // `id` is this component's `id`
           // `currentId` is the current group's `id`
           close:
             delayGroupContext.currentId === state.context.floatingId
               ? duration
               : instantDuration,
+          open: instantDuration,
         }
       : duration,
     initial: {
@@ -197,9 +197,9 @@ const TooltipArrow = (
 
   return (
     <FloatingArrow
-      ref={arrow.ref}
       context={context}
       height={arrow.config.width}
+      ref={arrow.ref}
       width={arrow.config.height}
       {...props}
     />
@@ -207,7 +207,7 @@ const TooltipArrow = (
 };
 
 export const Tooltip = Object.assign(TooltipBase, {
-  Trigger: forwardRef(TooltipTrigger),
-  Content: forwardRef(TooltipContent),
   Arrow: TooltipArrow,
+  Content: forwardRef(TooltipContent),
+  Trigger: forwardRef(TooltipTrigger),
 });

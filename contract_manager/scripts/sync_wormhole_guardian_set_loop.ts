@@ -90,15 +90,15 @@ function extractEndpoints(entry: ChainlistChainEntry): string[] {
  * chainlist entry's name/chain/shortName fields.
  */
 const CHAIN_ID_KEYWORD_ALIASES: Record<string, string[]> = {
+  arbitrum: ["arbitrum", "arb"],
   bsc: ["bsc", "bnb", "binance"],
   bsc_testnet: ["bsc", "bnb", "binance"],
-  mumbai: ["mumbai", "polygon"],
-  matic: ["matic", "polygon"],
-  zksync: ["zksync"],
-  optimism: ["optimism", "op"],
-  arbitrum: ["arbitrum", "arb"],
   ethereum: ["ethereum", "eth"],
+  matic: ["matic", "polygon"],
+  mumbai: ["mumbai", "polygon"],
+  optimism: ["optimism", "op"],
   saigon: ["saigon", "ronin"],
+  zksync: ["zksync"],
 };
 
 function expectedKeywords(chainId: string): string[] {
@@ -148,10 +148,7 @@ function getAlternativeRpc(
   return endpoints[tryNext % endpoints.length];
 }
 
-function updateEvmChainRpc(
-  chainId: string,
-  newRpcUrl: string,
-): boolean {
+function updateEvmChainRpc(chainId: string, newRpcUrl: string): boolean {
   const raw = fs.readFileSync(EVM_CHAINS_PATH, "utf-8");
   const chains = JSON.parse(raw) as EvmChainEntry[];
   const entry = chains.find((c) => c.id === chainId);
@@ -184,7 +181,7 @@ function runSync(args: string[]): { exitCode: number; output: SyncOutput } {
     if (e.stdout) fullOutput.push(e.stdout);
   }
   const lastLine = fullOutput.join("").trim().split("\n").filter(Boolean).pop();
-  let output: SyncOutput = { rows: [], needRetry: true };
+  let output: SyncOutput = { needRetry: true, rows: [] };
   if (lastLine) {
     try {
       output = JSON.parse(lastLine) as SyncOutput;
@@ -195,7 +192,7 @@ function runSync(args: string[]): { exitCode: number; output: SyncOutput } {
         console.error(fullOutput.join("").trim().slice(-500));
         process.exit(exitCode);
       }
-      output = { rows: [], needRetry: false };
+      output = { needRetry: false, rows: [] };
     }
   }
   return { exitCode, output };

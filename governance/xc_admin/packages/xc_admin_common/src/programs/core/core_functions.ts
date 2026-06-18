@@ -1,30 +1,32 @@
-import {
-  PublicKey,
-  TransactionInstruction,
-  type AccountInfo,
-  Connection,
-} from "@solana/web3.js";
+import type { Program } from "@coral-xyz/anchor";
+import type { Product, PythCluster } from "@pythnetwork/client";
 import {
   AccountType,
-  type PythCluster,
   parseBaseData,
   parseMappingData,
   parsePermissionData,
   parsePriceData,
   parseProductData,
-  type Product,
 } from "@pythnetwork/client";
+import type { PythOracle } from "@pythnetwork/client/lib/anchor";
+import type {
+  AccountInfo,
+  Connection,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 import {
+  createDetermisticPriceStoreInitializePublisherInstruction,
   findDetermisticAccountAddress,
+  getMaximumNumberOfPublishers,
   getMessageBufferAddressForPrice,
   getPythOracleMessageBufferCpiAuth,
   isMessageBufferAvailable,
-  MESSAGE_BUFFER_BUFFER_SIZE,
-  PRICE_FEED_OPS_KEY,
-  getMaximumNumberOfPublishers,
   isPriceStoreInitialized,
   isPriceStorePublisherInitialized,
-  createDetermisticPriceStoreInitializePublisherInstruction,
+  MESSAGE_BUFFER_BUFFER_SIZE,
+  PRICE_FEED_OPS_KEY,
 } from "../../index";
 import type {
   DownloadableConfig,
@@ -34,9 +36,6 @@ import type {
   RawConfig,
   ValidationResult,
 } from "../types";
-import { Program } from "@coral-xyz/anchor";
-import type { PythOracle } from "@pythnetwork/client/lib/anchor";
-import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 /**
  * Maximum sizes for instruction data to fit into transactions
@@ -114,8 +113,8 @@ function sortData(data: DownloadableConfig): DownloadableConfig {
       .map((priceAccount: DownloadablePriceAccount) => ({
         address: priceAccount.address,
         expo: priceAccount.expo,
-        minPub: priceAccount.minPub,
         maxLatency: priceAccount.maxLatency,
+        minPub: priceAccount.minPub,
         publishers: [...priceAccount.publishers].sort((a: string, b: string) =>
           a.localeCompare(b),
         ),
@@ -149,14 +148,14 @@ export function getConfig(params: CoreConfigParams): RawConfig {
         return [
           pubkey.toBase58(),
           {
-            next: parsed.nextPriceAccountKey,
             address: pubkey,
+            expo: parsed.exponent,
+            maxLatency: parsed.maxLatency,
+            minPub: parsed.minPublishers,
+            next: parsed.nextPriceAccountKey,
             publishers: parsed.priceComponents
               .filter((x) => x.publisher !== null && x.publisher !== undefined)
               .map((x) => x.publisher),
-            expo: parsed.exponent,
-            minPub: parsed.minPublishers,
-            maxLatency: parsed.maxLatency,
           },
         ];
       }),
@@ -198,9 +197,9 @@ export function getConfig(params: CoreConfigParams): RawConfig {
         return [
           pubkey.toBase58(),
           {
-            priceAccounts,
-            metadata: parsed.product,
             address: pubkey,
+            metadata: parsed.product,
+            priceAccounts,
           },
         ];
       }),
@@ -217,8 +216,8 @@ export function getConfig(params: CoreConfigParams): RawConfig {
     .map((account) => {
       const parsed = parseMappingData(account.account.data);
       return {
-        next: parsed.nextMappingAccount,
         address: account.pubkey,
+        next: parsed.nextMappingAccount,
         products: parsed.productAccountKeys
           .filter((key) => {
             const keyStr = key.toBase58();
@@ -283,10 +282,10 @@ export function getDownloadableConfig(
               priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
                 return {
                   address: p.address.toBase58(),
-                  publishers: p.publishers.map((p) => p.toBase58()),
                   expo: p.expo,
-                  minPub: p.minPub,
                   maxLatency: p.maxLatency,
+                  minPub: p.minPub,
+                  publishers: p.publishers.map((p) => p.toBase58()),
                 };
               }),
             },
@@ -387,8 +386,8 @@ export function validateUploadedConfig(
         JSON.stringify(processedConfig[symbol])
       ) {
         changes[symbol] = {
-          prev: existingConfig[symbol],
           new: processedConfig[symbol],
+          prev: existingConfig[symbol],
         };
       }
     }
@@ -410,8 +409,8 @@ export function validateUploadedConfig(
         processedConfig[symbol]?.address !== existingConfig[symbol]?.address
       ) {
         return {
-          isValid: false,
           error: `Address field for product cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`,
+          isValid: false,
         };
       }
     }
@@ -427,8 +426,8 @@ export function validateUploadedConfig(
           existingConfig[symbol].priceAccounts[0].address
       ) {
         return {
-          isValid: false,
           error: `Address field for priceAccounts cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`,
+          isValid: false,
         };
       }
     }
@@ -442,23 +441,23 @@ export function validateUploadedConfig(
           maximumNumberOfPublishers
       ) {
         return {
-          isValid: false,
           error: `${symbol} has more than ${maximumNumberOfPublishers} publishers.`,
+          isValid: false,
         };
       }
     }
 
     return {
-      isValid: true,
       changes,
+      isValid: true,
     };
   } catch (error) {
     return {
-      isValid: false,
       error:
         error instanceof Error
           ? error.message
           : "Failed to validate configuration",
+      isValid: false,
     };
   }
 }
@@ -525,8 +524,8 @@ async function generateAddInstructions(
       .addProduct({ ...newChanges.metadata })
       .accounts({
         fundingAccount,
-        tailMappingAccount: rawConfig.mappingAccounts[0]!.address,
         productAccount: productAccountKey,
+        tailMappingAccount: rawConfig.mappingAccounts[0]!.address,
       })
       .instruction();
 
@@ -551,8 +550,8 @@ async function generateAddInstructions(
         .addPrice(newChanges.priceAccounts[0].expo, 1)
         .accounts({
           fundingAccount,
-          productAccount: productAccountKey,
           priceAccount: priceAccountKey,
+          productAccount: productAccountKey,
         })
         .instruction(),
     );
@@ -572,9 +571,9 @@ async function generateAddInstructions(
           })
           .remainingAccounts([
             {
-              pubkey: getMessageBufferAddressForPrice(cluster, priceAccountKey),
               isSigner: false,
               isWritable: true,
+              pubkey: getMessageBufferAddressForPrice(cluster, priceAccountKey),
             },
           ])
           .instruction(),
@@ -611,8 +610,8 @@ async function generateAddInstructions(
         await pythProgramClient.methods
           .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
           .accounts({
-            priceAccount: priceAccountKey,
             fundingAccount,
+            priceAccount: priceAccountKey,
           })
           .instruction(),
       );
@@ -627,8 +626,8 @@ async function generateAddInstructions(
         await pythProgramClient.methods
           .setMaxLatency(newChanges.priceAccounts[0].maxLatency, [0, 0, 0])
           .accounts({
-            priceAccount: priceAccountKey,
             fundingAccount,
+            priceAccount: priceAccountKey,
           })
           .instruction(),
       );
@@ -658,8 +657,8 @@ async function generateDeleteInstructions(
         .delPrice()
         .accounts({
           fundingAccount,
-          productAccount: new PublicKey(prev.address || ""),
           priceAccount,
+          productAccount: new PublicKey(prev.address || ""),
         })
         .instruction(),
     );
@@ -686,11 +685,11 @@ async function generateDeleteInstructions(
           )
           .accounts({
             admin: fundingAccount,
-            payer: PRICE_FEED_OPS_KEY,
             messageBuffer: getMessageBufferAddressForPrice(
               cluster,
               priceAccount,
             ),
+            payer: PRICE_FEED_OPS_KEY,
           })
           .instruction(),
       );
@@ -758,8 +757,8 @@ async function generateUpdateInstructions(
         await pythProgramClient.methods
           .setMaxLatency(newPrice.maxLatency, [0, 0, 0])
           .accounts({
-            priceAccount: new PublicKey(prevPrice.address || ""),
             fundingAccount,
+            priceAccount: new PublicKey(prevPrice.address || ""),
           })
           .instruction(),
       );
@@ -816,8 +815,8 @@ async function generateUpdateInstructions(
         await pythProgramClient.methods
           .setMinPub(newPrice.minPub, [0, 0, 0])
           .accounts({
-            priceAccount: new PublicKey(prevPrice.address || ""),
             fundingAccount,
+            priceAccount: new PublicKey(prevPrice.address || ""),
           })
           .instruction(),
       );

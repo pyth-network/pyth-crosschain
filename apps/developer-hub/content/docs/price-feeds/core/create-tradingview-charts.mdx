@@ -4,9 +4,16 @@ description: Learn how to build TradingView charts powered by Pyth price feeds
 slug: /price-feeds/core/create-tradingview-charts
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 The TradingView integration allows users to view Pyth prices on their own website. All Pyth prices made available through the TradingView integration are originating from [Pythnet](/price-feeds/core/how-pyth-works/pythnet).
+
+<UpgradeCallout chain="index" />
+
+<Callout type="warn">
+  The Benchmarks endpoints below stay at the same URLs after the upgrade, but from **July 31, 2026** every request must include an `Authorization: Bearer $PYTH_API_KEY` header. Get a Pyth API Key on the [billing page](https://app.pyth.com/billing/plans?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=benchmarks-tv-billing).
+</Callout>
 
 ## Choosing an Implementation Method for TradingView Integration
 

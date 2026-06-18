@@ -53,7 +53,7 @@
       "alias": "USH/USD",
       "id": "eaa30c1ef2d9f4fde45d6e699bfda5187b3de200ea4cbab25d676b260ab728c1",
       "time_difference": 3600,
-      "price_deviation": 1,
+      "price_deviation": 2,
       "confidence_ratio": 100
     },
     {
@@ -137,7 +137,7 @@
       "alias": "MHYPE/USD",
       "id": "a7fb4cdafed5130e8731b8da7c9208881f24e9b671bb92438b1fbf361d578112",
       "time_difference": 3600,
-      "price_deviation": 1,
+      "price_deviation": 2,
       "confidence_ratio": 100
     },
     {
@@ -171,13 +171,6 @@
     {
       "alias": "METH/ETH.RR",
       "id": "ee279eeb2fec830e3f535ad4d6524eb35eb1c6890cb1afc0b64554d08c88727e",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "USR/USD.RR",
-      "id": "512a79cc65f49531f0bbb72956353e79ecdc1e4a6e5241847196c1f9a11d8a52",
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100
@@ -241,20 +234,6 @@
     {
       "alias": "KHYPE/HYPE.RR",
       "id": "983b7cabc6fab548e15a5b05500da9b99c1682107b3e2ff289344116c10ac02c",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WSTUSR/USR.RR",
-      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "RLP/USD.RR",
-      "id": "796bcb684fdfbba2b071c165251511ab61f08c8949afd9e05665a26f69d9a839",
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100

@@ -19,8 +19,8 @@
       "outputs": ["src/v2/v2-theme.css"]
     },
     "build:css-in-js:watch": {
-      "dependsOn": ["^build"],
       "cache": false,
+      "dependsOn": ["^build"],
       "persistent": true
     },
     "build:declarations": {
@@ -54,12 +54,12 @@
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "fix:lint:stylelint": {
-      "dependsOn": ["//#install:modules"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["//#install:modules"]
     },
     "start:dev": {
       "dependsOn": ["build"],

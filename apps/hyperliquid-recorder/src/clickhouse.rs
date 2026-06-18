@@ -1,104 +1,40 @@
 use std::time::Instant;
 
-use anyhow::{anyhow, Result};
-use chrono::{DateTime, Utc};
+use anyhow::Result;
+use chrono::{DateTime, TimeZone, Utc};
+use clickhouse::{Client, Row};
+use rust_decimal::Decimal;
+use serde::Serialize;
 
 use crate::{
     config::ClickHouseTarget,
-    models::{L2Snapshot, TradeRecord},
+    models::{FundingRateRecord, L2Level, L2Snapshot, TradeRecord},
 };
 
 #[derive(Clone)]
 pub struct ClickHouseClient {
-    http_client: reqwest::Client,
+    client: Client,
     target: ClickHouseTarget,
 }
 
 impl ClickHouseClient {
     pub fn new(target: ClickHouseTarget) -> Self {
-        Self {
-            http_client: reqwest::Client::new(),
-            target,
-        }
-    }
-
-    pub async fn ensure_schema(&self, retention_days: u16) -> Result<()> {
-        self.command(&format!(
-            "CREATE DATABASE IF NOT EXISTS {}",
-            self.target.database
-        ))
-        .await?;
-
-        self.command(&format!(
-            "
-            CREATE TABLE IF NOT EXISTS {}.{}
-            (
-                coin LowCardinality(String),
-                block_time DateTime64(3),
-                block_number UInt64,
-                n_levels UInt16,
-                n_sig_figs UInt8 DEFAULT 0,
-                mantissa UInt8 DEFAULT 0,
-                source_endpoint LowCardinality(String),
-                bids Array(Tuple(Decimal64(12), Decimal64(12), UInt32)),
-                asks Array(Tuple(Decimal64(12), Decimal64(12), UInt32)),
-                ingested_at DateTime64(3) DEFAULT now64(3)
-            )
-            ENGINE = ReplacingMergeTree(ingested_at)
-            PARTITION BY toYYYYMM(block_time)
-            ORDER BY (coin, block_time, block_number, n_levels, n_sig_figs, mantissa)
-            TTL toDateTime(block_time) + INTERVAL {retention_days} DAY DELETE
-            ",
-            self.target.database, self.target.l2_snapshots_table
-        ))
-        .await?;
-
-        self.command(&format!(
-            "
-            CREATE TABLE IF NOT EXISTS {}.{}
-            (
-                coin LowCardinality(String),
-                user String,
-                trade_time DateTime64(3),
-                block_number UInt64,
-                tid UInt64,
-                hash String,
-                oid UInt64,
-                side LowCardinality(String),
-                dir LowCardinality(String),
-                px Decimal64(12),
-                sz Decimal64(12),
-                start_position Decimal64(12),
-                closed_pnl Decimal64(12),
-                crossed Bool,
-                fee Decimal64(12),
-                fee_token LowCardinality(String),
-                twap_id Nullable(UInt64),
-                cloid Nullable(String),
-                builder Nullable(String),
-                builder_fee Nullable(Decimal64(12)),
-                liquidated_user Nullable(String),
-                liquidation_mark_px Nullable(Decimal64(12)),
-                liquidation_method Nullable(String),
-                source_endpoint LowCardinality(String),
-                ingested_at DateTime64(3) DEFAULT now64(3)
-            )
-            ENGINE = ReplacingMergeTree(ingested_at)
-            PARTITION BY toYYYYMM(trade_time)
-            ORDER BY (coin, trade_time, block_number, tid, oid, user)
-            TTL toDateTime(trade_time) + INTERVAL {retention_days} DAY DELETE
-            ",
-            self.target.database, self.target.trades_table
-        ))
-        .await?;
-        Ok(())
+        let url = format!(
+            "{}://{}:{}",
+            if target.secure { "https" } else { "http" },
+            target.host,
+            target.port,
+        );
+        let client = Client::default()
+            .with_url(url)
+            .with_user(target.username.clone())
+            .with_password(target.password.clone())
+            .with_database(target.database.clone());
+        Self { client, target }
     }
 
     pub async fn ping(&self) -> bool {
-        match self.command("SELECT 1").await {
-            Ok(result) => result.trim() == "1",
-            Err(_) => false,
-        }
+        self.client.query("SELECT 1").execute().await.is_ok()
     }
 
     pub async fn insert_batch(
@@ -110,24 +46,13 @@ impl ClickHouseClient {
             return Ok((0, 0.0));
         }
         let start = Instant::now();
-
-        let rows = snapshots
-            .iter()
-            .map(snapshot_to_values)
-            .collect::<Vec<_>>()
-            .join(",");
-
-        let settings = if insert_async {
-            " SETTINGS async_insert=1,wait_for_async_insert=1"
-        } else {
-            ""
-        };
-
-        let query = format!(
-            "INSERT INTO {}.{} (coin,block_time,block_number,n_levels,n_sig_figs,mantissa,source_endpoint,bids,asks){settings} VALUES {rows}",
-            self.target.database, self.target.l2_snapshots_table
-        );
-        self.command(&query).await?;
+        let mut insert = self
+            .new_insert::<L2SnapshotRow>(&self.target.l2_snapshots_table, insert_async)
+            .await?;
+        for snapshot in snapshots {
+            insert.write(&L2SnapshotRow::from(snapshot)).await?;
+        }
+        insert.end().await?;
         Ok((snapshots.len(), start.elapsed().as_secs_f64()))
     }
 
@@ -140,157 +65,219 @@ impl ClickHouseClient {
             return Ok((0, 0.0));
         }
         let start = Instant::now();
-
-        let rows = trades
-            .iter()
-            .map(trade_to_values)
-            .collect::<Vec<_>>()
-            .join(",");
-
-        let settings = if insert_async {
-            " SETTINGS async_insert=1,wait_for_async_insert=1"
-        } else {
-            ""
-        };
-
-        let query = format!(
-            "INSERT INTO {}.{} (coin,user,trade_time,block_number,tid,hash,oid,side,dir,px,sz,start_position,closed_pnl,crossed,fee,fee_token,twap_id,cloid,builder,builder_fee,liquidated_user,liquidation_mark_px,liquidation_method,source_endpoint){settings} VALUES {rows}",
-            self.target.database, self.target.trades_table
-        );
-        self.command(&query).await?;
+        let mut insert = self
+            .new_insert::<TradeRow>(&self.target.trades_table, insert_async)
+            .await?;
+        for trade in trades {
+            insert.write(&TradeRow::from(trade)).await?;
+        }
+        insert.end().await?;
         Ok((trades.len(), start.elapsed().as_secs_f64()))
     }
 
-    async fn command(&self, sql: &str) -> Result<String> {
-        let mut request = self
-            .http_client
-            .post(format!(
-                "{}://{}:{}/?database={}",
-                if self.target.secure { "https" } else { "http" },
-                self.target.host,
-                self.target.port,
-                self.target.database
-            ))
-            .basic_auth(&self.target.username, Some(&self.target.password))
-            .body(sql.to_string());
-
-        if self.target.password.is_empty() {
-            request = request.basic_auth(&self.target.username, Option::<String>::None);
+    pub async fn insert_funding_batch(
+        &self,
+        rates: &[FundingRateRecord],
+        insert_async: bool,
+    ) -> Result<(usize, f64)> {
+        if rates.is_empty() {
+            return Ok((0, 0.0));
         }
-
-        let response = request.send().await?;
-        let status = response.status();
-        let body = response.text().await?;
-        if !status.is_success() {
-            return Err(anyhow!("clickhouse query failed ({status}): {body}"));
+        let start = Instant::now();
+        let mut insert = self
+            .new_insert::<FundingRateRow>(&self.target.funding_rates_table, insert_async)
+            .await?;
+        for rate in rates {
+            insert.write(&FundingRateRow::from(rate)).await?;
         }
-        Ok(body)
+        insert.end().await?;
+        Ok((rates.len(), start.elapsed().as_secs_f64()))
+    }
+
+    async fn new_insert<T>(&self, table: &str, insert_async: bool) -> Result<clickhouse::insert::Insert<T>>
+    where
+        T: Row,
+    {
+        let client = if insert_async {
+            self.client
+                .clone()
+                .with_setting("async_insert", "1")
+                .with_setting("wait_for_async_insert", "1")
+        } else {
+            self.client.clone()
+        };
+        Ok(client.insert::<T>(table).await?)
     }
 }
 
-fn snapshot_to_values(snapshot: &L2Snapshot) -> String {
-    let block_time = DateTime::<Utc>::from_timestamp_millis(snapshot.block_time_ms as i64)
-        .unwrap_or(DateTime::<Utc>::UNIX_EPOCH)
-        .format("%Y-%m-%d %H:%M:%S%.3f");
-    let bids = levels_to_ch_array(&snapshot.bids);
-    let asks = levels_to_ch_array(&snapshot.asks);
-    format!(
-        "('{}','{}',{},{},{},{},'{}',{},{})",
-        escape(&snapshot.coin),
-        block_time,
-        snapshot.block_number,
-        snapshot.n_levels,
-        snapshot.n_sig_figs.unwrap_or(0),
-        snapshot.mantissa.unwrap_or(0),
-        escape(&snapshot.source_endpoint),
-        bids,
-        asks
-    )
+#[derive(Row, Serialize)]
+struct L2SnapshotRow {
+    coin: String,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    block_time: DateTime<Utc>,
+    block_number: u64,
+    n_levels: u16,
+    n_sig_figs: u8,
+    mantissa: u8,
+    source_endpoint: String,
+    bids: Vec<(i128, i128, u32)>,
+    asks: Vec<(i128, i128, u32)>,
 }
 
-fn levels_to_ch_array(levels: &[crate::models::L2Level]) -> String {
-    if levels.is_empty() {
-        return "CAST([] AS Array(Tuple(Decimal64(12), Decimal64(12), UInt32)))".to_string();
+impl From<&L2Snapshot> for L2SnapshotRow {
+    fn from(s: &L2Snapshot) -> Self {
+        Self {
+            coin: s.coin.clone(),
+            block_time: from_ms(s.block_time_ms),
+            block_number: s.block_number,
+            n_levels: s.n_levels as u16,
+            n_sig_figs: s.n_sig_figs.unwrap_or(0) as u8,
+            mantissa: s.mantissa.unwrap_or(0) as u8,
+            source_endpoint: s.source_endpoint.clone(),
+            bids: s.bids.iter().map(level_to_tuple).collect(),
+            asks: s.asks.iter().map(level_to_tuple).collect(),
+        }
     }
-    let tuples = levels
-        .iter()
-        .map(|level| {
-            format!(
-                "(toDecimal64('{}',12),toDecimal64('{}',12),{})",
-                level.px.normalize(),
-                level.sz.normalize(),
-                level.n
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(",");
-    format!("[{tuples}]")
 }
 
-fn trade_to_values(trade: &TradeRecord) -> String {
-    let trade_time = DateTime::<Utc>::from_timestamp_millis(trade.time_ms as i64)
-        .unwrap_or(DateTime::<Utc>::UNIX_EPOCH)
-        .format("%Y-%m-%d %H:%M:%S%.3f");
-    let liquidated_user = trade
-        .liquidation
-        .as_ref()
-        .map(|liquidation| liquidation.liquidated_user.as_str());
-    let liquidation_mark_px = trade
-        .liquidation
-        .as_ref()
-        .map(|liquidation| liquidation.mark_px.normalize().to_string());
-    let liquidation_method = trade
-        .liquidation
-        .as_ref()
-        .map(|liquidation| liquidation.method.as_str());
-
-    format!(
-        "('{}','{}','{}',{},{},'{}',{},'{}','{}',toDecimal64('{}',12),toDecimal64('{}',12),toDecimal64('{}',12),toDecimal64('{}',12),{},toDecimal64('{}',12),'{}',{}, {}, {}, {}, {}, {}, {}, '{}')",
-        escape(&trade.coin),
-        escape(&trade.user),
-        trade_time,
-        trade.block_number,
-        trade.tid,
-        escape(&trade.hash),
-        trade.oid,
-        escape(&trade.side),
-        escape(&trade.dir),
-        trade.px.normalize(),
-        trade.sz.normalize(),
-        trade.start_position.normalize(),
-        trade.closed_pnl.normalize(),
-        if trade.crossed { 1 } else { 0 },
-        trade.fee.normalize(),
-        escape(&trade.fee_token),
-        nullable_u64(trade.twap_id),
-        nullable_string(trade.cloid.as_deref()),
-        nullable_string(trade.builder.as_deref()),
-        nullable_decimal(trade.builder_fee.as_ref().map(|value| value.normalize().to_string())),
-        nullable_string(liquidated_user),
-        nullable_decimal(liquidation_mark_px),
-        nullable_string(liquidation_method),
-        escape(&trade.source_endpoint),
-    )
+#[derive(Row, Serialize)]
+struct TradeRow {
+    coin: String,
+    user: String,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    trade_time: DateTime<Utc>,
+    block_number: u64,
+    tid: u64,
+    hash: String,
+    oid: u64,
+    side: String,
+    dir: String,
+    px: i64,
+    sz: i64,
+    start_position: i64,
+    closed_pnl: i64,
+    crossed: bool,
+    fee: i64,
+    fee_token: String,
+    twap_id: Option<u64>,
+    cloid: Option<String>,
+    builder: Option<String>,
+    builder_fee: Option<i64>,
+    liquidated_user: Option<String>,
+    liquidation_mark_px: Option<i64>,
+    liquidation_method: Option<String>,
+    source_endpoint: String,
 }
 
-fn nullable_string(value: Option<&str>) -> String {
-    value
-        .map(|value| format!("'{}'", escape(value)))
-        .unwrap_or_else(|| "NULL".to_string())
+impl From<&TradeRecord> for TradeRow {
+    fn from(t: &TradeRecord) -> Self {
+        Self {
+            coin: t.coin.clone(),
+            user: t.user.clone(),
+            trade_time: from_ms(t.time_ms),
+            block_number: t.block_number,
+            tid: t.tid,
+            hash: t.hash.clone(),
+            oid: t.oid,
+            side: t.side.clone(),
+            dir: t.dir.clone(),
+            px: decimal_to_d64(&t.px),
+            sz: decimal_to_d64(&t.sz),
+            start_position: decimal_to_d64(&t.start_position),
+            closed_pnl: decimal_to_d64(&t.closed_pnl),
+            crossed: t.crossed,
+            fee: decimal_to_d64(&t.fee),
+            fee_token: t.fee_token.clone(),
+            twap_id: t.twap_id,
+            cloid: t.cloid.clone(),
+            builder: t.builder.clone(),
+            builder_fee: t.builder_fee.as_ref().map(decimal_to_d64),
+            liquidated_user: t.liquidation.as_ref().map(|l| l.liquidated_user.clone()),
+            liquidation_mark_px: t.liquidation.as_ref().map(|l| decimal_to_d64(&l.mark_px)),
+            liquidation_method: t.liquidation.as_ref().map(|l| l.method.clone()),
+            source_endpoint: t.source_endpoint.clone(),
+        }
+    }
 }
 
-fn nullable_decimal(value: Option<String>) -> String {
-    value
-        .map(|value| format!("toDecimal64('{}',12)", value))
-        .unwrap_or_else(|| "NULL".to_string())
+#[derive(Row, Serialize)]
+struct FundingRateRow {
+    coin: String,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    funding_time: DateTime<Utc>,
+    funding_rate: i64,
+    premium: Option<i64>,
+    source_endpoint: String,
 }
 
-fn nullable_u64(value: Option<u64>) -> String {
-    value
-        .map(|value| value.to_string())
-        .unwrap_or_else(|| "NULL".to_string())
+impl From<&FundingRateRecord> for FundingRateRow {
+    fn from(r: &FundingRateRecord) -> Self {
+        Self {
+            coin: r.coin.clone(),
+            funding_time: from_ms(r.funding_time_ms),
+            funding_rate: decimal_to_d64(&r.funding_rate),
+            premium: r.premium.as_ref().map(decimal_to_d64),
+            source_endpoint: r.source_endpoint.clone(),
+        }
+    }
 }
 
-fn escape(value: &str) -> String {
-    value.replace('\'', "\\'")
+fn level_to_tuple(level: &L2Level) -> (i128, i128, u32) {
+    (decimal_to_d128(&level.px), decimal_to_d128(&level.sz), level.n)
+}
+
+/// Convert a `Decimal` to its `Decimal(38, 12)` (`Decimal128`) wire
+/// representation (i128). Used by `L2SnapshotRow` since the L2 schema uses
+/// `Decimal(38, 12)` for bid/ask prices and sizes.
+///
+/// The only realistic failure is `rescale` no-op'ing because the target scale
+/// would overflow `rust_decimal`'s 96-bit mantissa — i.e. the input has more
+/// than 26 digits left of the decimal point. We log and write 0 in that case
+/// rather than losing the whole batch.
+fn decimal_to_d128(value: &Decimal) -> i128 {
+    const SCALE: u32 = 12;
+    let mut scaled = *value;
+    scaled.rescale(SCALE);
+    if scaled.scale() != SCALE {
+        tracing::warn!(
+            value = %value,
+            "Decimal value too large to rescale to Decimal(38, 12); writing 0"
+        );
+        return 0;
+    }
+    scaled.mantissa()
+}
+
+/// Convert a `Decimal` to its `Decimal(18, 12)` (`Decimal64`) wire
+/// representation (i64). Used by `TradeRow` and `FundingRateRow`, which both
+/// use `Decimal(18, 12)` in CH. Same failure modes as `decimal_to_d128`, plus
+/// the additional `i128 → i64` truncation guard for values that fit
+/// `Decimal128` but not `Decimal64`.
+fn decimal_to_d64(value: &Decimal) -> i64 {
+    const SCALE: u32 = 12;
+    let mut scaled = *value;
+    scaled.rescale(SCALE);
+    if scaled.scale() != SCALE {
+        tracing::warn!(
+            value = %value,
+            "Decimal value too large to rescale to Decimal(18, 12); writing 0"
+        );
+        return 0;
+    }
+    match i64::try_from(scaled.mantissa()) {
+        Ok(v) => v,
+        Err(_) => {
+            tracing::warn!(
+                value = %value,
+                "Decimal value overflows Decimal(18, 12); writing 0"
+            );
+            0
+        }
+    }
+}
+
+fn from_ms(ms: u64) -> DateTime<Utc> {
+    Utc.timestamp_millis_opt(ms as i64)
+        .single()
+        .unwrap_or_else(|| Utc.timestamp_millis_opt(0).single().unwrap())
 }

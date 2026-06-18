@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-const CONTENT = `# Pyth Core — Quick Start
+const CONTENT = `\`function () { return (
+\`# Pyth Core — Quick Start
 
 > Decentralized pull-based price oracle delivering 500+ feeds with 400ms updates across 100+ chains.
 > This file contains a curated quick-start. For full docs, fetch individual pages below.
@@ -99,19 +100,19 @@ eventSource.onMessage((update) => {
 ## Contract Addresses
 
 ### EVM Mainnet
-- Ethereum: 0x4305FB66699C3B2702D4d05CF36551390A4c69C6
-- Arbitrum: 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C
-- Base: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
-- Optimism: 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C
-- Polygon: 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C
-- Avalanche: 0x4305FB66699C3B2702D4d05CF36551390A4c69C6
-- BNB Chain: 0x4D7E825f80bDf85e913E0DD25A3ee446C0002EB0
+- Ethereum: **Updated Address**
+- Arbitrum: **Updated Address**
+- Base: **Updated Address**
+- Optimism: **Updated Address**
+- Polygon: **Updated Address**
+- Avalanche: **Updated Address**
+- BNB Chain: **Updated Address**
 
 ### Solana
 - Mainnet: FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH
 - Devnet: gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s
 
-Full list: https://docs.pyth.network/price-feeds/core/contract-addresses
+Full list: https://docs.pyth.network/price-feeds/core/upgrade/contract-addresses
 
 ## Popular Feed IDs
 
@@ -167,11 +168,11 @@ Separate order commitment from execution to prevent latency exploitation:
 
 ## Troubleshooting
 
-### StalePrice (0x19abf40e)
+### StalePrice (0x19_ab_f4_0e)
 Price hasn't been updated within the specified age parameter.
 **Fix**: Call \`updatePriceFeeds()\` with fresh data from Hermes before reading the price.
 
-### PriceFeedNotFound (0x14aebe68)
+### PriceFeedNotFound (0x14_ae_be_68)
 Price feed doesn't exist on-chain or the feed ID is wrong.
 **Fix**: Verify the price feed ID is correct. Call \`updatePriceFeeds()\` first. Verify the Pyth contract address matches the chain.
 
@@ -193,13 +194,21 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/core/fetch-price-updates.mdx — REST, streaming, and SDK methods
 - https://docs.pyth.network/price-feeds/core/how-pyth-works/index.mdx — Architecture overview
 - https://docs.pyth.network/price-feeds/core/use-real-time-data/index.mdx — Integration method selection
-- https://docs.pyth.network/price-feeds/core/contract-addresses/index.mdx — Full contract address list
+- https://docs.pyth.network/price-feeds/core/upgrade/contract-addresses/index.mdx — Full contract address list
 - https://docs.pyth.network/price-feeds/core/troubleshoot/evm.mdx — EVM error reference
 - https://docs.pyth.network/price-feeds/core/troubleshoot/svm.mdx — Solana error reference
 - https://docs.pyth.network/price-feeds/core/current-fees.mdx — Fee schedule by chain
-- https://docs.pyth.network/price-feeds/core/price-feeds/price-feed-ids.mdx — Complete feed catalog
+- https://docs.pyth.network/price-feeds/core/price-feed-ids.mdx — Complete feed catalog
 - https://docs.pyth.network/price-feeds/core/create-your-first-pyth-app/index.mdx — Step-by-step EVM tutorial
 - https://docs.pyth.network/price-feeds/core/migrate-an-app-to-pyth/chainlink.mdx — Chainlink migration guide
+
+\`) };
+
+
+
+
+
+
 `;
 
 export function GET() {

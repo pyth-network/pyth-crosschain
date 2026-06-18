@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { useDrawer as useDrawerImpl } from "./index.jsx";
 import { Button } from "../Button/index.jsx";
+import { useDrawer as useDrawerImpl } from "./index.jsx";
 
 const OpenButton = (
   props: Parameters<ReturnType<typeof useDrawerImpl>["open"]>[0],
@@ -19,15 +18,7 @@ const OpenButton = (
 };
 
 const meta = {
-  title: "hooks/useDrawer",
-  component: OpenButton,
   argTypes: {
-    title: {
-      control: "text",
-      table: {
-        category: "Contents",
-      },
-    },
     contents: {
       control: "text",
       table: {
@@ -44,14 +35,22 @@ const meta = {
         category: "Behavior",
       },
     },
+    title: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
   },
+  component: OpenButton,
+  title: "hooks/useDrawer",
 } satisfies Meta<typeof OpenButton>;
 export default meta;
 
 export const useDrawer = {
-  name: "useDrawer",
   args: {
-    title: "A drawer",
     contents: "This is a drawer",
+    title: "A drawer",
   },
+  name: "useDrawer",
 } satisfies StoryObj<typeof OpenButton>;

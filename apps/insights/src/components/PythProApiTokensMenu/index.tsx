@@ -7,10 +7,9 @@ import { Tooltip } from "@pythnetwork/component-library/Tooltip";
 import { sentenceCase } from "change-case";
 import { useState } from "react";
 import { Label } from "react-aria-components";
-
-import classes from "./index.module.scss";
 import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
 import { DATA_SOURCES_REQUIRING_API_TOKENS } from "../../schemas/pyth/pyth-pro-demo-schema";
+import classes from "./index.module.scss";
 
 type PythProApiTokensMenuProps = Partial<Pick<ButtonProps<never>, "variant">>;
 

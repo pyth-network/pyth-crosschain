@@ -6,9 +6,12 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 axum = { version = "0.6.20", features = ["json"] }
-chrono = { version = "0.4.38", features = ["clock"] }
+chrono = { version = "0.4.38", features = ["clock", "serde"] }
 clap = { version = "4.5.38", features = ["derive"] }
+clickhouse = { version = "0.15", default-features = false, features = ["rustls-tls", "chrono"] }
+fastrand = "2.3.0"
 config = { version = "0.14.1", default-features = false, features = ["yaml"] }
+derivative = "2.2.0"
 futures = "0.3.31"
 prometheus = "0.13.4"
 prost = "0.12.6"

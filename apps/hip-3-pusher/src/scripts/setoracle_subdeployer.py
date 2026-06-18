@@ -5,6 +5,7 @@ from eth_account import Account
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
 from hyperliquid.utils.signing import get_timestamp_ms, sign_l1_action
+from hyperliquid.utils.types import Meta, SpotMeta
 
 
 def main() -> None:
@@ -59,7 +60,12 @@ def main() -> None:
     print(f"Using {network_name} URL: {base_url}")
 
     deployer_account = Account.from_key(Path(args.private_key_file).read_text().strip())
-    deployer_exchange = Exchange(wallet=deployer_account, base_url=base_url)
+    deployer_exchange = Exchange(
+        wallet=deployer_account,
+        base_url=base_url,
+        meta=Meta(universe=[]),
+        spot_meta=SpotMeta(universe=[], tokens=[]),
+    )
     print("deployer address:", deployer_account.address)
     print("dex:", args.dex)
     print("subdeployer address:", args.subdeployer_address)

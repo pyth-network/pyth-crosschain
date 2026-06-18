@@ -1,0 +1,15 @@
+[package]
+name = "WormholeSimpleMajority"
+version = "0.2.0"
+published-at = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+
+[dependencies.Sui]
+git = "https://github.com/MystenLabs/sui.git"
+subdir = "crates/sui-framework/packages/sui-framework"
+rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
+
+[addresses]
+wormhole = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+
+[dev-addresses]
+wormhole = "0x100"

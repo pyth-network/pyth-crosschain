@@ -34,7 +34,6 @@ services:
       - "9093:9090"
     volumes:
       - ./prometheus.sample.yml:/etc/prometheus/prometheus.yml:ro
-      - ./alerts.sample.yml:/etc/prometheus/alerts.sample.yml:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"

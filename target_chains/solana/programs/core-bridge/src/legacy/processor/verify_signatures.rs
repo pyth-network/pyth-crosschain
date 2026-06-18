@@ -4,8 +4,8 @@ use crate::{
     state::{GuardianSet, SignatureSet},
     types::MessageHash,
 };
-use anchor_lang::{prelude::*, solana_program::sysvar};
-use solana_program::program_memory::sol_memcpy;
+use anchor_lang::prelude::*;
+use solana_program::{program_memory::sol_memcpy, sysvar};
 
 /// Offset schema used by the Sig Verify native program.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, InitSpace)]
@@ -63,7 +63,7 @@ pub struct VerifySignatures<'info> {
     #[account(
         address = sysvar::instructions::id() @ ErrorCode::AccountSysvarMismatch
     )]
-    instructions: AccountInfo<'info>,
+    instructions: UncheckedAccount<'info>,
 
     /// Previously needed sysvar.
     ///
@@ -264,7 +264,9 @@ fn deserialize_secp256k1_ix(
 
         let eth_pubkey_offset = usize::from(eth_pubkey_offset);
         let mut eth_pubkey = [0; 20];
-        sol_memcpy(&mut eth_pubkey, &ix_data[eth_pubkey_offset..], 20);
+        unsafe {
+            sol_memcpy(&mut eth_pubkey, &ix_data[eth_pubkey_offset..], 20);
+        }
 
         // The message offset should be the same for each sig verify offsets since each signature is
         // for the same message.
@@ -283,7 +285,9 @@ fn deserialize_secp256k1_ix(
 
     if let Some(message_offset) = expected_message_offset {
         let mut message = [0; 32];
-        sol_memcpy(&mut message, &ix_data[message_offset..], 32);
+        unsafe {
+            sol_memcpy(&mut message, &ix_data[message_offset..], 32);
+        }
 
         Ok(SigVerifyParameters {
             eth_pubkeys,

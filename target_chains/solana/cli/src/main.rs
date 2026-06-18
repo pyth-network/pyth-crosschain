@@ -13,9 +13,9 @@ use {
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
     solana_client::{rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig},
+    solana_commitment_config::CommitmentConfig,
     solana_compute_budget_interface::ComputeBudgetInstruction,
     solana_sdk::{
-        commitment_config::CommitmentConfig,
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         rent::Rent,

@@ -3,14 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SingleToggleGroup as SingleToggleGroupComponent } from "./index.jsx";
 
 const meta = {
-  component: SingleToggleGroupComponent,
   argTypes: {
-    rounded: {
-      control: "boolean",
-      table: {
-        category: "Appearance",
-      },
-    },
     items: {
       table: {
         disable: true,
@@ -21,16 +14,23 @@ const meta = {
         category: "Behavior",
       },
     },
+    rounded: {
+      control: "boolean",
+      table: {
+        category: "Appearance",
+      },
+    },
   },
+  component: SingleToggleGroupComponent,
 } satisfies Meta<typeof SingleToggleGroupComponent>;
 export default meta;
 
 export const SingleToggleGroup = {
   args: {
-    rounded: false,
     items: [
-      { id: "foo", children: "Foo" },
-      { id: "bar", children: "Bar" },
+      { children: "Foo", id: "foo" },
+      { children: "Bar", id: "bar" },
     ],
+    rounded: false,
   },
 } satisfies StoryObj<typeof SingleToggleGroupComponent>;

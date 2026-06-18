@@ -5,7 +5,7 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useIsSSR } from "react-aria";
-import { Button as BaseButton } from "react-aria-components";
+import type { Button as BaseButton } from "react-aria-components";
 
 import type { Props as ButtonProps } from "../Button";
 import { Button } from "../Button";
@@ -42,22 +42,22 @@ export const SearchButton = ({
   return (
     <div className={styles.searchButton}>
       <Button
-        className={clsx(styles.largeScreenSearchButton, props.className)}
-        variant="outline"
         beforeIcon={beforeIcon ?? <MagnifyingGlass />}
-        size="sm"
+        className={clsx(styles.largeScreenSearchButton, props.className)}
         rounded
+        size="sm"
+        variant="outline"
         {...props}
       >
         {largeScreenContent ?? <SearchShortcutText />}
       </Button>
       <Button
+        beforeIcon={beforeIcon ?? <MagnifyingGlass />}
         className={clsx(styles.smallScreenSearchButton, props.className)}
         hideText
-        variant="ghost"
-        beforeIcon={beforeIcon ?? <MagnifyingGlass />}
-        size="sm"
         rounded
+        size="sm"
+        variant="ghost"
         {...props}
       >
         {smallScreenContent ?? <SearchShortcutText />}

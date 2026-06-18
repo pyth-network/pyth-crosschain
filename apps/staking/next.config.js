@@ -1,36 +1,6 @@
 export default {
-  reactStrictMode: true,
-
-  pageExtensions: ["ts", "tsx", "mdx"],
-
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-
-  turbopack: {
-    resolveExtensions: [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".mts",
-      ".mjs",
-      ".cts",
-      ".cjs",
-    ],
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
-  },
-
   headers: () => [
     {
-      source: "/:path*",
       headers: [
         {
           key: "X-XSS-Protection",
@@ -54,14 +24,43 @@ export default {
             "vibrate=(), geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=self",
         },
       ],
+      source: "/:path*",
     },
   ],
 
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+
+  pageExtensions: ["ts", "tsx", "mdx"],
+  reactStrictMode: true,
+
   rewrites: () => [
     {
-      source: "/api/publishers-ranking",
       destination:
         "https://web-api.pyth.network/publishers_ranking?cluster=pythnet",
+      source: "/api/publishers-ranking",
     },
   ],
+
+  turbopack: {
+    resolveExtensions: [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
+    ],
+    rules: {
+      "*.svg": {
+        as: "*.js",
+        loaders: ["@svgr/webpack"],
+      },
+    },
+  },
 };

@@ -8,8 +8,8 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   CoinbaseWalletAdapter,
-  PhantomWalletAdapter,
   LedgerWalletAdapter,
+  PhantomWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   WalletConnectWalletAdapter,
@@ -60,14 +60,14 @@ export const WalletProvider = ({
             new WalletConnectWalletAdapter({
               network,
               options: {
-                relayUrl: "wss://relay.walletconnect.com",
-                projectId: walletConnectProjectId,
                 metadata: {
-                  name: metadata.applicationName,
                   description: metadata.description,
-                  url: metadata.metadataBase.toString(),
                   icons: ["https://pyth.network/token.svg"],
+                  name: metadata.applicationName,
+                  url: metadata.metadataBase.toString(),
                 },
+                projectId: walletConnectProjectId,
+                relayUrl: "wss://relay.walletconnect.com",
               },
             }),
           ]
@@ -78,7 +78,7 @@ export const WalletProvider = ({
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProviderImpl wallets={wallets} autoConnect>
+      <WalletProviderImpl autoConnect wallets={wallets}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProviderImpl>
     </ConnectionProvider>

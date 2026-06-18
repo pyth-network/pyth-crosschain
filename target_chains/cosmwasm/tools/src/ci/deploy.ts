@@ -4,8 +4,8 @@
 // to do that.
 
 import { readdirSync } from "fs";
-import { DeployerFactory } from "./deployer/index.js";
 import { CONFIG as NetworkConfig } from "./deployer/config.js";
+import { DeployerFactory } from "./deployer/index.js";
 import { NETWORKS } from "./network.js";
 
 async function deploy() {
@@ -85,9 +85,11 @@ async function deploy() {
     "0000000000000000000000000000000000000000000000000000000000000004";
 
   let inst_msg: Object = {
-    gov_chain: govChain,
+    chain_id: 18,
+    fee_denom: "uluna",
     gov_address: Buffer.from(govAddress, "hex").toString("base64"),
-    guardian_set_expirity: 86400,
+    gov_chain: govChain,
+    guardian_set_expirity: 86_400,
     initial_guardian_set: {
       addresses: [
         {
@@ -99,8 +101,6 @@ async function deploy() {
       ],
       expiration_time: 0,
     },
-    chain_id: 18,
-    fee_denom: "uluna",
   };
   console.log("Instantiating Wormhole contract");
   addresses[contract] = await deployer.instantiate(
@@ -118,27 +118,27 @@ async function deploy() {
   const pythChain = 1;
 
   inst_msg = {
-    wormhole_contract: addresses["wormhole.wasm"],
+    chain_id: 3,
     data_sources: [
       {
-        emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
         chain_id: pythChain,
+        emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
       },
     ],
-    governance_source: {
-      emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
-        "base64",
-      ),
-      chain_id: pythChain,
-    },
-    governance_source_index: 0,
-    governance_sequence_number: 0,
-    chain_id: 3,
-    valid_time_period_secs: 60,
     fee: {
       amount: "1",
       denom: "uluna",
     },
+    governance_sequence_number: 0,
+    governance_source: {
+      chain_id: pythChain,
+      emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
+        "base64",
+      ),
+    },
+    governance_source_index: 0,
+    valid_time_period_secs: 60,
+    wormhole_contract: addresses["wormhole.wasm"],
   };
 
   console.log("Instantiating Pyth contract");

@@ -15,7 +15,7 @@ pub mod price_update;
 pub mod program;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "lazer")] {
+    if #[cfg(feature = "pro-compatible")] {
         declare_id!("rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp");
         pub const PYTH_PUSH_ORACLE_ID: Pubkey = pubkey!("pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou");
     } else {

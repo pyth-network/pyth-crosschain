@@ -1,5 +1,9 @@
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { Table } from "@pythnetwork/component-library/Table";
+import {
+  getPriceFeedAccountForProgram,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+} from "@pythnetwork/pyth-solana-receiver";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
@@ -18,6 +22,8 @@ type SponsoredFeed = {
 type SponsoredFeedsTableProps = {
   feeds: SponsoredFeed[];
   networkName: string;
+  showUpgradedAccountAddress?: boolean;
+  hideAccountAddress?: boolean;
 };
 
 type UpdateParamsProps = {
@@ -82,6 +88,8 @@ const UpdateParams = ({ feed, isDefault }: UpdateParamsProps) => {
 export const SponsoredFeedsTable = ({
   feeds,
   networkName,
+  showUpgradedAccountAddress = false,
+  hideAccountAddress = false,
 }: SponsoredFeedsTableProps) => {
   const paramCounts: Record<string, number> = {};
   for (const feed of feeds) {
@@ -97,7 +105,8 @@ export const SponsoredFeedsTable = ({
   const defaultCount =
     defaultParams === undefined ? 0 : (paramCounts[defaultParams] ?? 0);
 
-  const hasAccountAddress = feeds.some((feed) => !!feed.account_address);
+  const hasAccountAddress =
+    !hideAccountAddress && feeds.some((feed) => !!feed.account_address);
 
   const columns = useMemo(
     () => [
@@ -116,6 +125,15 @@ export const SponsoredFeedsTable = ({
             },
           ]
         : []),
+      ...(showUpgradedAccountAddress
+        ? [
+            {
+              id: "upgradedAccountAddress",
+              name: "Upgraded Account Address",
+              alignment: "left" as const,
+            },
+          ]
+        : []),
       {
         id: "priceFeedId",
         name: "Price Feed Id",
@@ -127,7 +145,7 @@ export const SponsoredFeedsTable = ({
         alignment: "left" as const,
       },
     ],
-    [hasAccountAddress],
+    [hasAccountAddress, showUpgradedAccountAddress],
   );
 
   const rows = useMemo(
@@ -141,6 +159,7 @@ export const SponsoredFeedsTable = ({
           priceFeedId: ReactNode;
           updateParameters: ReactNode;
           accountAddress: ReactNode | undefined;
+          upgradedAccountAddress: ReactNode | undefined;
         } = {
           name: <span className={styles.nameLabel}>{feed.alias}</span>,
           priceFeedId: (
@@ -148,6 +167,7 @@ export const SponsoredFeedsTable = ({
           ),
           updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
           accountAddress: undefined,
+          upgradedAccountAddress: undefined,
         };
 
         if (hasAccountAddress) {
@@ -158,12 +178,25 @@ export const SponsoredFeedsTable = ({
           ) : undefined;
         }
 
+        if (showUpgradedAccountAddress) {
+          const upgradedAddress = getPriceFeedAccountForProgram(
+            0,
+            feed.id,
+            PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+          ).toBase58();
+          rowData.upgradedAccountAddress = (
+            <CopyButton text={upgradedAddress}>
+              {truncateHex(upgradedAddress)}
+            </CopyButton>
+          );
+        }
+
         return {
           id: feed.id,
           data: rowData,
         };
       }),
-    [feeds, defaultParams, hasAccountAddress],
+    [feeds, defaultParams, hasAccountAddress, showUpgradedAccountAddress],
   );
 
   if (feeds.length === 0) {

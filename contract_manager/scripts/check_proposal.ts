@@ -1,10 +1,4 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
+/** biome-ignore-all lint/suspicious/noConsole: CLI script */
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +13,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
   WormholeMultisigInstruction,
@@ -34,10 +29,10 @@ import { CosmWasmChain, EvmChain, SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import {
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  getCodeDigestWithoutAddress,
-  EvmWormholeContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  EvmWormholeContract,
+  getCodeDigestWithoutAddress,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -55,20 +50,20 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
   .options({
     cluster: {
-      type: "string",
       demandOption: true,
       desc: "Multsig Cluster name to check proposal on can be one of [devnet, testnet, mainnet-beta]",
-    },
-    proposal: {
       type: "string",
-      demandOption: true,
-      desc: "The proposal address to check",
     },
     "contract-type": {
-      type: "string",
+      choices: ["entropy", "lazer"],
       demandOption: false,
       desc: "Type of EVM contract to verify (entropy or lazer). Required when checking EvmExecute instructions.",
-      choices: ["entropy", "lazer"],
+      type: "string",
+    },
+    proposal: {
+      demandOption: true,
+      desc: "The proposal address to check",
+      type: "string",
     },
   });
 
@@ -85,9 +80,9 @@ async function main() {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const parsedInstructions = instructions.map((instruction) => {
     return multisigParser.parseInstruction({
-      programId: instruction.programId,
       data: instruction.data as Buffer,
       keys: instruction.keys as AccountMeta[],
+      programId: instruction.programId,
     });
   });
 
@@ -243,12 +238,15 @@ async function main() {
           }
         }
       }
-      if (instruction.governanceAction instanceof UpdateTrustedSigner264Bit) {
+      if (
+        instruction.governanceAction instanceof UpdateTrustedSigner264Bit ||
+        instruction.governanceAction instanceof UpdateTrustedSigner256Bit
+      ) {
         const { targetChainId, publicKey, expiresAt } =
           instruction.governanceAction;
 
         console.log(
-          `Verifying UpdateTrustedSigner264Bit on '${targetChainId}'`,
+          `Verifying ${instruction.governanceAction.action} on '${targetChainId}'`,
         );
 
         const expiresAtMs = expiresAt * 1000n;
@@ -309,8 +307,8 @@ async function main() {
           }
 
           await chain.updateLazerMeta(packagePath, {
-            version: version.toString(),
             receiver_chain_id: chain.getWormholeChainId(),
+            version: version.toString(),
           });
           const pkg = await chain.buildPackage(packagePath);
           const buildHash = Buffer.from(pkg.digest).toString("hex");

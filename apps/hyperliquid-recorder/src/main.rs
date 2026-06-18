@@ -7,9 +7,11 @@ use hyperliquid_recorder::{
     config::AppConfig,
     health::{start_http_servers, HealthState},
     metrics::RecorderMetrics,
-    recorder::{RecorderRuntime, WriterRuntimeConfig},
+    recorder::{FundingRuntimeConfig, RecorderRuntime, WriterRuntimeConfig},
 };
 use tokio::signal::unix::{signal, SignalKind};
+
+const FUNDING_PERIOD_SECONDS: u64 = 3600;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -27,14 +29,16 @@ async fn main() -> ExitCode {
 async fn run() -> Result<()> {
     let cli = Cli::parse();
     let config = AppConfig::from_sources(cli.config.as_deref())?;
+    tracing::info!(?config, "loaded recorder config");
 
     let writer_client = create_client_with_retry(config.clone(), 30).await?;
-    let ping_client = create_client_with_retry(config.clone(), 30).await?;
 
     let metrics = Arc::new(RecorderMetrics::new()?);
     let health = HealthState::new(
         config.markets.iter().map(|m| m.coin.clone()).collect(),
         config.ready_stale_seconds,
+        config.funding_poll_seconds,
+        FUNDING_PERIOD_SECONDS * 2,
     );
     let (health_server, metrics_server) = start_http_servers(
         config.health_port,
@@ -52,6 +56,11 @@ async fn run() -> Result<()> {
             batch_max_rows: config.batch_max_rows,
             batch_flush_seconds: config.batch_flush_seconds,
             queue_max_rows: config.queue_max_rows,
+        },
+        FundingRuntimeConfig {
+            info_api_url: config.info_api_url,
+            poll_seconds: config.funding_poll_seconds,
+            lookback_seconds: config.funding_lookback_seconds,
         },
         metrics.clone(),
         health.clone(),
@@ -71,7 +80,6 @@ async fn run() -> Result<()> {
     runtime.wait_forever().await;
     health_server.abort();
     metrics_server.abort();
-    drop(ping_client);
     Ok(())
 }
 

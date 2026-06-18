@@ -118,5 +118,30 @@
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "monad",
     "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "injective_evm_testnet",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "fantom_sonic_mainnet",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "injective_evm",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "berachain_mainnet",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "hyperevm",
+    "type": "EvmLazerContract"
   }
 ]

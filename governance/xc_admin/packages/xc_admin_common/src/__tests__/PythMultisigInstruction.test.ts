@@ -1,20 +1,21 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
 import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
 
 test("Pyth multisig instruction parse: create price account", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
@@ -31,8 +32,8 @@ test("Pyth multisig instruction parse: create price account", (done) => {
     .addPrice(-8, 1)
     .accounts({
       fundingAccount: PublicKey.unique(),
-      productAccount: PublicKey.unique(),
       priceAccount: PublicKey.unique(),
+      productAccount: PublicKey.unique(),
     })
     .instruction()
     .then((instruction) => {
@@ -100,7 +101,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
 });
 
 test("Pyth multisig instruction parse: set minimum publishers", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(

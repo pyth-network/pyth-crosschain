@@ -46,8 +46,8 @@ pub fn upgrade_guardian_set(
             AccountMeta::new(claim, false),
             AccountMeta::new(guardian_set_old, false),
             AccountMeta::new(guardian_set_new, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk_ids::system_program::id(), false),
         ],
-        data: (Instruction::UpgradeGuardianSet, UpgradeGuardianSetData {}).try_to_vec()?,
+        data: borsh::to_vec(&(Instruction::UpgradeGuardianSet, UpgradeGuardianSetData {}))?,
     })
 }

@@ -2,20 +2,20 @@ import type {
   Account,
   Chain,
   Client,
-  RpcSchema,
-  WalletActions,
-  PublicActions,
-  WebSocketTransport,
   HttpTransport,
+  PublicActions,
+  RpcSchema,
   Transport,
+  WalletActions,
+  WebSocketTransport,
 } from "viem";
 import {
   createPublicClient,
   createWalletClient,
   defineChain,
   http,
-  webSocket,
   publicActions,
+  webSocket,
 } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
@@ -25,9 +25,9 @@ import { isWsEndpoint } from "../utils.js";
 const UNKNOWN_CHAIN_CONFIG = {
   name: "Unknown",
   nativeCurrency: {
+    decimals: 18,
     name: "Unknown",
     symbol: "Unknown",
-    decimals: 18,
   },
   rpcUrls: {
     default: {
@@ -68,8 +68,8 @@ export const createClient = async (
   }).getChainId();
 
   return createWalletClient({
-    transport,
     account: mnemonicToAccount(mnemonic),
     chain: getChainById(chainId),
+    transport,
   }).extend(publicActions);
 };

@@ -67,12 +67,12 @@ describe("convert_date_to_timestamp tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data.unix_seconds).toBe(1767225600);
-    expect(data.unix_microseconds).toBe(1767225600000000);
+    expect(data.unix_seconds).toBe(1_767_225_600);
+    expect(data.unix_microseconds).toBe(1_767_225_600_000_000);
     expect(data.iso8601).toBe("2026-01-01T00:00:00.000Z");
     expect(data.is_in_valid_range).toBe(true);
     expect(data.server_time_utc).toBeDefined();
-    expect(data.valid_range.from_unix).toBe(1743465600);
+    expect(data.valid_range.from_unix).toBe(1_743_465_600);
   });
 
   it("converts ISO 8601 with timezone", async () => {
@@ -85,7 +85,7 @@ describe("convert_date_to_timestamp tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data.unix_seconds).toBe(1767268800);
+    expect(data.unix_seconds).toBe(1_767_268_800);
     expect(data.iso8601).toBe("2026-01-01T12:00:00.000Z");
   });
 
@@ -99,7 +99,7 @@ describe("convert_date_to_timestamp tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data.unix_seconds).toBe(1735689600);
+    expect(data.unix_seconds).toBe(1_735_689_600);
     expect(data.is_in_valid_range).toBe(false);
   });
 
@@ -263,7 +263,7 @@ describe("convert_date_to_timestamp tool", () => {
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
     // 12:00 IST = 06:30 UTC
-    expect(data.unix_seconds).toBe(1767249000);
+    expect(data.unix_seconds).toBe(1_767_249_000);
     expect(data.iso8601).toBe("2026-01-01T06:30:00.000Z");
   });
 });

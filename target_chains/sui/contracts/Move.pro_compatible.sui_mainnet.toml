@@ -1,0 +1,16 @@
+[package]
+name = "PythProCompatible"
+version = "0.0.2"
+published-at = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
+
+[dependencies.Sui]
+git = "https://github.com/MystenLabs/sui.git"
+subdir = "crates/sui-framework/packages/sui-framework"
+rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
+
+[dependencies.WormholeSimpleMajority]
+local = "../vendor/wormhole_simple_majority/wormhole"
+
+[addresses]
+pyth = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
+wormhole = "0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4"

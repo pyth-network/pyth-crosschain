@@ -1,12 +1,12 @@
 import type { InputProps } from "@headlessui/react";
 import {
-  Field,
-  Label,
   Description,
+  Field,
   Input as HeadlessUiInput,
+  Label,
 } from "@headlessui/react";
 import clsx from "clsx";
-import type { Ref, ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { forwardRef } from "react";
 
 import { ErrorTooltip } from "../ErrorTooltip";
@@ -39,12 +39,12 @@ const InputImpl = (
     </Label>
     <div className="relative h-12 w-full">
       <HeadlessUiInput
-        ref={ref}
-        invalid={invalid === true || validationError !== undefined}
         className={clsx(
           "flex size-full flex-row items-center justify-between truncate rounded border border-neutral-500 bg-transparent px-3 text-left text-sm placeholder:opacity-60 data-[focus]:border-pythpurple-600 data-[invalid]:border-red-500 data-[invalid]:data-[focus]:border-pythpurple-600 data-[invalid]:pl-3 data-[invalid]:pr-12 data-[focus]:ring-pythpurple-600 dark:data-[focus]:border-pythpurple-400 dark:data-[invalid]:border-red-600 dark:data-[invalid]:data-[focus]:border-pythpurple-400 dark:data-[focus]:ring-pythpurple-400",
           className,
         )}
+        invalid={invalid === true || validationError !== undefined}
+        ref={ref}
         {...props}
       />
       {validationError && (

@@ -7,6 +7,8 @@ slug: /price-feeds/core/use-real-time-data/pull-integration/cosmwasm
 Cosmwasm contracts can update and fetch the Pyth prices using the Pyth Cosmwasm Contract, deployed on their network.
 The documented source code can be found [here](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/contracts/pyth).
 
+<UpgradeCallout chain="cosmwasm" />
+
 ## Update Price Feeds
 
 The mechanism by which price feeds are updated on Cosmwasm is explained [here](../../pull-updates). The [@pythnetwork/price-service-client](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js) typescript package can be used to fetch the latest price feed data which then can be passed to the contract as the `UpdatePriceFeeds` ExecuteMsg.

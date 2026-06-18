@@ -9,14 +9,14 @@ crate-type = ["cdylib", "lib"]
 name = "pyth_solana_receiver"
 
 [features]
-no-entrypoint = []
+no-entrypoint = ["dep:rand"]
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 test-bpf = []
-lazer = [
-    "pyth-solana-receiver-sdk/lazer",
-    "wormhole-core-bridge-solana/lazer",
+pro-compatible = [
+    "pyth-solana-receiver-sdk/pro-compatible",
+    "wormhole-core-bridge-solana/pro-compatible",
 ]
 
 [dependencies]
@@ -29,13 +29,15 @@ byteorder = "1.4.3"
 wormhole-core-bridge-solana = { workspace = true }
 wormhole-raw-vaas = { workspace = true }
 pyth-solana-receiver-sdk = { workspace = true }
-rand = "0.8.5"
+rand = { version = "0.8.5", optional = true }
 
 [dev-dependencies]
 cfg-if = { workspace = true }
 solana-sdk = { workspace = true }
+solana-program-test = { workspace = true }
 tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
+wormhole-solana = { workspace = true }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 common-test-utils = { path = "../../common_test_utils" }

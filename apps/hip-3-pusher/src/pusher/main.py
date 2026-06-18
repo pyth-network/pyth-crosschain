@@ -46,8 +46,8 @@ async def main() -> None:
     logger.info("Starting hip-3-pusher...")
     config = load_config()
 
-    price_state = PriceState(config)
     metrics = Metrics(config)
+    price_state = PriceState(config, metrics)
     metrics.set_price_configs(config.hyperliquid.market_name, config.price)
 
     publisher = Publisher(config, price_state, metrics)
@@ -67,6 +67,7 @@ async def main() -> None:
         price_state.seda_oracle_state,
         price_state.seda_mark_state,
         price_state.seda_external_state,
+        metrics=metrics,
     )
     user_limit_listener = UserLimitListener(
         config, metrics, publisher.user_limit_address

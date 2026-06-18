@@ -3,29 +3,55 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/require-await */
-import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type {
+  HermesClient,
+  HexString,
+  UnixTimestamp,
+} from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 import type { WatchContractEventOnLogsParameter } from "viem";
 import {
-  TransactionExecutionError,
   BaseError,
+  ContractFunctionExecutionError,
   ContractFunctionRevertedError,
   FeeCapTooLowError,
-  InternalRpcError,
   InsufficientFundsError,
-  ContractFunctionExecutionError,
+  TransactionExecutionError,
 } from "viem";
 
-import type { PushAttempt } from "../common.js";
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
-import type { DurationInSeconds } from "../utils.js";
-import { CustomGasStation } from "./custom-gas-station";
-import type { PythContract } from "./pyth-contract.js";
-import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
-import { PythAbi } from "./pyth-abi.js";
-import type { SuperWalletClient } from "./super-wallet.js";
 import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
+import type { GasPrice, GasPriceConfig } from "./gas-price.js";
+import {
+  describeGasPrice,
+  escalateGasPrice,
+  gasPriceToTxParams,
+  getGasPrice,
+  scaleGasPrice,
+} from "./gas-price.js";
+import type { PythAbi } from "./pyth-abi.js";
+import type { PythContract } from "./pyth-contract.js";
+import type { SuperWalletClient } from "./super-wallet.js";
+
+type PushAttempt = {
+  nonce: number;
+  gasPrice: GasPrice;
+};
+
+// Some RPC providers surface the same underlying failure through different viem
+// error classes. For example "replacement transaction underpriced" comes back as
+// an `InternalRpcError` (code -32000) on most chains, but Soneium/Alchemy returns
+// it as an `InvalidInputRpcError` (code -32602, "Missing or invalid parameters").
+// Matching on the error text across the whole cause chain (rather than on a
+// specific class) keeps the detection robust across providers.
+const errorChainIncludes = (error: BaseError, needle: string): boolean =>
+  error.walk(
+    (e) =>
+      (e instanceof BaseError && e.details.includes(needle)) ||
+      (e instanceof Error && e.message.includes(needle)),
+  ) !== null;
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -63,7 +89,7 @@ export class EvmPriceListener extends ChainPriceListener {
   private async startWatching() {
     this.pythContract.watchEvent.PriceFeedUpdate(
       { id: this.priceItems.map((item) => addLeading0x(item.id)) },
-      { strict: true, onLogs: this.onPriceFeedUpdate.bind(this) },
+      { onLogs: this.onPriceFeedUpdate.bind(this), strict: true },
     );
   }
 
@@ -129,9 +155,8 @@ export class EvmPricePusher implements IPricePusher {
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
+    private gasPriceConfig: GasPriceConfig,
     private gasLimit?: number,
-    private customGasStation?: CustomGasStation,
-    private gasPrice?: number,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -177,16 +202,15 @@ export class EvmPricePusher implements IPricePusher {
       throw error;
     }
 
-    // Gas price in networks with transaction type eip1559 represents the
-    // addition of baseFee and priorityFee required to land the transaction. We
-    // are using this to remain compatible with the networks that doesn't
-    // support this transaction type.
-    let gasPrice =
-      this.gasPrice ??
-      Number(
-        await (this.customGasStation?.getCustomGasPrice() ??
-          this.client.getGasPrice()),
-      );
+    // Fetch a fresh gas price. With the eip1559 strategy this is sourced from
+    // the chain base fee and priority fee (avoiding the deprecated eth_gasPrice
+    // RPC); with the legacy strategy it falls back to the single gasPrice model
+    // for chains that don't support eip1559 transactions.
+    let gasPrice = await getGasPrice(
+      this.client,
+      this.gasPriceConfig,
+      this.logger,
+    );
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     this.pusherAddress ??= this.client.account.address;
@@ -202,24 +226,28 @@ export class EvmPricePusher implements IPricePusher {
       if (this.lastPushAttempt.nonce <= lastExecutedNonce) {
         this.lastPushAttempt = undefined;
       } else {
-        gasPriceToOverride =
-          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier;
+        gasPriceToOverride = scaleGasPrice(
+          this.lastPushAttempt.gasPrice,
+          this.overrideGasPriceMultiplier,
+        );
       }
     }
 
-    if (
-      gasPriceToOverride !== undefined &&
-      gasPriceToOverride > Number(gasPrice)
-    ) {
-      gasPrice = Math.min(
+    if (gasPriceToOverride !== undefined) {
+      // Bump every fee component to override the stuck transaction, capping the
+      // bump relative to the fresh gas price returned by the RPC.
+      gasPrice = escalateGasPrice(
+        gasPrice,
         gasPriceToOverride,
-        gasPrice * this.overrideGasPriceMultiplierCap,
+        this.overrideGasPriceMultiplierCap,
       );
     }
 
     const txNonce = lastExecutedNonce + 1;
 
-    this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
+    this.logger.debug(
+      `Using ${describeGasPrice(gasPrice)} and nonce: ${txNonce}`,
+    );
 
     const pubTimesToPushParam = pubTimesToPush.map(BigInt);
 
@@ -227,8 +255,8 @@ export class EvmPricePusher implements IPricePusher {
 
     // Update lastAttempt
     this.lastPushAttempt = {
-      nonce: txNonce,
       gasPrice: gasPrice,
+      nonce: txNonce,
     };
 
     try {
@@ -236,13 +264,13 @@ export class EvmPricePusher implements IPricePusher {
         await this.pythContract.simulate.updatePriceFeedsIfNecessary(
           [priceFeedUpdateDataWith0x, priceIdsWith0x, pubTimesToPushParam],
           {
-            value: updateFee,
-            gasPrice: BigInt(Math.ceil(gasPrice)),
-            nonce: txNonce,
             gas:
               this.gasLimit === undefined
                 ? undefined
                 : BigInt(Math.ceil(this.gasLimit)),
+            ...gasPriceToTxParams(gasPrice),
+            nonce: txNonce,
+            value: updateFee,
           },
         );
 
@@ -250,7 +278,7 @@ export class EvmPricePusher implements IPricePusher {
 
       const hash = await this.client.writeContract(request);
 
-      this.logger.info({ hash }, "Price update sent");
+      this.logger.debug({ hash }, "Price update sent");
 
       void this.waitForTransactionReceipt(hash);
     } catch (error: any) {
@@ -267,7 +295,7 @@ export class EvmPricePusher implements IPricePusher {
               e.data?.errorName === "NoFreshUpdate",
           )
         ) {
-          this.logger.info(
+          this.logger.debug(
             "Simulation reverted because none of the updates are fresh. This is an expected behaviour to save gas. Skipping this push.",
           );
           return;
@@ -284,11 +312,7 @@ export class EvmPricePusher implements IPricePusher {
 
         if (
           error.walk((e) => e instanceof FeeCapTooLowError) ||
-          error.walk(
-            (e) =>
-              e instanceof InternalRpcError &&
-              e.details.includes("replacement transaction underpriced"),
-          )
+          errorChainIncludes(error, "replacement transaction underpriced")
         ) {
           this.logger.warn(
             "The gas price of the transaction is too low or there is an existing transaction with higher gas with the same nonce. " +
@@ -307,7 +331,7 @@ export class EvmPricePusher implements IPricePusher {
                 e.message.includes("Nonce provided for the transaction")),
           )
         ) {
-          this.logger.info(
+          this.logger.debug(
             "The nonce is incorrect. This is an expected behaviour in high frequency or multi-instance setup. Skipping this push.",
           );
           return;
@@ -326,7 +350,7 @@ export class EvmPricePusher implements IPricePusher {
         // We normally crash on unknown failures but we believe that this type of error is safe to skip. The other reason is that
         // wometimes we see a TransactionExecutionError because of the nonce without any details and it is not catchable.
         if (error.walk((e) => e instanceof TransactionExecutionError)) {
-          this.logger.error(
+          this.logger.warn(
             { err: error },
             "Transaction execution failed. This is an expected behaviour in high frequency or multi-instance setup. " +
               "Please review this error and file an issue if it is a bug. Skipping this push.",
@@ -341,7 +365,7 @@ export class EvmPricePusher implements IPricePusher {
           error.message.includes("nonce too low") ||
           error.message.includes("invalid nonce")
         ) {
-          this.logger.info(
+          this.logger.debug(
             "The nonce is incorrect (are multiple users using this account?). Skipping this push.",
           );
           return;
@@ -369,7 +393,7 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         if (error.message.includes("could not replace existing tx")) {
-          this.logger.error(
+          this.logger.debug(
             "A transaction with the same nonce has been mined and this one is no longer needed. Skipping this push.",
           );
           return;
@@ -395,11 +419,14 @@ export class EvmPricePusher implements IPricePusher {
       switch (receipt.status) {
         case "success": {
           this.logger.debug({ hash, receipt }, "Price update successful");
+          // Keep one non-debug hash line per landed tx: the bundled Grafana
+          // "Tx Hash" panel scrapes this message from Loki and extracts {{.hash}}.
+          // Demoting it to debug hides successful hashes under the default log level.
           this.logger.info({ hash }, "Price update successful");
           break;
         }
         default: {
-          this.logger.info(
+          this.logger.debug(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
               "This is an expected behaviour in high frequency or multi-instance setup.",

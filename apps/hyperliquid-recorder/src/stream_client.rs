@@ -65,7 +65,7 @@ pub async fn run_stream_worker(
                     details = status.message(),
                     "L2 stream error"
                 );
-                tokio::time::sleep(Duration::from_secs(delay_seconds)).await;
+                jittered_backoff(delay_seconds).await;
                 delay_seconds = (delay_seconds.saturating_mul(2)).min(max_backoff_seconds.max(1));
             }
             Err(StreamError::Other(err)) => {
@@ -78,7 +78,7 @@ pub async fn run_stream_worker(
                     .with_label_values(&[&market.coin, "EXCEPTION"])
                     .inc();
                 tracing::error!(coin = market.coin, error = ?err, "unexpected L2 stream failure");
-                tokio::time::sleep(Duration::from_secs(delay_seconds)).await;
+                jittered_backoff(delay_seconds).await;
                 delay_seconds = (delay_seconds.saturating_mul(2)).min(max_backoff_seconds.max(1));
             }
         }
@@ -128,7 +128,7 @@ pub async fn run_trades_stream_worker(
                     details = status.message(),
                     "trades stream error"
                 );
-                tokio::time::sleep(Duration::from_secs(delay_seconds)).await;
+                jittered_backoff(delay_seconds).await;
                 delay_seconds = (delay_seconds.saturating_mul(2)).min(max_backoff_seconds.max(1));
             }
             Err(StreamError::Other(err)) => {
@@ -141,7 +141,7 @@ pub async fn run_trades_stream_worker(
                     .with_label_values(&["EXCEPTION"])
                     .inc();
                 tracing::error!(error = ?err, "unexpected trades stream failure");
-                tokio::time::sleep(Duration::from_secs(delay_seconds)).await;
+                jittered_backoff(delay_seconds).await;
                 delay_seconds = (delay_seconds.saturating_mul(2)).min(max_backoff_seconds.max(1));
             }
         }
@@ -188,6 +188,8 @@ async fn stream_once(
         if stop_token.is_cancelled() {
             break;
         }
+        let bids = collect_levels(&update.bids, &market.coin, "bid", &metrics);
+        let asks = collect_levels(&update.asks, &market.coin, "ask", &metrics);
         let snapshot = L2Snapshot {
             coin: update.coin,
             block_time_ms: update.time,
@@ -196,16 +198,8 @@ async fn stream_once(
             n_sig_figs: market.n_sig_figs,
             mantissa: market.mantissa,
             source_endpoint: endpoint.to_string(),
-            bids: update
-                .bids
-                .iter()
-                .filter_map(|level| to_level(level).ok())
-                .collect(),
-            asks: update
-                .asks
-                .iter()
-                .filter_map(|level| to_level(level).ok())
-                .collect(),
+            bids,
+            asks,
         };
 
         metrics.record_snapshot(&snapshot);
@@ -222,7 +216,7 @@ async fn stream_once(
         interval_rows_streamed = interval_rows_streamed.saturating_add(1);
         let elapsed = last_stream_report.elapsed();
         if elapsed >= Duration::from_secs(5) {
-            tracing::info!(
+            tracing::debug!(
                 coin = %market.coin,
                 interval_rows = interval_rows_streamed,
                 total_rows = total_rows_streamed,
@@ -236,7 +230,7 @@ async fn stream_once(
 
     if interval_rows_streamed > 0 {
         let elapsed = last_stream_report.elapsed();
-        tracing::info!(
+        tracing::debug!(
             coin = %market.coin,
             interval_rows = interval_rows_streamed,
             total_rows = total_rows_streamed,
@@ -281,10 +275,10 @@ async fn stream_trades_once(
     let ping_sender = request_sender.clone();
     let ping_stop_token = stop_token.clone();
     let ping_handle = tokio::spawn(async move {
-        while !ping_stop_token.is_cancelled() {
-            tokio::time::sleep(Duration::from_secs(30)).await;
-            if ping_stop_token.is_cancelled() {
-                break;
+        loop {
+            tokio::select! {
+                _ = ping_stop_token.cancelled() => break,
+                _ = tokio::time::sleep(Duration::from_secs(30)) => {}
             }
             let request = SubscribeRequest {
                 request: Some(subscribe_request::Request::Ping(Ping {
@@ -333,7 +327,7 @@ async fn stream_trades_once(
                         interval_rows_streamed = interval_rows_streamed.saturating_add(trade_count);
                         let elapsed = last_stream_report.elapsed();
                         if elapsed >= Duration::from_secs(5) {
-                            tracing::info!(
+                            tracing::debug!(
                                 interval_rows = interval_rows_streamed,
                                 total_rows = total_rows_streamed,
                                 rows_per_second =
@@ -357,7 +351,7 @@ async fn stream_trades_once(
 
     if interval_rows_streamed > 0 {
         let elapsed = last_stream_report.elapsed();
-        tracing::info!(
+        tracing::debug!(
             interval_rows = interval_rows_streamed,
             total_rows = total_rows_streamed,
             rows_per_second = interval_rows_streamed as f64 / elapsed.as_secs_f64().max(1e-9),
@@ -373,6 +367,35 @@ fn to_level(level: &crate::proto::hyperliquid::L2Level) -> Result<L2Level> {
     let px = Decimal::from_str(&level.px)?;
     let sz = Decimal::from_str(&level.sz)?;
     Ok(L2Level { px, sz, n: level.n })
+}
+
+fn collect_levels(
+    levels: &[crate::proto::hyperliquid::L2Level],
+    coin: &str,
+    side: &str,
+    metrics: &RecorderMetrics,
+) -> Vec<L2Level> {
+    let mut out = Vec::with_capacity(levels.len());
+    for level in levels {
+        match to_level(level) {
+            Ok(parsed) => out.push(parsed),
+            Err(err) => {
+                metrics
+                    .l2_level_parse_errors
+                    .with_label_values(&[coin, side])
+                    .inc();
+                tracing::warn!(
+                    coin,
+                    side,
+                    px = %level.px,
+                    sz = %level.sz,
+                    error = ?err,
+                    "dropping L2 level with unparseable decimal"
+                );
+            }
+        }
+    }
+    out
 }
 
 async fn build_channel(endpoint: &str) -> Result<Channel> {
@@ -394,4 +417,14 @@ fn unix_millis_now() -> i64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or(Duration::ZERO)
         .as_millis() as i64
+}
+
+/// Full-jitter backoff: sleep a uniform random duration in [0, delay_seconds].
+/// Prevents thundering-herd reconnects when many workers back off in lockstep.
+async fn jittered_backoff(delay_seconds: u64) {
+    if delay_seconds == 0 {
+        return;
+    }
+    let jittered_ms = fastrand::u64(0..=delay_seconds.saturating_mul(1000));
+    tokio::time::sleep(Duration::from_millis(jittered_ms)).await;
 }

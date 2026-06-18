@@ -18,7 +18,7 @@ pub struct InitMessageV1<'info> {
         mut,
         owner = crate::ID
     )]
-    draft_message: AccountInfo<'info>,
+    draft_message: UncheckedAccount<'info>,
 }
 
 impl<'info> InitMessageV1<'info> {

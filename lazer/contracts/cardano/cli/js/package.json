@@ -1,0 +1,112 @@
+{
+  "dependencies": {
+    "@evolution-sdk/devnet": "1.1.29",
+    "@evolution-sdk/evolution": "0.3.29",
+    "@noble/curves": "^2.0.1",
+    "@pythnetwork/xc-admin-common": "workspace:*",
+    "@wormhole-foundation/sdk-definitions": "^0.10.12",
+    "date-fns": "catalog:",
+    "effect": "3.19.19",
+    "yargs": "catalog:"
+  },
+  "description": "TypeScript SDK for the Pyth Lazer Cardano contract",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/dockerode": "^4.0.1",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "jest": "catalog:",
+    "tsx": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "exports": {
+    "./cli": {
+      "import": {
+        "default": "./dist/esm/cli.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/cli.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "default": "./dist/esm/client.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/client.cjs"
+      }
+    },
+    "./devnet": {
+      "import": {
+        "default": "./dist/esm/devnet.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/devnet.cjs"
+      }
+    },
+    "./eval": {
+      "import": {
+        "default": "./dist/esm/eval.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/eval.cjs"
+      }
+    },
+    "./offchain": {
+      "import": {
+        "default": "./dist/esm/offchain.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/offchain.cjs"
+      }
+    },
+    "./package.json": "./package.json",
+    "./transactions": {
+      "import": {
+        "default": "./dist/esm/transactions.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/transactions.cjs"
+      }
+    },
+    "./utils": {
+      "import": {
+        "default": "./dist/esm/utils.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/utils.cjs"
+      }
+    },
+    "./wormhole": {
+      "import": {
+        "default": "./dist/esm/wormhole.mjs"
+      },
+      "require": {
+        "default": "./dist/cjs/wormhole.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "name": "@pythnetwork/pyth-lazer-cardano-cli",
+  "private": true,
+  "repository": {
+    "directory": "lazer/contracts/cardano/cli/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "cli": "pnpm tsx --env-file=.env src/cli.ts",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "type": "module",
+  "version": "0.0.0"
+}

@@ -18,7 +18,8 @@ import type {
   TxResult,
 } from "../base";
 import { PriceFeedContract } from "../base";
-import { Chain, StarknetChain } from "../chains";
+import type { Chain } from "../chains";
+import { StarknetChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class StarknetWormholeContract extends WormholeContract {
@@ -34,8 +35,8 @@ export class StarknetWormholeContract extends WormholeContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: StarknetWormholeContract.type,
     };
   }
@@ -135,8 +136,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
 
   toJson(): KeyValueConfig {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: StarknetPriceFeedContract.type,
     };
   }
@@ -162,8 +163,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
       await contract.valid_data_sources();
     return sources.map((source) => {
       return {
-        emitterChain: Number(source.emitter_chain_id),
         emitterAddress: source.emitter_address.toString(16).padStart(64, "0"),
+        emitterChain: Number(source.emitter_chain_id),
       };
     });
   }
@@ -220,8 +221,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
       throw new Error(JSON.stringify(result.Err));
     } else {
       return {
-        price: convertPrice(result.Ok.price),
         emaPrice: convertPrice(result.Ok.ema_price),
+        price: convertPrice(result.Ok.price),
       };
     }
   }
@@ -286,8 +287,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const source: { emitter_chain_id: bigint; emitter_address: bigint } =
       await contract.governance_data_source();
     return {
-      emitterChain: Number(source.emitter_chain_id),
       emitterAddress: source.emitter_address.toString(16).padStart(64, "0"),
+      emitterChain: Number(source.emitter_chain_id),
     };
   }
 
@@ -307,9 +308,9 @@ function convertPrice(obj: {
   publish_time: bigint;
 }): Price {
   return {
-    price: obj.price.toString(),
     conf: obj.conf.toString(),
     expo: obj.expo.toString(),
+    price: obj.price.toString(),
     publishTime: obj.publish_time.toString(),
   };
 }

@@ -6,7 +6,7 @@ import {
   Schema,
   TSchema,
 } from "@evolution-sdk/evolution";
-import type { ProviderOnlyClient } from "@evolution-sdk/evolution/sdk/client/Client";
+import type { ReadClient } from "@evolution-sdk/evolution/sdk/client/Client";
 
 const PYTH_STATE_NFT = AssetName.fromBytes(Buffer.from("Pyth State", "utf-8"));
 
@@ -32,7 +32,7 @@ const PythStateDatum = TSchema.Struct({
 
 export async function getPythState(
   policyId: string,
-  client: ProviderOnlyClient,
+  client: ReadClient,
 ): Promise<UTxO.UTxO> {
   const unit = policyId + AssetName.toHex(PYTH_STATE_NFT);
   return await client.getUtxoByUnit(unit);

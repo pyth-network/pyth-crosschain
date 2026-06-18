@@ -1,9 +1,9 @@
 import "server-only";
 
 import {
-  PythStakingClient,
   epochToDate,
   extractPublisherData,
+  PythStakingClient,
 } from "@pythnetwork/staking-sdk";
 import { Connection } from "@solana/web3.js";
 
@@ -17,13 +17,13 @@ export const getPublisherPoolData = async () => {
   const publisherData = extractPublisherData(poolData);
   return publisherData.map(
     ({ totalDelegation, totalDelegationDelta, pubkey, apyHistory }) => ({
+      apyHistory: apyHistory.map(({ epoch, apy }) => ({
+        apy,
+        date: epochToDate(epoch + 1n),
+      })),
+      pubkey: pubkey.toBase58(),
       totalDelegation,
       totalDelegationDelta,
-      pubkey: pubkey.toBase58(),
-      apyHistory: apyHistory.map(({ epoch, apy }) => ({
-        date: epochToDate(epoch + 1n),
-        apy,
-      })),
     }),
   );
 };

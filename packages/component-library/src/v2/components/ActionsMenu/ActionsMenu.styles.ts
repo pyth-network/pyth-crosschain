@@ -13,13 +13,12 @@ export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
      * class name applied to each individual menu item
      */
     menuItem: {
+      "&:hover": triggerHover,
       alignItems: "center",
       display: "flex",
       gap: theme.spacing(2),
       padding: theme.spacing(2),
       transition: "background-color .2s ease, color .2s ease",
-
-      "&:hover": triggerHover,
     },
 
     /**

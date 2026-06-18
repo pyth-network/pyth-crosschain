@@ -15,7 +15,7 @@ export async function addParseAndVerifyLeEcdsaUpdateCall(opts: {
       tx.object.clock(),
       tx.pure.vector("u8", update),
     ],
-    target: `${id}::pyth_lazer::parse_and_verify_le_ecdsa_update`,
+    target: `${id}::pyth_lazer::parse_and_verify_le_ecdsa_update_v2`,
   });
 }
 

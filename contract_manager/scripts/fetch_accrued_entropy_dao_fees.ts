@@ -9,11 +9,10 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { findEntropyContract } from "./common";
 import { EvmChain } from "../src/core/chains";
-import { EvmEntropyContract } from "../src/core/contracts";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -21,21 +20,21 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --chain <chain-id> | --all-chains <testnet|mainnet|all>",
   )
   .options({
-    chain: {
-      type: "string",
-      desc: "Fetch accrued fees for the entropy contract on this specific chain",
-      conflicts: "all-chains",
-    },
     "all-chains": {
-      type: "string",
-      conflicts: "chain",
       choices: ["testnet", "mainnet", "all"],
+      conflicts: "chain",
       desc: "Fetch accrued fees for all entropy contracts deployed on specified network type",
+      type: "string",
+    },
+    chain: {
+      conflicts: "all-chains",
+      desc: "Fetch accrued fees for the entropy contract on this specific chain",
+      type: "string",
     },
     "show-eth": {
-      type: "boolean",
       default: false,
       desc: "Show fees in ETH in addition to Wei",
+      type: "boolean",
     },
   })
   .check((argv) => {
@@ -72,20 +71,20 @@ async function fetchAccruedFees(
     }
 
     return {
-      chainId,
-      contractAddress,
       accruedFees: accruedFeesWei,
       accruedFeesEth,
+      chainId,
+      contractAddress,
       isMainnet,
     };
   } catch (error) {
     return {
-      chainId,
-      contractAddress,
       accruedFees: "0",
       accruedFeesEth: showEth ? "0" : undefined,
-      isMainnet,
+      chainId,
+      contractAddress,
       error: error instanceof Error ? error.message : "Unknown error",
+      isMainnet,
     };
   }
 }
@@ -110,8 +109,8 @@ function formatResults(results: FeeResult[], showEth: boolean): void {
       successfulResults.map((r) => {
         const baseData = {
           Chain: r.chainId,
-          Network: r.isMainnet ? "Mainnet" : "Testnet",
           "Fees (Wei)": r.accruedFees,
+          Network: r.isMainnet ? "Mainnet" : "Testnet",
         };
 
         if (showEth && r.accruedFeesEth) {
@@ -131,8 +130,8 @@ function formatResults(results: FeeResult[], showEth: boolean): void {
     console.table(
       failedResults.map((r) => ({
         Chain: r.chainId,
-        Network: r.isMainnet ? "Mainnet" : "Testnet",
         Error: r.error,
+        Network: r.isMainnet ? "Mainnet" : "Testnet",
       })),
     );
   }

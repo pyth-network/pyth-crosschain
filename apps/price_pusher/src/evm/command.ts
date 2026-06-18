@@ -10,21 +10,34 @@ import pino from "pino";
 import type { Options } from "yargs";
 
 import { Controller } from "../controller.js";
+import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems, isWsEndpoint } from "../utils.js";
+import { createEvmBalanceTracker } from "./balance-tracker.js";
 import { getCustomGasStation } from "./custom-gas-station.js";
 import { EvmPriceListener, EvmPricePusher } from "./evm.js";
 import { createPythContract } from "./pyth-contract.js";
 import { createClient } from "./super-wallet.js";
-import { PricePusherMetrics } from "../metrics.js";
-import { isWsEndpoint, filterInvalidPriceItems } from "../utils.js";
-import { createEvmBalanceTracker } from "./balance-tracker.js";
 
 export default {
-  command: "evm",
-  describe: "run price pusher for evm",
   builder: {
+    "base-fee-multiplier": {
+      default: 1.2,
+      description:
+        "[eip1559 strategy only] Multiplier applied to the chain base fee when computing " +
+        "maxFeePerGas. Values above 1 leave headroom for the base fee to grow between blocks. " +
+        "Default to 1.2",
+      required: false,
+      type: "number",
+    } as Options,
+    "custom-gas-station": {
+      description:
+        "If using a custom gas station, chainId of custom gas station to use",
+      required: false,
+      type: "number",
+    } as Options,
     endpoint: {
       description:
         "RPC endpoint URL for evm network. If you provide a normal HTTP endpoint, the pusher " +
@@ -32,60 +45,74 @@ export default {
         "`polling-frequency` command-line argument. If you provide a websocket RPC " +
         "endpoint (`ws[s]://...`), the price pusher will use event subscriptions to read " +
         "the current EVM price in addition to polling. ",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
-    "custom-gas-station": {
-      description:
-        "If using a custom gas station, chainId of custom gas station to use",
-      type: "number",
+    "gas-limit": {
+      description: "Gas limit for the transaction",
       required: false,
+      type: "number",
     } as Options,
-    "tx-speed": {
+    "gas-price": {
       description:
-        "txSpeed for custom gas station. choose between 'slow'|'standard'|'fast'",
-      choices: ["slow", "standard", "fast"],
+        "[legacy strategy only] Override the gas price (in wei) that would be received from the RPC",
+      required: false,
+      type: "number",
+    } as Options,
+    "gas-pricing-strategy": {
+      choices: ["eip1559", "legacy"],
+      default: "eip1559",
+      description:
+        "How to price transactions. 'eip1559' (default and recommended) sources the " +
+        "gas from the chain base fee and a priority fee, which is more robust as it " +
+        "avoids the deprecated eth_gasPrice RPC. Use 'legacy' for chains that do not " +
+        "support eip1559 transactions.",
       required: false,
     } as Options,
     "override-gas-price-multiplier": {
+      default: 1.1,
       description:
         "Multiply the previous gas price by this number if the transaction is not landing to override. " +
         "Please note that the gas price can grow exponentially on consecutive failures; " +
         "to set a cap on the multiplier, use the `override-gas-price-multiplier-cap` option." +
         "Default to 1.1",
-      type: "number",
       required: false,
-      default: 1.1,
+      type: "number",
     } as Options,
     "override-gas-price-multiplier-cap": {
+      default: 5,
       description:
         "Maximum gas price multiplier to use in override compared to the RPC returned " +
         "gas price. Default to 5",
-      type: "number",
       required: false,
-      default: 5,
-    } as Options,
-    "gas-limit": {
-      description: "Gas limit for the transaction",
       type: "number",
+    } as Options,
+    "priority-fee-multiplier": {
+      default: 1,
+      description:
+        "[eip1559 strategy only] Multiplier applied to the priority fee (tip) estimated from " +
+        "the RPC. Default to 1",
       required: false,
-    } as Options,
-    "gas-price": {
-      description: "Override the gas price that would be received from the RPC",
       type: "number",
+    } as Options,
+    "tx-speed": {
+      choices: ["slow", "standard", "fast"],
+      description:
+        "txSpeed for custom gas station. choose between 'slow'|'standard'|'fast'",
       required: false,
     } as Options,
     "update-fee-multiplier": {
+      default: 1,
       description:
         "Multiplier for the fee to update the price. It is useful in networks " +
         "such as Hedera where setting on-chain getUpdateFee as the transaction value " +
         "won't work. Default to 1",
-      type: "number",
       required: false,
-      default: 1,
+      type: "number",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
+    ...options.hermesAccessToken,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -95,12 +122,15 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
+  command: "evm",
+  describe: "run price pusher for evm",
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
       endpoint,
       priceConfigFile,
       priceServiceEndpoint,
+      hermesAccessToken,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -110,7 +140,10 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       gasLimit,
+      gasPricingStrategy,
       gasPrice,
+      baseFeeMultiplier,
+      priorityFeeMultiplier,
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
@@ -123,11 +156,13 @@ export default {
     });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(priceServiceEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint, {
+      accessToken: hermesAccessToken,
+    });
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =
@@ -184,6 +219,23 @@ export default {
       customGasStation,
       txSpeed,
     );
+
+    if (gasPricingStrategy === "eip1559" && (gasStation || gasPrice)) {
+      logger.warn(
+        "`--custom-gas-station`/`--tx-speed` and `--gas-price` only apply to the 'legacy' " +
+          "gas pricing strategy and will be ignored. Use `--base-fee-multiplier` and " +
+          "`--priority-fee-multiplier` to tune the 'eip1559' strategy.",
+      );
+    }
+
+    const gasPriceConfig = {
+      baseFeeMultiplier,
+      customGasStation: gasStation,
+      gasPrice,
+      priorityFeeMultiplier,
+      strategy: gasPricingStrategy,
+    };
+
     const evmPusher = new EvmPricePusher(
       hermesClient,
       client,
@@ -192,9 +244,8 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
+      gasPriceConfig,
       gasLimit,
-      gasStation,
-      gasPrice,
     );
 
     const controller = new Controller(
@@ -204,20 +255,20 @@ export default {
       evmPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
-        pushingFrequency,
         metrics: metrics!,
+        pushingFrequency,
       },
     );
 
     // Create and start the balance tracker if metrics are enabled
     if (metrics) {
       const balanceTracker = createEvmBalanceTracker({
-        client,
         address: client.account.address,
+        client,
+        logger,
+        metrics,
         network: await client.getChainId().then((id) => id.toString()),
         updateInterval: pushingFrequency,
-        metrics,
-        logger,
       });
 
       // Start the balance tracker

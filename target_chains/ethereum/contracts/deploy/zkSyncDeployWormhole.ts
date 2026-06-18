@@ -1,9 +1,9 @@
+import type { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import {
   DefaultStore,
   EvmChain,
   EvmWormholeContract,
 } from "@pythnetwork/contract-manager";
-import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 

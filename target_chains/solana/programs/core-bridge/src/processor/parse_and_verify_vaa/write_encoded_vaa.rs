@@ -14,7 +14,7 @@ pub struct WriteEncodedVaa<'info> {
         owner = crate::ID,
         constraint = EncodedVaa::require_draft_vaa(&draft_vaa, &write_authority)?
     )]
-    draft_vaa: AccountInfo<'info>,
+    draft_vaa: UncheckedAccount<'info>,
 }
 
 impl<'info> WriteEncodedVaa<'info> {
@@ -53,11 +53,13 @@ pub fn write_encoded_vaa(ctx: Context<WriteEncodedVaa>, args: WriteEncodedVaaArg
     let WriteEncodedVaaArgs { index, data } = args;
 
     let acc_data: &mut [_] = &mut ctx.accounts.draft_vaa.data.borrow_mut();
-    sol_memcpy(
-        &mut acc_data[(EncodedVaa::VAA_START + usize::try_from(index).unwrap())..],
-        &data,
-        data.len(),
-    );
+    unsafe {
+        sol_memcpy(
+            &mut acc_data[(EncodedVaa::VAA_START + usize::try_from(index).unwrap())..],
+            &data,
+            data.len(),
+        );
+    }
 
     // Done.
     Ok(())

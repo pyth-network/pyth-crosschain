@@ -16,7 +16,7 @@ export const StakingTimeline = ({ cooldownOnly, currentEpoch }: Props) => (
         <>
           <div className="size-4 rounded-full border border-dashed border-pythpurple-100" />
           <div>Warmup</div>
-          <Date options="time" className="text-right">
+          <Date className="text-right" options="time">
             {epochToDate(currentEpoch + 1n)}
           </Date>
           <ArrowLongDownIcon className="size-4 scale-y-[200%] [mask-image:linear-gradient(to_bottom,_transparent,_black_125%)]" />
@@ -27,7 +27,7 @@ export const StakingTimeline = ({ cooldownOnly, currentEpoch }: Props) => (
       <div className="size-4 rounded-full border border-pythpurple-100 bg-pythpurple-600" />
       <div>Cooldown</div>
       {cooldownOnly ? (
-        <Date options="time" className="text-right">
+        <Date className="text-right" options="time">
           {epochToDate(currentEpoch + 2n)}
         </Date>
       ) : (

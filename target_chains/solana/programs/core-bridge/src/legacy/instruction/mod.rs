@@ -3,7 +3,7 @@
 //! one wants to serialize instruction data, for example, when speciying instructions on a client.
 
 use crate::types::Commitment;
-use anchor_lang::prelude::{borsh, AnchorDeserialize, AnchorSerialize};
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 
 /// Legacy instruction selector.
 ///

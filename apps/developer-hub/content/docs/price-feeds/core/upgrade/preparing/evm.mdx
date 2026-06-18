@@ -1,0 +1,52 @@
+---
+title: "EVM"
+description: "EVM-specific notes for the Pyth Core upgrade."
+full: true
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+These notes complement the [main upgrade guide](/price-feeds/core/upgrade/preparing) for EVM consumers.
+
+## Hermes client (viem and ethers)
+
+The Hermes client is the same shape regardless of which contract library you use. Instantiate `HermesClient` with the upgraded endpoint and your API key:
+
+<Tabs items={["viem", "ethers"]}>
+<Tab value="viem">
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+
+// Pass the resulting payload to your viem contract:
+// await pythContract.write.updatePriceFeeds([update.binary.data], { value: fee });
+```
+
+</Tab>
+<Tab value="ethers">
+
+```ts
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const hermes = new HermesClient(
+  "https://pyth.dourolabs.app/hermes",
+  { accessToken: process.env.PYTH_API_KEY },
+);
+
+// Pass the resulting payload to your ethers contract:
+// await pythContract.updatePriceFeeds([update.binary.data], { value: fee });
+```
+
+</Tab>
+</Tabs>
+
+The contract call itself follows your ABI library. Use `pythContract.write.updatePriceFeeds(...)` in viem, `pythContract.updatePriceFeeds(...)` in ethers.
+
+## Upgraded EVM Addresses
+
+[View on the contract addresses page →](/price-feeds/core/upgrade/contracts#evm)

@@ -1,5 +1,5 @@
 ---
-title: Consume Data on Cardano (Beta)
+title: Consume Data on Cardano
 description: Consume and verify Pyth Pro price updates in Cardano smart contracts
 slug: /price-feeds/pro/integrate-as-consumer/cardano
 ---
@@ -7,10 +7,6 @@ slug: /price-feeds/pro/integrate-as-consumer/cardano
 import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-
-<Callout type="warning">
-  Cardano integration is currently in Beta and the API may change before release.
-</Callout>
 
 This guide is intended to serve users who want to consume prices from Pyth Pro on **Cardano**.
 
@@ -126,13 +122,15 @@ The `pyth_id` below is the Pyth deployment policy ID for your network. The Pyth 
 <Tab value="Evolution SDK">
 
 ```typescript copy
-import { ScriptHash } from "@evolution-sdk/evolution";
+import { Client, preprod, ScriptHash } from "@evolution-sdk/evolution";
 import {
   getPythScriptHash,
   getPythState,
 } from "@pythnetwork/pyth-lazer-cardano-js";
 
-const client = createClient({ network, provider });
+const client = Client.make(preprod).withKoios({
+  baseUrl: "https://preprod.koios.rest/api/v1",
+});
 
 const pythState = await getPythState(POLICY_ID, client);
 const pythScript = getPythScriptHash(pythState);
@@ -141,9 +139,8 @@ const pythScript = getPythScriptHash(pythState);
 // trigger 0-withdrawal on the verification script, together with the price
 // update as a redeemer, to perform price verification on-chain.
 
-const wallet = client.attachWallet({
+const wallet = client.withSeed({
   mnemonic: CARDANO_MNEMONIC,
-  type: "seed"
 });
 
 const now = BigInt(Date.now());

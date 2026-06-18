@@ -46,11 +46,11 @@ pub mod tests {
         };
 
         assert_eq!(
-            test_config.try_to_vec().unwrap().len(),
+            borsh::to_vec(&test_config).unwrap().len(),
             32 + 1 + 32 + 32 + 4 + 1 + 33 + 1 + 33 + 8 + 1
         );
         assert!(
-            Config::DISCRIMINATOR.len() + test_config.try_to_vec().unwrap().len() <= Config::LEN
+            Config::DISCRIMINATOR.len() + borsh::to_vec(&test_config).unwrap().len() <= Config::LEN
         );
     }
 }

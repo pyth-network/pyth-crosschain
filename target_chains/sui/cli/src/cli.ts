@@ -1,53 +1,53 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
-import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
-import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import {
   getDefaultDeploymentConfig,
   toDeploymentType,
 } from "@pythnetwork/contract-manager/core/base";
+import type { SuiChain } from "@pythnetwork/contract-manager/core/chains";
+import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { execSync } from "child_process";
+import { resolve } from "path";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
 import { initPyth, publishPackage } from "./pyth_deploy.js";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
   upgradePyth,
 } from "./upgrade_pyth.js";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
-import { resolve } from "path";
 
 const OPTIONS = {
-  "private-key": {
-    type: "string",
-    demandOption: true,
-    desc: "Private key to use to sign transaction",
-  },
   contract: {
-    type: "string",
     demandOption: true,
     desc: "Contract to use for the command (e.g sui_testnet_0xe8c2ddcd5b10e8ed98e53b12fcf8f0f6fd9315f810ae61fa4001858851f21c88)",
-  },
-  path: {
     type: "string",
-    default: "../../contracts",
-    desc: "Path to the sui contracts, will use ../../contracts by default",
   },
   endpoint: {
-    type: "string",
     default: "https://hermes.pyth.network",
     desc: "Price service endpoint to use, defaults to https://hermes.pyth.network",
+    type: "string",
   },
   "endpoint-access-token": {
-    type: "string",
     demandOption: false,
     desc: "Access token to use for the endpoint",
+    type: "string",
   },
   "feed-id": {
-    type: "array",
     demandOption: true,
     desc: "Price feed ids to create without the leading 0x (e.g f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b). Can be provided multiple times for multiple feed updates",
+    type: "array",
+  },
+  path: {
+    default: "../../contracts",
+    desc: "Path to the sui contracts, will use ../../contracts by default",
+    type: "string",
+  },
+  "private-key": {
+    demandOption: true,
+    desc: "Private key to use to sign transaction",
+    type: "string",
   },
 } as const;
 
@@ -69,10 +69,10 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
-          "feed-id": OPTIONS["feed-id"],
-          "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
           "endpoint-access-token": OPTIONS["endpoint-access-token"],
+          "feed-id": OPTIONS["feed-id"],
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 create --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -102,9 +102,9 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
-          "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
           "endpoint-access-token": OPTIONS["endpoint-access-token"],
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 create-all --contract <contract-id> --private-key <private-key>",
@@ -166,18 +166,18 @@ yargs
     (yargs) => {
       return yargs
         .options({
-          "private-key": OPTIONS["private-key"],
           chain: {
-            type: "string",
             demandOption: true,
             desc: "Chain to deploy the code to. Can be sui_mainnet or sui_testnet",
+            type: "string",
+          },
+          "deployment-type": {
+            demandOption: true,
+            desc: "Deployment type to use. Can be 'stable', 'beta', 'pro-compatible-staging', or 'pro-compatible-production'",
+            type: "string",
           },
           path: OPTIONS.path,
-          "deployment-type": {
-            type: "string",
-            demandOption: true,
-            desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
-          },
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts> --deployment-type <deployment-type>",
@@ -213,10 +213,10 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
-          "feed-id": OPTIONS["feed-id"],
-          "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
           "endpoint-access-token": OPTIONS["endpoint-access-token"],
+          "feed-id": OPTIONS["feed-id"],
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 update-feeds --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -246,14 +246,14 @@ yargs
     (yargs) => {
       return yargs
         .options({
-          "private-key": OPTIONS["private-key"],
           contract: OPTIONS.contract,
+          path: OPTIONS.path,
+          "private-key": OPTIONS["private-key"],
           vaa: {
-            type: "string",
             demandOption: true,
             desc: "Signed Vaa for upgrading the package in hex format",
+            type: "string",
           },
-          path: OPTIONS.path,
         })
         .usage(
           "$0 upgrade --private-key <private-key> --contract <contract-id> --vaa <upgrade-vaa>",

@@ -39,7 +39,7 @@ pub struct PostMessage<'info> {
     /// been created yet, the instruction handler will create this account (and in this case, the
     /// message account will be required as a signer).
     #[account(mut)]
-    message: AccountInfo<'info>,
+    message: UncheckedAccount<'info>,
 
     /// Core Bridge Emitter (optional, read-only signer).
     ///
@@ -69,7 +69,7 @@ pub struct PostMessage<'info> {
         ],
         bump
     )]
-    emitter_sequence: AccountInfo<'info>,
+    emitter_sequence: UncheckedAccount<'info>,
 
     /// Payer (mut signer).
     ///
@@ -87,7 +87,7 @@ pub struct PostMessage<'info> {
         seeds = [crate::constants::FEE_COLLECTOR_SEED_PREFIX],
         bump,
     )]
-    fee_collector: Option<AccountInfo<'info>>,
+    fee_collector: Option<UncheckedAccount<'info>>,
 
     /// Previously needed sysvar.
     ///
@@ -168,7 +168,7 @@ fn handle_post_new_message(ctx: Context<PostMessage>, args: PostMessageArgs) -> 
     // Create the account.
     utils::cpi::create_account_safe(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             utils::cpi::CreateAccountSafe {
                 payer: ctx.accounts.payer.to_account_info(),
                 new_account: ctx.accounts.message.to_account_info(),
@@ -335,7 +335,7 @@ fn handle_post_prepared_message(ctx: Context<PostMessage>, args: PostMessageArgs
 fn handle_message_fee<'info>(
     config: &Account<'info, LegacyAnchorized<Config>>,
     payer: &AccountInfo<'info>,
-    fee_collector: &Option<AccountInfo<'info>>,
+    fee_collector: &Option<UncheckedAccount<'info>>,
     system_program: &Program<'info, System>,
 ) -> Result<()> {
     if config.fee_lamports > 0 {
@@ -352,7 +352,7 @@ fn handle_message_fee<'info>(
         // amount.
         system_program::transfer(
             CpiContext::new(
-                system_program.to_account_info(),
+                system_program.key(),
                 system_program::Transfer {
                     from: payer.to_account_info(),
                     to: fee_collector.to_account_info(),
@@ -377,7 +377,7 @@ fn create_or_realloc_emitter_sequence<'info>(
         // Create the emitter sequence account.
         utils::cpi::create_account_safe(
             CpiContext::new_with_signer(
-                system_program.to_account_info(),
+                system_program.key(),
                 utils::cpi::CreateAccountSafe {
                     payer: payer.to_account_info(),
                     new_account: emitter_sequence.to_account_info(),
@@ -412,7 +412,7 @@ fn create_or_realloc_emitter_sequence<'info>(
 
         system_program::transfer(
             CpiContext::new(
-                system_program.to_account_info(),
+                system_program.key(),
                 system_program::Transfer {
                     from: payer.to_account_info(),
                     to: emitter_sequence.to_account_info(),

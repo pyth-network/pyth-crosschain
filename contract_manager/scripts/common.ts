@@ -116,7 +116,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   "deployment-type": {
     default: "stable",
     demandOption: false,
-    desc: "Deployment type to use. Can be 'stable', 'beta', 'lazer-staging', or 'lazer-prod'",
+    desc: "Deployment type to use. Can be 'stable', 'beta', 'pro-compatible-staging', or 'pro-compatible-production'",
     type: "string",
   },
   "gas-multiplier": {
@@ -255,7 +255,7 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
  * @param {DeploymentType} deploymentType The deployment type to find the wormhole contract for.
  * If deploymentType is "stable" or "beta", it will also find wormhole contracts with no deployment to preserve backwards compatibility.
  * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
-*/
+ */
 export function findWormholeContract(
   chain: EvmChain,
   deploymentType: DeploymentType,
@@ -266,9 +266,9 @@ export function findWormholeContract(
     if (!(contract instanceof EvmWormholeContract)) continue;
     if (contract.getChain().getId() !== chain.getId()) continue;
     if (
-      contract.deploymentType === deploymentType || 
-      (isCanonicalWormhole && !contract.deploymentType))
-    {
+      contract.deploymentType === deploymentType ||
+      (isCanonicalWormhole && !contract.deploymentType)
+    ) {
       return contract;
     }
   }

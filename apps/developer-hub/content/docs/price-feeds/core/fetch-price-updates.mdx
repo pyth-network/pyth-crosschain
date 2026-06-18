@@ -15,6 +15,8 @@ The following guide explains how to fetch price updates.
 Price updates can be submitted to the Pyth Price Feeds contract to update the on-chain price.
 Please see [What is a Pull Oracle?](/price-feeds/core/pull-updates) to learn more.
 
+<UpgradeCallout chain="index" />
+
 Price updates are served from [Hermes](/price-feeds/core/how-pyth-works/hermes), which
 provides three different ways to fetch price updates:
 
@@ -36,10 +38,27 @@ Use the `/v2/updates/price/latest` endpoint to fetch the latest price update for
 This endpoint allows you to fetch the latest price updates for multiple feeds in a single request.
 For example, the following command retrieves the latest price updates for BTC/USD and ETH/USD:
 
+<Tabs items={["Upgraded endpoint", "Current endpoint"]}>
+<Tab value="Upgraded endpoint">
+
 ```bash copy
 curl -X 'GET' \
+  -H "Authorization: Bearer $PYTH_API_KEY" \
+  'https://pyth.dourolabs.app/hermes/v2/updates/price/latest?ids%5B%5D=0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43&ids%5B%5D=0xc96458d393fe9deb7a7d63a0ac41e2898a67a7750dbd166673279e06c868df0a'
+```
+
+</Tab>
+<Tab value="Current endpoint">
+
+```bash copy
+# Authentication becomes required on July 31, 2026.
+curl -X 'GET' \
+  -H "Authorization: Bearer $PYTH_API_KEY" \
   'https://hermes.pyth.network/v2/updates/price/latest?ids%5B%5D=0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43&ids%5B%5D=0xc96458d393fe9deb7a7d63a0ac41e2898a67a7750dbd166673279e06c868df0a'
 ```
+
+</Tab>
+</Tabs>
 
 The output will be similar to the following containing the requested price update:
 
@@ -96,7 +115,7 @@ The output will be similar to the following containing the requested price updat
 }
 ```
 
-Hermes offers several other endpoints for retrieving price updates. For more information, see the [Hermes API Reference](https://hermes.pyth.network/docs/#/).
+Hermes offers several other endpoints for retrieving price updates. For more information, see the [Hermes API Reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/).
 
 ## Streaming
 
@@ -108,7 +127,8 @@ The connection will automatically close after 24 hours to prevent resource leaks
 For example, to stream price updates for BTC/USD, run:
 
 ```bash copy
-curl -N 'https://hermes.pyth.network/v2/updates/price/stream?ids[]=0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43'
+curl -N -H "Authorization: Bearer $PYTH_API_KEY" \
+  'https://pyth.dourolabs.app/hermes/v2/updates/price/stream?ids[]=0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43'
 ```
 
 The output is a stream of events containing the requested price updates, similar to the following:
@@ -125,7 +145,9 @@ Pyth provides a typescript SDK for Hermes to fetch price updates.
 The [`HermesClient`](https://github.com/pyth-network/pyth-crosschain/blob/main/apps/hermes/client/js/src/HermesClient.ts#L41) class in this [SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) connects to Hermes to fetch and stream price updates.
 
 ```typescript copy
-const connection = new HermesClient("https://hermes.pyth.network", {});
+const connection = new HermesClient("https://pyth.dourolabs.app/hermes", {
+  accessToken: process.env.PYTH_API_KEY,
+});
 
 const priceIds = [
   // You can find the ids of prices at https://docs.pyth.network/price-feeds/price-feeds

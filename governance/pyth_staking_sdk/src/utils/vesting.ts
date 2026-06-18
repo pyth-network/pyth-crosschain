@@ -9,31 +9,31 @@ export const getUnlockSchedule = (options: {
 
   if (vestingSchedule.fullyVested) {
     return {
-      type: "fullyUnlocked",
       schedule: [],
+      type: "fullyUnlocked",
     };
   } else if (vestingSchedule.periodicVestingAfterListing) {
     return {
-      type: "periodicUnlockingAfterListing",
       schedule: getPeriodicUnlockSchedule({
         balance: vestingSchedule.periodicVestingAfterListing.initialBalance,
+        includePastPeriods,
         numPeriods: vestingSchedule.periodicVestingAfterListing.numPeriods,
         periodDuration:
           vestingSchedule.periodicVestingAfterListing.periodDuration,
         startDate: pythTokenListTime,
-        includePastPeriods,
       }),
+      type: "periodicUnlockingAfterListing",
     };
   } else {
     return {
-      type: "periodicUnlocking",
       schedule: getPeriodicUnlockSchedule({
         balance: vestingSchedule.periodicVesting.initialBalance,
+        includePastPeriods,
         numPeriods: vestingSchedule.periodicVesting.numPeriods,
         periodDuration: vestingSchedule.periodicVesting.periodDuration,
         startDate: vestingSchedule.periodicVesting.startDate,
-        includePastPeriods,
       }),
+      type: "periodicUnlocking",
     };
   }
 };
@@ -56,10 +56,10 @@ export const getPeriodicUnlockSchedule = (options: {
       Number(startDate) + Number(periodDuration) * (i + 1);
     if (currentTimeStamp < unlockTimeStamp || includePastPeriods) {
       unlockSchedule.push({
-        date: new Date(unlockTimeStamp * 1000),
         amount:
           ((numPeriods - BigInt(i)) * balance) / numPeriods -
           ((numPeriods - BigInt(i + 1)) * balance) / numPeriods,
+        date: new Date(unlockTimeStamp * 1000),
       });
     }
   }

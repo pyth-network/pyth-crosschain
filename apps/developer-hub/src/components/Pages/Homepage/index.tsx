@@ -1,3 +1,5 @@
+import { Button } from "@pythnetwork/component-library/Button";
+
 import { ProductCard } from "../../ProductCard";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
@@ -15,6 +17,24 @@ export const Homepage = () => {
             <p className={styles.heroSubtitle}>
               Integrate with the global price layer.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.sectionMigration}>
+        <div className={styles.migrationFeature}>
+          <div className={styles.migrationFeatureText}>
+            <h2 className={styles.migrationFeatureTitle}>
+              Pyth Core is upgrading on July 31, 2026
+            </h2>
+            <p className={styles.migrationFeatureBody}>
+              All Pyth Core users must register for an API Key
+            </p>
+          </div>
+          <div className={styles.migrationFeatureActions}>
+            <Button href="/price-feeds/core/upgrade/preparing" size="md" variant="primary">
+              Learn more
+            </Button>
           </div>
         </div>
       </section>

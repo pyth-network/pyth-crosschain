@@ -22,17 +22,18 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     marginTop: theme.spacing(3),
   },
   popup: {
-    display: "flex",
-    flexDirection: "column",
     backgroundColor: theme.resolveThemeColor(theme.colors.background.modal),
     border: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
     borderRadius: theme.tokens.borderRadius.xl2,
     boxShadow: theme.elevations.default[2],
     color: theme.resolveThemeColor(theme.colors.foreground),
+    display: "flex",
+    flexDirection: "column",
     maxWidth: "min(600px, calc(100vw - 2.5rem))",
     padding: theme.spacing(6),
     width: "100%",
   },
+  root: {},
   title: {
     color: theme.resolveThemeColor(theme.colors.foreground),
     fontSize: theme.tokens.fontSizes.xl,
@@ -48,5 +49,4 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     position: "fixed",
     zIndex: 50,
   },
-  root: {},
 }));

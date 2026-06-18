@@ -37,25 +37,25 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     contract: {
-      type: "string",
       demandOption: true,
       desc: "Path to the contract json file containing abi and bytecode",
+      type: "string",
     },
     network: {
-      type: "string",
-      demandOption: true,
       choices: ["testnet", "mainnet"],
-      desc: "The network to deploy the contract on",
-    },
-    "private-key": {
-      type: "string",
       demandOption: true,
-      desc: "Private key to sign the transactions. Hex format, without 0x prefix.",
+      desc: "The network to deploy the contract on",
+      type: "string",
     },
     "ops-wallet": {
-      type: "string",
       demandOption: true,
       desc: "Path to operations wallet json file",
+      type: "string",
+    },
+    "private-key": {
+      demandOption: true,
+      desc: "Private key to sign the transactions. Hex format, without 0x prefix.",
+      type: "string",
     },
   });
 

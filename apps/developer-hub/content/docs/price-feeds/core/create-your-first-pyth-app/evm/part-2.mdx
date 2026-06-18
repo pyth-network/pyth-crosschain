@@ -20,6 +20,8 @@ This part of the tutorial will conver the following:
   before continuing.
 </Callout>
 
+<UpgradeCallout chain="evm" />
+
 ## Deploy the contract
 
 Now, let's deploy the contract to a test network.
@@ -99,9 +101,25 @@ Let's try out the deployed contract.
 In order to do so, we will need to get a price update to pass to the `updateAndMint` function.
 We can fetch this update from Hermes:
 
+<Tabs items={["Upgraded endpoint", "Current endpoint"]}>
+<Tab value="Upgraded endpoint">
+
 ```bash copy
-curl -s "https://hermes.pyth.network/v2/updates/price/latest?&ids[]=$ETH_USD_ID" | jq -r ".binary.data[0]" > price_update.txt
+curl -s -H "Authorization: Bearer $PYTH_API_KEY" \
+  "https://pyth.dourolabs.app/hermes/v2/updates/price/latest?&ids[]=$ETH_USD_ID" | jq -r ".binary.data[0]" > price_update.txt
 ```
+
+</Tab>
+<Tab value="Current endpoint">
+
+```bash copy
+# Authentication becomes required on July 31, 2026.
+curl -s -H "Authorization: Bearer $PYTH_API_KEY" \
+  "https://hermes.pyth.network/v2/updates/price/latest?&ids[]=$ETH_USD_ID" | jq -r ".binary.data[0]" > price_update.txt
+```
+
+</Tab>
+</Tabs>
 
 This command will fetch a fresh price update from Hermes and save it in the file `price_update.txt`.
 The update is a binary payload represented as a hexadecimal string.
@@ -242,7 +260,9 @@ async function run() {
     client,
   });
 
-  const connection = new HermesClient("https://hermes.pyth.network");
+  const connection = new HermesClient("https://pyth.dourolabs.app/hermes", {
+    accessToken: process.env.PYTH_API_KEY,
+  });
   const priceIds = [process.env["ETH_USD_ID"] as string];
   const priceFeedUpdateData = await connection.getLatestPriceUpdates(priceIds);
   console.log("Retrieved Pyth price update:");

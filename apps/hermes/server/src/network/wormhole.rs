@@ -84,6 +84,7 @@ pub struct GuardianSetData {
 #[allow(
     clippy::enum_variant_names,
     clippy::allow_attributes_without_reason,
+    dead_code,
     reason = "generated code"
 )]
 mod proto {

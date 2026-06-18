@@ -1,17 +1,19 @@
+import type { Network } from "@injectivelabs/networks";
+import { getNetworkEndpoints, getNetworkInfo } from "@injectivelabs/networks";
+import type { Msgs, TxResponse } from "@injectivelabs/sdk-ts";
 import {
   ChainGrpcAuthApi,
+  ChainGrpcBankApi,
+  createTransactionFromMsg,
   MsgExecuteContract,
   MsgInstantiateContract,
   MsgMigrateContract,
   MsgStoreCode,
   MsgUpdateAdmin,
-  type Msgs,
   PrivateKey,
   TxGrpcClient,
-  type TxResponse,
-  createTransactionFromMsg,
-  ChainGrpcBankApi,
 } from "@injectivelabs/sdk-ts";
+import assert from "assert";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -25,14 +27,8 @@ import type {
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
 } from "./chain-executor.js";
-import assert from "assert";
-import {
-  getNetworkEndpoints,
-  getNetworkInfo,
-  Network,
-} from "@injectivelabs/networks";
 
-const DEFAULT_GAS_PRICE = 160000000;
+const DEFAULT_GAS_PRICE = 160_000_000;
 
 export class InjectiveExecutor implements ChainExecutor {
   private readonly gasMultiplier = 2;
@@ -77,11 +73,11 @@ export class InjectiveExecutor implements ChainExecutor {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc);
     const account = await chainGrpcAuthApi.fetchAccount(this.getAddress());
     const { txRaw: simulateTxRaw } = createTransactionFromMsg({
-      sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
-      message: msg,
       chainId: networkInfo.chainId,
+      message: msg,
       pubKey: this.wallet.toPublicKey().toBase64(),
+      sequence: account.baseAccount.sequence,
     });
 
     const txService = new TxGrpcClient(endpoints.grpc);
@@ -97,20 +93,20 @@ export class InjectiveExecutor implements ChainExecutor {
     const fee = {
       amount: [
         {
-          denom: "inj",
           amount: (gasUsed * this.gasPrice * this.gasMultiplier).toFixed(),
+          denom: "inj",
         },
       ],
       gas: (gasUsed * this.gasMultiplier).toFixed(),
     };
 
     const { signBytes, txRaw } = createTransactionFromMsg({
-      sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
-      message: msg,
       chainId: networkInfo.chainId,
       fee,
+      message: msg,
       pubKey: this.wallet.toPublicKey().toBase64(),
+      sequence: account.baseAccount.sequence,
     });
 
     const sig = await this.wallet.sign(Buffer.from(signBytes));
@@ -141,13 +137,13 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const txResponse = await this.signAndBroadcastMsg(store_code);
 
-    const codeId: number = parseInt(
+    const codeId: number = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
     );
 
     return {
-      txHash: txResponse.txHash,
       codeId,
+      txHash: txResponse.txHash,
     };
   }
 
@@ -156,12 +152,12 @@ export class InjectiveExecutor implements ChainExecutor {
   ): Promise<InstantiateContractResponse> {
     const { codeId, instMsg, label } = req;
     const instantiateMsg = MsgInstantiateContract.fromJSON({
-      sender: this.getAddress(),
       admin: this.getAddress(),
       codeId,
       label,
       // @ts-ignore: bug in the injective's sdk
       msg: instMsg,
+      sender: this.getAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(instantiateMsg);
@@ -172,8 +168,8 @@ export class InjectiveExecutor implements ChainExecutor {
     );
 
     return {
-      txHash: txResponse.txHash,
       contractAddr,
+      txHash: txResponse.txHash,
     };
   }
 
@@ -183,10 +179,10 @@ export class InjectiveExecutor implements ChainExecutor {
     const { contractAddr, msg, funds } = req;
 
     const executeMsg = MsgExecuteContract.fromJSON({
-      sender: this.getAddress(),
       contractAddress: contractAddr,
-      msg,
       funds,
+      msg,
+      sender: this.getAddress(),
     } as MsgExecuteContract["params"]);
 
     const txResponse = await this.signAndBroadcastMsg(executeMsg);
@@ -201,17 +197,17 @@ export class InjectiveExecutor implements ChainExecutor {
   ): Promise<MigrateContractResponse> {
     const { newCodeId, contractAddr, migrateMsg } = req;
     const migrate_msg = MsgMigrateContract.fromJSON({
-      sender: this.getAddress(),
-      contract: contractAddr,
       codeId: newCodeId,
+      contract: contractAddr,
       msg: migrateMsg ?? {
         action: "",
       },
+      sender: this.getAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
-    let resultCodeId: number = parseInt(
+    const resultCodeId: number = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
     );
     try {
@@ -234,9 +230,9 @@ export class InjectiveExecutor implements ChainExecutor {
     const currAdminAddr = this.getAddress();
 
     const updateAdminMsg = new MsgUpdateAdmin({
-      sender: currAdminAddr,
-      newAdmin: newAdminAddr,
       contract: contractAddr,
+      newAdmin: newAdminAddr,
+      sender: currAdminAddr,
     });
 
     const txResponse = await this.signAndBroadcastMsg(updateAdminMsg);

@@ -9,6 +9,15 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 This guide explains how to use real-time Pyth data in Sui applications.
 
+<UpgradeCallout chain="sui" />
+
+<Callout type="info">
+  After **July 31, 2026**, replace the Pyth package `rev` below with
+  `sui-pro-compatible-contract-mainnet` (or `sui-pro-compatible-contract-testnet`)
+  and update the Pyth State / Wormhole State IDs to the [upgraded Sui addresses](/price-feeds/core/upgrade/contracts#sui).
+  See the [upgrade guide](/price-feeds/core/upgrade/preparing) for details.
+</Callout>
+
 ## Install Pyth SDK
 
 Use the following dependency in your `Move.toml` file to use the latest Pyth Sui package and its dependencies:
@@ -136,9 +145,10 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 /// Step 1: Get the off-chain data.
 const connection = new SuiPriceServiceConnection(
-  "https://hermes-beta.pyth.network", // [!] Only for Sui Testnet
-  // "https://hermes.pyth.network/", // Use this for Mainnet
+  "https://pyth.dourolabs.app/hermes", // upgraded endpoint
+  // Or: "https://hermes.pyth.network" — auth required from July 31, 2026
   {
+    accessToken: process.env.PYTH_API_KEY,
     // Provide this option to retrieve signed price updates for on-chain contracts!
     priceFeedRequestConfig: {
       binary: true,
@@ -237,7 +247,7 @@ You can run this example with `npm run example-relay`. A full command that updat
 ```bash
 export SUI_KEY=YOUR_PRIV_KEY;
 npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
---hermes "https://hermes-beta.pyth.network" \
+--hermes "https://pyth.dourolabs.app/hermes" \
 --full-node "https://fullnode.testnet.sui.io:443" \
 --pyth-state-id "0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c" \
 --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
@@ -245,7 +255,7 @@ npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396f
 
 ### Contract Addresses
 
-Consult [Sui Contract Addresses](../../contract-addresses/sui) to find the package IDs.
+Consult [Sui Contract Addresses](../../contract-addresses/sui) to find the current package IDs, or the [upgraded Sui addresses](/price-feeds/core/upgrade/contracts#sui) for the post-July 31, 2026 upgrade.
 
 ### Pyth Price Feed IDs
 

@@ -1,1087 +1,39 @@
 {
-  "address": "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
-  "metadata": {
-    "name": "integrity_pool",
-    "version": "1.0.0",
-    "spec": "0.1.0",
-    "description": "Created with Anchor"
-  },
-  "instructions": [
-    {
-      "name": "advance",
-      "discriminator": [7, 56, 108, 201, 36, 20, 57, 89],
-      "accounts": [
-        {
-          "name": "signer",
-          "signer": true
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "publisher_caps"
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool_reward_custody",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "pool_config"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
-                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
-                  245, 133, 126, 255, 0, 169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool_config.pyth_token_mint",
-                "account": "PoolConfig"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
-              ]
-            }
-          }
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "advance_delegation_record",
-      "discriminator": [155, 43, 226, 175, 227, 115, 33, 88],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "stake_account_positions"
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "pool_reward_custody",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "pool_config"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
-                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
-                  245, 133, 126, 255, 0, 169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool_config.pyth_token_mint",
-                "account": "PoolConfig"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
-              ]
-            }
-          }
-        },
-        {
-          "name": "stake_account_custody",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 117, 115, 116, 111, 100, 121]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "publisher_stake_account_positions",
-          "optional": true
-        },
-        {
-          "name": "publisher_stake_account_custody",
-          "writable": true,
-          "optional": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 117, 115, 116, 111, 100, 121]
-              },
-              {
-                "kind": "account",
-                "path": "publisher_stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "delegation_record",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
-                  99, 111, 114, 100
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [],
-      "returns": "u64"
-    },
-    {
-      "name": "create_slash_event",
-      "discriminator": [7, 214, 12, 127, 239, 247, 253, 117],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "reward_program_authority",
-          "signer": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "slash_custody",
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "slash_event",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [115, 108, 97, 115, 104, 95, 101, 118, 101, 110, 116]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "arg",
-                "path": "index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "u64"
-        },
-        {
-          "name": "slash_ratio",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "delegate",
-      "discriminator": [90, 147, 75, 178, 85, 88, 4, 137],
-      "accounts": [
-        {
-          "name": "owner",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "config_account",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 111, 110, 102, 105, 103]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "stake_account_positions",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it will checked in staking program"
-          ],
-          "writable": true
-        },
-        {
-          "name": "stake_account_metadata",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "stake_account_custody",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 117, 115, 116, 111, 100, 121]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "staking_program",
-          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "initialize_pool",
-      "discriminator": [95, 180, 10, 172, 84, 174, 232, 40],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config_account",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 111, 110, 102, 105, 103]
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
-                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
-                70, 231, 183, 19, 217
-              ]
-            }
-          }
-        },
-        {
-          "name": "pool_data",
-          "writable": true
-        },
-        {
-          "name": "pool_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "slash_custody"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "reward_program_authority",
-          "type": "pubkey"
-        },
-        {
-          "name": "y",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "merge_delegation_positions",
-      "discriminator": [111, 59, 199, 177, 50, 231, 133, 228],
-      "accounts": [
-        {
-          "name": "owner",
-          "docs": [
-            "CHECK : This instruction is permissionless, this account will be checked against",
-            "stake_account_metadata in the CPI"
-          ],
-          "writable": true
-        },
-        {
-          "name": "pool_data",
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "delegation_record",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
-                  99, 111, 114, 100
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "config_account",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 111, 110, 102, 105, 103]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "stake_account_positions",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it will checked in staking program"
-          ],
-          "writable": true
-        },
-        {
-          "name": "stake_account_metadata",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "staking_program",
-          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "set_publisher_stake_account",
-      "discriminator": [99, 46, 72, 132, 100, 235, 211, 117],
-      "accounts": [
-        {
-          "name": "signer",
-          "signer": true
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "new_stake_account_positions_option",
-          "optional": true
-        },
-        {
-          "name": "current_stake_account_positions_option",
-          "optional": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "slash",
-      "discriminator": [204, 141, 18, 161, 8, 177, 92, 142],
-      "accounts": [
-        {
-          "name": "signer",
-          "signer": true
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "slash_event",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [115, 108, 97, 115, 104, 95, 101, 118, 101, 110, 116]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "arg",
-                "path": "index"
-              }
-            ]
-          }
-        },
-        {
-          "name": "delegation_record",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
-                  99, 111, 114, 100
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "publisher"
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked in the staking program"
-          ]
-        },
-        {
-          "name": "stake_account_positions",
-          "writable": true
-        },
-        {
-          "name": "stake_account_metadata",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
-                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
-                70, 231, 183, 19, 217
-              ]
-            }
-          }
-        },
-        {
-          "name": "stake_account_custody",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 117, 115, 116, 111, 100, 121]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
-                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
-                70, 231, 183, 19, 217
-              ]
-            }
-          }
-        },
-        {
-          "name": "config_account",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "governance_target_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [116, 97, 114, 103, 101, 116]
-              },
-              {
-                "kind": "const",
-                "value": [118, 111, 116, 105, 110, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "slash_custody",
-          "writable": true,
-          "relations": ["slash_event"]
-        },
-        {
-          "name": "custody_authority",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [97, 117, 116, 104, 111, 114, 105, 116, 121]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ]
-          }
-        },
-        {
-          "name": "staking_program",
-          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "undelegate",
-      "discriminator": [131, 148, 180, 198, 91, 104, 42, 238],
-      "accounts": [
-        {
-          "name": "owner",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "publisher",
-          "docs": [
-            "CHECK : The publisher will be checked against data in the pool_data"
-          ]
-        },
-        {
-          "name": "config_account",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 111, 110, 102, 105, 103]
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "stake_account_positions",
-          "writable": true
-        },
-        {
-          "name": "stake_account_metadata",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
-                  97
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "stake_account_custody",
-          "docs": [
-            "CHECK : This AccountInfo is safe because it's a checked PDA"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [99, 117, 115, 116, 111, 100, 121]
-              },
-              {
-                "kind": "account",
-                "path": "stake_account_positions"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "staking_program"
-            }
-          }
-        },
-        {
-          "name": "staking_program",
-          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "position_index",
-          "type": "u8"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "update_delegation_fee",
-      "discriminator": [197, 184, 73, 246, 24, 137, 184, 208],
-      "accounts": [
-        {
-          "name": "reward_program_authority",
-          "signer": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_data",
-          "writable": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "delegation_fee",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "update_reward_program_authority",
-      "discriminator": [105, 58, 166, 4, 99, 253, 115, 225],
-      "accounts": [
-        {
-          "name": "reward_program_authority",
-          "signer": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "reward_program_authority",
-          "type": "pubkey"
-        }
-      ]
-    },
-    {
-      "name": "update_y",
-      "discriminator": [224, 14, 232, 96, 41, 230, 183, 18],
-      "accounts": [
-        {
-          "name": "reward_program_authority",
-          "signer": true,
-          "relations": ["pool_config"]
-        },
-        {
-          "name": "pool_config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
-              }
-            ]
-          }
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "y",
-          "type": "u64"
-        }
-      ]
-    }
-  ],
   "accounts": [
     {
-      "name": "DelegationRecord",
-      "discriminator": [203, 185, 161, 226, 129, 251, 132, 155]
+      "discriminator": [203, 185, 161, 226, 129, 251, 132, 155],
+      "name": "DelegationRecord"
     },
     {
-      "name": "GlobalConfig",
-      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217]
+      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217],
+      "name": "GlobalConfig"
     },
     {
-      "name": "PoolConfig",
-      "discriminator": [26, 108, 14, 123, 116, 230, 129, 43]
+      "discriminator": [26, 108, 14, 123, 116, 230, 129, 43],
+      "name": "PoolConfig"
     },
     {
-      "name": "PoolData",
-      "discriminator": [155, 28, 220, 37, 221, 242, 70, 167]
+      "discriminator": [155, 28, 220, 37, 221, 242, 70, 167],
+      "name": "PoolData"
     },
     {
-      "name": "PositionData",
-      "discriminator": [85, 195, 241, 79, 124, 192, 79, 11]
+      "discriminator": [85, 195, 241, 79, 124, 192, 79, 11],
+      "name": "PositionData"
     },
     {
-      "name": "PublisherCaps",
-      "discriminator": [5, 87, 155, 44, 121, 90, 35, 134]
+      "discriminator": [5, 87, 155, 44, 121, 90, 35, 134],
+      "name": "PublisherCaps"
     },
     {
-      "name": "SlashEvent",
-      "discriminator": [60, 32, 32, 44, 93, 234, 234, 89]
+      "discriminator": [60, 32, 32, 44, 93, 234, 234, 89],
+      "name": "SlashEvent"
     },
     {
-      "name": "TargetMetadata",
-      "discriminator": [157, 23, 139, 117, 181, 44, 197, 130]
+      "discriminator": [157, 23, 139, 117, 181, 44, 197, 130],
+      "name": "TargetMetadata"
     }
   ],
+  "address": "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
   "errors": [
     {
       "code": 6000,
@@ -1141,8 +93,8 @@
     },
     {
       "code": 6014,
-      "name": "InvalidStartEpoch",
-      "msg": "Start epoch of the reward program is before the current epoch"
+      "msg": "Start epoch of the reward program is before the current epoch",
+      "name": "InvalidStartEpoch"
     },
     {
       "code": 6015,
@@ -1150,8 +102,8 @@
     },
     {
       "code": 6016,
-      "name": "InvalidSlashEventIndex",
-      "msg": "Slash event indexes must be sequential and start at 0"
+      "msg": "Slash event indexes must be sequential and start at 0",
+      "name": "InvalidSlashEventIndex"
     },
     {
       "code": 6017,
@@ -1163,18 +115,18 @@
     },
     {
       "code": 6019,
-      "name": "WrongSlashEventOrder",
-      "msg": "Slashes must be executed in order of slash event index"
+      "msg": "Slashes must be executed in order of slash event index",
+      "name": "WrongSlashEventOrder"
     },
     {
       "code": 6020,
-      "name": "PublisherCustodyAccountRequired",
-      "msg": "Publisher custody account required"
+      "msg": "Publisher custody account required",
+      "name": "PublisherCustodyAccountRequired"
     },
     {
       "code": 6021,
-      "name": "InvalidDelegationFee",
-      "msg": "Delegation fee must not be greater than 100%"
+      "msg": "Delegation fee must not be greater than 100%",
+      "name": "InvalidDelegationFee"
     },
     {
       "code": 6022,
@@ -1182,19 +134,1066 @@
     },
     {
       "code": 6023,
-      "name": "InvalidY",
-      "msg": "Y should not be greater than 1%"
+      "msg": "Y should not be greater than 1%",
+      "name": "InvalidY"
     },
     {
       "code": 6024,
       "name": "InvalidSlashCustodyAccount"
     }
   ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "publisher_caps"
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_reward_custody",
+          "pda": {
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            },
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
+                ]
+              },
+              {
+                "account": "PoolConfig",
+                "kind": "account",
+                "path": "pool_config.pyth_token_mint"
+              }
+            ]
+          },
+          "writable": true
+        }
+      ],
+      "args": [],
+      "discriminator": [7, 56, 108, 201, 36, 20, 57, 89],
+      "name": "advance"
+    },
+    {
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "stake_account_positions"
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_reward_custody",
+          "pda": {
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            },
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
+                ]
+              },
+              {
+                "account": "PoolConfig",
+                "kind": "account",
+                "path": "pool_config.pyth_token_mint"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "stake_account_custody",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 117, 115, 116, 111, 100, 121]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "name": "publisher_stake_account_positions",
+          "optional": true
+        },
+        {
+          "name": "publisher_stake_account_custody",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 117, 115, 116, 111, 100, 121]
+              },
+              {
+                "kind": "account",
+                "path": "publisher_stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "delegation_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
+                  99, 111, 114, 100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "publisher"
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [],
+      "discriminator": [155, 43, 226, 175, 227, 115, 33, 88],
+      "name": "advance_delegation_record",
+      "returns": "u64"
+    },
+    {
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "reward_program_authority",
+          "relations": ["pool_config"],
+          "signer": true
+        },
+        {
+          "name": "slash_custody",
+          "relations": ["pool_config"]
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "slash_event",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [115, 108, 97, 115, 104, 95, 101, 118, 101, 110, 116]
+              },
+              {
+                "kind": "account",
+                "path": "publisher"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "slash_ratio",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [7, 214, 12, 127, 239, 247, 253, 117],
+      "name": "create_slash_event"
+    },
+    {
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "config_account",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it will checked in staking program"
+          ],
+          "name": "stake_account_positions",
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_metadata",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_custody",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 117, 115, 116, 111, 100, 121]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          }
+        },
+        {
+          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
+          "name": "staking_program"
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [90, 147, 75, 178, 85, 88, 4, 137],
+      "name": "delegate"
+    },
+    {
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "config_account",
+          "pda": {
+            "program": {
+              "kind": "const",
+              "value": [
+                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
+                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
+                70, 231, 183, 19, 217
+              ]
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_data",
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "slash_custody"
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "reward_program_authority",
+          "type": "pubkey"
+        },
+        {
+          "name": "y",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [95, 180, 10, 172, 84, 174, 232, 40],
+      "name": "initialize_pool"
+    },
+    {
+      "accounts": [
+        {
+          "docs": [
+            "CHECK : This instruction is permissionless, this account will be checked against",
+            "stake_account_metadata in the CPI"
+          ],
+          "name": "owner",
+          "writable": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"]
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "name": "delegation_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
+                  99, 111, 114, 100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "publisher"
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "config_account",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it will checked in staking program"
+          ],
+          "name": "stake_account_positions",
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_metadata",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
+          "name": "staking_program"
+        }
+      ],
+      "args": [],
+      "discriminator": [111, 59, 199, 177, 50, 231, 133, 228],
+      "name": "merge_delegation_positions"
+    },
+    {
+      "accounts": [
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_stake_account_positions_option",
+          "optional": true
+        },
+        {
+          "name": "current_stake_account_positions_option",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminator": [99, 46, 72, 132, 100, 235, 211, 117],
+      "name": "set_publisher_stake_account"
+    },
+    {
+      "accounts": [
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "slash_event",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [115, 108, 97, 115, 104, 95, 101, 118, 101, 110, 116]
+              },
+              {
+                "kind": "account",
+                "path": "publisher"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delegation_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 95, 114, 101,
+                  99, 111, 114, 100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "publisher"
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked in the staking program"
+          ],
+          "name": "publisher"
+        },
+        {
+          "name": "stake_account_positions",
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_metadata",
+          "pda": {
+            "program": {
+              "kind": "const",
+              "value": [
+                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
+                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
+                70, 231, 183, 19, 217
+              ]
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "stake_account_custody",
+          "pda": {
+            "program": {
+              "kind": "const",
+              "value": [
+                12, 74, 158, 192, 43, 86, 104, 29, 164, 155, 4, 186, 155, 36,
+                207, 137, 253, 128, 249, 44, 241, 145, 227, 125, 189, 51, 111,
+                70, 231, 183, 19, 217
+              ]
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 117, 115, 116, 111, 100, 121]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "config_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "governance_target_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [116, 97, 114, 103, 101, 116]
+              },
+              {
+                "kind": "const",
+                "value": [118, 111, 116, 105, 110, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "slash_custody",
+          "relations": ["slash_event"],
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "custody_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 116, 104, 111, 114, 105, 116, 121]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          }
+        },
+        {
+          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
+          "name": "staking_program"
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [204, 141, 18, 161, 8, 177, 92, 142],
+      "name": "slash"
+    },
+    {
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ],
+          "name": "publisher"
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "config_account",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_account_positions",
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_metadata",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 116, 97, 107, 101, 95, 109, 101, 116, 97, 100, 97, 116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "CHECK : This AccountInfo is safe because it's a checked PDA"
+          ],
+          "name": "stake_account_custody",
+          "pda": {
+            "program": {
+              "kind": "account",
+              "path": "staking_program"
+            },
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 117, 115, 116, 111, 100, 121]
+              },
+              {
+                "kind": "account",
+                "path": "stake_account_positions"
+              }
+            ]
+          }
+        },
+        {
+          "address": "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
+          "name": "staking_program"
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "position_index",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [131, 148, 180, 198, 91, 104, 42, 238],
+      "name": "undelegate"
+    },
+    {
+      "accounts": [
+        {
+          "name": "reward_program_authority",
+          "relations": ["pool_config"],
+          "signer": true
+        },
+        {
+          "name": "pool_data",
+          "relations": ["pool_config"],
+          "writable": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "delegation_fee",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [197, 184, 73, 246, 24, 137, 184, 208],
+      "name": "update_delegation_fee"
+    },
+    {
+      "accounts": [
+        {
+          "name": "reward_program_authority",
+          "relations": ["pool_config"],
+          "signer": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "reward_program_authority",
+          "type": "pubkey"
+        }
+      ],
+      "discriminator": [105, 58, 166, 4, 99, 253, 115, 225],
+      "name": "update_reward_program_authority"
+    },
+    {
+      "accounts": [
+        {
+          "name": "reward_program_authority",
+          "relations": ["pool_config"],
+          "signer": true
+        },
+        {
+          "name": "pool_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 111, 111, 108, 95, 99, 111, 110, 102, 105, 103]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "y",
+          "type": "u64"
+        }
+      ],
+      "discriminator": [224, 14, 232, 96, 41, 230, 183, 18],
+      "name": "update_y"
+    }
+  ],
+  "metadata": {
+    "description": "Created with Anchor",
+    "name": "integrity_pool",
+    "spec": "0.1.0",
+    "version": "1.0.0"
+  },
   "types": [
     {
       "name": "DelegationRecord",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "last_epoch",
@@ -1204,7 +1203,8 @@
             "name": "next_slash_event_index",
             "type": "u64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -1213,7 +1213,6 @@
         "kind": "c"
       },
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "total_delegation",
@@ -1223,7 +1222,8 @@
             "name": "delta_delegation",
             "type": "i64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -1232,7 +1232,6 @@
         "kind": "c"
       },
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "epoch",
@@ -1261,13 +1260,13 @@
               ]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "GlobalConfig",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "bump",
@@ -1306,12 +1305,12 @@
             "type": "pubkey"
           },
           {
-            "name": "pyth_token_list_time",
             "docs": [
               "Once the pyth token is listed, governance can update the config to set this value.",
               "Once this value is set, vesting schedules that depend on the token list date can start",
               "vesting."
             ],
+            "name": "pyth_token_list_time",
             "type": {
               "option": "i64"
             }
@@ -1330,13 +1329,13 @@
             "name": "pool_authority",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "PoolConfig",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "pool_data",
@@ -1358,17 +1357,17 @@
             "name": "slash_custody",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "PoolData",
-      "serialization": "bytemuck",
       "repr": {
         "kind": "c"
       },
+      "serialization": "bytemuck",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "last_updated_epoch",
@@ -1445,34 +1444,34 @@
               "array": ["u64", 1024]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "PositionData",
       "docs": ["The header of DynamicPositionArray"],
-      "serialization": "bytemuck",
+      "name": "PositionData",
       "repr": {
         "kind": "c"
       },
+      "serialization": "bytemuck",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "owner",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "PublisherCaps",
-      "serialization": "bytemuck",
       "repr": {
         "kind": "c"
       },
+      "serialization": "bytemuck",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "write_authority",
@@ -1494,7 +1493,8 @@
               "array": ["u8", 40971]
             }
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
@@ -1503,7 +1503,6 @@
         "kind": "c"
       },
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "self_reward_ratio",
@@ -1517,13 +1516,13 @@
             "name": "delegation_fee",
             "type": "u64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
       "name": "SlashEvent",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "epoch",
@@ -1537,18 +1536,18 @@
             "name": "slash_custody",
             "type": "pubkey"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     },
     {
-      "name": "TargetMetadata",
       "docs": [
         "This represents a target that users can stake to",
         "Currently we store the last time the target account was updated, the current locked balance",
         "and the amount by which the locked balance will change in the next epoch"
       ],
+      "name": "TargetMetadata",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "bump",
@@ -1570,7 +1569,8 @@
             "name": "delta_locked",
             "type": "i64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     }
   ]

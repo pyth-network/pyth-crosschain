@@ -146,7 +146,7 @@ class Publisher:
             oracle_update.external,
         )
         if not oracle_pxs:
-            logger.error("No valid oracle prices available")
+            logger.info("No valid oracle prices available")
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
 
         # markPxs is a list of dicts of length 0-2, and so can be empty.
@@ -177,16 +177,17 @@ class Publisher:
                     )
                 self._handle_response(push_response, list(oracle_pxs.keys()))
             except PushError as e:
-                logger.exception("Push API call failed: {}", repr(e))
+                logger.info("Push API call failed (all endpoints): {}", repr(e))
                 self._update_attempts_total(
                     "error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys())
                 )
-                pass
+                self._record_submission("send_failed", None)
             except Exception as e:
                 logger.exception("Unexpected exception in push request: {}", repr(e))
                 self._update_attempts_total(
                     "error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys())
                 )
+                self._record_submission("send_failed", None)
         else:
             logger.debug("push disabled")
 
@@ -208,7 +209,7 @@ class Publisher:
                     external_perp_pxs,
                 )
             except Exception as e:
-                logger.exception(
+                logger.opt(exception=True).debug(
                     "perp_deploy_set_oracle exception for endpoint: {} error: {}",
                     exchange.base_url,
                     repr(e),
@@ -231,12 +232,20 @@ class Publisher:
         )
         return result
 
+    def _record_submission(self, outcome: str, submit_time_secs: int | None) -> None:
+        self.metrics.push_submitted_total.add(
+            1, {**self.metrics_labels, "outcome": outcome}
+        )
+        if submit_time_secs is not None:
+            self.metrics.last_submit_time.set(submit_time_secs, self.metrics_labels)
+
     def _handle_response(self, response: dict[str, Any], symbols: list[str]) -> None:
         logger.debug("oracle update response: {}", response)
         status = response.get("status")
         if status == "ok":
             self._update_attempts_total("success", None, symbols)
             time_secs = int(time.time())
+            self._record_submission("ok", time_secs)
 
             # update last publish time for each symbol in dex
             for symbol in symbols:
@@ -252,8 +261,11 @@ class Publisher:
         elif status == "err":
             error_reason = self._get_error_reason(response)
             self._update_attempts_total("error", error_reason, symbols)
-            if error_reason != "rate_limit":
-                logger.error("Error response: {}", response)
+            if error_reason == PushErrorReason.RATE_LIMIT:
+                self._record_submission("rate_limited", int(time.time()))
+            else:
+                self._record_submission("rejected", None)
+                logger.info("Error response: {}", response)
 
     def _record_push_interval_metric(self) -> None:
         now = time.time()
@@ -277,7 +289,7 @@ class Publisher:
                     external_perp_pxs=external_perp_pxs,
                 )
             except Exception as e:
-                logger.exception(
+                logger.opt(exception=True).debug(
                     "_send_single_multisig_update exception for endpoint: {} error: {}",
                     exchange.base_url,
                     repr(e),

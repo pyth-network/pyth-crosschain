@@ -77,13 +77,13 @@ const fetchStats = async (connection: Connection) => {
   ]);
 
   return {
-    totalGovernance: targetAccount.locked + targetAccount.deltaLocked,
-    totalStaked:
-      sumDelegations(poolData.delState) + sumDelegations(poolData.selfDelState),
     rewardsDistributed:
       poolData.claimableRewards +
       INITIAL_REWARD_POOL_SIZE -
       rewardCustodyAccount.amount,
+    totalGovernance: targetAccount.locked + targetAccount.deltaLocked,
+    totalStaked:
+      sumDelegations(poolData.delState) + sumDelegations(poolData.selfDelState),
   };
 };
 

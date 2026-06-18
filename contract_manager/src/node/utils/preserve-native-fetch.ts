@@ -13,9 +13,9 @@
  */
 const nativeFetch = globalThis.fetch;
 Object.defineProperty(globalThis, "fetch", {
+  configurable: true,
   get: () => nativeFetch,
   set: () => {
     // Swallow writes from polyfilling libraries; native fetch works fine.
   },
-  configurable: true,
 });

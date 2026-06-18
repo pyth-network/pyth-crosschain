@@ -6,7 +6,7 @@ use prometheus::{
     TextEncoder,
 };
 
-use crate::models::{L2Snapshot, TradeRecord};
+use crate::models::{FundingRateRecord, L2Snapshot, TradeRecord};
 
 #[derive(Clone)]
 pub struct RecorderMetrics {
@@ -18,6 +18,7 @@ pub struct RecorderMetrics {
     pub market_last_block_number: GaugeVec,
     pub market_last_block_time_ms: GaugeVec,
     pub market_snapshot_levels: GaugeVec,
+    pub l2_level_parse_errors: CounterVec,
     pub queue_depth: Gauge,
     pub queue_fill_ratio: Gauge,
     pub queue_drops: CounterVec,
@@ -26,7 +27,6 @@ pub struct RecorderMetrics {
     pub insert_latency_seconds: Histogram,
     pub clickhouse_up: Gauge,
     pub ready_state: Gauge,
-    pub trades_stream_messages: CounterVec,
     pub trades_stream_reconnects: CounterVec,
     pub trades_stream_errors: CounterVec,
     pub trades_rows_parsed: CounterVec,
@@ -37,6 +37,12 @@ pub struct RecorderMetrics {
     pub insert_trades_attempts: CounterVec,
     pub insert_trades_rows: Counter,
     pub insert_trades_latency_seconds: Histogram,
+    pub funding_poll_attempts: CounterVec,
+    pub funding_payload_errors: Counter,
+    pub funding_insert_attempts: CounterVec,
+    pub funding_insert_rows: Counter,
+    pub funding_insert_latency_seconds: Histogram,
+    pub funding_last_event_time_seconds: GaugeVec,
 }
 
 impl RecorderMetrics {
@@ -92,6 +98,13 @@ impl RecorderMetrics {
             ),
             &["coin", "side"],
         )?;
+        let l2_level_parse_errors = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_l2_level_parse_errors_total",
+                "Total L2 levels dropped due to decimal parse errors",
+            ),
+            &["coin", "side"],
+        )?;
         let queue_depth = Gauge::with_opts(Opts::new(
             "hyperliquid_recorder_queue_depth",
             "Current in-memory queue depth",
@@ -133,13 +146,6 @@ impl RecorderMetrics {
             "hyperliquid_recorder_ready",
             "Readiness status (1=ready, 0=not ready)",
         ))?;
-        let trades_stream_messages = CounterVec::new(
-            Opts::new(
-                "hyperliquid_recorder_trades_stream_messages_total",
-                "Total trade rows received from StreamData",
-            ),
-            &["coin"],
-        )?;
         let trades_stream_reconnects = CounterVec::new(
             Opts::new(
                 "hyperliquid_recorder_trades_stream_reconnects_total",
@@ -198,6 +204,42 @@ impl RecorderMetrics {
             )
             .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
         )?;
+        let funding_poll_attempts = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_poll_attempts_total",
+                "Total Hyperliquid fundingHistory poll attempts by coin and outcome",
+            ),
+            &["coin", "outcome"],
+        )?;
+        let funding_payload_errors = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_payload_errors_total",
+            "Total malformed fundingHistory payloads",
+        ))?;
+        let funding_insert_attempts = CounterVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_insert_attempts_total",
+                "Total ClickHouse insert attempts for funding batches",
+            ),
+            &["outcome"],
+        )?;
+        let funding_insert_rows = Counter::with_opts(Opts::new(
+            "hyperliquid_recorder_funding_insert_rows_total",
+            "Total funding rows inserted into ClickHouse",
+        ))?;
+        let funding_insert_latency_seconds = Histogram::with_opts(
+            HistogramOpts::new(
+                "hyperliquid_recorder_funding_insert_latency_seconds",
+                "ClickHouse funding insert latency in seconds",
+            )
+            .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
+        )?;
+        let funding_last_event_time_seconds = GaugeVec::new(
+            Opts::new(
+                "hyperliquid_recorder_funding_last_event_time_seconds",
+                "Unix timestamp of the most recent applied funding event observed per coin",
+            ),
+            &["coin"],
+        )?;
 
         registry.register(Box::new(stream_messages.clone()))?;
         registry.register(Box::new(stream_reconnects.clone()))?;
@@ -206,6 +248,7 @@ impl RecorderMetrics {
         registry.register(Box::new(market_last_block_number.clone()))?;
         registry.register(Box::new(market_last_block_time_ms.clone()))?;
         registry.register(Box::new(market_snapshot_levels.clone()))?;
+        registry.register(Box::new(l2_level_parse_errors.clone()))?;
         registry.register(Box::new(queue_depth.clone()))?;
         registry.register(Box::new(queue_fill_ratio.clone()))?;
         registry.register(Box::new(queue_drops.clone()))?;
@@ -214,7 +257,6 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_latency_seconds.clone()))?;
         registry.register(Box::new(clickhouse_up.clone()))?;
         registry.register(Box::new(ready_state.clone()))?;
-        registry.register(Box::new(trades_stream_messages.clone()))?;
         registry.register(Box::new(trades_stream_reconnects.clone()))?;
         registry.register(Box::new(trades_stream_errors.clone()))?;
         registry.register(Box::new(trades_rows_parsed.clone()))?;
@@ -225,6 +267,12 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_trades_attempts.clone()))?;
         registry.register(Box::new(insert_trades_rows.clone()))?;
         registry.register(Box::new(insert_trades_latency_seconds.clone()))?;
+        registry.register(Box::new(funding_poll_attempts.clone()))?;
+        registry.register(Box::new(funding_payload_errors.clone()))?;
+        registry.register(Box::new(funding_insert_attempts.clone()))?;
+        registry.register(Box::new(funding_insert_rows.clone()))?;
+        registry.register(Box::new(funding_insert_latency_seconds.clone()))?;
+        registry.register(Box::new(funding_last_event_time_seconds.clone()))?;
 
         Ok(Self {
             registry,
@@ -235,6 +283,7 @@ impl RecorderMetrics {
             market_last_block_number,
             market_last_block_time_ms,
             market_snapshot_levels,
+            l2_level_parse_errors,
             queue_depth,
             queue_fill_ratio,
             queue_drops,
@@ -243,7 +292,6 @@ impl RecorderMetrics {
             insert_latency_seconds,
             clickhouse_up,
             ready_state,
-            trades_stream_messages,
             trades_stream_reconnects,
             trades_stream_errors,
             trades_rows_parsed,
@@ -254,6 +302,12 @@ impl RecorderMetrics {
             insert_trades_attempts,
             insert_trades_rows,
             insert_trades_latency_seconds,
+            funding_poll_attempts,
+            funding_payload_errors,
+            funding_insert_attempts,
+            funding_insert_rows,
+            funding_insert_latency_seconds,
+            funding_last_event_time_seconds,
         })
     }
 
@@ -285,10 +339,17 @@ impl RecorderMetrics {
         Ok(buffer)
     }
 
+    pub fn record_funding(&self, record: &FundingRateRecord) {
+        let gauge = self
+            .funding_last_event_time_seconds
+            .with_label_values(&[&record.coin]);
+        let new_val = record.funding_time_ms as f64 / 1000.0;
+        if new_val > gauge.get() {
+            gauge.set(new_val);
+        }
+    }
+
     pub fn record_trade(&self, trade: &TradeRecord) {
-        self.trades_stream_messages
-            .with_label_values(&[&trade.coin])
-            .inc();
         self.trades_rows_parsed
             .with_label_values(&[&trade.coin])
             .inc();

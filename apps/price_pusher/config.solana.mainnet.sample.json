@@ -1,15 +1,15 @@
 {
+  "address-lookup-table-account": "GgPa1XHhkqvdJHjQpHaqxThwejgHW8qeW4k4jKVS4Lod",
+  "dynamic-jito-tips": true,
   "endpoint": "https://api.mainnet-beta.solana.com",
-  "keypair-file": "./id.json",
-  "shard-id": 1,
   "jito-endpoints": "mainnet.block-engine.jito.wtf,amsterdam.mainnet.block-engine.jito.wtf",
   "jito-keypair-file": "./jito.json",
   "jito-tip-lamports": "100000",
-  "dynamic-jito-tips": true,
-  "updates-per-jito-bundle": "6",
+  "keypair-file": "./id.json",
   "price-config-file": "./price-config.stable.sample.yaml",
   "price-service-endpoint": "https://hermes.pyth.network/",
-  "pyth-contract-address": "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
   "pushing-frequency": "30",
-  "address-lookup-table-account":"GgPa1XHhkqvdJHjQpHaqxThwejgHW8qeW4k4jKVS4Lod"
+  "pyth-contract-address": "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
+  "shard-id": 1,
+  "updates-per-jito-bundle": "6"
 }

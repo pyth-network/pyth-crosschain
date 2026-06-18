@@ -14,13 +14,13 @@ jobs:
       run:
         working-directory: target_chains/starknet/contracts/
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starknet Foundry
-        uses: foundry-rs/setup-snfoundry@v3
+        uses: foundry-rs/setup-snfoundry@v6
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
@@ -28,13 +28,16 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Devnet
         # it doesn't build with more recent Rust versions
-        run: cargo +1.85.0 install starknet-devnet --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
+        run: cargo +1.85.0 install starknet-devnet --locked --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
       - name: Check formatting
-        run: scarb fmt --check
+        # Clear RUSTFLAGS (-D warnings from setup-rust-toolchain) so it doesn't
+        # leak into the snforge_scarb_plugin build, where newer Rust lints get
+        # promoted to errors.
+        run: RUSTFLAGS="" scarb fmt --check
       - name: Run tests
-        run: snforge test
+        run: RUSTFLAGS="" snforge test
       - name: Build contracts
-        run: scarb build
+        run: RUSTFLAGS="" scarb build
       - name: Check ABI files
         run: |
           cat target/dev/pyth_pyth.contract_class.json | jq .abi > /tmp/pyth.json

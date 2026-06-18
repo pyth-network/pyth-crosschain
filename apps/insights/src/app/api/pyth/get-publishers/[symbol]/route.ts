@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { parseSearchParams } from "zod-search-params";
 
 import {
-  Cluster,
   CLUSTER_NAMES,
+  Cluster,
   ClusterToName,
   toCluster,
 } from "../../../../../services/pyth";

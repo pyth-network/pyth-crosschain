@@ -13,16 +13,18 @@ pub struct FinalizeMessageV1<'info> {
         owner = crate::ID,
         constraint = PostedMessageV1::require_draft_message(&draft_message, &emitter_authority)?
     )]
-    draft_message: AccountInfo<'info>,
+    draft_message: UncheckedAccount<'info>,
 }
 
 pub fn finalize_message_v1(ctx: Context<FinalizeMessageV1>) -> Result<()> {
     let acc_data = &mut ctx.accounts.draft_message.data.borrow_mut();
-    sol_memset(
-        &mut acc_data[37..],
-        MessageStatus::ReadyForPublishing as u8,
-        1,
-    );
+    unsafe {
+        sol_memset(
+            &mut acc_data[37..],
+            MessageStatus::ReadyForPublishing as u8,
+            1,
+        );
+    }
 
     // Done.
     Ok(())

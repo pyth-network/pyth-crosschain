@@ -950,135 +950,147 @@
     "type": "EvmPriceFeedContract"
   },
   {
-    "address": "0xc643e55EE8944F3017F4CB8C82aa3DB1AA2d8941",
+    "address": "0xBb86bCc951A62DF86826219d9251Ee05F2c1e286",
     "chain": "sepolia",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-staging"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xF451934f97aFe1347bD297542d19d4B727e071cB",
+    "address": "0x6b81963B9302091910852337d0071aECe9c0775c",
     "chain": "abstract",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
+    "address": "0xcc17C35f739da767C231A34a17986876C56AaCe4",
     "chain": "abstract_testnet",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xda5bED97db5417fB19d78A36529c26027735F404",
+    "address": "0xe15357fB7ab31E091583b9c4b4135BB2f176f38e",
     "chain": "arbitrum",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x4D5F8fD2D76E2b00D14697c7B279Cc0e783EC731",
+    "address": "0x0B73614636C855Bf23F342F307FB981A3e47f42B",
     "chain": "arbitrum_sepolia",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xC0c7e8A8D77Ae986862e5d9811C6826B3a760e85",
+    "address": "0xbC16aee60f64864882BC6C4E428e148Fc0E272F5",
     "chain": "base",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xffE8B2F80d61614DC1b06cD38a82e3ccc85EB52b",
+    "address": "0x5f52e4DBEA21f5b23523B6e20d50c29ae0a4EB83",
     "chain": "base_sepolia",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x007B40aC2A3F1d5624CD325D7E7E408d4247A5aD",
+    "address": "0x2F968931d1B7326d2875E9500980211dcc535eE5",
     "chain": "berachain_mainnet",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x5a641b1ba5FD4132fB6308F4cD22FE7C3eFfbFD7",
+    "address": "0xFfb6DE2684C1259Bc02E1bc66625de1c80fE708C",
     "chain": "berachain_bepolia",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xd74CdD8Eef0E97a5a7678F907991316f88E7965A",
+    "address": "0x99fA5f405b795cA03F2AE47Cd48FEd22029892a2",
     "chain": "hyperevm_testnet",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x3a2DD09B4739D905183D503d594c8FB3e3D41820",
+    "address": "0x298B2f0ae8Efa7f90D845da02ef2E3a88A9BbC02",
     "chain": "hyperevm",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x6AaB9a4CD5a7e5740c5cee76d4EAc2BD9957c66d",
+    "address": "0xed7701a8649d202E52CC3Fdf2ba07AEE745a5f95",
     "chain": "linea_sepolia",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0x5Cc070844E98F4ceC5f2fBE1592fB1ed73aB7b48",
-    "chain": "linea",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0xc4CD37d432F699dAf3fCf1Ad75c5Ab6107A27da3",
-    "chain": "monad_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0x237b7aFF1Af5d9F311f830234792d429355A58F3",
-    "chain": "monad",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0x05D4Ed5F126aC23b6fB8e4ffD4C2c28B6050E480",
-    "chain": "optimism",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0x9f4dbF226dd62F3e4F9D57529170EC0C948819d6",
-    "chain": "optimism_sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
-  },
-  {
-    "address": "0x9fcDCAb0A147e799Fa866594B2c4c20F4eF29F37",
-    "chain": "soneium_minato_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x986c00a290D1767651723c7cF9e5bD7bD745f6f9",
+    "chain": "linea",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
+    "chain": "monad_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
+    "chain": "monad",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xa78951b6bADC9F4740f6f456E9144705D5C5E4B2",
+    "chain": "optimism",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xEAef40A4d9b04B511e11DdDc1c16037Da49E3e35",
+    "chain": "optimism_sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x5c470034117339f4426cc1A005543002D333ce75",
+    "chain": "soneium_minato_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xC0F566304A44d27c40d4F81D629520Ac4eD1850E",
     "chain": "soneium",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "address": "0x0402833A00e734821f74fA4bbdeD2F1759540519",
     "chain": "sonic_evm_testnet",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0xbdEfAe34858456B5B0C6B9E249eaBe1600aB3171",
+    "address": "0x2b9Bb0042dB2F30650d73BB83CBAE584807d2FE4",
     "chain": "fantom_sonic_mainnet",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
   },
   {
-    "address": "0x378d8771E9c66A2aAd370344DfD4b65D1a3C1D8e",
+    "address": "0x14b9932cc9AC8Ee03301665a8644A753f46D8552",
     "chain": "ethereum",
     "type": "EvmPriceFeedContract",
-    "deploymentType": "lazer-prod"
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "chain": "injective_inevm",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x4821932D0CDd71225A6d914706A621e0389D7061",
+    "chain": "injective_evm",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]

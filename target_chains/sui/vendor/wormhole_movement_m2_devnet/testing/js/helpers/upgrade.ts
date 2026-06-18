@@ -1,8 +1,5 @@
-import {
-  RawSigner,
-  SUI_CLOCK_OBJECT_ID,
-  TransactionBlock,
-} from "@mysten/sui.js";
+import type { RawSigner } from "@mysten/sui.js";
+import { SUI_CLOCK_OBJECT_ID, TransactionBlock } from "@mysten/sui.js";
 import { buildForBytecode } from "./build";
 import { getPackageId } from "./utils";
 
@@ -10,7 +7,7 @@ export async function buildAndUpgradeWormhole(
   signer: RawSigner,
   signedVaa: Buffer,
   wormholePath: string,
-  wormholeStateId: string
+  wormholeStateId: string,
 ) {
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
@@ -18,27 +15,27 @@ export async function buildAndUpgradeWormhole(
 
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
-    target: `${wormholePackage}::upgrade_contract::authorize_upgrade`,
     arguments: [
       tx.object(wormholeStateId),
       tx.pure(Array.from(signedVaa)),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
+    target: `${wormholePackage}::upgrade_contract::authorize_upgrade`,
   });
 
   // Build and generate modules and dependencies for upgrade.
   const { modules, dependencies } = buildForBytecode(wormholePath);
   const [upgradeReceipt] = tx.upgrade({
-    modules,
     dependencies,
+    modules,
     packageId: wormholePackage,
     ticket: upgradeTicket,
   });
 
   // Commit upgrade.
   tx.moveCall({
-    target: `${wormholePackage}::upgrade_contract::commit_upgrade`,
     arguments: [tx.object(wormholeStateId), upgradeReceipt],
+    target: `${wormholePackage}::upgrade_contract::commit_upgrade`,
   });
 
   // Cannot auto compute gas budget, so we need to configure it manually.
@@ -46,11 +43,11 @@ export async function buildAndUpgradeWormhole(
   tx.setGasBudget(215_000_000n);
 
   return signer.signAndExecuteTransactionBlock({
-    transactionBlock: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    transactionBlock: tx,
   });
 }
 
@@ -59,15 +56,15 @@ export async function migrate(signer: RawSigner, stateId: string) {
 
   const tx = new TransactionBlock();
   tx.moveCall({
-    target: `${contractPackage}::migrate::migrate`,
     arguments: [tx.object(stateId)],
+    target: `${contractPackage}::migrate::migrate`,
   });
 
   return signer.signAndExecuteTransactionBlock({
-    transactionBlock: tx,
     options: {
       showEffects: true,
       showEvents: true,
     },
+    transactionBlock: tx,
   });
 }

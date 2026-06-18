@@ -7,6 +7,61 @@
   background-color: var(--color-fd-background);
 }
 
+.sectionMigration {
+  @include theme.max-width;
+}
+
+.migrationFeature {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(6);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: theme.spacing(6) theme.spacing(8);
+  border-radius: theme.border-radius("2xl");
+  border: 1px solid theme.color("border");
+  background-color: theme.color("background", "card-highlight");
+  border-left: 3px solid theme.color("states", "data", "normal");
+
+  @include theme.breakpoint("md") {
+    flex-direction: row;
+    align-items: center;
+    gap: theme.spacing(10);
+  }
+}
+
+.migrationFeatureText {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+  flex: 1;
+}
+
+.migrationFeatureTitle {
+  @include theme.text("2xl", "semibold");
+
+  margin: 0;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("heading");
+}
+
+.migrationFeatureBody {
+  @include theme.text("base", "normal");
+
+  margin: 0;
+  color: theme.color("paragraph");
+  line-height: 1.55;
+
+  strong {
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+  }
+}
+
+.migrationFeatureActions {
+  flex-shrink: 0;
+}
+
 .sectionHero {
   position: relative;
   border-bottom: 1px solid theme.color("border");
@@ -21,9 +76,9 @@
 .sectionHeroContent {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(10);
-  padding-top: theme.spacing(18);
-  padding-bottom: theme.spacing(18);
+  gap: theme.spacing(8);
+  padding-top: theme.spacing(10);
+  padding-bottom: theme.spacing(10);
 
   @include theme.max-width;
 
@@ -48,7 +103,7 @@
 }
 
 .heroTitle {
-  @include theme.text("5xl", "semibold");
+  @include theme.text("4xl", "semibold");
 
   line-height: 115%;
   letter-spacing: theme.letter-spacing("tight");
@@ -57,7 +112,7 @@
 }
 
 .heroSubtitle {
-  @include theme.text("2xl", "normal");
+  @include theme.text("xl", "normal");
 
   line-height: 140%;
   color: theme.color("paragraph");

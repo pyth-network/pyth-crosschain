@@ -11,23 +11,40 @@ to verify and use on-chain.
 Hermes allows users to easily query for recent price updates via a REST API, or subscribe to a server-side events stream
 for streaming updates. The Pyth Network's Javascript SDKs connect to an instance of Hermes to fetch price updates.
 
+<UpgradeCallout chain="index" />
+
 [hermes-repo]: https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes
 
 ## Documentation
 
-The [Hermes API Documentation](https://hermes.pyth.network/docs) provides a comprehensive explanation of Hermes API for
-user interaction. You can use [the price service client library in
-JS](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js) to interact with Hermes.
+The [Hermes API Documentation](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API) provides a comprehensive explanation of Hermes API for
+user interaction. You can use the [@pythnetwork/hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) library to interact with Hermes.
 
 Here's an example of retrieving the latest update of the ETH/USD price feed using `curl`.
 
+<Tabs items={["Upgraded endpoint", "Current endpoint"]}>
+<Tab value="Upgraded endpoint">
+
 ```bash
 # Example API call
-$ curl https://hermes.pyth.network/api/latest_price_feeds?ids[]=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+$ curl -H "Authorization: Bearer $PYTH_API_KEY" \
+  "https://pyth.dourolabs.app/hermes/api/latest_price_feeds?ids[]=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
 
 # Example Response
 [{"id":"ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace","price":{"price":"184136023127","conf":"177166324","expo":-8,"publish_time":1692110601},"ema_price":{"price":"184100641000","conf":"178704085","expo":-8,"publish_time":1692110601}}]
 ```
+
+</Tab>
+<Tab value="Current endpoint">
+
+```bash
+# Authentication becomes required on July 31, 2026.
+$ curl -H "Authorization: Bearer $PYTH_API_KEY" \
+  "https://hermes.pyth.network/api/latest_price_feeds?ids[]=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+```
+
+</Tab>
+</Tabs>
 
 ## Accessing Hermes
 

@@ -1,35 +1,34 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-
-import { Checkbox } from "./Checkbox";
 import type { InputSize } from "../../theme/theme";
 import { Text } from "../Text";
+import { Checkbox } from "./Checkbox";
 
 const CheckboxStory: Meta<typeof Checkbox>["render"] = (args) => {
   const sizes: InputSize[] = ["xs", "sm", "md", "lg"];
   const [primaryCheckedBySize, setPrimaryCheckedBySize] = useState<
     Record<InputSize, boolean>
   >({
-    xs: true,
-    sm: false,
-    md: true,
     lg: false,
+    md: true,
+    sm: false,
+    xs: true,
   });
   const [summaryCheckedBySize, setSummaryCheckedBySize] = useState<
     Record<InputSize, boolean>
   >({
-    xs: false,
-    sm: true,
-    md: false,
     lg: true,
+    md: false,
+    sm: true,
+    xs: false,
   });
   const [alertsCheckedBySize, setAlertsCheckedBySize] = useState<
     Record<InputSize, boolean>
   >({
-    xs: true,
-    sm: true,
-    md: false,
     lg: false,
+    md: false,
+    sm: true,
+    xs: true,
   });
 
   return (
@@ -43,7 +42,6 @@ const CheckboxStory: Meta<typeof Checkbox>["render"] = (args) => {
           <Checkbox
             {...args}
             checked={primaryCheckedBySize[size]}
-            size={size}
             onCheckedChange={(nextChecked, event) => {
               setPrimaryCheckedBySize((prev) => ({
                 ...prev,
@@ -51,28 +49,29 @@ const CheckboxStory: Meta<typeof Checkbox>["render"] = (args) => {
               }));
               args.onCheckedChange?.(nextChecked, event);
             }}
+            size={size}
           />
           <Checkbox
             checked={summaryCheckedBySize[size]}
             label="Send weekly summary"
-            size={size}
             onCheckedChange={(nextChecked) => {
               setSummaryCheckedBySize((prev) => ({
                 ...prev,
                 [size]: !!nextChecked,
               }));
             }}
+            size={size}
           />
           <Checkbox
             checked={alertsCheckedBySize[size]}
             label={<Text>Enable trading alerts</Text>}
-            size={size}
             onCheckedChange={(nextChecked) => {
               setAlertsCheckedBySize((prev) => ({
                 ...prev,
                 [size]: !!nextChecked,
               }));
             }}
+            size={size}
           />
         </div>
       ))}
@@ -81,8 +80,6 @@ const CheckboxStory: Meta<typeof Checkbox>["render"] = (args) => {
 };
 
 const meta = {
-  title: "V2/Checkbox",
-  component: Checkbox,
   args: {
     checked: true,
     label: "Receive product updates",
@@ -90,7 +87,9 @@ const meta = {
   argTypes: {
     onCheckedChange: { action: "onCheckedChange" },
   },
+  component: Checkbox,
   render: CheckboxStory,
+  title: "V2/Checkbox",
 } satisfies Meta<typeof Checkbox>;
 
 export default meta;

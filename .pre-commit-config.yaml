@@ -140,19 +140,6 @@ repos:
         entry: cd target_chains/solana/ && cargo clippy --all-targets -- --deny warnings
         pass_filenames: false
         files: target_chains/solana
-      # Hooks for Lazer
-      - id: cargo-fmt-lazer
-        name: Cargo format for Lazer
-        language: "rust"
-        entry: cargo fmt -p pyth-lazer-protocol -p pyth-lazer-client -p pyth-lazer-publisher-sdk
-        pass_filenames: false
-        files: lazer
-      - id: cargo-clippy-lazer
-        name: Cargo clippy for Lazer
-        language: "rust"
-        entry: cargo clippy -p pyth-lazer-protocol -p pyth-lazer-client -p pyth-lazer-publisher-sdk --all-targets -- --deny warnings
-        pass_filenames: false
-        files: lazer
       - id: cargo-fmt-stylus-sdk
         name: Cargo format for Stylus SDK
         language: "rust"

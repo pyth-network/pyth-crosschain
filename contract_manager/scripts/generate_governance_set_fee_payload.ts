@@ -21,24 +21,24 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.json>")
   .options({
     "config-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the config file",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
       demandOption: true,
       desc: "Path to the ops key file",
-    },
-    vault: {
       type: "string",
-      default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
-      desc: "Vault ID",
     },
     "rpc-url": {
-      type: "string",
-      desc: "Solana RPC URL",
       default: process.env.SOLANA_RPC_URL,
+      desc: "Solana RPC URL",
+      type: "string",
+    },
+    vault: {
+      default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
+      desc: "Vault ID",
+      type: "string",
     },
   });
 

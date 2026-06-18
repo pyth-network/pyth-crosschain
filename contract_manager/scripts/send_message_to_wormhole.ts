@@ -3,7 +3,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { WormholeEmitter, loadHotWallet } from "../src/node/utils/governance";
+import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -11,21 +11,21 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     cluster: {
-      type: "string",
       choices: ["mainnet-beta", "testnet"],
       demandOption: true,
       describe: "The Pyth cluster to use for sending the message",
+      type: "string",
+    },
+    message: {
+      demandOption: true,
+      describe: "The message in hex with no leading 0x to send to the wormhole",
+      type: "string",
     },
     walletPath: {
-      type: "string",
       demandOption: true,
       describe:
         "Path to the wallet file to use for sending the message (e.g. ./walletPath.json)",
-    },
-    message: {
       type: "string",
-      demandOption: true,
-      describe: "The message in hex with no leading 0x to send to the wormhole",
     },
   });
 

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use hyperliquid_recorder::models::{L2Level, L2Snapshot};
+use hyperliquid_recorder::models::{parse_funding_history, L2Level, L2Snapshot};
 use rust_decimal::Decimal;
 
 #[test]
@@ -25,4 +25,68 @@ fn test_snapshot_dedupe_key_uses_request_shape() {
         }],
     };
     assert_eq!(snapshot.dedupe_key(), ("BTC".to_string(), 123, 20, 3, 1));
+}
+
+#[test]
+fn test_parse_funding_history_canonical_payload() {
+    let body = r#"[
+        {"coin": "BTC", "fundingRate": "0.0000125", "premium": "0.00001", "time": 1700000000000},
+        {"coin": "BTC", "fundingRate": "0.0000130", "premium": "0.00002", "time": 1700003600000}
+    ]"#;
+    let records = parse_funding_history(body, "BTC", "https://api.hyperliquid.xyz/info")
+        .expect("payload should parse");
+    assert_eq!(records.len(), 2);
+    assert_eq!(records[0].coin, "BTC");
+    assert_eq!(records[0].funding_time_ms, 1_700_000_000_000);
+    assert_eq!(
+        records[0].funding_rate,
+        Decimal::from_str("0.0000125").unwrap()
+    );
+    assert_eq!(
+        records[0].premium,
+        Some(Decimal::from_str("0.00001").unwrap())
+    );
+    assert_eq!(
+        records[0].source_endpoint,
+        "https://api.hyperliquid.xyz/info"
+    );
+    assert_eq!(records[1].funding_time_ms, 1_700_003_600_000);
+}
+
+#[test]
+fn test_parse_funding_history_empty_array_is_ok() {
+    let records =
+        parse_funding_history("[]", "BTC", "src").expect("empty array should parse");
+    assert!(records.is_empty());
+}
+
+#[test]
+fn test_parse_funding_history_missing_premium_is_none() {
+    let body = r#"[
+        {"coin": "BTC", "fundingRate": "0.00002", "time": 1700000000000}
+    ]"#;
+    let records = parse_funding_history(body, "BTC", "src").expect("payload should parse");
+    assert_eq!(records.len(), 1);
+    assert!(records[0].premium.is_none());
+}
+
+#[test]
+fn test_parse_funding_history_malformed_decimal_errors() {
+    let body = r#"[
+        {"coin": "BTC", "fundingRate": "not-a-number", "time": 1700000000000}
+    ]"#;
+    let result = parse_funding_history(body, "BTC", "src");
+    assert!(result.is_err(), "malformed decimal must error");
+}
+
+#[test]
+fn test_parse_funding_history_drops_coin_mismatch() {
+    let body = r#"[
+        {"coin": "BTC", "fundingRate": "0.0000125", "time": 1700000000000},
+        {"coin": "btc", "fundingRate": "0.0000130", "time": 1700003600000}
+    ]"#;
+    let records =
+        parse_funding_history(body, "BTC", "src").expect("payload should parse");
+    assert_eq!(records.len(), 1, "lowercase coin should be dropped, not errored");
+    assert_eq!(records[0].coin, "BTC");
 }
