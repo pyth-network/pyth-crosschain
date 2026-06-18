@@ -107,7 +107,7 @@ See [config.sample.yml](config.sample.yml) for all options:
 
 ## Schema
 
-ClickHouse schema is in [`sql/001-init.sql`](sql/001-init.sql); for local dev it
+ClickHouse schema is in [`migrations/001-init.sql`](migrations/001-init.sql); for local dev it
 is auto-loaded via the ClickHouse Docker entrypoint. For production, apply it
 manually.
 

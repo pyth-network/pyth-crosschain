@@ -1,3 +1,9 @@
+-- Target ClickHouse cluster: pyth-analytics
+--
+-- Apply manually against the pyth-analytics cluster for production. For local
+-- dev this is auto-loaded by the docker-compose ClickHouse entrypoint (see
+-- docker-compose.local.yml).
+
 CREATE TABLE IF NOT EXISTS default.binance_book_ticker
 (
     symbol      LowCardinality(String),

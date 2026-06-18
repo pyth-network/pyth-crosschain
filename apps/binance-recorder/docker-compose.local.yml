@@ -11,7 +11,7 @@ services:
       - "9102:9000"
     volumes:
       - clickhouse-local-data:/var/lib/clickhouse
-      - ./sql/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+      - ./migrations/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
 
   binance-recorder:
     build:
