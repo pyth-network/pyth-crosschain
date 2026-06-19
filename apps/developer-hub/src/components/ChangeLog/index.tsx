@@ -43,7 +43,32 @@ export const ChangeLog = () => {
 
 const ChangeLogView = ({ log }: { log: ChangeLogData }) => {
   const [mode, setMode] = useState<Mode>("day");
+  const [highlighted, setHighlighted] = useState<string | undefined>(undefined);
   const lastDay = log.days.at(-1);
+
+  // Deep-link support: when opened at #<date>, land on that day. Data loads
+  // asynchronously, so the browser's native hash scroll fires before the day
+  // sections exist; re-run the scroll (and a brief highlight) once data is in.
+  useEffect(() => {
+    const date = window.location.hash.replace(/^#/, "");
+    if (date === "" || !log.days.some((d) => d.date === date)) {
+      return;
+    }
+    setMode("day");
+    setHighlighted(date);
+    const scrollTimer = window.setTimeout(() => {
+      document
+        .getElementById(date)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    const clearTimer = window.setTimeout(() => {
+      setHighlighted(undefined);
+    }, 2600);
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [log.days]);
 
   const renderBody = () => {
     if (log.days.length === 0) {
@@ -58,7 +83,11 @@ const ChangeLogView = ({ log }: { log: ChangeLogData }) => {
       return (
         <div className={styles.days}>
           {[...log.days].reverse().map((day) => (
-            <DayView day={day} key={day.date} />
+            <DayView
+              day={day}
+              isHighlighted={day.date === highlighted}
+              key={day.date}
+            />
           ))}
         </div>
       );
@@ -179,19 +208,97 @@ const dotClassFor = (type: ChangeType): string | undefined => {
   }
 };
 
-const DayView = ({ day }: { day: Day }) => {
+const LinkIcon = () => (
+  <svg
+    aria-hidden="true"
+    className={styles.copyLinkIcon}
+    fill="none"
+    height="13"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    width="13"
+  >
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg
+    aria-hidden="true"
+    className={styles.copyLinkIcon}
+    fill="none"
+    height="13"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    width="13"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const CopyLinkButton = ({ date }: { date: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    const url = `${window.location.origin}${window.location.pathname}#${date}`;
+    window.navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setCopied(true);
+        window.setTimeout(() => {
+          setCopied(false);
+        }, 1500);
+      })
+      .catch(() => {
+        // Clipboard can reject (insecure context / denied permission); ignore.
+      });
+  };
+
+  return (
+    <button
+      aria-label={`Copy link to ${fmtDateLong(date)}`}
+      className={clsx(styles.copyLink, copied && styles.copyLinkActive)}
+      onClick={copy}
+      type="button"
+    >
+      {copied ? <CheckIcon /> : <LinkIcon />}
+      {copied && <span className={styles.copyLinkText}>Copied</span>}
+    </button>
+  );
+};
+
+const DayView = ({
+  day,
+  isHighlighted,
+}: {
+  day: Day;
+  isHighlighted: boolean;
+}) => {
   const total = day.events.length;
 
   return (
-    <section className={styles.day} id={day.date}>
+    <section
+      className={clsx(styles.day, isHighlighted && styles.dayHighlighted)}
+      id={day.date}
+    >
       <div className={styles.dayHeader}>
         <h2 className={styles.dayDate}>{fmtDateLong(day.date)}</h2>
         <span className={styles.dayLabel}>{day.label.toLowerCase()}</span>
-        {total > 0 && (
-          <span className={styles.dayCount}>
-            {total} change{total === 1 ? "" : "s"}
-          </span>
-        )}
+        <div className={styles.dayHeaderActions}>
+          {total > 0 && (
+            <span className={styles.dayCount}>
+              {total} change{total === 1 ? "" : "s"}
+            </span>
+          )}
+          <CopyLinkButton date={day.date} />
+        </div>
       </div>
 
       {total === 0 ? (
