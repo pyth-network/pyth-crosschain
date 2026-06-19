@@ -14,7 +14,7 @@ stays up to date.
   3. POST the deploy hook  ───────┼────────────────────────────┼──▶ rebuild main
                                   └────────────────────────────┘        │
   main:  code only, no data            build: pull:changelog  ◀─────────┘
-         (data/changelog-diffs/         (git archive from changelog-data)
+         (data/changelog-diffs/         (https tarball of changelog-data)
           is gitignored)                generate:changelog → bundles last 15
                                         → page renders (build-time, SSR)
 ```
@@ -26,6 +26,11 @@ stays up to date.
   hydrates the diffs from `changelog-data` at build, then `generate:changelog`
   bundles the most recent 15 day-files into `generated-data.ts`. No CMS, no
   runtime fetch.
+- **It pulls over HTTPS, not `git fetch`.** The script downloads the
+  `changelog-data` branch tarball from `codeload.github.com` (public repo, no
+  auth). Vercel's build is a shallow, single-branch clone where
+  `git fetch <other-branch>` does not work — using it silently produced a page
+  with zero days.
 - A Vercel **Deploy Hook** is what turns a data push into a fresh deployment
   (a push to `changelog-data` does not auto-deploy).
 
