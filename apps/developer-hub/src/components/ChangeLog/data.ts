@@ -48,8 +48,9 @@ export type ChangeLog = {
 
 // ─── Public API ──────────────────────────────────────────────────────────
 
-export const getChangeLog = (): Promise<ChangeLog> =>
-  Promise.resolve(GENERATED_CHANGE_LOG);
+// The change log is bundled at build time, so this is a synchronous read of a
+// constant — no fetching, loading, or error states needed at the call site.
+export const getChangeLog = (): ChangeLog => GENERATED_CHANGE_LOG;
 
 // ─── Display helpers ─────────────────────────────────────────────────────
 
