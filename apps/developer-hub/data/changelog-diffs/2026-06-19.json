@@ -1,0 +1,98 @@
+{
+  "date": "2026-06-19",
+  "label": "Friday",
+  "summary": {
+    "added": 0,
+    "went_live": 5,
+    "removed": 4
+  },
+  "hero": "5 went live, 4 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.VXM6",
+      "lazerId": 3119,
+      "asset": "Pyth Price For Vix Index Future 17 June 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-06-19",
+      "quote": "POINTS",
+      "hermesId": "7e8b79b0ef4e6244d4e738efc0417f69ae2c88427e940856dfe5c72010d8794e"
+    },
+    {
+      "id": "Equity.US.NMM6/USD",
+      "lazerId": 3035,
+      "asset": "Deprecared Feed - Pyth Price In Usd For Cme Nasdaq E-Mini Index Futures 18 June 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-06-19",
+      "quote": "USD",
+      "hermesId": "56a457b9a6e6c8d5805a9beebe0f34ee78fc0f779c07cc1e996f8a05f4c9c849"
+    },
+    {
+      "id": "Equity.US.EMM6/USD",
+      "lazerId": 3034,
+      "asset": "Pyth Price In Usd For Cme S&P 500 Index E-Mini Futures 18 June 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-06-19",
+      "quote": "USD",
+      "hermesId": "04cc691c76057c7756eb6e479e8c4754e0c3ae39ba079ff58e5e7ab77e303c91"
+    },
+    {
+      "id": "Equity.US.DMM6/USD",
+      "lazerId": 3033,
+      "asset": "Pyth Price In Usd For Cme Dj Index Futures 18 June 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-06-19",
+      "quote": "USD",
+      "hermesId": "6e22a5245cb127b570610baad354dc9969214b81fa41510538f6cf47ce403356"
+    },
+    {
+      "id": "Crypto.SPCXX/USD",
+      "lazerId": 3329,
+      "asset": "Space Exploration Technology Corp Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-19",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.O/USD",
+      "lazerId": 3327,
+      "asset": "O1 Exchange",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-19",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.STRCX/USD",
+      "lazerId": 3325,
+      "asset": "Strategy Variable Rate Perpetual Stretch Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-19",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.NAV.USDM1/USD",
+      "lazerId": 3324,
+      "asset": "Us Dollar M1",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-06-19",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.CBXRP/USD",
+      "lazerId": 1558,
+      "asset": "Coinbase Wrapped Ripple",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-19",
+      "quote": "USD",
+      "hermesId": "95fd9e16d4cfc5d1370f32bb0bf2346860ad9c92fec83acf4ca263baf16c961d"
+    }
+  ]
+}
