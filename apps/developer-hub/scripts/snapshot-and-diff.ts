@@ -40,6 +40,24 @@ const utcToday = (): string => {
   ].join("-");
 };
 
+// The symbols API is external, so the typed shape is only an assumption. Drop
+// any record missing the fields the diff relies on (symbol, asset_type,
+// pyth_lazer_id) so a single malformed entry can't crash the daily job.
+const isValidSymbol = (item: unknown): item is PythSymbol => {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const s = item as Record<string, unknown>;
+  return (
+    typeof s.symbol === "string" &&
+    s.symbol.length > 0 &&
+    typeof s.asset_type === "string" &&
+    s.asset_type.length > 0 &&
+    typeof s.pyth_lazer_id === "number" &&
+    Number.isFinite(s.pyth_lazer_id)
+  );
+};
+
 const main = async () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const dataDir = resolve(here, "../data");
@@ -70,7 +88,13 @@ const main = async () => {
   if (!Array.isArray(current)) {
     throw new TypeError("Expected the symbols API to return a JSON array");
   }
-  const currentSymbols = current as PythSymbol[];
+  const currentSymbols = current.filter(isValidSymbol);
+  const skipped = current.length - currentSymbols.length;
+  if (skipped > 0) {
+    console.warn(
+      `Skipped ${skipped.toString()} malformed symbol record(s) missing symbol/asset_type/pyth_lazer_id.`,
+    );
+  }
 
   if (!existsSync(baselineFile)) {
     writeFileSync(baselineFile, `${JSON.stringify(currentSymbols)}\n`, "utf8");

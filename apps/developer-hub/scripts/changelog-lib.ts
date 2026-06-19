@@ -57,7 +57,7 @@ export const toTitleCase = (raw: string): string =>
   raw.toLowerCase().replaceAll(/\b([a-z])/g, (_, c: string) => c.toUpperCase());
 
 export const extractAssetName = (s: PythSymbol): string => {
-  const desc = s.description?.replace(/^DEPRECATED FEED\s*-?\s*/i, "").trim();
+  const desc = s.description?.replace(/^DEPRECATED\s+FEED\s*-?\s*/i, "").trim();
   if (desc && desc.length > 0) {
     const [base] = desc.split("/");
     return toTitleCase((base ?? "").trim());
@@ -114,30 +114,47 @@ export const diffPair = (
   today: PythSymbol[],
   date: string,
 ): Day => {
+  // Maps for symbol lookup by id; id Sets for the difference/intersection logic.
   const ymap = new Map<number, PythSymbol>(
     yesterday.map((s) => [s.pyth_lazer_id, s]),
   );
   const tmap = new Map<number, PythSymbol>(
     today.map((s) => [s.pyth_lazer_id, s]),
   );
+  const yesterdayIds = new Set(ymap.keys());
+  const todayIds = new Set(tmap.keys());
 
   const events: Entry[] = [];
 
-  for (const s of today) {
-    if (!ymap.has(s.pyth_lazer_id) && !isDeprecated(s)) {
+  // Set difference (today \ yesterday): newly listed feeds, skipping any that
+  // are born already deprecated.
+  const addedIds = [...todayIds].filter((id) => !yesterdayIds.has(id));
+  for (const id of addedIds) {
+    const s = tmap.get(id);
+    if (s && !isDeprecated(s)) {
       events.push({ ...baseEntry(s, date), changeType: "added" });
     }
   }
 
-  for (const s of yesterday) {
-    if (!tmap.has(s.pyth_lazer_id)) {
+  // Set difference (yesterday \ today): feeds dropped from the catalog.
+  const removedIds = [...yesterdayIds].filter((id) => !todayIds.has(id));
+  for (const id of removedIds) {
+    const s = ymap.get(id);
+    if (s) {
       events.push({ ...baseEntry(s, date), changeType: "removed" });
     }
   }
 
-  for (const t of today) {
-    const y = ymap.get(t.pyth_lazer_id);
-    if (!y) continue;
+  // Intersection (present in both snapshots): record state transitions.
+  for (const id of todayIds) {
+    if (!yesterdayIds.has(id)) {
+      continue;
+    }
+    const t = tmap.get(id);
+    const y = ymap.get(id);
+    if (!t || !y) {
+      continue;
+    }
     const prev = y.state;
     const next = t.state;
     const yDep = isDeprecated(y);
