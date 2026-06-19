@@ -34,12 +34,8 @@
       "dependsOn": ["//#install:modules"]
     },
     "generate:changelog": {
+      "cache": false,
       "dependsOn": ["//#install:modules"],
-      "inputs": [
-        "data/changelog-diffs/**",
-        "scripts/generate-changelog.ts",
-        "scripts/changelog-lib.ts"
-      ],
       "outputs": ["src/components/ChangeLog/generated-data.ts"]
     },
     "generate:docs": {
