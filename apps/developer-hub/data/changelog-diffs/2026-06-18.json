@@ -1,0 +1,49 @@
+{
+  "date": "2026-06-18",
+  "label": "Thursday",
+  "summary": {
+    "added": 0,
+    "went_live": 4,
+    "removed": 0
+  },
+  "hero": "4 went live.",
+  "events": [
+    {
+      "id": "Equity.US.TZA/USD",
+      "lazerId": 3320,
+      "asset": "Direxion Daily Small Cap Bear 3X Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-18",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MVLL/USD",
+      "lazerId": 3319,
+      "asset": "Graniteshares 2X Long Mrvl Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-18",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MUU/USD",
+      "lazerId": 3318,
+      "asset": "Direxion Daily Mu Bull 2X Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-18",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.BNKK/USD",
+      "lazerId": 2408,
+      "asset": "Bonk Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-18",
+      "quote": "USD",
+      "hermesId": "40e8ff325448543e5f3b4ddb97d754522357f4c56fc662f15a1568415f4b3000"
+    }
+  ]
+}
