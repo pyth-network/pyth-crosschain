@@ -1,0 +1,255 @@
+{
+  "date": "2026-06-08",
+  "label": "Monday",
+  "summary": {
+    "added": 0,
+    "went_live": 26,
+    "removed": 1
+  },
+  "hero": "26 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Crypto.MOTHER/USD",
+      "lazerId": 501,
+      "asset": "Mother Iggy",
+      "assetType": "crypto",
+      "quote": "USD",
+      "changeType": "removed",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.7747/HKD",
+      "lazerId": 3306,
+      "asset": "Csop Samsung Electronics Daily 2x Leveraged Product",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.7709/HKD",
+      "lazerId": 3305,
+      "asset": "Csop Sk Hynix Daily 2x Leveraged Product",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Commodities.GOU6/USD",
+      "lazerId": 3059,
+      "asset": "Pyth Price In Usd For Ls Gasoil 10 September 2026",
+      "assetType": "commodity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.US.NIDU6/USD",
+      "lazerId": 2914,
+      "asset": "Pyth Price In Usd For Cme Nikkei Usd Futures 10 September 2026",
+      "assetType": "equity",
+      "quote": "USD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1606/HKD",
+      "lazerId": 1933,
+      "asset": "Cdb Financial Leasing Co Ltd",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.9901/HKD",
+      "lazerId": 1656,
+      "asset": "New Oriental Ed & Technology Gp Inc",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.3988/HKD",
+      "lazerId": 1653,
+      "asset": "Bank Of China Ltd",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1876/HKD",
+      "lazerId": 1641,
+      "asset": "Budweiser Brewing Company Apac Ltd",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1177/HKD",
+      "lazerId": 1638,
+      "asset": "Sino Biopharmaceutical",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1024/HKD",
+      "lazerId": 1634,
+      "asset": "Kuaishou Technology",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0968/HKD",
+      "lazerId": 1632,
+      "asset": "Xinyi Solar Holdings Limited",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0960/HKD",
+      "lazerId": 1631,
+      "asset": "Longfor Group Hldgs Ltd",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0881/HKD",
+      "lazerId": 1629,
+      "asset": "Zhongsheng Group Holdings Limited",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0868/HKD",
+      "lazerId": 1628,
+      "asset": "Xinyi Glass Hldgs",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0762/HKD",
+      "lazerId": 1624,
+      "asset": "China Unicom Hong Kong Limited",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0386/HKD",
+      "lazerId": 1621,
+      "asset": "China Petroleum & Chemical Corp",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0288/HKD",
+      "lazerId": 1617,
+      "asset": "Wh Group Limited",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1398/HKD",
+      "lazerId": 903,
+      "asset": "Icbc",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.1093/HKD",
+      "lazerId": 899,
+      "asset": "Cspc Pharma",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0992/HKD",
+      "lazerId": 896,
+      "asset": "Lenovo Group",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0939/HKD",
+      "lazerId": 895,
+      "asset": "Construction Bank",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0241/HKD",
+      "lazerId": 890,
+      "asset": "Ali Health",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0101/HKD",
+      "lazerId": 889,
+      "asset": "Hang Lung Ppt",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0017/HKD",
+      "lazerId": 887,
+      "asset": "New World Dev",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0012/HKD",
+      "lazerId": 886,
+      "asset": "Henderson Land",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    },
+    {
+      "id": "Equity.HK.0003/HKD",
+      "lazerId": 885,
+      "asset": "Hk & China Gas",
+      "assetType": "equity",
+      "quote": "HKD",
+      "changeType": "went_live",
+      "date": "2026-06-08"
+    }
+  ]
+}
