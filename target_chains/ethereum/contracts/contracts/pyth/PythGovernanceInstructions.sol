@@ -22,7 +22,11 @@ contract PythGovernanceInstructions {
         Target, // 1
         EvmExecutor, // 2
         // The stacks target chain contract has custom governance instructions and needs its own module.
-        StacksTarget // 3
+        StacksTarget, // 3
+        // The Stellar wormhole executor (in pyth-network/pyth-lazer) has its own
+        // module so its generic-dispatch actions do not collide with another
+        // module's fixed actions. Reserved here so the id is not reused.
+        StellarExecutor // 4
     }
 
     GovernanceModule constant MODULE = GovernanceModule.Target;
