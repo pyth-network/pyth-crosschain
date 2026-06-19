@@ -175,6 +175,31 @@
   scroll-margin-top: theme.spacing(8);
 }
 
+.dayHighlighted {
+  border-radius: theme.border-radius("md");
+  animation: changelog-day-flash 2.4s ease-out;
+}
+
+@keyframes changelog-day-flash {
+  0%,
+  12% {
+    background: theme.color("background", "secondary");
+    box-shadow: 0 0 0 theme.spacing(3) theme.color("background", "secondary");
+  }
+
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 theme.spacing(3) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dayHighlighted {
+    animation: none;
+    background: theme.color("background", "secondary");
+  }
+}
+
 .dayHeader {
   display: flex;
   align-items: baseline;
@@ -198,11 +223,74 @@
   color: theme.color("muted");
 }
 
-.dayCount {
+.dayHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2.5);
   margin-left: auto;
+}
+
+.dayCount {
   font-family: theme.font-family("monospace");
   font-size: 0.6875rem;
   color: theme.color("muted");
+}
+
+.copyLink {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.5);
+  padding: theme.spacing(1) theme.spacing(2);
+  border: none;
+  border-radius: theme.border-radius("sm");
+  background: transparent;
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
+
+  &:hover {
+    background: theme.color("background", "secondary");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+}
+
+.dayHeader:hover .copyLink {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .copyLink {
+    opacity: 1;
+  }
+}
+
+.copyLinkActive {
+  opacity: 1;
+  color: theme.color("states", "success", "base");
+
+  &:hover {
+    color: theme.color("states", "success", "base");
+  }
+}
+
+.copyLinkIcon {
+  flex-shrink: 0;
+}
+
+.copyLinkText {
+  line-height: 1;
 }
 
 .dayEmpty {
