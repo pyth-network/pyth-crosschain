@@ -34,6 +34,13 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100
+    },
+    {
+      "alias": "PAXG/USD",
+      "id": "273717b49430906f4b0c230e99aa1007f83758e3199edbc887c0d06c3e332494",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
     }
   ]
 }
