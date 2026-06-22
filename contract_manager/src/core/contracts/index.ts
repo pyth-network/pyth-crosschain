@@ -4,6 +4,7 @@ export * from "./evm";
 export * from "./evm_abis";
 export * from "./fuel";
 export * from "./iota";
+export * from "./stellar";
 export * from "./sui";
 export * from "./ton";
 export * from "./wormhole";

@@ -1,0 +1,11 @@
+[
+  {
+    "horizonUrl": "https://horizon-testnet.stellar.org",
+    "id": "stellar_testnet",
+    "mainnet": false,
+    "networkPassphrase": "Test SDF Network ; September 2015",
+    "rpcUrl": "https://soroban-testnet.stellar.org",
+    "type": "StellarChain",
+    "wormholeChainName": "stellar_testnet"
+  }
+]

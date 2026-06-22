@@ -26,6 +26,7 @@
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
+    "@stellar/stellar-sdk": "catalog:",
     "@ton/blueprint": "^0.22.0",
     "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.3.0",
@@ -167,6 +168,16 @@
       "require": {
         "default": "./dist/cjs/core/contracts/starknet.cjs",
         "types": "./dist/cjs/core/contracts/starknet.d.ts"
+      }
+    },
+    "./core/contracts/stellar": {
+      "import": {
+        "default": "./dist/esm/core/contracts/stellar.mjs",
+        "types": "./dist/esm/core/contracts/stellar.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/stellar.cjs",
+        "types": "./dist/cjs/core/contracts/stellar.d.ts"
       }
     },
     "./core/contracts/sui": {
