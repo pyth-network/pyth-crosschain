@@ -83,6 +83,8 @@ Pyth hosts [public endpoints](https://docs.pyth.network/price-feeds/api-instance
 Hermes RPC providers for more reliability. Please refer to [this
 document](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes) for more information.
 
+The signing mnemonic can be supplied via either the `--mnemonic-file` flag (path to a file containing the mnemonic) or the `MNEMONIC` environment variable. The environment variable is convenient for platforms that inject secrets as encrypted env vars (e.g. DigitalOcean, Fly.io). If both are supplied, `--mnemonic-file` takes precedence.
+
 To run the price pusher, please run the following commands, replacing the command line arguments as necessary:
 
 ```sh

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
 import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 
 import type { PriceItem } from "./interface.js";
@@ -59,6 +61,22 @@ export const assertDefined = <T>(value: T | undefined): T => {
     return value;
   }
 };
+
+export function readMnemonic(mnemonicFile: string | undefined): string {
+  if (mnemonicFile !== undefined && mnemonicFile !== "") {
+    return fs.readFileSync(mnemonicFile, "utf8").trim();
+  }
+
+  // biome-ignore lint/style/noProcessEnv: MNEMONIC is the documented env-var entry point for this helper (CLI / docker users without a mnemonic file path)
+  const envMnemonic = process.env.MNEMONIC;
+  if (envMnemonic !== undefined && envMnemonic !== "") {
+    return envMnemonic.trim();
+  }
+
+  throw new Error(
+    "No mnemonic provided. Pass --mnemonic-file or set the MNEMONIC environment variable.",
+  );
+}
 
 export async function filterInvalidPriceItems(
   hermesClient: HermesClient,

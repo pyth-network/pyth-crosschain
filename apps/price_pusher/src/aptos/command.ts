@@ -3,8 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import fs from "node:fs";
-
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { AptosAccount } from "aptos";
 import pino from "pino";
@@ -15,7 +13,7 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { filterInvalidPriceItems } from "../utils.js";
+import { filterInvalidPriceItems, readMnemonic } from "../utils.js";
 import {
   APTOS_ACCOUNT_HD_PATH,
   AptosPriceListener,
@@ -87,7 +85,7 @@ export default {
       logger.info(`Metrics server started on port ${metricsPort}`);
     }
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
+    const mnemonic = readMnemonic(mnemonicFile);
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,
       mnemonic,

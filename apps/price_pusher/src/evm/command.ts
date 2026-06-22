@@ -3,8 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import fs from "node:fs";
-
 import { HermesClient } from "@pythnetwork/hermes-client";
 import pino from "pino";
 import type { Options } from "yargs";
@@ -14,7 +12,11 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { filterInvalidPriceItems, isWsEndpoint } from "../utils.js";
+import {
+  filterInvalidPriceItems,
+  isWsEndpoint,
+  readMnemonic,
+} from "../utils.js";
 import { createEvmBalanceTracker } from "./balance-tracker.js";
 import { getCustomGasStation } from "./custom-gas-station.js";
 import { EvmPriceListener, EvmPricePusher } from "./evm.js";
@@ -160,7 +162,7 @@ export default {
       accessToken: hermesAccessToken,
     });
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
+    const mnemonic = readMnemonic(mnemonicFile);
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 

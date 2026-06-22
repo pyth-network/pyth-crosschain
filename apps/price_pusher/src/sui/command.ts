@@ -3,8 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import fs from "node:fs";
-
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { HermesClient } from "@pythnetwork/hermes-client";
@@ -16,7 +14,7 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { filterInvalidPriceItems } from "../utils.js";
+import { filterInvalidPriceItems, readMnemonic } from "../utils.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
 import { SuiPriceListener, SuiPricePusher } from "./sui.js";
 
@@ -114,7 +112,7 @@ export default {
       accessToken: hermesAccessToken,
     });
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
+    const mnemonic = readMnemonic(mnemonicFile);
     const keypair = Ed25519Keypair.deriveKeypair(
       mnemonic,
       `m/44'/784'/${accountIndex}'/0'/0'`,
