@@ -181,11 +181,17 @@ export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 export const MODULE_EVM_EXECUTOR = 2;
 export const MODULE_LAZER = 3;
+// The Stellar wormhole executor (in pyth-network/pyth-lazer) has its own module
+// so its generic-dispatch actions do not collide with the Lazer module's fixed
+// actions. Reserved here so the id is not reused; the action payloads are wired
+// up alongside the Stellar contract-manager integration.
+export const MODULE_STELLAR_EXECUTOR = 4;
 export const MODULES = [
   MODULE_EXECUTOR,
   MODULE_TARGET,
   MODULE_EVM_EXECUTOR,
   MODULE_LAZER,
+  MODULE_STELLAR_EXECUTOR,
 ];
 
 export type PythGovernanceAction = {
