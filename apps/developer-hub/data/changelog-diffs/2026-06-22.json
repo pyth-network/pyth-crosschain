@@ -1,0 +1,185 @@
+{
+  "date": "2026-06-22",
+  "label": "Monday",
+  "summary": {
+    "added": 9,
+    "went_live": 9,
+    "removed": 0
+  },
+  "hero": "9 new feeds announced, 9 went live.",
+  "events": [
+    {
+      "id": "Equity.US.SPOT/USD",
+      "lazerId": 2864,
+      "asset": "Spotify Technology Sa",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "547ef6a2ea7db9baf50788876d3c062facaecfc896d898f37ba12efd0a13383a"
+    },
+    {
+      "id": "Equity.US.SOFI/USD",
+      "lazerId": 2861,
+      "asset": "Sofi Technologies Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "72fae0e0683c186f5ce9444afac9909cf5d60b499f4f9569dd75442f19c625c8"
+    },
+    {
+      "id": "Equity.US.SATS/USD",
+      "lazerId": 2850,
+      "asset": "Echostar Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "4a161e7f0a0aa807545fa83871ebcf15c1d4c74b28c8833b770d8644be80ac2a"
+    },
+    {
+      "id": "Equity.US.IONQ/USD",
+      "lazerId": 2799,
+      "asset": "Ionq Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "6af68a227de372e5d19183679911e468e06d85c013f56c376a78a4d942f8f269"
+    },
+    {
+      "id": "Equity.US.GRAB/USD",
+      "lazerId": 2779,
+      "asset": "Grab Holdings Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "be0e2b42aa0859682609decb790cd51832700fef549f59b5eb595221b6c3833c"
+    },
+    {
+      "id": "Equity.US.FLUT/USD",
+      "lazerId": 2769,
+      "asset": "Flutter Entertainment Plc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "28b4e628c91cbfe3e02bef0ffc4b0d2a0ee22f9f4d8f7c0fd2bb4763b1df36e3"
+    },
+    {
+      "id": "Equity.US.CELH/USD",
+      "lazerId": 2731,
+      "asset": "Celsius Holdings Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "56954c7f2b1af2edc80212cb56924cfb0f5e076bba6bd0aeb8a78a67cb2b82ef"
+    },
+    {
+      "id": "Equity.US.APLD/USD",
+      "lazerId": 2706,
+      "asset": "Applied Digital Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "7fc1e64946aff450748e8f60644d052ae787e5708dc48c6c73c546ee94218cc3"
+    },
+    {
+      "id": "Equity.US.AFRM/USD",
+      "lazerId": 2704,
+      "asset": "Affirm Holdings Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "137b11f6e570f46d5cbcf1ebe05ba1bbc677d419ba6eefb5e7f0786c11adae06"
+    },
+    {
+      "id": "Equity.CN.688008/CNY",
+      "lazerId": 3341,
+      "asset": "Montage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688256/CNY",
+      "lazerId": 3340,
+      "asset": "Cambricord Technologies Corp Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.603986/CNY",
+      "lazerId": 3339,
+      "asset": "Gigadevice Semiconductor Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.JP.4062/JPY",
+      "lazerId": 3338,
+      "asset": "Ibiden Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "JPY"
+    },
+    {
+      "id": "Equity.JP.285A/JPY",
+      "lazerId": 3337,
+      "asset": "Kioxia Holdings Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "JPY"
+    },
+    {
+      "id": "Equity.US.NIDZ6/USD",
+      "lazerId": 3336,
+      "asset": "Pyth Price In Usd For Cme Nikkei Usd Futures 10 December 2026",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "7561853a241258b29ccb3aeeb176834feb168566319f7455a9dc6f05e2511268"
+    },
+    {
+      "id": "Equity.US.DMZ6/USD",
+      "lazerId": 3335,
+      "asset": "Pyth Price In Usd For Cme Dj Index Futures 18 December 2026",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "USD",
+      "hermesId": "a0c8478ea45f8d0ba73d0dae1f052221b0d0b20e24a88001c7afd8f8ec78c14e"
+    },
+    {
+      "id": "Equity.US.NMZ6/USD",
+      "lazerId": 3334,
+      "asset": "Pyth Price In Usd For Cme Nasdaq E-Mini Index Futures 18 December 2026",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.EMZ6/USD",
+      "lazerId": 3333,
+      "asset": "Pyth Price In Usd For Cme S&P 500 Index E-Mini Futures 18 December 2026",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-22",
+      "quote": "USD"
+    }
+  ]
+}
