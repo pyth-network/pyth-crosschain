@@ -205,10 +205,6 @@ For complete documentation, fetch any page as plain markdown:
 \`) };
 
 
-
-
-
-
 `;
 
 export function GET() {
