@@ -1,0 +1,132 @@
+@use "@pythnetwork/component-library/theme";
+
+.ticker {
+  border-top: 1px solid theme.color("border");
+  background-color: color-mix(
+    in srgb,
+    theme.color("background", "secondary") 40%,
+    transparent
+  );
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(4);
+  padding-top: theme.spacing(3);
+  padding-bottom: theme.spacing(3);
+  color: inherit;
+  text-decoration: none;
+
+  @include theme.max-width;
+}
+
+.tag {
+  @include theme.text("xs", "medium");
+
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wide");
+  color: theme.color("muted");
+}
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+
+  // Soft fade at both edges so items slide in and out smoothly.
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 theme.spacing(6),
+    #000 calc(100% - #{theme.spacing(6)}),
+    transparent 100%
+  );
+}
+
+.track {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(8);
+  width: max-content;
+  white-space: nowrap;
+  animation: marquee 50s linear infinite;
+  will-change: transform;
+}
+
+// Pause when the user is hovering or keyboard-focused on the strip.
+.ticker:hover .track,
+.ticker:focus-within .track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    // Each set of items is half the track width, so shifting by 50% lands the
+    // duplicate exactly where the original began — a seamless loop.
+    transform: translateX(-50%);
+  }
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: theme.border-radius("full");
+  background: theme.color("muted");
+}
+
+.dotAdded {
+  background: theme.color("states", "success", "base");
+}
+
+.dotWentLive {
+  background: theme.color("highlight");
+}
+
+.dotRemoved {
+  background: theme.color("states", "error", "base");
+}
+
+.itemId {
+  font-family: theme.font-family("monospace");
+  font-size: 0.8125rem;
+  font-weight: theme.font-weight("semibold");
+  color: theme.color("foreground");
+}
+
+.itemLabel {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+}
+
+.cta {
+  @include theme.text("sm", "medium");
+
+  flex-shrink: 0;
+  color: theme.color("link", "primary");
+
+  .link:hover & {
+    text-decoration: underline;
+  }
+}
+
+// Respect reduced-motion: freeze the scroll and show a static, readable row.
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
