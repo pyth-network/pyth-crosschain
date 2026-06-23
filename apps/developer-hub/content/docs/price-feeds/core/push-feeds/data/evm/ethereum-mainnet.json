@@ -5,28 +5,32 @@
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
       "time_difference": 3600,
       "price_deviation": 2,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "LINEA/USD",
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
       "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "BOLD/USD",
       "id": "d6134dbb0427240f901e3e596d6e63f7d85088f96cd4cd4ae2f89c0819b5d623",
       "time_difference": 3600,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "SPYX/USD",
       "id": "2817b78438c769357182c04346fddaad1178c82f4048828fe0997c3c64624e14",
       "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     }
   ]
 }
