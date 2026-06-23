@@ -119,6 +119,8 @@ const client = new HermesClient("https://pyth.dourolabs.app/hermes", {
 Routes and response shapes are unchanged.
 The upgraded endpoint is a drop-in replacement. See the new [Hermes API reference](https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API#/) for the full surface.
 
+Per-chain availability: see the **Pro-compatible** column on the [EVM](/price-feeds/core/push-feeds/evm), [Solana](/price-feeds/core/push-feeds/solana), and [Sui](/price-feeds/core/push-feeds/sui) push-feed tables to confirm which feeds are already served by the upgraded Hermes today.
+
 <Callout type="warn">
   **Deploy 1 and 2 in the same release.**
   The upgraded endpoint serves payloads only the upgraded Pyth Core Contract verifies.

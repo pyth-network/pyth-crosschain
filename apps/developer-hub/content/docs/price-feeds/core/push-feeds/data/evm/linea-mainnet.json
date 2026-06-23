@@ -5,7 +5,8 @@
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
       "time_difference": 3600,
       "price_deviation": 1,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     }
   ]
 }

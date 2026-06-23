@@ -6,7 +6,8 @@
       "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "MSOL/USD",
@@ -14,7 +15,8 @@
       "id": "c2289a6a43d2ce91c6f55caec370f4acc38a2ed477f58813334c6d03749ff2a4",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "BSOL/USD",
@@ -22,7 +24,8 @@
       "id": "89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "SSOL/SOL",
@@ -30,7 +33,8 @@
       "id": "add6499a420f809bbebc0b22fbf68acb8c119023897f6ea801688e0d6e391af4",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "BONK/USD",
@@ -38,7 +42,8 @@
       "id": "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "W/USD",
@@ -46,7 +51,8 @@
       "id": "eff7446475e218517566ea99e72a4abec2e1bd8498b43b7d8331e29dcb059389",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "MEW/USD",
@@ -54,7 +60,8 @@
       "id": "514aed52ca5294177f20187ae883cec4a018619772ddce41efcc36a6448f5d5d",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "USDC/USD",
@@ -62,7 +69,8 @@
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "BTC/USD",
@@ -70,7 +78,8 @@
       "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "USDT/USD",
@@ -78,7 +87,8 @@
       "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "JUP/USD",
@@ -86,7 +96,8 @@
       "id": "0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "ETH/USD",
@@ -94,7 +105,8 @@
       "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "PYTH/USD",
@@ -102,7 +114,8 @@
       "id": "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "HNT/USD",
@@ -110,7 +123,8 @@
       "id": "649fdd7ec08e8e2a20f425729854e90293dcbe2376abc47197a14da6ff339756",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "ORCA/USD",
@@ -118,7 +132,8 @@
       "id": "37505261e557e251290b8c8899453064e8d760ed5c65a779726f2490980da74c",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "SAMO/USD",
@@ -126,7 +141,8 @@
       "id": "49601625e1a342c1f90c3fe6a03ae0251991a1d76e480d2741524c29037be28a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "WIF/USD",
@@ -134,7 +150,8 @@
       "id": "4ca4beeca86f0d164160323817a4e42b10010a724c2217c6ee41b54cd4cc61fc",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "INF/USD",
@@ -142,7 +159,8 @@
       "id": "f51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "MNDE/USD",
@@ -150,7 +168,8 @@
       "id": "3607bf4d7b78666bd3736c7aacaf2fd2bc56caa8667d3224971ebe3c0623292a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NEON/USD",
@@ -158,7 +177,8 @@
       "id": "d82183dd487bef3208a227bb25d748930db58862c5121198e723ed0976eb92b7",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "JLP/USD",
@@ -166,7 +186,8 @@
       "id": "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "WBTC/USD",
@@ -174,7 +195,8 @@
       "id": "c9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "PENGU/USD",
@@ -182,7 +204,8 @@
       "id": "bed3097008b9b5e3c93bec20be79cb43986b85a996475589351a21e67bae9b61",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "TRUMP/USD",
@@ -190,7 +213,8 @@
       "id": "879551021853eec7a7dc827578e8e69da7e4fa8148339aa0d3d5296405be4b1a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "FARTCOIN/USD",
@@ -198,7 +222,8 @@
       "id": "58cd29ef0e714c5affc44f269b2c1899a52da4169d7acc147b9da692e6953608",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "ACRED/USD",
@@ -206,7 +231,8 @@
       "id": "40ac3329933a6b5b65cf31496018c5764ac0567316146f7d0de00095886b480d",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "PUMP/USD",
@@ -214,7 +240,8 @@
       "id": "7a01fca212788bba7c5bf8c9efd576a8a722f070d2c17596ff7bb609b8d5c3b9",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "JUPSOL/SOL.RR",
@@ -222,7 +249,8 @@
       "id": "f8d8d6b6c866c8b2624fb5b679ae846738725e5fc887fa8e927c8d8645018a2b",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NAV.USTB/USD",
@@ -230,7 +258,8 @@
       "id": "dea78edd10cd7ae4524cc1744216788746306623bc3553014eeab6062860795d",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NAV.USCC/USD",
@@ -238,7 +267,8 @@
       "id": "5d73a5953dc86c4773adc778c30e8a6dfc94c5c3a74d7ebb56dd5e70350f044a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "ZBTC/USD",
@@ -246,7 +276,8 @@
       "id": "3d824c7f7c26ed1c85421ecec8c754e6b52d66a4e45de20a9c9ea91de8b396f9",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "LBTC/USD",
@@ -254,7 +285,8 @@
       "id": "8f257aab6e7698bb92b15511915e593d6f8eae914452f781874754b03d0c612b",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "INF/SOL",
@@ -262,7 +294,8 @@
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "INDEX.FORD/USD",
@@ -270,7 +303,8 @@
       "id": "84d8c84bfbe6f71af527493f9aaee09950ee3e09c8460b2b781ce65ea341c10a",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "INDEX.GLXY/USD",
@@ -278,7 +312,8 @@
       "id": "c59735498fa594a63e36382c12656e4313a7269ea1a1ed8fa583008e277f9cdb",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "SYRUPUSDC/USDC.RR",
@@ -286,7 +321,8 @@
       "id": "2ad31d1c4a85fbf2156ce57fab4104124c5ef76a6386375ecfc8da1ed5ce1486",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "ORE/USD",
@@ -294,7 +330,8 @@
       "id": "142b804c658e14ff60886783e46e5a51bdf398b4871d9d8f7c28aa1585cad504",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NOPAL/USD.RR",
@@ -302,7 +339,8 @@
       "id": "8858dfaa8998ff44681aa145a8aa5b7772979b1d044a1bbf3cf5d971168baa85",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NTBILL/USD.RR",
@@ -310,7 +348,8 @@
       "id": "f03015f29e6c90d5fe62da7d1a13c912c8bf7523d90c981387f82ee0c83332bd",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NBASIS/USD.RR",
@@ -318,7 +357,8 @@
       "id": "fd9397e6dfc968ff8eaa652c6e4b7dfdeb6fdc940afe90c23ca5acfa45d408e1",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NWISDOM/USD.RR",
@@ -326,7 +366,8 @@
       "id": "384986c9655ec6887dbd7f7430d864992f872db2c77ba5781a26b78dad277adc",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NALPHA/USD.RR",
@@ -334,7 +375,8 @@
       "id": "57d1e11bea1316c2f7263a39c2780685691585aae34eff39300f5db564501b17",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "NFALCON/USD.RR",
@@ -342,7 +384,8 @@
       "id": "323647322045edff1a0928dca6628169a57afdea43a5f0d948115e3dcae9c1fb",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "CASH/RD.RR",
@@ -350,7 +393,8 @@
       "id": "64c74ffd61574170cfaee65c54c8810adcf83f6c31f3c256d9a290dcbf4ff1a9",
       "time_difference": 30,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "CASH/USD",
@@ -358,7 +402,8 @@
       "id": "df3320ef0f4617337b8dbb924f2aaa4f9db08f522a5435b44f9066c1ac4c7f95",
       "time_difference": 30,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
     },
     {
       "alias": "PST/USDC.RR",
@@ -366,7 +411,8 @@
       "id": "675e36f84a6be779ed793c71eb5c03151e1866c125767f46933626e0610af84d",
       "time_difference": 240,
       "price_deviation": 0.05,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "JUPUSD/USD",
@@ -374,7 +420,8 @@
       "id": "8ed858a2214e892c9371694fb6c8a9037b6ed4052c4edf209f8cb988484e81d9",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     }
   ]
 }

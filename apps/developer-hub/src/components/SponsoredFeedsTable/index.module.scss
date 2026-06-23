@@ -80,3 +80,14 @@
 .updateParamsException {
   color: theme.pallette-color("orange", 600);
 }
+
+.proCompatibleHeaderLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover,
+  &:focus-visible {
+    color: theme.pallette-color("blue", 500);
+  }
+}

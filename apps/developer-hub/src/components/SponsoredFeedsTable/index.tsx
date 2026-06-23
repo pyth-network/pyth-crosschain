@@ -1,3 +1,4 @@
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { Table } from "@pythnetwork/component-library/Table";
 import {
@@ -10,6 +11,11 @@ import { useMemo } from "react";
 
 import styles from "./index.module.scss";
 
+const HERMES_API_DOCS_URL =
+  "https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API";
+
+type ProCompatibleStatus = "available" | "coming_soon";
+
 type SponsoredFeed = {
   alias: string;
   account_address?: string;
@@ -17,6 +23,7 @@ type SponsoredFeed = {
   time_difference: number;
   price_deviation: number;
   confidence_ratio: number;
+  pro_compatible_status?: ProCompatibleStatus;
 };
 
 type SponsoredFeedsTableProps = {
@@ -24,6 +31,7 @@ type SponsoredFeedsTableProps = {
   networkName: string;
   showUpgradedAccountAddress?: boolean;
   hideAccountAddress?: boolean;
+  showProCompatibleStatus?: boolean;
 };
 
 type UpdateParamsProps = {
@@ -85,11 +93,27 @@ const UpdateParams = ({ feed, isDefault }: UpdateParamsProps) => {
   );
 };
 
+const ProCompatibleStatusBadge = ({
+  status,
+}: {
+  status: ProCompatibleStatus;
+}) =>
+  status === "available" ? (
+    <Badge variant="success" size="xs" style="filled">
+      Available
+    </Badge>
+  ) : (
+    <Badge variant="warning" size="xs" style="filled">
+      Coming soon
+    </Badge>
+  );
+
 export const SponsoredFeedsTable = ({
   feeds,
   networkName,
   showUpgradedAccountAddress = false,
   hideAccountAddress = false,
+  showProCompatibleStatus = false,
 }: SponsoredFeedsTableProps) => {
   const paramCounts: Record<string, number> = {};
   for (const feed of feeds) {
@@ -144,8 +168,26 @@ export const SponsoredFeedsTable = ({
         name: "Update Parameters",
         alignment: "left" as const,
       },
+      ...(showProCompatibleStatus
+        ? [
+            {
+              id: "proCompatibleStatus",
+              name: (
+                <a
+                  href={HERMES_API_DOCS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.proCompatibleHeaderLink}
+                >
+                  Pro-compatible
+                </a>
+              ),
+              alignment: "left" as const,
+            },
+          ]
+        : []),
     ],
-    [hasAccountAddress, showUpgradedAccountAddress],
+    [hasAccountAddress, showUpgradedAccountAddress, showProCompatibleStatus],
   );
 
   const rows = useMemo(
@@ -160,6 +202,7 @@ export const SponsoredFeedsTable = ({
           updateParameters: ReactNode;
           accountAddress: ReactNode | undefined;
           upgradedAccountAddress: ReactNode | undefined;
+          proCompatibleStatus: ReactNode | undefined;
         } = {
           name: <span className={styles.nameLabel}>{feed.alias}</span>,
           priceFeedId: (
@@ -168,6 +211,7 @@ export const SponsoredFeedsTable = ({
           updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
           accountAddress: undefined,
           upgradedAccountAddress: undefined,
+          proCompatibleStatus: undefined,
         };
 
         if (hasAccountAddress) {
@@ -191,12 +235,26 @@ export const SponsoredFeedsTable = ({
           );
         }
 
+        if (showProCompatibleStatus) {
+          rowData.proCompatibleStatus = (
+            <ProCompatibleStatusBadge
+              status={feed.pro_compatible_status ?? "coming_soon"}
+            />
+          );
+        }
+
         return {
           id: feed.id,
           data: rowData,
         };
       }),
-    [feeds, defaultParams, hasAccountAddress, showUpgradedAccountAddress],
+    [
+      feeds,
+      defaultParams,
+      hasAccountAddress,
+      showUpgradedAccountAddress,
+      showProCompatibleStatus,
+    ],
   );
 
   if (feeds.length === 0) {
