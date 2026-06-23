@@ -26,7 +26,7 @@ The endpoint returns one JSON object per feed. This page documents every field o
 | `name`          | `string`  | Short symbol name, e.g. `BTCUSD`. For futures this includes the month/year code, e.g. `EMH6`.        |
 | `symbol`        | `string`  | Fully-qualified Pyth symbol, e.g. `Crypto.BTC/USD` or `Equity.US.EMH6/USD`. Encodes asset class, optional region, root, and quote currency. |
 | `description`   | `string`  | Human-readable description, e.g. `BITCOIN / US DOLLAR`.                                               |
-| `hermes_id`     | `string`  | Hex feed ID used by Pyth Core / Hermes for the same underlying, where one exists.                    |
+| `hermes_id`     | `string?` | Hex feed ID used by Pyth Core / Hermes for the same underlying. `null` when the feed has no Pyth Core counterpart. |
 | `nasdaq_symbol` | `string?` | Nasdaq ticker, for equities sourced via Nasdaq. `null` when not applicable.                          |
 | `cmc_id`        | `integer?`| CoinMarketCap ID, for crypto assets. `null` when not applicable.                                     |
 
