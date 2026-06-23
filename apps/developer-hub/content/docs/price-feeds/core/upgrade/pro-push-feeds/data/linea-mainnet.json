@@ -1,0 +1,11 @@
+{
+  "feeds": [
+    {
+      "alias": "LINEA/USD",
+      "confidence_ratio": 100,
+      "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
+      "price_deviation": 1,
+      "time_difference": 3600
+    }
+  ]
+}

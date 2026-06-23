@@ -57,6 +57,8 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The Price Feed program ID changes at the upgrade, so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
 
+For Pyth Pro feeds pushed into upgraded Pyth Core contracts across all supported networks, see [Pyth Pro Push Feeds](/price-feeds/core/upgrade/pro-push-feeds).
+
 <SponsoredFeedsTable
   feeds={solanaMainnet.feeds}
   networkName="Solana mainnet and devnet"
