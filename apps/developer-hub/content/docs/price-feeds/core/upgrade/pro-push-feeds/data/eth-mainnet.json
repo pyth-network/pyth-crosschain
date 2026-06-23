@@ -1,0 +1,32 @@
+{
+  "feeds": [
+    {
+      "alias": "USDC/USD",
+      "confidence_ratio": 100,
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "price_deviation": 2,
+      "time_difference": 3600
+    },
+    {
+      "alias": "BOLD/USD",
+      "confidence_ratio": 100,
+      "id": "d6134dbb0427240f901e3e596d6e63f7d85088f96cd4cd4ae2f89c0819b5d623",
+      "price_deviation": 0.5,
+      "time_difference": 3600
+    },
+    {
+      "alias": "LINEA/USD",
+      "confidence_ratio": 100,
+      "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "SPYX/USD",
+      "confidence_ratio": 100,
+      "id": "2817b78438c769357182c04346fddaad1178c82f4048828fe0997c3c64624e14",
+      "price_deviation": 1,
+      "time_difference": 3600
+    }
+  ]
+}

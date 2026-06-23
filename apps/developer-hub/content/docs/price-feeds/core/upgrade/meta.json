@@ -1,11 +1,12 @@
 {
-  "title": "Pyth Core Upgrade",
-  "icon": "RocketLaunch",
   "defaultOpen": true,
+  "icon": "RocketLaunch",
   "pages": [
     "preparing",
     "---References---",
     "contracts",
+    "pro-push-feeds",
     "how-it-works"
-  ]
+  ],
+  "title": "Pyth Core Upgrade"
 }

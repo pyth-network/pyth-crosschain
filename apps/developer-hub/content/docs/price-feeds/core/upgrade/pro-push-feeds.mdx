@@ -1,0 +1,162 @@
+---
+title: "Pyth Pro Push Feeds"
+description: "Pyth Pro feeds pushed into upgraded Pyth Core contracts."
+full: true
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
+import abstractMainnet from "./pro-push-feeds/data/abstract-mainnet.json";
+import arbitrumMainnet from "./pro-push-feeds/data/arbitrum-mainnet.json";
+import baseMainnet from "./pro-push-feeds/data/base-mainnet.json";
+import berachainMainnet from "./pro-push-feeds/data/berachain-mainnet.json";
+import ethereumMainnet from "./pro-push-feeds/data/eth-mainnet.json";
+import hyperEvmMainnet from "./pro-push-feeds/data/hyperevm-mainnet.json";
+import lineaMainnet from "./pro-push-feeds/data/linea-mainnet.json";
+import monadMainnet from "./pro-push-feeds/data/monad-mainnet.json";
+import optimismMainnet from "./pro-push-feeds/data/optimism-mainnet.json";
+import solanaMainnet from "./pro-push-feeds/data/solana-mainnet.json";
+import soneiumMainnet from "./pro-push-feeds/data/soneium-mainnet.json";
+import sonicMainnet from "./pro-push-feeds/data/sonic-mainnet.json";
+import suiMainnet from "./pro-push-feeds/data/sui-mainnet.json";
+
+These Pyth Pro feeds are pushed into the upgraded Pyth Core contracts on the networks below.
+For other Pyth Pro feeds, fetch prices directly from the Pyth Pro API or WebSocket and submit the update in your transaction.
+
+<Callout type="info" title="Request Additional Feeds">
+  If you would like to see additional feeds on this list, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+## Solana Mainnet
+
+<SponsoredFeedsTable
+  feeds={solanaMainnet.feeds}
+  networkName="Solana mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Solana mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  showUpgradedAccountAddress
+  hideAccountAddress
+/>
+
+## Sui Mainnet
+
+<SponsoredFeedsTable
+  feeds={suiMainnet.feeds}
+  networkName="Sui mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Sui mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+## EVM Mainnets
+
+### Abstract Mainnet
+
+<SponsoredFeedsTable
+  feeds={abstractMainnet.feeds}
+  networkName="Abstract mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Abstract mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Arbitrum Mainnet
+
+<SponsoredFeedsTable
+  feeds={arbitrumMainnet.feeds}
+  networkName="Arbitrum mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Arbitrum mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Base Mainnet
+
+<SponsoredFeedsTable
+  feeds={baseMainnet.feeds}
+  networkName="Base mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Base mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Berachain Mainnet
+
+<SponsoredFeedsTable
+  feeds={berachainMainnet.feeds}
+  networkName="Berachain mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Berachain mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Ethereum Mainnet
+
+<SponsoredFeedsTable
+  feeds={ethereumMainnet.feeds}
+  networkName="Ethereum mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Ethereum mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### HyperEVM Mainnet
+
+<SponsoredFeedsTable
+  feeds={hyperEvmMainnet.feeds}
+  networkName="HyperEVM mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on HyperEVM mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Linea Mainnet
+
+<SponsoredFeedsTable
+  feeds={lineaMainnet.feeds}
+  networkName="Linea mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Linea mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Monad Mainnet
+
+<SponsoredFeedsTable
+  feeds={monadMainnet.feeds}
+  networkName="Monad mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Monad mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Optimism Mainnet
+
+<SponsoredFeedsTable
+  feeds={optimismMainnet.feeds}
+  networkName="Optimism mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Optimism mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Soneium Mainnet
+
+<SponsoredFeedsTable
+  feeds={soneiumMainnet.feeds}
+  networkName="Soneium mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Soneium mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
+
+### Sonic Mainnet
+
+<SponsoredFeedsTable
+  feeds={sonicMainnet.feeds}
+  networkName="Sonic mainnet"
+  introText="The Pyth Pro price feeds listed below are pushed into the upgraded Pyth Core contract on Sonic mainnet."
+  tableLabel="Pyth Pro Push Feeds"
+  hideAccountAddress
+/>
