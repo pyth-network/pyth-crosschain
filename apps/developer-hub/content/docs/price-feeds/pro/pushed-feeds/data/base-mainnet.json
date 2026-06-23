@@ -1,0 +1,56 @@
+{
+  "chain": "base",
+  "feeds": [
+    {
+      "alias": "USDC/USD",
+      "confidence_ratio": 100,
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "ETH/USD",
+      "confidence_ratio": 100,
+      "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "WETH/USD",
+      "confidence_ratio": 100,
+      "id": "9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "CBETH/USD",
+      "confidence_ratio": 100,
+      "id": "15ecddd26d49e1a8f1de9376ebebc03916ede873447c1255d2d5891b92ce5717",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "WSTETH/USD",
+      "confidence_ratio": 100,
+      "id": "6df640f3b8963d8f8358f791f352b8364513f6ab1cca5ed3f1f7b5448980e784",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "SUI/USD",
+      "confidence_ratio": 100,
+      "id": "23d7315113f5b1d3ba7a83604c44b94d79f4fd69af77f804fc7f920a6dc65744",
+      "price_deviation": 1,
+      "time_difference": 3600
+    },
+    {
+      "alias": "XRP/USD",
+      "confidence_ratio": 100,
+      "id": "ec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8",
+      "price_deviation": 1,
+      "time_difference": 3600
+    }
+  ],
+  "networkName": "Base mainnet",
+  "source": "environments/platform-yellow/base-price-pusher-mainnet/deployment-pro-compatible.yaml"
+}

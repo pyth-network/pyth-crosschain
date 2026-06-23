@@ -1,0 +1,148 @@
+---
+title: Pushed Feeds
+description: List of Pyth Pro pushed feeds on supported networks
+slug: /price-feeds/pro/pushed-feeds
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { SponsoredFeedsTable } from "../../../../src/components/SponsoredFeedsTable";
+import abstractMainnet from "./pushed-feeds/data/abstract-mainnet.json";
+import arbitrumMainnet from "./pushed-feeds/data/arbitrum-mainnet.json";
+import baseMainnet from "./pushed-feeds/data/base-mainnet.json";
+import berachainMainnet from "./pushed-feeds/data/berachain-mainnet.json";
+import ethereumMainnet from "./pushed-feeds/data/eth-mainnet.json";
+import hyperEvmMainnet from "./pushed-feeds/data/hyperevm-mainnet.json";
+import lineaMainnet from "./pushed-feeds/data/linea-mainnet.json";
+import monadMainnet from "./pushed-feeds/data/monad-mainnet.json";
+import optimismMainnet from "./pushed-feeds/data/optimism-mainnet.json";
+import solanaMainnet from "./pushed-feeds/data/solana-mainnet.json";
+import soneiumMainnet from "./pushed-feeds/data/soneium-mainnet.json";
+import sonicMainnet from "./pushed-feeds/data/sonic-mainnet.json";
+import suiMainnet from "./pushed-feeds/data/sui-mainnet.json";
+
+<Callout type="info" title="Request Additional Feeds">
+  If you would like to see additional feeds on this list, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+Pyth Pro pushed feeds are a curated set of price feeds that Pyth pushes on-chain for supported networks.
+For feeds that are not listed here, consume Pyth Pro updates directly from the API or WebSocket and verify them on-chain in your transaction.
+
+## Solana Mainnet
+
+<SponsoredFeedsTable
+  feeds={solanaMainnet.feeds}
+  networkName="Solana mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+## Sui Mainnet
+
+<SponsoredFeedsTable
+  feeds={suiMainnet.feeds}
+  networkName="Sui mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+## EVM Mainnets
+
+### Abstract Mainnet
+
+<SponsoredFeedsTable
+  feeds={abstractMainnet.feeds}
+  networkName="Abstract mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Arbitrum Mainnet
+
+<SponsoredFeedsTable
+  feeds={arbitrumMainnet.feeds}
+  networkName="Arbitrum mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Base Mainnet
+
+<SponsoredFeedsTable
+  feeds={baseMainnet.feeds}
+  networkName="Base mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Berachain Mainnet
+
+<SponsoredFeedsTable
+  feeds={berachainMainnet.feeds}
+  networkName="Berachain mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Ethereum Mainnet
+
+<SponsoredFeedsTable
+  feeds={ethereumMainnet.feeds}
+  networkName="Ethereum mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### HyperEVM Mainnet
+
+<SponsoredFeedsTable
+  feeds={hyperEvmMainnet.feeds}
+  networkName="HyperEVM mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Linea Mainnet
+
+<SponsoredFeedsTable
+  feeds={lineaMainnet.feeds}
+  networkName="Linea mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Monad Mainnet
+
+<SponsoredFeedsTable
+  feeds={monadMainnet.feeds}
+  networkName="Monad mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Optimism Mainnet
+
+<SponsoredFeedsTable
+  feeds={optimismMainnet.feeds}
+  networkName="Optimism mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Soneium Mainnet
+
+<SponsoredFeedsTable
+  feeds={soneiumMainnet.feeds}
+  networkName="Soneium mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>
+
+### Sonic Mainnet
+
+<SponsoredFeedsTable
+  feeds={sonicMainnet.feeds}
+  networkName="Sonic mainnet"
+  feedTypeLabel="pushed"
+  hideAccountAddress
+/>

@@ -24,6 +24,7 @@ type SponsoredFeedsTableProps = {
   networkName: string;
   showUpgradedAccountAddress?: boolean;
   hideAccountAddress?: boolean;
+  feedTypeLabel?: string;
 };
 
 type UpdateParamsProps = {
@@ -34,20 +35,23 @@ type UpdateParamsProps = {
 const truncateHex = (value: string) =>
   `${value.slice(0, 6)}...${value.slice(-4)}`;
 
+const capitalize = (value: string) =>
+  `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+
 const formatTimeDifference = (
   seconds: number,
 ): { value: number; unit: string } => {
   if (seconds >= 3600) {
     const hours = Math.floor(seconds / 3600);
-    return { value: hours, unit: hours === 1 ? "hour" : "hours" };
+    return { unit: hours === 1 ? "hour" : "hours", value: hours };
   }
 
   if (seconds >= 60) {
     const minutes = Math.floor(seconds / 60);
-    return { value: minutes, unit: minutes === 1 ? "minute" : "minutes" };
+    return { unit: minutes === 1 ? "minute" : "minutes", value: minutes };
   }
 
-  return { value: seconds, unit: seconds === 1 ? "second" : "seconds" };
+  return { unit: seconds === 1 ? "second" : "seconds", value: seconds };
 };
 
 const formatUpdateParams = (feed: SponsoredFeed): string => {
@@ -90,6 +94,7 @@ export const SponsoredFeedsTable = ({
   networkName,
   showUpgradedAccountAddress = false,
   hideAccountAddress = false,
+  feedTypeLabel = "sponsored",
 }: SponsoredFeedsTableProps) => {
   const paramCounts: Record<string, number> = {};
   for (const feed of feeds) {
@@ -111,38 +116,38 @@ export const SponsoredFeedsTable = ({
   const columns = useMemo(
     () => [
       {
-        id: "name",
-        name: "Name",
-        isRowHeader: true,
         alignment: "left" as const,
+        id: "name",
+        isRowHeader: true,
+        name: "Name",
       },
       ...(hasAccountAddress
         ? [
             {
+              alignment: "left" as const,
               id: "accountAddress",
               name: "Account Address",
-              alignment: "left" as const,
             },
           ]
         : []),
       ...(showUpgradedAccountAddress
         ? [
             {
+              alignment: "left" as const,
               id: "upgradedAccountAddress",
               name: "Upgraded Account Address",
-              alignment: "left" as const,
             },
           ]
         : []),
       {
+        alignment: "left" as const,
         id: "priceFeedId",
         name: "Price Feed Id",
-        alignment: "left" as const,
       },
       {
+        alignment: "left" as const,
         id: "updateParameters",
         name: "Update Parameters",
-        alignment: "left" as const,
       },
     ],
     [hasAccountAddress, showUpgradedAccountAddress],
@@ -161,12 +166,12 @@ export const SponsoredFeedsTable = ({
           accountAddress: ReactNode | undefined;
           upgradedAccountAddress: ReactNode | undefined;
         } = {
+          accountAddress: undefined,
           name: <span className={styles.nameLabel}>{feed.alias}</span>,
           priceFeedId: (
             <CopyButton text={feed.id}>{truncateHex(feed.id)}</CopyButton>
           ),
           updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
-          accountAddress: undefined,
           upgradedAccountAddress: undefined,
         };
 
@@ -192,8 +197,8 @@ export const SponsoredFeedsTable = ({
         }
 
         return {
-          id: feed.id,
           data: rowData,
+          id: feed.id,
         };
       }),
     [feeds, defaultParams, hasAccountAddress, showUpgradedAccountAddress],
@@ -203,7 +208,7 @@ export const SponsoredFeedsTable = ({
     return (
       <div className={styles.container}>
         <p className={styles.introText}>
-          No sponsored price feeds are currently available for{" "}
+          No {feedTypeLabel} price feeds are currently available for{" "}
           <strong>{networkName}</strong>.
         </p>
       </div>
@@ -213,7 +218,7 @@ export const SponsoredFeedsTable = ({
   return (
     <div className={styles.container}>
       <p className={styles.introText}>
-        The price feeds listed below are currently sponsored in{" "}
+        The price feeds listed below are currently {feedTypeLabel} in{" "}
         <strong>{networkName}</strong>.
       </p>
       <div className={styles.tableWrapper}>
@@ -231,7 +236,7 @@ export const SponsoredFeedsTable = ({
           {paramEntries
             .filter(([params]) => params !== defaultParams)
             .map(([params, count]) => (
-              <div key={params} className={styles.summaryItem}>
+              <div className={styles.summaryItem} key={params}>
                 <span
                   className={clsx(styles.statusDot, styles.statusDotException)}
                 />
@@ -243,12 +248,12 @@ export const SponsoredFeedsTable = ({
         </div>
 
         <Table
-          label="Sponsored Feeds"
-          fill
+          className={clsx("not-prose", styles.table)}
           columns={columns}
+          fill
+          label={`${capitalize(feedTypeLabel)} Feeds`}
           rows={rows}
           stickyHeader="top"
-          className={clsx("not-prose", styles.table)}
         />
       </div>
     </div>
