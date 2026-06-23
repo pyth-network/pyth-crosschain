@@ -1,6 +1,6 @@
 ---
 title: Symbology & Reference Data
-description: Field-by-field reference for Pyth Pro symbol metadata, including futures chain, expiration, and availability patterns
+description: "Field-by-field reference for Pyth Pro symbol metadata: identifiers, classification, data quality, trading schedules, and futures expiration"
 slug: /price-feeds/pro/symbology-reference
 ---
 
@@ -68,84 +68,10 @@ The endpoint returns one JSON object per feed. This page documents every field o
 
 ### Futures & derivatives
 
-| Field                  | Type       | Description                                                                                             |
-| ---------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
-| `expiration_time`      | `string?`  | Expiration timestamp (RFC 3339) for a dated futures contract, e.g. `2026-06-11T17:00:00-04:00`.         |
-| `corporate_actions`    | `object[]?`| Corporate actions (e.g. a stock `SPLIT`) affecting an equity feed, with activation dates.               |
-| `chain_id`             | `string`   | Stable root identifying the family of feeds for a derivative product. See [Futures metadata](#futures-metadata). |
-| `expiration_pattern`   | `string[]` | All expirations the contract administrator lists. See [Futures metadata](#futures-metadata).            |
-| `availability_pattern` | `string[]` | The subset of expirations Pyth publishes. See [Futures metadata](#futures-metadata).                    |
-
-## Futures metadata
-
-Dated futures come in **families** — a series of contracts on the same underlying that expire on a recurring monthly cadence. Three fields describe that family.
-
-<Callout type="info">
-  `chain_id`, `expiration_pattern`, and `availability_pattern` are being added
-  to the symbology response across futures families. They apply to `future`
-  instruments; spot feeds do not carry them.
-</Callout>
-
-### `chain_id`
-
-The stable base Pyth identifier for the family of price feeds of a derivative product. The root is appended by qualifiers (e.g. month and year) that pin down a specific instrument priced.
-
-For example, `EM` is the root for the E-mini S&P 500 family; individual contracts such as `EMH6` (March 2026) and `EMM6` (June 2026) share the same `chain_id`. Use it to group, navigate between, and roll over related contracts.
-
-### `expiration_pattern`
-
-The complete set of expirations applicable to the product as identified by the contract administrator — that is, **every monthly contract the underlying exchange lists**.
-
-Encoded as a list of **lowercase three-letter month abbreviations**:
-
-```json
-"expiration_pattern": ["mar", "jun", "sep", "dec"]
-```
-
-### `availability_pattern`
-
-The set of price feeds expected to be available from Pyth, as a **subset of `expiration_pattern`**, given the liquidity profile and the market trading conventions. In other words, the contracts Pyth actually publishes, chosen by volume patterns on the exchange.
-
-Encoded as a list of **single-letter month codes**:
-
-```json
-"availability_pattern": ["H", "M", "U", "Z"]
-```
-
-### Month codes
-
-`availability_pattern` uses the standard single-letter futures month codes. `expiration_pattern` uses the lowercase month abbreviation for the same month.
-
-| Code | Month     | Abbrev |
-| ---- | --------- | ------ |
-| F    | January   | jan    |
-| G    | February  | feb    |
-| H    | March     | mar    |
-| J    | April     | apr    |
-| K    | May       | may    |
-| M    | June      | jun    |
-| N    | July      | jul    |
-| Q    | August    | aug    |
-| U    | September | sep    |
-| V    | October   | oct    |
-| X    | November  | nov    |
-| Z    | December  | dec    |
-
-See [Futures Terminology](/price-feeds/pro/futures-terminology) for how these codes combine with year digits to form a ticker (e.g. `EMH6`).
-
-### Worked example
-
-For the E-mini S&P 500 family:
-
-```json
-{
-  "chain_id": "EM",
-  "expiration_pattern": ["mar", "jun", "sep", "dec"],
-  "availability_pattern": ["H", "M", "U", "Z"]
-}
-```
-
-The exchange lists quarterly contracts — March, June, September, and December — so `expiration_pattern` is `["mar", "jun", "sep", "dec"]`. Pyth publishes that same quarterly set, which in month-code form is `["H", "M", "U", "Z"]`. When Pyth lists fewer contracts than the exchange offers (for example, only the most liquid quarter-end contracts of a monthly product), `availability_pattern` is a strict subset of `expiration_pattern`.
+| Field               | Type        | Description                                                                                     |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `expiration_time`   | `string?`   | Expiration timestamp (RFC 3339) for a dated futures contract, e.g. `2026-06-11T17:00:00-04:00`. |
+| `corporate_actions` | `object[]?` | Corporate actions (e.g. a stock `SPLIT`) affecting an equity feed, with activation dates.       |
 
 ## Accessing the data
 
