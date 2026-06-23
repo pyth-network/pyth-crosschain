@@ -1,0 +1,176 @@
+{
+  "date": "2026-06-23",
+  "label": "Tuesday",
+  "summary": {
+    "added": 16,
+    "went_live": 1,
+    "removed": 1
+  },
+  "hero": "16 new feeds announced, 1 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.WTIN6/USD",
+      "lazerId": 3068,
+      "asset": "Pyth Price In Usd For Wti 22 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-06-23",
+      "quote": "USD",
+      "hermesId": "ce4c15100156d27c8bdd044d9804294e7bc0944dbb5b2b82a61a7aa85b6b3a5e"
+    },
+    {
+      "id": "FX.USDXY",
+      "lazerId": 2307,
+      "asset": "Us Dollar Index",
+      "assetType": "fx",
+      "changeType": "went_live",
+      "date": "2026-06-23",
+      "quote": "N/A",
+      "hermesId": "710afe0041a07156bfd71971160c78a326bf8121403e0d4e140d06bea0353b7f"
+    },
+    {
+      "id": "Equity.US.CIEN/USD",
+      "lazerId": 3357,
+      "asset": "Ciena Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "CIEN"
+    },
+    {
+      "id": "Equity.US.QUBT/USD",
+      "lazerId": 3356,
+      "asset": "Quantum Computing Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.POET/USD",
+      "lazerId": 3355,
+      "asset": "Poet Technologies Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.UMC/USD",
+      "lazerId": 3354,
+      "asset": "United Microelectronics Corporation",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NVTS/USD",
+      "lazerId": 3353,
+      "asset": "Navitas Semiconductor Corporation",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CLSK/USD",
+      "lazerId": 3352,
+      "asset": "Cleanspark Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NU/USD",
+      "lazerId": 3351,
+      "asset": "Nu Holdings Ltd.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.XNDU/USD",
+      "lazerId": 3350,
+      "asset": "Xanadu Quantum Technologies Limited",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SPMO/USD",
+      "lazerId": 3349,
+      "asset": "Invesco S&P 500 Momentum Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TSEM/USD",
+      "lazerId": 3348,
+      "asset": "Tower Semiconductor Ltd.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.PR/USD",
+      "lazerId": 3347,
+      "asset": "Permian Resources Corporation",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.INOD/USD",
+      "lazerId": 3346,
+      "asset": "Innodata Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MXL/USD",
+      "lazerId": 3345,
+      "asset": "Maxlinear Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ELF/USD",
+      "lazerId": 3344,
+      "asset": "E.L.F. Beauty Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NNE/USD",
+      "lazerId": 3343,
+      "asset": "Nano Nuclear Energy Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.PENG/USD",
+      "lazerId": 3342,
+      "asset": "Penguin Solutions Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-23",
+      "quote": "USD"
+    }
+  ]
+}
