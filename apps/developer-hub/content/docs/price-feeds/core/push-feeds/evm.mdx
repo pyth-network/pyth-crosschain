@@ -5,6 +5,7 @@ slug: /price-feeds/core/push-feeds/evm
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import Link from "next/link";
 import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
 import abstractMainnet from "./data/evm/abstract-mainnet.json";
 import arbitrumMainnet from "./data/evm/arbitrum-mainnet.json";
@@ -37,6 +38,10 @@ The following EVM chains have push feeds:
 <Callout type="info" title="Request Additional Feeds">
   If you would like to see additional feeds on this list, please fill in this
   [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+<Callout type="info" title="Pro-compatible Core upgrade">
+  EVM chains are part of the <Link href="/price-feeds/core/upgrade">Pyth Core upgrade</Link> on July 31, 2026. The sponsored feeds and update parameters below carry over to the Pro-compatible scheduler. Feeds tagged <strong>Coming soon (Pro)</strong> are skipped by the scheduler until they are added to Pyth Pro — see the <Link href="/price-feeds/core/push-feeds#sponsored-feeds-and-the-pro-compatible-core-upgrade">push-feeds overview</Link> for details.
 </Callout>
 
 ## Abstract Mainnet

@@ -39,6 +39,12 @@ The feeds can vary by network. Please see the relevant section below for the net
   changes.
 </Callout>
 
+## Sponsored feeds and the Pro-compatible Core upgrade
+
+After the <Link href="/price-feeds/core/upgrade">Pyth Core upgrade</Link> on **July 31, 2026**, sponsored push feeds keep the same feed list and per-feed update parameters (heartbeat and price deviation) shown on the per-network pages below. The Pro-compatible scheduler publishes them from the upgraded data path.
+
+Some feeds are not yet available in Pyth Pro. The Pro-compatible scheduler **skips those feeds** until they are added to Pyth Pro. Feeds in that state are tagged **"Coming soon (Pro)"** on the per-network tables. See <Link href="/price-feeds/core/upgrade/preparing">preparing for the upgrade</Link> for the full migration checklist (EVM, Solana, and Sui).
+
 <Callout type="warning">
   DISCLAIMER: While the Pyth Data Association strives to deliver timely updates,
   these push feeds may occasionally experience delays in updates caused by chain

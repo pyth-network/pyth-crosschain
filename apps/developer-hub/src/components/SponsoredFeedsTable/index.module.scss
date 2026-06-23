@@ -61,8 +61,32 @@
   background-color: theme.pallette-color("orange", 500);
 }
 
+.statusDotComingSoon {
+  background-color: theme.pallette-color("gray", 500);
+}
+
 .nameLabel {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
   @include theme.text("base", "medium");
+}
+
+.nameLabelComingSoon {
+  color: theme.pallette-color("gray", 500);
+}
+
+.comingSoonBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid theme.pallette-color("gray", 600);
+  border-radius: theme.border-radius("full");
+  color: theme.pallette-color("gray", 500);
+
+  @include theme.text("xs", "medium");
 }
 
 .updateParams {

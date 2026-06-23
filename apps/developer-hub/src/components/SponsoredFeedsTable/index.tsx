@@ -17,6 +17,7 @@ type SponsoredFeed = {
   time_difference: number;
   price_deviation: number;
   confidence_ratio: number;
+  pro_available?: boolean;
 };
 
 type SponsoredFeedsTableProps = {
@@ -39,15 +40,15 @@ const formatTimeDifference = (
 ): { value: number; unit: string } => {
   if (seconds >= 3600) {
     const hours = Math.floor(seconds / 3600);
-    return { value: hours, unit: hours === 1 ? "hour" : "hours" };
+    return { unit: hours === 1 ? "hour" : "hours", value: hours };
   }
 
   if (seconds >= 60) {
     const minutes = Math.floor(seconds / 60);
-    return { value: minutes, unit: minutes === 1 ? "minute" : "minutes" };
+    return { unit: minutes === 1 ? "minute" : "minutes", value: minutes };
   }
 
-  return { value: seconds, unit: seconds === 1 ? "second" : "seconds" };
+  return { unit: seconds === 1 ? "second" : "seconds", value: seconds };
 };
 
 const formatUpdateParams = (feed: SponsoredFeed): string => {
@@ -108,41 +109,46 @@ export const SponsoredFeedsTable = ({
   const hasAccountAddress =
     !hideAccountAddress && feeds.some((feed) => !!feed.account_address);
 
+  const comingSoonCount = feeds.filter(
+    (feed) => feed.pro_available === false,
+  ).length;
+  const showProAvailability = comingSoonCount > 0;
+
   const columns = useMemo(
     () => [
       {
-        id: "name",
-        name: "Name",
-        isRowHeader: true,
         alignment: "left" as const,
+        id: "name",
+        isRowHeader: true,
+        name: "Name",
       },
       ...(hasAccountAddress
         ? [
             {
+              alignment: "left" as const,
               id: "accountAddress",
               name: "Account Address",
-              alignment: "left" as const,
             },
           ]
         : []),
       ...(showUpgradedAccountAddress
         ? [
             {
+              alignment: "left" as const,
               id: "upgradedAccountAddress",
               name: "Upgraded Account Address",
-              alignment: "left" as const,
             },
           ]
         : []),
       {
+        alignment: "left" as const,
         id: "priceFeedId",
         name: "Price Feed Id",
-        alignment: "left" as const,
       },
       {
+        alignment: "left" as const,
         id: "updateParameters",
         name: "Update Parameters",
-        alignment: "left" as const,
       },
     ],
     [hasAccountAddress, showUpgradedAccountAddress],
@@ -153,6 +159,7 @@ export const SponsoredFeedsTable = ({
       feeds.map((feed) => {
         const formattedParams = formatUpdateParams(feed);
         const isDefault = formattedParams === defaultParams;
+        const isComingSoon = feed.pro_available === false;
 
         const rowData: {
           name: ReactNode;
@@ -161,12 +168,26 @@ export const SponsoredFeedsTable = ({
           accountAddress: ReactNode | undefined;
           upgradedAccountAddress: ReactNode | undefined;
         } = {
-          name: <span className={styles.nameLabel}>{feed.alias}</span>,
+          accountAddress: undefined,
+          name: (
+            <span
+              className={clsx(
+                styles.nameLabel,
+                isComingSoon && styles.nameLabelComingSoon,
+              )}
+            >
+              {feed.alias}
+              {isComingSoon ? (
+                <span className={styles.comingSoonBadge}>
+                  Coming soon (Pro)
+                </span>
+              ) : undefined}
+            </span>
+          ),
           priceFeedId: (
             <CopyButton text={feed.id}>{truncateHex(feed.id)}</CopyButton>
           ),
           updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
-          accountAddress: undefined,
           upgradedAccountAddress: undefined,
         };
 
@@ -192,8 +213,8 @@ export const SponsoredFeedsTable = ({
         }
 
         return {
-          id: feed.id,
           data: rowData,
+          id: feed.id,
         };
       }),
     [feeds, defaultParams, hasAccountAddress, showUpgradedAccountAddress],
@@ -231,7 +252,7 @@ export const SponsoredFeedsTable = ({
           {paramEntries
             .filter(([params]) => params !== defaultParams)
             .map(([params, count]) => (
-              <div key={params} className={styles.summaryItem}>
+              <div className={styles.summaryItem} key={params}>
                 <span
                   className={clsx(styles.statusDot, styles.statusDotException)}
                 />
@@ -240,15 +261,25 @@ export const SponsoredFeedsTable = ({
                 <span className={styles.summaryCount}>({count})</span>
               </div>
             ))}
+          {showProAvailability ? (
+            <div className={styles.summaryItem}>
+              <span
+                className={clsx(styles.statusDot, styles.statusDotComingSoon)}
+              />
+              <span className={styles.summaryLabel}>Coming soon (Pro):</span>
+              <span>skipped by the Pro-compatible scheduler</span>
+              <span className={styles.summaryCount}>({comingSoonCount})</span>
+            </div>
+          ) : undefined}
         </div>
 
         <Table
-          label="Sponsored Feeds"
-          fill
+          className={clsx("not-prose", styles.table)}
           columns={columns}
+          fill
+          label="Sponsored Feeds"
           rows={rows}
           stickyHeader="top"
-          className={clsx("not-prose", styles.table)}
         />
       </div>
     </div>
