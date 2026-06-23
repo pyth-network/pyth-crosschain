@@ -6,7 +6,7 @@ slug: /price-feeds/pro/symbology-reference
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-Pyth Pro publishes **reference data** describing every feed it offers: identifiers, classification, data-quality parameters, trading schedules, and (for derivatives) expiration metadata. This data is distinct from the real-time price [payload](/price-feeds/pro/payload-reference) — it describes _what_ a feed is, not its current value.
+Pyth Pro publishes **reference data** describing every feed it offers: identifiers, classification, data-quality parameters, trading schedules, and (for derivatives) expiration metadata. This data is distinct from the real-time price [payload](/price-feeds/pro/payload-reference): it describes _what_ a feed is, not its current value.
 
 Reference data is served by the **Symbology & Reference Data API**:
 
@@ -59,9 +59,9 @@ The endpoint returns one JSON object per feed. This page documents every field o
 
 <Callout type="info" title="Three schedule fields, three altitudes">
   These describe the same trading calendar at increasing detail:
-  - **`schedule`** — a single default schedule string for the feed.
-  - **`market_session_schedule`** — that schedule broken out **per session** (regular, pre-market, etc.).
-  - **`market_sessions`** — the richest form: per-session `schedule` **plus** `min_pub` and `state`.
+  - **`schedule`**: a single default schedule string for the feed.
+  - **`market_session_schedule`**: that schedule broken out **per session** (regular, pre-market, etc.).
+  - **`market_sessions`**: the richest form, carrying per-session `schedule` **plus** `min_pub` and `state`.
 
   The price payload's `marketSession` field tells you which of these sessions is **currently active** for a given update.
 </Callout>
@@ -75,11 +75,11 @@ The endpoint returns one JSON object per feed. This page documents every field o
 
 ## Accessing the data
 
-- **Symbology & Reference Data API** — [`GET /v1/symbols`](https://pyth.dourolabs.app/v1/symbols) returns the full catalog.
-- **Interactive docs** — explore the schema in the [OpenAPI docs](https://pyth-lazer-0.dourolabs.app/docs).
+- **Symbology & Reference Data API**: [`GET /v1/symbols`](https://pyth.dourolabs.app/v1/symbols) returns the full catalog.
+- **Interactive docs**: explore the schema in the [OpenAPI docs](https://pyth-lazer-0.dourolabs.app/docs).
 
 ## Related
 
-- [Price Feed IDs](/price-feeds/pro/price-feed-ids) — browsable table of every available feed.
-- [Futures Terminology](/price-feeds/pro/futures-terminology) — ticker format, month/year codes, and rollover.
-- [Payload Reference](/price-feeds/pro/payload-reference) — the real-time price payload (distinct from reference data).
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids): browsable table of every available feed.
+- [Futures Terminology](/price-feeds/pro/futures-terminology): ticker format, month/year codes, and rollover.
+- [Payload Reference](/price-feeds/pro/payload-reference): the real-time price payload (distinct from reference data).
