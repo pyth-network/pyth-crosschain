@@ -294,8 +294,10 @@ export const SponsoredFeedsTable = ({
           The <strong>Pro-compatible</strong> column shows whether each feed is
           already served by the upgraded Hermes endpoint for the{" "}
           <a href={PRO_COMPATIBLE_DOCS_URL}>Pyth Core upgrade</a>. Feeds marked{" "}
-          <strong>Available</strong> are already served by the upgraded Hermes;{" "}
-          <strong>Coming soon</strong> feeds are still being migrated.
+          <strong>Available</strong> are already served by the upgraded Hermes.
+          Not all <strong>Coming soon</strong> feeds are guaranteed to be
+          migrated. If you rely on a specific feed,{" "}
+          <a href={`${PRO_COMPATIBLE_DOCS_URL}#get-help`}>contact the team</a>.
         </p>
       )}
       <div className={styles.tableWrapper}>
