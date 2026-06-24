@@ -141,6 +141,7 @@ pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
 # For Sui
 pnpm run start sui \
   --endpoint https://sui-testnet-rpc.allthatnode.com \
+  --network testnet \
   --pyth-package-id 0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44 \
   --pyth-state-id 0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a \
   --wormhole-package-id 0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e \
@@ -149,9 +150,16 @@ pnpm run start sui \
   --price-service-endpoint https://example-hermes-rpc.com \
   --mnemonic-file ./mnemonic \
   --price-config-file ./price-config.beta.sample.yaml \
+  [--endpoint-type json-rpc] \
   [--pushing-frequency 10] \
   [--polling-frequency 5] \
   [--num-gas-objects 30]
+
+# `--endpoint-type` selects the Sui RPC transport: `json-rpc` (default) or `grpc`.
+# Sui Foundation is deprecating JSON-RPC (public endpoints off July 2026, removed
+# from full nodes by mid-Oct 2026), so set `--endpoint-type grpc` and point
+# `--endpoint` at a gRPC-web base URL to migrate. `grpc` uses @mysten/sui's
+# experimental SuiGrpcClient.
 
 # For Near
 pnpm run start near \

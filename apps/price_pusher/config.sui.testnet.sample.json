@@ -1,5 +1,7 @@
 {
   "endpoint": "https://sui-testnet-rpc.allthatnode.com",
+  "endpoint-type": "json-rpc",
+  "network": "testnet",
   "mnemonic-file": "./mnemonic",
   "price-config-file": "./price-config.beta.sample.yaml",
   "price-feed-to-price-info-object-table-id": "0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5",

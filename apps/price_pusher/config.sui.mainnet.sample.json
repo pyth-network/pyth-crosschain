@@ -1,5 +1,7 @@
 {
   "endpoint": "https://sui-mainnet-endpoint.blockvision.org",
+  "endpoint-type": "json-rpc",
+  "network": "mainnet",
   "mnemonic-file": "./mnemonic",
   "price-config-file": "./price-config.stable.sample.yaml",
   "price-feed-to-price-info-object-table-id": "0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0",
