@@ -11,6 +11,7 @@ import { MermaidDiagram } from "./components/MermaidDiagram";
 import { UpgradeCallout } from "./components/MigrationFlow";
 import { PropertyCard } from "./components/PropertyCard";
 import { PropertyFieldLinker } from "./components/PropertyFieldLinker";
+import { ScheduleDecoder } from "./components/ScheduleDecoder";
 import { YouTubeEmbed } from "./components/YouTubeEmbed";
 import { openapi } from "./lib/openapi";
 
@@ -19,19 +20,20 @@ const OpenAPIPage = createAPIPage(openapi);
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
-    APIPage: OpenAPIPage,
     APICard,
     APICards,
-    Tabs,
+    APIPage: OpenAPIPage,
     Tab,
+    Tabs,
     ...components,
-    InfoBox: InfoBox,
-    YouTubeEmbed,
     BinaryFormatCards,
     FieldCodePanel,
+    InfoBox: InfoBox,
     MermaidDiagram,
     PropertyCard,
     PropertyFieldLinker,
+    ScheduleDecoder,
     UpgradeCallout,
+    YouTubeEmbed,
   };
 }

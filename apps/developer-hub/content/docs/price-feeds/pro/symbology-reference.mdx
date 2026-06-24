@@ -264,6 +264,32 @@ Every field is documented below.
   The price payload's `marketSession` field tells you which of these sessions is **currently active** for a given update.
 </Callout>
 
+Pick an example or paste a `schedule` string to decode it into market hours:
+
+<ScheduleDecoder
+  presets={[
+    {
+      label: "Crypto spot (BTCUSD), 24/7",
+      value: "America/New_York;O,O,O,O,O,O,O;",
+    },
+    {
+      label: "US equity (BKNG), regular session",
+      value:
+        "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C",
+    },
+    {
+      label: "US equity (BKNG), overnight session",
+      value:
+        "America/New_York;0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400,C,2000-2400;0118/C,0119/2000-2400,0215/C,0216/2000-2400,0402/0000-0400,0403/C,0524/C,0525/2000-2400,0618/0000-0400,0619/C,0702/0000-0400,0703/C,0906/C,0907/2000-2400,1125/0000-0400,1126/2000-2400,1224/0000-0400,1225/C,1231/0000-0400,0101/C",
+    },
+    {
+      label: "Commodity future (CAZ6)",
+      value:
+        "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
+    },
+  ]}
+/>
+
 ### Futures & derivatives
 
 | Field               | Type        | Description                                                                                     |
