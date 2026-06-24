@@ -128,40 +128,42 @@ Every feed is returned as a single JSON object with the same top-level shape. Th
 </Tab>
 <Tab value="Futures">
 
-`TGEN6`, a dated commodity future with an `expiration_time`:
+`CAZ6`, a dated commodity future (cocoa, Dec 2026) with an `expiration_time`:
 
 ```json
 {
-  "pyth_lazer_id": 3089,
-  "name": "TGEN6",
-  "symbol": "Commodities.TGEN6/EUR",
-  "description": "PYTH PRICE IN EUR FOR DUTCH TTF GAS 29 JUNE 2026",
+  "pyth_lazer_id": 3174,
+  "name": "CAZ6",
+  "symbol": "Commodities.CAZ6/USD",
+  "description": "PYTH PRICE IN USD FOR COCOA FUTURES 15 DECEMBER 2026",
   "asset_type": "commodity",
   "instrument_type": "future",
-  "expiration_time": "2026-06-29T17:00:00+01:00",
+  "expiration_time": "2026-12-15T13:30:00-05:00",
   "exponent": -5,
   "cmc_id": null,
   "interval": null,
   "min_publishers": 1,
   "min_channel": "fixed_rate@50ms",
   "state": "stable",
-  "schedule": "Europe/London;0700-1700,0700-1700,0700-1700,0700-1700,0700-1700,C,C;0403/C,0406/C,1225/C",
+  "schedule": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
   "market_session_schedule": {
-    "regular": "Europe/London;0700-1700,0700-1700,0700-1700,0700-1700,0700-1700,C,C;0403/C,0406/C,1225/C"
+    "regular": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C"
   },
   "market_sessions": {
     "regular": {
       "min_pub": 1,
-      "schedule": "Europe/London;0700-1700,0700-1700,0700-1700,0700-1700,0700-1700,C,C;0403/C,0406/C,1225/C",
+      "schedule": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
       "state": "stable"
     }
   },
-  "hermes_id": "afe0ab1998fc6204690c941cc0f78a57aaff15d9ab22a11e504b79deb97a5953",
+  "hermes_id": "7452a0c6aa220280021272c3cebaaa0f32cc910cd14ea43460ff8ae2d1e773ea",
   "nasdaq_symbol": null,
-  "quote_currency": "EUR",
+  "quote_currency": "USD",
   "groups": []
 }
 ```
+
+Dated-future feeds are point-in-time: after `expiration_time` the contract's `state` becomes `inactive`, and later contracts in the same family are listed separately. Query the API for the current set.
 
 </Tab>
 <Tab value="Funding rate">
@@ -219,8 +221,8 @@ Every field is documented below.
 | Field           | Type      | Description                                                                                          |
 | --------------- | --------- | ---------------------------------------------------------------------------------------------------- |
 | `pyth_lazer_id` | `u32`     | Stable numeric identifier for the feed in Pyth Pro. Use it when subscribing to prices.               |
-| `name`          | `string`  | Short symbol name, e.g. `BTCUSD`. For futures this includes the month/year code, e.g. `EMH6`.        |
-| `symbol`        | `string`  | Fully-qualified Pyth symbol, e.g. `Crypto.BTC/USD` or `Equity.US.EMH6/USD`. Encodes asset class, optional region, root, and quote currency. |
+| `name`          | `string`  | Short symbol name, e.g. `BTCUSD`. Dated futures suffix the family root with a month code and year digit, e.g. the `EM` (E-mini S&P 500) family becomes `EMU6`; see [Futures Terminology](/price-feeds/pro/futures-terminology). |
+| `symbol`        | `string`  | Fully-qualified Pyth symbol, e.g. `Crypto.BTC/USD` or `Equity.US.EMU6/USD`. Encodes asset class, optional region, root, and quote currency. |
 | `description`   | `string`  | Human-readable description, e.g. `BITCOIN / US DOLLAR`.                                               |
 | `hermes_id`     | `string?` | Hex feed ID used by Pyth Core / Hermes for the same underlying. `null` when the feed has no Pyth Core counterpart. |
 | `nasdaq_symbol` | `string?` | Nasdaq ticker, for equities sourced via Nasdaq. `null` when not applicable.                          |
@@ -230,7 +232,7 @@ Every field is documented below.
 
 | Field             | Type       | Description                                                                                                                            |
 | ----------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `asset_type`      | `string`   | Broad asset class. One of `crypto`, `equity`, `fx`, `commodity`, `metal`, `interest-rate`, `crypto-index`, `crypto-redemption-rate`, `funding-rate`, `nav`, `kalshi`. |
+| `asset_type`      | `string`   | Broad asset class (open enum, may grow). Current values include `crypto`, `equity`, `fx`, `commodity`, `metal`, `interest-rate`, `rates`, `crypto-index`, `crypto-redemption-rate`, `funding-rate`, `nav`, `kalshi`. |
 | `instrument_type` | `string`   | Instrument form: `spot`, `future`, `perp`, `rate`, `index`, or `nav`. May be an empty string when unspecified.                          |
 | `quote_currency`  | `string`   | Currency the price is quoted in, e.g. `USD`, `EUR`, `KRW`, `JPY`.                                                                       |
 | `groups`          | `string[]` | Discovery/grouping tags, e.g. `pyth-indices`. Empty for most feeds.                                                                     |
@@ -243,7 +245,7 @@ Every field is documented below.
 | `min_publishers` | `u16`     | Minimum number of publishers required for the feed to produce a price.                                               |
 | `min_channel`    | `string`  | Highest-frequency channel the feed supports: `real_time`, `fixed_rate@50ms`, or `fixed_rate@200ms`. You can subscribe at this channel or any slower one. |
 | `state`          | `string`  | Lifecycle state: `stable` (live), `coming_soon` (announced, not yet publishing), or `inactive` (retired/expired).    |
-| `interval`       | `string?` | Funding interval for perpetual and funding-rate feeds, e.g. `8h`. `null` otherwise.                                  |
+| `interval`       | `string?` | Funding interval for funding-rate feeds (instrument type `rate`), e.g. `8h`. `null` otherwise.                       |
 
 ### Scheduling
 
