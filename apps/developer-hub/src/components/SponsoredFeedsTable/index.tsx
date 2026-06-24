@@ -24,12 +24,8 @@ const PRO_COMPATIBLE_DOCS_URL = "/price-feeds/core/upgrade/preparing";
  *      GET https://pyth.dourolabs.app/hermes/v2/price_feeds
  *   2. For each feed, set "available" if its `id` is present in that listing,
  *      otherwise "coming_soon".
- *   3. Avalanche carve-out: every Avalanche feed is pinned to "coming_soon"
- *      regardless of the listing, because Pro-compatible push feeds are not
- *      deployed for that chain (no deployment-pro-compatible.yaml). See the
- *      `_comment` in data/evm/avalanche-mainnet.json.
  *
- * Last refreshed 2026-06-23. To refresh, re-run the steps above.
+ * Last refreshed 2026-07-01. To refresh, re-run the steps above.
  */
 type ProCompatibleStatus = "available" | "coming_soon";
 
