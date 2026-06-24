@@ -1,7 +1,6 @@
 import { Button } from "@pythnetwork/component-library/Button";
 
 import { ProductCard } from "../../ProductCard";
-import { ChangelogTicker } from "./changelog-ticker";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
 import { Section } from "./section";
@@ -20,7 +19,6 @@ export const Homepage = () => {
             </p>
           </div>
         </div>
-        <ChangelogTicker />
       </section>
 
       <section className={styles.sectionMigration}>

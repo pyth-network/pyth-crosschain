@@ -2,9 +2,9 @@ import { Banner } from "fumadocs-ui/components/banner";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import Link from "next/link";
 import type { ReactNode } from "react";
-
-import { docsOptions } from "../../../config/layout.config";
+import { ChangelogBar } from "../../../components/ChangelogBar";
 import { MigrationBanner } from "../../../components/MigrationBanner";
+import { docsOptions } from "../../../config/layout.config";
 
 export default async function Layout({
   children,
@@ -24,8 +24,8 @@ export default async function Layout({
               Try the{" "}
               <a
                 href="https://entropy-explorer.pyth.network/"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 Entropy Explorer
               </a>
@@ -38,6 +38,7 @@ export default async function Layout({
         </Banner>
       )}
       {section === "price-feeds" && <MigrationBanner />}
+      <ChangelogBar />
       <DocsLayout {...docsOptions}>{children}</DocsLayout>
     </>
   );
