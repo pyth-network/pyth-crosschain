@@ -291,11 +291,11 @@
     {
       "alias": "INF/SOL",
       "account_address": "4MbCk4vH47K2gHee6nTg62KScpGu2bV3YDeTZtpQm3ro",
-      "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
+      "id": "3e9961b890c4e77e9009c1a6d81dc556e24a3c190b02d1682c8f545c53b1d4a2",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "available"
+      "pro_compatible_status": "coming_soon"
     },
     {
       "alias": "INDEX.FORD/USD",

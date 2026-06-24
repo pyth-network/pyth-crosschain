@@ -11,9 +11,26 @@ import { useMemo } from "react";
 
 import styles from "./index.module.scss";
 
-const HERMES_API_DOCS_URL =
-  "https://pyth.dourolabs.app/docs/?urls.primaryName=Hermes+API";
+// The Pyth Core upgrade guide explains what "Pro-compatible" means for a feed.
+// The column header and intro copy link here rather than to the raw API spec.
+const PRO_COMPATIBLE_DOCS_URL = "/price-feeds/core/upgrade/preparing";
 
+/**
+ * `pro_compatible_status` is a DERIVED, point-in-time field on the push-feed
+ * data files (content/docs/price-feeds/core/push-feeds/data/{evm,sui,svm}/*.json).
+ * It is not returned by any API; it is computed and committed into the JSON:
+ *
+ *   1. Fetch the Pro-compatible Hermes listing:
+ *      GET https://pyth.dourolabs.app/hermes/v2/price_feeds
+ *   2. For each feed, set "available" if its `id` is present in that listing,
+ *      otherwise "coming_soon".
+ *   3. Avalanche carve-out: every Avalanche feed is pinned to "coming_soon"
+ *      regardless of the listing, because Pro-compatible push feeds are not
+ *      deployed for that chain (no deployment-pro-compatible.yaml). See the
+ *      `_comment` in data/evm/avalanche-mainnet.json.
+ *
+ * Last refreshed 2026-06-23. To refresh, re-run the steps above.
+ */
 type ProCompatibleStatus = "available" | "coming_soon";
 
 type SponsoredFeed = {
@@ -174,9 +191,7 @@ export const SponsoredFeedsTable = ({
               id: "proCompatibleStatus",
               name: (
                 <a
-                  href={HERMES_API_DOCS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={PRO_COMPATIBLE_DOCS_URL}
                   className={styles.proCompatibleHeaderLink}
                 >
                   Pro-compatible
@@ -274,6 +289,15 @@ export const SponsoredFeedsTable = ({
         The price feeds listed below are currently sponsored in{" "}
         <strong>{networkName}</strong>.
       </p>
+      {showProCompatibleStatus && (
+        <p className={styles.introText}>
+          The <strong>Pro-compatible</strong> column shows whether each feed is
+          already served by the upgraded Hermes endpoint for the{" "}
+          <a href={PRO_COMPATIBLE_DOCS_URL}>Pyth Core upgrade</a>. Feeds marked{" "}
+          <strong>Available</strong> are already served by the upgraded Hermes;{" "}
+          <strong>Coming soon</strong> feeds are still being migrated.
+        </p>
+      )}
       <div className={styles.tableWrapper}>
         <div className={styles.summaryBar}>
           {defaultParams ? (

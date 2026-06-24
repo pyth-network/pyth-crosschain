@@ -1,4 +1,5 @@
 {
+  "_comment": "Avalanche feeds are intentionally pinned to pro_compatible_status \"coming_soon\": Pro-compatible push feeds are not deployed for this chain (no deployment-pro-compatible.yaml). Do NOT auto-derive this field from the Hermes listing for this file. See the JSDoc on ProCompatibleStatus in src/components/SponsoredFeedsTable/index.tsx.",
   "feeds": [
     {
       "alias": "HLP0/USDC.RR",
