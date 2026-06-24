@@ -1,0 +1,96 @@
+{
+  "date": "2026-06-24",
+  "label": "Wednesday",
+  "summary": {
+    "added": 4,
+    "went_live": 5,
+    "removed": 0
+  },
+  "hero": "4 new feeds announced, 5 went live.",
+  "events": [
+    {
+      "id": "Equity.US.SPCH/USD",
+      "lazerId": 3332,
+      "asset": "Spch Leverage Shares 2X Long Spcx Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-24",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SSPC/USD",
+      "lazerId": 3331,
+      "asset": "Sspc Leverage Shares 2X Short Spcx Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-24",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.XSOL/JITOSOL.RR",
+      "lazerId": 2351,
+      "asset": "Hylo Leveraged Sol",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-24",
+      "quote": "JITOSOL",
+      "hermesId": "332e31d3fc656ca11dc8522f55791aa8dcd9dbeee0508ab880effc12a12b5c59"
+    },
+    {
+      "id": "Crypto.SHYUSD/JITOSOL.RR",
+      "lazerId": 2339,
+      "asset": "Staked Hylo Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-24",
+      "quote": "JITOSOL",
+      "hermesId": "9773ee09043d14e7f33f19db04a9c86fdac2d409a3885534029f6bd077bdcd37"
+    },
+    {
+      "id": "Crypto.HYUSD/JITOSOL.RR",
+      "lazerId": 2334,
+      "asset": "Hylo Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-24",
+      "quote": "JITOSOL",
+      "hermesId": "36d77e389795b35ee2cb71bddb68677bac6d5405da8745cb6442352fecc25c14"
+    },
+    {
+      "id": "Equity.US.KSTR/USD",
+      "lazerId": 3361,
+      "asset": "Kraneshares Sse Star Market 50 Index Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-24",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.HK.3986/HKD",
+      "lazerId": 3360,
+      "asset": "Gigadevice Semiconductor Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-24",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.HK.2476/HKD",
+      "lazerId": 3359,
+      "asset": "Victory Giant Techno (Huizhou) Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-24",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.HK.6809/HKD",
+      "lazerId": 3358,
+      "asset": "Montage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-24",
+      "quote": "HKD"
+    }
+  ]
+}
