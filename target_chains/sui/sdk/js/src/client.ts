@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-console */
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@mysten/sui/bcs";
-import type { SuiClient } from "@mysten/sui/client";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import type { Transaction } from "@mysten/sui/transactions";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
+import { parseStructTag, SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import type { HexString } from "@pythnetwork/hermes-client";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
@@ -17,6 +13,32 @@ type NestedTransactionResult = {
 };
 export type ObjectId = string;
 
+/**
+ * Any `@mysten/sui` v2 client exposes the unified `.core` API — this includes
+ * both `SuiJsonRpcClient` (`@mysten/sui/jsonRpc`) and the experimental
+ * `SuiGrpcClient` (`@mysten/sui/grpc`). `SuiPythClient` reads exclusively through
+ * `.core` so it works transport-agnostically with either one.
+ */
+export type SuiPythClientProvider = ClientWithCoreApi;
+
+/**
+ * The `.core` JSON view represents a nested Move struct as `{ type, fields }`
+ * over JSON-RPC but flattens it to a plain field map over gRPC. Return the inner
+ * field map for either shape so callers can read fields transport-agnostically.
+ */
+function getStructFields(value: unknown): Record<string, unknown> {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "fields" in value &&
+    "type" in value &&
+    typeof (value as { type: unknown }).type === "string"
+  ) {
+    return (value as { fields: Record<string, unknown> }).fields;
+  }
+  return value as Record<string, unknown>;
+}
+
 export class SuiPythClient {
   private pythPackageId: ObjectId | undefined;
   private wormholePackageId: ObjectId | undefined;
@@ -24,7 +46,7 @@ export class SuiPythClient {
   private priceFeedObjectIdCache = new Map<HexString, ObjectId>();
   private baseUpdateFee: number | undefined;
   constructor(
-    public provider: SuiClient,
+    public provider: SuiPythClientProvider,
     public pythStateId: ObjectId,
     public wormholeStateId: ObjectId,
   ) {
@@ -34,18 +56,14 @@ export class SuiPythClient {
 
   async getBaseUpdateFee(): Promise<number> {
     if (this.baseUpdateFee === undefined) {
-      const result = await this.provider.getObject({
-        id: this.pythStateId,
-        options: { showContent: true },
+      const { object } = await this.provider.core.getObject({
+        include: { json: true },
+        objectId: this.pythStateId,
       });
-      if (
-        !result.data?.content ||
-        result.data.content.dataType !== "moveObject"
-      )
+      if (!object.json) {
         throw new Error("Unable to fetch pyth state object");
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
+      }
+      this.baseUpdateFee = Number(object.json.base_update_fee);
     }
 
     return this.baseUpdateFee;
@@ -58,27 +76,17 @@ export class SuiPythClient {
    * @returns package id
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    const state = await this.provider
-      .getObject({
-        id: objectId,
-        options: {
-          showContent: true,
-        },
-      })
-      .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
-          return result.data.content.fields;
-        }
-        console.log(result.data?.content);
-
-        throw new Error(`Cannot fetch package id for object ${objectId}`);
-      });
+    const { object } = await this.provider.core.getObject({
+      include: { json: true },
+      objectId,
+    });
+    const state = object.json;
+    if (!state) {
+      throw new Error(`Cannot fetch package id for object ${objectId}`);
+    }
 
     if ("upgrade_cap" in state) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-      return state.upgrade_cap.fields.package;
+      return getStructFields(state.upgrade_cap).package as ObjectId;
     }
 
     throw new Error("upgrade_cap not found");
@@ -123,32 +131,42 @@ export class SuiPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
-    const verifiedVaas = await this.verifyVaas([vaa], tx);
+    const [update] = updates;
+    if (update === undefined) {
+      throw new Error("No accumulator message to verify");
+    }
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(update);
+    const [verifiedVaa] = await this.verifyVaas([vaa], tx);
+    if (verifiedVaa === undefined) {
+      throw new Error("Failed to verify the accumulator message");
+    }
     const [priceUpdatesHotPotato] = tx.moveCall({
       arguments: [
         tx.object(this.pythStateId),
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize([...updates[0]!], {
+            .serialize([...update], {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0]!,
+        verifiedVaa,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
     });
-    return priceUpdatesHotPotato!;
+    if (priceUpdatesHotPotato === undefined) {
+      throw new Error("Failed to create the price updates hot potato");
+    }
+    return priceUpdatesHotPotato;
   }
 
   async executePriceFeedUpdates(
     tx: Transaction,
     packageId: string,
     feedIds: HexString[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: the hot potato is an opaque transaction argument threaded between move calls
     priceUpdatesHotPotato: any,
     coins: NestedTransactionResult[],
   ) {
@@ -251,20 +269,27 @@ export class SuiPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
-    const verifiedVaas = await this.verifyVaas([vaa], tx);
+    const [update] = updates;
+    if (update === undefined) {
+      throw new Error("No accumulator message to create a price feed from");
+    }
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(update);
+    const [verifiedVaa] = await this.verifyVaas([vaa], tx);
+    if (verifiedVaa === undefined) {
+      throw new Error("Failed to verify the accumulator message");
+    }
     tx.moveCall({
       arguments: [
         tx.object(this.pythStateId),
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize([...updates[0]!], {
+            .serialize([...update], {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0]!,
+        verifiedVaa,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
       target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
@@ -299,27 +324,29 @@ export class SuiPythClient {
     const normalizedFeedId = feedId.replace("0x", "");
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
-      const result = await this.provider.getDynamicFieldObject({
-        name: {
-          type: `${fieldType}::price_identifier::PriceIdentifier`,
-          value: {
-            bytes: [...Buffer.from(normalizedFeedId, "hex")],
+      // `PriceIdentifier` is a single-field `{ bytes: vector<u8> }` struct, so
+      // its BCS encoding is identical to that of the inner `vector<u8>`.
+      const name = bcs
+        .vector(bcs.U8)
+        .serialize([...Buffer.from(normalizedFeedId, "hex")])
+        .toBytes();
+      let dynamicField;
+      try {
+        ({ dynamicField } = await this.provider.core.getDynamicField({
+          name: {
+            bcs: name,
+            type: `${fieldType}::price_identifier::PriceIdentifier`,
           },
-        },
-        parentId: tableId,
-      });
-      if (!result.data?.content) {
+          parentId: tableId,
+        }));
+      } catch {
+        // The feed has not been registered yet — the dynamic field is absent.
         return undefined;
       }
-      if (result.data.content.dataType !== "moveObject") {
-        throw new Error("Price feed type mismatch");
-      }
+      // The table value is an `0x2::object::ID`, i.e. a bare 32-byte address.
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        result.data.content.fields.value,
+        bcs.Address.parse(dynamicField.value.bcs),
       );
     }
     return this.priceFeedObjectIdCache.get(normalizedFeedId);
@@ -331,24 +358,33 @@ export class SuiPythClient {
    */
   async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
     if (this.priceTableInfo === undefined) {
-      const result = await this.provider.getDynamicFieldObject({
+      // `price_info` is a dynamic *object* field on the pyth state (it holds a
+      // `Table`), so it must be resolved through the `dynamic_object_field`
+      // `Wrapper` name type. The field value is the `0x2::object::ID` of the
+      // backing table object, which is the parent of the per-feed entries.
+      const { dynamicField } = await this.provider.core.getDynamicField({
         name: {
-          type: "vector<u8>",
-          value: "price_info",
+          bcs: bcs.string().serialize("price_info").toBytes(),
+          type: "0x2::dynamic_object_field::Wrapper<vector<u8>>",
         },
         parentId: this.pythStateId,
       });
-      if (!result.data?.type) {
+      const tableId = bcs.Address.parse(dynamicField.value.bcs);
+      // The table's type is `0x2::table::Table<<pkg>::price_identifier::PriceIdentifier, 0x2::object::ID>`;
+      // the first type parameter carries the package that defines `PriceIdentifier`.
+      const { object } = await this.provider.core.getObject({
+        objectId: tableId,
+      });
+      const keyType = parseStructTag(object.type).typeParams[0];
+      if (keyType === undefined || typeof keyType === "string") {
         throw new Error(
           "Price Table not found, contract may not be initialized",
         );
       }
-      let type = result.data.type.replace("0x2::table::Table<", "");
-      type = type.replace(
-        "::price_identifier::PriceIdentifier, 0x2::object::ID>",
-        "",
-      );
-      this.priceTableInfo = { fieldType: type, id: result.data.objectId };
+      this.priceTableInfo = {
+        fieldType: keyType.address,
+        id: tableId,
+      };
     }
     return this.priceTableInfo;
   }

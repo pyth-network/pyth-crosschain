@@ -13,8 +13,8 @@ import type {
   MoveStruct as SuiMoveStruct,
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
-} from "@mysten/sui/client";
-import { SuiClient } from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction as SuiTransaction } from "@mysten/sui/transactions";
 import {
@@ -400,8 +400,11 @@ export class SuiChain extends Chain {
     ).encode();
   }
 
-  getProvider(): SuiClient {
-    return new SuiClient({ url: this.rpcUrl });
+  getProvider(): SuiJsonRpcClient {
+    return new SuiJsonRpcClient({
+      network: this.mainnet ? "mainnet" : "testnet",
+      url: this.rpcUrl,
+    });
   }
 
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
@@ -617,7 +620,7 @@ export class SuiChain extends Chain {
    * `{ .., upgrade_cap: UpgradeCap }` convention.
    */
   async getStatePackageInfo(
-    client: SuiClient,
+    client: SuiJsonRpcClient,
     stateId: string,
   ): Promise<{
     package: string;
@@ -647,7 +650,7 @@ export class SuiChain extends Chain {
     };
   }
 
-  async getStateGovernanceInfo(client: SuiClient, stateId: string) {
+  async getStateGovernanceInfo(client: SuiJsonRpcClient, stateId: string) {
     const state = await this.getStateObject(client, stateId);
 
     if (!this.hasStructField(state, "governance")) {
@@ -664,7 +667,7 @@ export class SuiChain extends Chain {
   }
 
   private async getStateObject(
-    client: SuiClient,
+    client: SuiJsonRpcClient,
     stateId: string,
   ): Promise<SuiMoveStruct> {
     const { data: stateObject, error } = await client.getObject({
@@ -1086,7 +1089,7 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: untyped Sui transaction/bytecode shapes
     transactionObject: any,
     txParams: { from?: string; value?: string },
   ) {
@@ -1117,7 +1120,7 @@ export class EvmChain extends Chain {
         outputs: [{ name: "", type: "uint256" }],
         type: "function",
       },
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      // biome-ignore lint/suspicious/noExplicitAny: untyped Sui transaction/bytecode shapes
     ] as any;
 
     const web3 = this.getWeb3();
@@ -1139,10 +1142,10 @@ export class EvmChain extends Chain {
    */
   async deploy(
     privateKey: PrivateKey,
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: untyped Sui transaction/bytecode shapes
     abi: any,
     bytecode: string,
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: untyped Sui transaction/bytecode shapes
     deployArgs: any[],
     gasMultiplier = 1,
     gasPriceMultiplier = 1,

@@ -1,9 +1,13 @@
-import { SuiClient } from "@mysten/sui/client";
+/* biome-ignore-all lint/suspicious/noConsole: CLI example prints results to stdout */
+/* biome-ignore-all lint/style/noProcessEnv: CLI example reads the signing key from the environment */
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { Buffer } from "buffer";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import type { SuiPythClientProvider } from "../client.js";
 import { SuiPythClient } from "../client.js";
 import { SuiPriceServiceConnection } from "../index.js";
 
@@ -25,10 +29,21 @@ const argvPromise = yargs(hideBin(process.argv))
     description: "Access token for Hermes.",
     type: "string",
   })
+  .option("transport", {
+    choices: ["jsonrpc", "grpc"] as const,
+    default: "jsonrpc" as const,
+    description:
+      "Sui transport to use. `grpc` relies on @mysten/sui's experimental SuiGrpcClient.",
+  })
+  .option("network", {
+    default: "testnet",
+    description: "Sui network name (mainnet, testnet, devnet, ...).",
+    type: "string",
+  })
   .option("full-node", {
     demandOption: true,
     description:
-      "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
+      "URL of the full Sui node endpoint. For `jsonrpc` use the JSON-RPC URL (e.g: https://fullnode.testnet.sui.io:443); for `grpc` use the gRPC-web base URL.",
     type: "string",
   })
   .option("pyth-state-id", {
@@ -42,9 +57,16 @@ const argvPromise = yargs(hideBin(process.argv))
     type: "string",
   }).argv;
 
-export function getProvider(url: string) {
-  return new SuiClient({ url });
+export function getProvider(
+  transport: "jsonrpc" | "grpc",
+  network: string,
+  url: string,
+): SuiPythClientProvider {
+  return transport === "grpc"
+    ? new SuiGrpcClient({ baseUrl: url, network })
+    : new SuiJsonRpcClient({ network, url });
 }
+
 async function run() {
   if (process.env.SUI_KEY === undefined) {
     throw new Error(`SUI_KEY environment variable should be set.`);
@@ -54,13 +76,16 @@ async function run() {
   const hermesAccessToken = argv["hermes-access-token"];
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new SuiPriceServiceConnection(argv["hermes"], hermesAccessToken? { accessToken: hermesAccessToken } : undefined);
+  const connection = new SuiPriceServiceConnection(
+    argv.hermes,
+    hermesAccessToken ? { accessToken: hermesAccessToken } : undefined,
+  );
   const feeds = argv["feed-id"];
   if (!Array.isArray(feeds)) {
     throw new Error("Not a valid input!");
   }
 
-  const provider = getProvider(argv["full-node"]);
+  const provider = getProvider(argv.transport, argv.network, argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
   const pythStateId = argv["pyth-state-id"];
 
@@ -95,11 +120,9 @@ async function run() {
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
   tx.setGasBudget(100_000_000);
-  const result = await provider.signAndExecuteTransaction({
-    options: {
-      showEffects: true,
-      showEvents: true,
-    },
+  // `provider.core` exposes the unified transaction API for both transports.
+  const result = await provider.core.signAndExecuteTransaction({
+    include: { effects: true, events: true },
     signer: wallet,
     transaction: tx,
   });

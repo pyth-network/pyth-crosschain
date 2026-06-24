@@ -37,6 +37,39 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 ```
 
+## Migrating to v4 (transport-agnostic client)
+
+`@pythnetwork/pyth-sui-js` v4 upgrades to **`@mysten/sui` v2** and makes
+`SuiPythClient` transport-agnostic. `@mysten/sui` is now a **peer dependency**
+(`^2.7.0`) — install it alongside this package and supply the client yourself.
+
+Instead of the v1 `SuiClient`, pass any `@mysten/sui` v2 client that exposes the
+unified `.core` API:
+
+- `SuiJsonRpcClient` from `@mysten/sui/jsonRpc` (JSON-RPC), or
+- `SuiGrpcClient` from `@mysten/sui/grpc` (gRPC — still marked experimental by
+  `@mysten/sui`).
+
+```ts
+// Before (v3):
+import { SuiClient } from "@mysten/sui/client";
+const provider = new SuiClient({ url });
+const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
+
+// After (v4) — JSON-RPC:
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+const provider = new SuiJsonRpcClient({ network: "testnet", url });
+const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
+
+// After (v4) — gRPC (experimental):
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+const provider = new SuiGrpcClient({ network: "testnet", baseUrl });
+const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
+```
+
+The `SuiPythClient` API is otherwise unchanged, and existing JSON-RPC behavior is
+preserved for callers that pass a JSON-RPC client.
+
 ## On-chain prices
 
 ### **_Important Note for Integrators_**
@@ -53,7 +86,7 @@ You can use `SuiPythClient` to build such transactions.
 ```ts
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // see quickstart section
 
@@ -65,8 +98,9 @@ const wallet: SignerWithProvider = getWallet();
 const wormholeStateId = " 0xFILL_ME";
 const pythStateId = "0xFILL_ME";
 
-const provider = new SuiClient({ url: "https://fill-sui-endpoint" });
-const client = new SuiPythClient(wallet.provider, pythStateId, wormholeStateId);
+// Any `@mysten/sui` v2 client works here — use `SuiGrpcClient` for gRPC instead.
+const provider = new SuiJsonRpcClient({ network: "testnet", url: "https://fill-sui-endpoint" });
+const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
 const tx = new Transaction();
 const priceInfoObjectIds = await client.updatePriceFeeds(tx, priceFeedUpdateData, priceIds);
 
