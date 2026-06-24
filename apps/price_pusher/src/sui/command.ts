@@ -28,8 +28,19 @@ export default {
       description:
         "RPC endpoint URL for sui. The pusher will periodically" +
         "poll for updates. The polling interval is configurable via the " +
-        "`polling-frequency` command-line argument.",
+        "`polling-frequency` command-line argument. For `--endpoint-type grpc` " +
+        "this is the gRPC-web base URL.",
       required: true,
+      type: "string",
+    } as Options,
+    "endpoint-type": {
+      choices: ["json-rpc", "grpc"],
+      default: "json-rpc",
+      description:
+        "Transport to use for the Sui RPC endpoint. Sui Foundation is deprecating " +
+        "JSON-RPC (public endpoints off July 2026, removed by mid-Oct 2026); use " +
+        "`grpc` to migrate. `grpc` relies on @mysten/sui's experimental SuiGrpcClient.",
+      required: false,
       type: "string",
     } as Options,
     "gas-budget": {
@@ -44,6 +55,14 @@ export default {
         "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
       required: false,
       type: "array",
+    } as Options,
+    network: {
+      choices: ["mainnet", "testnet", "devnet", "localnet"],
+      description:
+        "Sui network label for the RPC client. This selects the network the " +
+        "endpoint serves; it does not change which `--endpoint` URL is used.",
+      required: true,
+      type: "string",
     } as Options,
     "num-gas-objects": {
       default: 30,
@@ -85,6 +104,8 @@ export default {
   handler: async function (argv: any) {
     const {
       endpoint,
+      endpointType,
+      network,
       priceConfigFile,
       priceServiceEndpoint,
       hermesAccessToken,
@@ -148,12 +169,14 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
-    const suiClient = createSuiProvider(endpoint);
+    const suiClient = createSuiProvider(endpointType, network, endpoint);
 
     const suiListener = new SuiPriceListener(
       pythStateId,
       wormholeStateId,
       endpoint,
+      endpointType,
+      network,
       priceItems,
       logger.child({ module: "SuiPriceListener" }),
       { pollingFrequency },
@@ -165,6 +188,8 @@ export default {
       pythStateId,
       wormholeStateId,
       endpoint,
+      endpointType,
+      network,
       keypair,
       gasBudget,
       numGasObjects,

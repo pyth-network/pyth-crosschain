@@ -1,4 +1,4 @@
-import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import type { Logger } from "pino";
 
 import type {
@@ -13,15 +13,15 @@ import type { DurationInSeconds } from "../utils.js";
  * Sui-specific configuration for balance tracker
  */
 export type SuiBalanceTrackerConfig = {
-  /** Sui client instance */
-  client: SuiJsonRpcClient;
+  /** Sui client instance (JSON-RPC or gRPC) */
+  client: ClientWithCoreApi;
 } & BaseBalanceTrackerConfig;
 
 /**
  * Sui-specific implementation of the balance tracker
  */
 export class SuiBalanceTracker extends BaseBalanceTracker {
-  private client: SuiJsonRpcClient;
+  private client: ClientWithCoreApi;
 
   constructor(config: SuiBalanceTrackerConfig) {
     super({
@@ -37,12 +37,12 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
    */
   protected async updateBalance(): Promise<void> {
     try {
-      const balance = await this.client.getBalance({
+      const { balance } = await this.client.core.getBalance({
         owner: this.address,
       });
 
       // Convert to a normalized number for reporting (SUI has 9 decimals)
-      const normalizedBalance = Number(balance.totalBalance) / 1e9;
+      const normalizedBalance = Number(balance.balance) / 1e9;
 
       this.metrics.updateWalletBalance(
         this.address,
@@ -66,7 +66,7 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
  * Parameters for creating a Sui balance tracker
  */
 export type CreateSuiBalanceTrackerParams = {
-  client: SuiJsonRpcClient;
+  client: ClientWithCoreApi;
   address: string;
   network: string;
   updateInterval: DurationInSeconds;

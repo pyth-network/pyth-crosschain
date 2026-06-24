@@ -3,12 +3,14 @@
 /* biome-ignore-all lint/complexity/noForEach: pre-existing */
 /* biome-ignore-all lint/suspicious/useAwait: pre-existing */
 
-import type { PaginatedCoins, SuiObjectRef } from "@mysten/sui/jsonRpc";
+import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import type { SuiObjectRef } from "@mysten/sui/jsonRpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import type { HermesClient } from "@pythnetwork/hermes-client";
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { getStructFields, SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -24,31 +26,68 @@ type ObjectId = string;
 type SuiAddress = string;
 
 /**
- * The `@mysten/sui` v2 JSON-RPC client requires a network label, but the pusher
- * is only configured with a raw endpoint URL. Reads are routed to that URL, so
- * the label is just metadata — infer it from the URL and default to mainnet.
+ * Sui transport selector. `json-rpc` is the legacy default; `grpc` migrates to
+ * the transport Sui Foundation is replacing JSON-RPC with (public JSON-RPC
+ * endpoints are turned off in July 2026, removed entirely by mid-Oct 2026).
  */
-export function createSuiProvider(url: string): SuiJsonRpcClient {
-  let network = "mainnet";
-  if (url.includes("testnet")) {
-    network = "testnet";
-  } else if (url.includes("devnet")) {
-    network = "devnet";
-  } else if (url.includes("localhost") || url.includes("127.0.0.1")) {
-    network = "localnet";
+export type SuiEndpointType = "json-rpc" | "grpc";
+
+/** Sui network label passed to the `@mysten/sui` v2 clients. */
+export type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
+
+/**
+ * Both the `@mysten/sui` v2 JSON-RPC client (`SuiJsonRpcClient`) and the
+ * experimental gRPC client (`SuiGrpcClient`) expose the unified `.core` API.
+ * The pusher reads and writes exclusively through `.core` so the same driver
+ * works over either transport.
+ */
+export function createSuiProvider(
+  endpointType: SuiEndpointType,
+  network: SuiNetwork,
+  url: string,
+): ClientWithCoreApi {
+  switch (endpointType) {
+    case "grpc": {
+      return new SuiGrpcClient({ baseUrl: url, network });
+    }
+    case "json-rpc": {
+      return new SuiJsonRpcClient({ network, url });
+    }
+    default: {
+      throw new Error(`Unknown Sui endpoint type: ${endpointType as string}`);
+    }
   }
-  return new SuiJsonRpcClient({ network, url });
+}
+
+/** Unwrap the executed transaction from the `.core` execution result union. */
+function getExecutedTransaction(
+  result: SuiClientTypes.TransactionResult<{ effects: true }>,
+) {
+  return result.$kind === "Transaction"
+    ? result.Transaction
+    : result.FailedTransaction;
+}
+
+/** Build an owned-object reference from a `.core` effects changed object. */
+function changedObjectToRef(obj: SuiClientTypes.ChangedObject): SuiObjectRef {
+  return {
+    digest: obj.outputDigest!,
+    objectId: obj.objectId,
+    version: obj.outputVersion!,
+  };
 }
 
 export class SuiPriceListener extends ChainPriceListener {
   private pythClient: SuiPythClient;
-  private provider: SuiJsonRpcClient;
+  private provider: ClientWithCoreApi;
   private logger: Logger;
 
   constructor(
     pythStateId: ObjectId,
     wormholeStateId: ObjectId,
     endpoint: string,
+    endpointType: SuiEndpointType,
+    network: SuiNetwork,
     priceItems: PriceItem[],
     logger: Logger,
     config: {
@@ -56,7 +95,7 @@ export class SuiPriceListener extends ChainPriceListener {
     },
   ) {
     super(config.pollingFrequency, priceItems);
-    this.provider = createSuiProvider(endpoint);
+    this.provider = createSuiProvider(endpointType, network, endpoint);
     this.pythClient = new SuiPythClient(
       this.provider,
       pythStateId,
@@ -74,32 +113,28 @@ export class SuiPriceListener extends ChainPriceListener {
       }
 
       // Fetching the price info object for the above priceInfoObjectId
-      const priceInfoObject = await this.provider.getObject({
-        id: priceInfoObjectId,
-        options: { showContent: true },
+      const { object } = await this.provider.core.getObject({
+        include: { json: true },
+        objectId: priceInfoObjectId,
       });
 
-      if (!priceInfoObject.data?.content)
+      if (!object.json)
         throw new Error("Price not found on chain for price id " + priceId);
 
-      if (priceInfoObject.data.content.dataType !== "moveObject")
-        throw new Error("fetched object datatype should be moveObject");
-
-      const priceInfo =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
-          .price.fields;
-      const { magnitude, negative } = priceInfo.price.fields;
-
-      const conf = priceInfo.conf;
-
-      const timestamp = priceInfo.timestamp;
+      // PriceInfoObject -> price_info -> price_feed -> price (the `Price` struct,
+      // holding the signed `price` magnitude, `conf`, and `timestamp`).
+      const priceFields = getStructFields(
+        getStructFields(getStructFields(object.json.price_info).price_feed)
+          .price,
+      );
+      const magnitudeFields = getStructFields(priceFields.price);
+      const magnitude = magnitudeFields.magnitude as string;
+      const negative = magnitudeFields.negative;
 
       return {
-        conf,
+        conf: priceFields.conf as string,
         price: negative ? `-${magnitude}` : magnitude,
-        publishTime: Number(timestamp),
+        publishTime: Number(priceFields.timestamp),
       };
     } catch (error) {
       this.logger.error(
@@ -128,46 +163,13 @@ export class SuiPriceListener extends ChainPriceListener {
 export class SuiPricePusher implements IPricePusher {
   constructor(
     private readonly signer: Ed25519Keypair,
-    private readonly provider: SuiJsonRpcClient,
+    private readonly provider: ClientWithCoreApi,
     private logger: Logger,
     private hermesClient: HermesClient,
     private gasBudget: number,
     private gasPool: SuiObjectRef[],
     private pythClient: SuiPythClient,
   ) {}
-
-  /**
-   * getPackageId returns the latest package id that the object belongs to. Use this to
-   * fetch the latest package id for a given object id and handle package upgrades automatically.
-   * @returns package id
-   */
-  static async getPackageId(
-    provider: SuiJsonRpcClient,
-    objectId: ObjectId,
-  ): Promise<ObjectId> {
-    const state = await provider
-      .getObject({
-        id: objectId,
-        options: {
-          showContent: true,
-        },
-      })
-      .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
-          return result.data.content.fields;
-        }
-
-        throw new Error("not move object");
-      });
-
-    if ("upgrade_cap" in state) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      return state.upgrade_cap.fields.package;
-    }
-
-    throw new Error("upgrade_cap not found");
-  }
 
   /**
    * Create a price pusher with a pool of `numGasObjects` gas coins that will be used to send transactions.
@@ -179,6 +181,8 @@ export class SuiPricePusher implements IPricePusher {
     pythStateId: string,
     wormholeStateId: string,
     endpoint: string,
+    endpointType: SuiEndpointType,
+    network: SuiNetwork,
     keypair: Ed25519Keypair,
     gasBudget: number,
     numGasObjects: number,
@@ -190,7 +194,7 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
-    const provider = createSuiProvider(endpoint);
+    const provider = createSuiProvider(endpointType, network, endpoint);
 
     const gasPool = await SuiPricePusher.initializeGasPool(
       keypair,
@@ -283,23 +287,35 @@ export class SuiPricePusher implements IPricePusher {
     try {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
-      const result = await this.provider.signAndExecuteTransaction({
-        options: {
-          showEffects: true,
-        },
+      const result = await this.provider.core.signAndExecuteTransaction({
+        include: { effects: true },
         signer: this.signer,
         transaction: tx,
       });
+      const executed = getExecutedTransaction(result);
 
-      nextGasObject = result.effects?.mutated
-        ?.map((obj) => obj.reference)
-        .find((ref) => ref.objectId === gasObject.objectId);
+      // The `.core` API returns a `FailedTransaction` for on-chain execution
+      // failures rather than throwing, so check the status explicitly — otherwise
+      // a failed push would emit the success log below and silently miss updates.
+      if (executed.effects.status.error) {
+        throw new Error(
+          `Transaction ${executed.digest} failed on-chain: ${JSON.stringify(
+            executed.effects.status.error,
+          )}`,
+        );
+      }
+
+      const gasObjectChange = executed.effects.gasObject;
+      nextGasObject =
+        gasObjectChange && gasObjectChange.objectId === gasObject.objectId
+          ? changedObjectToRef(gasObjectChange)
+          : undefined;
 
       // Keep at INFO: the bundled Grafana "Tx Hash" panel scrapes this message
       // from Loki and extracts {{.hash}}; debug is not emitted under the default
       // log level, which would hide successful Sui hashes from the dashboard.
       this.logger.info(
-        { hash: result.digest },
+        { hash: executed.digest },
         "Successfully updated price with transaction digest",
       );
     } catch (error: any) {
@@ -334,7 +350,7 @@ export class SuiPricePusher implements IPricePusher {
   // merging -- use this to store any locked objects on initialization.
   private static async initializeGasPool(
     signer: Ed25519Keypair,
-    provider: SuiJsonRpcClient,
+    provider: ClientWithCoreApi,
     numGasObjects: number,
     ignoreGasObjects: string[],
     logger: Logger,
@@ -355,19 +371,12 @@ export class SuiPricePusher implements IPricePusher {
       ignoreGasObjects,
       logger,
     );
-    const coinResult = await provider.getObject({
-      id: consolidatedCoin.objectId,
-      options: { showContent: true },
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: consolidatedCoin.objectId,
     });
-    let balance;
-    if (
-      coinResult.data?.content &&
-      coinResult.data.content.dataType == "moveObject"
-    ) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      balance = coinResult.data.content.fields.balance;
-    } else throw new Error("Bad coin object");
+    if (!object.json) throw new Error("Bad coin object");
+    const balance = object.json.balance as string;
     const splitAmount =
       (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
 
@@ -386,56 +395,54 @@ export class SuiPricePusher implements IPricePusher {
   // Attempt to refresh the version of the provided object reference to point to the current version
   // of the object. Throws an error if the object cannot be refreshed.
   private static async tryRefreshObjectReference(
-    provider: SuiJsonRpcClient,
+    provider: ClientWithCoreApi,
     ref: SuiObjectRef,
   ): Promise<SuiObjectRef> {
-    const objectResponse = await provider.getObject({ id: ref.objectId });
-    if (objectResponse.data === undefined) {
-      throw new Error("Failed to refresh object reference");
-    } else {
-      return {
-        digest: objectResponse.data!.digest,
-        objectId: objectResponse.data!.objectId,
-        version: objectResponse.data!.version,
-      };
-    }
+    const { object } = await provider.core.getObject({
+      objectId: ref.objectId,
+    });
+    return {
+      digest: object.digest,
+      objectId: object.objectId,
+      version: object.version,
+    };
   }
 
   private static async getAllGasCoins(
-    provider: SuiJsonRpcClient,
+    provider: ClientWithCoreApi,
     owner: SuiAddress,
   ): Promise<SuiObjectRef[]> {
     let hasNextPage = true;
-    let cursor;
+    let cursor: string | null = null;
     const coins = new Set<string>([]);
     let numCoins = 0;
     while (hasNextPage) {
-      const paginatedCoins: PaginatedCoins = await provider.getCoins({
+      const paginatedCoins = await provider.core.listCoins({
         cursor,
         owner,
       });
-      numCoins += paginatedCoins.data.length;
-      for (const c of paginatedCoins.data)
+      numCoins += paginatedCoins.objects.length;
+      for (const c of paginatedCoins.objects)
         coins.add(
           JSON.stringify({
             digest: c.digest,
-            objectId: c.coinObjectId,
+            objectId: c.objectId,
             version: c.version,
           }),
         );
       hasNextPage = paginatedCoins.hasNextPage;
-      cursor = paginatedCoins.nextCursor;
+      cursor = paginatedCoins.cursor;
     }
 
     if (numCoins !== coins.size) {
-      throw new Error("Unexpected getCoins result: duplicate coins found");
+      throw new Error("Unexpected listCoins result: duplicate coins found");
     }
     return [...coins].map((item) => JSON.parse(item));
   }
 
   private static async splitGasCoinEqually(
     signer: Ed25519Keypair,
-    provider: SuiJsonRpcClient,
+    provider: ClientWithCoreApi,
     signerAddress: SuiAddress,
     splitAmount: number,
     numGasObjects: number,
@@ -453,18 +460,20 @@ export class SuiPricePusher implements IPricePusher {
       tx.pure.address(signerAddress),
     );
     tx.setGasPayment([gasCoin]);
-    const result = await provider.signAndExecuteTransaction({
-      options: { showEffects: true },
+    const result = await provider.core.signAndExecuteTransaction({
+      include: { effects: true },
       signer,
       transaction: tx,
     });
-    const error = result.effects?.status.error;
-    if (error) {
+    const effects = getExecutedTransaction(result).effects;
+    if (effects.status.error) {
       throw new Error(
-        `Failed to initialize gas pool: ${error}. Try re-running the script`,
+        `Failed to initialize gas pool: ${JSON.stringify(effects.status.error)}. Try re-running the script`,
       );
     }
-    const newCoins = result.effects!.created!.map((obj) => obj.reference);
+    const newCoins = effects.changedObjects
+      .filter((obj) => obj.idOperation === "Created")
+      .map(changedObjectToRef);
     if (newCoins.length !== numGasObjects) {
       throw new Error(
         `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${JSON.stringify(newCoins)}`,
@@ -475,7 +484,7 @@ export class SuiPricePusher implements IPricePusher {
 
   private static async mergeGasCoinsIntoOne(
     signer: Ed25519Keypair,
-    provider: SuiJsonRpcClient,
+    provider: ClientWithCoreApi,
     owner: SuiAddress,
     initialLockedAddresses: string[],
     logger: Logger,
@@ -490,7 +499,7 @@ export class SuiPricePusher implements IPricePusher {
       gasCoins,
       MAX_NUM_GAS_OBJECTS_IN_PTB - 2,
     );
-    let finalCoin;
+    let finalCoin: SuiObjectRef | undefined;
     const lockedAddresses = new Set<string>();
     for (const value of initialLockedAddresses) lockedAddresses.add(value);
     for (let i = 0; i < gasCoinsChunks.length; i++) {
@@ -504,8 +513,8 @@ export class SuiPricePusher implements IPricePusher {
       mergeTx.setGasPayment(coins);
       let mergeResult;
       try {
-        mergeResult = await provider.signAndExecuteTransaction({
-          options: { showEffects: true },
+        mergeResult = await provider.core.signAndExecuteTransaction({
+          include: { effects: true },
           signer,
           transaction: mergeTx,
         });
@@ -530,13 +539,13 @@ export class SuiPricePusher implements IPricePusher {
         }
         throw error_;
       }
-      const error = mergeResult.effects?.status.error;
-      if (error) {
+      const effects = getExecutedTransaction(mergeResult).effects;
+      if (effects.status.error) {
         throw new Error(
-          `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`,
+          `Failed to merge coins when initializing gas pool: ${JSON.stringify(effects.status.error)}. Try re-running the script`,
         );
       }
-      finalCoin = mergeResult.effects!.mutated!.map((obj) => obj.reference)[0];
+      finalCoin = changedObjectToRef(effects.gasObject!);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion

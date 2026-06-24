@@ -26,7 +26,7 @@ export type SuiPythClientProvider = ClientWithCoreApi;
  * over JSON-RPC but flattens it to a plain field map over gRPC. Return the inner
  * field map for either shape so callers can read fields transport-agnostically.
  */
-function getStructFields(value: unknown): Record<string, unknown> {
+export function getStructFields(value: unknown): Record<string, unknown> {
   if (
     typeof value === "object" &&
     value !== null &&
