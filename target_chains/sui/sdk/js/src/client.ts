@@ -358,16 +358,24 @@ export class SuiPythClient {
    */
   async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
     if (this.priceTableInfo === undefined) {
+      // `price_info` is a dynamic *object* field on the pyth state (it holds a
+      // `Table`), so it must be resolved through the `dynamic_object_field`
+      // `Wrapper` name type. The field value is the `0x2::object::ID` of the
+      // backing table object, which is the parent of the per-feed entries.
       const { dynamicField } = await this.provider.core.getDynamicField({
         name: {
           bcs: bcs.string().serialize("price_info").toBytes(),
-          type: "vector<u8>",
+          type: "0x2::dynamic_object_field::Wrapper<vector<u8>>",
         },
         parentId: this.pythStateId,
       });
-      // `value.type` is `0x2::table::Table<<pkg>::price_identifier::PriceIdentifier, 0x2::object::ID>`;
+      const tableId = bcs.Address.parse(dynamicField.value.bcs);
+      // The table's type is `0x2::table::Table<<pkg>::price_identifier::PriceIdentifier, 0x2::object::ID>`;
       // the first type parameter carries the package that defines `PriceIdentifier`.
-      const keyType = parseStructTag(dynamicField.value.type).typeParams[0];
+      const { object } = await this.provider.core.getObject({
+        objectId: tableId,
+      });
+      const keyType = parseStructTag(object.type).typeParams[0];
       if (keyType === undefined || typeof keyType === "string") {
         throw new Error(
           "Price Table not found, contract may not be initialized",
@@ -375,7 +383,7 @@ export class SuiPythClient {
       }
       this.priceTableInfo = {
         fieldType: keyType.address,
-        id: dynamicField.fieldId,
+        id: tableId,
       };
     }
     return this.priceTableInfo;

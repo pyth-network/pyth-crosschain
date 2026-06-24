@@ -1,15 +1,21 @@
-import { bcs } from "@mysten/sui/bcs";
-import type { SuiClient } from "@mysten/sui/client";
+/* biome-ignore-all lint/suspicious/noConsole: pre-existing; CLI deploy script prints progress */
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing */
 
+import { execSync } from "node:child_process";
+import { bcs } from "@mysten/sui/bcs";
+import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
+import {
+  fromBase64,
+  MIST_PER_SUI,
+  normalizeSuiObjectId,
+} from "@mysten/sui/utils";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
-import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   packagePath: string,
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
@@ -36,7 +42,7 @@ export async function publishPackage(
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
     ),
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromBase64(m))),
   });
 
   // Transfer upgrade capability to deployer
@@ -96,7 +102,7 @@ export async function publishPackage(
 
 export async function initPyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   pythPackageId: string,
   deployerCapId: string,
   upgradeCapId: string,

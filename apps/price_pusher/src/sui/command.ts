@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; metrics wiring asserts on optional config */
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; yargs argv is untyped */
 import fs from "node:fs";
 
-import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import pino from "pino";
@@ -18,7 +14,7 @@ import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { filterInvalidPriceItems } from "../utils.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
-import { SuiPriceListener, SuiPricePusher } from "./sui.js";
+import { createSuiProvider, SuiPriceListener, SuiPricePusher } from "./sui.js";
 
 export default {
   builder: {
@@ -152,7 +148,7 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
-    const suiClient = new SuiClient({ url: endpoint });
+    const suiClient = createSuiProvider(endpoint);
 
     const suiListener = new SuiPriceListener(
       pythStateId,

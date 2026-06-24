@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "preserve",
-    "moduleResolution": "node"
+    "moduleResolution": "bundler"
   },
   "exclude": ["node_modules", "**/__tests__/*"],
   "extends": "@cprussin/tsconfig/base.json",

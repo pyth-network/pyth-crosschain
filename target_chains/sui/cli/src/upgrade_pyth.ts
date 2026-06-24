@@ -1,9 +1,16 @@
-import type { SuiClient } from "@mysten/sui/client";
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; untyped Sui build output */
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing */
+
+import { execSync } from "node:child_process";
+import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
+import {
+  fromBase64,
+  MIST_PER_SUI,
+  normalizeSuiObjectId,
+} from "@mysten/sui/utils";
 import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
-import { execSync } from "child_process";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -21,13 +28,13 @@ export function buildForBytecodeAndDigest(packagePath: string) {
       normalizeSuiObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
+    modules: buildOutput.modules.map((m: string) => Array.from(fromBase64(m))),
   };
 }
 
 export async function upgradePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
@@ -77,7 +84,7 @@ export async function upgradePyth(
 
 export async function migratePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   signedUpgradeVaa: Buffer,
   contract: SuiPriceFeedContract,
   pythPackageOld: string,
