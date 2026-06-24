@@ -140,13 +140,13 @@ pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
 
 # For Sui
 pnpm run start sui \
-  --endpoint https://sui-testnet-rpc.allthatnode.com \
+  --endpoint https://fullnode.testnet.sui.io:443 \
   --network testnet \
-  --pyth-package-id 0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44 \
-  --pyth-state-id 0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a \
-  --wormhole-package-id 0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e \
-  --wormhole-state-id 0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02 \
-  --price-feed-to-price-info-object-table-id 0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5 \
+  --pyth-package-id 0xabf837e98c26087cba0883c0a7a28326b1fa3c5e1e2c5abdb486f9e8f594c837 \
+  --pyth-state-id 0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c \
+  --wormhole-package-id 0x21473617f3565d704aa67be73ea41243e9e34a42d434c31f8182c67ba01ccf49 \
+  --wormhole-state-id 0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790 \
+  --price-feed-to-price-info-object-table-id 0xcb858b77d8068c6c8c0d8a4ddfba95053268e4a31f8ecc49adccc4ec1570d3a7 \
   --price-service-endpoint https://example-hermes-rpc.com \
   --mnemonic-file ./mnemonic \
   --price-config-file ./price-config.beta.sample.yaml \
