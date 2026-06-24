@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { PaginatedCoins, SuiObjectRef } from "@mysten/sui/client";
-import { SuiClient } from "@mysten/sui/client";
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; gas-pool code asserts on Sui RPC results */
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; untyped Sui RPC error/result shapes */
+/* biome-ignore-all lint/complexity/noForEach: pre-existing */
+/* biome-ignore-all lint/suspicious/useAwait: pre-existing */
+
+import type { PaginatedCoins, SuiObjectRef } from "@mysten/sui/jsonRpc";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import type { HermesClient } from "@pythnetwork/hermes-client";
@@ -25,14 +23,27 @@ const MAX_NUM_OBJECTS_IN_ARGUMENT = 510;
 type ObjectId = string;
 type SuiAddress = string;
 
+/**
+ * Build the v2 JSON-RPC client. The `@mysten/sui` v2 client requires an explicit
+ * network label (`mainnet` / `testnet` / `devnet` / a custom network); reads are
+ * routed to `url`.
+ */
+export function createSuiProvider(
+  network: string,
+  url: string,
+): SuiJsonRpcClient {
+  return new SuiJsonRpcClient({ network, url });
+}
+
 export class SuiPriceListener extends ChainPriceListener {
   private pythClient: SuiPythClient;
-  private provider: SuiClient;
+  private provider: SuiJsonRpcClient;
   private logger: Logger;
 
   constructor(
     pythStateId: ObjectId,
     wormholeStateId: ObjectId,
+    network: string,
     endpoint: string,
     priceItems: PriceItem[],
     logger: Logger,
@@ -41,7 +52,7 @@ export class SuiPriceListener extends ChainPriceListener {
     },
   ) {
     super(config.pollingFrequency, priceItems);
-    this.provider = new SuiClient({ url: endpoint });
+    this.provider = createSuiProvider(network, endpoint);
     this.pythClient = new SuiPythClient(
       this.provider,
       pythStateId,
@@ -113,7 +124,7 @@ export class SuiPriceListener extends ChainPriceListener {
 export class SuiPricePusher implements IPricePusher {
   constructor(
     private readonly signer: Ed25519Keypair,
-    private readonly provider: SuiClient,
+    private readonly provider: SuiJsonRpcClient,
     private logger: Logger,
     private hermesClient: HermesClient,
     private gasBudget: number,
@@ -127,7 +138,7 @@ export class SuiPricePusher implements IPricePusher {
    * @returns package id
    */
   static async getPackageId(
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     objectId: ObjectId,
   ): Promise<ObjectId> {
     const state = await provider
@@ -163,6 +174,7 @@ export class SuiPricePusher implements IPricePusher {
     logger: Logger,
     pythStateId: string,
     wormholeStateId: string,
+    network: string,
     endpoint: string,
     keypair: Ed25519Keypair,
     gasBudget: number,
@@ -175,7 +187,7 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
-    const provider = new SuiClient({ url: endpoint });
+    const provider = createSuiProvider(network, endpoint);
 
     const gasPool = await SuiPricePusher.initializeGasPool(
       keypair,
@@ -319,7 +331,7 @@ export class SuiPricePusher implements IPricePusher {
   // merging -- use this to store any locked objects on initialization.
   private static async initializeGasPool(
     signer: Ed25519Keypair,
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     numGasObjects: number,
     ignoreGasObjects: string[],
     logger: Logger,
@@ -371,7 +383,7 @@ export class SuiPricePusher implements IPricePusher {
   // Attempt to refresh the version of the provided object reference to point to the current version
   // of the object. Throws an error if the object cannot be refreshed.
   private static async tryRefreshObjectReference(
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     ref: SuiObjectRef,
   ): Promise<SuiObjectRef> {
     const objectResponse = await provider.getObject({ id: ref.objectId });
@@ -387,7 +399,7 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   private static async getAllGasCoins(
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     owner: SuiAddress,
   ): Promise<SuiObjectRef[]> {
     let hasNextPage = true;
@@ -420,7 +432,7 @@ export class SuiPricePusher implements IPricePusher {
 
   private static async splitGasCoinEqually(
     signer: Ed25519Keypair,
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     signerAddress: SuiAddress,
     splitAmount: number,
     numGasObjects: number,
@@ -460,7 +472,7 @@ export class SuiPricePusher implements IPricePusher {
 
   private static async mergeGasCoinsIntoOne(
     signer: Ed25519Keypair,
-    provider: SuiClient,
+    provider: SuiJsonRpcClient,
     owner: SuiAddress,
     initialLockedAddresses: string[],
     logger: Logger,

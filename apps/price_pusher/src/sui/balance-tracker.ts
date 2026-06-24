@@ -1,4 +1,4 @@
-import type { SuiClient } from "@mysten/sui/client";
+import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Logger } from "pino";
 
 import type {
@@ -14,14 +14,14 @@ import type { DurationInSeconds } from "../utils.js";
  */
 export type SuiBalanceTrackerConfig = {
   /** Sui client instance */
-  client: SuiClient;
+  client: SuiJsonRpcClient;
 } & BaseBalanceTrackerConfig;
 
 /**
  * Sui-specific implementation of the balance tracker
  */
 export class SuiBalanceTracker extends BaseBalanceTracker {
-  private client: SuiClient;
+  private client: SuiJsonRpcClient;
 
   constructor(config: SuiBalanceTrackerConfig) {
     super({
@@ -66,7 +66,7 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
  * Parameters for creating a Sui balance tracker
  */
 export type CreateSuiBalanceTrackerParams = {
-  client: SuiClient;
+  client: SuiJsonRpcClient;
   address: string;
   network: string;
   updateInterval: DurationInSeconds;

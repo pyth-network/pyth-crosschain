@@ -8,7 +8,7 @@
     "@injectivelabs/networks": "1.14.47",
     "@injectivelabs/sdk-ts": "1.14.50",
     "@injectivelabs/utils": "^1.14.48",
-    "@mysten/sui": "^1.3.0",
+    "@mysten/sui": "^2.7.0",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-fuel-js": "workspace:*",

@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; metrics wiring asserts on optional config */
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; yargs argv is untyped */
 import fs from "node:fs";
 
-import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import pino from "pino";
@@ -18,7 +14,7 @@ import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { filterInvalidPriceItems } from "../utils.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
-import { SuiPriceListener, SuiPricePusher } from "./sui.js";
+import { createSuiProvider, SuiPriceListener, SuiPricePusher } from "./sui.js";
 
 export default {
   builder: {
@@ -48,6 +44,12 @@ export default {
         "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
       required: false,
       type: "array",
+    } as Options,
+    network: {
+      description:
+        "Sui network label for the RPC client (e.g. mainnet, testnet, devnet).",
+      required: true,
+      type: "string",
     } as Options,
     "num-gas-objects": {
       default: 30,
@@ -89,6 +91,7 @@ export default {
   handler: async function (argv: any) {
     const {
       endpoint,
+      network,
       priceConfigFile,
       priceServiceEndpoint,
       hermesAccessToken,
@@ -152,11 +155,12 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
-    const suiClient = new SuiClient({ url: endpoint });
+    const suiClient = createSuiProvider(network, endpoint);
 
     const suiListener = new SuiPriceListener(
       pythStateId,
       wormholeStateId,
+      network,
       endpoint,
       priceItems,
       logger.child({ module: "SuiPriceListener" }),
@@ -168,6 +172,7 @@ export default {
       logger.child({ module: "SuiPricePusher" }),
       pythStateId,
       wormholeStateId,
+      network,
       endpoint,
       keypair,
       gasBudget,
