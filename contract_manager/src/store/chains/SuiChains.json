@@ -1,5 +1,6 @@
 [
   {
+    "endpointType": "json-rpc",
     "id": "sui_testnet",
     "mainnet": false,
     "rpcUrl": "https://fullnode.testnet.sui.io:443",
@@ -7,6 +8,7 @@
     "wormholeChainName": "sui"
   },
   {
+    "endpointType": "json-rpc",
     "id": "sui_mainnet",
     "mainnet": true,
     "rpcUrl": "https://fullnode.mainnet.sui.io:443",
@@ -14,6 +16,7 @@
     "wormholeChainName": "sui"
   },
   {
+    "endpointType": "json-rpc",
     "id": "movement_m2_devnet",
     "mainnet": false,
     "rpcUrl": "https://sui.devnet.m2.movementlabs.xyz:443",

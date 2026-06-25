@@ -9,10 +9,12 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
+import { bcs } from "@mysten/sui/bcs";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { getStructFields, SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   decodeGovernancePayload,
@@ -24,10 +26,45 @@ import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract, Storable, toDeploymentType } from "../base";
 import type { Chain, SuiLazerMeta } from "../chains";
-import { SuiChain } from "../chains";
+import { getExecutedTransaction, SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
+
+/**
+ * Sign and execute a transaction over the transport-agnostic `.core` API,
+ * setting the gas budget to 2x the simulated cost. Works over both the
+ * JSON-RPC and gRPC clients.
+ */
+async function executeSuiTransaction(
+  provider: ClientWithCoreApi,
+  tx: Transaction,
+  keypair: Ed25519Keypair,
+) {
+  tx.setSender(keypair.toSuiAddress());
+  const simulation = getExecutedTransaction(
+    await provider.core.simulateTransaction({
+      include: { effects: true },
+      transaction: await tx.build({ client: provider }),
+    }),
+  );
+  if (simulation.effects.status.error) {
+    throw new Error(
+      `Transaction simulation failed: ${JSON.stringify(
+        simulation.effects.status.error,
+      )}`,
+    );
+  }
+  const { computationCost, storageCost } = simulation.effects.gasUsed;
+  tx.setGasBudget((BigInt(computationCost) + BigInt(storageCost)) * BigInt(2));
+  return getExecutedTransaction(
+    await provider.core.signAndExecuteTransaction({
+      include: { effects: true, events: true },
+      signer: keypair,
+      transaction: tx,
+    }),
+  );
+}
 
 export class SuiPriceFeedContract extends PriceFeedContract {
   static type = "SuiPriceFeedContract";
@@ -114,24 +151,19 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     return `${this.chain.getId()}_${this.stateId}`;
   }
 
-  private async parsePrice(priceInfo: {
-    type: string;
-    fields: {
-      expo: { fields: { magnitude: string; negative: boolean } };
-      price: { fields: { magnitude: string; negative: boolean } };
-      conf: string;
-      timestamp: string;
-    };
-  }) {
-    let expo = priceInfo.fields.expo.fields.magnitude;
-    if (priceInfo.fields.expo.fields.negative) expo = "-" + expo;
-    let price = priceInfo.fields.price.fields.magnitude;
-    if (priceInfo.fields.price.fields.negative) price = "-" + price;
+  private parsePrice(priceInfo: unknown) {
+    const fields = getStructFields(priceInfo);
+    const expoFields = getStructFields(fields.expo);
+    let expo = expoFields.magnitude as string;
+    if (expoFields.negative) expo = "-" + expo;
+    const priceFields = getStructFields(fields.price);
+    let price = priceFields.magnitude as string;
+    if (priceFields.negative) price = "-" + price;
     return {
-      conf: priceInfo.fields.conf,
+      conf: fields.conf as string,
       expo,
       price,
-      publishTime: priceInfo.fields.timestamp,
+      publishTime: fields.timestamp as string,
     };
   }
 
@@ -139,32 +171,21 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const provider = this.getProvider();
     const priceInfoObjectId = await this.client.getPriceFeedObjectId(feedId);
     if (!priceInfoObjectId) return;
-    const priceInfo = await provider.getObject({
-      id: priceInfoObjectId,
-      options: { showContent: true },
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: priceInfoObjectId,
     });
-    if (!priceInfo.data?.content) {
+    if (!object.json) {
       throw new Error(
         `Price feed ID ${priceInfoObjectId} in price table but object not found!!`,
       );
     }
-    if (priceInfo.data.content.dataType !== "moveObject") {
-      throw new Error(
-        `Expected ${priceInfoObjectId} to be a moveObject (PriceInfoObject)`,
-      );
-    }
+    const priceFeed = getStructFields(
+      getStructFields(object.json.price_info).price_feed,
+    );
     return {
-      emaPrice: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        priceInfo.data.content.fields.price_info.fields.price_feed.fields
-          .ema_price,
-      ),
-      price: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        priceInfo.data.content.fields.price_info.fields.price_feed.fields.price,
-      ),
+      emaPrice: this.parsePrice(priceFeed.ema_price),
+      price: this.parsePrice(priceFeed.price),
     };
   }
 
@@ -320,93 +341,67 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param tx - the transaction
    * @param keypair - the keypair
    */
-  private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
+  private executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.getProvider();
-    tx.setSender(keypair.toSuiAddress());
-    const dryRun = await provider.dryRunTransactionBlock({
-      transactionBlock: await tx.build({ client: provider }),
-    });
-    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
-    return provider.signAndExecuteTransaction({
-      options: {
-        showEffects: true,
-        showEvents: true,
-      },
-      signer: keypair,
-      transaction: tx,
-    });
+    return executeSuiTransaction(provider, tx, keypair);
   }
 
   async getValidTimePeriod() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return Number(fields.stale_price_threshold);
   }
 
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
-    const result = await provider.getDynamicFieldObject({
+    const { object } = await provider.core.getDynamicObjectField({
+      include: { json: true },
       name: {
+        bcs: bcs
+          .vector(bcs.u8())
+          .serialize(Array.from(Buffer.from("data_sources", "utf8")))
+          .toBytes(),
         type: "vector<u8>",
-        value: "data_sources",
       },
       parentId: this.stateId,
     });
-    if (!result.data?.content) {
+    if (!object.json) {
       throw new Error(
         "Data Sources not found, contract may not be initialized",
       );
     }
-    if (result.data.content.dataType !== "moveObject") {
-      throw new Error("Data Sources type mismatch");
-    }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return result.data.content.fields.value.fields.keys.map(
-      ({
-        fields,
-      }: {
-        fields: {
-          emitter_address: { fields: { value: { fields: { data: string } } } };
-          emitter_chain: string;
-        };
-      }) => {
-        return {
-          emitterAddress: Buffer.from(
-            fields.emitter_address.fields.value.fields.data,
-          ).toString("hex"),
-          emitterChain: Number(fields.emitter_chain),
-        };
-      },
-    );
+    const keys = getStructFields(getStructFields(object.json).value)
+      .keys as unknown[];
+    return keys.map((key) => {
+      const fields = getStructFields(key);
+      const data = getStructFields(
+        getStructFields(fields.emitter_address).value,
+      ).data as number[];
+      return {
+        emitterAddress: Buffer.from(data).toString("hex"),
+        emitterChain: Number(fields.emitter_chain),
+      };
+    });
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const governanceFields = fields.governance_data_source.fields;
-    const chainId = governanceFields.emitter_chain;
-    const emitterAddress =
-      governanceFields.emitter_address.fields.value.fields.data;
+    const governanceFields = getStructFields(fields.governance_data_source);
+    const emitterAddress = getStructFields(
+      getStructFields(governanceFields.emitter_address).value,
+    ).data as number[];
     return {
       emitterAddress: Buffer.from(emitterAddress).toString("hex"),
-      emitterChain: Number(chainId),
+      emitterChain: Number(governanceFields.emitter_chain),
     };
   }
 
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return { amount: fields.base_update_fee };
+    return { amount: fields.base_update_fee as string };
   }
 
   async getLastExecutedGovernanceSequence() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return Number(fields.last_executed_governance_sequence);
   }
 
@@ -414,15 +409,14 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     return this.chain.getProvider();
   }
 
-  private async getStateFields() {
+  private async getStateFields(): Promise<Record<string, unknown>> {
     const provider = this.getProvider();
-    const result = await provider.getObject({
-      id: this.stateId,
-      options: { showContent: true },
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: this.stateId,
     });
-    if (!result.data?.content || result.data.content.dataType !== "moveObject")
-      throw new Error("Unable to fetch pyth state object");
-    return result.data.content.fields;
+    if (!object.json) throw new Error("Unable to fetch pyth state object");
+    return getStructFields(object.json);
   }
 }
 
@@ -556,13 +550,12 @@ export class SuiWormholeContract extends WormholeContract {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getStateFields(): Promise<any> {
     const provider = this.chain.getProvider();
-    const result = await provider.getObject({
-      id: this.stateId,
-      options: { showContent: true },
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: this.stateId,
     });
-    if (!result.data?.content || result.data.content.dataType !== "moveObject")
-      throw new Error("Unable to fetch pyth state object");
-    return result.data.content.fields;
+    if (!object.json) throw new Error("Unable to fetch pyth state object");
+    return getStructFields(object.json);
   }
 
   /**
@@ -571,21 +564,9 @@ export class SuiWormholeContract extends WormholeContract {
    * @param tx - the transaction
    * @param keypair - the keypair
    */
-  private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
+  private executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.chain.getProvider();
-    tx.setSender(keypair.toSuiAddress());
-    const dryRun = await provider.dryRunTransactionBlock({
-      transactionBlock: await tx.build({ client: provider }),
-    });
-    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
-    return provider.signAndExecuteTransaction({
-      options: {
-        showEffects: true,
-        showEvents: true,
-      },
-      signer: keypair,
-      transaction: tx,
-    });
+    return executeSuiTransaction(provider, tx, keypair);
   }
 }
 

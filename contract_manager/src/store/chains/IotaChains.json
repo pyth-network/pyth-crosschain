@@ -1,5 +1,6 @@
 [
   {
+    "endpointType": "json-rpc",
     "id": "iota_testnet",
     "mainnet": false,
     "rpcUrl": "https://api.testnet.iota.cafe/",
@@ -7,6 +8,7 @@
     "wormholeChainName": "iota_sui_testnet"
   },
   {
+    "endpointType": "json-rpc",
     "id": "iota_mainnet",
     "mainnet": true,
     "rpcUrl": "https://api.mainnet.iota.cafe/",
