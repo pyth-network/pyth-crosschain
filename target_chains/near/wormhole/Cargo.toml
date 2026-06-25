@@ -29,4 +29,7 @@ overflow-checks = true
 image                   = "sourcescan/cargo-near:0.13.3-rust-1.84.1"
 image_digest            = "sha256:baa712c5d2b7522d38175e36330d336ad2c4ce32bfaaa41af94ce40407ecd803"
 passed_env              = []
-container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
+# --no-abi: this bridge calls `env::ecrecover`, which near-sdk gates behind the `unstable` feature.
+# With `unstable` enabled, cargo-near's ABI extraction (which dlopens a host-target dylib) fails to
+# resolve `promise_batch_action_function_call_weight`. The bridge needs no ABI metadata, so skip it.
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked", "--no-abi"]
