@@ -386,6 +386,25 @@
   font-weight: theme.font-weight("semibold");
   color: theme.color("foreground");
   white-space: nowrap;
+  text-decoration: none;
+
+  // Small external-link cue so the symbol reads as a link out to the terminal.
+  &::after {
+    content: "↗";
+    margin-inline-start: theme.spacing(1);
+    font-size: 0.75em;
+    color: theme.color("muted");
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: theme.color("link", "primary");
+    text-decoration: underline;
+
+    &::after {
+      color: theme.color("link", "primary");
+    }
+  }
 }
 
 .eventAsset {

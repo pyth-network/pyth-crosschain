@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { ChangeLogEntry, ChangeType } from "./data";
-import { fmtDateShort } from "./data";
+import { fmtDateShort, terminalUrl } from "./data";
 import styles from "./index.module.scss";
 
 const CHANGE_LABELS: Record<ChangeType, string> = {
@@ -39,7 +39,14 @@ export const EventRow = ({
       {CHANGE_LABELS[entry.changeType]}
     </span>
     <div className={styles.eventInfo}>
-      <span className={styles.eventId}>{entry.id}</span>
+      <a
+        className={styles.eventId}
+        href={terminalUrl(entry.id)}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {entry.id}
+      </a>
       <span className={styles.eventAsset}>{entry.asset}</span>
       <span className={styles.eventAssetType}>· {entry.assetType}</span>
     </div>
