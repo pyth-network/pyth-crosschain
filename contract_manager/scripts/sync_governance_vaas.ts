@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable unicorn/no-await-expression-member */
-import { parseVaa } from "@certusone/wormhole-sdk";
+/** biome-ignore-all lint/suspicious/noConsole: CLI script */
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
+import { deserialize } from "@wormhole-foundation/sdk-definitions";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -44,9 +42,17 @@ async function main() {
   const mainnetVault =
     DefaultStore.vaults[
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ]!;
+    ];
+  if (!mainnetVault) {
+    throw new Error("could not find mainnet vault");
+  }
+
   const devnetVault =
-    DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3!;
+    DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
+  if (!devnetVault) {
+    throw new Error("could not find devnet vault");
+  }
+
   let matchedVault: Vault;
   if (
     (await devnetVault.getEmitter()).toBuffer().toString("hex") ===
@@ -73,7 +79,6 @@ async function main() {
   }
   console.log("Starting from sequence number", lastExecuted);
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
       await matchedVault.getEmitter(),
@@ -88,8 +93,8 @@ async function main() {
       console.log("no vaa found for sequence", lastExecuted + 1);
       break;
     }
-    const parsedVaa = parseVaa(vaa);
-    const action = decodeGovernancePayload(parsedVaa.payload);
+    const { payload } = deserialize("Uint8Array", new Uint8Array(vaa));
+    const action = decodeGovernancePayload(Buffer.from(payload));
     if (!action) {
       console.log("can not decode vaa, skipping");
     } else if (
@@ -112,5 +117,4 @@ async function main() {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

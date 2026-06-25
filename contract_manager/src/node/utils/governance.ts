@@ -1,16 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { readFileSync } from "node:fs";
-
-import {
-  createWormholeProgramInterface,
-  deriveEmitterSequenceKey,
-  deriveFeeCollectorKey,
-  deriveWormholeBridgeDataKey,
-} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import { getPythClusterApiUrl } from "@pythnetwork/client";
@@ -35,14 +23,11 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import SquadsMeshClass from "@sqds/mesh";
+import { utils } from "@wormhole-foundation/sdk-solana-core";
 import bs58 from "bs58";
 
 import type { KeyValueConfig } from "../../core/base.js";
 import { Storable } from "../../core/base.js";
-
-// TODO: this should be migrated to @wormhole-foundation/dsk
-// as such, we cannot publish an ESM variant of the contract_manager
-// until we upgrade
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -188,20 +173,20 @@ export class WormholeEmitter {
     const wormholeAddress = WORMHOLE_ADDRESS[this.cluster];
     if (!wormholeAddress) throw new Error(`Invalid cluster ${this.cluster}`);
     const kp = Keypair.generate();
-    const feeCollector = deriveFeeCollectorKey(wormholeAddress);
+    const feeCollector = utils.deriveFeeCollectorKey(wormholeAddress);
     const emitter = this.wallet.publicKey;
     const accounts = {
-      bridge: deriveWormholeBridgeDataKey(wormholeAddress),
+      bridge: utils.deriveWormholeBridgeDataKey(wormholeAddress),
       clock: SYSVAR_CLOCK_PUBKEY,
       emitter: emitter,
       feeCollector,
       message: kp.publicKey,
       payer: emitter,
       rent: SYSVAR_RENT_PUBKEY,
-      sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
+      sequence: utils.deriveEmitterSequenceKey(emitter, wormholeAddress),
       systemProgram: SystemProgram.programId,
     };
-    const wormholeProgram = createWormholeProgramInterface(
+    const wormholeProgram = utils.createWormholeProgramInterface(
       wormholeAddress,
       provider,
     );
@@ -349,7 +334,6 @@ export class Vault extends Storable {
    * Gets the emitter address of the vault
    * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const mesh = getSquadsMesh();
     const squad = mesh.endpoint(
@@ -410,7 +394,6 @@ export class Vault extends Storable {
  * This wallet can be used to connect to a vault and submit proposals
  * @param walletPath - - path to the wallet file
  */
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function loadHotWallet(walletPath: string): Promise<Wallet> {
   return new Wallet(
     Keypair.fromSecretKey(
