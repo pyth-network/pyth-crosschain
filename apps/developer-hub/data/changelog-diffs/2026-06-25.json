@@ -1,0 +1,355 @@
+{
+  "date": "2026-06-25",
+  "label": "Thursday",
+  "summary": {
+    "added": 20,
+    "went_live": 18,
+    "removed": 0
+  },
+  "hero": "20 new feeds announced, 18 went live.",
+  "events": [
+    {
+      "id": "Equity.US.QUBT/USD",
+      "lazerId": 3356,
+      "asset": "Quantum Computing Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.POET/USD",
+      "lazerId": 3355,
+      "asset": "Poet Technologies Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.UMC/USD",
+      "lazerId": 3354,
+      "asset": "United Microelectronics Corporation",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NVTS/USD",
+      "lazerId": 3353,
+      "asset": "Navitas Semiconductor Corporation",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CLSK/USD",
+      "lazerId": 3352,
+      "asset": "Cleanspark Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NU/USD",
+      "lazerId": 3351,
+      "asset": "Nu Holdings Ltd.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SPMO/USD",
+      "lazerId": 3349,
+      "asset": "Invesco S&P 500 Momentum Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TSEM/USD",
+      "lazerId": 3348,
+      "asset": "Tower Semiconductor Ltd.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.PR/USD",
+      "lazerId": 3347,
+      "asset": "Permian Resources Corporation",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.INOD/USD",
+      "lazerId": 3346,
+      "asset": "Innodata Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MXL/USD",
+      "lazerId": 3345,
+      "asset": "Maxlinear Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ELF/USD",
+      "lazerId": 3344,
+      "asset": "E.L.F. Beauty Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NNE/USD",
+      "lazerId": 3343,
+      "asset": "Nano Nuclear Energy Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.PENG/USD",
+      "lazerId": 3342,
+      "asset": "Penguin Solutions Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.MSFTX/MSFT.RR",
+      "lazerId": 3323,
+      "asset": "Microsoft Xstock",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "MSFT"
+    },
+    {
+      "id": "Crypto.AMZNX/AMZN.RR",
+      "lazerId": 3322,
+      "asset": "Amazon Xstock",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "AMZN"
+    },
+    {
+      "id": "Crypto.NAV.USX/USD",
+      "lazerId": 2992,
+      "asset": "Solstice Stablecoin",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.PST/USDC.RR",
+      "lazerId": 1577,
+      "asset": "Payfi Strategy Token",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-06-25",
+      "quote": "USDC",
+      "hermesId": "675e36f84a6be779ed793c71eb5c03151e1866c125767f46933626e0610af84d"
+    },
+    {
+      "id": "Pyth.BN.XAG/USDT",
+      "lazerId": 99933,
+      "asset": "Pyth Bn Xag",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.WTI/USDT",
+      "lazerId": 99932,
+      "asset": "Pyth Bn Wti",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.USD/JPY",
+      "lazerId": 99931,
+      "asset": "Pyth Bn Usd",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "JPY"
+    },
+    {
+      "id": "Pyth.BN.TSLA/USDT",
+      "lazerId": 99930,
+      "asset": "Pyth Bn Tsla",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.SPCX/USDT",
+      "lazerId": 99929,
+      "asset": "Pyth Bn Spcx",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.NVDA/USDT",
+      "lazerId": 99928,
+      "asset": "Pyth Bn Nvda",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.MU/USDT",
+      "lazerId": 99927,
+      "asset": "Pyth Bn Mu",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.MSTR/USDT",
+      "lazerId": 99926,
+      "asset": "Pyth Bn Mstr",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.MSFT/USDT",
+      "lazerId": 99925,
+      "asset": "Pyth Bn Msft",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.XAU/USDT",
+      "lazerId": 99924,
+      "asset": "Pyth Bn Xau",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.META/USDT",
+      "lazerId": 99923,
+      "asset": "Pyth Bn Meta",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.INTC/USDT",
+      "lazerId": 99922,
+      "asset": "Pyth Bn Intc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.HOOD/USDT",
+      "lazerId": 99921,
+      "asset": "Pyth Bn Hood",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.GOOGL/USDT",
+      "lazerId": 99920,
+      "asset": "Pyth Bn Googl",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.GBP/USDT",
+      "lazerId": 99919,
+      "asset": "Pyth Bn Gbp",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.EUR/USDT",
+      "lazerId": 99918,
+      "asset": "Pyth Bn Eur",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.CRCL/USDT",
+      "lazerId": 99917,
+      "asset": "Pyth Bn Crcl",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.BRENT/USDT",
+      "lazerId": 99916,
+      "asset": "Pyth Bn Brent",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.AMZN/USDT",
+      "lazerId": 99915,
+      "asset": "Pyth Bn Amzn",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    },
+    {
+      "id": "Pyth.BN.AAPL/USDT",
+      "lazerId": 99914,
+      "asset": "Pyth Bn Aapl",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-25",
+      "quote": "USDT"
+    }
+  ]
+}
