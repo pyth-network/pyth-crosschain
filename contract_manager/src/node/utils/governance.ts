@@ -39,6 +39,7 @@ import bs58 from "bs58";
 
 import type { KeyValueConfig } from "../../core/base.js";
 import { Storable } from "../../core/base.js";
+import { sleep } from "../../utils/sleep.js";
 
 // TODO: this should be migrated to @wormhole-foundation/dsk
 // as such, we cannot publish an ESM variant of the contract_manager
@@ -131,7 +132,7 @@ export class SubmittedWormholeMessage {
         }`,
       );
       if (response.status === 404) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await sleep(1000);
         continue;
       }
       const { vaaBytes } = (await response.json()) as {

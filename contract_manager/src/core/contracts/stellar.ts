@@ -13,6 +13,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
+import { sleep } from "../../utils/sleep";
 import type { PrivateKey, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
@@ -348,8 +349,4 @@ async function readInstanceStorage(
     }
   }
   return undefined;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

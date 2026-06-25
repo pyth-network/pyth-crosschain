@@ -4,6 +4,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
+import { sleep } from "../src/utils/sleep";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -44,7 +45,7 @@ async function main() {
     }`,
   );
   console.log(`Sleeping for 5 seconds to allow the message to be processed...`);
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await sleep(5000);
   console.log(
     `Fetching VAA for message ${submittedMessage.emitter.toBase58()}, Sequence Number: ${
       submittedMessage.sequenceNumber

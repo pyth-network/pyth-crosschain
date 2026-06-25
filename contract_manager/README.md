@@ -10,49 +10,35 @@ It has the following structure:
 
 # Main Entities
 
-Contract Manager has base classes which you can use to interact with the following entities:
+Contract Manager has base classes which you can use to interact with the
+entities below. Most have a chain-specific implementation per supported ecosystem
+(EVM/Cosmos/Aptos/Sui/Iota/Near/Fuel/Starknet/Ton/Stellar), and every instance is
+loaded from `store` by the `DefaultStore`.
 
-- Chain
-- PythContract
-- WormholeContract
+- **Chain** (`Chain`) — a blockchain network the tooling can target; holds RPC/network config and builds and submits transactions and governance payloads.
+- **Price feed contract** (`PriceFeedContract`) — the core Pyth contract that receives price updates and is configured through governance.
+- **Wormhole contract** (`WormholeContract`) — the Wormhole core bridge contract used to verify and submit governance VAAs.
+- **Lazer contract** (`EvmLazerContract` / `SuiLazerContract` / `StellarLazerContract`) — the Pyth Lazer verifier, which checks signed Lazer price updates and holds the trusted signer set.
+- **Executor contract** (`EvmExecutorContract` / `StellarExecutorContract`) — the governance executor that verifies a Pyth governance VAA and dispatches the decoded action to its target contract (or upgrades itself).
+- **Entropy contract** (`EvmEntropyContract`) — the Pyth Entropy contract serving on-chain secure randomness requests.
+- **Pulse contract** (`EvmPulseContract`) — the Pyth Pulse contract for scheduled, on-demand price-update callbacks.
+- **Token** (`Token`) — a native/gas token used to pay fees on a chain.
+- **Vault** (`Vault`) — the Solana multisig governance vault used to propose and execute governance messages.
 
-Each of these entities has a specialized class for each supported chain (EVM/Cosmos/Aptos/Sui/Stellar).
+## Lazer on Stellar
 
-# Lazer on Stellar
+Lazer on Stellar (Soroban) splits the verifier (`StellarLazerContract`) and the
+governance executor (`StellarExecutorContract`) across two contracts, mirroring
+the EVM `EvmLazerContract` / `EvmExecutorContract` split. Governance enters
+through the executor's `execute_governance_action`, which dispatches the decoded
+action to the verifier. Stellar uses a dedicated governance module
+(`MODULE_STELLAR_EXECUTOR = 4`) and dedicated Pyth receiver chain ids
+(`stellar_testnet` / `stellar_mainnet`); see
+`generate_stellar_lazer_update_trusted_signer_proposal.ts` for the proposal flow.
 
-Pyth Lazer on Stellar (Soroban) is split across two contracts (see
-`pyth-network/pyth-lazer` `contracts/stellar`), each with its own class in
-`src/core/contracts/stellar.ts` — mirroring the EVM split between
-`EvmLazerContract` and `EvmExecutorContract`:
-
-- `StellarLazerContract` — the **verifier** (`pyth-lazer-stellar`) verifies signed
-  price updates and holds the trusted signer set, and
-- `StellarExecutorContract` — the **executor** (`wormhole-executor-stellar`)
-  verifies Wormhole governance VAAs and dispatches the decoded action to the
-  verifier (or upgrades itself).
-
-Governance always enters through the executor: a Pyth governance VAA carrying a
-PTGM (Pyth Target Governance Message) is submitted to the executor's
-`execute_governance_action`, which invokes the named function on the verifier. The
-verifier's payload builders resolve the authorized executor from the verifier's
-on-chain state, the same way `EvmLazerContract` resolves its owning executor.
-
-Because Soroban addresses are variable-length strkeys and arguments are
-XDR-encoded, Stellar uses a dedicated governance module
-(`MODULE_STELLAR_EXECUTOR = 4` in `xc-admin-common`) rather than the Lazer module
-(3), so its `Call` / `UpgradeExecutor` action codes never collide with the Sui /
-Cardano Lazer actions. A logical action such as "update trusted signer" is encoded
-as `Call(target = verifier, fn = "update_trusted_signer", args = ScVec([pubkey,
-expiresAt]))`. See `generate_stellar_lazer_update_trusted_signer_proposal.ts`.
-
-The PTGM target chain id is a dedicated Pyth receiver id (`stellar_testnet` /
-`stellar_mainnet`), **not** Wormhole's canonical Stellar id (which collides with
-`base`). The deployed executor must be initialized with the matching `chain_id`.
-
-> **Note:** only the **testnet** verifier is registered today. The testnet
-> executor address in `store/contracts/StellarExecutorContracts.json` is a
-> placeholder and must be replaced once the executor is deployed; mainnet is not
-> yet deployed.
+> **Note:** only the **testnet** verifier is registered today. The executor entry
+> in `store/contracts/StellarExecutorContracts.json` is a placeholder until the
+> executor is deployed; mainnet is not yet deployed.
 
 # Docs
 

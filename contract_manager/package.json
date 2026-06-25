@@ -293,6 +293,16 @@
         "types": "./dist/cjs/utils/exec-file-async.d.ts"
       }
     },
+    "./utils/sleep": {
+      "import": {
+        "default": "./dist/esm/utils/sleep.mjs",
+        "types": "./dist/esm/utils/sleep.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/sleep.cjs",
+        "types": "./dist/cjs/utils/sleep.d.ts"
+      }
+    },
     "./utils/utils": {
       "import": {
         "default": "./dist/esm/utils/utils.mjs",

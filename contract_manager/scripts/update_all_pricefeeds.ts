@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
 import { DefaultStore } from "../src/node/utils/store";
+import { sleep } from "../src/utils/sleep";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Update the set of price feeds in a network. Usage: $0")
@@ -81,7 +82,7 @@ async function main() {
       ),
     );
     // Wait for 2 seconds to avoid rate limiting and nonce collision
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await sleep(2000);
   }
 }
 

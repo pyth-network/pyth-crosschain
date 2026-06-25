@@ -1,3 +1,4 @@
+import { sleep } from "../../utils/sleep";
 import type { PrivateKey, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
@@ -56,7 +57,7 @@ export abstract class WormholeContract extends Storable {
       console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await sleep(5000);
       }
     }
   }

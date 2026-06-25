@@ -10,6 +10,7 @@ import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import type { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { sleep } from "../src/utils/sleep";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
@@ -65,7 +66,7 @@ async function testLatency(
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await sleep(1000);
     const currentBlock = await web3.eth.getBlockNumber();
 
     if (fromBlock > currentBlock) {

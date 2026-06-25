@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { sleep } from "../src/utils/sleep";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
@@ -64,7 +65,7 @@ async function main() {
       console.log("Reveal tx hash:", revealResponse.transactionHash);
       break;
     }
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await sleep(300);
   }
 }
 
