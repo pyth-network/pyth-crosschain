@@ -25,21 +25,6 @@ loaded from `store` by the `DefaultStore`.
 - **Token** (`Token`) — a native/gas token used to pay fees on a chain.
 - **Vault** (`Vault`) — the Solana multisig governance vault used to propose and execute governance messages.
 
-## Lazer on Stellar
-
-Lazer on Stellar (Soroban) splits the verifier (`StellarLazerContract`) and the
-governance executor (`StellarExecutorContract`) across two contracts, mirroring
-the EVM `EvmLazerContract` / `EvmExecutorContract` split. Governance enters
-through the executor's `execute_governance_action`, which dispatches the decoded
-action to the verifier. Stellar uses a dedicated governance module
-(`MODULE_STELLAR_EXECUTOR = 4`) and dedicated Pyth receiver chain ids
-(`stellar_testnet` / `stellar_mainnet`); see
-`generate_stellar_lazer_update_trusted_signer_proposal.ts` for the proposal flow.
-
-> **Note:** only the **testnet** verifier is registered today. The executor entry
-> in `store/contracts/StellarExecutorContracts.json` is a placeholder until the
-> executor is deployed; mainnet is not yet deployed.
-
 # Docs
 
 You can generate the docs by running `pnpm exec typedoc src/index.ts` from this directory. Open the docs by opening `docs/index.html` in your browser.
