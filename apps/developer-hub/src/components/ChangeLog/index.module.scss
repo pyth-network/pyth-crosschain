@@ -392,7 +392,7 @@
   &::after {
     content: "↗";
     margin-inline-start: theme.spacing(1);
-    font-size: 0.75em;
+    font-size: 1em;
     color: theme.color("muted");
   }
 
