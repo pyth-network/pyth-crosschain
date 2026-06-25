@@ -41,36 +41,7 @@ client.subscribe({
   <Step>
   ### Verify price updates from your Soroban contract
 
-Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. Your own Soroban contract calls it via cross-contract invocation:
-
-```rust copy
-use pyth_lazer_stellar_sdk::PythLazerClient;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
-
-#[contract]
-pub struct ExampleConsumer;
-
-#[contractimpl]
-impl ExampleConsumer {
-    /// Receives a signed Lazer update, asks `pyth-lazer-stellar` to verify it,
-    /// and returns the verified payload bytes.
-    pub fn update_price(env: Env, lazer: Address, update: Bytes) -> Bytes {
-        let lazer = PythLazerClient::new(&env, &lazer);
-        lazer.verify_update(&update)
-    }
-}
-```
-
-<Callout type="warning">
-  Always call `verify_update` from inside your own contract — don't trust verified bytes passed in by the off-chain caller.
-  The cross-contract call is what gives your contract a trust boundary against an unsigned update.
-</Callout>
-
-  </Step>
-  <Step>
-  ### Consume the verified payload
-
-The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes the verified payload as a typed `Update` value. Add it to your contract's `Cargo.toml`:
+Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes a typed `PythLazerClient` that cross-contract-calls the verifier and returns the parsed update in one call. Add it to your contract's `Cargo.toml`:
 
 ```toml copy
 [dependencies]
@@ -78,17 +49,51 @@ soroban-sdk = "22"
 pyth-lazer-stellar-sdk = "0.2"
 ```
 
-Parse the payload and read the feeds you need:
+Then verify from inside your own contract:
 
 ```rust copy
-use pyth_lazer_stellar_sdk::{parse_payload, PythLazerClient};
+use pyth_lazer_stellar_sdk::{ParseError, PythLazerClient, VerifiedPayload};
+use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+
+#[contract]
+pub struct ExampleConsumer;
+
+#[contractimpl]
+impl ExampleConsumer {
+    /// Receives a signed Lazer update and asks `pyth-lazer-stellar` to verify
+    /// it. Returns a typed `VerifiedPayload` (which derefs to the parsed
+    /// `Update`); traps if the signature is bad, returns `ParseError` if the
+    /// verified payload bytes are malformed.
+    pub fn update_price(env: Env, lazer: Address, payload: Bytes) -> Result<(), ParseError> {
+        let update: VerifiedPayload =
+            PythLazerClient::new(&env, &lazer).verify_update(&payload)?;
+        // `update.feeds`, `update.timestamp`, `update.channel` are accessible
+        // via deref — use them in the next step.
+        Ok(())
+    }
+}
+```
+
+<Callout type="warning">
+  Always call `verify_update` from inside your own contract — don't trust a parsed update passed in by the off-chain caller.
+  The cross-contract call is what gives your contract a trust boundary against an unsigned update.
+</Callout>
+
+  </Step>
+  <Step>
+  ### Consume the verified payload
+
+Pick the feed you care about and read its fields off the verified `Update`:
+
+```rust copy
+use pyth_lazer_stellar_sdk::{ParseError, PythLazerClient};
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Bytes, Env};
 
 #[contracttype]
 #[derive(Clone)]
 pub struct StoredPrice {
     pub price: i64,
-    pub exponent: i16,
+    pub exponent: i32,
     pub timestamp_us: u64,
 }
 
@@ -97,31 +102,27 @@ pub struct ExampleConsumer;
 
 #[contractimpl]
 impl ExampleConsumer {
-    pub fn update_price(env: Env, lazer: Address, update: Bytes) -> StoredPrice {
-        // 1. Verify the signed update via cross-contract call.
-        let lazer = PythLazerClient::new(&env, &lazer);
-        let verified_payload = lazer.verify_update(&update);
+    pub fn update_price(env: Env, lazer: Address, payload: Bytes) -> Result<StoredPrice, ParseError> {
+        // Verify + parse in one call.
+        let update = PythLazerClient::new(&env, &lazer).verify_update(&payload)?;
 
-        // 2. Parse the verified payload into a typed Update.
-        let parsed = parse_payload(&verified_payload).expect("invalid payload");
-
-        // 3. Find the feed you care about (BTC/USD, feed_id = 1) and read its fields.
-        let feed = parsed
+        // BTC/USD is feed_id = 1; pick the feed you care about.
+        let feed = update
             .feeds
             .iter()
             .find(|f| f.feed_id == 1)
             .expect("BTC/USD feed missing");
 
-        StoredPrice {
+        Ok(StoredPrice {
             price: feed.price.expect("price missing"),
-            exponent: feed.exponent.expect("exponent missing"),
-            timestamp_us: parsed.timestamp,
-        }
+            exponent: i32::from(feed.exponent.expect("exponent missing")),
+            timestamp_us: feed.feed_update_timestamp.expect("feed timestamp missing"),
+        })
     }
 }
 ```
 
-Feed properties that are not requested in the subscription return `None`. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
+Feed properties that are not requested in the subscription return `None`. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. Per-feed `feed_update_timestamp` (microseconds since epoch) is the right field for freshness checks; the top-level `update.timestamp` is the payload-level timestamp. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
 
 <Callout type="info">
   Submit the transaction from your off-chain client using
