@@ -19,66 +19,63 @@ import type { Chain } from "../chains";
 import { StellarChain } from "../chains";
 
 /**
- * Lazer on Stellar is split across two Soroban contracts (see
- * `pyth-network/pyth-lazer` `contracts/stellar`):
+ * Lazer on Stellar (Soroban) is split across two contracts (see
+ * `pyth-network/pyth-lazer` `contracts/stellar`), each represented by its own
+ * `Storable` type here, mirroring the EVM split between {@link EvmLazerContract}
+ * and {@link EvmExecutorContract}:
  *
- * - the **verifier** (`pyth-lazer-stellar`) verifies signed price updates and
- *   stores the trusted signer set, and
- * - the **executor** (`wormhole-executor-stellar`) verifies Wormhole governance
- *   VAAs and dispatches the decoded PTGM action to the verifier (or upgrades
- *   itself).
+ * - {@link StellarLazerContract} — the **verifier** (`pyth-lazer-stellar`), which
+ *   verifies signed price updates and stores the trusted signer set.
+ * - {@link StellarExecutorContract} — the **executor**
+ *   (`wormhole-executor-stellar`), which verifies Wormhole governance VAAs and
+ *   dispatches the decoded PTGM action to the verifier (or upgrades itself).
  *
- * Governance always enters through the executor: a Pyth governance VAA carrying
- * a PTGM `Call` is submitted to `execute_governance_action`, which invokes the
- * named function on the verifier. This class wires both contract ids together
- * and builds the matching PTGM payloads.
+ * Governance always enters through the executor: a Pyth governance VAA carrying a
+ * PTGM `Call` is submitted to `execute_governance_action`, which invokes the
+ * named function on the verifier.
+ */
+
+/**
+ * The Lazer **verifier** (`pyth-lazer-stellar`).
+ *
+ * Governance does not enter the verifier directly — the verifier's payload
+ * builders frame each action as an executor `Call` and resolve the authorized
+ * executor from the verifier's on-chain state, the same way
+ * {@link EvmLazerContract} resolves its owning executor.
  */
 export class StellarLazerContract extends Storable {
   static type = "StellarLazerContract";
 
   /**
    * @param chain - the Stellar chain this contract is deployed on
-   * @param verifierAddress - Soroban contract id of the `pyth-lazer-stellar`
-   *   verifier
-   * @param executorAddress - Soroban contract id of the
-   *   `wormhole-executor-stellar` governance executor
+   * @param address - Soroban contract id of the `pyth-lazer-stellar` verifier
    */
   constructor(
     public readonly chain: StellarChain,
-    public readonly verifierAddress: string,
-    public readonly executorAddress: string,
+    public readonly address: string,
   ) {
     super();
   }
 
   getId(): string {
-    return `${this.chain.getId()}_${this.verifierAddress}`;
+    return `${this.chain.getId()}_${this.address}`;
   }
 
   getType(): string {
     return StellarLazerContract.type;
   }
 
-  getChain(): StellarChain {
-    return this.chain;
-  }
-
   toJson() {
     return {
+      address: this.address,
       chain: this.chain.getId(),
-      executorAddress: this.executorAddress,
       type: StellarLazerContract.type,
-      verifierAddress: this.verifierAddress,
     };
   }
 
   static fromJson(
     chain: Chain,
-    parsed: {
-      type: string;
-      verifierAddress: string;
-      executorAddress: string;
-    },
+    parsed: { type: string; address: string },
   ): StellarLazerContract {
     if (parsed.type !== StellarLazerContract.type) {
       throw new Error("Invalid type");
@@ -86,11 +83,7 @@ export class StellarLazerContract extends Storable {
     if (!(chain instanceof StellarChain)) {
       throw new Error(`Wrong chain type ${chain}`);
     }
-    return new StellarLazerContract(
-      chain,
-      parsed.verifierAddress,
-      parsed.executorAddress,
-    );
+    return new StellarLazerContract(chain, parsed.address);
   }
 
   /**
@@ -101,10 +94,10 @@ export class StellarLazerContract extends Storable {
    * @param publicKey - 33-byte compressed secp256k1 signer key, hex without 0x
    * @param expiresAt - expiry timestamp in unix seconds (0 removes the signer)
    */
-  generateUpdateTrustedSignerPayload(
+  async generateUpdateTrustedSignerPayload(
     publicKey: string,
     expiresAt: bigint,
-  ): Buffer {
+  ): Promise<Buffer> {
     const pubkey = Buffer.from(publicKey, "hex");
     if (pubkey.length !== 33) {
       throw new Error(
@@ -117,8 +110,8 @@ export class StellarLazerContract extends Storable {
     ]);
     return new CallStellarExecutor(
       this.chain.wormholeChainName,
-      this.executorAddress,
-      this.verifierAddress,
+      await this.getExecutor(),
+      this.address,
       "update_trusted_signer",
       args,
     ).encode();
@@ -130,7 +123,7 @@ export class StellarLazerContract extends Storable {
    *
    * @param wasmHash - 32-byte WASM hash of the new verifier, hex without 0x
    */
-  generateUpgradeVerifierPayload(wasmHash: string): Buffer {
+  async generateUpgradeVerifierPayload(wasmHash: string): Promise<Buffer> {
     const hash = Buffer.from(wasmHash, "hex");
     if (hash.length !== 32) {
       throw new Error(`WASM hash must be 32 bytes, got ${hash.length}`);
@@ -138,11 +131,109 @@ export class StellarLazerContract extends Storable {
     const args = encodeScVecArgs([xdr.ScVal.scvBytes(hash)]);
     return new CallStellarExecutor(
       this.chain.wormholeChainName,
-      this.executorAddress,
-      this.verifierAddress,
+      await this.getExecutor(),
+      this.address,
       "upgrade",
       args,
     ).encode();
+  }
+
+  /**
+   * Read the executor address authorized for governance on the verifier. This is
+   * the executor that {@link StellarExecutorContract} wraps; a mismatch with the
+   * registered executor means the registry is stale.
+   */
+  async getExecutor(): Promise<string> {
+    const value = await readInstanceStorage(
+      this.chain,
+      this.address,
+      "Executor",
+    );
+    if (!value) {
+      throw new Error("Verifier has no executor set (not initialized)");
+    }
+    return scValToNative(value) as string;
+  }
+
+  /**
+   * Read the expiry timestamp (unix seconds) of a trusted signer, or `undefined`
+   * if the signer is not currently trusted.
+   *
+   * The verifier keys trusted signers individually by public key and exposes no
+   * enumeration, so callers must supply the key of interest — there is no
+   * on-chain "list all signers" to mirror.
+   *
+   * @param publicKey - 33-byte compressed secp256k1 key, hex without 0x
+   */
+  async getTrustedSignerExpiry(publicKey: string): Promise<bigint | undefined> {
+    const server = this.chain.getProvider();
+    const key = xdr.ScVal.scvVec([
+      xdr.ScVal.scvSymbol("TrustedSigner"),
+      xdr.ScVal.scvBytes(Buffer.from(publicKey, "hex")),
+    ]);
+    try {
+      const entry = await server.getContractData(
+        this.address,
+        key,
+        stellarRpc.Durability.Persistent,
+      );
+      return BigInt(
+        scValToNative(entry.val.contractData().val()) as number | bigint,
+      );
+    } catch {
+      // getContractData throws when the entry does not exist.
+      return undefined;
+    }
+  }
+}
+
+/**
+ * The Wormhole governance **executor** (`wormhole-executor-stellar`). It verifies
+ * Pyth governance VAAs and dispatches the decoded PTGM action to the verifier, or
+ * upgrades itself. Mirrors {@link EvmExecutorContract}.
+ */
+export class StellarExecutorContract extends Storable {
+  static type = "StellarExecutorContract";
+
+  /**
+   * @param chain - the Stellar chain this contract is deployed on
+   * @param address - Soroban contract id of the `wormhole-executor-stellar`
+   *   governance executor
+   */
+  constructor(
+    public readonly chain: StellarChain,
+    public readonly address: string,
+  ) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return StellarExecutorContract.type;
+  }
+
+  toJson() {
+    return {
+      address: this.address,
+      chain: this.chain.getId(),
+      type: StellarExecutorContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string },
+  ): StellarExecutorContract {
+    if (parsed.type !== StellarExecutorContract.type) {
+      throw new Error("Invalid type");
+    }
+    if (!(chain instanceof StellarChain)) {
+      throw new Error(`Wrong chain type ${chain}`);
+    }
+    return new StellarExecutorContract(chain, parsed.address);
   }
 
   /**
@@ -153,7 +244,7 @@ export class StellarLazerContract extends Storable {
   generateUpgradeExecutorPayload(wasmDigest: string): Buffer {
     return new UpgradeStellarExecutor(
       this.chain.wormholeChainName,
-      this.executorAddress,
+      this.address,
       Buffer.from(wasmDigest, "hex"),
     ).encode();
   }
@@ -176,7 +267,7 @@ export class StellarLazerContract extends Storable {
       Buffer.from(senderPrivateKey, "hex"),
     );
     const account = await server.getAccount(keypair.publicKey());
-    const executor = new Contract(this.executorAddress);
+    const executor = new Contract(this.address);
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -212,57 +303,12 @@ export class StellarLazerContract extends Storable {
   }
 
   /**
-   * Read the executor address authorized for governance on the verifier. Should
-   * match {@link executorAddress}; a mismatch means the registry is stale.
-   */
-  async getExecutor(): Promise<string> {
-    const value = await this.readInstanceStorage(
-      this.verifierAddress,
-      "Executor",
-    );
-    if (!value) {
-      throw new Error("Verifier has no executor set (not initialized)");
-    }
-    return scValToNative(value) as string;
-  }
-
-  /**
-   * Read the expiry timestamp (unix seconds) of a trusted signer, or `undefined`
-   * if the signer is not currently trusted.
-   *
-   * The verifier keys trusted signers individually by public key and exposes no
-   * enumeration, so callers must supply the key of interest — there is no
-   * on-chain "list all signers" to mirror.
-   *
-   * @param publicKey - 33-byte compressed secp256k1 key, hex without 0x
-   */
-  async getTrustedSignerExpiry(publicKey: string): Promise<bigint | undefined> {
-    const server = this.chain.getProvider();
-    const key = xdr.ScVal.scvVec([
-      xdr.ScVal.scvSymbol("TrustedSigner"),
-      xdr.ScVal.scvBytes(Buffer.from(publicKey, "hex")),
-    ]);
-    try {
-      const entry = await server.getContractData(
-        this.verifierAddress,
-        key,
-        stellarRpc.Durability.Persistent,
-      );
-      return BigInt(
-        scValToNative(entry.val.contractData().val()) as number | bigint,
-      );
-    } catch {
-      // getContractData throws when the entry does not exist.
-      return undefined;
-    }
-  }
-
-  /**
    * Read the executor's current Wormhole guardian set index.
    */
   async getCurrentGuardianSetIndex(): Promise<number> {
-    const value = await this.readInstanceStorage(
-      this.executorAddress,
+    const value = await readInstanceStorage(
+      this.chain,
+      this.address,
       "GuardianSetIndex",
     );
     if (!value) {
@@ -270,37 +316,38 @@ export class StellarLazerContract extends Storable {
     }
     return Number(scValToNative(value) as number | bigint);
   }
-
-  /**
-   * Read a single entry from a contract's instance storage. Instance storage is
-   * bundled inside the contract instance ledger entry (not stored as separate
-   * ledger entries), so the whole instance is fetched and its storage map is
-   * scanned for `keySymbol`.
-   */
-  private async readInstanceStorage(
-    contractId: string,
-    keySymbol: string,
-  ): Promise<xdr.ScVal | undefined> {
-    const server = this.chain.getProvider();
-    const entry = await server.getContractData(
-      contractId,
-      xdr.ScVal.scvLedgerKeyContractInstance(),
-      stellarRpc.Durability.Persistent,
-    );
-    const storage = entry.val.contractData().val().instance().storage() ?? [];
-    for (const item of storage) {
-      const key = scValToNative(item.key()) as unknown;
-      if (Array.isArray(key) && key[0] === keySymbol) {
-        return item.val();
-      }
-    }
-    return undefined;
-  }
 }
 
 /** XDR-encode an argument vector as the `ScVec` the executor's `Call` expects. */
 function encodeScVecArgs(args: xdr.ScVal[]): Buffer {
   return xdr.ScVal.scvVec(args).toXDR();
+}
+
+/**
+ * Read a single entry from a contract's instance storage. Instance storage is
+ * bundled inside the contract instance ledger entry (not stored as separate
+ * ledger entries), so the whole instance is fetched and its storage map is
+ * scanned for `keySymbol`.
+ */
+async function readInstanceStorage(
+  chain: StellarChain,
+  contractId: string,
+  keySymbol: string,
+): Promise<xdr.ScVal | undefined> {
+  const server = chain.getProvider();
+  const entry = await server.getContractData(
+    contractId,
+    xdr.ScVal.scvLedgerKeyContractInstance(),
+    stellarRpc.Durability.Persistent,
+  );
+  const storage = entry.val.contractData().val().instance().storage() ?? [];
+  for (const item of storage) {
+    const key = scValToNative(item.key()) as unknown;
+    if (Array.isArray(key) && key[0] === keySymbol) {
+      return item.val();
+    }
+  }
+  return undefined;
 }
 
 function sleep(ms: number): Promise<void> {

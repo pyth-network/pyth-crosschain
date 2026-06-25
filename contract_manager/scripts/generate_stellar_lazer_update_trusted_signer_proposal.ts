@@ -66,7 +66,7 @@ async function main() {
   }
 
   console.log(`Generating payload for contract ${contract.getId()}`);
-  const payload = contract.generateUpdateTrustedSignerPayload(
+  const payload = await contract.generateUpdateTrustedSignerPayload(
     argv["trusted-signer"],
     BigInt(argv["expires-at"]),
   );

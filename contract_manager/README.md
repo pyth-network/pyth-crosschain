@@ -21,17 +21,21 @@ Each of these entities has a specialized class for each supported chain (EVM/Cos
 # Lazer on Stellar
 
 Pyth Lazer on Stellar (Soroban) is split across two contracts (see
-`pyth-network/pyth-lazer` `contracts/stellar`):
+`pyth-network/pyth-lazer` `contracts/stellar`), each with its own class in
+`src/core/contracts/stellar.ts` — mirroring the EVM split between
+`EvmLazerContract` and `EvmExecutorContract`:
 
-- the **verifier** (`pyth-lazer-stellar`) verifies signed price updates and holds
-  the trusted signer set, and
-- the **executor** (`wormhole-executor-stellar`) verifies Wormhole governance
-  VAAs and dispatches the decoded action to the verifier (or upgrades itself).
+- `StellarLazerContract` — the **verifier** (`pyth-lazer-stellar`) verifies signed
+  price updates and holds the trusted signer set, and
+- `StellarExecutorContract` — the **executor** (`wormhole-executor-stellar`)
+  verifies Wormhole governance VAAs and dispatches the decoded action to the
+  verifier (or upgrades itself).
 
-`StellarLazerContract` (`src/core/contracts/stellar.ts`) wires both contract ids
-together. Governance always enters through the executor: a Pyth governance VAA
-carrying a PTGM (Pyth Target Governance Message) is submitted to
-`execute_governance_action`, which invokes the named function on the verifier.
+Governance always enters through the executor: a Pyth governance VAA carrying a
+PTGM (Pyth Target Governance Message) is submitted to the executor's
+`execute_governance_action`, which invokes the named function on the verifier. The
+verifier's payload builders resolve the authorized executor from the verifier's
+on-chain state, the same way `EvmLazerContract` resolves its owning executor.
 
 Because Soroban addresses are variable-length strkeys and arguments are
 XDR-encoded, Stellar uses a dedicated governance module
@@ -46,7 +50,7 @@ The PTGM target chain id is a dedicated Pyth receiver id (`stellar_testnet` /
 `base`). The deployed executor must be initialized with the matching `chain_id`.
 
 > **Note:** only the **testnet** verifier is registered today. The testnet
-> executor address in `store/contracts/StellarLazerContracts.json` is a
+> executor address in `store/contracts/StellarExecutorContracts.json` is a
 > placeholder and must be replaced once the executor is deployed; mainnet is not
 > yet deployed.
 

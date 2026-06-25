@@ -1705,12 +1705,13 @@ export class StellarChain extends Chain {
   /**
    * Stellar contract upgrades are governance actions dispatched through the
    * wormhole executor, which needs the executor and target contract ids. Build
-   * them with the StellarLazerContract methods instead (it holds both ids).
+   * them with the per-contract methods instead.
    */
   generateGovernanceUpgradePayload(): Buffer {
     throw new Error(
       "Use StellarLazerContract.generateUpgradeVerifierPayload / " +
-        "generateUpgradeExecutorPayload — Stellar upgrades require contract ids.",
+        "StellarExecutorContract.generateUpgradeExecutorPayload — Stellar " +
+        "upgrades require contract ids.",
     );
   }
 

@@ -42,6 +42,7 @@ import {
   FuelWormholeContract,
   IotaPriceFeedContract,
   IotaWormholeContract,
+  StellarExecutorContract,
   StellarLazerContract,
   SuiLazerContract,
   SuiPriceFeedContract,
@@ -64,7 +65,10 @@ import { Vault } from "./governance";
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
-  public executor_contracts: Record<string, EvmExecutorContract> = {};
+  public executor_contracts: Record<
+    string,
+    EvmExecutorContract | StellarExecutorContract
+  > = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
@@ -210,6 +214,7 @@ export class Store {
       [EvmLazerContract.type]: EvmLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
+      [StellarExecutorContract.type]: StellarExecutorContract,
     };
     for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
@@ -236,7 +241,10 @@ export class Store {
           this.entropy_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof WormholeContract) {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
-        } else if (chainContract instanceof EvmExecutorContract) {
+        } else if (
+          chainContract instanceof EvmExecutorContract ||
+          chainContract instanceof StellarExecutorContract
+        ) {
           this.executor_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmLazerContract ||
