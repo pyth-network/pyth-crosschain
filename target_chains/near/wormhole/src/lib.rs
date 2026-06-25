@@ -408,6 +408,11 @@ impl Wormhole {
     }
 }
 
+// Gated to wasm32 like near-sdk's generated entry points: on the host target (unit tests, ABI
+// extraction) this raw entry point is never invoked, and leaving it ungated would keep its
+// cross-contract `deploy_contract`/`migrate` promise calls alive past dead-code elimination,
+// leaving undefined NEAR host symbols that break `cargo near`'s ABI dylib step.
+#[cfg(target_arch = "wasm32")]
 #[no_mangle]
 pub extern "C" fn update_contract() {
     env::setup_panic_hook();

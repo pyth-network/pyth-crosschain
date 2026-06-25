@@ -60,12 +60,13 @@ cd target_chains/near/wormhole
 cargo near build reproducible-wasm
 ```
 
-The `container_build_command` in `Cargo.toml` passes `--no-abi`. VAA verification calls
-`env::ecrecover`, which near-sdk gates behind the `unstable` feature; with `unstable` enabled,
-cargo-near's ABI extraction (it dlopens a host-target dylib) fails to resolve the
-`promise_batch_action_function_call_weight` host symbol. The bridge has no consumers of ABI
-metadata, so ABI generation is skipped — the receiver, which needs no `unstable` feature, keeps its
-ABI.
+The `container_build_command` in `Cargo.toml` mirrors the receiver's exactly. The raw
+contract-upgrade entry point `update_contract` is gated to `#[cfg(target_arch = "wasm32")]` (the
+same gating near-sdk applies to its generated entry points): without that gate the entry point and
+its `deploy_contract`/`migrate` cross-contract promise calls survive dead-code elimination in
+`cargo near`'s host-target ABI dylib, leaving undefined NEAR host symbols (e.g.
+`promise_batch_action_function_call_weight`) that fail ABI extraction. Gated, ABI generation
+succeeds and no `--no-abi` override is needed.
 
 The workspaces tests in `../receiver/tests/workspaces.rs` build the non-reproducible wasm via
 `../receiver/workspace-test.sh` and deploy it with a 5-key router set.
