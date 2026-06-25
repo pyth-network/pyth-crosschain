@@ -37,5 +37,12 @@ export const Status = ({ status, ...props }: Props) => {
         </StatusImpl>
       );
     }
+    case StatusType.Resolved: {
+      return (
+        <StatusImpl variant="info" {...props}>
+          REVEALED
+        </StatusImpl>
+      );
+    }
   }
 };

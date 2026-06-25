@@ -253,55 +253,81 @@ pub async fn process_event_with_backoff(
             metrics.reveals.get_or_create(&account_label).inc();
         }
         Err(e) => {
-            // In case the callback did not succeed, we double-check that the request is still on-chain.
-            // If the request is no longer on-chain, one of the transactions we sent likely succeeded, but
-            // the RPC gave us an error anyway.
+            // The reveal failed after exhausting retries. Re-check the on-chain request state before
+            // recording a terminal status, because the RPC may have reported an error even though one
+            // of our transactions actually landed.
             let req = chain_state
                 .contract
                 .get_request_v2(event.provider_address, event.sequence_number)
                 .await;
 
-            // We only count failures for cases where we are completely certain that the callback failed.
-            if req.as_ref().is_ok_and(|x| x.is_some()) {
-                tracing::error!("Failed to process event: {}. Request: {:?}", e, req);
-                metrics
-                    .requests_processed_failure
-                    .get_or_create(&account_label)
-                    .inc();
-                // Do not display the internal error, it might include RPC details.
-                let reason = match e {
-                    SubmitTxError::GasUsageEstimateError(_, ContractError::Revert(revert)) => {
-                        format!("Reverted: {revert}")
-                    }
-                    SubmitTxError::GasLimitExceeded { limit, estimate } => {
-                        format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
-                    }
-                    SubmitTxError::GasUsageEstimateError(_, _) => {
-                        "Unable to estimate gas usage".to_string()
-                    }
-                    SubmitTxError::GasPriceEstimateError(_) => {
-                        "Unable to estimate gas price".to_string()
-                    }
-                    SubmitTxError::SubmissionError(_, _) => {
-                        "Error submitting the transaction on-chain".to_string()
-                    }
-                    SubmitTxError::ConfirmationTimeout(tx) => format!(
-                        "Transaction was submitted, but never confirmed. Hash: {}",
-                        tx.sighash()
-                    ),
-                    SubmitTxError::ConfirmationError(tx, _) => format!(
-                        "Transaction was submitted, but never confirmed. Hash: {}",
-                        tx.sighash()
-                    ),
-                    SubmitTxError::ReceiptError(tx, _) => {
-                        format!("Reveal transaction failed on-chain. Hash: {}", tx.sighash())
-                    }
-                };
-                status.state = RequestEntryState::Failed {
-                    reason,
-                    provider_random_number: Some(provider_revelation),
-                };
-                history.add(&status);
+            match &req {
+                // The request is still on-chain, so we are certain the reveal/callback failed.
+                Ok(Some(_)) => {
+                    tracing::error!("Failed to process event: {}. Request: {:?}", e, req);
+                    metrics
+                        .requests_processed_failure
+                        .get_or_create(&account_label)
+                        .inc();
+                    // Do not display the internal error, it might include RPC details.
+                    let reason = match e {
+                        SubmitTxError::GasUsageEstimateError(_, ContractError::Revert(revert)) => {
+                            format!("Reverted: {revert}")
+                        }
+                        SubmitTxError::GasLimitExceeded { limit, estimate } => {
+                            format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
+                        }
+                        SubmitTxError::GasUsageEstimateError(_, _) => {
+                            "Unable to estimate gas usage".to_string()
+                        }
+                        SubmitTxError::GasPriceEstimateError(_) => {
+                            "Unable to estimate gas price".to_string()
+                        }
+                        SubmitTxError::SubmissionError(_, _) => {
+                            "Error submitting the transaction on-chain".to_string()
+                        }
+                        SubmitTxError::ConfirmationTimeout(tx) => format!(
+                            "Transaction was submitted, but never confirmed. Hash: {}",
+                            tx.sighash()
+                        ),
+                        SubmitTxError::ConfirmationError(tx, _) => format!(
+                            "Transaction was submitted, but never confirmed. Hash: {}",
+                            tx.sighash()
+                        ),
+                        SubmitTxError::ReceiptError(tx, _) => {
+                            format!("Reveal transaction failed on-chain. Hash: {}", tx.sighash())
+                        }
+                    };
+                    status.state = RequestEntryState::Failed {
+                        reason,
+                        provider_random_number: Some(provider_revelation),
+                    };
+                    history.add(&status);
+                }
+                // The request is no longer on-chain, which means its random value was revealed --
+                // either by one of our own transactions that the RPC failed to confirm, or by another
+                // party. Record a terminal Resolved state so the request does not linger as Pending
+                // forever (a lingering Pending row is what makes the explorer display an
+                // already-revealed request as pending).
+                Ok(None) => {
+                    tracing::info!(
+                        "Reveal reported an error but the request is no longer on-chain; marking as resolved. Error: {}",
+                        e
+                    );
+                    status.state = RequestEntryState::Resolved {
+                        provider_random_number: Some(provider_revelation),
+                    };
+                    history.add(&status);
+                }
+                // We could not determine the on-chain state (e.g. an RPC error). Leave the request as
+                // Pending so it can be retried or reconciled later rather than recording a wrong status.
+                Err(lookup_err) => {
+                    tracing::warn!(
+                        "Failed to process event: {}. Could not confirm on-chain request state: {:?}",
+                        e,
+                        lookup_err
+                    );
+                }
             }
         }
     }
