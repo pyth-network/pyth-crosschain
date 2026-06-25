@@ -41,7 +41,7 @@ client.subscribe({
   <Step>
   ### Verify price updates from your Soroban contract
 
-Pyth Pro provides a [Soroban contract](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar) deployed on Stellar that verifies signed Lazer updates. Your own Soroban contract calls it via cross-contract invocation:
+Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. Your own Soroban contract calls it via cross-contract invocation:
 
 ```rust copy
 use pyth_lazer_stellar_sdk::PythLazerClient;
@@ -70,12 +70,12 @@ impl ExampleConsumer {
   <Step>
   ### Consume the verified payload
 
-The Pyth Lazer Stellar SDK exposes the verified payload as a typed `Update` value. Add it to your contract's `Cargo.toml`:
+The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes the verified payload as a typed `Update` value. Add it to your contract's `Cargo.toml`:
 
 ```toml copy
 [dependencies]
 soroban-sdk = "22"
-pyth-lazer-stellar-sdk = "0.1"
+pyth-lazer-stellar-sdk = "0.2"
 ```
 
 Parse the payload and read the feeds you need:
@@ -143,8 +143,6 @@ You may find these additional resources helpful for consuming prices from Pyth P
 
 Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page for a complete list of supported price feeds.
 
-### Contract Sources
+### Rust SDK
 
-The Stellar Soroban contract implementation lives in [`contracts/stellar`](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar) in the `pyth-network/pyth-lazer` repository.
-
-The user-facing Rust SDK ([`pyth-lazer-stellar-sdk`](https://github.com/pyth-network/pyth-lazer/tree/main/contracts/stellar/sdk/rust)) exposes the typed `Update` and `Feed` types plus the `parse_payload` helper shown above.
+The user-facing Rust SDK [`pyth-lazer-stellar-sdk`](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes the typed `Update` and `Feed` types plus the `parse_payload` helper shown above. API reference on [docs.rs](https://docs.rs/pyth-lazer-stellar-sdk).
