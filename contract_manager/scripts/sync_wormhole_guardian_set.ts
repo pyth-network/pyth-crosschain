@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-console */
+// Must come first: pins native fetch before the contract/wormhole imports below
+// transitively load near-api-js, which clobbers globalThis.fetch with node-fetch
+// (whose Response.body lacks getReader(), breaking fuels). See the module docs.
+import "../src/node/utils/preserve-native-fetch";
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
