@@ -52,6 +52,15 @@ export type ChangeLog = {
 // constant — no fetching, loading, or error states needed at the call site.
 export const getChangeLog = (): ChangeLog => GENERATED_CHANGE_LOG;
 
+// ─── Links ───────────────────────────────────────────────────────────────
+
+// Deep-link a feed symbol into the Pyth Terminal explore view. The symbol id
+// maps directly onto the route — e.g. `Metal.Index.SILVER/USD` becomes
+// `/explore/Metal.Index.SILVER%2FUSD` — and encodeURIComponent escapes the
+// slash (and anything else) safely.
+export const terminalUrl = (id: string): string =>
+  `https://app.pyth.com/explore/${encodeURIComponent(id)}`;
+
 // ─── Display helpers ─────────────────────────────────────────────────────
 
 export const fmtDateShort = (iso: string): string => {
