@@ -447,6 +447,7 @@ fn initialize_wormhole_receiver(
             payer,
             legacy_guardian_set,
         )?;
+        current_guardian_set_index += 1;
     }
 
     if current_guardian_set_index == 6 {
@@ -459,6 +460,7 @@ fn initialize_wormhole_receiver(
             payer,
             legacy_guardian_set,
         )?;
+        current_guardian_set_index += 1;
     }
 
     Ok(())
