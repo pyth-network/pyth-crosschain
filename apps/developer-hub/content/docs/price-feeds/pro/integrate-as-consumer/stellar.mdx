@@ -30,7 +30,7 @@ client.subscribe({
   type: "subscribe",
   subscriptionId: 1,
   priceFeedIds: [1, 2], // BTC/USD, ETH/USD
-  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent", "feedUpdateTimestamp"],
   formats: ["leEcdsa"], // Required for Stellar
   channel: "fixed_rate@200ms",
   jsonBinaryEncoding: "hex",
@@ -41,9 +41,19 @@ client.subscribe({
   <Step>
   ### Verify price updates from your Soroban contract
 
-Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes a typed `PythLazerClient` that cross-contract-calls the verifier and returns the parsed update in one call. Add it to your contract's `Cargo.toml`:
+Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes a typed `PythLazerClient` that cross-contract-calls the verifier and returns the parsed update in one call.
+
+Scaffold a new Soroban contract with `stellar contract init <name>`, then replace the contract crate's `Cargo.toml` and `src/lib.rs` with the snippets below. Pin `soroban-sdk` to the major the SDK targets — bumping to a newer `soroban-sdk` (e.g. the `stellar contract init` default) will fail to build against the published SDK.
 
 ```toml copy
+[package]
+name = "example-consumer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
 [dependencies]
 soroban-sdk = "22"
 pyth-lazer-stellar-sdk = "0.2"
@@ -52,6 +62,8 @@ pyth-lazer-stellar-sdk = "0.2"
 Then verify from inside your own contract:
 
 ```rust copy
+#![no_std]
+
 use pyth_lazer_stellar_sdk::{ParseError, PythLazerClient, VerifiedPayload};
 use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
 
@@ -86,6 +98,8 @@ impl ExampleConsumer {
 Pick the feed you care about and read its fields off the verified `Update`:
 
 ```rust copy
+#![no_std]
+
 use pyth_lazer_stellar_sdk::{ParseError, PythLazerClient};
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Bytes, Env};
 
@@ -122,7 +136,7 @@ impl ExampleConsumer {
 }
 ```
 
-Feed properties that are not requested in the subscription return `None`. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. Per-feed `feed_update_timestamp` (microseconds since epoch) is the right field for freshness checks; the top-level `update.timestamp` is the payload-level timestamp. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
+Every property your contract reads must be requested in the Step 1 subscription — feed properties not in the subscription decode to `None`, so an unguarded `.expect(...)` will trap on-chain. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. Per-feed `feed_update_timestamp` (microseconds since epoch, requested as `feedUpdateTimestamp`) is the right field for freshness checks; the top-level `update.timestamp` is the payload-level timestamp. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
 
 <Callout type="info">
   Submit the transaction from your off-chain client using
@@ -146,4 +160,4 @@ Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/pri
 
 ### Rust SDK
 
-The user-facing Rust SDK [`pyth-lazer-stellar-sdk`](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes the typed `Update` and `Feed` types plus the `parse_payload` helper shown above. API reference on [docs.rs](https://docs.rs/pyth-lazer-stellar-sdk).
+The user-facing Rust SDK [`pyth-lazer-stellar-sdk`](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes the typed `Update` and `Feed` types, the `verify_update` helper used above, and a standalone `parse_payload` helper for already-verified bytes. API reference on [docs.rs](https://docs.rs/pyth-lazer-stellar-sdk).
