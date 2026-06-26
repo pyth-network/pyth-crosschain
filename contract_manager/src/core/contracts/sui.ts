@@ -30,6 +30,18 @@ import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
 
+/**
+ * A Move `vector<u8>` field rendered into the object's JSON comes back as a
+ * `number[]` over JSON-RPC but as a base64-encoded `string` over gRPC (the
+ * `.json` shape is explicitly transport-dependent per `@mysten/sui`). Normalise
+ * both representations to a `Buffer`.
+ */
+function bytesFromMoveField(data: number[] | string): Buffer {
+  return typeof data === "string"
+    ? Buffer.from(data, "base64")
+    : Buffer.from(data);
+}
+
 export class SuiPriceFeedContract extends PriceFeedContract {
   static type = "SuiPriceFeedContract";
   private client: SuiPythClient;
@@ -316,8 +328,11 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
-    const { object } = await provider.core.getDynamicObjectField({
-      include: { json: true },
+    // `data_sources` is a plain dynamic field (a `Set<DataSource>` stored
+    // inline), not a dynamic *object* field, so resolve the field wrapper id
+    // and load it. `getDynamicObjectField` derives a different child id and
+    // fails ("object does not exist") on both JSON-RPC and gRPC.
+    const { dynamicField } = await provider.core.getDynamicField({
       name: {
         bcs: bcs
           .vector(bcs.u8())
@@ -326,6 +341,10 @@ export class SuiPriceFeedContract extends PriceFeedContract {
         type: "vector<u8>",
       },
       parentId: this.stateId,
+    });
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: dynamicField.fieldId,
     });
     if (!object.json) {
       throw new Error(
@@ -338,9 +357,9 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       const fields = getStructFields(key);
       const data = getStructFields(
         getStructFields(fields.emitter_address).value,
-      ).data as number[];
+      ).data as number[] | string;
       return {
-        emitterAddress: Buffer.from(data).toString("hex"),
+        emitterAddress: bytesFromMoveField(data).toString("hex"),
         emitterChain: Number(fields.emitter_chain),
       };
     });
@@ -351,9 +370,9 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const governanceFields = getStructFields(fields.governance_data_source);
     const emitterAddress = getStructFields(
       getStructFields(governanceFields.emitter_address).value,
-    ).data as number[];
+    ).data as number[] | string;
     return {
-      emitterAddress: Buffer.from(emitterAddress).toString("hex"),
+      emitterAddress: bytesFromMoveField(emitterAddress).toString("hex"),
       emitterChain: Number(governanceFields.emitter_chain),
     };
   }
