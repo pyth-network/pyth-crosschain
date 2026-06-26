@@ -26,6 +26,8 @@ const HIDDEN_CHAIN_IDS = new Set<string>([
   "ethereal_devnet",
   "polynomial",
   "polynomial_testnet",
+  "swellchain",
+  "swellchain_testnet",
 ]);
 
 // Community-maintained EVM chain registry (https://github.com/ethereum-lists/chains).
