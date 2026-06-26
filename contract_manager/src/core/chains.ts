@@ -9,25 +9,19 @@ import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import * as suiBytecode from "@mysten/move-bytecode-template";
-import type {
-  MoveStruct as SuiMoveStruct,
-  MoveValue as SuiMoveValue,
-  SuiTransactionBlockResponseOptions,
-} from "@mysten/sui/jsonRpc";
+import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction as SuiTransaction } from "@mysten/sui/transactions";
-import {
-  MIST_PER_SUI,
-  SUI_CLOCK_OBJECT_ID,
-  SUI_FRAMEWORK_ADDRESS,
-} from "@mysten/sui/utils";
+import { MIST_PER_SUI, SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import {
   CosmwasmExecutor,
   CosmwasmQuerier,
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
+import { getStructFields } from "@pythnetwork/pyth-sui-js";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import type { ChainName, DataSource } from "@pythnetwork/xc-admin-common";
 import {
@@ -64,7 +58,6 @@ import * as chains from "viem/chains";
 import Web3 from "web3";
 
 import { execFileAsync } from "../utils/exec-file-async";
-import { hasProperty } from "../utils/utils";
 import type { KeyValueConfig, PrivateKey, TxResult } from "./base";
 import { Storable } from "./base";
 import type { TokenId } from "./token";
@@ -318,6 +311,105 @@ export class CosmWasmChain extends Chain {
   }
 }
 
+/**
+ * Sui transport selector. `json-rpc` is the legacy default; `grpc` migrates to
+ * the transport Sui Foundation is replacing JSON-RPC with — the public
+ * JSON-RPC endpoints are turned off in July 2026 and removed entirely by
+ * mid-Oct 2026. Mirrors the price pusher's dual-protocol support.
+ */
+export type SuiEndpointType = "json-rpc" | "grpc";
+
+/**
+ * Both the `@mysten/sui` v2 JSON-RPC client (`SuiJsonRpcClient`) and the
+ * experimental gRPC client (`SuiGrpcClient`) expose the unified `.core` API.
+ * The chain reads and writes exclusively through `.core` so the same code
+ * works over either transport.
+ */
+function createSuiProvider(
+  endpointType: SuiEndpointType,
+  mainnet: boolean,
+  url: string,
+): ClientWithCoreApi {
+  const network = mainnet ? "mainnet" : "testnet";
+  switch (endpointType) {
+    case "grpc": {
+      return new SuiGrpcClient({ baseUrl: url, network });
+    }
+    case "json-rpc": {
+      return new SuiJsonRpcClient({ network, url });
+    }
+  }
+}
+
+/**
+ * Unwrap the executed (or simulated) transaction from the `.core` result union.
+ * Both transports return a `Transaction` / `FailedTransaction` tagged union
+ * rather than throwing on on-chain failure, so callers must inspect the status.
+ */
+export function getExecutedTransaction<T>(
+  result:
+    | { $kind: "Transaction"; Transaction: T }
+    | { $kind: "FailedTransaction"; FailedTransaction: T },
+): T {
+  return result.$kind === "Transaction"
+    ? result.Transaction
+    : result.FailedTransaction;
+}
+
+/**
+ * Sign and execute a transaction over the transport-agnostic `.core` API,
+ * setting the gas budget to 2x the simulated cost. Works over both the
+ * JSON-RPC and gRPC clients. Throws if the simulation or the on-chain
+ * execution fails, and waits for the transaction to be available before
+ * returning.
+ *
+ * @param provider - the Sui client (JSON-RPC or gRPC)
+ * @param tx - the transaction
+ * @param keypair - the keypair
+ */
+export async function executeSuiTransaction(
+  provider: ClientWithCoreApi,
+  tx: SuiTransaction,
+  keypair: SuiEd25519Keypair,
+): Promise<SuiClientTypes.Transaction<{ effects: true; objectTypes: true }>> {
+  tx.setSender(keypair.toSuiAddress());
+  const simulation = getExecutedTransaction(
+    await provider.core.simulateTransaction({
+      include: { effects: true },
+      transaction: await tx.build({ client: provider }),
+    }),
+  );
+  if (simulation.effects.status.error) {
+    throw new Error(
+      `Transaction simulation failed: ${JSON.stringify(
+        simulation.effects.status.error,
+      )}`,
+    );
+  }
+  const { computationCost, storageCost } = simulation.effects.gasUsed;
+  tx.setGasBudget((BigInt(computationCost) + BigInt(storageCost)) * BigInt(2));
+
+  const executed = getExecutedTransaction(
+    await provider.core.signAndExecuteTransaction({
+      include: { effects: true, objectTypes: true },
+      signer: keypair,
+      transaction: tx,
+    }),
+  );
+  // The `.core` API returns a `FailedTransaction` for on-chain execution
+  // failures rather than throwing, so check the status explicitly.
+  if (executed.effects.status.error) {
+    throw new Error(
+      `Transaction ${executed.digest} failed on-chain: ${JSON.stringify(
+        executed.effects.status.error,
+      )}`,
+    );
+  }
+
+  await provider.core.waitForTransaction({ digest: executed.digest });
+  return executed;
+}
+
 export class SuiChain extends Chain {
   static override type = "SuiChain";
 
@@ -327,6 +419,7 @@ export class SuiChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     public rpcUrl: string,
+    public endpointType: SuiEndpointType = "json-rpc",
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -339,11 +432,13 @@ export class SuiChain extends Chain {
       parsed.wormholeChainName ?? "",
       parsed.nativeToken,
       parsed.rpcUrl ?? "",
+      (parsed.endpointType as SuiEndpointType | undefined) ?? "json-rpc",
     );
   }
 
   toJson(): KeyValueConfig {
     return {
+      endpointType: this.endpointType,
       id: this.id,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
@@ -400,11 +495,8 @@ export class SuiChain extends Chain {
     ).encode();
   }
 
-  getProvider(): SuiJsonRpcClient {
-    return new SuiJsonRpcClient({
-      network: this.mainnet ? "mainnet" : "testnet",
-      url: this.rpcUrl,
-    });
+  getProvider(): ClientWithCoreApi {
+    return createSuiProvider(this.endpointType, this.mainnet, this.rpcUrl);
   }
 
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
@@ -416,10 +508,10 @@ export class SuiChain extends Chain {
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const provider = this.getProvider();
-    const balance = await provider.getBalance({
+    const { balance } = await provider.core.getBalance({
       owner: await this.getAccountAddress(privateKey),
     });
-    return Number(balance.totalBalance) / Number(MIST_PER_SUI);
+    return Number(balance.balance) / Number(MIST_PER_SUI);
   }
 
   async getCliEnv(): Promise<string> {
@@ -466,25 +558,13 @@ export class SuiChain extends Chain {
     const upgrade_cap = tx.publish({ dependencies, modules });
     tx.transferObjects([upgrade_cap], signer.toSuiAddress());
 
-    const { digest, objectChanges } = await this.executeTransaction(
-      tx,
-      signer,
-      { showObjectChanges: true },
-    );
-    await this.getProvider().waitForTransaction({ digest });
+    const executed = await this.executeTransaction(tx, signer);
 
-    let packageId: string | undefined;
-    let upgradeCapId: string | undefined;
-    for (const change of objectChanges ?? []) {
-      if (change.type === "published") {
-        packageId = change.packageId;
-      } else if (
-        change.type === "created" &&
-        change.objectType === `${SUI_FRAMEWORK_ADDRESS}::package::UpgradeCap`
-      ) {
-        upgradeCapId = change.objectId;
-      }
-    }
+    const packageId = this.findPublishedPackageId(executed);
+    const upgradeCapId = this.findCreatedObjectId(
+      executed,
+      "::package::UpgradeCap",
+    );
     if (!packageId) {
       throw new Error("Could not find package ID in transaction results");
     }
@@ -569,20 +649,9 @@ export class SuiChain extends Chain {
       target: `${packageId}::actions::init_lazer`,
     });
 
-    const { objectChanges } = await this.executeTransaction(tx, signer, {
-      showObjectChanges: true,
-    });
+    const executed = await this.executeTransaction(tx, signer);
 
-    let stateId: string | undefined;
-    for (const change of objectChanges ?? []) {
-      if (
-        change.type === "created" &&
-        change.objectType === `${packageId}::state::State`
-      ) {
-        stateId = change.objectId;
-      }
-    }
-
+    const stateId = this.findCreatedObjectId(executed, "::state::State");
     if (!stateId) {
       throw new Error("Could not find State ID in transcation results");
     }
@@ -592,27 +661,11 @@ export class SuiChain extends Chain {
 
   async getUpgradeCapPackage(upgradeCapId: string) {
     const client = this.getProvider();
-    const { data, error } = await client.getObject({
-      id: upgradeCapId,
-      options: { showContent: true },
-    });
-    if (!data?.content || error) {
-      throw new Error(
-        `Failed to get UpgradeCap: ${error?.code ?? "undefined"}`,
-      );
-    }
-    if (data.content.dataType !== "moveObject") {
-      throw new Error("Supplied ID does not have a valid UpgradeCap object");
-    }
-
-    const upgradeCap = data.content;
-    if (
-      !this.hasStructField(upgradeCap, "package") ||
-      typeof upgradeCap.fields.package !== "string"
-    ) {
+    const fields = await this.getObjectFields(client, upgradeCapId);
+    if (typeof fields.package !== "string") {
       throw new TypeError("Could not find package string in UpgradeCap object");
     }
-    return upgradeCap.fields.package;
+    return fields.package;
   }
 
   /**
@@ -620,79 +673,89 @@ export class SuiChain extends Chain {
    * `{ .., upgrade_cap: UpgradeCap }` convention.
    */
   async getStatePackageInfo(
-    client: SuiJsonRpcClient,
+    client: ClientWithCoreApi,
     stateId: string,
   ): Promise<{
     package: string;
     version: string;
   }> {
-    const state = await this.getStateObject(client, stateId);
-
-    if (!this.hasStructField(state, "upgrade_cap")) {
+    const state = await this.getObjectFields(client, stateId);
+    if (state.upgrade_cap === undefined) {
       throw new Error("Missing 'upgrade_cap' in state object");
     }
-    const upgradeCap = state.fields.upgrade_cap;
-    if (
-      !this.hasStructField(upgradeCap, "package") ||
-      typeof upgradeCap.fields.package !== "string"
-    ) {
+    const upgradeCap = getStructFields(state.upgrade_cap);
+    if (typeof upgradeCap.package !== "string") {
       throw new Error("Could not find 'package' string in UpgradeCap");
     }
-    if (
-      !this.hasStructField(upgradeCap, "version") ||
-      typeof upgradeCap.fields.version !== "string"
-    ) {
+    if (typeof upgradeCap.version !== "string") {
       throw new Error("Could not find 'version' number in UpgradeCap");
     }
     return {
-      package: upgradeCap.fields.package,
-      version: upgradeCap.fields.version,
+      package: upgradeCap.package,
+      version: upgradeCap.version,
     };
   }
 
-  async getStateGovernanceInfo(client: SuiJsonRpcClient, stateId: string) {
-    const state = await this.getStateObject(client, stateId);
-
-    if (!this.hasStructField(state, "governance")) {
+  async getStateGovernanceInfo(client: ClientWithCoreApi, stateId: string) {
+    const state = await this.getObjectFields(client, stateId);
+    if (state.governance === undefined) {
       throw new Error("Missing 'governance' in state object");
     }
-    const governance = state.fields.governance;
-    if (
-      !this.hasStructField(governance, "seen_sequence") ||
-      typeof governance.fields.seen_sequence !== "string"
-    ) {
+    const governance = getStructFields(state.governance);
+    if (typeof governance.seen_sequence !== "string") {
       throw new Error("Could not find 'seen_sequence' BigInt in Governance");
     }
-    return { seen_sequence: BigInt(governance.fields.seen_sequence) };
+    return { seen_sequence: BigInt(governance.seen_sequence) };
   }
 
-  private async getStateObject(
-    client: SuiJsonRpcClient,
-    stateId: string,
-  ): Promise<SuiMoveStruct> {
-    const { data: stateObject, error } = await client.getObject({
-      id: stateId,
-      options: { showContent: true },
+  /**
+   * Reads an object's Move struct fields through the transport-agnostic `.core`
+   * API. `getStructFields` normalises the JSON shape, which differs between the
+   * JSON-RPC (`{ type, fields }`) and gRPC (flattened) transports.
+   */
+  private async getObjectFields(
+    client: ClientWithCoreApi,
+    objectId: string,
+  ): Promise<Record<string, unknown>> {
+    const { object } = await client.core.getObject({
+      include: { json: true },
+      objectId,
     });
-    if (!stateObject?.content || error) {
-      throw new Error(
-        `Failed to get state object: ${error?.code ?? "undefined"}`,
-      );
+    if (!object.json) {
+      throw new Error(`Failed to get object content for ${objectId}`);
     }
-    if (stateObject.content.dataType !== "moveObject") {
-      throw new Error(
-        `State must be an object, got: ${stateObject.content.dataType}`,
-      );
-    }
-
-    return stateObject.content;
+    return getStructFields(object.json);
   }
 
-  private hasStructField<const F extends string>(
-    value: SuiMoveValue,
-    name: F,
-  ): value is { fields: Record<F, SuiMoveValue> } {
-    return hasProperty(value, "fields") && hasProperty(value.fields, name);
+  /** The published package id from a `.core` execution's effects. */
+  private findPublishedPackageId(
+    executed: SuiClientTypes.Transaction<{
+      effects: true;
+      objectTypes: true;
+    }>,
+  ): string | undefined {
+    return executed.effects.changedObjects.find(
+      (obj) => obj.outputState === "PackageWrite",
+    )?.objectId;
+  }
+
+  /**
+   * The id of a newly-created object whose Move type ends with `typeSuffix`
+   * (e.g. `::package::UpgradeCap`). Matching the suffix rather than the full
+   * type avoids depending on how the transport normalises the package address.
+   */
+  private findCreatedObjectId(
+    executed: SuiClientTypes.Transaction<{
+      effects: true;
+      objectTypes: true;
+    }>,
+    typeSuffix: string,
+  ): string | undefined {
+    return executed.effects.changedObjects.find(
+      (obj) =>
+        obj.idOperation === "Created" &&
+        executed.objectTypes[obj.objectId]?.endsWith(typeSuffix),
+    )?.objectId;
   }
 
   /**
@@ -803,33 +866,16 @@ export class SuiChain extends Chain {
 
   /**
    * Given a transaction block and a keypair, sign and execute it.
-   * Sets the gas budget to 2x the estimated gas cost.
+   * Sets the gas budget to 2x the simulated gas cost.
    *
    * @param tx - the transaction
    * @param keypair - the keypair
-   * @param options - transaction response options
    */
-  async executeTransaction(
+  executeTransaction(
     tx: SuiTransaction,
     keypair: SuiEd25519Keypair,
-    options?: SuiTransactionBlockResponseOptions,
-  ) {
-    const provider = this.getProvider();
-
-    tx.setSender(keypair.toSuiAddress());
-    const dryRun = await provider.dryRunTransactionBlock({
-      transactionBlock: await tx.build({ client: provider }),
-    });
-    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
-
-    const res = await provider.signAndExecuteTransaction({
-      options,
-      signer: keypair,
-      transaction: tx,
-    });
-
-    await provider.waitForTransaction({ digest: res.digest });
-    return res;
+  ): Promise<SuiClientTypes.Transaction<{ effects: true; objectTypes: true }>> {
+    return executeSuiTransaction(this.getProvider(), tx, keypair);
   }
 
   explorerUrl(type: "object" | "address" | "txblock", id: string): string {
@@ -850,6 +896,15 @@ export type SuiLazerMeta = {
   receiver_chain_id: number;
 };
 
+/**
+ * IOTA transport selector, kept symmetric with {@link SuiEndpointType} so the
+ * chain config schema is consistent across the two Move chains. The IOTA SDK
+ * (`@iota/iota-sdk`) does not yet ship a gRPC client, so only `json-rpc` is
+ * functional today; the `grpc` variant exists so configs are ready the moment
+ * IOTA's fork adds one.
+ */
+export type IotaEndpointType = "json-rpc" | "grpc";
+
 export class IotaChain extends Chain {
   static override type = "IotaChain";
 
@@ -859,6 +914,7 @@ export class IotaChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     public rpcUrl: string,
+    public endpointType: IotaEndpointType = "json-rpc",
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -871,11 +927,13 @@ export class IotaChain extends Chain {
       parsed.wormholeChainName ?? "",
       parsed.nativeToken,
       parsed.rpcUrl ?? "",
+      (parsed.endpointType as IotaEndpointType | undefined) ?? "json-rpc",
     );
   }
 
   toJson(): KeyValueConfig {
     return {
+      endpointType: this.endpointType,
       id: this.id,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
@@ -897,6 +955,11 @@ export class IotaChain extends Chain {
   }
 
   getProvider(): IotaClient {
+    if (this.endpointType === "grpc") {
+      throw new Error(
+        "gRPC is not supported for IOTA yet: @iota/iota-sdk does not ship a gRPC client. Use endpointType 'json-rpc'.",
+      );
+    }
     return new IotaClient({ url: this.rpcUrl });
   }
 
