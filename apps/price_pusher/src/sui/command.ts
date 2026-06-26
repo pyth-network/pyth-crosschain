@@ -73,14 +73,14 @@ export default {
     "pyth-state-id": {
       description:
         "Pyth State Id. Can be found here" +
-        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/price-feeds/core/contract-addresses/sui",
       required: true,
       type: "string",
     } as Options,
     "wormhole-state-id": {
       description:
         "Wormhole State Id. Can be found here" +
-        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/price-feeds/core/contract-addresses/sui",
       required: true,
       type: "string",
     } as Options,
