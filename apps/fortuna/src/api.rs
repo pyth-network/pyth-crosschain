@@ -45,7 +45,6 @@ pub enum StateTag {
     Failed,
     Completed,
     CallbackErrored,
-    Resolved,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]

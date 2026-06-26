@@ -136,7 +136,6 @@ const useStatusSelect = () => {
             { id: Status.Pending },
             { id: Status.Failed },
             { id: Status.CallbackError },
-            { id: Status.Resolved },
           ],
         },
       ],
@@ -168,9 +167,6 @@ const parseStatus = (value: string) => {
     }
     case StatusParams[Status.Failed]: {
       return Status.Failed;
-    }
-    case StatusParams[Status.Resolved]: {
-      return Status.Resolved;
     }
     default: {
       return "all";

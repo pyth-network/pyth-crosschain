@@ -94,13 +94,6 @@ export const getRequests = async ({
                   case "pending": {
                     return Request.Pending(common);
                   }
-                  case "resolved": {
-                    return Request.Resolved({
-                      ...common,
-                      providerContribution:
-                        request.state.provider_random_number,
-                    });
-                  }
                   case "failed": {
                     return Request.Failed({
                       ...common,
@@ -201,11 +194,6 @@ const failedSchema = z.strictObject({
   state: z.literal("failed"),
 });
 
-const resolvedSchema = z.strictObject({
-  provider_random_number: z.string(),
-  state: z.literal("resolved"),
-});
-
 const fortunaSchema = z.strictObject({
   requests: z.array(
     z.strictObject({
@@ -219,12 +207,7 @@ const fortunaSchema = z.strictObject({
       request_tx_hash: hexStringSchema,
       sender: hexStringSchema,
       sequence: z.number(),
-      state: z.union([
-        completedStateSchema,
-        pendingStateSchema,
-        failedSchema,
-        resolvedSchema,
-      ]),
+      state: z.union([completedStateSchema, pendingStateSchema, failedSchema]),
       user_random_number: z.string(),
     }),
   ),
@@ -236,7 +219,6 @@ export enum Status {
   Failed,
   CallbackError,
   Complete,
-  Resolved,
 }
 
 type BaseArgs = {
@@ -264,9 +246,6 @@ type CompletedArgs = BaseArgs & {
 type CallbackErrorArgs = CompletedArgs & {
   reason: string;
 };
-type ResolvedArgs = BaseArgs & {
-  providerContribution: string;
-};
 
 const Request = {
   CallbackErrored: (args: CallbackErrorArgs) => ({
@@ -285,24 +264,18 @@ const Request = {
     status: Status.Pending as const,
     ...args,
   }),
-  Resolved: (args: ResolvedArgs) => ({
-    status: Status.Resolved as const,
-    ...args,
-  }),
 };
 export type Request = ReturnType<(typeof Request)[keyof typeof Request]>;
 export type PendingRequest = ReturnType<typeof Request.Pending>;
 export type FailedRequest = ReturnType<typeof Request.Failed>;
 export type CallbackErrorRequest = ReturnType<typeof Request.CallbackErrored>;
 export type CompleteRequest = ReturnType<typeof Request.Complete>;
-export type ResolvedRequest = ReturnType<typeof Request.Resolved>;
 
 export const StatusParams = {
   [Status.Pending]: "pending",
   [Status.Failed]: "failed",
   [Status.Complete]: "complete",
   [Status.CallbackError]: "callback-error",
-  [Status.Resolved]: "resolved",
 } as const;
 
 const toFortunaStatus = (status: string) => {
@@ -318,9 +291,6 @@ const toFortunaStatus = (status: string) => {
     }
     case StatusParams[Status.CallbackError]: {
       return "CallbackErrored";
-    }
-    case StatusParams[Status.Resolved]: {
-      return "Resolved";
     }
     default: {
       return;
