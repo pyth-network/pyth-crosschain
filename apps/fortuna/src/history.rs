@@ -65,17 +65,6 @@ pub enum RequestEntryState {
         #[serde_as(as = "Option<serde_with::hex::Hex>")]
         provider_random_number: Option<[u8; 32]>,
     },
-    /// The request is no longer pending on-chain (its random value was revealed), but this keeper
-    /// did not itself record the reveal transaction. This happens when one of our own reveal
-    /// transactions succeeded but the RPC returned an error, or when the request was revealed by
-    /// another party. We therefore know the provider's contribution but not the reveal transaction
-    /// details (block number, tx hash, gas usage, callback outcome).
-    Resolved {
-        /// The provider contribution to the random number.
-        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
-        #[serde_as(as = "Option<serde_with::hex::Hex>")]
-        provider_random_number: Option<[u8; 32]>,
-    },
 }
 
 #[serde_as]
@@ -216,14 +205,6 @@ impl TryFrom<RequestRow> for RequestStatus {
             }
             "Failed" => RequestEntryState::Failed {
                 reason: row.info.unwrap_or_default(),
-                provider_random_number: match row.provider_random_number {
-                    Some(provider_random_number) => {
-                        Some(hex::FromHex::from_hex(provider_random_number)?)
-                    }
-                    None => None,
-                },
-            },
-            "Resolved" => RequestEntryState::Resolved {
                 provider_random_number: match row.provider_random_number {
                     Some(provider_random_number) => {
                         Some(hex::FromHex::from_hex(provider_random_number)?)
@@ -405,23 +386,6 @@ impl History {
                     .bind("Failed")
                     .bind(new_status.last_updated_at.timestamp_millis())
                     .bind(reason)
-                    .bind(provider_random_number)
-                    .bind(network_id)
-                    .bind(sequence)
-                    .bind(provider)
-                    .bind(request_tx_hash)
-                    .execute(pool)
-                    .await
-            }
-            RequestEntryState::Resolved {
-                provider_random_number,
-            } => {
-                let provider_random_number: Option<String> = provider_random_number
-                    .map(|provider_random_number| provider_random_number.encode_hex());
-                // Only transition out of Pending so we never clobber a Completed/Failed record.
-                sqlx::query("UPDATE request SET state = $1, last_updated_at = $2, provider_random_number = $3 WHERE network_id = $4 AND sequence = $5 AND provider = $6 AND request_tx_hash = $7 AND state = 'Pending'")
-                    .bind("Resolved")
-                    .bind(new_status.last_updated_at.timestamp_millis())
                     .bind(provider_random_number)
                     .bind(network_id)
                     .bind(sequence)
@@ -616,7 +580,6 @@ impl<'a> RequestQueryBuilder<'a> {
             query = query.bind(match state {
                 StateTag::Pending => "Pending",
                 StateTag::Failed => "Failed",
-                StateTag::Resolved => "Resolved",
                 StateTag::Completed | StateTag::CallbackErrored => "Completed",
             })
         }
@@ -699,7 +662,6 @@ impl<'a> RequestQueryBuilder<'a> {
             query = query.bind(match state {
                 StateTag::Pending => "Pending",
                 StateTag::Failed => "Failed",
-                StateTag::Resolved => "Resolved",
                 StateTag::Completed | StateTag::CallbackErrored => "Completed",
             })
         }
@@ -745,113 +707,6 @@ mod test {
             state: RequestEntryState::Pending,
             gas_limit: 500_000,
         }
-    }
-
-    #[tokio::test]
-    async fn test_resolved_state_round_trips() {
-        let history = History::new_in_memory().await.unwrap();
-        let mut status = get_random_request_status();
-        // Insert the initial Pending row.
-        History::update_request_status(&history.pool, status.clone()).await;
-
-        // Transition it to Resolved, as happens when a reveal lands on-chain but this keeper does
-        // not record the reveal transaction itself (RPC error after our tx succeeded, or the request
-        // was revealed by another party).
-        let provider_random_number = [42u8; 32];
-        status.state = RequestEntryState::Resolved {
-            provider_random_number: Some(provider_random_number),
-        };
-        History::update_request_status(&history.pool, status.clone()).await;
-
-        // The row reads back as Resolved with the provider contribution preserved.
-        let logs = history
-            .query()
-            .search(status.sequence.to_string())
-            .unwrap()
-            .network_id(status.network_id)
-            .execute()
-            .await
-            .unwrap();
-        assert_eq!(logs, vec![status.clone()]);
-
-        // Filtering by the Resolved state returns it.
-        let logs = history
-            .query()
-            .state(StateTag::Resolved)
-            .execute()
-            .await
-            .unwrap();
-        assert_eq!(logs, vec![status.clone()]);
-
-        // It is no longer reported as Pending.
-        let logs = history
-            .query()
-            .state(StateTag::Pending)
-            .execute()
-            .await
-            .unwrap();
-        assert!(logs.is_empty());
-    }
-
-    #[tokio::test]
-    async fn test_resolved_does_not_clobber_completed() {
-        let history = History::new_in_memory().await.unwrap();
-        let mut status = get_random_request_status();
-        History::update_request_status(&history.pool, status.clone()).await;
-
-        // Complete the request first.
-        status.state = RequestEntryState::Completed {
-            reveal_block_number: 1,
-            reveal_tx_hash: TxHash::random(),
-            provider_random_number: [40; 32],
-            gas_used: U256::from(567890),
-            combined_random_number: RequestStatus::generate_combined_random_number(
-                &status.user_random_number,
-                &[40; 32],
-            ),
-            callback_failed: false,
-            callback_return_value: Default::default(),
-            callback_gas_used: 100_000,
-        };
-        History::update_request_status(&history.pool, status.clone()).await;
-
-        // A subsequent Resolved write must not overwrite the Completed record, since the Resolved
-        // update only transitions rows that are still Pending.
-        let mut resolved = status.clone();
-        resolved.state = RequestEntryState::Resolved {
-            provider_random_number: Some([42; 32]),
-        };
-        History::update_request_status(&history.pool, resolved).await;
-
-        let logs = history
-            .query()
-            .search(status.sequence.to_string())
-            .unwrap()
-            .network_id(status.network_id)
-            .execute()
-            .await
-            .unwrap();
-        assert_eq!(logs, vec![status]);
-    }
-
-    #[test]
-    fn test_resolved_serializes_to_the_shape_the_explorer_expects() {
-        let provider_random_number = [42u8; 32];
-        let mut status = get_random_request_status();
-        status.state = RequestEntryState::Resolved {
-            provider_random_number: Some(provider_random_number),
-        };
-
-        let value = serde_json::to_value(&status).unwrap();
-
-        // The entropy-explorer reads `request.state.state` and
-        // `request.state.provider_random_number`; this locks that contract so the
-        // explorer's (strict) zod parser keeps accepting what Fortuna emits.
-        assert_eq!(value["state"]["state"], "resolved");
-        assert_eq!(
-            value["state"]["provider_random_number"],
-            provider_random_number.encode_hex()
-        );
     }
 
     #[tokio::test]

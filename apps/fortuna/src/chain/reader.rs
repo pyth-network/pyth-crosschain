@@ -3,7 +3,7 @@ use {
     axum::async_trait,
     ethers::{
         prelude::LogMeta,
-        types::{Address, BlockNumber as EthersBlockNumber, U256},
+        types::{Address, BlockNumber as EthersBlockNumber, Bytes, U256},
     },
 };
 
@@ -54,6 +54,18 @@ pub struct RequestedV2Event {
     pub log_meta: LogMeta,
 }
 
+/// A v2 `Revealed` event that cleared a request on chain.
+#[derive(Clone)]
+pub struct RevealedV2Event {
+    pub provider_revelation: [u8; 32],
+    pub random_number: [u8; 32],
+    pub callback_failed: bool,
+    pub callback_return_value: Bytes,
+    pub callback_gas_used: u32,
+    pub gas_used: U256,
+    pub log_meta: LogMeta,
+}
+
 /// EntropyReader is the read-only interface of the Entropy contract.
 #[async_trait]
 pub trait EntropyReader: Send + Sync {
@@ -74,6 +86,15 @@ pub trait EntropyReader: Send + Sync {
         to_block: BlockNumber,
         provider: Address,
     ) -> Result<Vec<RequestedV2Event>>;
+
+    /// Find the v2 `Revealed` event that cleared `(provider, sequence_number)`, searching
+    /// `[from_block, latest]`. Returns `None` if no such reveal is on chain (e.g. reorged out).
+    async fn get_revealed_event(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        from_block: BlockNumber,
+    ) -> Result<Option<RevealedV2Event>>;
 
     /// Estimate the gas required to reveal a random number with a callback.
     async fn estimate_reveal_with_callback_gas(
@@ -233,6 +254,15 @@ pub mod mock {
             _provider: Address,
         ) -> Result<Vec<super::RequestedV2Event>> {
             Ok(vec![])
+        }
+
+        async fn get_revealed_event(
+            &self,
+            _provider: Address,
+            _sequence_number: u64,
+            _from_block: BlockNumber,
+        ) -> Result<Option<super::RevealedV2Event>> {
+            Ok(None)
         }
 
         async fn estimate_reveal_with_callback_gas(

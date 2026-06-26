@@ -3,7 +3,9 @@
 use {
     crate::{
         api::ChainId,
-        chain::reader::{self, BlockNumber, BlockStatus, EntropyReader, RequestedV2Event},
+        chain::reader::{
+            self, BlockNumber, BlockStatus, EntropyReader, RequestedV2Event, RevealedV2Event,
+        },
         config::EthereumConfig,
         eth_utils::{
             eth_gas_oracle::EthProviderOracle,
@@ -22,7 +24,7 @@ use {
         prelude::JsonRpcClient,
         providers::{Http, Middleware, Provider},
         signers::{LocalWallet, Signer},
-        types::{BlockNumber as EthersBlockNumber, U256},
+        types::{BlockNumber as EthersBlockNumber, H256, U256},
     },
     sha3::{Digest, Keccak256},
     std::sync::Arc,
@@ -337,6 +339,49 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             })
             .filter(|r| r.provider_address == provider)
             .collect())
+    }
+
+    async fn get_revealed_event(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+        from_block: BlockNumber,
+    ) -> Result<Option<RevealedV2Event>> {
+        let mut event = self.revealed_2_filter();
+        // provider and sequence_number are indexed (topic1, topic3), so filter server-side to this
+        // single request rather than scanning the whole block range.
+        event.filter = event
+            .filter
+            .address(self.address())
+            .from_block(from_block)
+            .topic1(provider)
+            .topic3(H256::from_low_u64_be(sequence_number));
+
+        let res: Vec<(Revealed2Filter, LogMeta)> = event.query_with_meta().await?;
+        // The callback-failed branch emits a Revealed event without clearing the request, so only a
+        // `callback_failed == false` event is a clearing reveal.
+        let Some((revealed, log_meta)) = res.into_iter().find(|(r, _)| !r.callback_failed) else {
+            return Ok(None);
+        };
+
+        let gas_used = self
+            .client()
+            .get_transaction_receipt(log_meta.transaction_hash)
+            .await
+            .ok()
+            .flatten()
+            .and_then(|receipt| receipt.gas_used)
+            .unwrap_or_default();
+
+        Ok(Some(RevealedV2Event {
+            provider_revelation: revealed.provider_contribution,
+            random_number: revealed.random_number,
+            callback_failed: revealed.callback_failed,
+            callback_return_value: revealed.callback_return_value,
+            callback_gas_used: revealed.callback_gas_used,
+            gas_used,
+            log_meta,
+        }))
     }
 
     async fn estimate_reveal_with_callback_gas(

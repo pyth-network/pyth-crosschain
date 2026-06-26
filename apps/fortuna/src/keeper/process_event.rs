@@ -304,20 +304,38 @@ pub async fn process_event_with_backoff(
                     };
                     history.add(&status);
                 }
-                // The request is no longer on-chain, which means its random value was revealed --
-                // either by one of our own transactions that the RPC failed to confirm, or by another
-                // party. Record a terminal Resolved state so the request does not linger as Pending
-                // forever (a lingering Pending row is what makes the explorer display an
-                // already-revealed request as pending).
+                // The request is gone from contract storage: it was either revealed (by our own
+                // transaction whose receipt we lost, or by another party) or its creating block was
+                // reorged out. Confirm a reveal actually happened by finding the on-chain Revealed
+                // event before recording a terminal state; otherwise leave it Pending so we never
+                // assert a reveal that did not occur.
                 Ok(None) => {
-                    tracing::info!(
-                        "Reveal reported an error but the request is no longer on-chain; marking as resolved. Error: {}",
-                        e
-                    );
-                    status.state = RequestEntryState::Resolved {
-                        provider_random_number: Some(provider_revelation),
-                    };
-                    history.add(&status);
+                    // If found, the reveal genuinely happened; if not (reorged out, or outside the
+                    // searched range) or the lookup errors, leave the request Pending.
+                    if let Ok(Some(revealed)) = chain_state
+                        .contract
+                        .get_revealed_event(
+                            event.provider_address,
+                            event.sequence_number,
+                            event.log_meta.block_number.as_u64(),
+                        )
+                        .await
+                    {
+                        tracing::info!(
+                            "Request was already revealed on-chain; recording completed from the on-chain event"
+                        );
+                        status.state = RequestEntryState::Completed {
+                            reveal_block_number: revealed.log_meta.block_number.as_u64(),
+                            reveal_tx_hash: revealed.log_meta.transaction_hash,
+                            provider_random_number: revealed.provider_revelation,
+                            gas_used: revealed.gas_used,
+                            combined_random_number: revealed.random_number,
+                            callback_failed: revealed.callback_failed,
+                            callback_return_value: revealed.callback_return_value,
+                            callback_gas_used: revealed.callback_gas_used,
+                        };
+                        history.add(&status);
+                    }
                 }
                 // We could not determine the on-chain state (e.g. an RPC error). Leave the request as
                 // Pending so it can be retried or reconciled later rather than recording a wrong status.
