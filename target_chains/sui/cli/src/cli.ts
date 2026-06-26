@@ -275,6 +275,7 @@ yargs
       const pythPackageOld = await contract.getPackageId(contract.stateId);
       console.log("Old package id:", pythPackageOld);
       const signedVaa = Buffer.from(argv.vaa, "hex");
+      // `upgradePyth` throws if the upgrade fails (simulation or on-chain).
       const upgradeResults = await upgradePyth(
         keypair,
         contract.chain.getProvider(),
@@ -284,12 +285,6 @@ yargs
         contract,
       );
       console.log("Tx digest", upgradeResults.digest);
-      if (
-        !upgradeResults.effects ||
-        upgradeResults.effects.status.status !== "success"
-      ) {
-        throw new Error("Upgrade failed");
-      }
 
       console.log(
         "Upgrade successful, Executing the migrate function in a separate transaction...",
@@ -298,22 +293,22 @@ yargs
       // We can not do the migration in the same transaction since the newly published package is not found
       // on chain at the beginning of the transaction.
 
-      const migrateResults = await migratePyth(
-        keypair,
-        contract.chain.getProvider(),
-        signedVaa,
-        contract,
-        pythPackageOld,
-      );
-      console.log("Tx digest", migrateResults.digest);
-      if (
-        !migrateResults.effects ||
-        migrateResults.effects.status.status !== "success"
-      ) {
+      let migrateResults;
+      try {
+        migrateResults = await migratePyth(
+          keypair,
+          contract.chain.getProvider(),
+          signedVaa,
+          contract,
+          pythPackageOld,
+        );
+      } catch (error) {
         throw new Error(
           `Migrate failed. Old package id is ${pythPackageOld}. Please do the migration manually`,
+          { cause: error },
         );
       }
+      console.log("Tx digest", migrateResults.digest);
       console.log("Migrate successful");
     },
   )

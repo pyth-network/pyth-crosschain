@@ -2,14 +2,11 @@
 /* biome-ignore-all lint/style/noNonNullAssertion: pre-existing */
 
 import { execSync } from "node:child_process";
-import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import {
-  fromBase64,
-  MIST_PER_SUI,
-  normalizeSuiObjectId,
-} from "@mysten/sui/utils";
+import { fromBase64, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { executeSuiTransaction } from "@pythnetwork/contract-manager/core/chains";
 import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
@@ -34,7 +31,7 @@ export function buildForBytecodeAndDigest(packagePath: string) {
 
 export async function upgradePyth(
   keypair: Ed25519Keypair,
-  provider: SuiJsonRpcClient,
+  provider: ClientWithCoreApi,
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
@@ -70,21 +67,12 @@ export async function upgradePyth(
     target: `${pythPackage}::contract_upgrade::commit_upgrade`,
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI
-
-  return provider.signAndExecuteTransaction({
-    options: {
-      showEffects: true,
-      showEvents: true,
-    },
-    signer: keypair,
-    transaction: tx,
-  });
+  return executeSuiTransaction(provider, tx, keypair);
 }
 
 export async function migratePyth(
   keypair: Ed25519Keypair,
-  provider: SuiJsonRpcClient,
+  provider: ClientWithCoreApi,
   signedUpgradeVaa: Buffer,
   contract: SuiPriceFeedContract,
   pythPackageOld: string,
@@ -104,14 +92,5 @@ export async function migratePyth(
     target: `${pythPackage}::migrate::migrate`,
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 10n); //0.1 SUI
-
-  return provider.signAndExecuteTransaction({
-    options: {
-      showEffects: true,
-      showEvents: true,
-    },
-    signer: keypair,
-    transaction: tx,
-  });
+  return executeSuiTransaction(provider, tx, keypair);
 }

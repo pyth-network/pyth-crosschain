@@ -3,19 +3,16 @@
 
 import { execSync } from "node:child_process";
 import { bcs } from "@mysten/sui/bcs";
-import type { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import {
-  fromBase64,
-  MIST_PER_SUI,
-  normalizeSuiObjectId,
-} from "@mysten/sui/utils";
+import { fromBase64, normalizeSuiObjectId } from "@mysten/sui/utils";
+import { executeSuiTransaction } from "@pythnetwork/contract-manager/core/chains";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
-  provider: SuiJsonRpcClient,
+  provider: ClientWithCoreApi,
   packagePath: string,
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
@@ -36,8 +33,6 @@ export async function publishPackage(
   // Publish contracts
   const txb = new Transaction();
 
-  txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
-
   const [upgradeCap] = txb.publish({
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
@@ -48,44 +43,31 @@ export async function publishPackage(
   // Transfer upgrade capability to deployer
   txb.transferObjects([upgradeCap!], txb.pure.address(keypair.toSuiAddress()));
 
-  // Execute transactions
-  const result = await provider.signAndExecuteTransaction({
-    options: {
-      showInput: true,
-      showObjectChanges: true,
-    },
-    signer: keypair,
-    transaction: txb,
-  });
+  // Execute transaction over the transport-agnostic `.core` API.
+  const executed = await executeSuiTransaction(provider, txb, keypair);
 
-  const publishedChanges = result.objectChanges?.filter(
-    (change) => change.type === "published",
-  );
-
-  if (
-    publishedChanges?.length !== 1 ||
-    publishedChanges[0]?.type !== "published"
-  ) {
-    throw new Error(
-      "No publish event found in transaction:" +
-        JSON.stringify(result.objectChanges, null, 2),
-    );
+  const packageId = executed.effects.changedObjects.find(
+    (change) => change.outputState === "PackageWrite",
+  )?.objectId;
+  if (!packageId) {
+    throw new Error("No published package found in transaction effects");
   }
 
-  const packageId = publishedChanges[0].packageId;
-
   console.log("Published with package id: ", packageId);
-  console.log("Tx digest", result.digest);
+  console.log("Tx digest", executed.digest);
+  // Match object types by suffix: the package address in the type string is
+  // normalised differently across transports, but the module/struct suffix is
+  // stable.
   let upgradeCapId: string | undefined;
   let deployerCapId: string | undefined;
-  for (const objectChange of result.objectChanges!) {
-    if (objectChange.type === "created") {
-      if (objectChange.objectType === "0x2::package::UpgradeCap") {
-        upgradeCapId = objectChange.objectId;
-      }
-      if (objectChange.objectType === `${packageId}::setup::DeployerCap`) {
-        deployerCapId = objectChange.objectId;
-      }
+  for (const change of executed.effects.changedObjects) {
+    if (change.idOperation !== "Created") continue;
+    const objectType = executed.objectTypes[change.objectId];
+    if (objectType?.endsWith("::package::UpgradeCap")) {
+      upgradeCapId = change.objectId;
+    }
+    if (objectType?.endsWith("::setup::DeployerCap")) {
+      deployerCapId = change.objectId;
     }
   }
   if (!upgradeCapId || !deployerCapId) {
@@ -102,7 +84,7 @@ export async function publishPackage(
 
 export async function initPyth(
   keypair: Ed25519Keypair,
-  provider: SuiJsonRpcClient,
+  provider: ClientWithCoreApi,
   pythPackageId: string,
   deployerCapId: string,
   upgradeCapId: string,
@@ -156,33 +138,19 @@ export async function initPyth(
     target: `${pythPackageId}::pyth::init_pyth`,
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
+  // `executeSuiTransaction` throws on simulation / on-chain failure, so a
+  // successful return means the init succeeded.
+  const executed = await executeSuiTransaction(provider, tx, keypair);
+  console.log("Pyth init successful");
+  console.log("Tx digest", executed.digest);
 
-  const result = await provider.signAndExecuteTransaction({
-    options: {
-      showBalanceChanges: true,
-      showEffects: true,
-      showEvents: true,
-      showInput: true,
-      showObjectChanges: true,
-    },
-    signer: keypair,
-    transaction: tx,
-  });
-  if (!result.effects || !result.objectChanges) {
-    throw new Error("No effects or object changes found in transaction");
+  const stateId = executed.effects.changedObjects.find(
+    (change) =>
+      change.idOperation === "Created" &&
+      executed.objectTypes[change.objectId]?.endsWith("::state::State"),
+  )?.objectId;
+  if (stateId) {
+    console.log("Pyth state id: ", stateId);
   }
-  if (result.effects.status.status === "success") {
-    console.log("Pyth init successful");
-    console.log("Tx digest", result.digest);
-  }
-  for (const objectChange of result.objectChanges) {
-    if (
-      objectChange.type === "created" &&
-      objectChange.objectType === `${pythPackageId}::state::State`
-    ) {
-      console.log("Pyth state id: ", objectChange.objectId);
-    }
-  }
-  return result;
+  return executed;
 }
