@@ -288,5 +288,10 @@
     "address": "0xd74CdD8Eef0E97a5a7678F907991316f88E7965A",
     "chain": "injective_evm",
     "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+    "chain": "cronos",
+    "type": "EvmExecutorContract"
   }
 ]
