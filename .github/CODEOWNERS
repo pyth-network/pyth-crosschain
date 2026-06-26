@@ -18,8 +18,8 @@ turbo.json @pyth-network/web-team
 .github/workflows/ci-turbo-build.yml @pyth-network/web-team
 .github/workflows/ci-turbo-test.yml @pyth-network/web-team
 
-/lazer/contracts/aptos @Riateche @ali-behjati
-/lazer/contracts/evm @Riateche @ali-behjati
+/lazer/contracts/aptos @Riateche
+/lazer/contracts/evm @Riateche
 
 flake.lock @cprussin
 *.nix @cprussin
