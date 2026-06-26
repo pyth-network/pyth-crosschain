@@ -10,7 +10,6 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 import { bcs } from "@mysten/sui/bcs";
-import type { ClientWithCoreApi } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
@@ -26,45 +25,10 @@ import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract, Storable, toDeploymentType } from "../base";
 import type { Chain, SuiLazerMeta } from "../chains";
-import { getExecutedTransaction, SuiChain } from "../chains";
+import { SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
-
-/**
- * Sign and execute a transaction over the transport-agnostic `.core` API,
- * setting the gas budget to 2x the simulated cost. Works over both the
- * JSON-RPC and gRPC clients.
- */
-async function executeSuiTransaction(
-  provider: ClientWithCoreApi,
-  tx: Transaction,
-  keypair: Ed25519Keypair,
-) {
-  tx.setSender(keypair.toSuiAddress());
-  const simulation = getExecutedTransaction(
-    await provider.core.simulateTransaction({
-      include: { effects: true },
-      transaction: await tx.build({ client: provider }),
-    }),
-  );
-  if (simulation.effects.status.error) {
-    throw new Error(
-      `Transaction simulation failed: ${JSON.stringify(
-        simulation.effects.status.error,
-      )}`,
-    );
-  }
-  const { computationCost, storageCost } = simulation.effects.gasUsed;
-  tx.setGasBudget((BigInt(computationCost) + BigInt(storageCost)) * BigInt(2));
-  return getExecutedTransaction(
-    await provider.core.signAndExecuteTransaction({
-      include: { effects: true, events: true },
-      signer: keypair,
-      transaction: tx,
-    }),
-  );
-}
 
 export class SuiPriceFeedContract extends PriceFeedContract {
   static type = "SuiPriceFeedContract";
@@ -342,8 +306,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param keypair - the keypair
    */
   private executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
-    const provider = this.getProvider();
-    return executeSuiTransaction(provider, tx, keypair);
+    return this.chain.executeTransaction(tx, keypair);
   }
 
   async getValidTimePeriod() {
@@ -565,8 +528,7 @@ export class SuiWormholeContract extends WormholeContract {
    * @param keypair - the keypair
    */
   private executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
-    const provider = this.chain.getProvider();
-    return executeSuiTransaction(provider, tx, keypair);
+    return this.chain.executeTransaction(tx, keypair);
   }
 }
 

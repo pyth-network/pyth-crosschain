@@ -356,6 +356,60 @@ export function getExecutedTransaction<T>(
     : result.FailedTransaction;
 }
 
+/**
+ * Sign and execute a transaction over the transport-agnostic `.core` API,
+ * setting the gas budget to 2x the simulated cost. Works over both the
+ * JSON-RPC and gRPC clients. Throws if the simulation or the on-chain
+ * execution fails, and waits for the transaction to be available before
+ * returning.
+ *
+ * @param provider - the Sui client (JSON-RPC or gRPC)
+ * @param tx - the transaction
+ * @param keypair - the keypair
+ */
+export async function executeSuiTransaction(
+  provider: ClientWithCoreApi,
+  tx: SuiTransaction,
+  keypair: SuiEd25519Keypair,
+): Promise<SuiClientTypes.Transaction<{ effects: true; objectTypes: true }>> {
+  tx.setSender(keypair.toSuiAddress());
+  const simulation = getExecutedTransaction(
+    await provider.core.simulateTransaction({
+      include: { effects: true },
+      transaction: await tx.build({ client: provider }),
+    }),
+  );
+  if (simulation.effects.status.error) {
+    throw new Error(
+      `Transaction simulation failed: ${JSON.stringify(
+        simulation.effects.status.error,
+      )}`,
+    );
+  }
+  const { computationCost, storageCost } = simulation.effects.gasUsed;
+  tx.setGasBudget((BigInt(computationCost) + BigInt(storageCost)) * BigInt(2));
+
+  const executed = getExecutedTransaction(
+    await provider.core.signAndExecuteTransaction({
+      include: { effects: true, objectTypes: true },
+      signer: keypair,
+      transaction: tx,
+    }),
+  );
+  // The `.core` API returns a `FailedTransaction` for on-chain execution
+  // failures rather than throwing, so check the status explicitly.
+  if (executed.effects.status.error) {
+    throw new Error(
+      `Transaction ${executed.digest} failed on-chain: ${JSON.stringify(
+        executed.effects.status.error,
+      )}`,
+    );
+  }
+
+  await provider.core.waitForTransaction({ digest: executed.digest });
+  return executed;
+}
+
 export class SuiChain extends Chain {
   static override type = "SuiChain";
 
@@ -817,50 +871,11 @@ export class SuiChain extends Chain {
    * @param tx - the transaction
    * @param keypair - the keypair
    */
-  async executeTransaction(
+  executeTransaction(
     tx: SuiTransaction,
     keypair: SuiEd25519Keypair,
   ): Promise<SuiClientTypes.Transaction<{ effects: true; objectTypes: true }>> {
-    const provider = this.getProvider();
-
-    tx.setSender(keypair.toSuiAddress());
-    const simulation = getExecutedTransaction(
-      await provider.core.simulateTransaction({
-        include: { effects: true },
-        transaction: await tx.build({ client: provider }),
-      }),
-    );
-    if (simulation.effects.status.error) {
-      throw new Error(
-        `Transaction simulation failed: ${JSON.stringify(
-          simulation.effects.status.error,
-        )}`,
-      );
-    }
-    const { computationCost, storageCost } = simulation.effects.gasUsed;
-    tx.setGasBudget(
-      (BigInt(computationCost) + BigInt(storageCost)) * BigInt(2),
-    );
-
-    const executed = getExecutedTransaction(
-      await provider.core.signAndExecuteTransaction({
-        include: { effects: true, objectTypes: true },
-        signer: keypair,
-        transaction: tx,
-      }),
-    );
-    // The `.core` API returns a `FailedTransaction` for on-chain execution
-    // failures rather than throwing, so check the status explicitly.
-    if (executed.effects.status.error) {
-      throw new Error(
-        `Transaction ${executed.digest} failed on-chain: ${JSON.stringify(
-          executed.effects.status.error,
-        )}`,
-      );
-    }
-
-    await provider.core.waitForTransaction({ digest: executed.digest });
-    return executed;
+    return executeSuiTransaction(this.getProvider(), tx, keypair);
   }
 
   explorerUrl(type: "object" | "address" | "txblock", id: string): string {
