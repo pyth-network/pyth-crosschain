@@ -985,7 +985,7 @@ async fn test_borsh_field_cmopat() {
 // Vendored Wormhole core bridge (PR-A) end-to-end tests.
 //
 // Unlike `initialize_chain`, which deploys the always-verifies `wormhole-stub`, these tests deploy
-// the real vendored `pyth_wormhole` core bridge initialized with a 5-key Pyth Pro router set, and
+// the real vendored `pyth-wormhole-near` core bridge initialized with a 5-key Pyth Pro router set, and
 // drive it through the two flows the upgrade relies on: a 3-of-5 quorum accumulator update and a
 // standard `UpgradeGuardianSet` rotation. The first five dummy guardians stand in for the router
 // keys; the next five are the rotation target.
@@ -1008,7 +1008,7 @@ fn guardian_set_upgrade_payload(new_index: u32, new_addresses: &[[u8; 20]]) -> V
     payload
 }
 
-/// Deploys the vendored `pyth_wormhole` core bridge (guardian set 0 = first `NUM_ROUTERS` dummy
+/// Deploys the vendored `pyth-wormhole-near` core bridge (guardian set 0 = first `NUM_ROUTERS` dummy
 /// keys) plus a receiver pointing at it.
 async fn initialize_chain_with_vendored_wormhole() -> (
     near_workspaces::Worker<near_workspaces::network::Sandbox>,
@@ -1024,10 +1024,11 @@ async fn initialize_chain_with_vendored_wormhole() -> (
 
     let wormhole = worker
         .dev_deploy(
-            &std::fs::read("pyth_wormhole.wasm").expect("Failed to find pyth_wormhole.wasm"),
+            &std::fs::read("pyth_wormhole_near.wasm")
+                .expect("Failed to find pyth_wormhole_near.wasm"),
         )
         .await
-        .expect("Failed to deploy pyth_wormhole.wasm");
+        .expect("Failed to deploy pyth_wormhole_near.wasm");
 
     let initial_guardians: Vec<String> = dummy_guardians_addresses()[..NUM_ROUTERS]
         .iter()

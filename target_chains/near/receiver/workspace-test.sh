@@ -23,7 +23,7 @@ cp target/wasm32-unknown-unknown/release/pyth_near.wasm .
 (
     cd ../wormhole
     cargo build --release --target wasm32-unknown-unknown --locked
-    cp target/wasm32-unknown-unknown/release/pyth_wormhole.wasm ../receiver
+    cp target/wasm32-unknown-unknown/release/pyth_wormhole_near.wasm ../receiver
 )
 
 RUST_LOG=info cargo test --locked

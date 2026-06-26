@@ -59,7 +59,7 @@ Then create its account and deploy, initializing guardian set 0 with the 5 route
 (20-byte secp256k1 addresses, hex):
 
 ```
-near deploy wormhole-pyth.near target/near/pyth_wormhole.wasm --network-id mainnet \
+near deploy wormhole-pyth.near target/near/pyth_wormhole_near.wasm --network-id mainnet \
   --init-function new \
   --init-args '{"initial_guardians":["<router_addr_0>","<router_addr_1>","<router_addr_2>","<router_addr_3>","<router_addr_4>"]}'
 ```

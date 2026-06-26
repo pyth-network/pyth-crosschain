@@ -64,6 +64,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pyth_wormhole.wasm
-          path: target_chains/near/wormhole/target/near/pyth_wormhole.wasm
+          name: pyth_wormhole_near.wasm
+          path: target_chains/near/wormhole/target/near/pyth_wormhole_near.wasm
           retention-days: 90
