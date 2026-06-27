@@ -1,0 +1,255 @@
+{
+  "date": "2026-06-27",
+  "label": "Saturday",
+  "summary": {
+    "added": 9,
+    "went_live": 16,
+    "removed": 1
+  },
+  "hero": "9 new feeds announced, 16 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.NGDN6/USD",
+      "lazerId": 3029,
+      "asset": "Pyth Price In Usd For Hh Natural Gas 26 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "1c597df8d6db7b35d20eb6ca5430e462425eddfe84ebc63530118d7389a43318"
+    },
+    {
+      "id": "Equity.HK.3986/HKD",
+      "lazerId": 3360,
+      "asset": "Gigadevice Semiconductor Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.HK.2476/HKD",
+      "lazerId": 3359,
+      "asset": "Victory Giant Techno (Huizhou) Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.HK.6809/HKD",
+      "lazerId": 3358,
+      "asset": "Montage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.US.CIEN/USD",
+      "lazerId": 3357,
+      "asset": "Ciena Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "CIEN"
+    },
+    {
+      "id": "Equity.CN.688008/CNY",
+      "lazerId": 3341,
+      "asset": "Montage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688256/CNY",
+      "lazerId": 3340,
+      "asset": "Cambricord Technologies Corp Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.603986/CNY",
+      "lazerId": 3339,
+      "asset": "Gigadevice Semiconductor Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Commodities.NGDV6/USD",
+      "lazerId": 3247,
+      "asset": "Pyth Price In Usd For Hh Natural Gas 28 September 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SONY/USD",
+      "lazerId": 2373,
+      "asset": "Sony Group Corp Adr",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "b4e9d5fc0e0dbf10b138cbbdcb0c211dd6a56676bcf16d09760be7967bd204f9"
+    },
+    {
+      "id": "Crypto.H/USD",
+      "lazerId": 1811,
+      "asset": "Humanity",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "807df1ed343907c4d97790334338c5df6e360036b3c95f880450d078569b5481"
+    },
+    {
+      "id": "Crypto.TAIKO/USD",
+      "lazerId": 587,
+      "asset": "Taiko",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "d878b9766566a87675421e9b11992c1f2ca2438d5b7d841cb147308e1bd6bb99"
+    },
+    {
+      "id": "Crypto.SCR/USD",
+      "lazerId": 547,
+      "asset": "Scroll",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "2e4ec9368637222474f16f5482be6bbebe857628842e47a07fa1bd24878eb041"
+    },
+    {
+      "id": "Crypto.RPL/USD",
+      "lazerId": 541,
+      "asset": "Rocketpool",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "24f94ac0fd8638e3fc41aab2e4df933e63f763351b640bf336a6ec70651c4503"
+    },
+    {
+      "id": "Crypto.PI/USD",
+      "lazerId": 310,
+      "asset": "Pi Network",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "8c102183926ffc9a1a1347a5a583661af37b415e93ea3f3591e94c303ed4f514"
+    },
+    {
+      "id": "Crypto.SUN/USD",
+      "lazerId": 256,
+      "asset": "Sun Token",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "f9e525cd436857e2467825b9bf61a3c8a01b43e4999c5167e04045d318fb28e0"
+    },
+    {
+      "id": "Crypto.DEXE/USD",
+      "lazerId": 193,
+      "asset": "Dexe Network",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-06-27",
+      "quote": "USD",
+      "hermesId": "e0b2e998bbaa9b55f46905767a638ab6143a81713ac6f0406a4538a40b5c41de"
+    },
+    {
+      "id": "Equity.CN.688525/CNY",
+      "lazerId": 3373,
+      "asset": "Biwin Storage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688521/CNY",
+      "lazerId": 3372,
+      "asset": "Verisilicon Microelectronics Shanghai Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688012/CNY",
+      "lazerId": 3371,
+      "asset": "Advanced Micro-Fabrication Equipment Inc China",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688048/CNY",
+      "lazerId": 3370,
+      "asset": "Suzhou Everbright Photonics Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.600584/CNY",
+      "lazerId": 3369,
+      "asset": "Jcet Group Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688041/CNY",
+      "lazerId": 3368,
+      "asset": "Hygon Information Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.CN.688981/CNY",
+      "lazerId": 3367,
+      "asset": "Semiconductor Manufacturing Intl Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.US.WEN/USD",
+      "lazerId": 3366,
+      "asset": "Wendy'S Co",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "WEN"
+    },
+    {
+      "id": "Equity.US.SATA/USD",
+      "lazerId": 3365,
+      "asset": "Strive Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-27",
+      "quote": "SATA"
+    }
+  ]
+}
