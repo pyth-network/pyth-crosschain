@@ -79,18 +79,6 @@ if (pythUpdate) {
 ## Important Integration Notes
 
 ### On-Chain Payload Validation
-> [!WARNING]
-> Price update payloads (such as those retrieved from Hermes) undergo validation **strictly on-chain** at execution time.
->
-> The client-side SDKs pass payload bytes transparently and do not perform pre-validation on:
-> - Wormhole VAA cryptographic integrity or structure
-> - Data source / emitter identity correctness
->
-> If an invalid or malformed payload is passed to `updatePriceFeeds` (or equivalent methods), the client SDK will not throw an error. Instead, the transaction will proceed to the blockchain and revert on-chain with native contract errors like `InvalidWormholeVaa()` or `InvalidUpdateDataSource()`.
-
-## Important Integration Notes
-
-### On-Chain Payload Validation
 
 > [!WARNING]
 > Price update payloads (for example, those retrieved from Hermes) are **authoritatively validated on-chain** during transaction execution.
