@@ -130,6 +130,12 @@ export const RECEIVER_CHAINS = {
   cardano_mainnet: 60097,
   cardano_preprod: 60098,
   cardano_preview: 60099,
+  // Stellar (Soroban) Lazer deployment. The Stellar wormhole executor is
+  // initialized with this id as its `chain_id`; PTGM messages target it exactly
+  // (the executor rejects the wildcard 0). A dedicated Pyth receiver id is used
+  // rather than Wormhole's canonical Stellar id, which collides with `base`
+  // (30) — matching the precedent set by Sui (`iota_sui_*`) and Cardano.
+  stellar_mainnet: 60100,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -276,6 +282,7 @@ export const RECEIVER_CHAINS = {
   celo_sepolia_testnet: 50137,
   arc_testnet: 50138,
   tempo_testnet: 50139,
+  stellar_testnet: 50140,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

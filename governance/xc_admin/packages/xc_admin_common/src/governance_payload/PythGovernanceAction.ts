@@ -35,6 +35,17 @@ export const LazerAction = {
   UpgradeCardanoWithdrawScript: 3,
 } as const;
 
+// Actions for the Stellar wormhole executor (MODULE_STELLAR_EXECUTOR). The
+// executor is a generic dispatcher: `Call` invokes an arbitrary function on a
+// target Soroban contract, and `UpgradeExecutor` swaps the executor's own WASM.
+// These live in their own module (4) rather than the Lazer module (3) so the
+// codes do not collide with `UpgradeSuiLazerContract`/`UpdateTrustedSigner`.
+// biome-ignore assist/source/useSortedKeys: ordered by ID
+export const StellarExecutorAction = {
+  UpgradeExecutor: 0,
+  Call: 1,
+} as const;
+
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>,
@@ -80,6 +91,13 @@ export function toActionName(
       case 3:
         return "UpgradeCardanoWithdrawScript";
     }
+  } else if (deserialized.moduleId == MODULE_STELLAR_EXECUTOR) {
+    switch (deserialized.actionId) {
+      case 0:
+        return "UpgradeExecutor";
+      case 1:
+        return "Call";
+    }
   }
   return undefined;
 }
@@ -88,7 +106,8 @@ export declare type ActionName =
   | keyof typeof ExecutorAction
   | keyof typeof TargetAction
   | keyof typeof EvmExecutorAction
-  | keyof typeof LazerAction;
+  | keyof typeof LazerAction
+  | keyof typeof StellarExecutorAction;
 
 /** Governance header that should be in every Pyth crosschain governance message*/
 export class PythGovernanceHeader {
@@ -157,6 +176,12 @@ export class PythGovernanceHeader {
     } else if (this.action in EvmExecutorAction) {
       module = MODULE_EVM_EXECUTOR;
       action = EvmExecutorAction[this.action as keyof typeof EvmExecutorAction];
+    } else if (this.action in StellarExecutorAction) {
+      module = MODULE_STELLAR_EXECUTOR;
+      action =
+        StellarExecutorAction[
+          this.action as keyof typeof StellarExecutorAction
+        ];
     } else {
       module = MODULE_LAZER;
       action = LazerAction[this.action as keyof typeof LazerAction];
@@ -183,8 +208,7 @@ export const MODULE_EVM_EXECUTOR = 2;
 export const MODULE_LAZER = 3;
 // The Stellar wormhole executor (in pyth-network/pyth-lazer) has its own module
 // so its generic-dispatch actions do not collide with the Lazer module's fixed
-// actions. Reserved here so the id is not reused; the action payloads are wired
-// up alongside the Stellar contract-manager integration.
+// actions. Its action payloads are defined in StellarExecutorAction.ts.
 export const MODULE_STELLAR_EXECUTOR = 4;
 export const MODULES = [
   MODULE_EXECUTOR,

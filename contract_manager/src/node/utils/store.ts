@@ -22,6 +22,7 @@ import {
   IotaChain,
   NearChain,
   StarknetChain,
+  StellarChain,
   SuiChain,
   SvmChain,
   TonChain,
@@ -41,6 +42,8 @@ import {
   FuelWormholeContract,
   IotaPriceFeedContract,
   IotaWormholeContract,
+  StellarExecutorContract,
+  StellarLazerContract,
   SuiLazerContract,
   SuiPriceFeedContract,
   SuiWormholeContract,
@@ -62,14 +65,19 @@ import { Vault } from "./governance";
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
-  public executor_contracts: Record<string, EvmExecutorContract> = {};
+  public executor_contracts: Record<
+    string,
+    EvmExecutorContract | StellarExecutorContract
+  > = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
-  public lazer_contracts: Record<string, EvmLazerContract | SuiLazerContract> =
-    {};
+  public lazer_contracts: Record<
+    string,
+    EvmLazerContract | SuiLazerContract | StellarLazerContract
+  > = {};
 
   constructor(public path: string) {
     this.loadAllChains();
@@ -115,6 +123,7 @@ export class Store {
       [SuiChain.type]: SuiChain,
       [IotaChain.type]: IotaChain,
       [SvmChain.type]: SvmChain,
+      [StellarChain.type]: StellarChain,
     };
 
     for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
@@ -204,6 +213,8 @@ export class Store {
       [IotaWormholeContract.type]: IotaWormholeContract,
       [EvmLazerContract.type]: EvmLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
+      [StellarLazerContract.type]: StellarLazerContract,
+      [StellarExecutorContract.type]: StellarExecutorContract,
     };
     for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
@@ -230,11 +241,15 @@ export class Store {
           this.entropy_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof WormholeContract) {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
-        } else if (chainContract instanceof EvmExecutorContract) {
+        } else if (
+          chainContract instanceof EvmExecutorContract ||
+          chainContract instanceof StellarExecutorContract
+        ) {
           this.executor_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmLazerContract ||
-          chainContract instanceof SuiLazerContract
+          chainContract instanceof SuiLazerContract ||
+          chainContract instanceof StellarLazerContract
         ) {
           this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {

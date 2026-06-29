@@ -15,6 +15,10 @@ import {
   StarknetSetWormholeAddress,
 } from "./SetWormholeAddress";
 import {
+  CallStellarExecutor,
+  UpgradeStellarExecutor,
+} from "./StellarExecutorAction";
+import {
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
 } from "./UpdateTrustedSigner";
@@ -102,6 +106,10 @@ export function decodeGovernancePayload(
         return undefined;
       }
     }
+    case "Call":
+      return CallStellarExecutor.decode(data);
+    case "UpgradeExecutor":
+      return UpgradeStellarExecutor.decode(data);
     default:
       return undefined;
   }
@@ -117,6 +125,7 @@ export * from "./SetFee";
 export * from "./SetTransactionFee";
 export * from "./SetValidPeriod";
 export * from "./SetWormholeAddress";
+export * from "./StellarExecutorAction";
 export * from "./UpdateTrustedSigner";
 export * from "./UpgradeContract";
 export * from "./UpgradeLazerContract";

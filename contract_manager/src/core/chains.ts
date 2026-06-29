@@ -43,6 +43,11 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
+import {
+  Horizon as StellarHorizon,
+  Keypair as StellarKeypair,
+  rpc as stellarRpc,
+} from "@stellar/stellar-sdk";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
 import { Address, TonClient, WalletContractV4 } from "@ton/ton";
@@ -1701,5 +1706,94 @@ export class NearChain extends Chain {
     };
     const nearConnection = await nearAPI.connect(connectionConfig);
     return await nearConnection.account(accountId);
+  }
+}
+
+export class StellarChain extends Chain {
+  static override type = "StellarChain";
+
+  /**
+   * @param rpcUrl - Soroban RPC endpoint (e.g. https://soroban-testnet.stellar.org)
+   * @param networkPassphrase - Stellar network passphrase, e.g.
+   *   "Test SDF Network ; September 2015" for testnet
+   * @param horizonUrl - Horizon endpoint, used only to read account balances
+   */
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public rpcUrl: string,
+    public networkPassphrase: string,
+    public horizonUrl: string,
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): StellarChain {
+    if (parsed.type !== StellarChain.type) throw new Error("Invalid type");
+    return new StellarChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName ?? "",
+      parsed.nativeToken,
+      parsed.rpcUrl ?? "",
+      parsed.networkPassphrase ?? "",
+      parsed.horizonUrl ?? "",
+    );
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      horizonUrl: this.horizonUrl,
+      id: this.id,
+      mainnet: this.mainnet,
+      networkPassphrase: this.networkPassphrase,
+      rpcUrl: this.rpcUrl,
+      type: StellarChain.type,
+      wormholeChainName: this.wormholeChainName,
+    };
+  }
+
+  getType(): string {
+    return StellarChain.type;
+  }
+
+  getProvider(): stellarRpc.Server {
+    return new stellarRpc.Server(this.rpcUrl, {
+      allowHttp: this.rpcUrl.startsWith("http://"),
+    });
+  }
+
+  /**
+   * Stellar contract upgrades are governance actions dispatched through the
+   * wormhole executor, which needs the executor and target contract ids. Build
+   * them with the per-contract methods instead.
+   */
+  generateGovernanceUpgradePayload(): Buffer {
+    throw new Error(
+      "Use StellarLazerContract.generateUpgradeVerifierPayload / " +
+        "StellarExecutorContract.generateUpgradeExecutorPayload — Stellar " +
+        "upgrades require contract ids.",
+    );
+  }
+
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const keypair = StellarKeypair.fromRawEd25519Seed(
+      Buffer.from(privateKey, "hex"),
+    );
+    return Promise.resolve(keypair.publicKey());
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const address = await this.getAccountAddress(privateKey);
+    const server = new StellarHorizon.Server(this.horizonUrl, {
+      allowHttp: this.horizonUrl.startsWith("http://"),
+    });
+    const account = await server.loadAccount(address);
+    const native = account.balances.find(
+      (balance) => balance.asset_type === "native",
+    );
+    return native ? Number(native.balance) : 0;
   }
 }
