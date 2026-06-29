@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import pytest
+from pydantic import SecretStr
 
 from pusher.config import Config, HermesConfig, HyperliquidConfig, LazerConfig
 from pusher.exception import StaleConnectionError
@@ -54,7 +55,7 @@ def _minimal_config() -> Config:
     config: Config = Config.model_construct()
     config.lazer = LazerConfig.model_construct(
         lazer_urls=["wss://lazer.example"],
-        lazer_api_key="token",
+        lazer_api_key=SecretStr("token"),
         feed_ids=[1],
         stop_after_attempt=3,
     )

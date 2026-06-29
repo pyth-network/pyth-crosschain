@@ -8,7 +8,7 @@ See README.md for detailed documentation on each configuration option.
 from typing import Literal, Self
 
 from hyperliquid.utils.constants import MAINNET_API_URL, TESTNET_API_URL
-from pydantic import BaseModel, FilePath, model_validator
+from pydantic import BaseModel, FilePath, SecretStr, model_validator
 
 # Interval of time after which we'll cycle websocket connections
 STALE_TIMEOUT_SECONDS: int = 5
@@ -43,7 +43,7 @@ class LazerConfig(BaseModel):
     """
 
     lazer_urls: list[str]
-    lazer_api_key: str
+    lazer_api_key: SecretStr
     feed_ids: list[int]  # Numeric Lazer feed IDs (different from Hermes hex IDs)
     stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 

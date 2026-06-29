@@ -19,7 +19,7 @@ class LazerListener:
 
     def __init__(self, config: Config, lazer_state: PriceSourceState) -> None:
         self.lazer_urls = config.lazer.lazer_urls
-        self.api_key = config.lazer.lazer_api_key
+        self.api_key = config.lazer.lazer_api_key.get_secret_value()
         self.feed_ids = config.lazer.feed_ids
         self.lazer_state = lazer_state
         self.stop_after_attempt = config.lazer.stop_after_attempt
