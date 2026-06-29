@@ -37,8 +37,19 @@ def load_config() -> Config:
 def init_logging() -> None:
     logger.remove()
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    # diagnose=True annotates tracebacks with the values of every local in the
+    # offending frame, which would dump the secp256k1 signing key (read into a
+    # local in Publisher.__init__) into plaintext logs on any startup error
+    # path. Default off in production; devs can opt in with LOG_DIAGNOSE=1.
+    diagnose = os.getenv("LOG_DIAGNOSE") == "1"
     # serialize=True if we want json logging
-    logger.add(sys.stderr, level=log_level, serialize=False)
+    logger.add(
+        sys.stderr,
+        level=log_level,
+        serialize=False,
+        backtrace=False,
+        diagnose=diagnose,
+    )
 
 
 async def main() -> None:
