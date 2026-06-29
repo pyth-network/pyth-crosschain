@@ -29,6 +29,7 @@ pub use {
 
 mod chain_ids;
 mod config;
+pub mod examples;
 mod explorer;
 mod index;
 mod live;
@@ -40,10 +41,15 @@ pub type ChainId = String;
 pub type NetworkId = u64;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[schema(example = "Completed")]
 pub enum StateTag {
+    /// Request is pending and waiting to be fulfilled
     Pending,
+    /// Request failed to be fulfilled
     Failed,
+    /// Request was successfully completed
     Completed,
+    /// Request was completed but the callback to the caller failed
     CallbackErrored,
 }
 
