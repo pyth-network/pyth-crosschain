@@ -248,8 +248,6 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx — MCP skills catalog (price alerts, portfolio tracking, FX conversion, etc.)
 \`
 
-
-
 `;
 
 export function GET() {
