@@ -7,10 +7,10 @@ import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { AptosAccount } from "aptos";
-import pino from "pino";
 import type { Options } from "yargs";
 
 import { Controller } from "../controller.js";
+import { createLogger } from "../logger.js";
 import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
@@ -72,7 +72,7 @@ export default {
       metricsPort,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {

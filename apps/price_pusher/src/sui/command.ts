@@ -4,10 +4,10 @@ import fs from "node:fs";
 
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import pino from "pino";
 import type { Options } from "yargs";
 
 import { Controller } from "../controller.js";
+import { createLogger } from "../logger.js";
 import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
@@ -124,7 +124,7 @@ export default {
       metricsPort,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {
