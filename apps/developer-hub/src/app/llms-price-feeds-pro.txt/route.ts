@@ -171,7 +171,7 @@ Pyth Pro also provides an MCP server so agents can discover feeds and fetch pric
 - pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT
 
 ### Stellar
-- Soroban Devnet: soroxysjdBk2fHxUx3zR5wba6FT6Po9nF5Tdzc5gnPx
+- Soroban Devnet: sor2xysjdBk2fHxUx3zR5wba6FT6Po9nF5Tdzc5gnPx
 
 Full list: https://docs.pyth.network/price-feeds/pro/contract-addresses
 
@@ -247,6 +247,8 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/mcp.mdx — MCP server overview
 - https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx — MCP skills catalog (price alerts, portfolio tracking, FX conversion, etc.)
 \`
+
+
 
 `;
 
