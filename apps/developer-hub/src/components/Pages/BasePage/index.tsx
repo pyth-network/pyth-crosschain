@@ -20,8 +20,9 @@ export async function BasePage(props: { params: { slug: string[] } }) {
   const title = page.data.title;
   const url = page.url;
 
-  // Hide PageActions for api-reference pages
+  // Hide PageActions for api-reference and changelog pages
   const isApiReference = url.startsWith("/api-reference");
+  const isChangelog = url === "/price-feeds/changelog";
 
   return (
     <DocsPage
@@ -31,7 +32,7 @@ export async function BasePage(props: { params: { slug: string[] } }) {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      {!isApiReference && (
+      {!isApiReference && !isChangelog && (
         <PageActions content={content} title={title} url={url} />
       )}
       <DocsBody>
