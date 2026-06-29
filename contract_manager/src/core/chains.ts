@@ -1519,6 +1519,7 @@ export class TonChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     private rpcUrl: string,
+    private networkId: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -1583,6 +1584,7 @@ export class TonChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
+      networkId: this.networkId,
       rpcUrl: this.rpcUrl,
       type: TonChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -1597,6 +1599,7 @@ export class TonChain extends Chain {
       parsed.wormholeChainName ?? "",
       parsed.nativeToken,
       parsed.rpcUrl ?? "",
+      parsed.networkId ?? "",
     );
   }
 
