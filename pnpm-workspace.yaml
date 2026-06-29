@@ -68,7 +68,7 @@ catalog:
   "@solana/wallet-adapter-react-ui": ^0.9.36
   "@solana/wallet-adapter-wallets": ^0.19.33
   "@solana/web3.js": ^1.98.0
-  "@stellar/stellar-sdk": ^13.3.0
+  "@stellar/stellar-sdk": ^14.6.1
   "@storybook/addon-styling-webpack": ^3.0.0
   "@storybook/addon-themes": ^10.1.11
   "@storybook/nextjs": ^10.1.11

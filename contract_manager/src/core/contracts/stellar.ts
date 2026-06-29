@@ -317,6 +317,30 @@ export class StellarExecutorContract extends Storable {
     }
     return Number(scValToNative(value) as number | bigint);
   }
+
+  /**
+   * Read the WASM hash the executor instance is currently running, hex without
+   * `0x`. This is the executable backing the contract instance ledger entry, not
+   * a value in instance storage, so a self-upgrade governance action changes it.
+   * Used to assert an upgrade took effect (and to capture the canonical hash to
+   * roll back to).
+   */
+  async getCurrentWasmHash(): Promise<string> {
+    const server = this.chain.getProvider();
+    const entry = await server.getContractData(
+      this.address,
+      xdr.ScVal.scvLedgerKeyContractInstance(),
+      stellarRpc.Durability.Persistent,
+    );
+    const executable = entry.val.contractData().val().instance().executable();
+    if (
+      executable.switch() !==
+      xdr.ContractExecutableType.contractExecutableWasm()
+    ) {
+      throw new Error("Executor instance is not backed by a WASM executable");
+    }
+    return executable.wasmHash().toString("hex");
+  }
 }
 
 /** XDR-encode an argument vector as the `ScVec` the executor's `Call` expects. */
