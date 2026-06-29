@@ -30,6 +30,7 @@ from typing import Any, TypedDict
 
 import httpx
 from loguru import logger
+from pydantic import SecretStr
 
 from pusher.config import Config, SedaFeedConfig
 from pusher.metrics import Metrics
@@ -80,11 +81,12 @@ class SedaListener:
         self.metrics = metrics
         self.dex = config.hyperliquid.market_name
         self.url = config.seda.url
-        self.api_key = api_key_override or (
+        api_key = api_key_override or (
             Path(config.seda.api_key_path).read_text().strip()
             if config.seda.api_key_path
             else None
         )
+        self.api_key: SecretStr | None = SecretStr(api_key) if api_key else None
         self.feeds = config.seda.feeds
         self.poll_interval = config.seda.poll_interval
         self.poll_failure_interval = config.seda.poll_failure_interval
@@ -106,7 +108,7 @@ class SedaListener:
         """Build HTTP request headers for SEDA API."""
         return {
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {self.api_key.get_secret_value() if self.api_key else None}",
             "Content-Type": "application/json",
         }
 
