@@ -29,6 +29,7 @@ def load_config() -> Config:
     with open(config_path, "rb") as config_file:
         config_toml = tomllib.load(config_file)
         config = Config(**config_toml)
+        logger.debug("Config loaded: {}", config)
         logger.info("Price config: {}", config.price)
     return config
 
