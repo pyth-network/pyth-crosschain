@@ -1,3 +1,8 @@
+/* biome-ignore-all lint/suspicious/noConsole: pre-existing; CLI prints progress */
+
+import { execSync } from "node:child_process";
+import { resolve } from "node:path";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import {
   getDefaultDeploymentConfig,
@@ -7,8 +12,6 @@ import type { SuiChain } from "@pythnetwork/contract-manager/core/chains";
 import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { execSync } from "child_process";
-import { resolve } from "path";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initPyth, publishPackage } from "./pyth_deploy.js";
@@ -57,6 +60,34 @@ function getContract(contractId: string): SuiPriceFeedContract {
     throw new Error(`Contract ${contractId} not found`);
   }
   return contract;
+}
+
+/**
+ * Wait until a freshly published package is readable through the node's query
+ * API. The publish transaction's effects already confirm the package object
+ * exists, but a fullnode's read endpoints (object reads and Move-function
+ * resolution) lag a few seconds behind transaction execution. `initPyth` builds
+ * and simulates a transaction that calls into the just-published package, so
+ * running it immediately makes the node's resolver fail with
+ * "package/object not found". Poll until the package resolves before continuing.
+ */
+async function waitForPackageReadable(
+  provider: ClientWithCoreApi,
+  packageId: string,
+): Promise<void> {
+  const maxAttempts = 30;
+  const delayMs = 2000;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await provider.core.getObject({ objectId: packageId });
+      return;
+    } catch {
+      await new Promise((done) => setTimeout(done, delayMs));
+    }
+  }
+  throw new Error(
+    `Published package ${packageId} did not become readable after ${maxAttempts} attempts`,
+  );
 }
 
 const yargs = createCLI(hideBin(process.argv));
@@ -143,7 +174,7 @@ yargs
         })
         .usage("$0 generate-digest --path <path-to-contracts>");
     },
-    async (argv) => {
+    (argv) => {
       const buildOutput: {
         modules: string[];
         dependencies: string[];
@@ -190,15 +221,15 @@ yargs
         new Uint8Array(Buffer.from(walletPrivateKey, "hex")),
       );
       const deploymentType = toDeploymentType(argv["deployment-type"]);
-      const result = await publishPackage(
-        keypair,
-        chain.getProvider(),
-        argv.path,
-      );
+      const provider = chain.getProvider();
+      const result = await publishPackage(keypair, provider, argv.path);
+      // The publish is on-chain, but the fullnode needs a moment before the new
+      // package is resolvable for `initPyth`'s build/simulate step.
+      await waitForPackageReadable(provider, result.packageId);
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
         keypair,
-        chain.getProvider(),
+        provider,
         result.packageId,
         result.deployerCapId,
         result.upgradeCapId,
