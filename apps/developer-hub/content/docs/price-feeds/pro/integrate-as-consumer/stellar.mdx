@@ -43,7 +43,7 @@ client.subscribe({
 
 Pyth Pro provides a Soroban contract deployed on Stellar that verifies signed Lazer updates. The [Pyth Lazer Stellar SDK](https://crates.io/crates/pyth-lazer-stellar-sdk) exposes a typed `PythLazerClient` that cross-contract-calls the verifier and returns the parsed update in one call.
 
-Scaffold a new Soroban contract with `stellar contract init <name>`, then replace the contract crate's `Cargo.toml` and `src/lib.rs` with the snippets below. Pin `soroban-sdk` to the major the SDK targets — bumping to a newer `soroban-sdk` (e.g. the `stellar contract init` default) will fail to build against the published SDK.
+Scaffold a new Soroban contract with `stellar contract init <name>`, then replace the contract crate's `Cargo.toml` and `src/lib.rs` with the snippets below.
 
 ```toml copy
 [package]
@@ -55,8 +55,8 @@ edition = "2021"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-soroban-sdk = "22"
-pyth-lazer-stellar-sdk = "0.2"
+soroban-sdk = "26"
+pyth-lazer-stellar-sdk = "0.3"
 ```
 
 Then verify from inside your own contract:
