@@ -3,6 +3,7 @@ import {
   UpgradeStellarExecutor,
 } from "@pythnetwork/xc-admin-common";
 import {
+  Account,
   BASE_FEE,
   Contract,
   nativeToScVal,
@@ -161,9 +162,9 @@ export class StellarLazerContract extends Storable {
    * Read the expiry timestamp (unix seconds) of a trusted signer, or `undefined`
    * if the signer is not currently trusted.
    *
-   * The verifier keys trusted signers individually by public key and exposes no
-   * enumeration, so callers must supply the key of interest — there is no
-   * on-chain "list all signers" to mirror.
+   * This reads the individual `TrustedSigner(<pubkey>)` storage entry directly,
+   * so it requires knowing the key of interest. To enumerate the full set
+   * instead, use {@link getTrustedSigners}.
    *
    * @param publicKey - 33-byte compressed secp256k1 key, hex without 0x
    */
@@ -186,6 +187,48 @@ export class StellarLazerContract extends Storable {
       // getContractData throws when the entry does not exist.
       return undefined;
     }
+  }
+
+  /**
+   * Enumerate every currently trusted signer by invoking the verifier's
+   * `list_trusted_signers` view, returning each `(publicKey, expiresAt)` pair.
+   *
+   * Unlike {@link getTrustedSignerExpiry} (a direct storage read), this is a
+   * contract function call, so it is run through simulation — nothing is
+   * submitted on-chain and no signing is required.
+   */
+  async getTrustedSigners(): Promise<
+    { publicKey: string; expiresAt: bigint }[]
+  > {
+    const server = this.chain.getProvider();
+    const contract = new Contract(this.address);
+
+    // Simulation never submits the transaction, so a throwaway source account
+    // with a zero sequence number suffices — no on-chain account or signature.
+    const source = new Account(StellarKeypair.random().publicKey(), "0");
+    const tx = new TransactionBuilder(source, {
+      fee: BASE_FEE,
+      networkPassphrase: this.chain.networkPassphrase,
+    })
+      .addOperation(contract.call("list_trusted_signers"))
+      .setTimeout(30)
+      .build();
+
+    const sim = await server.simulateTransaction(tx);
+    if (stellarRpc.Api.isSimulationError(sim)) {
+      throw new Error(`Failed to list trusted signers: ${sim.error}`);
+    }
+    const retval = sim.result?.retval;
+    if (!retval) {
+      return [];
+    }
+    // `list_trusted_signers` returns Vec<(BytesN<33>, u64)>, which decodes to an
+    // array of [pubkeyBytes, expiry] tuples.
+    const signers = scValToNative(retval) as [Uint8Array, bigint | number][];
+    return signers.map(([pubkey, expiresAt]) => ({
+      expiresAt: BigInt(expiresAt),
+      publicKey: Buffer.from(pubkey).toString("hex"),
+    }));
   }
 }
 
