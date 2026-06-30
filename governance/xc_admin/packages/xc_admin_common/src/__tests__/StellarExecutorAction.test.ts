@@ -9,9 +9,9 @@ import {
   UpgradeStellarExecutor,
 } from "../governance_payload";
 
-// A 56-character Soroban contract id (testnet Lazer verifier).
-const VERIFIER = "CCE62RN3NUTNMD2SQ2EGWRJ6XHL7RUYQBNCEK7LVGFRLPCW7U7FGACM5";
-const EXECUTOR = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+// 56-character Soroban contract ids of the deployed testnet Lazer contracts.
+const VERIFIER = "CAYFT5JE3UQTKT4Q6ZOZK4FXVYVT6RE3MFC7STA4UB6WAEGBT65MRU52";
+const EXECUTOR = "CA542YLVDLBQXTTS2FOERQAED2WE5DQRKLRZUUEG75DQ2TEX2525QNBG";
 
 function expectHeader(buffer: Buffer, action: number) {
   // Magic "PTGM" is MAGIC_NUMBER serialized little-endian (u32).
