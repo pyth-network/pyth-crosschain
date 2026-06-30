@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-const CONTENT = `# Pyth Pro — Quick Start
+const CONTENT = `\`# Pyth Pro — Quick Start
 
 > Enterprise-grade, ultra-low latency WebSocket price streaming for professional trading applications.
 > This file contains a curated quick-start. For full docs, fetch individual pages below.
@@ -11,7 +11,7 @@ const CONTENT = `# Pyth Pro — Quick Start
 
 Pyth Pro (formerly Lazer) is a subscription-based price streaming service designed for high-frequency trading, MEV strategies, and latency-sensitive applications. It delivers real-time market data via WebSocket with configurable update channels.
 
-Unlike Pyth Core (pull-based oracle for DeFi), Pyth Pro provides direct WebSocket streaming optimized for speed. Data can optionally be verified on-chain using signed payloads on EVM and Solana.
+Unlike Pyth Core (pull-based oracle for DeFi), Pyth Pro provides direct WebSocket streaming optimized for speed. Data can optionally be verified on-chain using signed payloads on EVM, Solana, and Stellar.
 
 Access requires an API token from an authorized Pyth Data Distributor. Apply at https://pyth.network/pro.
 
@@ -33,6 +33,7 @@ Access requires an API token from an authorized Pyth Data Distributor. Apply at 
 **Binary Formats**: Payloads can include signed data for on-chain verification:
 - \`evm\` — ECDSA signatures for EVM chains
 - \`solana\` — Ed25519 signatures for Solana/Fogo
+- \`stellar\` — Stellar signatures for Soroban contracts
 - \`leUnsigned\` — No signature (offline/testing only)
 
 ## Integration Code
@@ -169,6 +170,9 @@ Pyth Pro also provides an MCP server so agents can discover feeds and fetch pric
 ### Fogo
 - pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT
 
+### Stellar
+- Soroban Devnet: sor2xysjdBk2fHxUx3zR5wba6FT6Po9nF5Tdzc5gnPx
+
 Full list: https://docs.pyth.network/price-feeds/pro/contract-addresses
 
 ## Common Patterns
@@ -237,10 +241,13 @@ For complete documentation, fetch any page as plain markdown:
 - https://docs.pyth.network/price-feeds/pro/api/history.mdx — History API and OHLC data
 - https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/evm.mdx — EVM on-chain verification
 - https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/svm.mdx — Solana/Fogo on-chain verification
+- https://docs.pyth.network/price-feeds/pro/integrate-as-consumer/stellar.mdx — Stellar on-chain verification
 - https://docs.pyth.network/price-feeds/pro/contract-addresses.mdx — Deployment addresses
 - https://docs.pyth.network/price-feeds/pro/price-feed-ids.mdx — Available price feeds
 - https://docs.pyth.network/price-feeds/pro/mcp.mdx — MCP server overview
 - https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx — MCP skills catalog (price alerts, portfolio tracking, FX conversion, etc.)
+\`
+
 `;
 
 export function GET() {
