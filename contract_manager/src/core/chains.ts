@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: utils used through CLI */
 /** biome-ignore-all lint/suspicious/noConsole: utils used through CLI */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
 
@@ -44,8 +45,11 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import {
+  BASE_FEE,
   Horizon as StellarHorizon,
   Keypair as StellarKeypair,
+  Operation as StellarOperation,
+  TransactionBuilder as StellarTransactionBuilder,
   rpc as stellarRpc,
 } from "@stellar/stellar-sdk";
 import { keyPairFromSeed } from "@ton/crypto";
@@ -1795,5 +1799,53 @@ export class StellarChain extends Chain {
       (balance) => balance.asset_type === "native",
     );
     return native ? Number(native.balance) : 0;
+  }
+
+  /**
+   * Upload a contract WASM blob to the network so it can later be referenced by
+   * hash (e.g. as the target of a governance `UpgradeExecutor`/`upgrade` action)
+   * and return its hash, hex without `0x`.
+   *
+   * The on-chain WASM hash is the SHA-256 of the blob, so it is computed locally
+   * from `wasm` and returned regardless of how the ledger reports the upload —
+   * uploading the same bytes twice is idempotent and yields the same hash.
+   *
+   * @param wasm - the WASM blob to upload
+   * @param senderPrivateKey - 32-byte ed25519 seed of the account that pays for
+   *   and signs the upload, hex without `0x`
+   */
+  async uploadContractWasm(
+    wasm: Buffer,
+    senderPrivateKey: PrivateKey,
+  ): Promise<string> {
+    const server = this.getProvider();
+    const keypair = StellarKeypair.fromRawEd25519Seed(
+      Buffer.from(senderPrivateKey, "hex"),
+    );
+    const account = await server.getAccount(keypair.publicKey());
+
+    const tx = new StellarTransactionBuilder(account, {
+      fee: BASE_FEE,
+      networkPassphrase: this.networkPassphrase,
+    })
+      .addOperation(StellarOperation.uploadContractWasm({ wasm }))
+      .setTimeout(30)
+      .build();
+
+    const prepared = await server.prepareTransaction(tx);
+    prepared.sign(keypair);
+
+    const sent = await server.sendTransaction(prepared);
+    if (sent.status === "ERROR") {
+      throw new Error(
+        `Failed to upload WASM: ${JSON.stringify(sent.errorResult)}`,
+      );
+    }
+    const result = await server.pollTransaction(sent.hash);
+    if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {
+      throw new Error(`WASM upload transaction ${sent.hash} failed`);
+    }
+
+    return createHash("sha256").update(wasm).digest("hex");
   }
 }
