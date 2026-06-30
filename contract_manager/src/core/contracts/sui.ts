@@ -682,6 +682,36 @@ export class SuiLazerContract extends Storable {
   }
 
   /**
+   * Read the current set of trusted Lazer signers from the shared `State`
+   * object. The `trusted_signers: vector<TrustedSignerInfo>` field is stored
+   * inline on the state, so a single object fetch enumerates every signer.
+   *
+   * @returns one entry per signer: `publicKey` (33-byte compressed secp256k1,
+   *   hex without 0x) and `expiresAt` (unix seconds)
+   */
+  async getTrustedSigners(): Promise<
+    { publicKey: string; expiresAt: bigint }[]
+  > {
+    const provider = this.chain.getProvider();
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: this.stateId,
+    });
+    if (!object.json) {
+      throw new Error("Unable to fetch Lazer state object");
+    }
+    const signers = getStructFields(object.json).trusted_signers as unknown[];
+    return signers.map((signer) => {
+      const fields = getStructFields(signer);
+      const publicKey = fields.public_key as number[] | string;
+      return {
+        expiresAt: BigInt(fields.expires_at as string | number),
+        publicKey: bytesFromMoveField(publicKey).toString("hex"),
+      };
+    });
+  }
+
+  /**
    * Bumps contract version in source based on on-chain version and returns new
    * contract metadata.
    */
