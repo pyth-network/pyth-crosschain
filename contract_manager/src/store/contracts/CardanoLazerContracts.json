@@ -1,0 +1,7 @@
+[
+  {
+    "chain": "cardano_mainnet",
+    "policyId": "c935c937d0deda8975142c7b77aeef8f8cd48791e89a8ca7a0edc154",
+    "type": "CardanoLazerContract"
+  }
+]

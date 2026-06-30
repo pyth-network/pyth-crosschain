@@ -5,7 +5,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { EvmLazerContract, SuiLazerContract } from "../src/core/contracts";
+import {
+  CardanoLazerContract,
+  EvmLazerContract,
+  SuiLazerContract,
+} from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
@@ -98,6 +102,19 @@ async function main() {
               contractId,
               chain,
               signer.address,
+              signer.expiresAt,
+              nowSeconds,
+              warnWithinSeconds,
+            ),
+          );
+        }
+      } else if (contract instanceof CardanoLazerContract) {
+        for (const signer of await contract.getTrustedSigners()) {
+          rows.push(
+            makeRow(
+              contractId,
+              chain,
+              signer.publicKey,
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
