@@ -1,0 +1,23 @@
+# Pro-compatible Pyth deploy manifest (Move 2024 package system).
+#
+# Identical sources to the standard package, but linked against the locally
+# vendored `WormholeSimpleMajority` core bridge (simple-majority guardian quorum)
+# instead of the upstream wormhole-foundation package.
+#
+# To build/deploy a pro-compatible package, swap this manifest and its
+# publication file into the canonical names, then build for the target network:
+#
+#     cp Move.pro_compatible.toml      Move.toml
+#     cp Move.pro_compatible.lock      Move.lock
+#     cp Published.pro_compatible.toml Published.toml
+#     sui move build -e <mainnet|testnet>
+#
+# (Restore the standard Move.toml / Move.lock / Published.toml afterwards.)
+
+[package]
+name = "pyth"
+version = "0.0.2"
+edition = "legacy"
+
+[dependencies.wormhole]
+local = "../vendor/wormhole_simple_majority/wormhole"
