@@ -1031,6 +1031,37 @@ export class EvmLazerContract extends Storable {
     return await contract.methods.version().call();
   }
 
+  /**
+   * Read the current set of trusted Lazer signers by reading contract storage
+   * directly. `PythLazer` exposes no getter, and `TrustedSignerInfo[100]
+   * internal trustedSigners` is the first state variable, so its entries occupy
+   * slots 0..199 (2 slots per struct: slot `2*i` holds `pubkey`, slot `2*i+1`
+   * holds `expiresAt`). Entries with a zero `pubkey` are unused and skipped.
+   *
+   * A sibling PR adds a public `getTrustedSigners()` view; once deployed
+   * everywhere this can switch to calling it.
+   *
+   * @returns one entry per active signer: checksummed `address` and `expiresAt`
+   *   (unix seconds)
+   */
+  async getTrustedSigners(): Promise<{ address: string; expiresAt: bigint }[]> {
+    const web3 = this.chain.getWeb3();
+    const signers: { address: string; expiresAt: bigint }[] = [];
+    for (let i = 0; i < 100; i++) {
+      const pubkeySlot = await web3.eth.getStorageAt(this.address, 2 * i);
+      const pubkey = BigInt(pubkeySlot);
+      if (pubkey === 0n) continue;
+      const expiresAtSlot = await web3.eth.getStorageAt(this.address, 2 * i + 1);
+      signers.push({
+        address: web3.utils.toChecksumAddress(
+          "0x" + pubkey.toString(16).padStart(40, "0"),
+        ),
+        expiresAt: BigInt(expiresAtSlot),
+      });
+    }
+    return signers;
+  }
+
   async getOwner(): Promise<string> {
     const contract = this.getContract();
     return contract.methods.owner().call();
