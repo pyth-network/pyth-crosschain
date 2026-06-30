@@ -2,6 +2,7 @@ on:
   pull_request:
     paths:
       - target_chains/sui/contracts/**
+      - .github/workflows/ci-sui-contract.yml
   push:
     branches:
       - main
@@ -16,15 +17,23 @@ jobs:
       run:
         working-directory: target_chains/sui/contracts/
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          rustflags: ""
-      - name: install sui
+      - uses: actions/checkout@v4
+      - name: Install Sui CLI (binary)
         run: |
-          # This version doesn't build with newer Rust
-          cargo +1.79.0 install -f sui --locked \
-            --git https://github.com/MystenLabs/sui.git \
-            --rev 041c5f2bae2fe52079e44b70514333532d69f4e6
+          set -euo pipefail
+          # Using the latest stable mainnet Sui CLI binary pinned for reproducibility.
+          # To bump: update SUI_VERSION to the latest mainnet tag (format: mainnet-vX.Y.Z).
+          # Asset naming: sui-mainnet-vX.Y.Z-ubuntu-x86_64.tgz under tag mainnet-vX.Y.Z.
+          CHANNEL="mainnet"
+          SUI_VERSION="v1.72.2"
+          ARCHIVE="sui-${CHANNEL}-${SUI_VERSION}-ubuntu-x86_64.tgz"
+          URL="https://github.com/MystenLabs/sui/releases/download/${CHANNEL}-${SUI_VERSION}/${ARCHIVE}"
+          echo "Downloading ${URL}"
+          curl -fsSL -o "${ARCHIVE}" "${URL}"
+          tar -xzf "${ARCHIVE}"
+          BIN_PATH="$(find . -maxdepth 2 -type f -name sui | head -n 1)"
+          chmod +x "${BIN_PATH}"
+          sudo mv "${BIN_PATH}" /usr/local/bin/sui
+          sui --version
       - name: Run tests
         run: sui move test

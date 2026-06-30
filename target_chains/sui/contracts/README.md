@@ -1,10 +1,17 @@
 # Build information
 
-Contracts are compiled with sui cli version `sui 1.0.0-09b208149` that can be installed via the following command:
+Contracts are built and tested with the Sui CLI, pinned to the mainnet release in `.github/workflows/ci-sui-contract.yml` (currently `mainnet-v1.72.2`). Install it with [`suiup`](https://github.com/MystenLabs/suiup), the official Sui toolchain version manager:
 
 ```commandline
-cargo install --locked --git https://github.com/MystenLabs/sui.git --rev 09b2081498366df936abae26eea4b2d5cafb2788 sui sui-faucet
+curl -sSfL https://raw.githubusercontent.com/Mystenlabs/suiup/main/install.sh | sh
+suiup install sui@mainnet-1.72.2
+suiup default set sui@mainnet-1.72.2
+sui --version
 ```
+
+(CI installs the same release as a prebuilt binary directly; see `.github/workflows/ci-sui-contract.yml`.)
+
+The contracts use the Move 2024 package system (Sui package management v2): dependencies and the package's own named address are resolved via `Move.lock` environments rather than a `[addresses]` section.
 
 ## Gas Profiling
 
