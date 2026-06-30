@@ -1,0 +1,375 @@
+{
+  "date": "2026-06-30",
+  "label": "Tuesday",
+  "summary": {
+    "added": 33,
+    "went_live": 7,
+    "removed": 0
+  },
+  "hero": "33 new feeds announced, 7 went live.",
+  "events": [
+    {
+      "id": "Equity.US.WEN/USD",
+      "lazerId": 3366,
+      "asset": "Wendy'S Co",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "WEN"
+    },
+    {
+      "id": "Equity.US.SATA/USD",
+      "lazerId": 3365,
+      "asset": "Strive Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "SATA"
+    },
+    {
+      "id": "Equity.US.KSTR/USD",
+      "lazerId": 3361,
+      "asset": "Kraneshares Sse Star Market 50 Index Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.XNDU/USD",
+      "lazerId": 3350,
+      "asset": "Xanadu Quantum Technologies Limited",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.BLDV6/USD",
+      "lazerId": 3158,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 28 August 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "USD",
+      "hermesId": "f8620d6b85c68f92dcd447dc5200d9bc0d22d2577219db188762b55770daab9a"
+    },
+    {
+      "id": "Commodities.TGEV6/EUR",
+      "lazerId": 3092,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 29 September 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "EUR",
+      "hermesId": "08091cec13e9f3888d078444fe13d2d5d6e169dad606bbca8a0542c080b5ed57"
+    },
+    {
+      "id": "Commodities.BRENTZ6/USD",
+      "lazerId": 3046,
+      "asset": "Pyth Price In Usd For Brent 30 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-06-30",
+      "quote": "USD",
+      "hermesId": "6db688b9ec9e90a3e53f75891c3581e29ba157edf2a9ae98dffb5e5b5e595742"
+    },
+    {
+      "id": "Equity.US.ECHO/USD",
+      "lazerId": 3409,
+      "asset": "Echostar Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.XLEX/USD",
+      "lazerId": 3406,
+      "asset": "Energy Select Sector Spdr Fund Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.VRTX/USD",
+      "lazerId": 3405,
+      "asset": "Vertex Pharmaceuticals Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.USARX/USD",
+      "lazerId": 3404,
+      "asset": "Usa Rare Earth Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.TSMX/USD",
+      "lazerId": 3403,
+      "asset": "Taiwan Semiconductor Manufacturing Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.TERX/USD",
+      "lazerId": 3402,
+      "asset": "Teradyne Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.SOXLX/USD",
+      "lazerId": 3401,
+      "asset": "Direxion Daily Semiconductor Bull 3X Shares Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.SNDKX/USD",
+      "lazerId": 3400,
+      "asset": "Sandisk Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.PLTRX/USD",
+      "lazerId": 3399,
+      "asset": "Palantir Technologies Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ORCLX/USD",
+      "lazerId": 3398,
+      "asset": "Oracle Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ONDSX/USD",
+      "lazerId": 3397,
+      "asset": "Ondas Holdings Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.MUX/USD",
+      "lazerId": 3396,
+      "asset": "Micron Technology Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.MRVLX/USD",
+      "lazerId": 3395,
+      "asset": "Marvell Technology Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.LLYX/USD",
+      "lazerId": 3394,
+      "asset": "Eli Lilly Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.LITEX/USD",
+      "lazerId": 3393,
+      "asset": "Lumentum Holdings Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.IWMX/USD",
+      "lazerId": 3392,
+      "asset": "Ishares Russell 2000 Etf Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.IRENX/USD",
+      "lazerId": 3391,
+      "asset": "Iren Limited Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.INTCX/USD",
+      "lazerId": 3390,
+      "asset": "Intel Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.IBMX/USD",
+      "lazerId": 3389,
+      "asset": "Ibm Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.HIMSX/USD",
+      "lazerId": 3388,
+      "asset": "Hims & Hers Health Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.GMEX/USD",
+      "lazerId": 3387,
+      "asset": "Gamestop Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.GEVX/USD",
+      "lazerId": 3386,
+      "asset": "Ge Vernova Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.EWYX/USD",
+      "lazerId": 3385,
+      "asset": "Ishares Msci South Korea Etf Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.DELLX/USD",
+      "lazerId": 3384,
+      "asset": "Dell Technologies Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.CSCOX/USD",
+      "lazerId": 3383,
+      "asset": "Cisco Systems Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.CRWDX/USD",
+      "lazerId": 3382,
+      "asset": "Crowdstrike Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.BMNRX/USD",
+      "lazerId": 3381,
+      "asset": "Bitmine Immersion Technologies Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.AVGOX/USD",
+      "lazerId": 3380,
+      "asset": "Broadcom Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ASTSX/USD",
+      "lazerId": 3379,
+      "asset": "Ast Spacemobile Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ASMLX/USD",
+      "lazerId": 3378,
+      "asset": "Asml Holding Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.AMDX/USD",
+      "lazerId": 3377,
+      "asset": "Advanced Micro Devices Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.AMATX/USD",
+      "lazerId": 3376,
+      "asset": "Applied Materials Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ADBEX/USD",
+      "lazerId": 3375,
+      "asset": "Adobe Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-06-30",
+      "quote": "USD"
+    }
+  ]
+}
