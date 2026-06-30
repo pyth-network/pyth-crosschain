@@ -42,6 +42,86 @@ contract PythLazerTest is Test {
         assert(!pythLazer.isValidSigner(address(2)));
     }
 
+    function test_getTrustedSigners_empty() public view {
+        PythLazer.TrustedSignerInfo[] memory signers = pythLazer
+            .getTrustedSigners();
+        assertEq(signers.length, 0);
+    }
+
+    function test_getTrustedSigners_insertionOrder() public {
+        address signerA = address(10);
+        address signerB = address(11);
+        address signerC = address(12);
+        uint256 expiryA = block.timestamp + 1000;
+        uint256 expiryB = block.timestamp + 2000;
+        uint256 expiryC = block.timestamp + 3000;
+
+        vm.startPrank(owner);
+        pythLazer.updateTrustedSigner(signerA, expiryA);
+        pythLazer.updateTrustedSigner(signerB, expiryB);
+        pythLazer.updateTrustedSigner(signerC, expiryC);
+        vm.stopPrank();
+
+        PythLazer.TrustedSignerInfo[] memory signers = pythLazer
+            .getTrustedSigners();
+        assertEq(signers.length, 3);
+        assertEq(signers[0].pubkey, signerA);
+        assertEq(signers[0].expiresAt, expiryA);
+        assertEq(signers[1].pubkey, signerB);
+        assertEq(signers[1].expiresAt, expiryB);
+        assertEq(signers[2].pubkey, signerC);
+        assertEq(signers[2].expiresAt, expiryC);
+    }
+
+    function test_getTrustedSigners_removalAndReuse() public {
+        address signerA = address(10);
+        address signerB = address(11);
+        address signerC = address(12);
+        uint256 expiry = block.timestamp + 1000;
+
+        vm.startPrank(owner);
+        pythLazer.updateTrustedSigner(signerA, expiry);
+        pythLazer.updateTrustedSigner(signerB, expiry);
+
+        // Remove the first signer; its slot must be skipped.
+        pythLazer.updateTrustedSigner(signerA, 0);
+        vm.stopPrank();
+
+        PythLazer.TrustedSignerInfo[] memory signers = pythLazer
+            .getTrustedSigners();
+        assertEq(signers.length, 1);
+        assertEq(signers[0].pubkey, signerB);
+
+        // Adding a new signer reuses the freed slot 0, which comes before
+        // signerB in slot order.
+        vm.prank(owner);
+        pythLazer.updateTrustedSigner(signerC, expiry);
+
+        signers = pythLazer.getTrustedSigners();
+        assertEq(signers.length, 2);
+        assertEq(signers[0].pubkey, signerC);
+        assertEq(signers[1].pubkey, signerB);
+    }
+
+    function test_getTrustedSignerExpiry() public {
+        address signer = address(10);
+        uint256 expiry = block.timestamp + 1234;
+
+        assertEq(pythLazer.getTrustedSignerExpiry(address(99)), 0);
+
+        vm.prank(owner);
+        pythLazer.updateTrustedSigner(signer, expiry);
+        assertEq(pythLazer.getTrustedSignerExpiry(signer), expiry);
+
+        vm.prank(owner);
+        pythLazer.updateTrustedSigner(signer, 0);
+        assertEq(pythLazer.getTrustedSignerExpiry(signer), 0);
+    }
+
+    function test_version() public view {
+        assertEq(pythLazer.version(), "0.2.0");
+    }
+
     function test_verify() public {
         // Prepare dummy update and signer
         address trustedSigner = 0xb8d50f0bAE75BF6E03c104903d7C3aFc4a6596Da;
