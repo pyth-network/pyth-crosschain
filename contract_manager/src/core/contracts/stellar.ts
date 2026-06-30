@@ -18,6 +18,7 @@ import type { PrivateKey, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
 import { StellarChain } from "../chains";
+import { WormholeContract } from "./wormhole";
 
 /**
  * Lazer on Stellar (Soroban) is split across two contracts (see
@@ -192,8 +193,13 @@ export class StellarLazerContract extends Storable {
  * The Wormhole governance **executor** (`wormhole-executor-stellar`). It verifies
  * Pyth governance VAAs and dispatches the decoded PTGM action to the verifier, or
  * upgrades itself. Mirrors {@link EvmExecutorContract}.
+ *
+ * Unlike the EVM split, the Stellar executor also *holds the Wormhole guardian
+ * set* itself (there is no separate core-bridge contract on this chain), so it is
+ * a {@link WormholeContract}: guardian-set rotations are submitted to its own
+ * `update_guardian_set` entry point.
  */
-export class StellarExecutorContract extends Storable {
+export class StellarExecutorContract extends WormholeContract {
   static type = "StellarExecutorContract";
 
   /**
@@ -214,6 +220,14 @@ export class StellarExecutorContract extends Storable {
 
   getType(): string {
     return StellarExecutorContract.type;
+  }
+
+  getChain(): StellarChain {
+    return this.chain;
+  }
+
+  getChainId(): Promise<number> {
+    return Promise.resolve(this.chain.getWormholeChainId());
   }
 
   toJson() {
@@ -259,8 +273,39 @@ export class StellarExecutorContract extends Storable {
    *   guardian-signed VAA, not the sender.
    * @param vaa - the signed Wormhole governance VAA wrapping the PTGM payload
    */
-  async executeGovernanceAction(
+  executeGovernanceAction(
     senderPrivateKey: PrivateKey,
+    vaa: Buffer,
+  ): Promise<TxResult> {
+    return this.submitVaa(senderPrivateKey, "execute_governance_action", vaa);
+  }
+
+  /**
+   * Submit a signed Wormhole core guardian-set-upgrade VAA to the executor's
+   * `update_guardian_set` entry point. This is a distinct authorization path from
+   * {@link executeGovernanceAction}: the VAA must be signed by the *current*
+   * guardian set and authorized by the executor's guardian-set-upgrade emitter
+   * (the Wormhole core bridge), not the Pyth governance emitter.
+   *
+   * @param senderPrivateKey - 32-byte ed25519 seed of the submitting account,
+   *   hex without 0x. The submitter only pays fees.
+   * @param vaa - the signed Wormhole core guardian-set-upgrade VAA
+   */
+  upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer,
+  ): Promise<TxResult> {
+    return this.submitVaa(senderPrivateKey, "update_guardian_set", vaa);
+  }
+
+  /**
+   * Submit a signed VAA to a single-`Bytes`-argument executor entry point
+   * (`execute_governance_action` or `update_guardian_set`) and wait for the
+   * transaction to confirm.
+   */
+  private async submitVaa(
+    senderPrivateKey: PrivateKey,
+    method: string,
     vaa: Buffer,
   ): Promise<TxResult> {
     const server = this.chain.getProvider();
@@ -274,9 +319,7 @@ export class StellarExecutorContract extends Storable {
       fee: BASE_FEE,
       networkPassphrase: this.chain.networkPassphrase,
     })
-      .addOperation(
-        executor.call("execute_governance_action", xdr.ScVal.scvBytes(vaa)),
-      )
+      .addOperation(executor.call(method, xdr.ScVal.scvBytes(vaa)))
       .setTimeout(30)
       .build();
 
@@ -286,7 +329,7 @@ export class StellarExecutorContract extends Storable {
     const sent = await server.sendTransaction(prepared);
     if (sent.status === "ERROR") {
       throw new Error(
-        `Failed to submit governance transaction: ${JSON.stringify(sent.errorResult)}`,
+        `Failed to submit ${method} transaction: ${JSON.stringify(sent.errorResult)}`,
       );
     }
 
@@ -297,7 +340,7 @@ export class StellarExecutorContract extends Storable {
     }
 
     if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {
-      throw new Error(`Governance transaction ${sent.hash} failed`);
+      throw new Error(`${method} transaction ${sent.hash} failed`);
     }
 
     return { id: sent.hash, info: result };
@@ -305,12 +348,16 @@ export class StellarExecutorContract extends Storable {
 
   /**
    * Read the executor's current Wormhole guardian set index.
+   *
+   * The index lives in *persistent* storage (see the executor's `guardian.rs`),
+   * not instance storage, so it is fetched as a standalone ledger entry keyed by
+   * the `GuardianSetIndex` data key.
    */
   async getCurrentGuardianSetIndex(): Promise<number> {
-    const value = await readInstanceStorage(
+    const value = await readPersistentStorage(
       this.chain,
       this.address,
-      "GuardianSetIndex",
+      xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("GuardianSetIndex")]),
     );
     if (!value) {
       throw new Error("Executor has no guardian set index (not initialized)");
@@ -341,11 +388,74 @@ export class StellarExecutorContract extends Storable {
     }
     return executable.wasmHash().toString("hex");
   }
+
+  /**
+   * Read the Ethereum addresses of the executor's current guardian set, returned
+   * as `0x`-prefixed hex strings.
+   */
+  async getGuardianSet(): Promise<string[]> {
+    const index = await this.getCurrentGuardianSetIndex();
+    const value = await readPersistentStorage(
+      this.chain,
+      this.address,
+      xdr.ScVal.scvVec([
+        xdr.ScVal.scvSymbol("GuardianSetByIndex"),
+        xdr.ScVal.scvU32(index),
+      ]),
+    );
+    if (!value) {
+      throw new Error(`Executor has no guardian set at index ${index}`);
+    }
+    const stored = scValToNative(value) as { keys: Uint8Array[] };
+    return stored.keys.map((key) => `0x${Buffer.from(key).toString("hex")}`);
+  }
+
+  /**
+   * Read the sequence number of the last governance VAA the executor has
+   * executed. Returns `0n` if none has been executed yet. Governance VAAs are
+   * accepted only with strictly increasing sequence numbers, so the next
+   * proposal to execute is the first one after this value.
+   */
+  async getLastExecutedSequence(): Promise<bigint> {
+    const value = await readPersistentStorage(
+      this.chain,
+      this.address,
+      xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("LastExecutedSequence")]),
+    );
+    return value ? BigInt(scValToNative(value) as number | bigint) : 0n;
+  }
 }
 
 /** XDR-encode an argument vector as the `ScVec` the executor's `Call` expects. */
 function encodeScVecArgs(args: xdr.ScVal[]): Buffer {
   return xdr.ScVal.scvVec(args).toXDR();
+}
+
+/**
+ * Read a single entry from a contract's persistent storage by its `ScVal` key,
+ * returning the stored value or `undefined` if the entry does not exist.
+ *
+ * Persistent entries are individual ledger entries (unlike instance storage,
+ * which is bundled in the contract instance), so each is fetched directly with
+ * its data key.
+ */
+async function readPersistentStorage(
+  chain: StellarChain,
+  contractId: string,
+  key: xdr.ScVal,
+): Promise<xdr.ScVal | undefined> {
+  const server = chain.getProvider();
+  try {
+    const entry = await server.getContractData(
+      contractId,
+      key,
+      stellarRpc.Durability.Persistent,
+    );
+    return entry.val.contractData().val();
+  } catch {
+    // getContractData throws when the entry does not exist.
+    return undefined;
+  }
 }
 
 /**

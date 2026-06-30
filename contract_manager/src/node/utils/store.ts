@@ -239,13 +239,16 @@ export class Store {
           );
         if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
-        } else if (chainContract instanceof WormholeContract) {
-          this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmExecutorContract ||
           chainContract instanceof StellarExecutorContract
         ) {
+          // Checked before WormholeContract: the Stellar executor *is* a
+          // WormholeContract (it holds the guardian set) but belongs in
+          // executor_contracts.
           this.executor_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof WormholeContract) {
+          this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmLazerContract ||
           chainContract instanceof SuiLazerContract ||
