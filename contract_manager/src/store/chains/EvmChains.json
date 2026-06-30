@@ -174,7 +174,7 @@
     "id": "cronos",
     "mainnet": true,
     "networkId": 25,
-    "rpcUrl": "https://cronos-evm-rpc.publicnode.com",
+    "rpcUrl": "https://evm.cronos.com",
     "type": "EvmChain"
   },
   {
