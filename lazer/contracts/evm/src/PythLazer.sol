@@ -67,6 +67,39 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         return block.timestamp < trustedSignerToExpiresAtMapping[signer];
     }
 
+    /// @notice Returns all trusted signers with a non-zero pubkey, in slot order.
+    /// @dev Empty slots (pubkey == address(0)) are skipped, so the returned
+    /// array length is the number of populated signers (≤ 100).
+    function getTrustedSigners()
+        external
+        view
+        returns (TrustedSignerInfo[] memory)
+    {
+        uint256 count = 0;
+        for (uint8 i = 0; i < trustedSigners.length; i++) {
+            if (trustedSigners[i].pubkey != address(0)) {
+                count++;
+            }
+        }
+
+        TrustedSignerInfo[] memory signers = new TrustedSignerInfo[](count);
+        uint256 j = 0;
+        for (uint8 i = 0; i < trustedSigners.length; i++) {
+            if (trustedSigners[i].pubkey != address(0)) {
+                signers[j] = trustedSigners[i];
+                j++;
+            }
+        }
+        return signers;
+    }
+
+    /// @notice Returns the stored expiry timestamp for a signer, or 0 if unknown.
+    function getTrustedSignerExpiry(
+        address signer
+    ) external view returns (uint256) {
+        return trustedSignerToExpiresAtMapping[signer];
+    }
+
     function verifyUpdate(
         bytes calldata update
     ) external payable returns (bytes calldata payload, address signer) {
@@ -106,6 +139,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function version() public pure returns (string memory) {
-        return "0.1.1";
+        return "0.2.0";
     }
 }

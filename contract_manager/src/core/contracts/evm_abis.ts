@@ -1404,6 +1404,30 @@ export const LAZER_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "getTrustedSigners",
+    outputs: [
+      {
+        components: [
+          { internalType: "address", name: "pubkey", type: "address" },
+          { internalType: "uint256", name: "expiresAt", type: "uint256" },
+        ],
+        internalType: "struct PythLazer.TrustedSignerInfo[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "signer", type: "address" }],
+    name: "getTrustedSignerExpiry",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "signer", type: "address" }],
     name: "isValidSigner",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
