@@ -26,67 +26,83 @@
   "exports": {
     "./cli": {
       "import": {
-        "default": "./dist/esm/cli.mjs"
+        "default": "./dist/esm/cli.mjs",
+        "types": "./dist/esm/cli.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/cli.cjs"
+        "default": "./dist/cjs/cli.cjs",
+        "types": "./dist/cjs/cli.d.ts"
       }
     },
     "./client": {
       "import": {
-        "default": "./dist/esm/client.mjs"
+        "default": "./dist/esm/client.mjs",
+        "types": "./dist/esm/client.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/client.cjs"
+        "default": "./dist/cjs/client.cjs",
+        "types": "./dist/cjs/client.d.ts"
       }
     },
     "./devnet": {
       "import": {
-        "default": "./dist/esm/devnet.mjs"
+        "default": "./dist/esm/devnet.mjs",
+        "types": "./dist/esm/devnet.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/devnet.cjs"
+        "default": "./dist/cjs/devnet.cjs",
+        "types": "./dist/cjs/devnet.d.ts"
       }
     },
     "./eval": {
       "import": {
-        "default": "./dist/esm/eval.mjs"
+        "default": "./dist/esm/eval.mjs",
+        "types": "./dist/esm/eval.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/eval.cjs"
+        "default": "./dist/cjs/eval.cjs",
+        "types": "./dist/cjs/eval.d.ts"
       }
     },
     "./offchain": {
       "import": {
-        "default": "./dist/esm/offchain.mjs"
+        "default": "./dist/esm/offchain.mjs",
+        "types": "./dist/esm/offchain.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/offchain.cjs"
+        "default": "./dist/cjs/offchain.cjs",
+        "types": "./dist/cjs/offchain.d.ts"
       }
     },
     "./package.json": "./package.json",
     "./transactions": {
       "import": {
-        "default": "./dist/esm/transactions.mjs"
+        "default": "./dist/esm/transactions.mjs",
+        "types": "./dist/esm/transactions.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/transactions.cjs"
+        "default": "./dist/cjs/transactions.cjs",
+        "types": "./dist/cjs/transactions.d.ts"
       }
     },
     "./utils": {
       "import": {
-        "default": "./dist/esm/utils.mjs"
+        "default": "./dist/esm/utils.mjs",
+        "types": "./dist/esm/utils.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/utils.cjs"
+        "default": "./dist/cjs/utils.cjs",
+        "types": "./dist/cjs/utils.d.ts"
       }
     },
     "./wormhole": {
       "import": {
-        "default": "./dist/esm/wormhole.mjs"
+        "default": "./dist/esm/wormhole.mjs",
+        "types": "./dist/esm/wormhole.d.ts"
       },
       "require": {
-        "default": "./dist/cjs/wormhole.cjs"
+        "default": "./dist/cjs/wormhole.cjs",
+        "types": "./dist/cjs/wormhole.d.ts"
       }
     }
   },

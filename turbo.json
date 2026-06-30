@@ -1,7 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["NODE_ENV"],
-  "globalPassThroughEnv": ["COREPACK_HOME", "FORCE_COLOR", "BIOME_BINARY"],
+  "globalPassThroughEnv": [
+    "COREPACK_HOME",
+    "FORCE_COLOR",
+    "BIOME_BINARY",
+    "BLOCKFROST_PROJECT_ID",
+    "KOIOS_TOKEN",
+    "KOIOS_API_KEY",
+    "MAESTRO_API_KEY"
+  ],
   "tasks": {
     "//#fix": {
       "cache": false,

@@ -22,6 +22,12 @@ import {
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
+import type {
+  CardanoNetwork,
+  CardanoProvider,
+  ReadClient,
+} from "@pythnetwork/pyth-lazer-cardano-js";
+import { createReadClient } from "@pythnetwork/pyth-lazer-cardano-js";
 import { getStructFields } from "@pythnetwork/pyth-sui-js";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import type { ChainName, DataSource } from "@pythnetwork/xc-admin-common";
@@ -1847,5 +1853,120 @@ export class StellarChain extends Chain {
     }
 
     return createHash("sha256").update(wasm).digest("hex");
+  }
+}
+
+/**
+ * A Cardano network hosting a Lazer deployment (see {@link CardanoLazerContract}).
+ *
+ * Cardano is UTxO-based with Aiken validators; all reads go through the Evolution
+ * SDK read client exposed by {@link getProvider}, mirroring how
+ * {@link StellarChain.getProvider} hands back its SDK client. Governance is
+ * Wormhole-VAA based and dispatched out-of-band (the VAA is submitted as redeemer
+ * data in a Cardano transaction), so this chain class only needs read access.
+ */
+export class CardanoChain extends Chain {
+  static override type = "CardanoChain";
+
+  /**
+   * @param network - Evolution SDK network preset this deployment lives on
+   * @param providerType - data provider used to build the read client. The
+   *   credential (if any) is read from the environment at {@link getProvider}
+   *   time, never stored in config: `BLOCKFROST_PROJECT_ID` for `blockfrost`,
+   *   `MAESTRO_API_KEY` for `maestro`, optional `KOIOS_TOKEN` for `koios`
+   *   (Koios reads work tokenless at low rate, which is enough for the audit).
+   */
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public network: CardanoNetwork,
+    public providerType: CardanoProvider["type"],
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): CardanoChain {
+    if (parsed.type !== CardanoChain.type) throw new Error("Invalid type");
+    return new CardanoChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName ?? "",
+      parsed.nativeToken,
+      parsed.network as CardanoNetwork,
+      parsed.providerType as CardanoProvider["type"],
+    );
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      mainnet: this.mainnet,
+      network: this.network,
+      providerType: this.providerType,
+      type: CardanoChain.type,
+      wormholeChainName: this.wormholeChainName,
+    };
+  }
+
+  getType(): string {
+    return CardanoChain.type;
+  }
+
+  private getProviderConfig(): CardanoProvider {
+    switch (this.providerType) {
+      case "blockfrost": {
+        const projectId = process.env.BLOCKFROST_PROJECT_ID;
+        if (!projectId) {
+          throw new Error(
+            "BLOCKFROST_PROJECT_ID must be set to use the blockfrost provider",
+          );
+        }
+        return { projectId, type: "blockfrost" };
+      }
+      case "koios": {
+        const token = process.env.KOIOS_TOKEN;
+        return { type: "koios", ...(token ? { token } : {}) };
+      }
+      case "maestro": {
+        const apiKey = process.env.MAESTRO_API_KEY;
+        if (!apiKey) {
+          throw new Error(
+            "MAESTRO_API_KEY must be set to use the maestro provider",
+          );
+        }
+        return { apiKey, type: "maestro" };
+      }
+    }
+  }
+
+  getProvider(): ReadClient {
+    return createReadClient(this.network, this.getProviderConfig());
+  }
+
+  /**
+   * Cardano governance upgrades are Wormhole VAA actions targeting a specific
+   * deployment, so build them with {@link CardanoLazerContract} instead.
+   */
+  generateGovernanceUpgradePayload(): Buffer {
+    throw new Error(
+      "Use CardanoLazerContract.generateUpgradeSpendScriptPayload / " +
+        "generateUpgradeWithdrawScriptPayload — Cardano upgrades require a policy id.",
+    );
+  }
+
+  getAccountAddress(): Promise<string> {
+    throw new Error(
+      "Cardano accounts are derived from a mnemonic wallet, not a hex private " +
+        "key; signing is handled by @pythnetwork/pyth-lazer-cardano-cli.",
+    );
+  }
+
+  getAccountBalance(): Promise<number> {
+    throw new Error(
+      "Cardano accounts are derived from a mnemonic wallet, not a hex private " +
+        "key; signing is handled by @pythnetwork/pyth-lazer-cardano-cli.",
+    );
   }
 }

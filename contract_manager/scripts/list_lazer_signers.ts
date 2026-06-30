@@ -6,6 +6,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import {
+  CardanoLazerContract,
   EvmLazerContract,
   StellarLazerContract,
   SuiLazerContract,
@@ -107,6 +108,19 @@ async function main() {
           );
         }
       } else if (contract instanceof StellarLazerContract) {
+        for (const signer of await contract.getTrustedSigners()) {
+          rows.push(
+            makeRow(
+              contractId,
+              chain,
+              signer.publicKey,
+              signer.expiresAt,
+              nowSeconds,
+              warnWithinSeconds,
+            ),
+          );
+        }
+      } else if (contract instanceof CardanoLazerContract) {
         for (const signer of await contract.getTrustedSigners()) {
           rows.push(
             makeRow(
