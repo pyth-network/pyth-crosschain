@@ -1,14 +1,15 @@
 # Build information
 
-Contracts are built and tested with a prebuilt Sui CLI binary (mainnet channel), matching the version pinned in `.github/workflows/ci-sui-contract.yml`. Download the matching release from <https://github.com/MystenLabs/sui/releases> (asset `sui-mainnet-vX.Y.Z-ubuntu-x86_64.tgz`) and put `sui` on your `PATH`, e.g.:
+Contracts are built and tested with the Sui CLI, pinned to the mainnet release in `.github/workflows/ci-sui-contract.yml` (currently `mainnet-v1.72.2`). Install it with [`suiup`](https://github.com/MystenLabs/suiup), the official Sui toolchain version manager:
 
 ```commandline
-SUI_VERSION="v1.72.2"
-curl -fsSL -o sui.tgz "https://github.com/MystenLabs/sui/releases/download/mainnet-${SUI_VERSION}/sui-mainnet-${SUI_VERSION}-ubuntu-x86_64.tgz"
-tar -xzf sui.tgz
-sudo mv "$(find . -maxdepth 2 -type f -name sui | head -n 1)" /usr/local/bin/sui
+curl -sSfL https://raw.githubusercontent.com/Mystenlabs/suiup/main/install.sh | sh
+suiup install sui@mainnet-1.72.2
+suiup default set sui@mainnet-1.72.2
 sui --version
 ```
+
+(CI installs the same release as a prebuilt binary directly; see `.github/workflows/ci-sui-contract.yml`.)
 
 The contracts use the Move 2024 package system (Sui package management v2): dependencies and the package's own named address are resolved via `Move.lock` environments rather than a `[addresses]` section.
 
