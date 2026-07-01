@@ -34,7 +34,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "BONK/USD",
@@ -250,7 +250,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NAV.USTB/USD",
@@ -412,7 +412,7 @@
       "time_difference": 240,
       "price_deviation": 0.05,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "JUPUSD/USD",
