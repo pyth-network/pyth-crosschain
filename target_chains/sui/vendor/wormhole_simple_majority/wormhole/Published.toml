@@ -1,0 +1,22 @@
+# Published addresses for the vendored WormholeSimpleMajority core bridge,
+# keyed by environment. Consumed by the pro-compatible Pyth build to resolve the
+# `wormhole` named address per network (replaces the old `[addresses] wormhole`
+# entry that the consumer used to supply).
+#
+# Values verified against on-chain state via the public Sui fullnodes.
+
+[published.mainnet]
+chain-id = "35834a8a"
+original-id = "0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4"
+published-at = "0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4"
+version = 1
+upgrade-capability = "0xa78bd3b6cbb3b24036357ca190f0f2a87b1bd23ddd57eba97fc1455692625df2"
+build-config = { flavor = "sui", edition = "legacy" }
+
+[published.testnet]
+chain-id = "4c78adac"
+original-id = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+published-at = "0xe79f4e3e02ce132f40f39e73220493a802329d3cb6ad7f789e98a78910fc0053"
+version = 1
+upgrade-capability = "0x7eecf7d34399853d27668206470d93017a8e55f490a4d5fc7c044f625ff60c24"
+build-config = { flavor = "sui", edition = "legacy" }
