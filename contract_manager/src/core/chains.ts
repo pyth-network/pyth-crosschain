@@ -24,7 +24,6 @@ import {
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import type {
   CardanoNetwork,
-  CardanoProvider,
   ReadClient,
 } from "@pythnetwork/pyth-lazer-cardano-js";
 import { createReadClient } from "@pythnetwork/pyth-lazer-cardano-js";
@@ -1870,11 +1869,6 @@ export class CardanoChain extends Chain {
 
   /**
    * @param network - Evolution SDK network preset this deployment lives on
-   * @param providerType - data provider used to build the read client. The
-   *   credential (if any) is read from the environment at {@link getProvider}
-   *   time, never stored in config: `BLOCKFROST_PROJECT_ID` for `blockfrost`,
-   *   `MAESTRO_API_KEY` for `maestro`, optional `KOIOS_TOKEN` for `koios`
-   *   (Koios reads work tokenless at low rate, which is enough for the audit).
    */
   constructor(
     id: string,
@@ -1882,7 +1876,6 @@ export class CardanoChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     public network: CardanoNetwork,
-    public providerType: CardanoProvider["type"],
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -1895,7 +1888,6 @@ export class CardanoChain extends Chain {
       parsed.wormholeChainName ?? "",
       parsed.nativeToken,
       parsed.network as CardanoNetwork,
-      parsed.providerType as CardanoProvider["type"],
     );
   }
 
@@ -1904,7 +1896,6 @@ export class CardanoChain extends Chain {
       id: this.id,
       mainnet: this.mainnet,
       network: this.network,
-      providerType: this.providerType,
       type: CardanoChain.type,
       wormholeChainName: this.wormholeChainName,
     };
@@ -1914,35 +1905,11 @@ export class CardanoChain extends Chain {
     return CardanoChain.type;
   }
 
-  private getProviderConfig(): CardanoProvider {
-    switch (this.providerType) {
-      case "blockfrost": {
-        const projectId = process.env.BLOCKFROST_PROJECT_ID;
-        if (!projectId) {
-          throw new Error(
-            "BLOCKFROST_PROJECT_ID must be set to use the blockfrost provider",
-          );
-        }
-        return { projectId, type: "blockfrost" };
-      }
-      case "koios": {
-        const token = process.env.KOIOS_TOKEN;
-        return { type: "koios", ...(token ? { token } : {}) };
-      }
-      case "maestro": {
-        const apiKey = process.env.MAESTRO_API_KEY;
-        if (!apiKey) {
-          throw new Error(
-            "MAESTRO_API_KEY must be set to use the maestro provider",
-          );
-        }
-        return { apiKey, type: "maestro" };
-      }
-    }
-  }
-
   getProvider(): ReadClient {
-    return createReadClient(this.network, this.getProviderConfig());
+    // Reads go through Koios, which is tokenless at a low rate limit — enough
+    // for the audit. KOIOS_TOKEN only raises that limit and need not be set in
+    // practice; it's picked up from the environment here if present.
+    return createReadClient(this.network, process.env.KOIOS_TOKEN);
   }
 
   /**
