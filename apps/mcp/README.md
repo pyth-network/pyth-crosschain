@@ -48,7 +48,22 @@ Any MCP client that supports StreamableHTTP can connect using the URL:
 https://mcp.pyth.network/mcp
 ```
 
-## Tools
+## Modes
+
+### Legacy (stdio) — `pyth-mcp`
+
+Exposes 4 tools: `get_symbols`, `get_historical_price`, `get_candlestick_data`, `get_latest_price`. Use for local Claude Desktop / Claude Code. Token passed as tool parameter.
+
+### Code Mode only (stdio) — `pyth-mcp-codemode`
+
+Exposes 2 tools: `search`, `execute`. LLM writes async code against `codemode.*` functions. Token injected server-side — never exposed to the model. Use for hosted/public endpoint.
+
+```sh
+# Run Code Mode (requires PYTH_PRO_ACCESS_TOKEN for get_latest_price)
+PYTH_PRO_ACCESS_TOKEN=<token> node apps/mcp/dist/index-codemode.js
+```
+
+## Tools (Legacy mode)
 
 | Tool | Description | Auth Required |
 |------|-------------|---------------|
@@ -82,6 +97,9 @@ Try these with any connected AI assistant:
 For contributors working on the MCP server itself.
 
 ### Build
+Code Mode exposes these via `codemode.get_symbols`, `codemode.get_latest_price`, etc. inside `execute()`.
+
+## Setup
 
 ```sh
 pnpm --filter @pythnetwork/mcp build
@@ -117,7 +135,7 @@ To connect a client to a local build via stdio:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PYTH_PRO_ACCESS_TOKEN` | — | Bearer token for Router API |
+| `PYTH_PRO_ACCESS_TOKEN` | — | Bearer token for Router API. Required for Code Mode `get_latest_price`; injected server-side |
 | `PYTH_CHANNEL` | `fixed_rate@200ms` | Default price channel |
 | `PYTH_LOG_LEVEL` | `info` | Log level (debug/info/warn/error) |
 | `PYTH_REQUEST_TIMEOUT_MS` | `10000` | HTTP request timeout |
