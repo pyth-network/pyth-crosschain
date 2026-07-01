@@ -20,6 +20,20 @@ All `{channel}` path segments refer to a price channel (e.g. `real_time`, `fixed
   connect TradingView charting UIs directly to this API.
 </Callout>
 
+<Callout type="warn">
+  **Channel choice affects returned data.** The `{channel}` segment is not just
+  a transport option — it materially changes the values returned by both
+  `/{channel}/price` (point-in-time lookups) and `/{channel}/history` (OHLC
+  candles). Sub-second price updates visible on `real_time` or
+  `fixed_rate@50ms` may be absent from coarser channels like
+  `fixed_rate@1000ms`, causing candle highs and lows to differ for the same
+  time window. Note that `pythdata.app` charts use `fixed_rate@1000ms`, so
+  candles there can differ from those on `real_time` or `fixed_rate@50ms`. For
+  settlement, backtesting, or exact-published-price workflows, always query the
+  same channel your downstream process depends on. See the [worked
+  example](#channel-resolution-example) below.
+</Callout>
+
 ## Endpoints
 
 | Method | Path                   | Auth | Description                   |
@@ -106,6 +120,36 @@ Returns OHLC candlestick data in TradingView format.
 | `v`   | `number[]` | Volumes (if available)    |
 
 Arrays are aligned by index — `t[0]`, `o[0]`, `h[0]`, `l[0]`, `c[0]` represent the same candle.
+
+#### Channel resolution example
+
+The channel you query determines which price updates are included in each
+candle. Coarser channels sample fewer updates per second, so sub-second price
+spikes may not appear.
+
+**Feed:** `Equity.US.MSFT/USD` (`pyth_lazer_id=1292`), 2026-05-29.
+
+On `fixed_rate@50ms`, the following prices were published around market close:
+
+| Timestamp (ET)   | Price       | Market status |
+| ---------------- | ----------- | ------------- |
+| `15:59:59.500`   | `449.99680` | regular       |
+| `15:59:59.700`   | `450.00000` | regular       |
+| `15:59:59.800`   | `449.99680` | regular       |
+| `16:00:00.000`   | `449.99500` | postMarket    |
+
+The `15:59` one-minute candle **high** differs by channel:
+
+| Channel                            | Candle high |
+| ---------------------------------- | ----------- |
+| `real_time` / `fixed_rate@50ms`    | `450.01`    |
+| `fixed_rate@200ms`                 | `449.9968`  |
+| `fixed_rate@1000ms`                | `449.995`   |
+
+The `fixed_rate@1000ms` channel (used by `pythdata.app`) never saw the
+`450.00000` tick at `15:59:59.700 ET` because it fell between its 1-second
+sampling points. This is expected behavior — different channels produce
+different candle values.
 
 ---
 
