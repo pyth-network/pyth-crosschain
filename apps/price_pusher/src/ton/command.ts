@@ -5,10 +5,10 @@ import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { Address, TonClient } from "@ton/ton";
-import { pino } from "pino";
 import type { Options } from "yargs";
 import { Controller } from "../controller.js";
 import type { IPriceListener } from "../interface.js";
+import { createLogger } from "../logger.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
@@ -56,7 +56,7 @@ export default {
       controllerLogLevel,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 

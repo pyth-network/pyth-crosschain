@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { pino } from "pino";
 import type { Options } from "yargs";
 
 import { Controller } from "../controller";
+import { createLogger } from "../logger";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
@@ -63,7 +63,7 @@ export default {
       controllerLogLevel,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {

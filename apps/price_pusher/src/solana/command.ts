@@ -19,10 +19,10 @@ import {
 import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
-import { pino } from "pino";
 import type { Options } from "yargs";
 import { Controller } from "../controller.js";
 import type { IBalanceTracker } from "../interface.js";
+import { createLogger } from "../logger.js";
 import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
@@ -155,7 +155,7 @@ export default {
       wormholeProgramId,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
