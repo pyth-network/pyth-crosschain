@@ -2,7 +2,7 @@
   "author": "",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
-    "@coral-xyz/anchor": "^0.29.0",
+    "@coral-xyz/anchor": "^0.30.1",
     "@cosmjs/cosmwasm-stargate": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
     "@injectivelabs/networks": "^1.14.6",
@@ -16,6 +16,7 @@
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-iota-js": "workspace:*",
+    "@pythnetwork/pyth-lazer-solana-sdk": "^0.2.0",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/pyth-starknet-js": "^0.2.1",
@@ -158,6 +159,16 @@
       "require": {
         "default": "./dist/cjs/core/contracts/near.cjs",
         "types": "./dist/cjs/core/contracts/near.d.ts"
+      }
+    },
+    "./core/contracts/solana": {
+      "import": {
+        "default": "./dist/esm/core/contracts/solana.mjs",
+        "types": "./dist/esm/core/contracts/solana.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/solana.cjs",
+        "types": "./dist/cjs/core/contracts/solana.d.ts"
       }
     },
     "./core/contracts/starknet": {

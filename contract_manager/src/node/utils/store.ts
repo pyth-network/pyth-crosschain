@@ -42,6 +42,7 @@ import {
   FuelWormholeContract,
   IotaPriceFeedContract,
   IotaWormholeContract,
+  SolanaLazerContract,
   StellarExecutorContract,
   StellarLazerContract,
   SuiLazerContract,
@@ -76,7 +77,10 @@ export class Store {
   public vaults: Record<string, Vault> = {};
   public lazer_contracts: Record<
     string,
-    EvmLazerContract | SuiLazerContract | StellarLazerContract
+    | EvmLazerContract
+    | SuiLazerContract
+    | StellarLazerContract
+    | SolanaLazerContract
   > = {};
 
   constructor(public path: string) {
@@ -214,6 +218,7 @@ export class Store {
       [EvmLazerContract.type]: EvmLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
+      [SolanaLazerContract.type]: SolanaLazerContract,
       [StellarExecutorContract.type]: StellarExecutorContract,
     };
     for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
@@ -252,7 +257,8 @@ export class Store {
         } else if (
           chainContract instanceof EvmLazerContract ||
           chainContract instanceof SuiLazerContract ||
-          chainContract instanceof StellarLazerContract
+          chainContract instanceof StellarLazerContract ||
+          chainContract instanceof SolanaLazerContract
         ) {
           this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {
