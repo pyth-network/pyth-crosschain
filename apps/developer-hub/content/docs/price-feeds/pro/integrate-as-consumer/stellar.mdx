@@ -65,18 +65,31 @@ Then verify from inside your own contract:
 #![no_std]
 
 use pyth_lazer_stellar_sdk::{ParseError, PythLazerClient, VerifiedPayload};
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Bytes, Env};
 
 #[contract]
 pub struct ExampleConsumer;
 
+#[contracttype]
+pub enum DataKey {
+    Lazer,
+}
+
 #[contractimpl]
 impl ExampleConsumer {
+    /// Runs once at deploy time. Stores the deployed `pyth-lazer-stellar`
+    /// verifier's contract address so every subsequent `update_price` call
+    /// uses the same trusted verifier.
+    pub fn __constructor(env: Env, lazer: Address) {
+        env.storage().instance().set(&DataKey::Lazer, &lazer);
+    }
+
     /// Receives a signed Lazer update and asks `pyth-lazer-stellar` to verify
     /// it. Returns a typed `VerifiedPayload` (which derefs to the parsed
     /// `Update`); traps if the signature is bad, returns `ParseError` if the
     /// verified payload bytes are malformed.
-    pub fn update_price(env: Env, lazer: Address, payload: Bytes) -> Result<(), ParseError> {
+    pub fn update_price(env: Env, payload: Bytes) -> Result<(), ParseError> {
+        let lazer: Address = env.storage().instance().get(&DataKey::Lazer).unwrap();
         let update: VerifiedPayload =
             PythLazerClient::new(&env, &lazer).verify_update(&payload)?;
         // `update.feeds`, `update.timestamp`, `update.channel` are accessible
@@ -111,12 +124,22 @@ pub struct StoredPrice {
     pub timestamp_us: u64,
 }
 
+#[contracttype]
+pub enum DataKey {
+    Lazer,
+}
+
 #[contract]
 pub struct ExampleConsumer;
 
 #[contractimpl]
 impl ExampleConsumer {
-    pub fn update_price(env: Env, lazer: Address, payload: Bytes) -> Result<StoredPrice, ParseError> {
+    pub fn __constructor(env: Env, lazer: Address) {
+        env.storage().instance().set(&DataKey::Lazer, &lazer);
+    }
+
+    pub fn update_price(env: Env, payload: Bytes) -> Result<StoredPrice, ParseError> {
+        let lazer: Address = env.storage().instance().get(&DataKey::Lazer).unwrap();
         // Verify + parse in one call.
         let update = PythLazerClient::new(&env, &lazer).verify_update(&payload)?;
 
@@ -139,12 +162,13 @@ impl ExampleConsumer {
 Every property your contract reads must be requested in the Step 1 subscription — feed properties not in the subscription decode to `None`, so an unguarded `.expect(...)` will trap on-chain. Signed integer properties (`price`, `best_bid_price`, `best_ask_price`, `confidence`, `funding_rate`, `ema_price`, `ema_confidence`) are decoded as `Option<i64>`. Per-feed `feed_update_timestamp` (microseconds since epoch, requested as `feedUpdateTimestamp`) is the right field for freshness checks; the top-level `update.timestamp` is the payload-level timestamp. See the [Pyth Pro payload reference](/price-feeds/pro/payload-reference) for the complete wire format.
 
 <Callout type="info">
-  Submit the transaction from your off-chain client using
+  Pass the deployed [`pyth-lazer-stellar` contract id](/price-feeds/pro/contract-addresses#stellar)
+  as the `lazer` constructor argument at deploy time — e.g.
+  `stellar contract deploy --wasm <path> -- --lazer <verifier-contract-id>`.
+  Then submit price updates from your off-chain client using
   [`@stellar/stellar-sdk`](https://www.npmjs.com/package/@stellar/stellar-sdk),
-  passing the binary update bytes as the `update` argument to
-  `ExampleConsumer::update_price` (and the deployed
-  [`pyth-lazer-stellar` contract id](/price-feeds/pro/contract-addresses#stellar)
-  as `lazer`).
+  passing just the binary update bytes as the `payload` argument to
+  `ExampleConsumer::update_price`.
 </Callout>
 
   </Step>
