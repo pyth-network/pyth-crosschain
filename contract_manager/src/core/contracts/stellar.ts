@@ -158,34 +158,50 @@ export class StellarLazerContract extends Storable {
   }
 
   /**
-   * Read the expiry timestamp (unix seconds) of a trusted signer, or `undefined`
-   * if the signer is not currently trusted.
+   * Read the current set of trusted Lazer signers from the verifier. The whole
+   * set lives in a single persistent entry under `DataKey::TrustedSigners`
+   * (unit variant -> key `ScVec([Symbol("TrustedSigners")])`) as a
+   * `Map<BytesN<33>, u64>` (compressed pubkey -> expiry), so a single fetch
+   * enumerates every signer.
    *
-   * The verifier keys trusted signers individually by public key and exposes no
-   * enumeration, so callers must supply the key of interest — there is no
-   * on-chain "list all signers" to mirror.
-   *
-   * @param publicKey - 33-byte compressed secp256k1 key, hex without 0x
+   * @returns one entry per signer: `publicKey` (33-byte compressed secp256k1,
+   *   hex without 0x) and `expiresAt` (unix seconds). Empty for an
+   *   uninitialized verifier or one with no trusted signers.
    */
-  async getTrustedSignerExpiry(publicKey: string): Promise<bigint | undefined> {
+  async getTrustedSigners(): Promise<
+    { publicKey: string; expiresAt: bigint }[]
+  > {
     const server = this.chain.getProvider();
-    const key = xdr.ScVal.scvVec([
-      xdr.ScVal.scvSymbol("TrustedSigner"),
-      xdr.ScVal.scvBytes(Buffer.from(publicKey, "hex")),
-    ]);
+    const key = xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("TrustedSigners")]);
+    let entry;
     try {
-      const entry = await server.getContractData(
+      entry = await server.getContractData(
         this.address,
         key,
         stellarRpc.Durability.Persistent,
       );
-      return BigInt(
-        scValToNative(entry.val.contractData().val()) as number | bigint,
-      );
     } catch {
-      // getContractData throws when the entry does not exist.
-      return undefined;
+      // getContractData throws when the entry does not exist (uninitialized).
+      return [];
     }
+    const map = entry.val.contractData().val().map() ?? [];
+    return map.map((item) => ({
+      expiresAt: BigInt(scValToNative(item.val()) as number | bigint),
+      publicKey: (scValToNative(item.key()) as Buffer).toString("hex"),
+    }));
+  }
+
+  /**
+   * Read the expiry timestamp (unix seconds) of a trusted signer, or `undefined`
+   * if the signer is not currently trusted.
+   *
+   * @param publicKey - 33-byte compressed secp256k1 key, hex without 0x
+   */
+  async getTrustedSignerExpiry(publicKey: string): Promise<bigint | undefined> {
+    const target = publicKey.toLowerCase();
+    const signers = await this.getTrustedSigners();
+    return signers.find((signer) => signer.publicKey.toLowerCase() === target)
+      ?.expiresAt;
   }
 }
 
