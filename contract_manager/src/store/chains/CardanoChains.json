@@ -1,0 +1,23 @@
+[
+  {
+    "id": "cardano_mainnet",
+    "mainnet": true,
+    "network": "mainnet",
+    "type": "CardanoChain",
+    "wormholeChainName": "cardano_mainnet"
+  },
+  {
+    "id": "cardano_preprod",
+    "mainnet": false,
+    "network": "preprod",
+    "type": "CardanoChain",
+    "wormholeChainName": "cardano_preprod"
+  },
+  {
+    "id": "cardano_preview",
+    "mainnet": false,
+    "network": "preview",
+    "type": "CardanoChain",
+    "wormholeChainName": "cardano_preview"
+  }
+]
