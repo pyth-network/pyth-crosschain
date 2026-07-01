@@ -61,6 +61,9 @@ const PythStateDatum = TSchema.Struct({
   withdraw_script: TSchema.ByteArray,
 });
 
+/** Decoded on-chain Pyth state datum (see {@link PythStateDatum}). */
+type PythState = Schema.Schema.Type<typeof PythStateDatum>;
+
 /** A trusted Lazer signer read from the on-chain Pyth state. */
 export type TrustedSigner = {
   /** 32-byte secp256k1 verification key, hex-encoded without `0x`. */
@@ -72,51 +75,28 @@ export type TrustedSigner = {
 /** Cardano network the deployment lives on. */
 export type CardanoNetwork = "mainnet" | "preprod" | "preview";
 
-/**
- * Data provider used to read chain state. `koios` works without a token for
- * low-rate read access; `blockfrost` and `maestro` require a credential.
- */
-export type CardanoProvider =
-  | { type: "blockfrost"; projectId: string }
-  | { type: "koios"; token?: string }
-  | { type: "maestro"; apiKey: string };
-
 const CHAINS = { mainnet, preprod, preview } as const;
 
 /**
- * Build a read-only Evolution SDK client for the given network and provider.
+ * Build a read-only Evolution SDK client backed by Koios for the given network.
  * The returned client is what {@link getPythState} expects.
+ *
+ * Koios read access works tokenless at a low rate limit, which is enough for
+ * enumerating trusted signers; `token` only raises that limit and is optional.
  */
 export function createReadClient(
   network: CardanoNetwork,
-  provider: CardanoProvider,
+  token?: string,
 ): ReadClient {
-  const assembly = Client.make(CHAINS[network]);
-  switch (provider.type) {
-    case "blockfrost": {
-      return assembly.withBlockfrost({
-        baseUrl: `https://cardano-${network}.blockfrost.io/api/v0`,
-        projectId: provider.projectId,
-      });
-    }
-    case "koios": {
-      const subdomain = {
-        mainnet: "api",
-        preprod: "preprod",
-        preview: "preview",
-      }[network];
-      return assembly.withKoios({
-        baseUrl: `https://${subdomain}.koios.rest/api/v1`,
-        ...(provider.token ? { token: provider.token } : {}),
-      });
-    }
-    case "maestro": {
-      return assembly.withMaestro({
-        apiKey: provider.apiKey,
-        baseUrl: `https://${network}.gomaestro-api.org/v1`,
-      });
-    }
-  }
+  const subdomain = {
+    mainnet: "api",
+    preprod: "preprod",
+    preview: "preview",
+  }[network];
+  return Client.make(CHAINS[network]).withKoios({
+    baseUrl: `https://${subdomain}.koios.rest/api/v1`,
+    ...(token ? { token } : {}),
+  });
 }
 
 export async function getPythState(
@@ -127,7 +107,7 @@ export async function getPythState(
   return await client.getUtxoByUnit(unit);
 }
 
-function decodePythState(pythState: UTxO.UTxO) {
+function decodePythState(pythState: UTxO.UTxO): PythState {
   if (!DatumOption.isInlineDatum(pythState.datumOption)) {
     throw new TypeError("State NFT UTxO does not have an inline datum");
   }
