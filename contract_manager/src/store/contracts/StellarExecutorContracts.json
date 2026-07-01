@@ -1,6 +1,6 @@
 [
   {
-    "address": "PLACEHOLDER_EXECUTOR_TESTNET_NOT_YET_DEPLOYED",
+    "address": "CA542YLVDLBQXTTS2FOERQAED2WE5DQRKLRZUUEG75DQ2TEX2525QNBG",
     "chain": "stellar_testnet",
     "type": "StellarExecutorContract"
   }
