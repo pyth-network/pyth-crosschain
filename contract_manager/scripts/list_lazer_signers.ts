@@ -5,7 +5,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { EvmLazerContract, SuiLazerContract } from "../src/core/contracts";
+import {
+  EvmLazerContract,
+  StellarLazerContract,
+  SuiLazerContract,
+} from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
@@ -70,8 +74,6 @@ async function main() {
 
   const rows: SignerRow[] = [];
 
-  // Stellar verifiers expose no on-chain enumeration of trusted signers, so
-  // they are intentionally excluded here; that audit is tracked separately.
   for (const contract of Object.values(DefaultStore.lazer_contracts)) {
     if (contract.chain.isMainnet() === argv.testnet) continue;
     const contractId = contract.getId();
@@ -98,6 +100,19 @@ async function main() {
               contractId,
               chain,
               signer.address,
+              signer.expiresAt,
+              nowSeconds,
+              warnWithinSeconds,
+            ),
+          );
+        }
+      } else if (contract instanceof StellarLazerContract) {
+        for (const signer of await contract.getTrustedSigners()) {
+          rows.push(
+            makeRow(
+              contractId,
+              chain,
+              signer.publicKey,
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
