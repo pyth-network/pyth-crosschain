@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
-import { createECDH } from "node:crypto";
+import { generateKeyPairSync } from "node:crypto";
 
 import { ClientContext } from "@pythnetwork/pyth-lazer-cardano-cli/client";
 import { applyGovernanceAction } from "@pythnetwork/pyth-lazer-cardano-cli/transactions";
@@ -57,13 +57,14 @@ function getChain(name: string): CardanoChain {
   return chain;
 }
 
-/** A fresh 32-byte secp256k1 (x-only) verification key that signs nothing. */
+/** A fresh 32-byte Ed25519 verification key that signs nothing. */
 function dummyTrustedSigner(): string {
-  const ecdh = createECDH("secp256k1");
-  ecdh.generateKeys();
-  // Drop the 0x02/0x03 prefix of the compressed key to get the 32-byte key
-  // the Cardano validator stores (`VerificationKey` in pyth_state.ak).
-  return ecdh.getPublicKey(null, "compressed").subarray(1).toString("hex");
+  // Cardano stores Ed25519 trusted-signer keys (`VerificationKey` in
+  // pyth_state.ak), matching Lazer's Ed25519-signed "solana" update format.
+  // The test only exercises add/remove round-trips, so the key never signs.
+  const { publicKey } = generateKeyPairSync("ed25519");
+  const { x } = publicKey.export({ format: "jwk" });
+  return Buffer.from(x as string, "base64url").toString("hex");
 }
 
 function digestToHex(digest: unknown): string {
@@ -221,7 +222,7 @@ parser.command(
       "policy-id": commonOptions["policy-id"],
       signer: {
         description:
-          "32-byte secp256k1 key (hex, no 0x) to add/remove. Defaults to a fresh " +
+          "32-byte Ed25519 key (hex, no 0x) to add/remove. Defaults to a fresh " +
           "dummy key generated in-script.",
         type: "string",
       },

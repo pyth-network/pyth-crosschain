@@ -42,8 +42,10 @@ const ValidityRange = TSchema.Struct({
 });
 
 // Schema matching the on-chain Pyth state datum layout. `trusted_signers` maps
-// a 32-byte secp256k1 verification key to the validity range that bounds the
-// signer's expiry (see `validators/pyth_state.ak`).
+// a 32-byte Ed25519 verification key to the validity range that bounds the
+// signer's expiry (see `validators/pyth_state.ak`). Cardano verifies Lazer's
+// Ed25519-signed "solana" update format, so the signer keys are Ed25519 — not
+// the secp256k1 keys/addresses used by the EVM and Sui integrations.
 // biome-ignore assist/source/useSortedKeys: order-sensistive
 const PythStateDatum = TSchema.Struct({
   // biome-ignore assist/source/useSortedKeys: order-sensitive
@@ -66,7 +68,7 @@ type PythState = Schema.Schema.Type<typeof PythStateDatum>;
 
 /** A trusted Lazer signer read from the on-chain Pyth state. */
 export type TrustedSigner = {
-  /** 32-byte secp256k1 verification key, hex-encoded without `0x`. */
+  /** 32-byte Ed25519 verification key, hex-encoded without `0x`. */
   publicKey: string;
   /** Expiry timestamp in unix seconds. */
   expiresAt: bigint;

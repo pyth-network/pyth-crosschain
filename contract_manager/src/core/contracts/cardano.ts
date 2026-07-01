@@ -95,7 +95,7 @@ export class CardanoLazerContract extends Storable {
    * Build the raw Wormhole governance payload that updates (or, with
    * `expiresAt = 0n`, removes) a trusted Lazer signer.
    *
-   * @param publicKey - 32-byte secp256k1 signer key, hex without `0x`
+   * @param publicKey - 32-byte Ed25519 signer key, hex without `0x`
    * @param expiresAt - expiry timestamp in unix seconds (0 removes the signer)
    */
   generateUpdateTrustedSignerPayload(
