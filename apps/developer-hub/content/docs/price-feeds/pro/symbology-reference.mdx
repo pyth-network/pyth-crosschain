@@ -1,0 +1,309 @@
+---
+title: Symbology & Reference Data
+description: "Field-by-field reference for Pyth Pro symbol metadata: identifiers, classification, data quality, trading schedules, and futures expiration"
+slug: /price-feeds/pro/symbology-reference
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+Pyth Pro publishes **reference data** describing every feed it offers: identifiers, classification, data-quality parameters, trading schedules, and (for derivatives) expiration metadata. This data is distinct from the real-time price [payload](/price-feeds/pro/payload-reference): it describes _what_ a feed is, not its current value.
+
+Reference data is served by the **Symbology & Reference Data API**:
+
+```
+GET https://pyth.dourolabs.app/v1/symbols
+```
+
+The endpoint returns one JSON object per feed. This page documents every field on that object. For the request schema and query parameters for filtering (for example by `asset_type` or `instrument_type`), see the [interactive API reference](https://pyth.dourolabs.app/docs/#/Symbol/symbols_handler).
+
+## Example response
+
+Every feed is returned as a single JSON object with the same top-level shape. The tabs below show feeds that populate different optional fields, depending on asset class and instrument type.
+
+<Tabs items={["Equity", "Crypto spot", "Futures", "Funding rate"]}>
+<Tab value="Equity">
+
+`BKNG`, a US equity with `regular`, `pre_market`, `post_market`, and `over_night` sessions, a `nasdaq_symbol`, and a `corporate_actions` stock split:
+
+```json
+{
+  "pyth_lazer_id": 992,
+  "name": "BKNG",
+  "symbol": "Equity.US.BKNG/USD",
+  "description": "BOOKING HOLDINGS INC / US DOLLAR",
+  "asset_type": "equity",
+  "instrument_type": "spot",
+  "exponent": -5,
+  "cmc_id": null,
+  "interval": null,
+  "min_publishers": 3,
+  "min_channel": "fixed_rate@200ms",
+  "state": "stable",
+  "schedule": "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C",
+  "market_session_schedule": {
+    "regular": "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C",
+    "pre_market": "America/New_York;0400-0930,0400-0930,0400-0930,0400-0930,0400-0930,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1225/C",
+    "post_market": "America/New_York;1600-2000,1600-2000,1600-2000,1600-2000,1600-2000,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1225/C",
+    "over_night": "America/New_York;0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400,C,2000-2400;0118/C,0119/2000-2400,0215/C,0216/2000-2400,0402/0000-0400,0403/C,0524/C,0525/2000-2400,0618/0000-0400,0619/C,0702/0000-0400,0703/C,0906/C,0907/2000-2400,1125/0000-0400,1126/2000-2400,1224/0000-0400,1225/C,1231/0000-0400,0101/C"
+  },
+  "market_sessions": {
+    "regular": {
+      "min_pub": 3,
+      "schedule": "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C",
+      "state": "stable"
+    },
+    "pre_market": {
+      "min_pub": 2,
+      "schedule": "America/New_York;0400-0930,0400-0930,0400-0930,0400-0930,0400-0930,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1225/C",
+      "state": "stable"
+    },
+    "post_market": {
+      "min_pub": 2,
+      "schedule": "America/New_York;1600-2000,1600-2000,1600-2000,1600-2000,1600-2000,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1225/C",
+      "state": "stable"
+    },
+    "over_night": {
+      "min_pub": 2,
+      "schedule": "America/New_York;0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400,C,2000-2400;0118/C,0119/2000-2400,0215/C,0216/2000-2400,0402/0000-0400,0403/C,0524/C,0525/2000-2400,0618/0000-0400,0619/C,0702/0000-0400,0703/C,0906/C,0907/2000-2400,1125/0000-0400,1126/2000-2400,1224/0000-0400,1225/C,1231/0000-0400,0101/C",
+      "state": "stable"
+    }
+  },
+  "hermes_id": "e90b679a7e4ca0d591abb634959d38a535c2036c6b121c520a82cff111ff7d12",
+  "nasdaq_symbol": "BKNG",
+  "quote_currency": "USD",
+  "corporate_actions": [
+    {
+      "event_type": "SPLIT",
+      "activation": {
+        "us_equity_ex_date": {
+          "ex_date": "2026-04-06"
+        }
+      },
+      "adjustment_factor_numerator": "25",
+      "adjustment_factor_denominator": "1"
+    }
+  ],
+  "groups": []
+}
+```
+
+</Tab>
+<Tab value="Crypto spot">
+
+`BTCUSD`, a 24/7 crypto feed with a single `regular` session:
+
+```json
+{
+  "pyth_lazer_id": 1,
+  "name": "BTCUSD",
+  "symbol": "Crypto.BTC/USD",
+  "description": "BITCOIN / US DOLLAR",
+  "asset_type": "crypto",
+  "instrument_type": "spot",
+  "exponent": -8,
+  "cmc_id": 1,
+  "interval": null,
+  "min_publishers": 3,
+  "min_channel": "real_time",
+  "state": "stable",
+  "schedule": "America/New_York;O,O,O,O,O,O,O;",
+  "market_session_schedule": {
+    "regular": "America/New_York;O,O,O,O,O,O,O;"
+  },
+  "market_sessions": {
+    "regular": {
+      "min_pub": 3,
+      "schedule": "America/New_York;O,O,O,O,O,O,O;",
+      "state": "stable"
+    }
+  },
+  "hermes_id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+  "nasdaq_symbol": null,
+  "quote_currency": "USD",
+  "groups": []
+}
+```
+
+</Tab>
+<Tab value="Futures">
+
+`CAZ6`, a dated commodity future (cocoa, Dec 2026) with an `expiration_time`:
+
+```json
+{
+  "pyth_lazer_id": 3174,
+  "name": "CAZ6",
+  "symbol": "Commodities.CAZ6/USD",
+  "description": "PYTH PRICE IN USD FOR COCOA FUTURES 15 DECEMBER 2026",
+  "asset_type": "commodity",
+  "instrument_type": "future",
+  "expiration_time": "2026-12-15T13:30:00-05:00",
+  "exponent": -5,
+  "cmc_id": null,
+  "interval": null,
+  "min_publishers": 1,
+  "min_channel": "fixed_rate@50ms",
+  "state": "stable",
+  "schedule": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
+  "market_session_schedule": {
+    "regular": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C"
+  },
+  "market_sessions": {
+    "regular": {
+      "min_pub": 1,
+      "schedule": "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
+      "state": "stable"
+    }
+  },
+  "hermes_id": "7452a0c6aa220280021272c3cebaaa0f32cc910cd14ea43460ff8ae2d1e773ea",
+  "nasdaq_symbol": null,
+  "quote_currency": "USD",
+  "groups": []
+}
+```
+
+Dated-future feeds are point-in-time: after `expiration_time` the contract's `state` becomes `inactive`, and later contracts in the same family are listed separately. Query the API for the current set.
+
+</Tab>
+<Tab value="Funding rate">
+
+`FundingRate.Binance.BTC/USDT`, a funding-rate feed with an 8-hour `interval`. Its `hermes_id` is `null`, since it has no Pyth Core counterpart:
+
+```json
+{
+  "pyth_lazer_id": 112,
+  "name": "BTCUSDT",
+  "symbol": "FundingRate.Binance.BTC/USDT",
+  "description": "Binance BTC / USDT Funding Rate",
+  "asset_type": "funding-rate",
+  "instrument_type": "rate",
+  "exponent": -12,
+  "cmc_id": null,
+  "interval": "8h",
+  "min_publishers": 1,
+  "min_channel": "fixed_rate@200ms",
+  "state": "stable",
+  "schedule": "America/New_York;O,O,O,O,O,O,O;",
+  "market_session_schedule": {
+    "regular": "America/New_York;O,O,O,O,O,O,O;"
+  },
+  "market_sessions": {
+    "regular": {
+      "min_pub": 1,
+      "schedule": "America/New_York;O,O,O,O,O,O,O;",
+      "state": "stable"
+    }
+  },
+  "hermes_id": null,
+  "nasdaq_symbol": null,
+  "quote_currency": "USDT",
+  "groups": []
+}
+```
+
+</Tab>
+</Tabs>
+
+Every field is documented below.
+
+## Field reference
+
+<Callout type="info" title="Field invariants">
+  Useful guarantees when mapping these fields in your own systems:
+  - **`name`** is not guaranteed to be unique; the same short name can appear on more than one feed.
+  - **`symbol`** is unique, but in rare cases it can change without notice. Use **`pyth_lazer_id`** as the stable key for external mappings.
+  - **`asset_type`** and **`instrument_type`** are open enums whose set of values can grow over time, so handle unknown values gracefully.
+</Callout>
+
+### Identity & naming
+
+| Field           | Type      | Description                                                                                          |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `pyth_lazer_id` | `u32`     | Stable numeric identifier for the feed in Pyth Pro. Use it when subscribing to prices.               |
+| `name`          | `string`  | Short symbol name, e.g. `BTCUSD`. Dated futures suffix the family root with a month code and year digit, e.g. the `EM` (E-mini S&P 500) family becomes `EMU6`; see [Futures Terminology](/price-feeds/pro/futures-terminology). |
+| `symbol`        | `string`  | Fully-qualified Pyth symbol, e.g. `Crypto.BTC/USD` or `Equity.US.EMU6/USD`. Encodes asset class, optional region, root, and quote currency. |
+| `description`   | `string`  | Human-readable description, e.g. `BITCOIN / US DOLLAR`.                                               |
+| `hermes_id`     | `string?` | Hex feed ID used by Pyth Core / Hermes for the same underlying. `null` when the feed has no Pyth Core counterpart. |
+| `nasdaq_symbol` | `string?` | Nasdaq ticker, for equities sourced via Nasdaq. `null` when not applicable.                          |
+| `cmc_id`        | `integer?`| CoinMarketCap ID, for crypto assets. `null` when not applicable.                                     |
+
+### Classification
+
+| Field             | Type       | Description                                                                                                                            |
+| ----------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `asset_type`      | `string`   | Broad asset class (open enum, may grow). Current values include `crypto`, `equity`, `fx`, `commodity`, `metal`, `interest-rate`, `rates`, `crypto-index`, `crypto-redemption-rate`, `funding-rate`, `nav`, `kalshi`. |
+| `instrument_type` | `string`   | Instrument form: `spot`, `future`, `perp`, `rate`, `index`, or `nav`. May be an empty string when unspecified.                          |
+| `quote_currency`  | `string`   | Currency the price is quoted in, e.g. `USD`, `EUR`, `KRW`, `JPY`.                                                                       |
+| `groups`          | `string[]` | Discovery/grouping tags, e.g. `pyth-indices`. Empty for most feeds.                                                                     |
+
+### Pricing & data quality
+
+| Field            | Type      | Description                                                                                                          |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `exponent`       | `i16`     | Decimal exponent: `actual_price = mantissa × 10^exponent`. Same meaning as in the price payload.                     |
+| `min_publishers` | `u16`     | Minimum number of publishers required for the feed to produce a price.                                               |
+| `min_channel`    | `string`  | Highest-frequency channel the feed supports: `real_time`, `fixed_rate@50ms`, or `fixed_rate@200ms`. You can subscribe at this channel or any slower one. |
+| `state`          | `string`  | Lifecycle state: `stable` (live), `coming_soon` (announced, not yet publishing), or `inactive` (retired/expired).    |
+| `interval`       | `string?` | Funding interval for funding-rate feeds (instrument type `rate`), e.g. `8h`. `null` otherwise.                       |
+
+### Scheduling
+
+| Field                     | Type     | Description                                                                                                            |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `schedule`                | `string` | The **regular** session's trading schedule, in the form `TZ;<weekly>;<holidays>`. Each day is open (`O`), closed (`C`), or a set of hour ranges (e.g. `0000-1700&1800-2400`). Identical to `market_session_schedule.regular`. |
+| `market_session_schedule` | `object` | A schedule string per session, keyed by session name (`regular`, `pre_market`, `post_market`, `over_night`).           |
+| `market_sessions`         | `object` | The full per-session configuration: each session carries its own `schedule`, `min_pub`, and `state`.                  |
+
+<Callout type="info" title="Three schedule fields, three altitudes">
+  These describe the same trading calendar at increasing detail:
+  - **`schedule`**: the **regular** session's schedule (identical to `market_session_schedule.regular`), not a union across sessions.
+  - **`market_session_schedule`**: a schedule string for **each** session the feed has (`regular`, `pre_market`, `post_market`, `over_night`).
+  - **`market_sessions`**: the richest form, carrying per-session `schedule` **plus** `min_pub` and `state`.
+
+  The price payload's `marketSession` field tells you which of these sessions is **currently active** for a given update.
+</Callout>
+
+Pick an example or paste a `schedule` string to decode it into market hours:
+
+<ScheduleDecoder
+  presets={[
+    {
+      label: "Crypto spot (BTCUSD), 24/7",
+      value: "America/New_York;O,O,O,O,O,O,O;",
+    },
+    {
+      label: "US equity (BKNG), regular session",
+      value:
+        "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0101/C,0119/C,0216/C,0403/C,0525/C,0619/C,0703/C,0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C",
+    },
+    {
+      label: "US equity (BKNG), overnight session",
+      value:
+        "America/New_York;0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400&2000-2400,0000-0400,C,2000-2400;0118/C,0119/2000-2400,0215/C,0216/2000-2400,0402/0000-0400,0403/C,0524/C,0525/2000-2400,0618/0000-0400,0619/C,0702/0000-0400,0703/C,0906/C,0907/2000-2400,1125/0000-0400,1126/2000-2400,1224/0000-0400,1225/C,1231/0000-0400,0101/C",
+    },
+    {
+      label: "Commodity future (CAZ6)",
+      value:
+        "America/New_York;0445-1330,0445-1330,0445-1330,0445-1330,0445-1330,C,C;0525/C,0619/C,0703/C,0907/C,1126/C,1225/C,0101/C",
+    },
+  ]}
+/>
+
+### Futures & derivatives
+
+| Field               | Type        | Description                                                                                     |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `expiration_time`   | `string?`   | Expiration timestamp (RFC 3339) for a dated futures contract, e.g. `2026-12-15T13:30:00-05:00`. |
+| `corporate_actions` | `object[]?` | Corporate actions on an equity feed. Each entry has an `event_type` (e.g. `SPLIT`), an `activation` block with the effective date (e.g. `us_equity_ex_date.ex_date`), and `adjustment_factor_numerator` / `adjustment_factor_denominator`. See the [Equity example](#example-response). |
+
+## Accessing the data
+
+- **Symbology & Reference Data API**: [`GET /v1/symbols`](https://pyth.dourolabs.app/v1/symbols) returns the full catalog.
+- **Interactive docs**: explore the request schema and filtering parameters in the [OpenAPI reference](https://pyth.dourolabs.app/docs/#/Symbol/symbols_handler).
+
+## Related
+
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids): browsable table of every available feed.
+- [Futures Terminology](/price-feeds/pro/futures-terminology): ticker format, month/year codes, and rollover.
+- [Payload Reference](/price-feeds/pro/payload-reference): the real-time price payload (distinct from reference data).
