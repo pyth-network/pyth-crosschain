@@ -1,0 +1,52 @@
+{
+  "date": "2026-07-01",
+  "label": "Wednesday",
+  "summary": {
+    "added": 0,
+    "went_live": 0,
+    "removed": 4
+  },
+  "hero": "4 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.LCM6/USc",
+      "lazerId": 3212,
+      "asset": "Pyth Price In Us Cents For Live Cattle 30 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-01",
+      "quote": "USc",
+      "hermesId": "e7fd99642fd9786dcd55a18a3ef5279c23508ad7103c2998773139b728a8a107"
+    },
+    {
+      "id": "Commodities.BLDQ6/USD",
+      "lazerId": 3156,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 30 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-01",
+      "quote": "USD",
+      "hermesId": "46d606bece245e05e74a45954673c36bd6578b9ec35975d78be98e4a74de52d5"
+    },
+    {
+      "id": "Commodities.TGEN6/EUR",
+      "lazerId": 3089,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 29 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-01",
+      "quote": "EUR",
+      "hermesId": "afe0ab1998fc6204690c941cc0f78a57aaff15d9ab22a11e504b79deb97a5953"
+    },
+    {
+      "id": "Commodities.BRENTQ6/USD",
+      "lazerId": 3042,
+      "asset": "Pyth Price In Usd For Brent 30 June 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-01",
+      "quote": "USD",
+      "hermesId": "cfdf6d7bd0e4221d8fc74a35caee1bf3c203c177781a5c9eef0b29c150698dab"
+    }
+  ]
+}
