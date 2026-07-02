@@ -1,0 +1,396 @@
+{
+  "date": "2026-07-02",
+  "label": "Thursday",
+  "summary": {
+    "added": 14,
+    "went_live": 25,
+    "removed": 1
+  },
+  "hero": "14 new feeds announced, 25 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.RSN6/USc",
+      "lazerId": 3016,
+      "asset": "Pyth Price In Us Cents For Raw Sugar 30 June 2O26",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-02",
+      "quote": "USc",
+      "hermesId": "0bd82229bc26af207a17c24949bf1a2ed70600377adada64597ca418028777f5"
+    },
+    {
+      "id": "Equity.HK.0668/HKD",
+      "lazerId": 3374,
+      "asset": "Anker Innovations Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "HKD"
+    },
+    {
+      "id": "Equity.US.HONA/USD",
+      "lazerId": 3362,
+      "asset": "Honeywell Aerospace",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.USDF/USD",
+      "lazerId": 2687,
+      "asset": "Falcon Usd",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "feb26a319cfbb09cfa85b382e4d97f48e6b8727a2b5e7e2fff0692ff676d5239"
+    },
+    {
+      "id": "Crypto.FLUID/USD",
+      "lazerId": 2327,
+      "asset": "Fluid",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "47d462d8bac4c29b6ae1792029b9b92c8adea12ed22155bfc22f481287f1e349"
+    },
+    {
+      "id": "Equity.KR.000660/KRW",
+      "lazerId": 2166,
+      "asset": "Sk Hynix",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "KRW",
+      "hermesId": "189f0b6276a37a09fa9d4305525d074d753b30d83f1d748ae12330b9c86622c2"
+    },
+    {
+      "id": "Crypto.EUSX/USX.RR",
+      "lazerId": 1804,
+      "asset": "Solstice Yield-Bearing Stablecoin",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USX",
+      "hermesId": "f36e12e65d2969b242fb97d3ebaa32ec55d5794189b64d1a07dc4f41425c9378"
+    },
+    {
+      "id": "Crypto.WSTETH/STETH.RR",
+      "lazerId": 761,
+      "asset": "Wrapped Steth",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "STETH",
+      "hermesId": "f59ead01ed0faba85332a1e2feae8ddb14a1c94ebac259f1c982c92fc7ce333e"
+    },
+    {
+      "id": "Crypto.SYRUPUSDT/USDT.RR",
+      "lazerId": 745,
+      "asset": "Syrup Tether",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USDT",
+      "hermesId": "7e10170c23d7df62d301b2ade26854200ee584f3f3b84cb2e5195adf35c5b97f"
+    },
+    {
+      "id": "Crypto.SUSDS/USDS.RR",
+      "lazerId": 741,
+      "asset": "Staked Usd Sky Protocol",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USDS",
+      "hermesId": "6968a8641208463d17ae3b9cfa0e4841a7aa7a5d54122b9f692b84fe9ce3409f"
+    },
+    {
+      "id": "Crypto.SUSDE/USDE.RR",
+      "lazerId": 740,
+      "asset": "Ethena Staked Usde",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USDE",
+      "hermesId": "271c64ce459937abf721d42552035713b6c58f80eeceab716a624607fda4b10f"
+    },
+    {
+      "id": "Crypto.SSOL/SOL.RR",
+      "lazerId": 727,
+      "asset": "Solayer Staked Solana",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "SOL",
+      "hermesId": "add6499a420f809bbebc0b22fbf68acb8c119023897f6ea801688e0d6e391af4"
+    },
+    {
+      "id": "Crypto.RETH/ETH.RR",
+      "lazerId": 713,
+      "asset": "Rocket Pool Eth",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "ETH",
+      "hermesId": "612a00bae88eee6a4bc8bd4de6e578794a0e584ce784691561aba348e07cbede"
+    },
+    {
+      "id": "Crypto.MSOL/SOL.RR",
+      "lazerId": 709,
+      "asset": "Marinade Staked Solana",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "SOL",
+      "hermesId": "046e7c1cf187195ba3174028ab3be75be88382956f7d4d4b6b507e727370f284"
+    },
+    {
+      "id": "Crypto.JUPSOL/SOL.RR",
+      "lazerId": 695,
+      "asset": "Jupiter Staked Solana",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "SOL",
+      "hermesId": "f8d8d6b6c866c8b2624fb5b679ae846738725e5fc887fa8e927c8d8645018a2b"
+    },
+    {
+      "id": "Crypto.JITOSOL/SOL.RR",
+      "lazerId": 693,
+      "asset": "Jito Staked Solana",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "SOL",
+      "hermesId": "01d577b07031e12635d2fb86af6ae938bdc2b6dba9602d8e8af34d44587566fc"
+    },
+    {
+      "id": "Crypto.CBETH/ETH.RR",
+      "lazerId": 670,
+      "asset": "Coinbase Wrapped Staked Eth",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "ETH",
+      "hermesId": "ed5d938ea5c648f66a3b7dd349376356c1d95135307137f4d1200eb36e9f5c12"
+    },
+    {
+      "id": "Crypto.VELODROME.VELO/USD",
+      "lazerId": 619,
+      "asset": "Velodrome Finance",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "8b66bf97961dcd47336fe8467a4c7fd86e6c0bc77ebfbe91ab106a56d3a3513a"
+    },
+    {
+      "id": "Crypto.SOL/ETH",
+      "lazerId": 564,
+      "asset": "Solana",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "ETH",
+      "hermesId": "de87506dabfadbef89af2d5d796ebae80ddaea240fc7667aa808fce3629cd8fb"
+    },
+    {
+      "id": "Crypto.LQTY/USD",
+      "lazerId": 474,
+      "asset": "Liquity",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "5e8b35b0da37ede980d8f4ddaa7988af73d8c3d110e3eddd2a56977beb839b63"
+    },
+    {
+      "id": "Crypto.GNS/USD",
+      "lazerId": 436,
+      "asset": "Gains Network",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "5a5d5f7fb72cc84b579d74d1c06d258d751962e9a010c0b1cce7e6023aacb71b"
+    },
+    {
+      "id": "Crypto.COQ/USD",
+      "lazerId": 407,
+      "asset": "Coq Inu",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "5cc87aaa7df22e5ac77f6a4bc50569129eb00396fd9fd68569e748e7e96fdf90"
+    },
+    {
+      "id": "Crypto.CETUS/USD",
+      "lazerId": 401,
+      "asset": "Cetus Protocol",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "e5b274b2611143df055d6e7cd8d93fe1961716bcd4dca1cad87a83bc1e78c1ef"
+    },
+    {
+      "id": "Crypto.OHM/USD",
+      "lazerId": 275,
+      "asset": "Olympus Dao",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "3a8c0214e4fb7f1dd7792ed4d5b2971372e52f088fcd9cc02309253cbdc4a70e"
+    },
+    {
+      "id": "Crypto.NEXO/USD",
+      "lazerId": 185,
+      "asset": "Nexo",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "e5f406d97d7fa159c21647912b72aa8c669e24d7bd59bcd518587bbde027c531"
+    },
+    {
+      "id": "Crypto.TWT/USD",
+      "lazerId": 146,
+      "asset": "Trust Wallet",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-02",
+      "quote": "USD",
+      "hermesId": "998da06a0cc22e5f849b8ca16da633718125122c2b923682e17fa17f46b8be71"
+    },
+    {
+      "id": "Equity.US.MBGL/USD",
+      "lazerId": 3421,
+      "asset": "Mobility Global Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.BSP/USD",
+      "lazerId": 3420,
+      "asset": "Bending Spoons S.P.A.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ADI/USD",
+      "lazerId": 3419,
+      "asset": "Adi Chain",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ANSEM/USD",
+      "lazerId": 3418,
+      "asset": "The Black Bull",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.RAIN/USD",
+      "lazerId": 3417,
+      "asset": "Rain",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.WBT/USD",
+      "lazerId": 3416,
+      "asset": "Whitebit Coin",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.LAB/USD",
+      "lazerId": 3415,
+      "asset": "Lab",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.M/USD",
+      "lazerId": 3414,
+      "asset": "Memecore",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.HTX/USD",
+      "lazerId": 3413,
+      "asset": "Htx Dao",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.BFUSD/USD",
+      "lazerId": 3412,
+      "asset": "Bfusd",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.STABLE/USD",
+      "lazerId": 3411,
+      "asset": "Stable",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.U/USD",
+      "lazerId": 3410,
+      "asset": "United Stables",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.YLDS/USD",
+      "lazerId": 3408,
+      "asset": "Figure Markets",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.BEAT/USD",
+      "lazerId": 3407,
+      "asset": "Audiera",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-02",
+      "quote": "USD"
+    }
+  ]
+}
