@@ -15,6 +15,7 @@ import type { PriceFeedContract, Storable } from "../../core/base";
 import type { Chain } from "../../core/chains";
 import {
   AptosChain,
+  CardanoChain,
   CosmWasmChain,
   EvmChain,
   FuelChain,
@@ -31,6 +32,7 @@ import type { EvmPulseContract } from "../../core/contracts";
 import {
   AptosPriceFeedContract,
   AptosWormholeContract,
+  CardanoLazerContract,
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
   EvmEntropyContract,
@@ -76,7 +78,10 @@ export class Store {
   public vaults: Record<string, Vault> = {};
   public lazer_contracts: Record<
     string,
-    EvmLazerContract | SuiLazerContract | StellarLazerContract
+    | EvmLazerContract
+    | SuiLazerContract
+    | StellarLazerContract
+    | CardanoLazerContract
   > = {};
 
   constructor(public path: string) {
@@ -124,6 +129,7 @@ export class Store {
       [IotaChain.type]: IotaChain,
       [SvmChain.type]: SvmChain,
       [StellarChain.type]: StellarChain,
+      [CardanoChain.type]: CardanoChain,
     };
 
     for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
@@ -215,6 +221,7 @@ export class Store {
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
       [StellarExecutorContract.type]: StellarExecutorContract,
+      [CardanoLazerContract.type]: CardanoLazerContract,
     };
     for (const jsonFile of this.getJsonFiles(`${this.path}/contracts/`)) {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
@@ -252,7 +259,8 @@ export class Store {
         } else if (
           chainContract instanceof EvmLazerContract ||
           chainContract instanceof SuiLazerContract ||
-          chainContract instanceof StellarLazerContract
+          chainContract instanceof StellarLazerContract ||
+          chainContract instanceof CardanoLazerContract
         ) {
           this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {
