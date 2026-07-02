@@ -1,6 +1,9 @@
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
-import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
+import {
+  derivePostedVaaKey,
+  getWormholeBridgeData,
+} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import type { BN } from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
@@ -74,6 +77,13 @@ async function run() {
     : -1;
   lastSequenceNumber = Math.max(lastSequenceNumber, OFFSET);
   const wormholeApi = GUARDIAN_RPC ?? WORMHOLE_API_ENDPOINT[CLUSTER];
+  const liveGuardianSetIndex = (
+    await getWormholeBridgeData(
+      provider.connection,
+      WORMHOLE_ADDRESS[CLUSTER]!,
+      COMMITMENT,
+    )
+  ).guardianSetIndex;
   const productAccountToSymbol: { [key: string]: string } = {};
   while (true) {
     lastSequenceNumber += 1;
@@ -89,6 +99,16 @@ async function run() {
 
     if (response.vaaBytes) {
       const vaa = parseVaa(Buffer.from(response.vaaBytes, "base64"));
+
+      // VAAs signed by an outdated guardian set can no longer be posted to the
+      // wormhole bridge, so skip them instead of failing on postVaaSolana.
+      if (vaa.guardianSetIndex !== liveGuardianSetIndex) {
+        console.log(
+          `Skipping VAA ${lastSequenceNumber}: signed by guardian set ${vaa.guardianSetIndex}, live guardian set is ${liveGuardianSetIndex}`,
+        );
+        continue;
+      }
+
       const governancePayload = decodeGovernancePayload(vaa.payload);
 
       if (
