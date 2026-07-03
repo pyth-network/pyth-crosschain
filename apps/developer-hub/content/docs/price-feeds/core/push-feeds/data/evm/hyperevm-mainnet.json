@@ -54,7 +54,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "USH/USD",
@@ -102,7 +102,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "WSTHYPE/STHYPE.RR",
