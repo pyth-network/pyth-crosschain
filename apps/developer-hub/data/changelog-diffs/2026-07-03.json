@@ -1,0 +1,39 @@
+{
+  "date": "2026-07-03",
+  "label": "Friday",
+  "summary": {
+    "added": 1,
+    "went_live": 2,
+    "removed": 0
+  },
+  "hero": "1 new feed announced, 2 went live.",
+  "events": [
+    {
+      "id": "Equity.US.MBGL/USD",
+      "lazerId": 3421,
+      "asset": "Mobility Global Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-03",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ECHO/USD",
+      "lazerId": 3409,
+      "asset": "Echostar Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-03",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SECZ/USD",
+      "lazerId": 3422,
+      "asset": "Securitize Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-03",
+      "quote": "USD"
+    }
+  ]
+}
