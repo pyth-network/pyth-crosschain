@@ -1,0 +1,21 @@
+{
+  "date": "2026-07-04",
+  "label": "Saturday",
+  "summary": {
+    "added": 1,
+    "went_live": 0,
+    "removed": 0
+  },
+  "hero": "1 new feed announced.",
+  "events": [
+    {
+      "id": "Crypto.VERONA/USD",
+      "lazerId": 3427,
+      "asset": "Verona",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-04",
+      "quote": "USD"
+    }
+  ]
+}
