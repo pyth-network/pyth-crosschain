@@ -1,0 +1,100 @@
+{
+  "date": "2026-07-06",
+  "label": "Monday",
+  "summary": {
+    "added": 2,
+    "went_live": 6,
+    "removed": 1
+  },
+  "hero": "2 new feeds announced, 6 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "DEPRECATED FEED - Equity.US.SATS/USD",
+      "lazerId": 2850,
+      "asset": "Echostar Corp",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "4a161e7f0a0aa807545fa83871ebcf15c1d4c74b28c8833b770d8644be80ac2a"
+    },
+    {
+      "id": "Equity.US.VIXY/USD",
+      "lazerId": 2884,
+      "asset": "Proshares Vix Short-Term Futures Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "6db82288cc5f3e1e2c6be0111fcd989ac93d161fb586a70651dccad2ac52c840"
+    },
+    {
+      "id": "Equity.US.NVDX/USD",
+      "lazerId": 2835,
+      "asset": "T-Rex 2X Long Nvidia Daily Target Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "5aaf8192e79d5989eee903b7d7b62d47776d649f9184baf5499561d6a099f7ea"
+    },
+    {
+      "id": "Equity.US.GDX/USD",
+      "lazerId": 2773,
+      "asset": "Vaneck Gold Miners Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "be25a3ca6904edff6de0a1c3ad5a9eaf12a87bced4d1c7823d7afe16160001f6"
+    },
+    {
+      "id": "Equity.US.ETHA/USD",
+      "lazerId": 2754,
+      "asset": "Ishares Ethereum Trust Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "188bdefa94c2f8b3878ebcd98f65551dbc2091f250ae6780719184821b1a0e1c"
+    },
+    {
+      "id": "Equity.US.ARKG/USD",
+      "lazerId": 2709,
+      "asset": "Ark Genomic Revolution Ucits Etf Usd Acc Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "2acb17e433f5d7b90a66c4e3cbcfa37795bead4f7616fb80ff40bcd9b20f2fac"
+    },
+    {
+      "id": "Equity.US.GENI/USD",
+      "lazerId": 2362,
+      "asset": "Genius Sports Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-06",
+      "quote": "USD",
+      "hermesId": "cf48105b97cb001e2d51955f21a7519a462a0f756460747fd4da71ac70caf098"
+    },
+    {
+      "id": "Equity.US.SKHY/USD",
+      "lazerId": 3437,
+      "asset": "Sk Hynix Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-06",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SHAZ/USD",
+      "lazerId": 3436,
+      "asset": "Sharonai Holdings Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-06",
+      "quote": "USD"
+    }
+  ]
+}
