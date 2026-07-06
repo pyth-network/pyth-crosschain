@@ -49,6 +49,16 @@ export default {
       required: true,
       type: "number",
     } as Options,
+    "grpc-metadata": {
+      default: [],
+      description:
+        "Metadata header(s) sent with every gRPC request, formatted as " +
+        "`key=value`. Repeat for multiple headers. Use this to authenticate " +
+        "native-gRPC providers: `x-token=<secret>` for QuikNode/Ankr, " +
+        "`x-api-key=<secret>` for BlockVision. Only used with `--endpoint-type grpc`.",
+      required: false,
+      type: "array",
+    } as Options,
     "ignore-gas-objects": {
       default: [],
       description:
@@ -118,6 +128,7 @@ export default {
       ignoreGasObjects,
       gasBudget,
       accountIndex,
+      grpcMetadata: grpcMetadataArgs,
       logLevel,
       controllerLogLevel,
       enableMetrics,
@@ -125,6 +136,19 @@ export default {
     } = argv;
 
     const logger = pino({ level: logLevel });
+
+    // Parse `--grpc-metadata key=value` pairs into the metadata map forwarded
+    // to the gRPC transport (e.g. the `x-token` auth header).
+    const grpcMetadata: Record<string, string> = {};
+    for (const entry of grpcMetadataArgs as string[]) {
+      const eq = entry.indexOf("=");
+      if (eq === -1) {
+        throw new Error(
+          `Invalid --grpc-metadata "${entry}": expected key=value`,
+        );
+      }
+      grpcMetadata[entry.slice(0, eq)] = entry.slice(eq + 1);
+    }
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {
@@ -169,7 +193,12 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
-    const suiClient = createSuiProvider(endpointType, network, endpoint);
+    const suiClient = createSuiProvider(
+      endpointType,
+      network,
+      endpoint,
+      grpcMetadata,
+    );
 
     const suiListener = new SuiPriceListener(
       pythStateId,
@@ -180,6 +209,7 @@ export default {
       priceItems,
       logger.child({ module: "SuiPriceListener" }),
       { pollingFrequency },
+      grpcMetadata,
     );
 
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
@@ -194,6 +224,7 @@ export default {
       gasBudget,
       numGasObjects,
       ignoreGasObjects,
+      grpcMetadata,
     );
 
     const controller = new Controller(

@@ -5,10 +5,12 @@
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",
     "@coral-xyz/anchor": "^0.30.0",
+    "@grpc/grpc-js": "^1.13.2",
     "@injectivelabs/networks": "1.14.47",
     "@injectivelabs/sdk-ts": "1.14.50",
     "@injectivelabs/utils": "^1.14.48",
     "@mysten/sui": "^2.7.0",
+    "@protobuf-ts/grpc-transport": "^2.11.1",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
@@ -224,5 +226,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "11.0.1"
+  "version": "11.2.1"
 }
