@@ -300,6 +300,7 @@ Pick an example or paste a `schedule` string to decode it into market hours:
 ## Accessing the data
 
 - **Symbology & Reference Data API**: [`GET /v1/symbols`](https://pyth.dourolabs.app/v1/symbols) returns the full catalog.
+- **Filter to your entitlements**: pass [`?entitled_only=true`](https://pyth.dourolabs.app/v1/symbols?entitled_only=true) to return only the symbols your API key is entitled to, instead of the full catalog.
 - **Interactive docs**: explore the request schema and filtering parameters in the [OpenAPI reference](https://pyth.dourolabs.app/docs/#/Symbol/symbols_handler).
 
 ## Related
