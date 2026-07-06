@@ -40,7 +40,7 @@ export const Sidebar = ({
     <>
       <aside
         className={clsx(
-          "fixed inset-y-16 -ml-3 w-64 overflow-y-auto pr-4",
+          "fixed bottom-16 top-24 -ml-3 w-64 overflow-y-auto pr-4",
           className,
         )}
         {...props}
