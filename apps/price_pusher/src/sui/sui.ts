@@ -598,13 +598,21 @@ export class SuiPricePusher implements IPricePusher {
         }
         throw error_;
       }
-      const effects = getExecutedTransaction(mergeResult).effects;
+      const executed = getExecutedTransaction(mergeResult);
+      const effects = executed.effects;
       if (effects.status.error) {
         throw new Error(
           `Failed to merge coins when initializing gas pool: ${JSON.stringify(effects.status.error)}. Try re-running the script`,
         );
       }
       finalCoin = changedObjectToRef(effects.gasObject!);
+      // Block until this merge is observable before the next transaction spends
+      // its output (the next chunk's gas, or the subsequent split). gRPC
+      // endpoints are load-balanced across fullnodes at different checkpoints,
+      // so without this the follow-up tx can be simulated against a backend
+      // that has not yet applied this merge and fail with a version conflict.
+      // The legacy JSON-RPC path got this for free via WaitForLocalExecution.
+      await provider.core.waitForTransaction({ digest: executed.digest });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
