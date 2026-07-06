@@ -12,6 +12,7 @@ import {
 } from "../../server-config";
 import { PriceFeedListProvider } from "../../use-price-feed-list";
 import { Amplitude } from "../Amplitude";
+import { Banner } from "../Banner";
 import { HighlighterProvider } from "../Code/use-highlighted-code";
 import { EvmProvider } from "../EvmProvider";
 import { Footer } from "../Footer";
@@ -45,7 +46,10 @@ export const Root = ({ children }: Props) => (
         <HighlighterProvider>
           <PriceFeedListProvider>
             <EvmProvider walletConnectProjectId={WALLETCONNECT_PROJECT_ID}>
-              <Header className="z-10 border-b border-neutral-400 dark:border-neutral-600" />
+              <div className="sticky top-0 z-20">
+                <Banner />
+                <Header className="border-b border-neutral-400 dark:border-neutral-600" />
+              </div>
               <div className="size-full">{children}</div>
               <Footer className="z-10 border-t border-neutral-400 dark:border-neutral-600" />
             </EvmProvider>

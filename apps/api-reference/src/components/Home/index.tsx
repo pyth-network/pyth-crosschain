@@ -1,5 +1,6 @@
 import type { ElementType, SVGProps } from "react";
 import { ButtonLink } from "../Button";
+import { InlineLink } from "../InlineLink";
 import { MaxWidth } from "../MaxWidth";
 import Benchmarks from "./benchmarks.svg";
 import Entropy from "./entropy.svg";
@@ -7,9 +8,24 @@ import PriceFeeds from "./price-feeds.svg";
 
 export const Home = () => (
   <main className="grid size-full place-content-center py-16 text-center">
-    <h1 className="mb-16 text-4xl font-semibold text-pythpurple-600 dark:text-pythpurple-400">
+    <h1 className="mb-4 text-4xl font-semibold text-pythpurple-600 dark:text-pythpurple-400">
       Pyth Network API Reference
     </h1>
+    <p className="mx-auto mb-16 max-w-2xl text-balance text-lg text-neutral-600 dark:text-neutral-400">
+      The interactive API reference for{" "}
+      <span className="font-medium text-pythpurple-600 dark:text-pythpurple-400">
+        Pyth Core
+      </span>
+      : real-time price feeds, Benchmarks, and Entropy. For Pyth Pro low-latency
+      streaming, see the{" "}
+      <InlineLink
+        href="https://docs.pyth.network/price-feeds/pro"
+        target="_blank"
+      >
+        Pyth Pro docs
+      </InlineLink>
+      .
+    </p>
     <MaxWidth>
       <nav
         aria-label="Products"
