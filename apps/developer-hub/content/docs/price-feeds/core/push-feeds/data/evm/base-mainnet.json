@@ -55,6 +55,14 @@
       "price_deviation": 1,
       "confidence_ratio": 100,
       "pro_compatible_status": "available"
+    },
+    {
+      "alias": "WEETH/USD",
+      "id": "9ee4e7c60b940440a261eb54b6d8149c23b580ed7da3139f7f08f4ea29dad395",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100,
+      "pro_compatible_status": "coming_soon"
     }
   ]
 }
