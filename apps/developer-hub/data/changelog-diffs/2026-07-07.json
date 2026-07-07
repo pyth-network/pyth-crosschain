@@ -1,0 +1,218 @@
+{
+  "date": "2026-07-07",
+  "label": "Tuesday",
+  "summary": {
+    "added": 0,
+    "went_live": 20,
+    "removed": 2
+  },
+  "hero": "20 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Crypto.MMT/USD",
+      "lazerId": 2700,
+      "asset": "Momentum",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "1fc9127232d059b415f7b11989d06aa11a3563619e5b7a8e44ae440f0b95e4e1"
+    },
+    {
+      "id": "Crypto.STSUI/USD",
+      "lazerId": 579,
+      "asset": "Alphafi Staked Sui",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "0b3eae8cb6e221e7388a435290e0f2211172563f94769077b7f4c4c6a11eea76"
+    },
+    {
+      "id": "Equity.US.SHAZ/USD",
+      "lazerId": 3436,
+      "asset": "Sharonai Holdings Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.VERONA/USD",
+      "lazerId": 3427,
+      "asset": "Verona",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SECZ/USD",
+      "lazerId": 3422,
+      "asset": "Securitize Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ADI/USD",
+      "lazerId": 3419,
+      "asset": "Adi Chain",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.ANSEM/USD",
+      "lazerId": 3418,
+      "asset": "The Black Bull",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.RAIN/USD",
+      "lazerId": 3417,
+      "asset": "Rain",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.WBT/USD",
+      "lazerId": 3416,
+      "asset": "Whitebit Coin",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.LAB/USD",
+      "lazerId": 3415,
+      "asset": "Lab",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.M/USD",
+      "lazerId": 3414,
+      "asset": "Memecore",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.HTX/USD",
+      "lazerId": 3413,
+      "asset": "Htx Dao",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.BFUSD/USD",
+      "lazerId": 3412,
+      "asset": "Bfusd",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.STABLE/USD",
+      "lazerId": 3411,
+      "asset": "Stable",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.U/USD",
+      "lazerId": 3410,
+      "asset": "United Stables",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.BEAT/USD",
+      "lazerId": 3407,
+      "asset": "Audiera",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.USX/USD",
+      "lazerId": 1851,
+      "asset": "Solstice Stablecoin",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "80950327494d0e7f29bdddb061ed7d1def1d712cec73bc167af02f0664137a16"
+    },
+    {
+      "id": "Crypto.IKA/USD",
+      "lazerId": 1818,
+      "asset": "Ika Network",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "2b529621fa6e2c8429f623ba705572aa64175d7768365ef829df6a12c9f365f4"
+    },
+    {
+      "id": "Crypto.DMC/USD",
+      "lazerId": 1560,
+      "asset": "Delorean",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "8abfa63ae82ca2fbc271861375e497166d8792580fb7c2ffcf014d2a131433f0"
+    },
+    {
+      "id": "Crypto.A/USD",
+      "lazerId": 1556,
+      "asset": "Vaulta",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "2cffc28ec4268805dbcb315bb122616059a1c200dda3d56f06ac150db8dfc370"
+    },
+    {
+      "id": "Crypto.HAEDAL/USD",
+      "lazerId": 648,
+      "asset": "Haedal Protocol",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "e67d98cc1fbd94f569d5ba6c3c3c759eb3ffc5d2b28e64538a53ae13efad8fd1"
+    },
+    {
+      "id": "Crypto.BLUE/USD",
+      "lazerId": 381,
+      "asset": "Bluefin",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-07",
+      "quote": "USD",
+      "hermesId": "04cfeb7b143eb9c48e9b074125c1a3447b85f59c31164dc20c1beaa6f21f2b6b"
+    }
+  ]
+}
