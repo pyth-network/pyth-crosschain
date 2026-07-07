@@ -1,0 +1,27 @@
+# Published addresses for the Pyth package, keyed by environment.
+#
+# Under the Move 2024 package system (Sui package management v2) the per-network
+# `Move.<net>.toml` deploy templates are superseded by this file: the single
+# `Move.toml` is built per network with `sui move build -e <mainnet|testnet>`,
+# which reads the package's published address from here and pins dependencies
+# from `Move.lock`. The `mainnet`/`testnet` environments are implicit and need
+# no `[environments]` entry in `Move.toml`.
+#
+# All values are verified against on-chain state via the public Sui fullnodes
+# (`sui_getObject` on the Pyth `State` object's wrapped `0x2::package::UpgradeCap`).
+
+[published.mainnet]
+chain-id = "35834a8a"
+original-id = "0x8d97f1cd6ac663735be08d1d2b6d02a159e711586461306ce60a2b7a6a565a9e"
+published-at = "0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91"
+version = 2
+upgrade-capability = "0x82f7a92bba76ea6acc3220976c159e26c1b03308222224ecfa24fd6921921b13"
+build-config = { flavor = "sui", edition = "legacy" }
+
+[published.testnet]
+chain-id = "4c78adac"
+original-id = "0xabf837e98c26087cba0883c0a7a28326b1fa3c5e1e2c5abdb486f9e8f594c837"
+published-at = "0xabf837e98c26087cba0883c0a7a28326b1fa3c5e1e2c5abdb486f9e8f594c837"
+version = 1
+upgrade-capability = "0xb6b707a2a9c557b3510984f5961233f59793c9df0a2515408ce4d395bab7881f"
+build-config = { flavor = "sui", edition = "legacy" }

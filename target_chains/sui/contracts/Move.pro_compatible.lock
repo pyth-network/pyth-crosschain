@@ -16,8 +16,14 @@ use_environment = "mainnet"
 manifest_digest = "CD547CB1ACCE0880C835DAED2D8FFCB91D56C833AE5240D3AA5B918398263195"
 deps = { MoveStdlib = "MoveStdlib" }
 
-[pinned.mainnet.wormhole]
+[pinned.mainnet.pyth]
 source = { root = true }
+use_environment = "mainnet"
+manifest_digest = "51B14B13D80FEF0D4CC89F136A5E368F33AAEF56481139CFBA66A03E507D7EDC"
+deps = { std = "MoveStdlib", sui = "Sui", wormhole = "wormhole" }
+
+[pinned.mainnet.wormhole]
+source = { local = "../vendor/wormhole_simple_majority/wormhole" }
 use_environment = "mainnet"
 manifest_digest = "E41BBD67BE8940D26C79D78B028477EF5B33BA217A1282C78ACB344CF8A5ECF6"
 deps = { std = "MoveStdlib", sui = "Sui" }
@@ -34,8 +40,14 @@ use_environment = "testnet"
 manifest_digest = "7AFB66695545775FBFBB2D3078ADFD084244D5002392E837FDE21D9EA1C6D01C"
 deps = { MoveStdlib = "MoveStdlib" }
 
-[pinned.testnet.wormhole]
+[pinned.testnet.pyth]
 source = { root = true }
+use_environment = "testnet"
+manifest_digest = "603E66D350FD2C86697552ACA397CBAE3BF45109CD22793855114AE539968B73"
+deps = { std = "MoveStdlib", sui = "Sui", wormhole = "wormhole" }
+
+[pinned.testnet.wormhole]
+source = { local = "../vendor/wormhole_simple_majority/wormhole" }
 use_environment = "testnet"
 manifest_digest = "5745706258F61D6CE210904B3E6AE87A73CE9D31A6F93BE4718C442529332A87"
 deps = { std = "MoveStdlib", sui = "Sui" }

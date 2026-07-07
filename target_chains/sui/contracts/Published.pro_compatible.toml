@@ -1,0 +1,21 @@
+# Published addresses for the pro-compatible Pyth package, keyed by environment.
+# Swapped into `Published.toml` alongside `Move.pro_compatible.toml` when building
+# a pro-compatible deployment (see the header of `Move.pro_compatible.toml`).
+#
+# Values verified against on-chain state via the public Sui fullnodes.
+
+[published.mainnet]
+chain-id = "35834a8a"
+original-id = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
+published-at = "0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0"
+version = 1
+upgrade-capability = "0xd3668b1f23a15f6ebe826c70654062166d405cf089004c45ef1a0adeefb83a53"
+build-config = { flavor = "sui", edition = "legacy" }
+
+[published.testnet]
+chain-id = "4c78adac"
+original-id = "0xd1ac23e1582080e2e5d43dbad1cf463ea2337cdbbb1a9ca669e470cefb74d8fd"
+published-at = "0xd1ac23e1582080e2e5d43dbad1cf463ea2337cdbbb1a9ca669e470cefb74d8fd"
+version = 1
+upgrade-capability = "0xe3544ca2f377147375d30430410dd5e1aefa9685381922c1cf7056d8ac41e98d"
+build-config = { flavor = "sui", edition = "legacy" }
