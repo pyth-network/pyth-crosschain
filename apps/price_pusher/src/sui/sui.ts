@@ -3,12 +3,14 @@
 /* biome-ignore-all lint/complexity/noForEach: pre-existing */
 /* biome-ignore-all lint/suspicious/useAwait: pre-existing */
 
+import { ChannelCredentials } from "@grpc/grpc-js";
 import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
 import type { SuiObjectRef } from "@mysten/sui/jsonRpc";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
+import { GrpcTransport } from "@protobuf-ts/grpc-transport";
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { getStructFields, SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import type { Logger } from "pino";
@@ -35,20 +37,65 @@ export type SuiEndpointType = "json-rpc" | "grpc";
 /** Sui network label passed to the `@mysten/sui` v2 clients. */
 export type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
 
+/** gRPC request metadata (e.g. `{ "x-token": "<secret>" }`) sent on every call. */
+export type SuiGrpcMetadata = Record<string, string>;
+
+/**
+ * Turn a gRPC endpoint into a `@grpc/grpc-js` `host:port` plus channel
+ * credentials. Third-party Sui gRPC endpoints (QuikNode `:9000`, Ankr /
+ * BlockVision `:443`) serve **native gRPC over HTTP/2**, so the host must be
+ * a bare `host:port` with no scheme or path. A `http://` prefix selects an
+ * insecure channel (local devnet); anything else uses TLS.
+ */
+function parseGrpcEndpoint(url: string): {
+  host: string;
+  credentials: ChannelCredentials;
+} {
+  let host = url.trim();
+  let insecure = false;
+  if (host.startsWith("https://")) {
+    host = host.slice("https://".length);
+  } else if (host.startsWith("http://")) {
+    host = host.slice("http://".length);
+    insecure = true;
+  }
+  // Drop any path/token segment — native gRPC authenticates via metadata, not URL.
+  host = host.replace(/\/.*$/, "");
+  return {
+    credentials: insecure
+      ? ChannelCredentials.createInsecure()
+      : ChannelCredentials.createSsl(),
+    host,
+  };
+}
+
 /**
  * Both the `@mysten/sui` v2 JSON-RPC client (`SuiJsonRpcClient`) and the
  * experimental gRPC client (`SuiGrpcClient`) expose the unified `.core` API.
  * The pusher reads and writes exclusively through `.core` so the same driver
  * works over either transport.
+ *
+ * `SuiGrpcClient` defaults to a grpc-web (HTTP/1.1) transport, which the Sui
+ * providers' native-gRPC (HTTP/2) endpoints reject; it also drops the `meta`
+ * option on that default path, so credentials never reach the wire. We
+ * therefore build an explicit `@protobuf-ts/grpc-transport` (native gRPC over
+ * `@grpc/grpc-js`) and pass the auth header through its `meta`.
  */
 export function createSuiProvider(
   endpointType: SuiEndpointType,
   network: SuiNetwork,
   url: string,
+  grpcMetadata?: SuiGrpcMetadata,
 ): ClientWithCoreApi {
   switch (endpointType) {
     case "grpc": {
-      return new SuiGrpcClient({ baseUrl: url, network });
+      const { host, credentials } = parseGrpcEndpoint(url);
+      const transport = new GrpcTransport({
+        channelCredentials: credentials,
+        host,
+        ...(grpcMetadata && { meta: grpcMetadata }),
+      });
+      return new SuiGrpcClient({ network, transport });
     }
     case "json-rpc": {
       return new SuiJsonRpcClient({ network, url });
@@ -93,9 +140,15 @@ export class SuiPriceListener extends ChainPriceListener {
     config: {
       pollingFrequency: DurationInSeconds;
     },
+    grpcMetadata?: SuiGrpcMetadata,
   ) {
     super(config.pollingFrequency, priceItems);
-    this.provider = createSuiProvider(endpointType, network, endpoint);
+    this.provider = createSuiProvider(
+      endpointType,
+      network,
+      endpoint,
+      grpcMetadata,
+    );
     this.pythClient = new SuiPythClient(
       this.provider,
       pythStateId,
@@ -187,6 +240,7 @@ export class SuiPricePusher implements IPricePusher {
     gasBudget: number,
     numGasObjects: number,
     ignoreGasObjects: string[],
+    grpcMetadata?: SuiGrpcMetadata,
   ): Promise<SuiPricePusher> {
     if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
       throw new Error(
@@ -194,7 +248,12 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
-    const provider = createSuiProvider(endpointType, network, endpoint);
+    const provider = createSuiProvider(
+      endpointType,
+      network,
+      endpoint,
+      grpcMetadata,
+    );
 
     const gasPool = await SuiPricePusher.initializeGasPool(
       keypair,
@@ -539,13 +598,21 @@ export class SuiPricePusher implements IPricePusher {
         }
         throw error_;
       }
-      const effects = getExecutedTransaction(mergeResult).effects;
+      const executed = getExecutedTransaction(mergeResult);
+      const effects = executed.effects;
       if (effects.status.error) {
         throw new Error(
           `Failed to merge coins when initializing gas pool: ${JSON.stringify(effects.status.error)}. Try re-running the script`,
         );
       }
       finalCoin = changedObjectToRef(effects.gasObject!);
+      // Block until this merge is observable before the next transaction spends
+      // its output (the next chunk's gas, or the subsequent split). gRPC
+      // endpoints are load-balanced across fullnodes at different checkpoints,
+      // so without this the follow-up tx can be simulated against a backend
+      // that has not yet applied this merge and fail with a version conflict.
+      // The legacy JSON-RPC path got this for free via WaitForLocalExecution.
+      await provider.core.waitForTransaction({ digest: executed.digest });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
