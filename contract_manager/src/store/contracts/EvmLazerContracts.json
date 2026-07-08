@@ -148,5 +148,15 @@
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "cronos",
     "type": "EvmLazerContract"
+  },
+  {
+    "address": "0x768dbf6a56b2C16b68C561a1A3395e2e86542D97",
+    "chain": "mezo_testnet",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0x00Aa49132AF596DE135C840E85E4bF6871dB4Eb8",
+    "chain": "mezo",
+    "type": "EvmLazerContract"
   }
 ]
