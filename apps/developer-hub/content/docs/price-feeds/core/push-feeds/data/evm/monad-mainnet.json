@@ -78,7 +78,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "STETH/ETH.RR",
@@ -118,7 +118,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "USDE/USD",
@@ -166,7 +166,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "FDUSD/USD",
