@@ -7,7 +7,9 @@ const ConfigSchema = z.object({
   historyUrl: z
     .string()
     .url()
-    .default("https://history.pyth-lazer.dourolabs.app")
+    // History API base. Serves /v1/symbols and the token-gated
+    // /v1/{channel}/price and /v1/{channel}/history routes.
+    .default("https://pyth.dourolabs.app")
     .refine((u) => u.startsWith("https://"), "URL must use HTTPS"),
   logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
   requestTimeoutMs: z.coerce.number().int().positive().default(10_000),
