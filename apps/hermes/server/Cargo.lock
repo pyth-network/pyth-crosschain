@@ -3269,10 +3269,10 @@ dependencies = [
 
 [[package]]
 name = "pythnet-sdk"
-version = "2.3.1"
+version = "3.0.0"
 dependencies = [
  "bincode",
- "borsh 0.10.3",
+ "borsh 1.5.3",
  "bytemuck",
  "byteorder",
  "fast-math",
