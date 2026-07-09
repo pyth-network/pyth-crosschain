@@ -12,12 +12,23 @@ import { Callout } from "fumadocs-ui/components/callout";
 https://pyth-lazer.dourolabs.app
 ```
 
+<Callout type="warning" title="API key required for POST /v1/price starting July 24, 2026">
+  Starting **July 24, 2026**, `POST /v1/price` requires API-key authentication,
+  and unauthenticated access to it will be disabled. Pass
+  `Authorization: Bearer <PRO_API_KEY>`; API-key auth is supported today, so add
+  the header now to stay forward-compatible. Do not expose the key in browser
+  apps — keep it server-side. See [Authentication](#authentication) for the
+  header format and frontend-safe guidance, and the
+  [announcement](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808)
+  for details.
+</Callout>
+
 ## Endpoints
 
-| Method | Path               | Description                                         |
-| ------ | ------------------ | --------------------------------------------------- |
-| POST   | `/v1/latest_price` | Fetch the latest price for one or more price feeds  |
-| POST   | `/v1/price`        | Fetch price data at a specific historical timestamp |
+| Method | Path               | Auth                       | Description                                         |
+| ------ | ------------------ | -------------------------- | --------------------------------------------------- |
+| POST   | `/v1/latest_price` | —                          | Fetch the latest price for one or more price feeds  |
+| POST   | `/v1/price`        | Yes (from July 24, 2026)   | Fetch price data at a specific historical timestamp |
 
 ### POST /v1/latest_price
 
@@ -50,6 +61,27 @@ All fields from `/v1/latest_price`, plus:
 | `timestamp` | `u64` | Yes      | Unix timestamp in microseconds. Must be a raw integer — do not quote it. |
 
 For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
+
+## Authentication
+
+Starting **July 24, 2026**, `POST /v1/price` requires API-key authentication,
+and unauthenticated access to it will be disabled. Pass your Pro API key as a
+bearer token:
+
+```bash copy
+curl -X POST -H "Authorization: Bearer $PRO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"priceFeedIds":[1,2],"properties":["price"],"formats":["solana"],"channel":"fixed_rate@200ms","timestamp":1704067200000000}' \
+  "https://pyth-lazer.dourolabs.app/v1/price"
+```
+
+**Do not embed your Pro API key in frontend or browser applications.** The key
+must stay server-side. Route requests through your own backend, which injects
+the `Authorization` header before forwarding to this API. A client-safe JWT
+authentication option is expected around **July 10, 2026** for teams that do not
+want to run their own proxy.
+
+See [Acquire an API Key](/price-feeds/pro/acquire-api-key) to obtain a key.
 
 ## OpenAPI Schema
 
