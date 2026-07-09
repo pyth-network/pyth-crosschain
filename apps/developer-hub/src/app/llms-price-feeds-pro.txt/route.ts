@@ -154,7 +154,7 @@ Pyth Pro also provides an MCP server so agents can discover feeds and fetch pric
 
 - MCP endpoint: https://mcp.pyth.network/mcp
 - Tool workflow: \`get_symbols\` -> \`get_latest_price\` / \`get_historical_price\` -> \`get_candlestick_data\`
-- Token behavior: only \`get_latest_price\` requires \`access_token\`
+- Token behavior: \`get_latest_price\`, \`get_historical_price\`, and \`get_candlestick_data\` require \`access_token\`
 - 9 pre-built skills for Claude Code: price alerts, cross-asset comparison, volatility analysis, FX conversion, portfolio tracking, funding rate monitoring, data export, time-series snapshots, and integration guidance
 - Skills docs: https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
 

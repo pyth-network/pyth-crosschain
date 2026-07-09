@@ -8,7 +8,11 @@ import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
-import { logToolCall } from "../utils/logger.js";
+import {
+  computeTokenHash,
+  getApiKeyLast4,
+  logToolCall,
+} from "../utils/logger.js";
 import {
   alignTimestampToChannel,
   DATA_AVAILABLE_FROM_ISO,
@@ -19,6 +23,11 @@ import {
 } from "../utils/timestamp.js";
 
 const GetHistoricalPriceInput = {
+  access_token: z
+    .string()
+    .trim()
+    .min(1, "access_token must not be empty")
+    .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
   channel: z
     .string()
     .regex(
@@ -66,7 +75,7 @@ export function registerGetHistoricalPrice(
         readOnlyHint: true,
       },
       description:
-        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Get price data for specific feeds at a historical timestamp. Requires an `access_token` (see https://docs.pyth.network/price-feeds/pro/acquire-api-key). Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetHistoricalPriceInput,
       title: "Get Historical Price",
     },
@@ -79,13 +88,13 @@ export function registerGetHistoricalPrice(
         (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
 
       const baseMetrics = {
-        apiKeyLast4: null as null,
+        apiKeyLast4: getApiKeyLast4(params.access_token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
         numFeedsRequested: 0,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: null as null,
+        tokenHash: computeTokenHash(params.access_token),
         tool: "get_historical_price" as const,
       };
 
@@ -144,7 +153,12 @@ export function registerGetHistoricalPrice(
 
         priceEndpointCalled = true;
         const { data: prices, upstreamLatencyMs: priceUpstreamMs } =
-          await historyClient.getHistoricalPrice(channel, ids, timestampUs);
+          await historyClient.getHistoricalPrice(
+            channel,
+            ids,
+            timestampUs,
+            params.access_token,
+          );
 
         const totalUpstreamMs = symbolLookupUpstreamMs + priceUpstreamMs;
         const enriched = prices.map((p) => addDisplayPrices(p));

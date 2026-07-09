@@ -26,7 +26,7 @@ The Pyth MCP server gives AI assistants direct, structured access to Pyth market
 Recommended workflow: `get_symbols` → `get_latest_price` / `get_historical_price` → `get_candlestick_data`
 
 <Callout type="warning">
-  `get_latest_price` requires a Pyth Pro API key passed as `access_token`. Get one at [acquire API key guide](./acquire-api-key). All other tools work without a key.
+  `get_latest_price`, `get_historical_price`, and `get_candlestick_data` require a Pyth Pro API key passed as `access_token`. Get one at [acquire API key guide](./acquire-api-key). `get_symbols` and `convert_date_to_timestamp` work without a key.
 </Callout>
 
 ## Setup
@@ -157,6 +157,7 @@ Get prices at a single historical timestamp.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
+| `access_token` | string | **Yes** | Pyth Pro API key |
 | `symbols` | string[] | No\* | Full symbols |
 | `price_feed_ids` | number[] | No\* | Feed IDs |
 | `timestamp` | number | **Yes** | Unix seconds, milliseconds, or microseconds |
@@ -178,6 +179,7 @@ Fetch OHLC candlestick data for a single feed.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
+| `access_token` | string | **Yes** | Pyth Pro API key |
 | `symbol` | string | **Yes** | Full symbol (e.g. `Crypto.BTC/USD`) |
 | `resolution` | string | **Yes** | `1`, `5`, `15`, `30`, `60`, `120`, `240`, `360`, `720`, `D`, `W`, `M` |
 | `from` | number | **Yes** | Start time (Unix seconds) |
@@ -192,7 +194,7 @@ Fetch OHLC candlestick data for a single feed.
 
 ### Invalid or expired API key
 
-- **Symptom:** `get_latest_price` returns an auth error
+- **Symptom:** `get_latest_price`, `get_historical_price`, or `get_candlestick_data` returns an auth error
 - **Fix:** Verify or regenerate your API key and pass it as `access_token`
 
 ### Symbol not found

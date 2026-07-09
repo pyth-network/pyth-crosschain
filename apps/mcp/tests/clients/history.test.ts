@@ -92,6 +92,18 @@ describe("HistoryClient", () => {
       expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
 
+    it("does not send an Authorization header", async () => {
+      let auth: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+          auth = request.headers.get("authorization");
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      await client.getSymbols();
+      expect(auth).toBeNull();
+    });
+
     it("handles 400 error", async () => {
       server.use(
         http.get(`${HISTORY_URL}/v1/symbols`, () =>
@@ -115,6 +127,25 @@ describe("HistoryClient", () => {
       expect(data.t).toHaveLength(2);
       expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
+
+    it("sends an Authorization header when an access token is provided", async () => {
+      let auth: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+          auth = request.headers.get("authorization");
+          return HttpResponse.json(mockOHLC);
+        }),
+      );
+      await client.getCandlestickData(
+        "fixed_rate@200ms",
+        "BTC/USD",
+        "D",
+        1_708_300_800,
+        1_708_387_200,
+        "test-token",
+      );
+      expect(auth).toBe("Bearer test-token");
+    });
   });
 
   describe("getHistoricalPrice", () => {
@@ -128,6 +159,23 @@ describe("HistoryClient", () => {
       expect(prices).toHaveLength(1);
       expect(prices[0].price_feed_id).toBe(1);
       expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it("sends an Authorization header when an access token is provided", async () => {
+      let auth: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+          auth = request.headers.get("authorization");
+          return HttpResponse.json(mockPrice);
+        }),
+      );
+      await client.getHistoricalPrice(
+        "fixed_rate@200ms",
+        [1],
+        1_708_300_800_000_000,
+        "test-token",
+      );
+      expect(auth).toBe("Bearer test-token");
     });
   });
 });

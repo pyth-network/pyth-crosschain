@@ -86,6 +86,7 @@ describe("get_candlestick_data tool", () => {
   it("returns OHLC data for valid request", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "D",
         symbol: "BTC/USD",
@@ -121,6 +122,7 @@ describe("get_candlestick_data tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "D",
         symbol: "BTC/USD",
@@ -157,6 +159,7 @@ describe("get_candlestick_data tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "1",
         symbol: "BTC/USD",
@@ -173,5 +176,51 @@ describe("get_candlestick_data tool", () => {
     expect(data.returned).toBe(500);
     expect(data.total_available).toBe(600);
     expect(data.t).toHaveLength(500);
+  });
+
+  it("returns validation error when access_token is missing", async () => {
+    const result = await client.callTool({
+      arguments: {
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBe(true);
+  });
+
+  it("sends Authorization header to the history endpoint", async () => {
+    let historyAuth: string | null = "unset";
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+        historyAuth = request.headers.get("authorization");
+        return HttpResponse.json({
+          c: [51_500],
+          h: [52_000],
+          l: [50_000],
+          o: [51_000],
+          s: "ok",
+          t: [1_708_300_800],
+          v: [100],
+        });
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(historyAuth).toBe("Bearer test-token");
   });
 });

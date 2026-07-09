@@ -106,6 +106,7 @@ describe("get_historical_price tool", () => {
   it("returns enriched prices via symbol lookup", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },
@@ -134,6 +135,7 @@ describe("get_historical_price tool", () => {
   it("returns enriched prices via feed IDs", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: 1_708_300_800,
       },
@@ -151,6 +153,7 @@ describe("get_historical_price tool", () => {
   it("returns error for unknown symbol", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["UNKNOWN/USD"],
         timestamp: 1_708_300_800,
       },
@@ -174,6 +177,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
@@ -219,6 +223,7 @@ describe("get_historical_price tool", () => {
 
     const result = await testClient.callTool({
       arguments: {
+        access_token: "test-token",
         // Duplicates: [1,1,2,2,1] should dedup to [1,2] = count 2
         price_feed_ids: [1, 1, 2, 2, 1],
         timestamp: 1_708_300_800,
@@ -252,6 +257,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: futureTimestamp,
       },
@@ -281,6 +287,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: pastTimestamp,
       },
@@ -307,6 +314,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [999_999],
         timestamp: 1_708_300_800,
       },
@@ -331,6 +339,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },
@@ -342,5 +351,45 @@ describe("get_historical_price tool", () => {
       .text;
     // Should get the generic error, not the feed-specific error
     expect(text).toContain("Failed to fetch historical price");
+  });
+
+  it("returns validation error when access_token is missing", async () => {
+    const result = await client.callTool({
+      arguments: {
+        price_feed_ids: [1],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBe(true);
+  });
+
+  it("sends Authorization header to price endpoint but not symbols endpoint", async () => {
+    let priceAuth: string | null = "unset";
+    let symbolsAuth: string | null = "unset";
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        symbolsAuth = request.headers.get("authorization");
+        return HttpResponse.json(mockFeeds);
+      }),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+        priceAuth = request.headers.get("authorization");
+        return HttpResponse.json(mockHistoricalPrice);
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        symbols: ["BTC/USD"],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(priceAuth).toBe("Bearer test-token");
+    expect(symbolsAuth).toBeNull();
   });
 });

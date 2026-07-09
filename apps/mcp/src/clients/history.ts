@@ -54,6 +54,7 @@ export class HistoryClient {
     resolution: string,
     from: number,
     to: number,
+    accessToken?: string,
   ): Promise<UpstreamResult<OHLCResponse>> {
     const url = new URL(`/v1/${channel}/history`, this.baseUrl);
     url.searchParams.set("symbol", symbol);
@@ -65,6 +66,9 @@ export class HistoryClient {
     const data = await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET candlestick data");
       const res = await fetch(url, {
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
@@ -84,6 +88,7 @@ export class HistoryClient {
     channel: string,
     ids: number[],
     timestampUs: number,
+    accessToken?: string,
   ): Promise<UpstreamResult<HistoricalPriceResponse[]>> {
     const url = new URL(`/v1/${channel}/price`, this.baseUrl);
     for (const id of ids) {
@@ -95,6 +100,9 @@ export class HistoryClient {
     const data = await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET historical price");
       const res = await fetch(url, {
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {

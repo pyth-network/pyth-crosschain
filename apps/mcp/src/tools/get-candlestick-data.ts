@@ -7,7 +7,11 @@ import { RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
 import { toolError } from "../utils/errors.js";
-import { logToolCall } from "../utils/logger.js";
+import {
+  computeTokenHash,
+  getApiKeyLast4,
+  logToolCall,
+} from "../utils/logger.js";
 import {
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
@@ -18,6 +22,11 @@ import {
 const MAX_CANDLES = 500;
 
 const GetCandlestickDataInput = {
+  access_token: z
+    .string()
+    .trim()
+    .min(1, "access_token must not be empty")
+    .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
   channel: z
     .string()
     .regex(
@@ -64,7 +73,7 @@ export function registerGetCandlestickData(
         readOnlyHint: true,
       },
       description:
-        "Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Fetch OHLC candlestick data for a symbol. Requires an `access_token` (see https://docs.pyth.network/price-feeds/pro/acquire-api-key). Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },
@@ -73,12 +82,12 @@ export function registerGetCandlestickData(
       const start = Date.now();
 
       const baseMetrics = {
-        apiKeyLast4: null as null,
+        apiKeyLast4: getApiKeyLast4(params.access_token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: null as null,
+        tokenHash: computeTokenHash(params.access_token),
         tool: "get_candlestick_data" as const,
       };
 
@@ -102,6 +111,7 @@ export function registerGetCandlestickData(
             params.resolution,
             params.from,
             params.to,
+            params.access_token,
           );
 
         if (data.s === "no_data") {
