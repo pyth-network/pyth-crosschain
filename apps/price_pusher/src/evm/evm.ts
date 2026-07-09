@@ -146,6 +146,15 @@ export class EvmPriceListener extends ChainPriceListener {
 export class EvmPricePusher implements IPricePusher {
   private pusherAddress: `0x${string}` | undefined;
   private lastPushAttempt: PushAttempt | undefined;
+  // Single-flight, bounded receipt tracker. At most one receipt wait runs at a
+  // time; it is cancelled and replaced whenever a newer push supersedes the tx
+  // (e.g. a same-nonce gas escalation), and it stops at `receiptWaitTimeoutMs`.
+  // This replaces viem's `waitForTransactionReceipt`, whose timeout (on the
+  // pinned version) rejects without tearing down its internal
+  // `eth_getTransactionByHash` / block-number poll — so a fire-and-forget wait
+  // for a tx that never becomes findable leaked a detached poller that ran for
+  // the pod's whole lifetime and accumulated one per push.
+  private receiptTracker: AbortController | undefined;
 
   constructor(
     private hermesClient: HermesClient,
@@ -157,6 +166,11 @@ export class EvmPricePusher implements IPricePusher {
     private updateFeeMultiplier: number,
     private gasPriceConfig: GasPriceConfig,
     private gasLimit?: number,
+    // Upper bound on how long to poll for a tx receipt before giving up. Keeps a
+    // tx that never lands from polling forever. Defaults to ~2 push cycles.
+    private receiptWaitTimeoutMs = 60_000,
+    // How often to poll `eth_getTransactionReceipt` while waiting.
+    private receiptPollIntervalMs = 2000,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -280,7 +294,7 @@ export class EvmPricePusher implements IPricePusher {
 
       this.logger.debug({ hash }, "Price update sent");
 
-      void this.waitForTransactionReceipt(hash);
+      this.trackTransactionReceipt(hash);
     } catch (error: any) {
       this.logger.debug(
         { err: error },
@@ -410,32 +424,113 @@ export class EvmPricePusher implements IPricePusher {
     }
   }
 
-  private async waitForTransactionReceipt(hash: `0x${string}`): Promise<void> {
-    try {
-      const receipt = await this.client.waitForTransactionReceipt({
-        hash: hash,
-      });
+  // Stop the in-flight receipt tracker (graceful shutdown / tests). Safe to call
+  // at any time; leaves no pending poll behind.
+  public dispose(): void {
+    this.receiptTracker?.abort();
+    this.receiptTracker = undefined;
+  }
 
-      switch (receipt.status) {
-        case "success": {
-          this.logger.debug({ hash, receipt }, "Price update successful");
+  // Start (or replace) the single-flight receipt tracker for a freshly-sent tx.
+  // Fire-and-forget by design — the receipt is observational (it only produces
+  // the "Price update successful" log the Grafana Tx-Hash panel scrapes); the
+  // controller never blocks on it, and the re-send/nonce/gas decision is driven
+  // by a fresh `getTransactionCount` each cycle, not by the receipt. Cancels any
+  // prior tracker so only the latest tx is polled, capping concurrent waiters at
+  // one (a superseded poller may issue at most one more in-flight lookup before
+  // it observes the abort, which also lets it still log a tx that just landed).
+  private trackTransactionReceipt(hash: `0x${string}`): void {
+    this.receiptTracker?.abort();
+    const controller = new AbortController();
+    this.receiptTracker = controller;
+    void this.pollTransactionReceipt(hash, controller).finally(() => {
+      // Only clear if we are still the active tracker (a newer push may have
+      // already replaced us).
+      if (this.receiptTracker === controller) {
+        this.receiptTracker = undefined;
+      }
+    });
+  }
+
+  // Poll `eth_getTransactionReceipt` (one call per interval) until the tx lands,
+  // the tracker is superseded, or the deadline elapses. Unlike viem's
+  // `waitForTransactionReceipt` this issues no `eth_getTransactionByHash` and no
+  // per-block full-block fetch, and its teardown is guaranteed by the bound +
+  // AbortController — so an un-landing tx cannot leak a poller.
+  private async pollTransactionReceipt(
+    hash: `0x${string}`,
+    controller: AbortController,
+  ): Promise<void> {
+    const deadline = Date.now() + this.receiptWaitTimeoutMs;
+
+    for (;;) {
+      let receipt;
+      try {
+        receipt = await this.client.getTransactionReceipt({ hash });
+      } catch {
+        // viem throws TransactionReceiptNotFoundError while the tx is unmined.
+        // Treat any lookup failure as "not landed yet" and keep polling.
+        receipt = undefined;
+      }
+
+      // A fetched receipt means the tx actually landed — it is never stale, so
+      // log it even if this tracker was superseded (otherwise the Grafana panel
+      // would miss the hash of a tx that landed just as the next push started).
+      if (receipt !== undefined) {
+        if (receipt.status === "success") {
           // Keep one non-debug hash line per landed tx: the bundled Grafana
           // "Tx Hash" panel scrapes this message from Loki and extracts {{.hash}}.
-          // Demoting it to debug hides successful hashes under the default log level.
           this.logger.info({ hash }, "Price update successful");
-          break;
-        }
-        default: {
+        } else {
           this.logger.debug(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
               "This is an expected behaviour in high frequency or multi-instance setup.",
           );
         }
+        return;
       }
-    } catch (error: any) {
-      this.logger.warn({ err: error }, "Failed to get transaction receipt");
+
+      // Not landed yet: stop if this tracker was superseded, or if we ran out
+      // of time (only these bounded paths end the loop, so it cannot leak).
+      if (controller.signal.aborted) {
+        return;
+      }
+      if (Date.now() >= deadline) {
+        this.logger.debug(
+          { hash },
+          "Gave up waiting for the transaction receipt within the timeout. " +
+            "This is expected when a tx does not land; the next push re-derives " +
+            "the nonce from the chain and replaces it if needed.",
+        );
+        return;
+      }
+
+      await this.interruptibleSleep(
+        this.receiptPollIntervalMs,
+        controller.signal,
+      );
     }
+  }
+
+  // Sleep that resolves early if the signal aborts, so a superseded tracker
+  // stops promptly instead of waiting out its poll interval.
+  private interruptibleSleep(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve) => {
+      if (signal.aborted) {
+        resolve();
+        return;
+      }
+      const onAbort = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        signal.removeEventListener("abort", onAbort);
+        resolve();
+      }, ms);
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
   }
 
   private async getPriceFeedsUpdateData(
