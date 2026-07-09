@@ -343,4 +343,95 @@ describe("get_historical_price tool", () => {
     // Should get the generic error, not the feed-specific error
     expect(text).toContain("Failed to fetch historical price");
   });
+
+  it("forwards access_token as a Bearer header to the price endpoint", async () => {
+    let authHeader: string | null = "unset";
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+        authHeader = request.headers.get("authorization");
+        return HttpResponse.json(mockHistoricalPrice);
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "pro-token-123",
+        price_feed_ids: [1],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(authHeader).toBe("Bearer pro-token-123");
+  });
+
+  it("maps upstream 401 without a token to the missing-token message", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
+        () => new HttpResponse(null, { status: 401 }),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: { price_feed_ids: [1], timestamp: 1_708_300_800 },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("requires a Pyth Pro access token");
+  });
+
+  it("maps upstream 403 with a token to the invalid-token message", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
+        () => new HttpResponse(null, { status: 403 }),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "bad-token",
+        price_feed_ids: [1],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("invalid or expired");
+  });
+
+  it("does not mislabel a 403 from the public getSymbols lookup as a token error", async () => {
+    // The symbol->id lookup hits the public /v1/symbols. If it 403s, that is an
+    // upstream failure, NOT an auth problem — the token was never sent there.
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/symbols`,
+        () => new HttpResponse(null, { status: 403 }),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "some-token",
+        symbols: ["BTC/USD"],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Failed to fetch historical price");
+    expect(text).not.toContain("invalid or expired");
+    expect(text).not.toContain("requires a Pyth Pro access token");
+  });
 });

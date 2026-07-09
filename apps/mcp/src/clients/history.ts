@@ -9,6 +9,15 @@ import {
   OHLCResponseSchema,
 } from "./types.js";
 
+/**
+ * Bearer auth header for the token-gated History endpoints (`/{channel}/price`
+ * and `/{channel}/history`, which require authentication from 2026-07-24).
+ * Returns undefined when no token is set so unauthenticated callers are unchanged.
+ */
+function authHeaders(token?: string): Record<string, string> | undefined {
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+}
+
 export class HistoryClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
@@ -54,6 +63,7 @@ export class HistoryClient {
     resolution: string,
     from: number,
     to: number,
+    token?: string,
   ): Promise<UpstreamResult<OHLCResponse>> {
     const url = new URL(`/v1/${channel}/history`, this.baseUrl);
     url.searchParams.set("symbol", symbol);
@@ -65,6 +75,7 @@ export class HistoryClient {
     const data = await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET candlestick data");
       const res = await fetch(url, {
+        headers: authHeaders(token),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
@@ -84,6 +95,7 @@ export class HistoryClient {
     channel: string,
     ids: number[],
     timestampUs: number,
+    token?: string,
   ): Promise<UpstreamResult<HistoricalPriceResponse[]>> {
     const url = new URL(`/v1/${channel}/price`, this.baseUrl);
     for (const id of ids) {
@@ -95,6 +107,7 @@ export class HistoryClient {
     const data = await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET historical price");
       const res = await fetch(url, {
+        headers: authHeaders(token),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
