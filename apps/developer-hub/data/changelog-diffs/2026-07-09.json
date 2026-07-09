@@ -1,0 +1,39 @@
+{
+  "date": "2026-07-09",
+  "label": "Thursday",
+  "summary": {
+    "added": 3,
+    "went_live": 0,
+    "removed": 0
+  },
+  "hero": "3 new feeds announced.",
+  "events": [
+    {
+      "id": "Equity.US.SNXX/USD",
+      "lazerId": 3440,
+      "asset": "Tradr 2X Long Sndk Daily Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-09",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.INTW/USD",
+      "lazerId": 3439,
+      "asset": "Graniteshares 2X Long Intc Daily Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-09",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SKHYV/USD",
+      "lazerId": 3438,
+      "asset": "Sk Hynix Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-09",
+      "quote": "USD"
+    }
+  ]
+}
