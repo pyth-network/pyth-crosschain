@@ -20,19 +20,30 @@ All `{channel}` path segments refer to a price channel (e.g. `real_time`, `fixed
   connect TradingView charting UIs directly to this API.
 </Callout>
 
+<Callout type="warning" title="API key required starting July 24, 2026">
+  Starting **July 24, 2026**, `GET /{channel}/price` and `GET /{channel}/history`
+  require API-key authentication, and unauthenticated access to them will be
+  disabled. API-key auth is supported today, so add the
+  `Authorization: Bearer <PRO_API_KEY>` header now to stay forward-compatible.
+  See [Authentication](#authentication) for the header format and frontend-safe
+  guidance. See the
+  [announcement](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808)
+  for details.
+</Callout>
+
 ## Endpoints
 
-| Method | Path                   | Auth | Description                   |
-| ------ | ---------------------- | ---- | ----------------------------- |
-| GET    | `/live`                | No   | Health check                  |
-| GET    | `/symbols`             | No   | List available symbols        |
-| GET    | `/{channel}/price`     | No   | Price at a specific timestamp |
-| GET    | `/{channel}/history`   | No   | OHLC candlestick data         |
-| GET    | `/{channel}/search`    | No   | Search symbols                |
-| GET    | `/{channel}/symbols`   | No   | Resolve a single symbol       |
-| GET    | `/{channel}/streaming` | No   | SSE price stream              |
-| GET    | `/{channel}/config`    | No   | TradingView configuration     |
-| GET    | `/publisher_updates`   | Yes  | Raw publisher updates         |
+| Method | Path                   | Auth                       | Description                   |
+| ------ | ---------------------- | -------------------------- | ----------------------------- |
+| GET    | `/live`                | No                         | Health check                  |
+| GET    | `/symbols`             | No                         | List available symbols        |
+| GET    | `/{channel}/price`     | Yes (from July 24, 2026)   | Price at a specific timestamp |
+| GET    | `/{channel}/history`   | Yes (from July 24, 2026)   | OHLC candlestick data         |
+| GET    | `/{channel}/search`    | No                         | Search symbols                |
+| GET    | `/{channel}/symbols`   | No                         | Resolve a single symbol       |
+| GET    | `/{channel}/streaming` | No                         | SSE price stream              |
+| GET    | `/{channel}/config`    | No                         | TradingView configuration     |
+| GET    | `/publisher_updates`   | Yes                        | Raw publisher updates         |
 
 ---
 
@@ -163,6 +174,25 @@ Returns raw publisher price updates. Requires authentication.
 | `limit`         | `number`   | No       | Max results, 1–10000 (default: `15`)      |
 
 ---
+
+## Authentication
+
+Starting **July 24, 2026**, `GET /{channel}/price` and `GET /{channel}/history`
+require API-key authentication, and unauthenticated access to them will be
+disabled. Pass your Pro API key as a bearer token:
+
+```bash copy
+curl -H "Authorization: Bearer $PRO_API_KEY" \
+  "https://pyth.dourolabs.app/v1/fixed_rate@200ms/price?ids=1&timestamp=1704067200000000"
+```
+
+**Do not embed your Pro API key in frontend or browser applications.** The key
+must stay server-side. Route requests through your own backend, which injects
+the `Authorization` header before forwarding to this API. A client-safe JWT
+authentication option is expected around **July 10, 2026** for teams that do not
+want to run their own proxy.
+
+See [Acquire an API Key](/price-feeds/pro/acquire-api-key) to obtain a key.
 
 ## OpenAPI Schema
 

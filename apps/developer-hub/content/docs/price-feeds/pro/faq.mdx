@@ -123,6 +123,8 @@ https://pyth.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&fro
 
 See the [History API](/price-feeds/pro/api/history) for full endpoint details, query parameters, and resolutions.
 
+Starting **July 24, 2026**, `GET /{channel}/history` and `GET /{channel}/price` require the `Authorization: Bearer <PRO_API_KEY>` header, and unauthenticated access to them will be disabled. See the [History API](/price-feeds/pro/api/history#authentication) for the header format and frontend-safe guidance.
+
 #### Q. How do I fetch the latest price via HTTP?
 
 Use the REST API. Base URL:
@@ -135,6 +137,12 @@ https://pyth-lazer.dourolabs.app
 - **Price at a timestamp:** `POST /v1/price` — returns price data at a specific historical timestamp (request body includes a `timestamp` field).
 
 See the [REST API](/price-feeds/pro/api/rest) for request/response schemas and examples.
+
+Starting **July 24, 2026**, `POST /v1/price` will require the `Authorization: Bearer <PRO_API_KEY>` header, and unauthenticated access to it will be disabled. See the [REST API](/price-feeds/pro/api/rest#authentication) for details. `POST /v1/latest_price` is unaffected by this change.
+
+#### Q. How should I authenticate the History and REST endpoints from a frontend app?
+
+Do not embed your Pro API key in browsers or frontend apps. Route requests through your own backend or proxy that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. A client-safe JWT authentication option is expected around **July 10, 2026** for teams that do not want to run their own proxy.
 
 ## API Keys & Permissions
 
