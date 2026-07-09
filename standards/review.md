@@ -122,8 +122,9 @@ easy to miss.
 ## Language Best Practices
 
 Check whether the code is written with the best practices of that language.
-Refer to the project's code guidelines in `doc/code-guidelines.md`,
-`doc/rust-code-guidelines.md`, and `doc/js-code-guidelines.md`.
+Refer to the sibling standards: [style.md](style.md), [testing.md](testing.md),
+[services.md](services.md), the [rust/](rust/AGENTS.md) cluster, and the
+[typescript/](typescript/AGENTS.md) cluster.
 
 ## Version Bumps
 

@@ -70,7 +70,7 @@ exclude = [
 unsafe_code = "deny"
 
 [workspace.lints.clippy]
-# See https://github.com/pyth-network/pyth-crosschain/blob/main/doc/rust-code-guidelines.md
+# See https://github.com/pyth-network/pyth-crosschain/blob/main/standards/rust/AGENTS.md
 
 wildcard_dependencies = "deny"
 
