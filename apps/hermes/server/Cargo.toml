@@ -82,7 +82,7 @@ panic                  = 'abort'
 unsafe_code = "deny"
 
 [lints.clippy]
-# See [Rust code guidelines](../../doc/rust-code-guidelines.md)
+# See [Rust code guidelines](../../../standards/rust/AGENTS.md)
 
 wildcard_dependencies = "deny"
 
