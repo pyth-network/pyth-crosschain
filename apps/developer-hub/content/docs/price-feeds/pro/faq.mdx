@@ -142,13 +142,13 @@ Starting **July 24, 2026**, `POST /v1/price` will require the `Authorization: Be
 
 #### Q. How should I authenticate the History and REST endpoints from a frontend app?
 
-Do not embed your Pro access token in browsers or frontend apps. Route requests through your own backend or proxy that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. A client-safe JWT authentication option is expected around **July 10, 2026** for teams that do not want to run their own proxy.
+Do not embed your Pro access token in browsers or frontend apps. Route requests through your own backend or proxy that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. A client-safe JWT authentication option is planned for teams that do not want to run their own proxy.
 
-## API Keys & Permissions
+## Access Tokens & Permissions
 
-#### Q. How are API keys permissioned for different asset classes?
+#### Q. How are access tokens permissioned for different asset classes?
 
-Each API key is permissioned for a specific set of:
+Each access token is permissioned for a specific set of:
 
 - **Asset types** (e.g., crypto, equity, fx, metals, rates)
 - **Minimum channel** (e.g., `fixed_rate@200ms`, `real_time`)
@@ -161,7 +161,7 @@ One customer might have access to all asset types; another might be restricted t
 Common causes:
 
 1. **Wrong endpoint:** Ensure you are using the correct WebSocket or REST endpoint for your token.
-2. **Asset class restriction:** Your API key may not be entitled to the requested feed types.
+2. **Asset class restriction:** Your access token may not be entitled to the requested feed types.
 3. **Expired token:** Demo tokens expire; request a production token for long-term use.
 
 ## Troubleshooting
