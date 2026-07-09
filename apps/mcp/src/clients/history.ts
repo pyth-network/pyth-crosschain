@@ -11,8 +11,8 @@ import {
 
 /**
  * Bearer auth header for the token-gated History endpoints (`/{channel}/price`
- * and `/{channel}/history`, which require authentication from 2026-07-24).
- * Returns undefined when no token is set so unauthenticated callers are unchanged.
+ * and `/{channel}/history`). Returns undefined when no token is set so
+ * unauthenticated callers are unchanged.
  */
 function authHeaders(token?: string): Record<string, string> | undefined {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
