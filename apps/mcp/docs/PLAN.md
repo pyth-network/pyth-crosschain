@@ -10,7 +10,7 @@ Pyth Pro delivers low-latency, cross-asset market data (crypto, equities, FX, me
 
 The server wraps two Pyth Pro APIs:
 - **Router API** (`https://pyth-lazer.dourolabs.app`) — real-time/latest prices, requires bearer token
-- **History API** (`https://history.pyth-lazer.dourolabs.app`) — symbols, OHLC, historical prices, mostly public
+- **History API** (`https://pyth.dourolabs.app`) — symbols (public), plus OHLC and historical prices (token-gated from 2026-07-24)
 
 ---
 
@@ -466,7 +466,7 @@ interface ToolInvocationLog {
 | `PYTH_PRO_ACCESS_TOKEN` | `--token` | — | Pyth Pro bearer token. Required for Router API tools. |
 | `PYTH_CHANNEL` | `--channel` | `fixed_rate@200ms` | Default price channel |
 | `PYTH_ROUTER_URL` | `--router-url` | `https://pyth-lazer.dourolabs.app` | Router API base URL |
-| `PYTH_HISTORY_URL` | `--history-url` | `https://history.pyth-lazer.dourolabs.app` | History API base URL |
+| `PYTH_HISTORY_URL` | `--history-url` | `https://pyth.dourolabs.app` | History API base URL |
 | `PYTH_LOG_LEVEL` | `--log-level` | `info` | Log level: debug, info, warn, error |
 | `PYTH_LOG_FILE` | `--log-file` | stderr | Log output file (stdio mode logs to stderr to avoid polluting JSON-RPC) |
 | `PYTH_REQUEST_TIMEOUT_MS` | `--timeout` | `10000` | HTTP request timeout in milliseconds |

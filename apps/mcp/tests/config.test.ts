@@ -19,7 +19,7 @@ describe("loadConfig", () => {
     const config = loadConfig();
     expect(config.channel).toBe("fixed_rate@200ms");
     expect(config.routerUrl).toBe("https://pyth-lazer.dourolabs.app");
-    expect(config.historyUrl).toBe("https://history.pyth-lazer.dourolabs.app");
+    expect(config.historyUrl).toBe("https://pyth.dourolabs.app");
     expect(config.logLevel).toBe("info");
     expect(config.requestTimeoutMs).toBe(10_000);
   });

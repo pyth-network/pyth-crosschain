@@ -10,7 +10,7 @@ import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
 
-const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
+const HISTORY_URL = "https://pyth.dourolabs.app";
 
 const mockFeeds = Array.from({ length: 100 }, (_, i) => ({
   asset_type: i < 50 ? "crypto" : "equity",
