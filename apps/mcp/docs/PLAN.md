@@ -21,9 +21,9 @@ The server wraps two Pyth Pro APIs:
 | Language | **TypeScript** — largest MCP ecosystem, npm distribution, fast to ship |
 | Transport | **Stdio + HTTP** — local dev via stdio, remote deployment via HTTP |
 | Package | **`@pyth-network/mcp-server`** |
-| Auth (v1) | User provides `PYTH_PRO_ACCESS_TOKEN` env var. Required for Router API tools. History API tools work without it. |
+| Auth (v1) | Caller passes their Pyth Pro token per-call via the `access_token` tool parameter. Required for `get_latest_price`. **As of 2026-07-24**, `get_historical_price` and `get_candlestick_data` also require it (History `/{channel}/price` and `/{channel}/history` became auth-gated). `get_symbols` (`/v1/symbols`) stays public. |
 | Auth (v2) | Server holds a shared trial token (never exposed). Rate-limited per session. Falls back when user has no token. |
-| Graceful degradation | History API tools (search, OHLC, historical prices) work **without** a token. Router API tools (latest prices) require a token and return a clear "bring your token" message if missing. |
+| Graceful degradation | `get_symbols` (feed discovery) works **without** a token. `get_latest_price`, and — from 2026-07-24 — `get_historical_price` / `get_candlestick_data`, require a token and return a clear "bring your token" message if missing/invalid. |
 | Channel default | `fixed_rate@200ms` server-wide default via `PYTH_CHANNEL` env var. Per-tool `channel` parameter can override. Note: each feed has a minimum supported channel (most are 200ms, some support real_time). |
 | Feed identifiers | Tools accept **both** `symbols` (string, e.g. `"BTC/USD"`) and `priceFeedIds` (numeric). LLMs will naturally use symbols. |
 | Properties default | `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount]` — overridable per-tool call. |
@@ -165,7 +165,7 @@ process.on("SIGINT", cleanup);
 
 ## Tools (4 tools)
 
-> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). All other tools use the History API (public, no token needed).
+> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). The other tools use the History API: `get_symbols` is public, while `get_historical_price` and `get_candlestick_data` require a token as of 2026-07-24 (passed per-call via `access_token`).
 
 ### Toolset: `discovery` (public, no token needed)
 
@@ -198,7 +198,7 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /{channel}/history` (History API) |
-| Auth | None |
+| Auth | Required as of 2026-07-24 (per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**
@@ -222,7 +222,7 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /{channel}/price` (History API) |
-| Auth | None |
+| Auth | Required as of 2026-07-24 (per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**

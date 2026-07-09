@@ -130,4 +130,89 @@ describe("HistoryClient", () => {
       expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
   });
+
+  describe("authentication", () => {
+    it("sends Authorization: Bearer on getCandlestickData when a token is set", async () => {
+      let authHeader: string | null = "unset";
+      server.use(
+        http.get(
+          `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+          ({ request }) => {
+            authHeader = request.headers.get("authorization");
+            return HttpResponse.json(mockOHLC);
+          },
+        ),
+      );
+      await client.getCandlestickData(
+        "fixed_rate@200ms",
+        "BTC/USD",
+        "D",
+        1_708_300_800,
+        1_708_387_200,
+        "secret-token",
+      );
+      expect(authHeader).toBe("Bearer secret-token");
+    });
+
+    it("sends Authorization: Bearer on getHistoricalPrice when a token is set", async () => {
+      let authHeader: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+          authHeader = request.headers.get("authorization");
+          return HttpResponse.json(mockPrice);
+        }),
+      );
+      await client.getHistoricalPrice(
+        "fixed_rate@200ms",
+        [1],
+        1_708_300_800_000_000,
+        "secret-token",
+      );
+      expect(authHeader).toBe("Bearer secret-token");
+    });
+
+    it("omits the Authorization header when no token is passed", async () => {
+      let priceAuth: string | null = "unset";
+      let ohlcAuth: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+          priceAuth = request.headers.get("authorization");
+          return HttpResponse.json(mockPrice);
+        }),
+        http.get(
+          `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+          ({ request }) => {
+            ohlcAuth = request.headers.get("authorization");
+            return HttpResponse.json(mockOHLC);
+          },
+        ),
+      );
+      await client.getHistoricalPrice(
+        "fixed_rate@200ms",
+        [1],
+        1_708_300_800_000_000,
+      );
+      await client.getCandlestickData(
+        "fixed_rate@200ms",
+        "BTC/USD",
+        "D",
+        1_708_300_800,
+        1_708_387_200,
+      );
+      expect(priceAuth).toBeNull();
+      expect(ohlcAuth).toBeNull();
+    });
+
+    it("never sends an Authorization header on the public getSymbols endpoint", async () => {
+      let authHeader: string | null = "unset";
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+          authHeader = request.headers.get("authorization");
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      await client.getSymbols();
+      expect(authHeader).toBeNull();
+    });
+  });
 });

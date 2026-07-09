@@ -174,4 +174,85 @@ describe("get_candlestick_data tool", () => {
     expect(data.total_available).toBe(600);
     expect(data.t).toHaveLength(500);
   });
+
+  it("forwards access_token as a Bearer header to the history endpoint", async () => {
+    let authHeader: string | null = "unset";
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+        authHeader = request.headers.get("authorization");
+        return HttpResponse.json({
+          c: [51_500],
+          h: [52_000],
+          l: [50_000],
+          o: [51_000],
+          s: "ok",
+          t: [1_708_300_800],
+          v: [100],
+        });
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "pro-token-123",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(authHeader).toBe("Bearer pro-token-123");
+  });
+
+  it("maps upstream 401 without a token to the missing-token message", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+        () => new HttpResponse(null, { status: 401 }),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("requires a Pyth Pro access token");
+  });
+
+  it("maps upstream 403 with a token to the invalid-token message", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+        () => new HttpResponse(null, { status: 403 }),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "bad-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("invalid or expired");
+  });
 });
