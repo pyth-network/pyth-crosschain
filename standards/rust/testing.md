@@ -14,24 +14,19 @@ cargo clippy --all-targets -- --deny warnings
 cargo test --package <affected-package>
 ```
 
-- `cargo fmt --check` — formatting.
-- `cargo clippy --all-targets -- --deny warnings` — linting, including test and
-  example targets. `--deny warnings` mirrors CI: any warning is a failure.
-- `cargo test --package <affected-package>` — run the tests for the package(s) your
-  change touches. Run the full `cargo test --workspace` when your change is
-  cross-cutting.
+`--deny warnings` mirrors CI: any warning fails. Run tests for the package(s) your
+change touches, or `cargo test --workspace` when the change is cross-cutting.
 
 ## Keep tests next to the code
 
 Unit tests live in a `#[cfg(test)] mod tests` in the same file as the code under
-test, so they can exercise private items without widening any visibility.
-Integration tests that drive a crate through its public API live in the crate's
-`tests/` directory.
+test, so they can exercise private items without widening visibility. Integration
+tests that drive a crate through its public API live in the crate's `tests/`
+directory.
 
-The panic-related clippy lints are relaxed inside tests via `clippy.toml`
-(`allow-unwrap-in-tests`, `allow-expect-in-tests`, `allow-panic-in-tests`,
-`allow-indexing-slicing-in-tests`), so `.unwrap()`, `.expect()`, and indexing are
-fine in test code where a panic simply fails the test.
+The panic-related clippy lints are relaxed inside tests via `clippy.toml`, so
+`.unwrap()`, `.expect()`, and indexing are fine in test code where a panic simply
+fails the test.
 
 ## Async tests
 
@@ -45,8 +40,7 @@ async fn resolves_feed() {
 }
 ```
 
-- Prefer the default current-thread runtime; only reach for
-  `#[tokio::test(flavor = "multi_thread")]` when the test genuinely needs multiple
-  worker threads.
-- Don't sleep to wait for a condition — await the thing you actually care about, or
-  poll it with a bounded timeout so a hang fails fast instead of stalling the suite.
+- Prefer the default current-thread runtime; only use
+  `#[tokio::test(flavor = "multi_thread")]` when the test needs multiple workers.
+- Don't sleep to wait for a condition — await the thing you care about, or poll it
+  with a bounded timeout so a hang fails fast.

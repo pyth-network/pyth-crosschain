@@ -8,6 +8,6 @@ test. This page covers the TypeScript-specific conventions.
   `pnpm create-pyth-package` comes wired for it.
 - Locate tests next to the code they exercise, with a `*.test.ts` filename
   (`*.test.tsx` for a React component). Import from the module's own source rather
-  than from the package's public entry point, so a test can reach an internal
-  without it being added to `src/index.ts`.
-- Test the behaviour a real caller would observe, not the implementation details.
+  than the package's public entry point, so a test can reach an internal without
+  adding it to `src/index.ts`.
+- Test the behaviour a real caller would observe, not implementation details.
