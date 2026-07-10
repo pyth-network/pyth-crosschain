@@ -1102,5 +1102,17 @@
     "chain": "injective_evm",
     "type": "EvmWormholeContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "chain": "cronos",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb",
+    "chain": "mezo",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
