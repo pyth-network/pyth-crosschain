@@ -201,7 +201,7 @@ solution is also available. To use this option:
 
 1. A browser client needs to ask its backend for a JWT.
 2. If the client backend doesn't already have a valid JWT cached, it calls
-   `POST /auth/token` on the API service, using its actual (secret) API key.
+   `POST /auth/token`, using its actual (secret) API key.
 3. The backend returns this JWT to the frontend.
 4. The frontend uses this JWT as a bearer token (i.e., as an
    `Authorization: Bearer ...` header, just like backend clients do with API keys)
@@ -209,6 +209,10 @@ solution is also available. To use this option:
 
 Note that JWT tokens are short-lived. Clients should inspect the token's expiration time
 and periodically refresh their tokens.
+
+Backends should protect their own token-providing endpoint against abuse, e.g. by
+requiring their own authentication or with rate limits. API usage via JWTs counts
+against the usage limit of the API key used to mint the JWT.
 
 See [/auth/token](https://pyth.dourolabs.app/docs/?urls.primaryName=Auth+API#/Auth/mint-token)
 for details on how to call the mint token endpoint.
