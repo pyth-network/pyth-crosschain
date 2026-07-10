@@ -189,10 +189,33 @@ curl -H "Authorization: Bearer $PRO_API_KEY" \
 **Do not embed your Pro API key in frontend or browser applications.** The key
 must stay server-side. Route requests through your own backend, which injects
 the `Authorization` header before forwarding to this API. A client-safe JWT
-authentication option is planned for teams that do not want to run their own
+authentication option is available for teams that do not want to run their own
 proxy.
 
 See [Acquire an API Key](/price-feeds/pro/acquire-api-key) to obtain a key.
+
+### JWT Authentication
+
+While routing requests through your own backend is the preferred approach, a JWT-based
+solution is also available. To use this option:
+
+1. A browser client needs to ask its backend for a JWT.
+2. If the client backend doesn't already have a valid JWT cached, it calls
+   `POST /auth/token`, using its actual (secret) API key.
+3. The backend returns this JWT to the frontend.
+4. The frontend uses this JWT as a bearer token (i.e., as an
+   `Authorization: Bearer ...` header, just like backend clients do with API keys)
+   to perform authenticated calls to the Pyth API service.
+
+Note that JWT tokens are short-lived. Clients should inspect the token's expiration time
+and periodically refresh their tokens.
+
+Backends should protect their own token-providing endpoint against abuse, e.g. by
+requiring their own authentication or with rate limits. API usage via JWTs counts
+against the usage limit of the API key used to mint the JWT.
+
+See [/auth/token](https://pyth.dourolabs.app/docs/?urls.primaryName=Auth+API#/Auth/mint-token)
+for details on how to call the mint token endpoint.
 
 ## OpenAPI Schema
 
