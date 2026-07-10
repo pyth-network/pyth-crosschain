@@ -1,0 +1,112 @@
+{
+  "date": "2026-07-10",
+  "label": "Friday",
+  "summary": {
+    "added": 10,
+    "went_live": 1,
+    "removed": 0
+  },
+  "hero": "10 new feeds announced, 1 went live.",
+  "events": [
+    {
+      "id": "Commodities.PTV6/USD",
+      "lazerId": 2981,
+      "asset": "Pyth Price In Usd For Platinum 28 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-10",
+      "quote": "USD",
+      "hermesId": "54a5a2a245da9b9188e4b448a7d35d7503adb660648ca108339e221cbb22e92a"
+    },
+    {
+      "id": "Crypto.NAV.XBTC/USDC",
+      "lazerId": 3445,
+      "asset": "Liminal Btc Nav",
+      "assetType": "nav",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USDC"
+    },
+    {
+      "id": "Crypto.NAV.XHYPE/USDC",
+      "lazerId": 3444,
+      "asset": "Liminal Hype Nav",
+      "assetType": "nav",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USDC"
+    },
+    {
+      "id": "Crypto.CASHCAT/USD",
+      "lazerId": 3441,
+      "asset": "Cashcat",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USD"
+    },
+    {
+      "id": "FX.Index.USD/NOK",
+      "lazerId": 3435,
+      "asset": "Pyth Price In Nok For Usd 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "NOK"
+    },
+    {
+      "id": "FX.Index.USD/SEK",
+      "lazerId": 3434,
+      "asset": "Pyth Price In Sek For Usd 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "SEK"
+    },
+    {
+      "id": "FX.Index.NZD/USD",
+      "lazerId": 3433,
+      "asset": "Pyth Price In Usd For Nzd 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USD"
+    },
+    {
+      "id": "FX.Index.USD/CHF",
+      "lazerId": 3432,
+      "asset": "Pyth Price In Chf For Usd 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "CHF"
+    },
+    {
+      "id": "FX.Index.USD/CAD",
+      "lazerId": 3431,
+      "asset": "Pyth Price In Cad For Usd 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "CAD"
+    },
+    {
+      "id": "FX.Index.AUD/USD",
+      "lazerId": 3430,
+      "asset": "Pyth Price In Usd For Aud 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USD"
+    },
+    {
+      "id": "FX.Index.GBP/USD",
+      "lazerId": 3429,
+      "asset": "Pyth Price In Usd For Gbp 24",
+      "assetType": "fx",
+      "changeType": "added",
+      "date": "2026-07-10",
+      "quote": "USD"
+    }
+  ]
+}
