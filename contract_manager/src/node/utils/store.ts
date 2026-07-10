@@ -44,6 +44,7 @@ import {
   FuelWormholeContract,
   IotaPriceFeedContract,
   IotaWormholeContract,
+  SolanaLazerContract,
   StellarExecutorContract,
   StellarLazerContract,
   SuiLazerContract,
@@ -82,6 +83,7 @@ export class Store {
     | SuiLazerContract
     | StellarLazerContract
     | CardanoLazerContract
+    | SolanaLazerContract
   > = {};
 
   constructor(public path: string) {
@@ -220,6 +222,7 @@ export class Store {
       [EvmLazerContract.type]: EvmLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
+      [SolanaLazerContract.type]: SolanaLazerContract,
       [StellarExecutorContract.type]: StellarExecutorContract,
       [CardanoLazerContract.type]: CardanoLazerContract,
     };
@@ -260,7 +263,8 @@ export class Store {
           chainContract instanceof EvmLazerContract ||
           chainContract instanceof SuiLazerContract ||
           chainContract instanceof StellarLazerContract ||
-          chainContract instanceof CardanoLazerContract
+          chainContract instanceof CardanoLazerContract ||
+          chainContract instanceof SolanaLazerContract
         ) {
           this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {

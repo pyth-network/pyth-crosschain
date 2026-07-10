@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 import {
   CardanoLazerContract,
   EvmLazerContract,
+  SolanaLazerContract,
   StellarLazerContract,
   SuiLazerContract,
 } from "../src/core/contracts";
@@ -127,6 +128,33 @@ async function main() {
               contractId,
               chain,
               signer.publicKey,
+              signer.expiresAt,
+              nowSeconds,
+              warnWithinSeconds,
+            ),
+          );
+        }
+      } else if (contract instanceof SolanaLazerContract) {
+        // The Solana program keeps two independent signer sets; distinguish them
+        // by suffixing the chain column so each row is unambiguous.
+        for (const signer of await contract.getTrustedSigners()) {
+          rows.push(
+            makeRow(
+              contractId,
+              `${chain} (ed25519)`,
+              signer.publicKey,
+              signer.expiresAt,
+              nowSeconds,
+              warnWithinSeconds,
+            ),
+          );
+        }
+        for (const signer of await contract.getTrustedEcdsaSigners()) {
+          rows.push(
+            makeRow(
+              contractId,
+              `${chain} (ecdsa)`,
+              signer.address,
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
