@@ -16,7 +16,7 @@ import { SolanaLazerContract } from "../src/core/contracts";
 // The Solana Lazer program is a single Anchor program gated by a direct on-chain
 // `top_authority: Signer` constraint — there is NO Wormhole executor / VAA. The
 // canonical mainnet program is owned by the Pyth DAO Squads multisig signer
-// `F6eZvgfuPtncCUDzYgzaFPRodHwZXQHe1pC4kkyvkYwa`. To exercise the governance flow
+// `6oXTdojyfDS8m5VtTaYB9xRCxpKGSvKJFndLUPV3V3wT`. To exercise the governance flow
 // end-to-end without going through the multisig, deploy a throwaway instance of
 // `pyth-lazer-solana-contract` to devnet whose `top_authority` is a keypair you
 // control. The test stand-in for "the DAO multisig" is "you, holding that key".

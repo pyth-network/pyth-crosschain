@@ -1,15 +1,12 @@
-import anchorPkg, { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import type { PythLazerSolanaContract } from "@pythnetwork/pyth-lazer-solana-sdk";
 import { PYTH_LAZER_SOLANA_CONTRACT_IDL } from "@pythnetwork/pyth-lazer-solana-sdk";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 
 import { Storable } from "../base";
 import type { Chain } from "../chains";
 import { SvmChain } from "../chains";
-
-// `BN` is not detected as a named ESM export of the anchor CJS module, so it is
-// pulled off the default (namespace) export instead.
-const { BN } = anchorPkg;
 
 /** Seed for the program's singleton `Storage` PDA (`b"storage"`). */
 const STORAGE_SEED = Buffer.from("storage");
@@ -25,8 +22,6 @@ function evmAddressToBytes(address: EvmAddress): number[] {
   }
   return [...bytes];
 }
-
-const ZERO_EVM_ADDRESS: EvmAddress = "0x" + "00".repeat(20);
 
 function bytesToEvmAddress(bytes: ArrayLike<number>): EvmAddress {
   return "0x" + Buffer.from(Array.from(bytes)).toString("hex");
@@ -132,8 +127,8 @@ export class SolanaLazerContract extends Storable {
   }
 
   /**
-   * Read the live ed25519 trusted signers. Only the first `num_trusted_signers`
-   * array entries are live; zero-pubkey entries are dropped defensively.
+   * Read the live ed25519 trusted signers — the first `num_trusted_signers`
+   * array entries.
    *
    * @returns one entry per signer: base58 `publicKey` and `expiresAt` (unix
    *   seconds)
@@ -147,20 +142,14 @@ export class SolanaLazerContract extends Storable {
     return storage.trustedSigners
       .slice(0, storage.numTrustedSigners)
       .map((signer) => ({
+        publicKey: (signer.pubkey as PublicKey).toBase58(),
         expiresAt: BigInt(signer.expiresAt.toString()),
-        pubkey: signer.pubkey as PublicKey,
-      }))
-      .filter((signer) => !signer.pubkey.equals(PublicKey.default))
-      .map((signer) => ({
-        expiresAt: signer.expiresAt,
-        publicKey: signer.pubkey.toBase58(),
       }));
   }
 
   /**
-   * Read the live secp256k1 trusted signers, keyed by 20-byte EVM address. Only
-   * the first `num_trusted_ecdsa_signers` entries are live; zero-address entries
-   * are dropped defensively.
+   * Read the live secp256k1 trusted signers, keyed by 20-byte EVM address — the
+   * first `num_trusted_ecdsa_signers` entries.
    *
    * @returns one entry per signer: `0x`-prefixed `address` and `expiresAt` (unix
    *   seconds)
@@ -174,8 +163,7 @@ export class SolanaLazerContract extends Storable {
       .map((signer) => ({
         address: bytesToEvmAddress(signer.pubkey as number[]),
         expiresAt: BigInt(signer.expiresAt.toString()),
-      }))
-      .filter((signer) => signer.address !== ZERO_EVM_ADDRESS);
+      }));
   }
 
   /**
