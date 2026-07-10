@@ -1092,5 +1092,17 @@
     "chain": "injective_evm",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "chain": "cronos",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
+    "chain": "mezo",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
