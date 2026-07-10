@@ -49,6 +49,10 @@
       "default": "./dist/vote.cjs",
       "types": "./dist/vote.d.ts"
     },
+    "./vote-side": {
+      "default": "./dist/vote-side.cjs",
+      "types": "./dist/vote-side.d.ts"
+    },
     "./wallet": {
       "default": "./dist/wallet.cjs",
       "types": "./dist/wallet.d.ts"

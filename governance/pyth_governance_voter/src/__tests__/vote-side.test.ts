@@ -1,5 +1,5 @@
 import { VoteKind } from "@solana/spl-governance";
-import { buildVote } from "../vote.js";
+import { buildVote } from "../vote-side.js";
 
 describe("buildVote", () => {
   it("maps yes to an Approve vote with 100% weight on rank 0", () => {

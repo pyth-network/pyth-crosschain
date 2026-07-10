@@ -2,8 +2,9 @@ import process from "node:process";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { program } from "commander";
 import { printError, printLine } from "./log.js";
-import type { VoteSide, VoteSummary } from "./vote.js";
+import type { VoteSummary } from "./vote.js";
 import { buildCastVoteTransaction } from "./vote.js";
+import type { VoteSide } from "./vote-side.js";
 import type { WalletOptions } from "./wallet.js";
 import { loadWallet, parseWalletType } from "./wallet.js";
 
@@ -27,8 +28,10 @@ const parseSide = (value: string): VoteSide => {
 
 const parseDerivation = (value: string): number => {
   const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid ledger derivation value "${value}"`);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    throw new Error(
+      `Invalid ledger derivation value "${value}"; expected a non-negative integer`,
+    );
   }
   return parsed;
 };
@@ -107,6 +110,24 @@ const castVote = async (options: CastVoteOptions): Promise<void> => {
   }
 
   const signed = await wallet.signTransaction(transaction);
+
+  // A Fireblocks approval can take minutes, but the blockhash baked into the
+  // signed message is only valid for ~60-90s. The signature covers that
+  // blockhash, so if it lapsed while waiting for approval we cannot swap in a
+  // fresh one without re-signing (another approval). Fail early with an
+  // actionable message instead of an opaque sendRawTransaction rejection.
+  const { value: blockhashStillValid } = await connection.isBlockhashValid(
+    blockhash,
+    { commitment: "confirmed" },
+  );
+  if (!blockhashStillValid) {
+    printError(
+      "Transaction blockhash expired before the signature was ready (wallet approval likely took too long). Re-run the command to try again.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const signature = await connection.sendRawTransaction(signed.serialize());
   printLine(`Vote transaction sent: ${signature}`);
 

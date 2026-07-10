@@ -121,6 +121,14 @@ minutes) for the operation to complete (printing the Fireblocks transaction id s
 a pending approval can be traced), attaches the returned signature, and submits
 the transaction to Solana.
 
+**Approve promptly.** The signature covers a specific recent blockhash, which is
+only valid for ~60–90 seconds. If the Fireblocks approval takes longer than
+that, the blockhash expires and the transaction can no longer be submitted (the
+signed message cannot be re-blockhashed without another approval). The CLI
+detects this and exits with an actionable error rather than an opaque send
+failure — just re-run the command and approve quickly. A durable-nonce execute
+path would remove this time pressure and is a candidate future improvement.
+
 ## Environment variable contract (Fireblocks)
 
 Credentials are read from the environment only — never as CLI flags — so they do

@@ -9,9 +9,6 @@ import {
   getProposal,
   getTokenOwnerRecordAddress,
   PROGRAM_VERSION_V2,
-  Vote,
-  VoteChoice,
-  VoteKind,
   withCastVote,
 } from "@solana/spl-governance";
 import type {
@@ -20,8 +17,8 @@ import type {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { Transaction } from "@solana/web3.js";
-
-export type VoteSide = "yes" | "no";
+import type { VoteSide } from "./vote-side.js";
+import { buildVote } from "./vote-side.js";
 
 export type InstructionSummary = {
   name: string;
@@ -56,27 +53,6 @@ export type CastVoteParams = {
 export type CastVoteResult = {
   transaction: Transaction;
   summary: VoteSummary;
-};
-
-/**
- * Maps the yes/no CLI argument to an SPL Governance V2 {@link Vote}. `yes`
- * approves with 100% weight on the single choice; `no` is a plain deny.
- */
-export const buildVote = (side: VoteSide): Vote => {
-  if (side === "yes") {
-    return new Vote({
-      approveChoices: [new VoteChoice({ rank: 0, weightPercentage: 100 })],
-      deny: undefined,
-      veto: undefined,
-      voteType: VoteKind.Approve,
-    });
-  }
-  return new Vote({
-    approveChoices: undefined,
-    deny: true,
-    veto: undefined,
-    voteType: VoteKind.Deny,
-  });
 };
 
 const rejectStakingWalletUsage = (): never => {
