@@ -4,6 +4,7 @@ packages:
   - apps/hermes/client/js
   - governance/xc_admin/packages/*
   - governance/pyth_staking_sdk
+  - governance/pyth_governance_voter
   - price_service/sdk/js
   - price_service/client/js
   - pythnet/message_buffer

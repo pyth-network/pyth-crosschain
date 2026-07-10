@@ -1,0 +1,76 @@
+{
+  "bin": {
+    "pyth-governance-voter": "./dist/index.cjs"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-node-hid": "^6.29.5",
+    "@pythnetwork/staking-sdk": "workspace:*",
+    "@solana/spl-governance": "^0.3.28",
+    "@solana/web3.js": "catalog:",
+    "commander": "^9.5.0",
+    "fireblocks-sdk": "^5.39.0"
+  },
+  "description": "CLI for casting votes on Pyth DAO governance proposals from a Fireblocks, hot, or Ledger wallet",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@solana/wallet-adapter-react": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "jest": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./fireblocks": {
+      "default": "./dist/fireblocks.cjs",
+      "types": "./dist/fireblocks.d.ts"
+    },
+    "./ledger": {
+      "default": "./dist/ledger.cjs",
+      "types": "./dist/ledger.d.ts"
+    },
+    "./log": {
+      "default": "./dist/log.cjs",
+      "types": "./dist/log.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./vote": {
+      "default": "./dist/vote.cjs",
+      "types": "./dist/vote.d.ts"
+    },
+    "./wallet": {
+      "default": "./dist/wallet.cjs",
+      "types": "./dist/wallet.d.ts"
+    }
+  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "./dist/index.cjs",
+  "name": "@pythnetwork/pyth-governance-voter",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "build": "ts-duality --noEsm",
+    "clean": "rm -rf ./dist",
+    "cli": "pnpm run build && node dist/index.cjs",
+    "test:types": "tsc",
+    "test:unit": "jest"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
+}
