@@ -1,0 +1,276 @@
+{
+  "date": "2026-07-11",
+  "label": "Saturday",
+  "summary": {
+    "added": 1,
+    "went_live": 25,
+    "removed": 1
+  },
+  "hero": "1 new feed announced, 25 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.GON6/USD",
+      "lazerId": 3057,
+      "asset": "Pyth Price In Usd For Ls Gasoil 10 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "e1e8a41da6e5563ec8217d8f608099d4bcf5f83cf71b08f6997829d04311d763"
+    },
+    {
+      "id": "Crypto.NAV.XHYPE/USDC",
+      "lazerId": 3444,
+      "asset": "Liminal Hype Nav",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USDC"
+    },
+    {
+      "id": "Equity.US.SKHYV/USD",
+      "lazerId": 3438,
+      "asset": "Sk Hynix Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.MUX/USD",
+      "lazerId": 3396,
+      "asset": "Micron Technology Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.AMZNX/USD",
+      "lazerId": 3321,
+      "asset": "Amazon Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.MSFTX/USD",
+      "lazerId": 3116,
+      "asset": "Microsoft Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.GOV6/USD",
+      "lazerId": 3060,
+      "asset": "Pyth Price In Usd For Ls Gasoil 12 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "67ac99dbcd32ccfe426f959d26906d3ce66d96302fd812fb7a4a8cc03ccf5827"
+    },
+    {
+      "id": "Crypto.SEDA/USD",
+      "lazerId": 2701,
+      "asset": "Seda",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "6abf75211b819e5933e96466760b0ae8c326c7057d8a681d229430347b0825f6"
+    },
+    {
+      "id": "Crypto.MMT/USD",
+      "lazerId": 2700,
+      "asset": "Momentum",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "1fc9127232d059b415f7b11989d06aa11a3563619e5b7a8e44ae440f0b95e4e1"
+    },
+    {
+      "id": "Crypto.LMTS/USD",
+      "lazerId": 2394,
+      "asset": "Limitless",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "d34b642b86004cdd87fab54e9471483558e7ffb50928cfe8f06855124d1c84aa"
+    },
+    {
+      "id": "Crypto.USELESS/USD",
+      "lazerId": 2348,
+      "asset": "Useless",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "f4b55102bfc9ea1bb2342ea2cb050209ed2a398f7c534afbbc5164541861ba23"
+    },
+    {
+      "id": "Crypto.USOL/USD",
+      "lazerId": 1596,
+      "asset": "Hyperunit Solana",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "974c7a77dbace44d229be17fc176975e06404b004476aeaff37641818cb0c55a"
+    },
+    {
+      "id": "Crypto.SPK/USD",
+      "lazerId": 1583,
+      "asset": "Spark Fi",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "88a17f294aa817de3f22d5b1ebf2b4e5979e252264085f875eb9849eefeb718d"
+    },
+    {
+      "id": "Crypto.UETH/USD",
+      "lazerId": 651,
+      "asset": "Unit Ethereum",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "08c73e187b45ecb2ab8375b975865d3c4a225fef1ccc7f326ad6eec66a24567a"
+    },
+    {
+      "id": "Crypto.UBTC/USD",
+      "lazerId": 650,
+      "asset": "Unit Bitcoin",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "42bfb26778f3504a9f359a92c731f77d0c24aed9b7745276e3ad0c2d840b74c2"
+    },
+    {
+      "id": "Crypto.WEETH/USD",
+      "lazerId": 628,
+      "asset": "Wrapped Eeth",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "9ee4e7c60b940440a261eb54b6d8149c23b580ed7da3139f7f08f4ea29dad395"
+    },
+    {
+      "id": "Crypto.WBETH/USD",
+      "lazerId": 626,
+      "asset": "Wrapped Binance Beacon Eth",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "a267be8dc252ce1e7981598af48ca0d0fe558caec7b11a9cf870fab5b7ab7c16"
+    },
+    {
+      "id": "Crypto.USDTB/USD",
+      "lazerId": 613,
+      "asset": "Ethena Usdtb",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "e4731214382d8ed70a766930a7722c68064fc7ed4e6d70dbce3c84d4be81bc92"
+    },
+    {
+      "id": "Crypto.SYN/USD",
+      "lazerId": 585,
+      "asset": "Synapse",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "0afa62dff138fe0ea24e54bb875a634cc729675dab9f84462c964b2bb14c0349"
+    },
+    {
+      "id": "Crypto.STETH/USD",
+      "lazerId": 572,
+      "asset": "Lido Staked Eth",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "846ae1bdb6300b817cee5fdee2a6da192775030db5615b94a465f53bd40850b5"
+    },
+    {
+      "id": "Crypto.STETH/ETH",
+      "lazerId": 571,
+      "asset": "Lido Staked Eth",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "ETH",
+      "hermesId": "3af6a3098c56f58ff47cc46dee4a5b1910e5c157f7f0b665952445867470d61f"
+    },
+    {
+      "id": "Crypto.ORDER/USD",
+      "lazerId": 522,
+      "asset": "Orderly Network",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "cb1dd84dbe147e75e80947c105fc7e7fd61200ef2f94c079ea249b5189d2c8a4"
+    },
+    {
+      "id": "Crypto.MEZO.MUSD/USD",
+      "lazerId": 490,
+      "asset": "Mezo Us Dollar",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "0617a9b725011a126a2b9fd53563f4236501f32cf76d877644b943394606c6de"
+    },
+    {
+      "id": "Crypto.KHYPE/USD",
+      "lazerId": 463,
+      "asset": "Kinetiq Staked Hype",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "2837a61ae8165c018b0e406ac32b1527270e57b81f0069260afbef71b9cf8ffe"
+    },
+    {
+      "id": "Crypto.CBETH/USD",
+      "lazerId": 398,
+      "asset": "Coinbase Wrapped Staked Eth",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "15ecddd26d49e1a8f1de9376ebebc03916ede873447c1255d2d5891b92ce5717"
+    },
+    {
+      "id": "Crypto.BOLD/USD",
+      "lazerId": 387,
+      "asset": "Liquity Bold",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-11",
+      "quote": "USD",
+      "hermesId": "d6134dbb0427240f901e3e596d6e63f7d85088f96cd4cd4ae2f89c0819b5d623"
+    },
+    {
+      "id": "Commodities.Index.BRENT/USD",
+      "lazerId": 3446,
+      "asset": "Pyth Price In Usd For Brent 24",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-07-11",
+      "quote": "USD"
+    }
+  ]
+}
