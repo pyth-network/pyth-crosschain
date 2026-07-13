@@ -1,6 +1,6 @@
 ---
-title: "Upgraded Contract Addresses"
-description: "Per-chain addresses for the upgraded Pyth Core Contract."
+title: "Pro-compatible Contract Addresses"
+description: "Per-chain addresses for the Pro-compatible Pyth Core Contract."
 full: true
 ---
 
@@ -9,7 +9,7 @@ import MigrationContractsTable from "../../../../../src/components/MigrationCont
 import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
 import solanaMainnet from "../push-feeds/data/svm/solana-mainnet.json";
 
-These are the **upgraded Pyth Core Contract** addresses for each supported chain. To upgrade your Pyth Core integration, swap your existing Pyth contract address for the one listed below for your chain. The interface is unchanged. No other code changes are needed.
+These are the **Pro-compatible Pyth Core Contract** addresses for each supported chain. To upgrade your Pyth Core integration, swap your existing Pyth contract address for the one listed below for your chain. The interface is unchanged. No other code changes are needed.
 
 See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrade path.
 
@@ -27,7 +27,7 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 ### Mainnet
 
-|                     | Current                                                                                                                                                                | Upgraded                                                             |
+|                     | Current                                                                                                                                                                | Pro-compatible                                                             |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Pyth State ID       | [`0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8`](https://suiscan.xyz/mainnet/object/0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8) | [`0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d`](https://suiscan.xyz/mainnet/object/0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d) |
 | Pyth Package ID     | [`0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91`](https://suiscan.xyz/mainnet/object/0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91) | [`0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0`](https://suiscan.xyz/mainnet/object/0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0) |
@@ -36,7 +36,7 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 ### Testnet
 
-|                     | Current                                                                                                                                                                                  | Upgraded                                                             |
+|                     | Current                                                                                                                                                                                  | Pro-compatible                                                             |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Pyth State ID       | [`0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c`](https://suiscan.xyz/testnet/object/0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c) | [`0x3c48fe392912de6c18087a2b3f5fdbfbfdb4598e180947feff1f12f8e9ea073e`](https://suiscan.xyz/testnet/object/0x3c48fe392912de6c18087a2b3f5fdbfbfdb4598e180947feff1f12f8e9ea073e) |
 | Pyth Package ID     | [`0xabf837e98c26087cba0883c0a7a28326b1fa3c5e1e2c5abdb486f9e8f594c837`](https://suiscan.xyz/testnet/object/0xabf837e98c26087cba0883c0a7a28326b1fa3c5e1e2c5abdb486f9e8f594c837) | [`0xd1ac23e1582080e2e5d43dbad1cf463ea2337cdbbb1a9ca669e470cefb74d8fd`](https://suiscan.xyz/testnet/object/0xd1ac23e1582080e2e5d43dbad1cf463ea2337cdbbb1a9ca669e470cefb74d8fd) |
@@ -47,7 +47,7 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 ### Programs (Mainnet and Testnet)
 
-| Program           | Current                                                                                                                              | Upgraded                                       |
+| Program           | Current                                                                                                                              | Pro-compatible                                       |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
 | Wormhole receiver | [`HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ`](https://explorer.solana.com/address/HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ)   | [`HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL`](https://explorer.solana.com/address/HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL) |
 | Solana receiver   | [`rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ`](https://explorer.solana.com/address/rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ)   | [`rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp`](https://explorer.solana.com/address/rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp) |
@@ -55,7 +55,7 @@ See the [upgrade guide](/price-feeds/core/upgrade/preparing) for the full upgrad
 
 ### Push Feed Accounts (Mainnet)
 
-Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The Price Feed program ID changes at the upgrade, so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
+Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The Price Feed program ID changes at the upgrade, so every per-feed account address changes too. Below are the Pro-compatible account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
 
 <SponsoredFeedsTable
   feeds={solanaMainnet.feeds}

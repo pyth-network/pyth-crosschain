@@ -64,7 +64,7 @@ const connection = new SuiPriceServiceConnection(
 
 ### Swap your contract address
 
-On Sui, swapping the Pyth Core contract address means updating the Pyth package `rev` in your `Move.toml`. The full list of upgraded Pyth State, Pyth Package, Wormhole State, and Wormhole Package IDs is on the [contract addresses page](/price-feeds/core/upgrade/contracts#sui).
+On Sui, swapping the Pyth Core contract address means updating the Pyth package `rev` in your `Move.toml`. The full list of Pro-compatible Pyth State, Pyth Package, Wormhole State, and Wormhole Package IDs is on the [contract addresses page](/price-feeds/core/upgrade/contracts#sui).
 
 Current Pyth Core users reference the Pyth package in their `Move.toml`:
 
@@ -75,7 +75,7 @@ subdir = "target_chains/sui/contracts"
 rev = "sui-contract-mainnet"
 ```
 
-The upgraded Pyth Core package is available at a new `rev`:
+The Pro-compatible Pyth Core package is available at a new `rev`:
 
 ```toml
 [dependencies.pyth]
@@ -85,7 +85,7 @@ rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-te
 ```
 
 <Callout type="warn">
-  **Sui package compatibility may force you to keep both.** Per Sui's [custom package upgrade policies](https://docs.sui.io/develop/publish-upgrade-packages/custom-policies), you may need to keep the original Pyth package alongside the upgraded one in your `Move.toml`. Rename one to avoid a naming conflict:
+  **Sui package compatibility may force you to keep both.** Per Sui's [custom package upgrade policies](https://docs.sui.io/develop/publish-upgrade-packages/custom-policies), you may need to keep the original Pyth package alongside the Pro-compatible one in your `Move.toml`. Rename one to avoid a naming conflict:
 
   ```toml
   [dependencies.pyth]
@@ -110,6 +110,6 @@ rev = "sui-pro-compatible-contract-mainnet"  # or sui-pro-compatible-contract-te
 </Step>
 </Steps>
 
-## Upgraded Sui Addresses
+## Pro-compatible Sui Addresses
 
 [View on the contract addresses page →](/price-feeds/core/upgrade/contracts#sui)

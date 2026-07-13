@@ -27,7 +27,7 @@ graph LR
   end
 
   subgraph OnChain ["<span style='color:#71717a'>On-Chain</span>"]
-    P[Upgraded Pyth Core Contract]
+    P[Pro-compatible Pyth Core Contract]
   end
 
   R1 --> H
@@ -52,8 +52,8 @@ graph LR
 2. **Data Collection**: The upgraded Hermes endpoint gathers the signed roots and
    price messages from all routers.
 3. **Update Submission**: Consumers fetch the signed root and Merkle proofs from
-   Hermes and submit them to the upgraded contract.
-4. **On-Chain Verification**: The upgraded contracts verify that the router
+   Hermes and submit them to the Pro-compatible contract.
+4. **On-Chain Verification**: The Pro-compatible contracts verify that the router
    signatures meet the quorum and validate the requested price aggregate against the Merkle
    root.
 
@@ -70,7 +70,7 @@ The upgraded Hermes endpoint is hosted at a new URL but remains completely
 backward-compatible with standard Hermes. It exposes the identical HTTP and
 WebSocket API endpoints and returns the same payload structures.
 
-### Upgraded Pyth Core Contract
+### Pro-compatible Pyth Core Contract
 
 These are newly deployed contracts on each supported blockchain. They share
 the exact same ABI and interface as the legacy contracts, eliminating the
@@ -97,5 +97,5 @@ Here is a side-by-side comparison of the two architectures:
 
 Pyth Core will be upgraded on **July 31st**. To avoid potential oracle downtime,
 make sure you take the appropriate steps by following the [upgrade guide](/price-feeds/core/upgrade/preparing).
-You can also view the [upgraded Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts)
+You can also view the [Pro-compatible Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts)
 for the new contract addresses on each supported chain.

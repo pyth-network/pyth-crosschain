@@ -166,7 +166,7 @@ export const SponsoredFeedsTable = ({
         ? [
             {
               id: "upgradedAccountAddress",
-              name: "Upgraded Account Address",
+              name: "Pro-compatible Account Address",
               alignment: "left" as const,
             },
           ]

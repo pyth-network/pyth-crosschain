@@ -99,7 +99,7 @@ const MigrationContractsTable = async ({
       <thead>
         <tr>
           <th>Network</th>
-          <th>Upgraded Pyth Core Contract</th>
+          <th>Pro-compatible Pyth Core Contract</th>
         </tr>
       </thead>
       <tbody>
