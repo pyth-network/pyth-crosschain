@@ -1,0 +1,140 @@
+{
+  "date": "2026-07-13",
+  "label": "Monday",
+  "summary": {
+    "added": 0,
+    "went_live": 13,
+    "removed": 0
+  },
+  "hero": "13 went live.",
+  "events": [
+    {
+      "id": "Crypto.NAV.XBTC/USDC",
+      "lazerId": 3445,
+      "asset": "Liminal Btc Nav",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USDC"
+    },
+    {
+      "id": "Crypto.META/USD",
+      "lazerId": 2395,
+      "asset": "Metadao",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "e379d8d3a1a44952474f057bdfe6e902a97f093b2872c152dcf04f612e3e3be9"
+    },
+    {
+      "id": "Crypto.FF/USD",
+      "lazerId": 2326,
+      "asset": "Falcon Finance",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "f9597faf41a8d91fcc4dc95e9b4f408ea391cf17ec26955ae2055b6dbda5ec89"
+    },
+    {
+      "id": "Crypto.WSTHYPE/STHYPE.RR",
+      "lazerId": 762,
+      "asset": "Wrapped Staked Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "STHYPE",
+      "hermesId": "1a78b5829a99f1d2897917dae2a02266c0210535a995a2e9d0692613bbc89e27"
+    },
+    {
+      "id": "Crypto.KHYPE/HYPE.RR",
+      "lazerId": 697,
+      "asset": "Kinetiq Staked Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "HYPE",
+      "hermesId": "983b7cabc6fab548e15a5b05500da9b99c1682107b3e2ff289344116c10ac02c"
+    },
+    {
+      "id": "Crypto.MSUSD/USD",
+      "lazerId": 504,
+      "asset": "Metronome Synthetic Us Dollar",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "c753c899ffdfcc8d1a02440fe380501b454b559122998bcd245d9063d07cc162"
+    },
+    {
+      "id": "Crypto.MSETH/USD",
+      "lazerId": 502,
+      "asset": "Metronome Synthetic Ethereum",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "cd4eb98d487478925bb032580ab13e7ccfcb2e814500b526f00bd9fa651cc6b6"
+    },
+    {
+      "id": "Crypto.MNDE/USD",
+      "lazerId": 495,
+      "asset": "Marinade",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "3607bf4d7b78666bd3736c7aacaf2fd2bc56caa8667d3224971ebe3c0623292a"
+    },
+    {
+      "id": "Crypto.LION/USD",
+      "lazerId": 470,
+      "asset": "Loaded Lions",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "a57e29fe0a3e6165a55a42675d94aaf27e1b0183e7dfa1b7e9e3514c70f622d0"
+    },
+    {
+      "id": "Crypto.DBR/USD",
+      "lazerId": 411,
+      "asset": "Debridge",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "f788488fe2df341b10a498e0a789f03209c0938d9ed04bc521f8224748d6d236"
+    },
+    {
+      "id": "Crypto.BIO/USD",
+      "lazerId": 377,
+      "asset": "Bio Protocol",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "d9d22050e7413a16129f1334cd4dd5a359975ce16389cdadae8f677cf46e2839"
+    },
+    {
+      "id": "Crypto.JASMY/USD",
+      "lazerId": 189,
+      "asset": "Jasmycoin",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD",
+      "hermesId": "2b386bdca7fda5cf3c3975f70318593bf144104cb00742592ecff60dd798972f"
+    },
+    {
+      "id": "Crypto.GLM/USD",
+      "lazerId": 122,
+      "asset": "Golem",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-13",
+      "quote": "USD"
+    }
+  ]
+}
