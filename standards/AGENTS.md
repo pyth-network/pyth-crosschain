@@ -13,8 +13,8 @@ the language you are working in.
 - [services.md](services.md) — writing resilient services: error recovery,
   benchmarking, logging/metrics/tracing, dependency minimization, running
   multiple instances.
-- [review.md](review.md) — pointer to the root [REVIEW.md](../REVIEW.md) checklist
-  reviewers apply to every PR.
+- [review.md](review.md) — the code-review checklist reviewers apply to every PR
+  (also surfaced at the repo root as [REVIEW.md](../REVIEW.md)).
 
 ## Rust
 
