@@ -6,6 +6,7 @@ on:
       - 'apps/mcp/server.json'
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: publish-mcp-registry
@@ -27,7 +28,7 @@ jobs:
 
       - name: Install mcp-publisher
         run: |
-          curl -fL "https://github.com/modelcontextprotocol/registry/releases/download/v1.4.1/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          curl -fL "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.0/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
           sudo mv mcp-publisher /usr/local/bin/
 
       - name: Authenticate to MCP Registry
