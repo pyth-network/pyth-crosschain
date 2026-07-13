@@ -56,6 +56,7 @@ get_latest_price({ "access_token": "<token>", "symbols": [...next 100...] })
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "FundingRate.BTC/USD",
   "from": 1750723200,
   "to": 1751328000,
@@ -98,7 +99,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 1. **Treating rate values as dollar prices.** Funding rate `display_price` is a rate (e.g., 0.0005), not a dollar amount. Present as a percentage or basis points, not "$0.0005".
 
-2. **Forgetting `access_token` for `get_latest_price`.** This tool requires authentication. `get_symbols` and `get_candlestick_data` are public, but current rates via `get_latest_price` need a token.
+2. **Forgetting `access_token` for price tools.** `get_latest_price` and `get_candlestick_data` both require authentication. Only `get_symbols` is public — current rates and rate history need a token.
 
 3. **Batching more than 100 feeds without chunking.** `get_latest_price` has a 100-feed limit. If the funding-rate category has more than 100 feeds, split into multiple calls of 100 each.
 
@@ -137,6 +138,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch hourly candles for 7 days:
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "FundingRate.BTC/USD",
      "from": 1750723200,
      "to": 1751328000,

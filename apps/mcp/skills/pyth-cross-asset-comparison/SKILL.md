@@ -39,6 +39,7 @@ get_symbols({ "query": "BTC" })
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "Crypto.BTC/USD",
   "from": 1743465600,
   "to": 1746057600,
@@ -106,12 +107,14 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch daily candles (same range for both):
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.BTC/USD",
      "from": 1743465600,
      "to": 1751328000,
      "resolution": "D"
    })
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Metal.XAU/USD",
      "from": 1743465600,
      "to": 1751328000,
@@ -141,12 +144,14 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch daily candles (same range, same resolution):
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.ETH/USD",
      "from": 1748736000,
      "to": 1751328000,
      "resolution": "D"
    })
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.SOL/USD",
      "from": 1748736000,
      "to": 1751328000,
@@ -167,12 +172,14 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch 4-hour candles for one week:
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "FX.EUR/USD",
      "from": 1750723200,
      "to": 1751328000,
      "resolution": "240"
    })
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "FX.GBP/USD",
      "from": 1750723200,
      "to": 1751328000,

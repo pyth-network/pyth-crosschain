@@ -59,6 +59,7 @@ get_latest_price({
 
 ```json
 get_historical_price({
+  "access_token": "<token>",
   "symbols": ["Crypto.BTC/USD", "Crypto.ETH/USD", "Crypto.SOL/USD"],
   "timestamp": 1743465600
 })
@@ -166,6 +167,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch reference prices at start of last month:
    ```json
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["Crypto.BTC/USD", "Crypto.ETH/USD", "Crypto.SOL/USD"],
      "timestamp": 1746057600
    })

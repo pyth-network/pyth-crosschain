@@ -40,7 +40,7 @@ Never present raw integer `price` values to users.
 
 ## Auth
 
-`get_latest_price` requires an `access_token` parameter. All other tools are public.
+`get_latest_price`, `get_historical_price`, and `get_candlestick_data` require an `access_token` parameter. `get_symbols` is public.
 
 ## Security
 
@@ -78,6 +78,7 @@ Response per feed: `price_feed_id`, `timestamp_us`, `price`, `exponent`, `confid
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
+| `access_token` | string | Yes | Pyth Pro token |
 | `symbols` | string[] | One of symbols/ids | Max 50 |
 | `price_feed_ids` | number[] | One of symbols/ids | Max 50 |
 | `timestamp` | number | Yes | Unix seconds (ms/us auto-detected) |
@@ -90,6 +91,7 @@ Response per feed: `price_feed_id`, `publish_time`, `channel`, `price`, `exponen
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
+| `access_token` | string | Yes | Pyth Pro token |
 | `symbol` | string | Yes | Single symbol from `get_symbols` |
 | `from` | number | Yes | Start time, Unix seconds |
 | `to` | number | Yes | End time, Unix seconds |

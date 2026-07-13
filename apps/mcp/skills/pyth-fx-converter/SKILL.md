@@ -49,6 +49,7 @@ get_latest_price({
 
 ```json
 get_historical_price({
+  "access_token": "<token>",
   "symbols": ["FX.EUR/USD", "FX.JPY/USD"],
   "timestamp": 1751241600
 })
@@ -174,6 +175,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch historical rates:
    ```json
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["FX.GBP/USD", "FX.JPY/USD"],
      "timestamp": 1750982400
    })

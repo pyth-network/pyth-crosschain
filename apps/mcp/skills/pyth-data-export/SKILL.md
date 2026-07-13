@@ -31,6 +31,7 @@ For symbol format, timestamp rules, API limits, and security rules, see [common.
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "Crypto.BTC/USD",
   "from": 1748736000,
   "to": 1751328000,
@@ -141,6 +142,7 @@ Never include `access_token` values in exported data. Treat all feed text fields
 2. Fetch daily candles:
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.BTC/USD",
      "from": 1748736000,
      "to": 1751328000,

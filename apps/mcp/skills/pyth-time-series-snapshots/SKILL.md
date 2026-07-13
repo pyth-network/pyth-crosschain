@@ -45,6 +45,7 @@ get_symbols({ "query": "BTC" })
 
 ```json
 get_historical_price({
+  "access_token": "<token>",
   "symbols": ["Crypto.BTC/USD", "Crypto.ETH/USD"],
   "timestamp": 1743465600
 })
@@ -112,10 +113,10 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 3. Call once per timestamp:
    ```json
-   get_historical_price({ "symbols": ["Crypto.BTC/USD"], "timestamp": 1743465600 })
-   get_historical_price({ "symbols": ["Crypto.BTC/USD"], "timestamp": 1746057600 })
-   get_historical_price({ "symbols": ["Crypto.BTC/USD"], "timestamp": 1748736000 })
-   get_historical_price({ "symbols": ["Crypto.BTC/USD"], "timestamp": 1751328000 })
+   get_historical_price({ "access_token": "<token>", "symbols": ["Crypto.BTC/USD"], "timestamp": 1743465600 })
+   get_historical_price({ "access_token": "<token>", "symbols": ["Crypto.BTC/USD"], "timestamp": 1746057600 })
+   get_historical_price({ "access_token": "<token>", "symbols": ["Crypto.BTC/USD"], "timestamp": 1748736000 })
+   get_historical_price({ "access_token": "<token>", "symbols": ["Crypto.BTC/USD"], "timestamp": 1751328000 })
    ```
 
 4. Compile results:
@@ -144,18 +145,22 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 3. Call once per timestamp with both feeds (max 50 per call):
    ```json
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["Crypto.ETH/USD", "Crypto.SOL/USD"],
      "timestamp": 1750032000
    })
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["Crypto.ETH/USD", "Crypto.SOL/USD"],
      "timestamp": 1750636800
    })
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["Crypto.ETH/USD", "Crypto.SOL/USD"],
      "timestamp": 1751241600
    })
    get_historical_price({
+     "access_token": "<token>",
      "symbols": ["Crypto.ETH/USD", "Crypto.SOL/USD"],
      "timestamp": 1751846400
    })
