@@ -99,7 +99,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 1. **Treating rate values as dollar prices.** Funding rate `display_price` is a rate (e.g., 0.0005), not a dollar amount. Present as a percentage or basis points, not "$0.0005".
 
-2. **Forgetting `access_token` for price tools.** `get_latest_price` and `get_candlestick_data` both require authentication. Only `get_symbols` is public — current rates and rate history need a token.
+2. **Forgetting `access_token` for price tools.** `get_latest_price`, `get_historical_price`, and `get_candlestick_data` all require authentication. Only `get_symbols` is public — current rates and rate history need a token.
 
 3. **Batching more than 100 feeds without chunking.** `get_latest_price` has a 100-feed limit. If the funding-rate category has more than 100 feeds, split into multiple calls of 100 each.
 
