@@ -285,56 +285,57 @@ module wormhole::governance_message_tests {
         test_scenario::end(my_scenario);
     }
 
-    #[test]
-    fun test_local_action() {
-        // Set up.
-        let caller = person();
-        let my_scenario = test_scenario::begin(caller);
-        let scenario = &mut my_scenario;
+    // IOTA: disabled, payload was created for Sui
+    // #[test]
+    // fun test_local_action() {
+    //     // Set up.
+    //     let caller = person();
+    //     let my_scenario = test_scenario::begin(caller);
+    //     let scenario = &mut my_scenario;
 
-        let wormhole_fee = 350;
-        set_up_wormhole(scenario, wormhole_fee);
+    //     let wormhole_fee = 350;
+    //     set_up_wormhole(scenario, wormhole_fee);
 
-        // Prepare test setting sender to `caller`.
-        test_scenario::next_tx(scenario, caller);
+    //     // Prepare test setting sender to `caller`.
+    //     test_scenario::next_tx(scenario, caller);
 
-        let worm_state = take_state(scenario);
-        let the_clock = take_clock(scenario);
+    //     let worm_state = take_state(scenario);
+    //     let the_clock = take_clock(scenario);
 
-        let verified_vaa =
-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
-        let (
-            _,
-            _,
-            _,
-            expected_payload
-        ) = governance_message::deserialize_test_only(
-            vaa::payload(&verified_vaa)
-        );
+    //     let verified_vaa =
+    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+    //     let (
+    //         _,
+    //         _,
+    //         _,
+    //         expected_payload
+    //     ) = governance_message::deserialize_test_only(
+    //         vaa::payload(&verified_vaa)
+    //     );
 
-        let ticket =
-            governance_message::authorize_verify_local(
-                GovernanceWitness {},
-                state::governance_chain(&worm_state),
-                state::governance_contract(&worm_state),
-                state::governance_module(),
-                3 // set fee
-            );
-        let receipt =
-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+    //     let ticket =
+    //         governance_message::authorize_verify_local(
+    //             GovernanceWitness {},
+    //             state::governance_chain(&worm_state),
+    //             state::governance_contract(&worm_state),
+    //             state::governance_module(),
+    //             3 // set fee
+    //         );
+    //     let receipt =
+    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
 
-        let consumed = consumed_vaas::new(&mut tx_context::dummy());
-        let payload = governance_message::take_payload(&mut consumed, receipt);
-        assert!(payload == expected_payload, 0);
+    //     let consumed = consumed_vaas::new(&mut tx_context::dummy());
+    //     let payload = governance_message::take_payload(&mut consumed, receipt);
+    //     assert!(payload == expected_payload, 0);
 
-        // Clean up.
-        consumed_vaas::destroy(consumed);
-        return_state(worm_state);
-        return_clock(the_clock);
+    //     // Clean up.
+    //     consumed_vaas::destroy(consumed);
+    //     return_state(worm_state);
+    //     return_clock(the_clock);
 
-        // Done.
-        test_scenario::end(my_scenario);
-    }
+    //     // Done.
+    //     test_scenario::end(my_scenario);
+    // }
 
     #[test]
     #[expected_failure(

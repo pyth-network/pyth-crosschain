@@ -121,100 +121,102 @@ module wormhole::migrate_tests {
     const UPGRADE_VAA: vector<u8> =
         x"01000000000100db695668c0c91f4df6e4106dcb912d9062898fd976d631ff1c1b4109ccd203b43cd2419c7d9a191f8d42a780419e63307aacc93080d8629c6c03061c52becf1d0100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726501001500000000000000000000000000000000000000000000006e6577206275696c64";
 
-    #[test]
-    fun test_migrate() {
-        use wormhole::migrate::{migrate};
+    // IOTA: disabled, payload was created for Sui
+    // #[test]
+    // fun test_migrate() {
+    //     use wormhole::migrate::{migrate};
 
-        let user = person();
-        let my_scenario = test_scenario::begin(user);
-        let scenario = &mut my_scenario;
+    //     let user = person();
+    //     let my_scenario = test_scenario::begin(user);
+    //     let scenario = &mut my_scenario;
 
-        // Initialize Wormhole.
-        let wormhole_message_fee = 350;
-        set_up_wormhole(scenario, wormhole_message_fee);
+    //     // Initialize Wormhole.
+    //     let wormhole_message_fee = 350;
+    //     set_up_wormhole(scenario, wormhole_message_fee);
 
-        // Next transaction should be conducted as an ordinary user.
-        test_scenario::next_tx(scenario, user);
+    //     // Next transaction should be conducted as an ordinary user.
+    //     test_scenario::next_tx(scenario, user);
 
-        // Upgrade (digest is just b"new build") for testing purposes.
-        upgrade_wormhole(scenario);
+    //     // Upgrade (digest is just b"new build") for testing purposes.
+    //     upgrade_wormhole(scenario);
 
-        // Ignore effects.
-        test_scenario::next_tx(scenario, user);
+    //     // Ignore effects.
+    //     test_scenario::next_tx(scenario, user);
 
-        let worm_state = take_state(scenario);
-        let the_clock = take_clock(scenario);
+    //     let worm_state = take_state(scenario);
+    //     let the_clock = take_clock(scenario);
 
-        // Set up migrate (which prepares this package to be the same state as
-        // a previous release).
-        wormhole::migrate::set_up_migrate(&mut worm_state);
+    //     // Set up migrate (which prepares this package to be the same state as
+    //     // a previous release).
+    //     wormhole::migrate::set_up_migrate(&mut worm_state);
 
-        // Conveniently roll version back.
-        state::reverse_migrate_version(&mut worm_state);
+    //     // Conveniently roll version back.
+    //     state::reverse_migrate_version(&mut worm_state);
 
-        // Simulate executing with an outdated build by upticking the minimum
-        // required version for `publish_message` to something greater than
-        // this build.
-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+    //     // Simulate executing with an outdated build by upticking the minimum
+    //     // required version for `publish_message` to something greater than
+    //     // this build.
+    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
 
-        // Make sure we emitted an event.
-        let effects = test_scenario::next_tx(scenario, user);
-        assert!(test_scenario::num_user_events(&effects) == 1, 0);
+    //     // Make sure we emitted an event.
+    //     let effects = test_scenario::next_tx(scenario, user);
+    //     assert!(test_scenario::num_user_events(&effects) == 1, 0);
 
-        // Clean up.
-        return_state(worm_state);
-        return_clock(the_clock);
+    //     // Clean up.
+    //     return_state(worm_state);
+    //     return_clock(the_clock);
 
-        // Done.
-        test_scenario::end(my_scenario);
-    }
+    //     // Done.
+    //     test_scenario::end(my_scenario);
+    // }
 
-    #[test]
-    #[expected_failure(abort_code = wormhole::package_utils::E_INCORRECT_OLD_VERSION)]
-    /// ^ This expected error may change depending on the migration. In most
-    /// cases, this will abort with `wormhole::package_utils::E_INCORRECT_OLD_VERSION`.
-    fun test_cannot_migrate_again() {
-        use wormhole::migrate::{migrate};
+    // IOTA: disabled, payload was created for Sui
+    // #[test]
+    // #[expected_failure(abort_code = wormhole::package_utils::E_INCORRECT_OLD_VERSION)]
+    // /// ^ This expected error may change depending on the migration. In most
+    // /// cases, this will abort with `wormhole::package_utils::E_INCORRECT_OLD_VERSION`.
+    // fun test_cannot_migrate_again() {
+    //     use wormhole::migrate::{migrate};
 
-        let user = person();
-        let my_scenario = test_scenario::begin(user);
-        let scenario = &mut my_scenario;
+    //     let user = person();
+    //     let my_scenario = test_scenario::begin(user);
+    //     let scenario = &mut my_scenario;
 
-        // Initialize Wormhole.
-        let wormhole_message_fee = 350;
-        set_up_wormhole(scenario, wormhole_message_fee);
+    //     // Initialize Wormhole.
+    //     let wormhole_message_fee = 350;
+    //     set_up_wormhole(scenario, wormhole_message_fee);
 
-        // Next transaction should be conducted as an ordinary user.
-        test_scenario::next_tx(scenario, user);
+    //     // Next transaction should be conducted as an ordinary user.
+    //     test_scenario::next_tx(scenario, user);
 
-        // Upgrade (digest is just b"new build") for testing purposes.
-        upgrade_wormhole(scenario);
+    //     // Upgrade (digest is just b"new build") for testing purposes.
+    //     upgrade_wormhole(scenario);
 
-        // Ignore effects.
-        test_scenario::next_tx(scenario, user);
+    //     // Ignore effects.
+    //     test_scenario::next_tx(scenario, user);
 
-        let worm_state = take_state(scenario);
-        let the_clock = take_clock(scenario);
+    //     let worm_state = take_state(scenario);
+    //     let the_clock = take_clock(scenario);
 
-        // Set up migrate (which prepares this package to be the same state as
-        // a previous release).
-        wormhole::migrate::set_up_migrate(&mut worm_state);
+    //     // Set up migrate (which prepares this package to be the same state as
+    //     // a previous release).
+    //     wormhole::migrate::set_up_migrate(&mut worm_state);
 
-        // Conveniently roll version back.
-        state::reverse_migrate_version(&mut worm_state);
+    //     // Conveniently roll version back.
+    //     state::reverse_migrate_version(&mut worm_state);
 
-        // Simulate executing with an outdated build by upticking the minimum
-        // required version for `publish_message` to something greater than
-        // this build.
-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+    //     // Simulate executing with an outdated build by upticking the minimum
+    //     // required version for `publish_message` to something greater than
+    //     // this build.
+    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
 
-        // Make sure we emitted an event.
-        let effects = test_scenario::next_tx(scenario, user);
-        assert!(test_scenario::num_user_events(&effects) == 1, 0);
+    //     // Make sure we emitted an event.
+    //     let effects = test_scenario::next_tx(scenario, user);
+    //     assert!(test_scenario::num_user_events(&effects) == 1, 0);
 
-        // You shall not pass!
-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+    //     // You shall not pass!
+    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
 
-        abort 42
-    }
+    //     abort 42
+    // }
 }
