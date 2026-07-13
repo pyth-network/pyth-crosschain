@@ -54,15 +54,15 @@ https://mcp.pyth.network/mcp
 |------|-------------|---------------|
 | `get_symbols` | Search and list available price feeds | No |
 | `get_latest_price` | Real-time prices for one or more feeds | Yes (access token) |
-| `get_historical_price` | Point-in-time price snapshots | No |
-| `get_candlestick_data` | OHLC candlestick bars for charting and analysis | No |
+| `get_historical_price` | Point-in-time price snapshots | Yes (access token) |
+| `get_candlestick_data` | OHLC candlestick bars for charting and analysis | Yes (access token) |
 | `convert_date_to_timestamp` | Convert date strings to Unix timestamps | No |
 
 > **Tip:** Use `get_symbols` first to discover available feeds before calling other tools.
 
 ## Access Token
 
-An access token is only required for `get_latest_price`. All other tools work without one.
+An access token is required for `get_latest_price`, `get_historical_price`, and `get_candlestick_data`. `get_symbols` and `convert_date_to_timestamp` work without one.
 
 - Get a token at [pyth.network/pricing](https://pyth.network/pricing)
 - The token is passed as a tool parameter — your AI assistant will ask for it when needed
