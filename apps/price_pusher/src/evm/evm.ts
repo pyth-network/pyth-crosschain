@@ -146,15 +146,21 @@ export class EvmPriceListener extends ChainPriceListener {
 export class EvmPricePusher implements IPricePusher {
   private pusherAddress: `0x${string}` | undefined;
   private lastPushAttempt: PushAttempt | undefined;
-  // Single-flight, bounded receipt tracker. At most one receipt wait runs at a
-  // time; it is cancelled and replaced whenever a newer push supersedes the tx
-  // (e.g. a same-nonce gas escalation), and it stops at `receiptWaitTimeoutMs`.
-  // This replaces viem's `waitForTransactionReceipt`, whose timeout (on the
-  // pinned version) rejects without tearing down its internal
-  // `eth_getTransactionByHash` / block-number poll — so a fire-and-forget wait
-  // for a tx that never becomes findable leaked a detached poller that ran for
-  // the pod's whole lifetime and accumulated one per push.
-  private receiptTracker: AbortController | undefined;
+  // Bounded, per-nonce receipt trackers. Each poll self-terminates on landing or
+  // at `receiptWaitTimeoutMs`. Same-nonce gas escalations ADD a tracker rather
+  // than replacing the previous one: the original and the repriced tx compete
+  // for the nonce and EITHER can land (a miner may include the old tx over the
+  // replacement), so all competing hashes stay watched and whichever lands is
+  // logged. A nonce advance means the previous nonce already resolved, so its
+  // now-doomed stragglers are aborted. This replaces viem's
+  // `waitForTransactionReceipt`, whose timeout (on the pinned version) rejects
+  // without tearing down its internal `eth_getTransactionByHash` / block-number
+  // poll — so a fire-and-forget wait for a tx that never becomes findable leaked
+  // a detached poller that ran for the pod's whole lifetime, one per push. Here
+  // the count is bounded: at most one nonce is tracked at a time, and each of
+  // its trackers self-terminates at the deadline.
+  private receiptTrackers = new Set<AbortController>();
+  private trackedNonce: number | undefined;
 
   constructor(
     private hermesClient: HermesClient,
@@ -294,7 +300,7 @@ export class EvmPricePusher implements IPricePusher {
 
       this.logger.debug({ hash }, "Price update sent");
 
-      this.trackTransactionReceipt(hash);
+      this.trackTransactionReceipt(hash, txNonce);
     } catch (error: any) {
       this.logger.debug(
         { err: error },
@@ -424,31 +430,40 @@ export class EvmPricePusher implements IPricePusher {
     }
   }
 
-  // Stop the in-flight receipt tracker (graceful shutdown / tests). Safe to call
-  // at any time; leaves no pending poll behind.
+  // Stop all in-flight receipt trackers (graceful shutdown / tests). Safe to
+  // call at any time; leaves no pending poll behind.
   public dispose(): void {
-    this.receiptTracker?.abort();
-    this.receiptTracker = undefined;
+    for (const controller of this.receiptTrackers) {
+      controller.abort();
+    }
+    this.receiptTrackers.clear();
+    this.trackedNonce = undefined;
   }
 
-  // Start (or replace) the single-flight receipt tracker for a freshly-sent tx.
-  // Fire-and-forget by design — the receipt is observational (it only produces
-  // the "Price update successful" log the Grafana Tx-Hash panel scrapes); the
-  // controller never blocks on it, and the re-send/nonce/gas decision is driven
-  // by a fresh `getTransactionCount` each cycle, not by the receipt. Cancels any
-  // prior tracker so only the latest tx is polled, capping concurrent waiters at
-  // one (a superseded poller may issue at most one more in-flight lookup before
-  // it observes the abort, which also lets it still log a tx that just landed).
-  private trackTransactionReceipt(hash: `0x${string}`): void {
-    this.receiptTracker?.abort();
-    const controller = new AbortController();
-    this.receiptTracker = controller;
-    void this.pollTransactionReceipt(hash, controller).finally(() => {
-      // Only clear if we are still the active tracker (a newer push may have
-      // already replaced us).
-      if (this.receiptTracker === controller) {
-        this.receiptTracker = undefined;
+  // Start a receipt tracker for a freshly-sent tx. Fire-and-forget by design —
+  // the receipt is observational (it only produces the "Price update successful"
+  // log the Grafana Tx-Hash panel scrapes); the controller never blocks on it,
+  // and the re-send/nonce/gas decision is driven by a fresh `getTransactionCount`
+  // each cycle, not by the receipt.
+  private trackTransactionReceipt(hash: `0x${string}`, nonce: number): void {
+    // A new nonce means the previous nonce already resolved (a tx for it landed,
+    // advancing the on-chain count), so abort the stragglers still polling the
+    // old nonce's hashes. They each do one final lookup on abort, so the hash
+    // that actually landed is still logged before they stop. Same-nonce
+    // escalations fall through and ADD a tracker so every competing hash for the
+    // live nonce stays watched.
+    if (this.trackedNonce !== undefined && nonce !== this.trackedNonce) {
+      for (const controller of this.receiptTrackers) {
+        controller.abort();
       }
+      this.receiptTrackers.clear();
+    }
+    this.trackedNonce = nonce;
+
+    const controller = new AbortController();
+    this.receiptTrackers.add(controller);
+    void this.pollTransactionReceipt(hash, controller).finally(() => {
+      this.receiptTrackers.delete(controller);
     });
   }
 
