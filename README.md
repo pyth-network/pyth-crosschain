@@ -79,7 +79,7 @@ Use the [Conventional Commits](https://www.conventionalcommits.org) format for y
 In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
 to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
 
-See also: [Code guidelines](doc/code-guidelines.md)
+See also: [Standards](standards/AGENTS.md)
 
 ### Releases
 
@@ -151,7 +151,7 @@ To quickly get started, from the root of this repo, you can run the following:
 3. Once the script is done, you will have your new webb app, library or CLI tool bootstrapped with all the current best practices.
 
 If you'd like to read more about the best practices, checkout this best practices doc:
-[🔗 Creating a new JavaScript / TypeScript Package](./doc/js-code-guidelines.md)
+[🔗 Creating a new JavaScript / TypeScript Package](./standards/typescript/packages.md)
 
 ## Audit / Feature Status
 
