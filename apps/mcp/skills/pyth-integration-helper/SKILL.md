@@ -104,8 +104,8 @@ Each feed has a `min_channel` — you cannot request a faster rate than this.
 
 ### Auth
 
-Only `get_latest_price` requires an `access_token`. Get one at https://pyth.network/pricing.
-`get_symbols`, `get_historical_price`, and `get_candlestick_data` are public.
+`get_latest_price`, `get_historical_price`, and `get_candlestick_data` require an `access_token`. Get one at https://pyth.network/pricing.
+`get_symbols` is public.
 
 ### Security
 
@@ -124,8 +124,8 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 1. Explain available tools:
    - `get_symbols` — discover feeds and their IDs
    - `get_latest_price` — real-time prices (requires access token)
-   - `get_historical_price` — point-in-time historical prices
-   - `get_candlestick_data` — OHLC candle data for charting/analysis
+   - `get_historical_price` — point-in-time historical prices (requires access token)
+   - `get_candlestick_data` — OHLC candle data for charting/analysis (requires access token)
 
 2. Find the feed:
    ```json
@@ -135,7 +135,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 3. Explain the flow:
    - For live price: `get_latest_price` with access token
-   - For historical analysis: `get_candlestick_data` with time range
+   - For historical analysis: `get_candlestick_data` with access token and time range
    - Prices in USD by default (`quote_currency: "USD"`)
    - Use `display_price` for human-readable output
 

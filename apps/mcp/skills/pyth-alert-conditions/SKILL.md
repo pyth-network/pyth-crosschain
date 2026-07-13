@@ -43,6 +43,7 @@ Key fields: `display_price`, `display_bid`, `display_ask`, `timestamp_us`.
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "Crypto.BTC/USD",
   "from": 1751241600,
   "to": 1751328000,
@@ -56,6 +57,7 @@ get_candlestick_data({
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "Metal.XAU/USD",
   "from": 1750723200,
   "to": 1751328000,
@@ -137,6 +139,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    ```json
    get_symbols({ "query": "ETH" })  // -> "Crypto.ETH/USD"
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.ETH/USD",
      "from": 1751241600,
      "to": 1751328000,
@@ -165,6 +168,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    ```json
    get_symbols({ "query": "gold" })  // -> "Metal.XAU/USD"
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Metal.XAU/USD",
      "from": 1750723200,
      "to": 1751328000,

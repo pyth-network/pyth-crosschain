@@ -36,6 +36,7 @@ get_symbols({ "query": "SOL" })
 
 ```json
 get_candlestick_data({
+  "access_token": "<token>",
   "symbol": "Crypto.SOL/USD",
   "from": 1748736000,
   "to": 1751328000,
@@ -122,6 +123,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 2. Fetch 30 daily candles:
    ```json
    get_candlestick_data({
+     "access_token": "<token>",
      "symbol": "Crypto.SOL/USD",
      "from": 1748736000,
      "to": 1751328000,
@@ -148,9 +150,9 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 2. Fetch daily candles for 30 days (same range for all):
    ```json
-   get_candlestick_data({ "symbol": "Crypto.BTC/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
-   get_candlestick_data({ "symbol": "Crypto.ETH/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
-   get_candlestick_data({ "symbol": "Equity.US.AAPL", "from": 1748736000, "to": 1751328000, "resolution": "D" })
+   get_candlestick_data({ "access_token": "<token>", "symbol": "Crypto.BTC/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
+   get_candlestick_data({ "access_token": "<token>", "symbol": "Crypto.ETH/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
+   get_candlestick_data({ "access_token": "<token>", "symbol": "Equity.US.AAPL", "from": 1748736000, "to": 1751328000, "resolution": "D" })
    ```
 
 3. Compute annualized vol for each (crypto = `sqrt(365)`, equity = `sqrt(252)`):
