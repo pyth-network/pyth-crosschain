@@ -95,6 +95,23 @@ export default {
       required: false,
       type: "number",
     } as Options,
+    "receipt-poll-interval": {
+      default: 2,
+      description:
+        "How often (in seconds) to poll for a sent transaction's receipt while waiting for " +
+        "it to land. Default to 2",
+      required: false,
+      type: "number",
+    } as Options,
+    "receipt-wait-timeout": {
+      default: 60,
+      description:
+        "Maximum time (in seconds) to poll for a sent transaction's receipt before giving " +
+        "up. Bounds the wait so a transaction that never lands cannot be polled forever. " +
+        "Default to 60",
+      required: false,
+      type: "number",
+    } as Options,
     "tx-speed": {
       choices: ["slow", "standard", "fast"],
       description:
@@ -145,6 +162,8 @@ export default {
       baseFeeMultiplier,
       priorityFeeMultiplier,
       updateFeeMultiplier,
+      receiptPollInterval,
+      receiptWaitTimeout,
       logLevel,
       controllerLogLevel,
       enableMetrics,
@@ -246,6 +265,11 @@ export default {
       updateFeeMultiplier,
       gasPriceConfig,
       gasLimit,
+      // CLI values are in seconds; the pusher expects milliseconds. Defaults
+      // (60s / 2s) reproduce the pre-flag behaviour, so existing deployments
+      // that don't set these flags are unaffected.
+      receiptWaitTimeout * 1000,
+      receiptPollInterval * 1000,
     );
 
     const controller = new Controller(
