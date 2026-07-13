@@ -203,73 +203,72 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     expect(chain.calls.getTransactionByHash).toBe(0);
   });
 
-  it("superseded nonce (gas escalation): single-flight, old tracker is cancelled", async () => {
+  it("same-nonce escalation: both hashes stay watched; the OLD tx winning the race is still logged (Codex)", async () => {
+    // On a same-nonce gas escalation the original and repriced tx compete for
+    // the nonce, and a miner may include the OLD one over the replacement. The
+    // original's tracker must NOT be cancelled, or its landing is never logged
+    // and the Grafana Tx-Hash panel misses a tx that actually landed.
     const chain = new MockChain();
-    chain.defaultPolicy = "pending"; // both stuck so the escalation path is taken
-    const { logger } = makeLogger();
-    // Long timeout so tracker A cannot self-terminate within the window — the
-    // ONLY thing that can stop A here is the abort, so this genuinely proves
-    // single-flight (with a short shared timeout, A stopping would be ambiguous
-    // between abort and its own deadline).
+    chain.defaultPolicy = "pending"; // both pending -> same-nonce escalation path
+    const { logger, logs } = makeLogger();
     const pusher = makePusher(chain, logger, 10_000, 30);
 
-    // First push -> tx A (nonce 5), tracker A starts polling.
+    // Push A (nonce 5), then push B — same nonce (A not landed), escalated gas.
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
-    await sleep(90);
+    await sleep(60);
     const hashA = chain.sentHashes[0] as Hash;
-    expect(chain.receiptCallsByHash.get(hashA) ?? 0).toBeGreaterThan(0);
-
-    // Second push -> same nonce (not landed), escalated gas, tx B; tracker B
-    // must abort tracker A.
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(60);
     const hashB = chain.sentHashes[1] as Hash;
     expect(hashB).not.toEqual(hashA);
 
-    const aCallsAfterSupersede = chain.receiptCallsByHash.get(hashA) ?? 0;
-    await sleep(150);
-    const aCallsLater = chain.receiptCallsByHash.get(hashA) ?? 0;
-    const bCallsLater = chain.receiptCallsByHash.get(hashB) ?? 0;
+    // Both are still polled after the escalation — A was NOT cancelled.
+    const aBefore = chain.receiptCallsByHash.get(hashA) ?? 0;
+    await sleep(90);
+    expect(
+      (chain.receiptCallsByHash.get(hashA) ?? 0) - aBefore,
+    ).toBeGreaterThan(0);
+    expect(chain.receiptCallsByHash.get(hashB) ?? 0).toBeGreaterThan(0);
 
-    // A stopped being polled (at most one in-flight call straddling the abort).
-    // Without the abort, A's 10s deadline is far away, so it would keep polling
-    // and this delta would be many — i.e. this assertion fails if abort breaks.
-    expect(aCallsLater - aCallsAfterSupersede).toBeLessThanOrEqual(1);
-    // B is the live tracker and keeps polling.
-    expect(bCallsLater).toBeGreaterThan(0);
+    // The OLD tx wins the mempool race and lands after being superseded.
+    chain.policyByHash.set(hashA, "success");
+    await sleep(90);
 
-    // Tear down the live tracker so its (10s) timer does not outlive the test.
+    const successHashes = hashLogs(logs.info).map((entry) => entry.hash);
+    expect(successHashes).toContain(hashA); // A's landing IS logged
+    expect(successHashes).not.toContain(hashB); // B never lands
+    expect(hashLogs(logs.info)).toHaveLength(1);
+
     pusher.dispose();
     await sleep(20);
   });
 
-  it("superseded-but-landed: a cancelled tracker STILL logs its tx once it lands", async () => {
-    // Regression guard: on a normal next-nonce advance the prior tx has landed
-    // (that is why the nonce advanced), and the next push aborts its tracker.
-    // The aborted tracker must not drop the "Price update successful" log for a
-    // tx that actually landed, or the Grafana Tx-Hash panel silently under-reports.
+  it("nonce advance: the resolved nonce's stragglers are aborted (bounded) but its landed tx is still logged", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "pending";
     const { logger, logs } = makeLogger();
     const pusher = makePusher(chain, logger, 10_000, 30);
 
-    // Push A -> tracker A, tx A pending.
+    // Push A (nonce 5), pending.
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(60);
     const hashA = chain.sentHashes[0] as Hash;
 
-    // Tx A lands, then a new push (B) supersedes and aborts tracker A.
+    // A lands and the on-chain nonce advances; the next push uses nonce 6, a
+    // DIFFERENT nonce, which aborts A's straggler while still logging A.
     chain.policyByHash.set(hashA, "success");
+    chain.minedTxCount = 6;
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
-    await sleep(120);
-    const hashB = chain.sentHashes[1] as Hash;
+    await sleep(90);
 
-    // A's success must still be logged despite A being superseded.
+    // A's landing is logged via the final lookup on abort.
     const successHashes = hashLogs(logs.info).map((entry) => entry.hash);
     expect(successHashes).toContain(hashA);
-    // B never lands, so it does not (yet) log — exactly one success line.
-    expect(successHashes).not.toContain(hashB);
-    expect(hashLogs(logs.info)).toHaveLength(1);
+
+    // A is then aborted -> no longer polled (bounded across the nonce boundary).
+    const aAfter = chain.receiptCallsByHash.get(hashA) ?? 0;
+    await sleep(120);
+    expect(chain.receiptCallsByHash.get(hashA) ?? 0).toBe(aAfter);
 
     pusher.dispose();
     await sleep(20);
