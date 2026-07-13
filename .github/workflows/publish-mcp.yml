@@ -19,6 +19,10 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Only ever publish from main — including manual dispatch — so a
+    # workflow_dispatch on a branch can't publish an unreviewed manifest
+    # to the io.github.pyth-network/* namespace with the OIDC credentials.
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
         with:
