@@ -12,6 +12,15 @@ import evmPriceFeedContractsData from "../store/contracts/EvmPriceFeedContracts.
 import evmWormholeContractsData from "../store/contracts/EvmWormholeContracts.json" with {
   type: "json",
 };
+import solanaLazerContractsData from "../store/contracts/SolanaLazerContracts.json" with {
+  type: "json",
+};
+import suiLazerContractsData from "../store/contracts/SuiLazerContracts.json" with {
+  type: "json",
+};
+import suiPriceFeedContractsData from "../store/contracts/SuiPriceFeedContracts.json" with {
+  type: "json",
+};
 
 export const allEvmChainIds: number[] = evmChainsData.map((c) => c.networkId);
 
@@ -25,6 +34,18 @@ export const evmLazerContracts: readonly EvmLazerContractEntry[] =
   evmLazerContractsData;
 export const evmPriceFeedContracts: readonly EvmPriceFeedContractEntry[] =
   evmPriceFeedContractsData;
+
+export type SolanaLazerContractEntry = (typeof solanaLazerContractsData)[number];
+export type SuiLazerContractEntry = (typeof suiLazerContractsData)[number];
+export type SuiPriceFeedContractEntry =
+  (typeof suiPriceFeedContractsData)[number];
+
+export const solanaLazerContracts: readonly SolanaLazerContractEntry[] =
+  solanaLazerContractsData;
+export const suiLazerContracts: readonly SuiLazerContractEntry[] =
+  suiLazerContractsData;
+export const suiPriceFeedContracts: readonly SuiPriceFeedContractEntry[] =
+  suiPriceFeedContractsData;
 
 export const getEvmPriceFeedContractAddress = (
   chainId: number,
