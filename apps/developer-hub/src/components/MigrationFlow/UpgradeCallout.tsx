@@ -65,10 +65,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
   }
 
   const label = CHAIN_LABELS[chain];
-  const upgradedAddresses =
-    chain === "sui"
-      ? "/price-feeds/core/contract-addresses/sui#upgraded-contract-addresses"
-      : `${upgradedAddressesRoot}#${chain}`;
+  const upgradedAddresses = `${upgradedAddressesRoot}#${chain}`;
 
   if (SUPPORTED_SIMPLE.has(chain)) {
     return (
