@@ -2,15 +2,10 @@ import { readFileSync } from "node:fs";
 import process from "node:process";
 import type { Transaction } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
-import {
-  FireblocksSDK,
-  PeerType,
-  SigningAlgorithm,
-  TransactionOperation,
-  TransactionStatus,
-} from "fireblocks-sdk";
+import type { TransactionOperation } from "fireblocks-sdk";
+import { FireblocksSDK, PeerType, TransactionStatus } from "fireblocks-sdk";
 import { printLine } from "./log.js";
-import type { VoterWallet } from "./wallet.js";
+import type { ApprovalResult, VoterWallet } from "./wallet.js";
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 5 * 60_000;
@@ -77,31 +72,32 @@ const fetchVaultSolanaAddress = async (
 class FireblocksSigner {
   private readonly client: FireblocksSDK;
   private readonly config: FireblocksConfig;
-  private readonly publicKey: PublicKey;
 
-  constructor(
-    client: FireblocksSDK,
-    config: FireblocksConfig,
-    publicKey: PublicKey,
-  ) {
+  constructor(client: FireblocksSDK, config: FireblocksConfig) {
     this.client = client;
     this.config = config;
-    this.publicKey = publicKey;
   }
 
-  async signTransaction(transaction: Transaction): Promise<Transaction> {
-    const content = transaction.compileMessage().serialize().toString("hex");
+  async submitTransaction(transaction: Transaction): Promise<string> {
+    // The full unsigned transaction (with an empty signature placeholder for the
+    // voter) is what the program-call API parses, co-signs, and broadcasts.
+    const serialized = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
 
     const created = await this.client.createTransaction({
       assetId: this.config.assetId,
       extraParameters: {
-        rawMessageData: {
-          algorithm: SigningAlgorithm.MPC_EDDSA_ED25519,
-          messages: [{ content }],
-        },
+        programCallData: serialized.toString("base64"),
       },
       note: "Pyth DAO governance vote",
-      operation: TransactionOperation.RAW,
+      // PROGRAM_CALL is not in this SDK version's TransactionOperation enum, but
+      // the API accepts it. Unlike RAW (which caps message size and rejected the
+      // ~700-byte vote message), the Solana program-call flow hands Fireblocks
+      // the whole transaction so it can parse, sign, and broadcast it — and
+      // manage blockhash liveness across the approval delay.
+      operation: "PROGRAM_CALL" as TransactionOperation,
       source: {
         id: this.config.vaultAccountId,
         type: PeerType.VAULT_ACCOUNT,
@@ -110,24 +106,27 @@ class FireblocksSigner {
 
     printLine(`Fireblocks transaction created: ${created.id}`);
 
-    const signature = await this.pollForSignature(created.id);
-    transaction.addSignature(this.publicKey, Buffer.from(signature, "hex"));
-    return transaction;
+    return this.pollForBroadcast(created.id);
   }
 
-  private async pollForSignature(txId: string): Promise<string> {
+  private async pollForBroadcast(txId: string): Promise<string> {
     const deadline = Date.now() + POLL_TIMEOUT_MS;
+    let announcedHash: string | undefined;
     for (;;) {
       const tx = await this.client.getTransactionById(txId);
 
+      if (tx.txHash && tx.txHash !== announcedHash) {
+        announcedHash = tx.txHash;
+        printLine(`Vote transaction broadcast: ${tx.txHash}`);
+      }
+
       if (tx.status === TransactionStatus.COMPLETED) {
-        const signature = tx.signedMessages?.[0]?.signature.fullSig;
-        if (!signature) {
+        if (!tx.txHash) {
           throw new Error(
-            `Fireblocks transaction ${txId} completed without a signature`,
+            `Fireblocks transaction ${txId} completed without a transaction hash`,
           );
         }
-        return signature;
+        return tx.txHash;
       }
 
       if (TERMINAL_FAILURE_STATUSES.has(tx.status)) {
@@ -143,14 +142,14 @@ class FireblocksSigner {
       }
 
       printLine(
-        `Fireblocks transaction ${txId} status: ${tx.status}; waiting for approval/signing...`,
+        `Fireblocks transaction ${txId} status: ${tx.status}; waiting for approval/broadcast...`,
       );
       await sleep(POLL_INTERVAL_MS);
     }
   }
 }
 
-const dryRunSignGuard = (): never => {
+const dryRunApprovalGuard = (): Promise<ApprovalResult> => {
   throw new Error("dry-run does not sign transactions");
 };
 
@@ -167,8 +166,8 @@ export const loadFireblocksWallet = async (
 
   if (dryRun && voterPubkeyEnv) {
     return {
+      approveTransaction: dryRunApprovalGuard,
       publicKey: new PublicKey(voterPubkeyEnv),
-      signTransaction: dryRunSignGuard,
     };
   }
 
@@ -180,12 +179,15 @@ export const loadFireblocksWallet = async (
 
   if (dryRun) {
     // Pubkey resolved via a read-only getDepositAddresses call; no signing.
-    return { publicKey, signTransaction: dryRunSignGuard };
+    return { approveTransaction: dryRunApprovalGuard, publicKey };
   }
 
-  const signer = new FireblocksSigner(client, config, publicKey);
+  const signer = new FireblocksSigner(client, config);
   return {
+    approveTransaction: (transaction) =>
+      signer
+        .submitTransaction(transaction)
+        .then((signature) => ({ broadcast: true, signature })),
     publicKey,
-    signTransaction: (transaction) => signer.signTransaction(transaction),
   };
 };

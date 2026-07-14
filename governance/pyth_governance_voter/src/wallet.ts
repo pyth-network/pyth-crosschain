@@ -6,9 +6,21 @@ import { LedgerNodeWallet } from "./ledger.js";
 
 export type WalletType = "fireblocks" | "hot" | "ledger";
 
+/**
+ * The outcome of asking a wallet to approve the vote transaction.
+ *
+ * Local wallets (hot, ledger) sign in-process and hand the signed transaction
+ * back for the CLI to broadcast. Fireblocks signs *and* broadcasts the
+ * transaction itself via the Solana program-call API, so it returns the
+ * resulting on-chain signature and leaves nothing for the CLI to send.
+ */
+export type ApprovalResult =
+  | { broadcast: false; transaction: Transaction }
+  | { broadcast: true; signature: string };
+
 export type VoterWallet = {
   publicKey: PublicKey;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
+  approveTransaction: (transaction: Transaction) => Promise<ApprovalResult>;
 };
 
 export type WalletOptions = {
@@ -43,11 +55,11 @@ export const loadWallet = async (
       }
       const keypair = loadHotWallet(options.hotWalletPath);
       return {
-        publicKey: keypair.publicKey,
-        signTransaction: (transaction) => {
+        approveTransaction: (transaction) => {
           transaction.partialSign(keypair);
-          return Promise.resolve(transaction);
+          return Promise.resolve({ broadcast: false, transaction });
         },
+        publicKey: keypair.publicKey,
       };
     }
     case "ledger": {
@@ -56,8 +68,11 @@ export const loadWallet = async (
         options.ledgerDerivationChange,
       );
       return {
+        approveTransaction: async (transaction) => ({
+          broadcast: false,
+          transaction: await ledger.signTransaction(transaction),
+        }),
         publicKey: ledger.publicKey,
-        signTransaction: (transaction) => ledger.signTransaction(transaction),
       };
     }
     case "fireblocks": {

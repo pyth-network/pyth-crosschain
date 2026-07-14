@@ -109,20 +109,30 @@ const castVote = async (options: CastVoteOptions): Promise<void> => {
     return;
   }
 
-  const signed = await wallet.signTransaction(transaction);
+  const result = await wallet.approveTransaction(transaction);
 
-  // A Fireblocks approval can take minutes, but the blockhash baked into the
-  // signed message is only valid for ~60-90s. The signature covers that
-  // blockhash, so if it lapsed while waiting for approval we cannot swap in a
-  // fresh one without re-signing (another approval). Fail early with an
-  // actionable message instead of an opaque sendRawTransaction rejection.
+  if (result.broadcast) {
+    // Fireblocks parsed, signed, and broadcast the transaction itself via the
+    // Solana program-call API, refreshing blockhash liveness across the approval
+    // delay. The returned signature is already confirmed on chain.
+    printLine(`Vote transaction sent: ${result.signature}`);
+    printLine("Vote confirmed on chain.");
+    return;
+  }
+
+  const signed = result.transaction;
+
+  // Local wallets (hot, ledger) sign in-process, so the blockhash baked into the
+  // signed message is still fresh; guard anyway against clock skew or a slow
+  // ledger approval, since the signature covers that blockhash and cannot be
+  // reused with a swapped-in one.
   const { value: blockhashStillValid } = await connection.isBlockhashValid(
     blockhash,
     { commitment: "confirmed" },
   );
   if (!blockhashStillValid) {
     printError(
-      "Transaction blockhash expired before the signature was ready (wallet approval likely took too long). Re-run the command to try again.",
+      "Transaction blockhash expired before the signature was ready. Re-run the command to try again.",
     );
     process.exitCode = 1;
     return;
