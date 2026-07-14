@@ -40,7 +40,7 @@ const TITLE = "Pyth Core upgrades on July 31, 2026";
 
 export const UpgradeCallout = ({ chain }: Props) => {
   const upgradeGuide = "/price-feeds/core/upgrade/preparing";
-  const upgradedAddressesRoot = "/price-feeds/core/upgrade/contracts";
+  const upgradedAddressesRoot = "/price-feeds/contract-addresses";
   const contactMail = "mailto:data@dourolabs.xyz";
 
   if (chain === "index") {
@@ -65,7 +65,10 @@ export const UpgradeCallout = ({ chain }: Props) => {
   }
 
   const label = CHAIN_LABELS[chain];
-  const upgradedAddresses = `${upgradedAddressesRoot}#${chain}`;
+  const upgradedAddresses =
+    chain === "sui"
+      ? "/price-feeds/core/contract-addresses/sui#upgraded-contract-addresses"
+      : `${upgradedAddressesRoot}#${chain}`;
 
   if (SUPPORTED_SIMPLE.has(chain)) {
     return (

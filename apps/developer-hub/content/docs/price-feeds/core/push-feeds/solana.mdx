@@ -22,3 +22,14 @@ import solanaMainnet from "./data/svm/solana-mainnet.json";
 />
 
 Note: The addresses represent the price feed account for shard 0 of the relevant price feed id.
+
+## Upgraded Push Feed Accounts (Mainnet)
+
+Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The Price Feed program ID changes with the [Pyth Core upgrade](/price-feeds/core/upgrade), so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed.
+
+<SponsoredFeedsTable
+  feeds={solanaMainnet.feeds}
+  networkName="Solana mainnet and devnet"
+  showUpgradedAccountAddress
+  hideAccountAddress
+/>
