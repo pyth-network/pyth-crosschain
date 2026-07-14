@@ -8,8 +8,6 @@ import { Callout } from "fumadocs-ui/components/callout";
 import {
   SolanaCoreProgramsTable,
   SolanaProTable,
-  SuiCoreContractsTable,
-  SuiProTable,
 } from "../../../src/components/NonEvmContractsTables";
 import UnifiedContractsTable from "../../../src/components/UnifiedContractsTable";
 
@@ -60,7 +58,7 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 
 ## The two mistakes this page exists to prevent
 
-1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the [**upgraded Core** address](/price-feeds/core/upgrade/contracts).
+1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the **upgraded Core** address (listed below).
 2. **Swapping the contract address without moving your data source, or vice versa.** Each endpoint's payloads verify only on its own contract generation. Swap both together, or wait and let July 31 switch both for you.
 
 **Where to go next:** the [upgrade guide](/price-feeds/core/upgrade/preparing) for the how, or the [Pyth Pro docs](/price-feeds/pro) if per-transaction pricing is what you need. All addresses, all three kinds, are below.
@@ -83,7 +81,7 @@ The same program addresses are used across SVM networks.
 
 <SolanaCoreProgramsTable />
 
-Per-feed push accounts change with the upgrade because they are PDAs of the Price feed program. See the [upgraded contract addresses](/price-feeds/core/upgrade/contracts) page for the full per-feed list.
+Per-feed push accounts change with the upgrade because they are PDAs of the Price feed program. See the [upgraded push feed accounts](/price-feeds/core/push-feeds/solana#upgraded-push-feed-accounts-mainnet) for the full per-feed list.
 
 Pyth Core is also deployed on other SVM chains, including Eclipse, Sonic, Atlas, and Fogo. See the [Core Solana and SVM contract addresses](/price-feeds/core/contract-addresses/solana) page for those.
 
@@ -95,21 +93,7 @@ For devnet and testnet, see the [Pyth Pro contract addresses](/price-feeds/pro/c
 
 ## Sui
 
-### Pyth Core (Mainnet)
-
-<SuiCoreContractsTable network="mainnet" />
-
-### Pyth Core (Testnet)
-
-<SuiCoreContractsTable network="testnet" />
-
-Package IDs are listed on the [upgraded contract addresses](/price-feeds/core/upgrade/contracts#sui) page.
-
-### Pyth Pro
-
-<SuiProTable />
-
-Package IDs and testnet details are on the [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses#sui) page.
+Sui has all three contract flavors. Current addresses are on the [Core Sui contract addresses](/price-feeds/core/contract-addresses/sui) page, upgraded addresses on the [upgraded Sui addresses](/price-feeds/core/contract-addresses/sui#upgraded-contract-addresses) section of that page, and Pro addresses on the [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses#sui) page.
 
 ## Chains with Pyth Pro only
 

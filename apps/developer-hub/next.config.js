@@ -238,6 +238,12 @@ const config = {
         source: "/price-feeds/lazer/:path*",
       },
 
+      // Upgraded contract addresses were folded into the unified page.
+      {
+        destination: "/price-feeds/contract-addresses",
+        permanent: true,
+        source: "/price-feeds/core/upgrade/contracts",
+      },
       {
         destination: "/price-feeds/core/:path",
         permanent: true,
