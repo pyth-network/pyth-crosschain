@@ -54,7 +54,7 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
 const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
 
-const HIDDEN_CHAINS = new Set(["taiko"]);
+const HIDDEN_CHAINS = new Set(["swellchain", "swellchain_testnet", "taiko"]);
 
 export async function fetchEntropyDeployments(
   url: string,

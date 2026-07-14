@@ -27,6 +27,10 @@ type ChainStatus = {
 const HIDDEN_CHAIN_IDS = new Set<string>([
   "injective_inevm",
   "injective_inevm_testnet",
+  // Swell has been sunset; keep contract-manager records for internal history,
+  // but do not advertise it in the public docs.
+  "swellchain",
+  "swellchain_testnet",
 ]);
 const CHAIN_REGISTRY_URL = "https://chainid.network/chains.json";
 const CHAIN_REGISTRY_REVALIDATE_SECONDS = 60 * 60 * 24;

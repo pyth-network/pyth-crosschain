@@ -20,7 +20,9 @@ type MigrationDeployment = {
   explorer?: string;
 };
 
-const HIDDEN_CHAIN_IDS = new Set<string>();
+// Chains with contract-manager records that should not be advertised in the
+// public docs.
+const HIDDEN_CHAIN_IDS = new Set<string>(["swellchain", "swellchain_testnet"]);
 
 const CHAIN_REGISTRY_URL = "https://chainid.network/chains.json";
 const CHAIN_REGISTRY_REVALIDATE_SECONDS = 60 * 60 * 24;
