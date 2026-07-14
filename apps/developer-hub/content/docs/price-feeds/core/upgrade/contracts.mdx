@@ -24,7 +24,7 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 |                          | What it is                                                                                                                       | Built for                                                                                |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | **Pyth Core (current)**  | The contract you integrated against today. Keeps a **shared price on-chain** that any contract can read                            | Existing integrations                                                                      |
-| **Pyth Core (upgraded)** | The **same interface and feed IDs** at a new address, with richer data and more customization. Still keeps the shared price on-chain | Upgrading your existing integration before July 31 (a [drop-in address swap](/price-feeds/core/upgrade/preparing)) |
+| **Pyth Core (upgraded)** | The **same interface and feed IDs** at a new address, with richer data and more customization. Still keeps the shared price on-chain | Upgrading your existing integration before July 31: swap the [contract address and the Hermes endpoint together](/price-feeds/core/upgrade/preparing), with an API key |
 | **Pyth Pro**             | A different model: **no price stored on-chain**. Each transaction carries its own millisecond-fresh signed price, verified on the spot | Latency-critical trading priced per transaction: perps fills, RFQ and quote-based execution |
 
 ## The real difference between upgraded Core and Pro
@@ -50,7 +50,7 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 
 ## What happens on July 31, 2026
 
-- Your **current contract is upgraded in place**. It starts accepting the new data payloads automatically. You keep your address and your feed IDs.\*
+- Your **current contract is upgraded in place**. It starts accepting the new data payloads automatically. You keep your address, and your feed IDs don't change; nearly all feeds carry over ([check yours](https://pythdata.app/explore?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=contract-addresses)).\*
 - `hermes.pyth.network` is **redirected to the upgraded backend**. The URL keeps working, but every request needs a [Pyth API Key](https://pythdata.app/signup?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=contract-addresses) from that day on.
 - From then on, "current" and "upgraded" are the same thing, and that distinction disappears. What remains is Core vs Pro: the same upgraded data, either stored on-chain for everyone to read, or attached fresh to each transaction.
 
@@ -58,8 +58,8 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 
 ## The two mistakes this page exists to prevent
 
-1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the **upgraded Core** address (listed below).
-2. **Swapping the contract address without moving your data source, or vice versa.** Each endpoint's payloads verify only on its own contract generation. Swap both together, or wait and let July 31 switch both for you.
+1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read, so it isn't a drop-in replacement for a Core integration. If you're upgrading Core, you want the **upgraded Core** address (listed below).
+2. **Swapping the contract address without moving your data source, or vice versa.** Each endpoint's payloads verify only on its own contract generation. Swap both together, or wait and let July 31 switch both for you (expect a brief switchover window; see the [wait-path guidance](/price-feeds/core/upgrade/preparing#waiting-for-the-automatic-upgrade)).
 
 **Where to go next:** the [upgrade guide](/price-feeds/core/upgrade/preparing) for the how, or the [Pyth Pro docs](/price-feeds/pro) if per-transaction pricing is what you need. All addresses, all three kinds, are below.
 
@@ -72,6 +72,8 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 ### Testnets
 
 <UnifiedContractsTable isMainnet={false} />
+
+A — means that flavor isn't deployed on the chain. If your chain has no upgraded address, [contact the team](mailto:data@dourolabs.xyz).
 
 ## Solana
 
