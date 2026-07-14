@@ -18,7 +18,7 @@ import {
 
 <ActiveStepHighlighter />
 
-Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**. Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31, and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically. The one new requirement is authentication on Hermes: every Hermes user needs a Pyth API Key by **July 31**.
+Pyth Network is upgrading [Pyth Core](/price-feeds/core) on **July 31, 2026**. Your existing integration keeps working: the on-chain Pyth contract is upgraded by the Pyth DAO on July 31 (except on [Sui](/price-feeds/core/upgrade/preparing/sui), which requires a manual swap), and [Hermes](/api-reference/pyth-core/hermes) requests are redirected to the upgraded backend automatically. The one new requirement is authentication on Hermes: every Hermes user needs a Pyth API Key by **July 31**.
 
 For background on what's changing and why, see the [upgrade overview](/price-feeds/core/upgrade). For a walkthrough of the signers, data flow, and contracts behind the upgrade, see [How the Pyth Core upgrade works](/price-feeds/core/upgrade/how-it-works).
 
@@ -233,7 +233,7 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     Nearly all current Pyth Core feeds remain available after the upgrade, with new ones added. Look up your specific feeds on the [feed explorer](https://pythdata.app/explore?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=feed-explorer-faq). If a feed you depend on isn't listed, [contact the team](#get-help).
   </Accordion>
   <Accordion title="I read prices on-chain only (push feeds, no Hermes) — do I need an API key?">
-    No. The API key is only required for Hermes (REST/SSE) requests. If your integration reads prices directly from the Pyth contract on-chain and never calls Hermes, you don't need to register. Your contract will be upgraded automatically on July 31, or you can swap it early (Step 3).
+    No. The API key is only required for Hermes (REST/SSE) requests. If your integration reads prices directly from the Pyth contract on-chain and never calls Hermes, you don't need to register. Your contract will be upgraded automatically on July 31, or you can swap it early (see the [Early upgrade](#early-upgrade) section).
   </Accordion>
   <Accordion title="My code uses the Hermes REST/SSE API directly — what changes for me?">
     Routes and response shapes are unchanged. The upgraded endpoint is a drop-in replacement. The differences are *which URL* you call and *whether you send the `Authorization: Bearer $PYTH_API_KEY` header*:
