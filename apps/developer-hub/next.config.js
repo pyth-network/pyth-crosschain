@@ -241,7 +241,7 @@ const config = {
       {
         destination: "/price-feeds/core/:path",
         permanent: true,
-        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|changelog(?:/|$|\.mdx?$)).*)`,
+        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|changelog(?:/|$|\.mdx?$)|contract-addresses(?:$|\.mdx?$)).*)`,
       },
 
       // HIP-3 redirect - fumadocs meta.json links prepend parent path
