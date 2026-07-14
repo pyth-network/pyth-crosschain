@@ -21,16 +21,29 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 |                          | What it is                                                                                                                       | Built for                                                                                |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | **Pyth Core (current)**  | The contract you integrated against today. Keeps a **shared price on-chain** that any contract can read                            | Existing integrations                                                                      |
-| **Pyth Core (upgraded)** | The same interface and feed IDs at a new address, with richer data and more customization. Still keeps the shared price on-chain   | Upgrading your existing integration before July 31 (a drop-in address swap)               |
+| **Pyth Core (upgraded)** | The **same interface and feed IDs** at a new address, with richer data and more customization. Still keeps the shared price on-chain | Upgrading your existing integration before July 31 (a [drop-in address swap](/price-feeds/core/upgrade/preparing)) |
 | **Pyth Pro**             | A different model: **no price stored on-chain**. Each transaction carries its own millisecond-fresh signed price, verified on the spot | Latency-critical trading priced per transaction: perps fills, RFQ and quote-based execution |
 
 ## The real difference between upgraded Core and Pro
 
-**Upgraded Core keeps the price on-chain, where everyone can read it.** Your contract calls `getPriceNoOlderThan` and gets the same canonical price every other protocol on the chain sees. That's the shape lending markets, CDPs, and vaults are built around: liquidations are triggered by third parties, share prices are computed in view functions, and protocols compose with each other by reading the same stored value. Sponsored push feeds keep it fresh, so passive protocols integrate with a single read. The upgrade doesn't change any of this. It keeps your interface and your feed IDs and improves what's behind them.
+**Upgraded Core keeps one shared price on-chain.**
 
-**Pro attaches the price to the transaction instead.** Nothing is stored on-chain; every transaction that needs a price brings a freshly signed one, and the contract verifies it in the moment. That gives each trade a price that's milliseconds old at execution, which is exactly what a perps venue filling orders or an RFQ system executing signed quotes needs, and what no stored price can provide. The trade-off is that there's no shared price for other contracts to read.
+- Your contract calls [`getPriceNoOlderThan`](/price-feeds/core/api-reference) and reads the **same canonical price** every other protocol on the chain sees.
+- That's the shape **lending markets, CDPs, and vaults** are built around: liquidations triggered by third parties, share prices computed in view functions, protocols composing by reading the same stored value.
+- [Sponsored push feeds](/price-feeds/core/push-feeds) keep the price fresh, so passive protocols integrate with a **single read**.
+- The upgrade changes none of this: **same interface, same feed IDs**, better data behind them.
 
-**One question decides it:** Do other contracts (or third-party liquidators, or view functions) need to read your price? Use Core. Does each transaction need its own freshest-possible price at execution? That's Pro.
+**Pyth Pro attaches the price to each transaction.**
+
+- **Nothing is stored on-chain.** Every transaction that needs a price carries a freshly signed one, [verified on the spot](/price-feeds/pro/integrate-as-consumer).
+- Each trade executes on a price that is **milliseconds old**: what perps fills and RFQ execution need, and what no stored price can provide.
+- The trade-off: **no shared price** for other contracts to read.
+
+<Callout>
+  **One question decides it.** Do other contracts, third-party liquidators, or
+  view functions need to read your price? Use **Core**. Does every transaction
+  need its own freshest-possible price at execution? That's **Pro**.
+</Callout>
 
 ## What happens on July 31, 2026
 
@@ -42,7 +55,7 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 
 ## The two mistakes this page exists to prevent
 
-1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the **upgraded Core** address.
+1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the [**upgraded Core** address](/price-feeds/core/upgrade/contracts).
 2. **Swapping the contract address without moving your data source, or vice versa.** Each endpoint's payloads verify only on its own contract generation. Swap both together, or wait and let July 31 switch both for you.
 
 **Where to go next:** the [upgrade guide](/price-feeds/core/upgrade/preparing) for the how, or the [Pyth Pro docs](/price-feeds/pro) if per-transaction pricing is what you need. All addresses, all three kinds, are below.
@@ -69,6 +82,8 @@ Pyth has three kinds of on-chain contracts. This page explains how to tell them 
 
 Per-feed push accounts change with the upgrade because they are PDAs of the Price feed program. See the [upgraded contract addresses](/price-feeds/core/upgrade/contracts) page for the full per-feed list.
 
+Pyth Core is also deployed on other SVM chains, including Eclipse, Sonic, Atlas, and Fogo. See the [Core Solana and SVM contract addresses](/price-feeds/core/contract-addresses/solana) page for those.
+
 ### Pyth Pro program
 
 | Network                          | Pyth Pro                                                                                                                             |
@@ -88,16 +103,16 @@ Per-feed push accounts change with the upgrade because they are PDAs of the Pric
 
 Testnet addresses are listed on the [upgraded contract addresses](/price-feeds/core/upgrade/contracts#sui) page.
 
-### Pyth Pro (Mainnet)
+### Pyth Pro
 
-|                 | Pyth Pro                                                                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Package ID      | <CopyAddress address="0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580" maxLength={6} url="https://explorer.polymedia.app/object/0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580?network=mainnet" /> |
-| State Object ID | <CopyAddress address="0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573" maxLength={6} url="https://explorer.polymedia.app/object/0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573?network=mainnet" /> |
+| Network     | Package ID                                                                                                                           | State Object ID                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Sui Mainnet | <CopyAddress address="0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580" maxLength={6} url="https://explorer.polymedia.app/object/0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580?network=mainnet" /> | <CopyAddress address="0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573" maxLength={6} url="https://explorer.polymedia.app/object/0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573?network=mainnet" /> |
+| Sui Testnet | <CopyAddress address="0xf5bd2141967507050a91b58de3d95e77c432cd90d1799ee46effc27430a68c21" maxLength={6} url="https://explorer.polymedia.app/object/0xf5bd2141967507050a91b58de3d95e77c432cd90d1799ee46effc27430a68c21?network=testnet" /> | <CopyAddress address="0xe2b9096a5ea341a9f1eef126b2203727e29e73fdb0641ade2e1e32942f97e4d8" maxLength={6} url="https://explorer.polymedia.app/object/0xe2b9096a5ea341a9f1eef126b2203727e29e73fdb0641ade2e1e32942f97e4d8?network=testnet" /> |
 
 ## Chains with Pyth Pro only
 
-Fogo, Cardano, and Stellar have native Pyth Pro deployments; see the [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses) page.
+Cardano and Stellar have native Pyth Pro deployments; see the [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses) page.
 
 ## Chains with Pyth Core only
 
