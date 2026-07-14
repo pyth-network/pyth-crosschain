@@ -1,0 +1,724 @@
+{
+  "date": "2026-07-14",
+  "label": "Tuesday",
+  "summary": {
+    "added": 0,
+    "went_live": 11,
+    "removed": 61
+  },
+  "hero": "11 went live, 61 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.SKHYV/USD",
+      "lazerId": 3438,
+      "asset": "Sk Hynix Inc",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.NEX/USD",
+      "lazerId": 3100,
+      "asset": "Nexus",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.HWUSD/USDC.RR",
+      "lazerId": 2688,
+      "asset": "Hyperwave Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDC",
+      "hermesId": "90730ebbd6d0e9b9fe41d099e31b06f5465a2164e468d77126b78e3017f19fa2"
+    },
+    {
+      "id": "Crypto.USDU/USD",
+      "lazerId": 2405,
+      "asset": "Unitas Us Dollar",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "9c26b01925ed603f7c90deb29cd88751c580436333a7dca20a64a2c63785f502"
+    },
+    {
+      "id": "Crypto.SHYPE/HYPE.RR",
+      "lazerId": 2402,
+      "asset": "Kintsu Staked Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "HYPE",
+      "hermesId": "7732a1ad8cb76d90cd5dd68ae7dcd20c8b7f01c441fcb2b2aedde09f54788fe3"
+    },
+    {
+      "id": "Crypto.GOLD/USD",
+      "lazerId": 2391,
+      "asset": "Oro Gold",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "b9f33a89ac0ae219f25b66b0a9e9ae32ae498dfad9f6d30ab96654372e431640"
+    },
+    {
+      "id": "Crypto.4/USD",
+      "lazerId": 2383,
+      "asset": "4",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "a92ee5b5fdefab122adba627d07ff1720e5d65729f7a81b7d2d6244f869c9ea2"
+    },
+    {
+      "id": "Crypto.WVLP/USDT.RR",
+      "lazerId": 2350,
+      "asset": "Hyperbeat Wrapped Ventuals Liquidity Provider",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDT",
+      "hermesId": "4287caf50fd3f325690c0cbb9621f029bf0c53af3868418120c47d36a9838ef8"
+    },
+    {
+      "id": "Crypto.THBILL/USDC.RR",
+      "lazerId": 2344,
+      "asset": "Theo Short Duration Us Treasury Fund",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDC",
+      "hermesId": "5b1bc5a579deba54dbaa9bc1c5b2e2b3f116d8d5ec27fbb3b9dc140a78e9f1e2"
+    },
+    {
+      "id": "Crypto.BUCKET.USDB/USD",
+      "lazerId": 2320,
+      "asset": "Bucket Usd",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "f85d863ce3b640bf85307be333dedc563aa3a27961c9042f89ed8300ebd3c855"
+    },
+    {
+      "id": "Crypto.WHLP/USDC.RR",
+      "lazerId": 1853,
+      "asset": "Wrapped Hyperliquidity Provider",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDC",
+      "hermesId": "b94c49af07479932872c63126f6bdee78140be7a953435e3815c8e1b204a0a04"
+    },
+    {
+      "id": "Crypto.VKHYPE/KHYPE.RR",
+      "lazerId": 1852,
+      "asset": "Veda Vault Kinetiq Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "KHYPE",
+      "hermesId": "1161bc023b33f1fc5ed8896f20945af0a8645cf00ff3dc9d9a24a8ea8d519fe7"
+    },
+    {
+      "id": "Crypto.URANUS/USD",
+      "lazerId": 1850,
+      "asset": "Uranus Coin",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "ae537f03693a1ed70781aa64387eb553e7ff56df30972a74f728c75413fdd0d0"
+    },
+    {
+      "id": "Crypto.UP/USD",
+      "lazerId": 1849,
+      "asset": "Doubleup",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "c591a547856b091560b120ee14b165a84ca58eca23b2ab635df641340bde1f10"
+    },
+    {
+      "id": "Crypto.TAC/USD",
+      "lazerId": 1844,
+      "asset": "Tac Protocol",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "f3d1e3fbe7944d9008cbc4e6390677d60ba1ea118f230570369355dc3780c7b4"
+    },
+    {
+      "id": "Crypto.HWHYPE/HYPE.RR",
+      "lazerId": 1817,
+      "asset": "Hyperwave Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "HYPE",
+      "hermesId": "abaed880ac0af9f7990b5092407eb007752937a12470242082d5477da7465b1c"
+    },
+    {
+      "id": "Crypto.HWHLP/USDC.RR",
+      "lazerId": 1816,
+      "asset": "Hyperwave Hyperliquidity Provider",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDC",
+      "hermesId": "d136d4fd8d5f41c42339bcaf79954cfc2d50a33b129a990f8a2087d73cadade9"
+    },
+    {
+      "id": "Crypto.HLP0/USDC.RR",
+      "lazerId": 1813,
+      "asset": "Hyperliquidity Provider Zero",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDC",
+      "hermesId": "aa388e24e74d5dd12145f74fad3180266f78ed08c0a2f47c60583fdb612587ba"
+    },
+    {
+      "id": "Crypto.FRAG/USD",
+      "lazerId": 1805,
+      "asset": "Fragmetric",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "c901e5966162def3cad9f6c385b5c6f65fbd4faee77ac6f0f6ab4a21b2e2e03c"
+    },
+    {
+      "id": "Crypto.WUSDL/USDL.RR",
+      "lazerId": 766,
+      "asset": "Wrapped Lift Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USDL",
+      "hermesId": "04b157d96df801e3229a2bc72896156e4d30845dab647c6389a3a175a7c45bac"
+    },
+    {
+      "id": "Crypto.USYC/USD.RR",
+      "lazerId": 754,
+      "asset": "Us Yield Coin",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "01cb900802d74a2e3d36bd9bf100523532b650c47dcac2e8202ba1e972eab305"
+    },
+    {
+      "id": "Crypto.SUSD/USD.RR",
+      "lazerId": 739,
+      "asset": "Solayer Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "5eb440963482af6f5b17f072db2ce2427b5cc5d0014bd97821d10b98015c2f8e"
+    },
+    {
+      "id": "Crypto.MHYPE/HYPE.RR",
+      "lazerId": 708,
+      "asset": "Spinup Staked Hype",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "HYPE",
+      "hermesId": "e35aebd2d35795acaa2b0e59f3b498510e8ef334986d151d1502adb9e26234f7"
+    },
+    {
+      "id": "Crypto.LST/SOL.RR",
+      "lazerId": 704,
+      "asset": "Liquid Staking Token",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "SOL",
+      "hermesId": "7827a48c04b4213b119367cb17404af515a1c0a7b52c91b42cf7b7bc1f286912"
+    },
+    {
+      "id": "Crypto.WFRAGSOL/USD",
+      "lazerId": 652,
+      "asset": "Wrapped Fragmetric Restaked Solana",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "20ca2bf878779b0473f2074a513e736d486171ca9b4e428f4a9dd5a5024b7fd1"
+    },
+    {
+      "id": "Crypto.WOM/USD",
+      "lazerId": 633,
+      "asset": "Wombat Exchange",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "43cddc3e1d0b17fec1cf2a230f46e9319887a037dcee56e053af44d8259fb042"
+    },
+    {
+      "id": "Crypto.USDL/USD",
+      "lazerId": 608,
+      "asset": "Lift Dollar",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "cd861966551d758d36e2b5deffdefa0f06b6b1dfce5ed64255f30cff35b1ec30"
+    },
+    {
+      "id": "Crypto.UMA/USD",
+      "lazerId": 601,
+      "asset": "Uma",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "4b78d251770732f6304b1f41e9bebaabc3b256985ef18988f6de8d6562dd254c"
+    },
+    {
+      "id": "Crypto.TURBOS/USD",
+      "lazerId": 599,
+      "asset": "Turbos Finance",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "f9c2e890443dd995d0baafc08eea3358be1ffb874f93f99c30b3816c460bbac3"
+    },
+    {
+      "id": "Crypto.THL/USD",
+      "lazerId": 595,
+      "asset": "Thala",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "74e3fbb0d33e0ed8c0078b56134dcebdae38852f0858a8ea4de4c5ea7474bd42"
+    },
+    {
+      "id": "Crypto.THAPT/USD",
+      "lazerId": 593,
+      "asset": "Thala Apt",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "b29276972267db5d64ae718fb7f107ad9e72a79cabf9992f0e9bc75ad451a7f6"
+    },
+    {
+      "id": "Crypto.SYUSD/USD",
+      "lazerId": 586,
+      "asset": "Synnax Us Dollar",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "e7f14a58b2ce19f896b0d4f88d93933ec55e7a91cea94d9dbb43ad3fd6350440"
+    },
+    {
+      "id": "Crypto.SENDCOIN.SEND/USD",
+      "lazerId": 554,
+      "asset": "Sendcoin",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "07b4391b29784ce5f02fc959aa1da3daa5909ba6561ee0a93d6ab5a896f4604c"
+    },
+    {
+      "id": "Crypto.SCUSD/USD",
+      "lazerId": 549,
+      "asset": "Sonic Usd",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "316b1536978bee10c47b3c74c0b3995aabae973a3351621680a2aa383aca77b8"
+    },
+    {
+      "id": "Crypto.SCETH/USD",
+      "lazerId": 546,
+      "asset": "Sonic Eth",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "8bb5e69ed1ab19642a0e7e851b1ed7b3579d0548bc8ddd1077b0d9476bb1dabc"
+    },
+    {
+      "id": "Crypto.PERP/USD",
+      "lazerId": 527,
+      "asset": "Perpetual Protocol",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "944f2f908c5166e0732ea5b610599116cd8e1c41f47452697c1e84138b7184d6"
+    },
+    {
+      "id": "Crypto.OUSDT/USD",
+      "lazerId": 524,
+      "asset": "Open Usdt",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "2dc7f272d3010abe4de48755a50fcf5bd9eefd3b4af01d8f39f6c80ae51544fe"
+    },
+    {
+      "id": "Crypto.OS/USD",
+      "lazerId": 523,
+      "asset": "Origin Staked Sonic",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "2bcd65e3c1b4580a5f59755ef30e11077238217dd418d301dd7ee4d252987675"
+    },
+    {
+      "id": "Crypto.OMI/USD",
+      "lazerId": 519,
+      "asset": "Ecomi",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "06d9fa501fd2bef47265361ca0eaf6e0a97c3b226cea5ab760240f70818581ad"
+    },
+    {
+      "id": "Crypto.ODOS/USD",
+      "lazerId": 516,
+      "asset": "Odos",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "1ba77b9dc10d6957caeb6ecdbe54badaef1e8af2f1c3a5157490e397c8935e91"
+    },
+    {
+      "id": "Crypto.NECT/USD",
+      "lazerId": 510,
+      "asset": "Beraborrow Nectar",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "ddf0dd319060db4561b5aa8f84a94816d33579f8dc2af2d8f74583bce20cd260"
+    },
+    {
+      "id": "Crypto.MOBY/USD",
+      "lazerId": 497,
+      "asset": "Moby Ai",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "edbaef2120caa0cc107c332bc2e9ef79b51c80fa4bb746098015c5c366aec42f"
+    },
+    {
+      "id": "Crypto.MBTC/USD",
+      "lazerId": 484,
+      "asset": "Merlin Seal Bitcoin",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "6665073f5bc307b97e68654ff11f3d8875abd6181855814d23ab01b8085c0906"
+    },
+    {
+      "id": "Crypto.LUSD/USD",
+      "lazerId": 477,
+      "asset": "Liquity Usd",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "c9dc99720306ef43fd301396a6f8522c8be89c6c77e8c27d87966918a943fd20"
+    },
+    {
+      "id": "Crypto.LUCE/USD",
+      "lazerId": 476,
+      "asset": "Luce",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "19b27827b96e6e8517183e137e13237093922eb1c0c876f65f6e38ef9012ac45"
+    },
+    {
+      "id": "Crypto.LOOKS/USD",
+      "lazerId": 473,
+      "asset": "Looksrare",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "acecdd9ac741a1f6dad0fd6ade5354e9523bd0c864b955307cea3643fdfe8ff5"
+    },
+    {
+      "id": "Crypto.LOFI/USD",
+      "lazerId": 472,
+      "asset": "Lofi The Yeti",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "82eebc2c47490ba9c0f9bc35ea9fb57a7e2bbf69b84a04ea2a3525153b8090ea"
+    },
+    {
+      "id": "Crypto.LBGT/USD",
+      "lazerId": 467,
+      "asset": "Liquid Bera Governance Token",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "7d80a0d7344c6632c5ed2b85016f32aed4f831294e274739d92bb9e32df5b22f"
+    },
+    {
+      "id": "Crypto.HFUN/USD",
+      "lazerId": 447,
+      "asset": "Hypurr Fun",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "61db931fcfd322223fb84dc4bfc9c6481bd5610a31403782bc396df213e3ce12"
+    },
+    {
+      "id": "Crypto.GRAIL/USD",
+      "lazerId": 440,
+      "asset": "Camelot Token",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "48f3736d94693aa73c11214c4176ba7f997a8329f4dbc3854c4b2686861132ce"
+    },
+    {
+      "id": "Crypto.GOGLZ/USD",
+      "lazerId": 438,
+      "asset": "Goggles",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "82465d1155ddbb2c73bf3491457163000f8e8d02dea90c548b1b7e56ae9fe4b1"
+    },
+    {
+      "id": "Crypto.FOXY/USD",
+      "lazerId": 428,
+      "asset": "Foxy",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "cef3865c498dd400d74e69995c1cff0c3ef0987e277858883a28802b94e2476f"
+    },
+    {
+      "id": "Crypto.FIDA/USD",
+      "lazerId": 427,
+      "asset": "Bonfida",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "c80657b7f6f3eac27218d09d5a4e54e47b25768d9f5e10ac15fe2cf900881400"
+    },
+    {
+      "id": "Crypto.BYUSD/USD",
+      "lazerId": 392,
+      "asset": "Berachain Pyusd",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "00456705ae9007ea761e95c724035a23a62fe9e444bbc744e11af7f050ab53c3"
+    },
+    {
+      "id": "Crypto.BUDDY/USD",
+      "lazerId": 391,
+      "asset": "Alright Buddy",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "ac2adf4571a391da22a2d39e8c5eb32ceecd6ab38c386a9194d669deece74dee"
+    },
+    {
+      "id": "Crypto.BLZE/USD",
+      "lazerId": 382,
+      "asset": "Blaze",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "93c3def9b169f49eed14c9d73ed0e942c666cf0e1290657ec82038ebb792c2a8"
+    },
+    {
+      "id": "Crypto.BBSOL/USD",
+      "lazerId": 373,
+      "asset": "Bybit Staked Solana",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "2997d5f9e96563cef9151cffc4580803930826fa38c4af5062de2363720769ea"
+    },
+    {
+      "id": "Crypto.ATLAS/USD",
+      "lazerId": 364,
+      "asset": "Star Atlas",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "681e0eb7acf9a2a3384927684d932560fb6f67c6beb21baa0f110e993b265386"
+    },
+    {
+      "id": "Crypto.AERGO/USD",
+      "lazerId": 351,
+      "asset": "Aergo",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "dd83d991ed72e3d688509ca349f29d2bd3d883af74a17b9515c310ff70e9d1e4"
+    },
+    {
+      "id": "Crypto.SKI/USD",
+      "lazerId": 216,
+      "asset": "Ski Mask Dog",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "748f752e089f3018381c905e3640dd079ff145e68ebcaf1774a7d47b9cab7854"
+    },
+    {
+      "id": "Crypto.GIGA/USD",
+      "lazerId": 162,
+      "asset": "Gigachad",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "7bc1234d6195d67c317d59c1e5841128eac2ace68922fa202111309c30059a74"
+    },
+    {
+      "id": "Commodities.Index.BRENT/USD",
+      "lazerId": 3446,
+      "asset": "Pyth Price In Usd For Brent 24",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SNXX/USD",
+      "lazerId": 3440,
+      "asset": "Tradr 2X Long Sndk Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.INTW/USD",
+      "lazerId": 3439,
+      "asset": "Graniteshares 2X Long Intc Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SKHY/USD",
+      "lazerId": 3437,
+      "asset": "Sk Hynix Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.JP.285A/JPY",
+      "lazerId": 3337,
+      "asset": "Kioxia Holdings Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "JPY"
+    },
+    {
+      "id": "Equity.Index.US30/USD",
+      "lazerId": 3292,
+      "asset": "Pyth Price In Usd For Us30 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.JP.1321/JPY",
+      "lazerId": 1668,
+      "asset": "Nomura Next Funds Nikkei 225 Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "JPY",
+      "hermesId": "62454bd808fe2f611fa91a09749537ed9cee6023ac737461ae17ab54b184e44c"
+    },
+    {
+      "id": "Crypto.WM/M.RR",
+      "lazerId": 760,
+      "asset": "Wrapped M",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "M",
+      "hermesId": "1d67aa80208885842df35f00cd64b0561b49c2fe22763e95336b3617df1165ba"
+    },
+    {
+      "id": "Crypto.WEETH/EETH.RR",
+      "lazerId": 759,
+      "asset": "Wrapped Ether.Fi Staked Eth",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "EETH",
+      "hermesId": "343558e79f587e098c321218ecb34d031ba709ab3e84133126f3c98511b91f64"
+    },
+    {
+      "id": "Crypto.STETH/ETH.RR",
+      "lazerId": 730,
+      "asset": "Lido Staked Eth",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "ETH",
+      "hermesId": "cf40822c7635ddbde64c831982c65b3b37247f139e8e53078d1602e886badd2f"
+    },
+    {
+      "id": "Crypto.USDT0/USD",
+      "lazerId": 612,
+      "asset": "Usdt0",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-14",
+      "quote": "USD",
+      "hermesId": "cfc1303ea9f083b1b4f99e1369fb9d2611f3230d5ea33a6abf2f86071c089fdc"
+    }
+  ]
+}
