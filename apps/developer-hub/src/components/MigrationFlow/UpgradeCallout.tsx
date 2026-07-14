@@ -40,7 +40,7 @@ const TITLE = "Pyth Core upgrades on July 31, 2026";
 
 export const UpgradeCallout = ({ chain }: Props) => {
   const upgradeGuide = "/price-feeds/core/upgrade/preparing";
-  const upgradedAddressesRoot = "/price-feeds/contract-addresses";
+  const upgradedAddressesRoot = "/price-feeds/core/upgrade/contracts";
   const contactMail = "mailto:data@dourolabs.xyz";
 
   if (chain === "index") {

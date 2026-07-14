@@ -238,16 +238,10 @@ const config = {
         source: "/price-feeds/lazer/:path*",
       },
 
-      // Upgraded contract addresses were folded into the unified page.
-      {
-        destination: "/price-feeds/contract-addresses",
-        permanent: true,
-        source: "/price-feeds/core/upgrade/contracts",
-      },
       {
         destination: "/price-feeds/core/:path",
         permanent: true,
-        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|changelog(?:/|$|\.mdx?$)|contract-addresses(?:$|\.mdx?$)).*)`,
+        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|changelog(?:/|$|\.mdx?$)).*)`,
       },
 
       // HIP-3 redirect - fumadocs meta.json links prepend parent path

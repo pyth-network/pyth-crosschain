@@ -48,7 +48,7 @@ const hermes = new HermesClient(
 
 ### Swap your contract address
 
-On Solana, swapping the Pyth Core contract address means pointing your program and TS SDK at the upgraded program IDs. The full mapping is on the [contract addresses page](/price-feeds/contract-addresses#solana). 
+On Solana, swapping the Pyth Core contract address means pointing your program and TS SDK at the upgraded program IDs. The full mapping is on the [contract addresses page](/price-feeds/core/upgrade/contracts#solana). 
 If your app reads push feeds directly, the per-feed account addresses also change; see the [push feed accounts table](/price-feeds/core/push-feeds/solana#upgraded-push-feed-accounts-mainnet) for the full mapping.
 
 #### On-chain program (Rust)
@@ -82,7 +82,7 @@ const pythSolanaReceiver = new PythSolanaReceiver({
 ```
 
 <Callout type="warn">
-  Replace any additional reference to the current Core program IDs with the upgraded program IDs in your codebase. See the [contract addresses page](/price-feeds/contract-addresses#solana) for the full mapping.
+  Replace any additional reference to the current Core program IDs with the upgraded program IDs in your codebase. See the [contract addresses page](/price-feeds/core/upgrade/contracts#solana) for the full mapping.
 </Callout>
 
 </Step>
@@ -90,4 +90,4 @@ const pythSolanaReceiver = new PythSolanaReceiver({
 
 ## Upgraded Solana Addresses
 
-[View on the contract addresses page →](/price-feeds/contract-addresses#solana)
+[View on the contract addresses page →](/price-feeds/core/upgrade/contracts#solana)
