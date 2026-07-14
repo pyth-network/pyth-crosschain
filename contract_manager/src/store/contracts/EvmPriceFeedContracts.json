@@ -1104,5 +1104,11 @@
     "chain": "mezo",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x933aDeC2C7624b11E4B2b80ACE15BF9a71a31315",
+    "chain": "mezo_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
