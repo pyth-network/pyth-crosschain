@@ -1114,5 +1114,11 @@
     "chain": "mezo",
     "type": "EvmWormholeContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x876A4e56A51386aBb1a5ab5d62f77E814372f0C7",
+    "chain": "mezo_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
