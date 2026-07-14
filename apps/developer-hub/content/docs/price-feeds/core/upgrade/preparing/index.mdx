@@ -133,9 +133,9 @@ Per-chain availability: see the **Pro-compatible** column on the [EVM](/price-fe
 
 ### Swap your contract address
 
-Swap your existing Pyth contract address for the [upgraded Pyth Core Contract](/price-feeds/contract-addresses) on your chain. The upgraded Pyth Core Contract preserves the Pyth Core interface. No other code changes are needed.
+Swap your existing Pyth contract address for the [upgraded Pyth Core Contract](/price-feeds/core/upgrade/contracts) on your chain. The upgraded Pyth Core Contract preserves the Pyth Core interface. No other code changes are needed.
 
-View all upgraded [Pyth Core Contract addresses](/price-feeds/contract-addresses).
+View all upgraded [Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts).
 
 After the swap, you're done before the July 31 cutover. 
 
@@ -203,7 +203,7 @@ for (const update of [newUpdate, oldUpdate]) {
 
 ## Chain support
 
-Pyth Core will be supported on major EVM chains, Solana and Sui. See the [upgraded Pyth Core contract addresses page](/price-feeds/contract-addresses) for more details.
+Pyth Core will be supported on major EVM chains, Solana and Sui. See the [upgraded Pyth Core contract addresses page](/price-feeds/core/upgrade/contracts) for more details.
 
 ### Feed support
 
@@ -224,10 +224,10 @@ Nearly all current Pyth Core feeds remain available after the upgrade, with new 
     On July 31, 2026. Exact switch timing is announced closer to the date. From that point, `hermes.pyth.network` serves the upgraded data and requires API key authentication.
   </Accordion>
   <Accordion title="Can I test before upgrading?">
-    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the upgraded Pyth Core Contract are both available on testnets today. See the upgraded [Pyth Core Contract addresses](/price-feeds/contract-addresses) for addresses.
+    Yes. The upgraded endpoint (`pyth.dourolabs.app/hermes`) and the upgraded Pyth Core Contract are both available on testnets today. See the upgraded [Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts) for addresses.
   </Accordion>
   <Accordion title="What if my chain isn't supported?">
-    Contact the team. Several chains are in active discussion and may be supported by July 31. For others, custom arrangements are possible. See the [upgraded Pyth Core Contract addresses](/price-feeds/contract-addresses) for the full list.
+    Contact the team. Several chains are in active discussion and may be supported by July 31. For others, custom arrangements are possible. See the [upgraded Pyth Core Contract addresses](/price-feeds/core/upgrade/contracts) for the full list.
   </Accordion>
   <Accordion title="Are all my feeds available after the upgrade?">
     Nearly all current Pyth Core feeds remain available after the upgrade, with new ones added. Look up your specific feeds on the [feed explorer](https://pythdata.app/explore?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=feed-explorer-faq). If a feed you depend on isn't listed, [contact the team](#get-help).
