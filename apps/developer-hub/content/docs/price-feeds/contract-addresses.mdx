@@ -1,0 +1,110 @@
+---
+title: All Contract Addresses
+description: Pyth Core (current), upgraded Pyth Core, and Pyth Pro contract addresses side by side for every supported chain.
+slug: /price-feeds/contract-addresses
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import CopyAddress from "../../../src/components/CopyAddress";
+import UnifiedContractsTable from "../../../src/components/UnifiedContractsTable";
+
+Pyth has three kinds of on-chain contracts. This page explains how to tell them apart and lists all three side by side, per chain.
+
+<Callout type="info">
+  **If you remember one thing:** Pyth Core and Pyth Pro are two different
+  products with two different shapes. The "upgraded" contract is not Pro. It's
+  the next generation of the Pyth Core contract you already use: same
+  interface, same feed IDs, now with the richer data and customizability that
+  Pro introduced.
+</Callout>
+
+|                          | What it is                                                                                                                       | Built for                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Pyth Core (current)**  | The contract you integrated against today. Keeps a **shared price on-chain** that any contract can read                            | Existing integrations                                                                      |
+| **Pyth Core (upgraded)** | The same interface and feed IDs at a new address, with richer data and more customization. Still keeps the shared price on-chain   | Upgrading your existing integration before July 31 (a drop-in address swap)               |
+| **Pyth Pro**             | A different model: **no price stored on-chain**. Each transaction carries its own millisecond-fresh signed price, verified on the spot | Latency-critical trading priced per transaction: perps fills, RFQ and quote-based execution |
+
+## The real difference between upgraded Core and Pro
+
+**Upgraded Core keeps the price on-chain, where everyone can read it.** Your contract calls `getPriceNoOlderThan` and gets the same canonical price every other protocol on the chain sees. That's the shape lending markets, CDPs, and vaults are built around: liquidations are triggered by third parties, share prices are computed in view functions, and protocols compose with each other by reading the same stored value. Sponsored push feeds keep it fresh, so passive protocols integrate with a single read. The upgrade doesn't change any of this. It keeps your interface and your feed IDs and improves what's behind them.
+
+**Pro attaches the price to the transaction instead.** Nothing is stored on-chain; every transaction that needs a price brings a freshly signed one, and the contract verifies it in the moment. That gives each trade a price that's milliseconds old at execution, which is exactly what a perps venue filling orders or an RFQ system executing signed quotes needs, and what no stored price can provide. The trade-off is that there's no shared price for other contracts to read.
+
+**One question decides it:** Do other contracts (or third-party liquidators, or view functions) need to read your price? Use Core. Does each transaction need its own freshest-possible price at execution? That's Pro.
+
+## What happens on July 31, 2026
+
+- Your **current contract is upgraded in place**. It starts accepting the new data payloads automatically. You keep your address and your feed IDs.\*
+- `hermes.pyth.network` is **redirected to the upgraded backend**. The URL keeps working, but every request needs a [Pyth API Key](https://pythdata.app/signup?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=contract-addresses) from that day on.
+- From then on, "current" and "upgraded" are the same thing, and that distinction disappears. What remains is Core vs Pro: the same upgraded data, either stored on-chain for everyone to read, or attached fresh to each transaction.
+
+\* Except on Sui, where the in-place upgrade isn't possible; see the [Sui upgrade guide](/price-feeds/core/upgrade/preparing/sui).
+
+## The two mistakes this page exists to prevent
+
+1. **Swapping a Core integration to a Pro address.** Pro has a different interface, different feed IDs, and no stored price to read; nothing will work. If you're upgrading Core, you want the **upgraded Core** address.
+2. **Swapping the contract address without moving your data source, or vice versa.** Each endpoint's payloads verify only on its own contract generation. Swap both together, or wait and let July 31 switch both for you.
+
+**Where to go next:** the [upgrade guide](/price-feeds/core/upgrade/preparing) for the how, or the [Pyth Pro docs](/price-feeds/pro) if per-transaction pricing is what you need. All addresses, all three kinds, are below.
+
+## EVM
+
+### Mainnets
+
+<UnifiedContractsTable isMainnet={true} />
+
+### Testnets
+
+<UnifiedContractsTable isMainnet={false} />
+
+## Solana
+
+### Pyth Core programs (Mainnet and Testnet)
+
+| Program           | Pyth Core (current)                                                                                                                  | Pyth Core (upgraded)                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Wormhole receiver | <CopyAddress address="HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ" maxLength={6} url="https://explorer.solana.com/address/HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ" /> | <CopyAddress address="HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL" maxLength={6} url="https://explorer.solana.com/address/HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL" /> |
+| Solana receiver   | <CopyAddress address="rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ" maxLength={6} url="https://explorer.solana.com/address/rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ" /> | <CopyAddress address="rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp" maxLength={6} url="https://explorer.solana.com/address/rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp" /> |
+| Price feed        | <CopyAddress address="pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT" maxLength={6} url="https://explorer.solana.com/address/pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT" /> | <CopyAddress address="pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou" maxLength={6} url="https://explorer.solana.com/address/pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou" /> |
+
+Per-feed push accounts change with the upgrade because they are PDAs of the Price feed program. See the [upgraded contract addresses](/price-feeds/core/upgrade/contracts) page for the full per-feed list.
+
+### Pyth Pro program
+
+| Network                          | Pyth Pro                                                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Solana Mainnet, Devnet, Testnet  | <CopyAddress address="pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt" url="https://solscan.io/account/pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt" /> |
+
+## Sui
+
+### Pyth Core (Mainnet)
+
+|                     | Pyth Core (current)                                                                                                                  | Pyth Core (upgraded)                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Pyth State ID       | <CopyAddress address="0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8" /> | <CopyAddress address="0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x03719fae774ddab3cfcaa53bbc046f0cbe21410019b6280811bf3f9f4b05839d" /> |
+| Pyth Package ID     | <CopyAddress address="0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x04e20ddf36af412a4096f9014f4a565af9e812db9a05cc40254846cf6ed0ad91" /> | <CopyAddress address="0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x55300367a2d40813727ccac4ecee977a39fb9cdb46f2e6b2c354b9798f5de2c0" /> |
+| Wormhole State ID   | <CopyAddress address="0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c" maxLength={6} url="https://suiscan.xyz/mainnet/object/0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c" /> | <CopyAddress address="0xdbca52b9fb4f712e25f61f974586d93ac541bcf8389564f0323bb07215168b5c" maxLength={6} url="https://suiscan.xyz/mainnet/object/0xdbca52b9fb4f712e25f61f974586d93ac541bcf8389564f0323bb07215168b5c" /> |
+| Wormhole Package ID | <CopyAddress address="0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a" /> | <CopyAddress address="0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4" maxLength={6} url="https://suiscan.xyz/mainnet/object/0x99de5c967d8206ef4b75c0afab3df2a59eb02b05c282821db803831008ac25b4" /> |
+
+Testnet addresses are listed on the [upgraded contract addresses](/price-feeds/core/upgrade/contracts#sui) page.
+
+### Pyth Pro (Mainnet)
+
+|                 | Pyth Pro                                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Package ID      | <CopyAddress address="0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580" maxLength={6} url="https://explorer.polymedia.app/object/0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580?network=mainnet" /> |
+| State Object ID | <CopyAddress address="0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573" maxLength={6} url="https://explorer.polymedia.app/object/0xd0db9c1e9212a98120384bf78d8b8c985d87b9ee6921dffcf9d1394062911573?network=mainnet" /> |
+
+## Chains with Pyth Pro only
+
+Fogo, Cardano, and Stellar have native Pyth Pro deployments; see the [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses) page.
+
+## Chains with Pyth Core only
+
+Aptos, CosmWasm, Fuel, Iota, Movement, Near, Starknet, and TON currently have Pyth Core contracts only. Their per-chain addresses are on the [Pyth Core contract addresses](/price-feeds/core/contract-addresses) pages.
+
+<Callout type="info">
+  **Don't see your chain, or unsure which contract applies to you?** We're
+  adding chains regularly and can discuss custom arrangements. [Contact the
+  team →](mailto:data@dourolabs.xyz)
+</Callout>
