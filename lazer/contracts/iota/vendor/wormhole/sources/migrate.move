@@ -105,21 +105,21 @@ module wormhole::migrate {
 
 #[test_only]
 module wormhole::migrate_tests {
-    use iota::test_scenario::{Self};
+    // use iota::test_scenario::{Self};
 
-    use wormhole::state::{Self};
-    use wormhole::wormhole_scenario::{
-        person,
-        return_clock,
-        return_state,
-        set_up_wormhole,
-        take_clock,
-        take_state,
-        upgrade_wormhole
-    };
+    // use wormhole::state::{Self};
+    // use wormhole::wormhole_scenario::{
+    //     person,
+    //     return_clock,
+    //     return_state,
+    //     set_up_wormhole,
+    //     take_clock,
+    //     take_state,
+    //     upgrade_wormhole
+    // };
 
-    const UPGRADE_VAA: vector<u8> =
-        x"01000000000100db695668c0c91f4df6e4106dcb912d9062898fd976d631ff1c1b4109ccd203b43cd2419c7d9a191f8d42a780419e63307aacc93080d8629c6c03061c52becf1d0100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726501001500000000000000000000000000000000000000000000006e6577206275696c64";
+    // const UPGRADE_VAA: vector<u8> =
+    //     x"01000000000100db695668c0c91f4df6e4106dcb912d9062898fd976d631ff1c1b4109ccd203b43cd2419c7d9a191f8d42a780419e63307aacc93080d8629c6c03061c52becf1d0100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726501001500000000000000000000000000000000000000000000006e6577206275696c64";
 
     // IOTA: disabled, payload was created for Sui
     // #[test]

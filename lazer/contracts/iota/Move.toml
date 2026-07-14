@@ -7,3 +7,7 @@ wormhole = { local = "./vendor/wormhole" }
 
 [addresses]
 pyth_lazer = "0x0"
+
+[dev-addresses]
+# TODO: replace with proper address
+wormhole = "0xdead1"
