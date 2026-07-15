@@ -89,7 +89,7 @@ Pyth Core is also deployed on other SVM chains, including Eclipse, Sonic, Atlas,
 
 ### Push Feed Accounts (Mainnet)
 
-Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The Price Feed program ID changes at the upgrade, so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
+Each Solana push feed lives at a PDA derived from the Price Feed program ID and the price feed ID. The seeds are `[u16_le(shard_id), 32-byte price_feed_id]`, and shard 0 is the sponsored default (matching the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page). The Price Feed program ID changes at the upgrade, so every per-feed account address changes too. Below are the upgraded account addresses (shard 0) for every sponsored feed. For the current (pre-upgrade) addresses, see the [push feeds on Solana](/price-feeds/core/push-feeds/solana) page.
 
 <SponsoredFeedsTable
   feeds={solanaMainnet.feeds}
@@ -97,6 +97,50 @@ Each Solana push feed lives at a PDA derived from the Price Feed program ID and 
   showUpgradedAccountAddress
   hideAccountAddress
 />
+
+To derive an upgraded account address yourself, use the `getPriceFeedAccountForProgram` helper from `@pythnetwork/pyth-solana-receiver` with the Pro-compatible Price Feed program ID:
+
+```ts
+import {
+  getPriceFeedAccountForProgram,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+} from "@pythnetwork/pyth-solana-receiver";
+
+// Derive the upgraded Solana push feed account for a given feed ID (shard 0 is the sponsored default).
+const feedId =
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"; // SOL/USD
+const upgradedAccount = getPriceFeedAccountForProgram(
+  0,
+  feedId,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+).toBase58();
+```
+
+Under the hood the helper is a `PublicKey.findProgramAddressSync` with the two-seed layout above, so if you don't want the SDK dependency you can derive the same address directly:
+
+```ts
+import { PublicKey } from "@solana/web3.js";
+import { Buffer } from "buffer";
+
+const PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
+  "pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou",
+);
+
+const shardId = 0;
+const feedId =
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
+
+const shardBuffer = Buffer.alloc(2);
+shardBuffer.writeUInt16LE(shardId, 0);
+const feedIdBuffer = Buffer.from(feedId.slice(2), "hex");
+
+const [upgradedAccount] = PublicKey.findProgramAddressSync(
+  [shardBuffer, feedIdBuffer],
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+);
+```
+
+Deriving the PDA gives you the address; it does not mean the account is sponsored or actively updated. Only the feeds listed above are sponsored.
 
 ### Pyth Pro program
 
