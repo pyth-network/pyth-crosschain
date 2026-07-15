@@ -124,7 +124,11 @@ export class EvmWormholeContract extends WormholeContract {
     return currentSet;
   }
 
-  async upgradeGuardianSets(senderPrivateKey: PrivateKey, vaa: Buffer) {
+  async upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer,
+    gasPriceMultiplier?: number,
+  ) {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
@@ -134,6 +138,7 @@ export class EvmWormholeContract extends WormholeContract {
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
       { from: address },
+      gasPriceMultiplier,
     );
     return { id: result.transactionHash, info: result };
   }

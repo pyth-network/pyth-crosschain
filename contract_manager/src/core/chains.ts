@@ -1169,6 +1169,7 @@ export class EvmChain extends Chain {
     // biome-ignore lint/suspicious/noExplicitAny: untyped Sui transaction/bytecode shapes
     transactionObject: any,
     txParams: { from?: string; value?: string },
+    gasPriceMultiplier = 1,
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
     const gasEstimate = await transactionObject.estimateGas(txParams);
@@ -1176,7 +1177,9 @@ export class EvmChain extends Chain {
     // To send a type 2 transaction, remove the ``gasPrice`` field.
     return transactionObject.send({
       gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: Number(await this.getGasPrice()),
+      gasPrice: Math.trunc(
+        Number(await this.getGasPrice()) * gasPriceMultiplier,
+      ),
       ...txParams,
     });
   }
