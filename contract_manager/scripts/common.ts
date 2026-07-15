@@ -366,8 +366,10 @@ export async function deployWormholeContract(
 
   if (config.type === "stable") {
     console.log(`Syncing mainnet guardian sets for ${chain.getId()}...`);
-    // TODO: Add a way to pass gas configs to this
-    await wormholeContract.syncMainnetGuardianSets(config.privateKey);
+    await wormholeContract.syncMainnetGuardianSets(
+      config.privateKey,
+      config.gasPriceMultiplier,
+    );
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
