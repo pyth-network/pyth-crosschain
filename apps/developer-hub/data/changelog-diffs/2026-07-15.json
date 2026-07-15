@@ -1,0 +1,97 @@
+{
+  "date": "2026-07-15",
+  "label": "Wednesday",
+  "summary": {
+    "added": 0,
+    "went_live": 5,
+    "removed": 4
+  },
+  "hero": "5 went live, 4 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "InterestRate.10YM6",
+      "lazerId": 3254,
+      "asset": "Pyth Price For 10 Year T-Note 18 June 2026",
+      "assetType": "interest-rate",
+      "changeType": "removed",
+      "date": "2026-07-15",
+      "quote": "POINTS"
+    },
+    {
+      "id": "InterestRate.3MSH6",
+      "lazerId": 3250,
+      "asset": "Pyth Price For Three Month Sofr 16 June 2026",
+      "assetType": "interest-rate",
+      "changeType": "removed",
+      "date": "2026-07-15",
+      "quote": "POINTS"
+    },
+    {
+      "id": "Commodities.WHN6/USD",
+      "lazerId": 3079,
+      "asset": "Pyth Price In Us Cents For Wheat 14 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-15",
+      "quote": "USD",
+      "hermesId": "42430baf6ddd312bb4584dd3a39f1c80c29a28dcf0ddccb083b2ea6abfcb7825"
+    },
+    {
+      "id": "Equity.US.NMM6/USD",
+      "lazerId": 3035,
+      "asset": "Pyth Price In Usd For Nasdaq E-Mini Index Futures 18 June 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-07-15",
+      "quote": "USD",
+      "hermesId": "56a457b9a6e6c8d5805a9beebe0f34ee78fc0f779c07cc1e996f8a05f4c9c849"
+    },
+    {
+      "id": "Equity.Index.US100/USD",
+      "lazerId": 3291,
+      "asset": "Pyth Price In Usd For Us100 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-15",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.Index.US500/USD",
+      "lazerId": 3290,
+      "asset": "Pyth Price In Usd For Us500 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-15",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.Index.NATGAS/USD",
+      "lazerId": 3265,
+      "asset": "Pyth Price In Usd For Natgas 24",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-15",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.LCZ6/USc",
+      "lazerId": 3215,
+      "asset": "Pyth Price In Us Cents For Live Cattle 31 December 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-15",
+      "quote": "USc",
+      "hermesId": "7784095554ed1396c8b62ca4b1b9c6edfd5c5d82607e81acd3a04faf82a50a09"
+    },
+    {
+      "id": "Commodities.WTIX6/USD",
+      "lazerId": 3072,
+      "asset": "Pyth Price In Usd For Wti 20 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-15",
+      "quote": "USD",
+      "hermesId": "f8c2191e76f7f4d5335e7f4e8f81ab0df6360d54ee020874222841894203e9d7"
+    }
+  ]
+}
