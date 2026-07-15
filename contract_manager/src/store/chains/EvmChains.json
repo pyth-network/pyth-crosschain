@@ -1426,5 +1426,19 @@
     "networkId": 25363,
     "rpcUrl": "https://rpc.fluent.xyz",
     "type": "EvmChain"
+  },
+  {
+    "id": "robinhood",
+    "mainnet": true,
+    "networkId": 4663,
+    "rpcUrl": "https://rpc.mainnet.chain.robinhood.com",
+    "type": "EvmChain"
+  },
+  {
+    "id": "robinhood_testnet",
+    "mainnet": false,
+    "networkId": 46630,
+    "rpcUrl": "https://rpc.testnet.chain.robinhood.com",
+    "type": "EvmChain"
   }
 ]
