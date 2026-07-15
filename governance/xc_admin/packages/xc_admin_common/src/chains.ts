@@ -136,6 +136,7 @@ export const RECEIVER_CHAINS = {
   // rather than Wormhole's canonical Stellar id, which collides with `base`
   // (30) — matching the precedent set by Sui (`iota_sui_*`) and Cardano.
   stellar_mainnet: 60100,
+  robinhood: 60101,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -283,6 +284,7 @@ export const RECEIVER_CHAINS = {
   arc_testnet: 50138,
   tempo_testnet: 50139,
   stellar_testnet: 50140,
+  robinhood_testnet: 50141,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

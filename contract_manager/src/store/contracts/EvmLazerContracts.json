@@ -163,5 +163,15 @@
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "cronos_testnet",
     "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "robinhood",
+    "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "robinhood_testnet",
+    "type": "EvmLazerContract"
   }
 ]

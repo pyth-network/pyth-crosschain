@@ -308,5 +308,15 @@
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     "chain": "cronos_testnet",
     "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "chain": "robinhood",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "chain": "robinhood_testnet",
+    "type": "EvmExecutorContract"
   }
 ]

@@ -1138,5 +1138,29 @@
     "chain": "polygon_amoy",
     "type": "EvmWormholeContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "chain": "robinhood",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "chain": "robinhood_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "chain": "robinhood",
+    "type": "EvmWormholeContract",
+    "deploymentType": "stable"
+  },
+  {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "chain": "robinhood_testnet",
+    "type": "EvmWormholeContract",
+    "deploymentType": "stable"
   }
 ]
