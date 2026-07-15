@@ -1,0 +1,39 @@
+--- a/sources/utils/package_utils.move
++++ b/sources/utils/package_utils.move
+@@ -73,8 +73,8 @@
+             iota::address::from_bytes(
+                 iota::hex::decode(
+                     std::ascii::into_bytes(
+-                        std::type_name::address_string(
+-                            &std::type_name::with_defining_ids<T>()
++                        std::type_name::get_address(
++                            &std::type_name::get<T>()
+                         )
+                     )
+                 )
+@@ -108,7 +108,7 @@
+ 
+     // Retrieve the `TypeName` of a given version.
+     public fun type_of_version<Version: drop>(_version: Version): TypeName {
+-        type_name::with_defining_ids<Version>()
++        type_name::get<Version>()
+     }
+ 
+     /// Initialize package info and set the initial version. This should be done
+@@ -234,13 +234,13 @@
+         );
+         let _: Old = field::remove(id, CurrentVersion {});
+ 
+-        let new_type = type_name::with_defining_ids<New>();
++        let new_type = type_name::get<New>();
+         // Make sure the new type does not equal the old type, which means there
+         // is no protection against either build.
+-        assert!(new_type != type_name::with_defining_ids<Old>(), E_SAME_VERSION);
++        assert!(new_type != type_name::get<Old>(), E_SAME_VERSION);
+ 
+         // Also make sure `New` originates from this module.
+-        let module_name = into_bytes(type_name::module_string(&new_type));
++        let module_name = into_bytes(type_name::get_module(&new_type));
+         assert!(module_name == b"version_control", E_TYPE_NOT_ALLOWED);
+ 
+         // Finally add the new version.

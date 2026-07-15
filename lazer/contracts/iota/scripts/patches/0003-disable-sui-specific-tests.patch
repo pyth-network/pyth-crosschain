@@ -1,0 +1,1332 @@
+--- a/sources/governance/set_fee.move
++++ b/sources/governance/set_fee.move
+@@ -76,11 +76,11 @@
+ 
+ #[test_only]
+ module wormhole::set_fee_tests {
+-    use iota::balance::{Self};
++    // use iota::balance::{Self};
+     use iota::test_scenario::{Self};
+ 
+-    use wormhole::bytes::{Self};
+-    use wormhole::cursor::{Self};
++    // use wormhole::bytes::{Self};
++    // use wormhole::cursor::{Self};
+     use wormhole::governance_message::{Self};
+     use wormhole::set_fee::{Self};
+     use wormhole::state::{Self};
+@@ -88,210 +88,214 @@
+     use wormhole::version_control::{Self};
+     use wormhole::wormhole_scenario::{
+         person,
+-        return_clock,
+-        return_state,
++        // return_clock,
++        // return_state,
+         set_up_wormhole,
+         take_clock,
+         take_state,
+-        upgrade_wormhole
++        // upgrade_wormhole
+     };
+ 
+     const VAA_SET_FEE_1: vector<u8> =
+         x"01000000000100181aa27fd44f3060fad0ae72895d42f97c45f7a5d34aa294102911370695e91e17ae82caa59f779edde2356d95cd46c2c381cdeba7a8165901a562374f212d750000bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f7265030015000000000000000000000000000000000000000000000000000000000000015e";
+-    const VAA_SET_FEE_MAX: vector<u8> =
+-        x"01000000000100b0697fd31572e11b2256cf46d5934f38fbb90e6265e999bee50950846bf9f94d5b86f247cce20e3cc158163be7b5ae21ebaaf67e20d597229ca04d505fd4bc1c0000bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f7265030015000000000000000000000000000000000000000000000000ffffffffffffffff";
+-    const VAA_SET_FEE_OVERFLOW: vector<u8> =
+-        x"01000000000100950a509a797c9b40a678a5d6297f5b74e1ce1794b3c012dad5774c395e65e8b0773cf160113f571f1452ee98d10aa61273b6bc8aefa74a3c8f7e2c9c89fb25fa0000bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f72650300150000000000000000000000000000000000000000000000010000000000000000";
++    // const VAA_SET_FEE_MAX: vector<u8> =
++    //     x"01000000000100b0697fd31572e11b2256cf46d5934f38fbb90e6265e999bee50950846bf9f94d5b86f247cce20e3cc158163be7b5ae21ebaaf67e20d597229ca04d505fd4bc1c0000bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f7265030015000000000000000000000000000000000000000000000000ffffffffffffffff";
++    // const VAA_SET_FEE_OVERFLOW: vector<u8> =
++    //     x"01000000000100950a509a797c9b40a678a5d6297f5b74e1ce1794b3c012dad5774c395e65e8b0773cf160113f571f1452ee98d10aa61273b6bc8aefa74a3c8f7e2c9c89fb25fa0000bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f72650300150000000000000000000000000000000000000000000000010000000000000000";
+ 
+-    #[test]
+-    fun test_set_fee() {
+-        // Testing this method.
+-        use wormhole::set_fee::{set_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_set_fee() {
++    //     // Testing this method.
++    //     use wormhole::set_fee::{set_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 420;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 420;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Prepare test to execute `set_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `set_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Double-check current fee (from setup).
+-        assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
++    //     // Double-check current fee (from setup).
++    //     assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        let fee_amount = set_fee(&mut worm_state, receipt);
+-        assert!(wormhole_fee != fee_amount, 0);
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     let fee_amount = set_fee(&mut worm_state, receipt);
++    //     assert!(wormhole_fee != fee_amount, 0);
+ 
+-        // Confirm the fee changed.
+-        assert!(state::message_fee(&worm_state) == fee_amount, 0);
++    //     // Confirm the fee changed.
++    //     assert!(state::message_fee(&worm_state) == fee_amount, 0);
+ 
+-        // And confirm that we can deposit the new fee amount.
+-        state::deposit_fee_test_only(
+-            &mut worm_state,
+-            balance::create_for_testing(fee_amount)
+-        );
++    //     // And confirm that we can deposit the new fee amount.
++    //     state::deposit_fee_test_only(
++    //         &mut worm_state,
++    //         balance::create_for_testing(fee_amount)
++    //     );
+ 
+-        // Finally set the fee again to max u64 (this will effectively pause
+-        // Wormhole message publishing until the fee gets adjusted back to a
+-        // reasonable level again).
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_MAX, &the_clock);
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        let fee_amount = set_fee(&mut worm_state, receipt);
++    //     // Finally set the fee again to max u64 (this will effectively pause
++    //     // Wormhole message publishing until the fee gets adjusted back to a
++    //     // reasonable level again).
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_MAX, &the_clock);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     let fee_amount = set_fee(&mut worm_state, receipt);
+ 
+-        // Confirm.
+-        assert!(state::message_fee(&worm_state) == fee_amount, 0);
++    //     // Confirm.
++    //     assert!(state::message_fee(&worm_state) == fee_amount, 0);
+ 
+-        // Clean up.
+-        return_state(worm_state);
+-        return_clock(the_clock);
++    //     // Clean up.
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
+ 
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+-    #[test]
+-    fun test_set_fee_after_upgrade() {
+-        // Testing this method.
+-        use wormhole::set_fee::{set_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_set_fee_after_upgrade() {
++    //     // Testing this method.
++    //     use wormhole::set_fee::{set_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 420;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 420;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Upgrade.
+-        upgrade_wormhole(scenario);
++    //     // Upgrade.
++    //     upgrade_wormhole(scenario);
+ 
+-        // Prepare test to execute `set_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `set_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Double-check current fee (from setup).
+-        assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
++    //     // Double-check current fee (from setup).
++    //     assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        let fee_amount = set_fee(&mut worm_state, receipt);
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     let fee_amount = set_fee(&mut worm_state, receipt);
+ 
+-        // Confirm the fee changed.
+-        assert!(state::message_fee(&worm_state) == fee_amount, 0);
++    //     // Confirm the fee changed.
++    //     assert!(state::message_fee(&worm_state) == fee_amount, 0);
+ 
+-        // Clean up.
+-        return_state(worm_state);
+-        return_clock(the_clock);
+-
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     // Clean up.
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
+ 
+-    #[test]
+-    #[expected_failure(abort_code = wormhole::set::E_KEY_ALREADY_EXISTS)]
+-    fun test_cannot_set_fee_with_same_vaa() {
+-        // Testing this method.
+-        use wormhole::set_fee::{set_fee};
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = wormhole::set::E_KEY_ALREADY_EXISTS)]
++    // fun test_cannot_set_fee_with_same_vaa() {
++    //     // Testing this method.
++    //     use wormhole::set_fee::{set_fee};
+ 
+-        let wormhole_fee = 420;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Prepare test to execute `set_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     let wormhole_fee = 420;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     // Prepare test to execute `set_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        // Set once.
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        set_fee(&mut worm_state, receipt);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     // Set once.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     set_fee(&mut worm_state, receipt);
+ 
+-        // You shall not pass!
+-        set_fee(&mut worm_state, receipt);
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+ 
+-        abort 42
+-    }
++    //     // You shall not pass!
++    //     set_fee(&mut worm_state, receipt);
+ 
+-    #[test]
+-    #[expected_failure(abort_code = wormhole::bytes32::E_U64_OVERFLOW)]
+-    fun test_cannot_set_fee_with_overflow() {
+-        // Testing this method.
+-        use wormhole::set_fee::{set_fee};
++    //     abort 42
++    // }
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = wormhole::bytes32::E_U64_OVERFLOW)]
++    // fun test_cannot_set_fee_with_overflow() {
++    //     // Testing this method.
++    //     use wormhole::set_fee::{set_fee};
+ 
+-        let wormhole_fee = 420;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Prepare test to execute `set_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     let wormhole_fee = 420;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     // Prepare test to execute `set_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        // Show that the encoded fee is greater than u64 max.
+-        let verified_vaa =
+-            vaa::parse_and_verify(
+-                &worm_state,
+-                VAA_SET_FEE_OVERFLOW,
+-                &the_clock
+-            );
+-        let payload =
+-            governance_message::take_decree(vaa::payload(&verified_vaa));
+-        let cur = cursor::new(payload);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        let fee_amount = bytes::take_u256_be(&mut cur);
+-        assert!(fee_amount > 0xffffffffffffffff, 0);
++    //     // Show that the encoded fee is greater than u64 max.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(
++    //             &worm_state,
++    //             VAA_SET_FEE_OVERFLOW,
++    //             &the_clock
++    //         );
++    //     let payload =
++    //         governance_message::take_decree(vaa::payload(&verified_vaa));
++    //     let cur = cursor::new(payload);
+ 
+-        cursor::destroy_empty(cur);
++    //     let fee_amount = bytes::take_u256_be(&mut cur);
++    //     assert!(fee_amount > 0xffffffffffffffff, 0);
+ 
+-        let ticket = set_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     cursor::destroy_empty(cur);
+ 
+-        // You shall not pass!
+-        set_fee(&mut worm_state, receipt);
++    //     let ticket = set_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+ 
+-        abort 42
+-    }
++    //     // You shall not pass!
++    //     set_fee(&mut worm_state, receipt);
+ 
++    //     abort 42
++    // }
++
+     #[test]
+     #[expected_failure(abort_code = wormhole::package_utils::E_NOT_CURRENT_VERSION)]
+     fun test_cannot_set_fee_outdated_version() {
+--- a/sources/governance/transfer_fee.move
++++ b/sources/governance/transfer_fee.move
+@@ -107,14 +107,14 @@
+ #[test_only]
+ module wormhole::transfer_fee_tests {
+     use iota::balance::{Self};
+-    use iota::coin::{Self, Coin};
+-    use iota::iota::{IOTA};
++    // use iota::coin::{Self, Coin};
++    // use iota::iota::{IOTA};
+     use iota::test_scenario::{Self};
+ 
+-    use wormhole::bytes::{Self};
+-    use wormhole::bytes32::{Self};
+-    use wormhole::cursor::{Self};
+-    use wormhole::external_address::{Self};
++    // use wormhole::bytes::{Self};
++    // use wormhole::bytes32::{Self};
++    // use wormhole::cursor::{Self};
++    // use wormhole::external_address::{Self};
+     use wormhole::governance_message::{Self};
+     use wormhole::state::{Self};
+     use wormhole::transfer_fee::{Self};
+@@ -122,343 +122,349 @@
+     use wormhole::version_control::{Self};
+     use wormhole::wormhole_scenario::{
+         person,
+-        return_clock,
+-        return_state,
++        // return_clock,
++        // return_state,
+         set_up_wormhole,
+         take_clock,
+         take_state,
+-        two_people,
+-        upgrade_wormhole
++        // two_people,
++        // upgrade_wormhole
+     };
+ 
+     const VAA_TRANSFER_FEE_1: vector<u8> =
+         x"01000000000100a96aee105d7683266d98c9b274eddb20391378adddcefbc7a5266b4be78bc6eb582797741b65617d796c6c613ae7a4dad52a8b4aa4659842dcc4c9b3891549820100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726504001500000000000000000000000000000000000000000000000000000000000004b0000000000000000000000000000000000000000000000000000000000000b0b2";
+-    const VAA_TRANSFER_FEE_OVERFLOW: vector<u8> =
+-        x"01000000000100529b407a673f8917ccb9bb6f8d46d0f729c1ff845b0068ef5e0a3de464670b2e379a8994b15362785e52d73e01c880dbcdf432ef3702782d17d352fb07ed86830100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f72650400150000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000b0b2";
+-    const VAA_TRANSFER_FEE_ZERO_ADDRESS: vector<u8> =
+-        x"0100000000010032b2ab65a690ae4af8c85903d7b22239fc272183eefdd5a4fa784664f82aa64b381380cc03859156e88623949ce4da4435199aaac1cb09e52a09d6915725a5e70100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726504001500000000000000000000000000000000000000000000000000000000000004b00000000000000000000000000000000000000000000000000000000000000000";
++    // const VAA_TRANSFER_FEE_OVERFLOW: vector<u8> =
++    //     x"01000000000100529b407a673f8917ccb9bb6f8d46d0f729c1ff845b0068ef5e0a3de464670b2e379a8994b15362785e52d73e01c880dbcdf432ef3702782d17d352fb07ed86830100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f72650400150000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000b0b2";
++    // const VAA_TRANSFER_FEE_ZERO_ADDRESS: vector<u8> =
++    //     x"0100000000010032b2ab65a690ae4af8c85903d7b22239fc272183eefdd5a4fa784664f82aa64b381380cc03859156e88623949ce4da4435199aaac1cb09e52a09d6915725a5e70100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726504001500000000000000000000000000000000000000000000000000000000000004b00000000000000000000000000000000000000000000000000000000000000000";
+ 
+-    #[test]
+-    fun test_transfer_fee() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_transfer_fee() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        // Set up.
+-        let (caller, recipient) = two_people();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let (caller, recipient) = two_people();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Double-check current fee (from setup).
+-        assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
++    //     // Double-check current fee (from setup).
++    //     assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
+ 
+-        // Deposit fee several times.
+-        let (i, n) = (0u64, 8);
+-        while (i < n) {
+-            state::deposit_fee_test_only(
+-                &mut worm_state,
+-                balance::create_for_testing(wormhole_fee)
+-            );
+-            i = i + 1;
+-        };
++    //     // Deposit fee several times.
++    //     let (i, n) = (0u64, 8);
++    //     while (i < n) {
++    //         state::deposit_fee_test_only(
++    //             &mut worm_state,
++    //             balance::create_for_testing(wormhole_fee)
++    //         );
++    //         i = i + 1;
++    //     };
+ 
+-        // Double-check balance.
+-        let total_deposited = n * wormhole_fee;
+-        assert!(state::fees_collected(&worm_state) == total_deposited, 0);
++    //     // Double-check balance.
++    //     let total_deposited = n * wormhole_fee;
++    //     assert!(state::fees_collected(&worm_state) == total_deposited, 0);
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        let withdrawn =
+-            transfer_fee(
+-                &mut worm_state,
+-                receipt,
+-                test_scenario::ctx(scenario)
+-            );
+-        assert!(withdrawn == 1200, 0);
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     let withdrawn =
++    //         transfer_fee(
++    //             &mut worm_state,
++    //             receipt,
++    //             test_scenario::ctx(scenario)
++    //         );
++    //     assert!(withdrawn == 1200, 0);
+ 
+-        // Ignore effects.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Ignore effects.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        // Verify that the recipient received the withdrawal.
+-        let withdrawn_coin =
+-            test_scenario::take_from_address<Coin<IOTA>>(scenario, recipient);
+-        assert!(coin::value(&withdrawn_coin) == withdrawn, 0);
++    //     // Verify that the recipient received the withdrawal.
++    //     let withdrawn_coin =
++    //         test_scenario::take_from_address<Coin<IOTA>>(scenario, recipient);
++    //     assert!(coin::value(&withdrawn_coin) == withdrawn, 0);
+ 
+-        // And there is still a balance on Wormhole's fee collector.
+-        let remaining = total_deposited - withdrawn;
+-        assert!(state::fees_collected(&worm_state) == remaining, 0);
++    //     // And there is still a balance on Wormhole's fee collector.
++    //     let remaining = total_deposited - withdrawn;
++    //     assert!(state::fees_collected(&worm_state) == remaining, 0);
+ 
+-        // Clean up.
+-        coin::burn_for_testing(withdrawn_coin);
+-        return_state(worm_state);
+-        return_clock(the_clock);
++    //     // Clean up.
++    //     coin::burn_for_testing(withdrawn_coin);
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
+ 
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+-    #[test]
+-    fun test_transfer_fee_after_upgrade() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_transfer_fee_after_upgrade() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Upgrade.
+-        upgrade_wormhole(scenario);
+-
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Upgrade.
++    //     upgrade_wormhole(scenario);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        // Double-check current fee (from setup).
+-        assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Deposit fee several times.
+-        let (i, n) = (0u64, 8);
+-        while (i < n) {
+-            state::deposit_fee_test_only(
+-                &mut worm_state,
+-                balance::create_for_testing(wormhole_fee)
+-            );
+-            i = i + 1;
+-        };
++    //     // Double-check current fee (from setup).
++    //     assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
+ 
+-        // Double-check balance.
+-        let total_deposited = n * wormhole_fee;
+-        assert!(state::fees_collected(&worm_state) == total_deposited, 0);
++    //     // Deposit fee several times.
++    //     let (i, n) = (0u64, 8);
++    //     while (i < n) {
++    //         state::deposit_fee_test_only(
++    //             &mut worm_state,
++    //             balance::create_for_testing(wormhole_fee)
++    //         );
++    //         i = i + 1;
++    //     };
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        let withdrawn =
+-            transfer_fee(
+-                &mut worm_state,
+-                receipt,
+-                test_scenario::ctx(scenario)
+-            );
+-        assert!(withdrawn == 1200, 0);
++    //     // Double-check balance.
++    //     let total_deposited = n * wormhole_fee;
++    //     assert!(state::fees_collected(&worm_state) == total_deposited, 0);
+ 
+-        // Clean up.
+-        return_state(worm_state);
+-        return_clock(the_clock);
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     let withdrawn =
++    //         transfer_fee(
++    //             &mut worm_state,
++    //             receipt,
++    //             test_scenario::ctx(scenario)
++    //         );
++    //     assert!(withdrawn == 1200, 0);
+ 
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     // Clean up.
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
+ 
+-    #[test]
+-    #[expected_failure(abort_code = wormhole::set::E_KEY_ALREADY_EXISTS)]
+-    fun test_cannot_transfer_fee_with_same_vaa() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = wormhole::set::E_KEY_ALREADY_EXISTS)]
++    // fun test_cannot_transfer_fee_with_same_vaa() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        // Double-check current fee (from setup).
+-        assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Deposit fee several times.
+-        let (i, n) = (0u64, 8);
+-        while (i < n) {
+-            state::deposit_fee_test_only(
+-                &mut worm_state,
+-                balance::create_for_testing(wormhole_fee)
+-            );
+-            i = i + 1;
+-        };
++    //     // Double-check current fee (from setup).
++    //     assert!(state::message_fee(&worm_state) == wormhole_fee, 0);
+ 
+-        // Transfer once.
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
++    //     // Deposit fee several times.
++    //     let (i, n) = (0u64, 8);
++    //     while (i < n) {
++    //         state::deposit_fee_test_only(
++    //             &mut worm_state,
++    //             balance::create_for_testing(wormhole_fee)
++    //         );
++    //         i = i + 1;
++    //     };
++
++    //     // Transfer once.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        // You shall not pass!
+-        transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     // You shall not pass!
++    //     transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
+ 
+-        abort 42
+-    }
++    //     abort 42
++    // }
+ 
+-    #[test]
+-    #[expected_failure(abort_code = iota::balance::ENotEnough)]
+-    fun test_cannot_transfer_fee_insufficient_balance() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = iota::balance::ENotEnough)]
++    // fun test_cannot_transfer_fee_insufficient_balance() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Show balance is zero.
+-        assert!(state::fees_collected(&worm_state) == 0, 0);
++    //     // Show balance is zero.
++    //     assert!(state::fees_collected(&worm_state) == 0, 0);
+ 
+-        // Show that the encoded fee is greater than zero.
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
+-        let payload =
+-            governance_message::take_decree(vaa::payload(&verified_vaa));
+-        let cur = cursor::new(payload);
++    //     // Show that the encoded fee is greater than zero.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_TRANSFER_FEE_1, &the_clock);
++    //     let payload =
++    //         governance_message::take_decree(vaa::payload(&verified_vaa));
++    //     let cur = cursor::new(payload);
+ 
+-        let amount = bytes::take_u256_be(&mut cur);
+-        assert!(amount > 0, 0);
+-        cursor::take_rest(cur);
++    //     let amount = bytes::take_u256_be(&mut cur);
++    //     assert!(amount > 0, 0);
++    //     cursor::take_rest(cur);
+ 
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        // You shall not pass!
+-        transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     // You shall not pass!
++    //     transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
+ 
+-        abort 42
+-    }
++    //     abort 42
++    // }
+ 
+-    #[test]
+-    #[expected_failure(abort_code = external_address::E_ZERO_ADDRESS)]
+-    fun test_cannot_transfer_fee_recipient_zero_address() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = external_address::E_ZERO_ADDRESS)]
++    // fun test_cannot_transfer_fee_recipient_zero_address() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Show balance is zero.
+-        assert!(state::fees_collected(&worm_state) == 0, 0);
++    //     // Show balance is zero.
++    //     assert!(state::fees_collected(&worm_state) == 0, 0);
+ 
+-        // Show that the encoded fee is greater than zero.
+-        let verified_vaa =
+-            vaa::parse_and_verify(
+-                &worm_state,
+-                VAA_TRANSFER_FEE_ZERO_ADDRESS,
+-                &the_clock
+-            );
+-        let payload =
+-            governance_message::take_decree(vaa::payload(&verified_vaa));
+-        let cur = cursor::new(payload);
++    //     // Show that the encoded fee is greater than zero.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(
++    //             &worm_state,
++    //             VAA_TRANSFER_FEE_ZERO_ADDRESS,
++    //             &the_clock
++    //         );
++    //     let payload =
++    //         governance_message::take_decree(vaa::payload(&verified_vaa));
++    //     let cur = cursor::new(payload);
+ 
+-        bytes::take_u256_be(&mut cur);
++    //     bytes::take_u256_be(&mut cur);
+ 
+-        // Confirm recipient is zero address.
+-        let addr = bytes32::take_bytes(&mut cur);
+-        assert!(!bytes32::is_nonzero(&addr), 0);
+-        cursor::destroy_empty(cur);
++    //     // Confirm recipient is zero address.
++    //     let addr = bytes32::take_bytes(&mut cur);
++    //     assert!(!bytes32::is_nonzero(&addr), 0);
++    //     cursor::destroy_empty(cur);
+ 
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        // You shall not pass!
+-        transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     // You shall not pass!
++    //     transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
+ 
+-        abort 42
+-    }
++    //     abort 42
++    // }
+ 
+-    #[test]
+-    #[expected_failure(abort_code = wormhole::bytes32::E_U64_OVERFLOW)]
+-    fun test_cannot_transfer_fee_withdraw_amount_overflow() {
+-        // Testing this method.
+-        use wormhole::transfer_fee::{transfer_fee};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = wormhole::bytes32::E_U64_OVERFLOW)]
++    // fun test_cannot_transfer_fee_withdraw_amount_overflow() {
++    //     // Testing this method.
++    //     use wormhole::transfer_fee::{transfer_fee};
+ 
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        // Prepare test to execute `transfer_fee`.
+-        test_scenario::next_tx(scenario, caller);
++    //     // Prepare test to execute `transfer_fee`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Show balance is zero.
+-        assert!(state::fees_collected(&worm_state) == 0, 0);
++    //     // Show balance is zero.
++    //     assert!(state::fees_collected(&worm_state) == 0, 0);
+ 
+-        // Show that the encoded fee is greater than zero.
+-        let verified_vaa =
+-            vaa::parse_and_verify(
+-                &worm_state,
+-                VAA_TRANSFER_FEE_OVERFLOW,
+-                &the_clock
+-            );
+-        let payload =
+-            governance_message::take_decree(vaa::payload(&verified_vaa));
+-        let cur = cursor::new(payload);
++    //     // Show that the encoded fee is greater than zero.
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(
++    //             &worm_state,
++    //             VAA_TRANSFER_FEE_OVERFLOW,
++    //             &the_clock
++    //         );
++    //     let payload =
++    //         governance_message::take_decree(vaa::payload(&verified_vaa));
++    //     let cur = cursor::new(payload);
+ 
+-        let amount = bytes::take_u256_be(&mut cur);
+-        assert!(amount > 0xffffffffffffffff, 0);
+-        cursor::take_rest(cur);
++    //     let amount = bytes::take_u256_be(&mut cur);
++    //     assert!(amount > 0xffffffffffffffff, 0);
++    //     cursor::take_rest(cur);
+ 
+-        let ticket = transfer_fee::authorize_governance(&worm_state);
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-        // You shall not pass!
+-        transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
++    //     let ticket = transfer_fee::authorize_governance(&worm_state);
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
++    //     // You shall not pass!
++    //     transfer_fee(&mut worm_state, receipt, test_scenario::ctx(scenario));
+ 
+-        abort 42
+-    }
++    //     abort 42
++    // }
+ 
+     #[test]
+     #[expected_failure(abort_code = wormhole::package_utils::E_NOT_CURRENT_VERSION)]
+--- a/sources/migrate.move
++++ b/sources/migrate.move
+@@ -105,116 +105,118 @@
+ 
+ #[test_only]
+ module wormhole::migrate_tests {
+-    use iota::test_scenario::{Self};
++    // use iota::test_scenario::{Self};
+ 
+-    use wormhole::state::{Self};
+-    use wormhole::wormhole_scenario::{
+-        person,
+-        return_clock,
+-        return_state,
+-        set_up_wormhole,
+-        take_clock,
+-        take_state,
+-        upgrade_wormhole
+-    };
++    // use wormhole::state::{Self};
++    // use wormhole::wormhole_scenario::{
++    //     person,
++    //     return_clock,
++    //     return_state,
++    //     set_up_wormhole,
++    //     take_clock,
++    //     take_state,
++    //     upgrade_wormhole
++    // };
+ 
+-    const UPGRADE_VAA: vector<u8> =
+-        x"01000000000100db695668c0c91f4df6e4106dcb912d9062898fd976d631ff1c1b4109ccd203b43cd2419c7d9a191f8d42a780419e63307aacc93080d8629c6c03061c52becf1d0100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726501001500000000000000000000000000000000000000000000006e6577206275696c64";
++    // const UPGRADE_VAA: vector<u8> =
++    //     x"01000000000100db695668c0c91f4df6e4106dcb912d9062898fd976d631ff1c1b4109ccd203b43cd2419c7d9a191f8d42a780419e63307aacc93080d8629c6c03061c52becf1d0100bc614e000000000001000000000000000000000000000000000000000000000000000000000000000400000000000000010100000000000000000000000000000000000000000000000000000000436f726501001500000000000000000000000000000000000000000000006e6577206275696c64";
+ 
+-    #[test]
+-    fun test_migrate() {
+-        use wormhole::migrate::{migrate};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_migrate() {
++    //     use wormhole::migrate::{migrate};
+ 
+-        let user = person();
+-        let my_scenario = test_scenario::begin(user);
+-        let scenario = &mut my_scenario;
++    //     let user = person();
++    //     let my_scenario = test_scenario::begin(user);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Initialize Wormhole.
+-        let wormhole_message_fee = 350;
+-        set_up_wormhole(scenario, wormhole_message_fee);
++    //     // Initialize Wormhole.
++    //     let wormhole_message_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_message_fee);
+ 
+-        // Next transaction should be conducted as an ordinary user.
+-        test_scenario::next_tx(scenario, user);
++    //     // Next transaction should be conducted as an ordinary user.
++    //     test_scenario::next_tx(scenario, user);
+ 
+-        // Upgrade (digest is just b"new build") for testing purposes.
+-        upgrade_wormhole(scenario);
++    //     // Upgrade (digest is just b"new build") for testing purposes.
++    //     upgrade_wormhole(scenario);
+ 
+-        // Ignore effects.
+-        test_scenario::next_tx(scenario, user);
++    //     // Ignore effects.
++    //     test_scenario::next_tx(scenario, user);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Set up migrate (which prepares this package to be the same state as
+-        // a previous release).
+-        wormhole::migrate::set_up_migrate(&mut worm_state);
++    //     // Set up migrate (which prepares this package to be the same state as
++    //     // a previous release).
++    //     wormhole::migrate::set_up_migrate(&mut worm_state);
+ 
+-        // Conveniently roll version back.
+-        state::reverse_migrate_version(&mut worm_state);
++    //     // Conveniently roll version back.
++    //     state::reverse_migrate_version(&mut worm_state);
+ 
+-        // Simulate executing with an outdated build by upticking the minimum
+-        // required version for `publish_message` to something greater than
+-        // this build.
+-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
++    //     // Simulate executing with an outdated build by upticking the minimum
++    //     // required version for `publish_message` to something greater than
++    //     // this build.
++    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+ 
+-        // Make sure we emitted an event.
+-        let effects = test_scenario::next_tx(scenario, user);
+-        assert!(test_scenario::num_user_events(&effects) == 1, 0);
++    //     // Make sure we emitted an event.
++    //     let effects = test_scenario::next_tx(scenario, user);
++    //     assert!(test_scenario::num_user_events(&effects) == 1, 0);
+ 
+-        // Clean up.
+-        return_state(worm_state);
+-        return_clock(the_clock);
++    //     // Clean up.
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
+ 
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+-    #[test]
+-    #[expected_failure(abort_code = wormhole::package_utils::E_INCORRECT_OLD_VERSION)]
+-    /// ^ This expected error may change depending on the migration. In most
+-    /// cases, this will abort with `wormhole::package_utils::E_INCORRECT_OLD_VERSION`.
+-    fun test_cannot_migrate_again() {
+-        use wormhole::migrate::{migrate};
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // #[expected_failure(abort_code = wormhole::package_utils::E_INCORRECT_OLD_VERSION)]
++    // /// ^ This expected error may change depending on the migration. In most
++    // /// cases, this will abort with `wormhole::package_utils::E_INCORRECT_OLD_VERSION`.
++    // fun test_cannot_migrate_again() {
++    //     use wormhole::migrate::{migrate};
+ 
+-        let user = person();
+-        let my_scenario = test_scenario::begin(user);
+-        let scenario = &mut my_scenario;
++    //     let user = person();
++    //     let my_scenario = test_scenario::begin(user);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Initialize Wormhole.
+-        let wormhole_message_fee = 350;
+-        set_up_wormhole(scenario, wormhole_message_fee);
++    //     // Initialize Wormhole.
++    //     let wormhole_message_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_message_fee);
+ 
+-        // Next transaction should be conducted as an ordinary user.
+-        test_scenario::next_tx(scenario, user);
++    //     // Next transaction should be conducted as an ordinary user.
++    //     test_scenario::next_tx(scenario, user);
+ 
+-        // Upgrade (digest is just b"new build") for testing purposes.
+-        upgrade_wormhole(scenario);
++    //     // Upgrade (digest is just b"new build") for testing purposes.
++    //     upgrade_wormhole(scenario);
+ 
+-        // Ignore effects.
+-        test_scenario::next_tx(scenario, user);
++    //     // Ignore effects.
++    //     test_scenario::next_tx(scenario, user);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
+ 
+-        // Set up migrate (which prepares this package to be the same state as
+-        // a previous release).
+-        wormhole::migrate::set_up_migrate(&mut worm_state);
++    //     // Set up migrate (which prepares this package to be the same state as
++    //     // a previous release).
++    //     wormhole::migrate::set_up_migrate(&mut worm_state);
+ 
+-        // Conveniently roll version back.
+-        state::reverse_migrate_version(&mut worm_state);
++    //     // Conveniently roll version back.
++    //     state::reverse_migrate_version(&mut worm_state);
+ 
+-        // Simulate executing with an outdated build by upticking the minimum
+-        // required version for `publish_message` to something greater than
+-        // this build.
+-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
++    //     // Simulate executing with an outdated build by upticking the minimum
++    //     // required version for `publish_message` to something greater than
++    //     // this build.
++    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+ 
+-        // Make sure we emitted an event.
+-        let effects = test_scenario::next_tx(scenario, user);
+-        assert!(test_scenario::num_user_events(&effects) == 1, 0);
++    //     // Make sure we emitted an event.
++    //     let effects = test_scenario::next_tx(scenario, user);
++    //     assert!(test_scenario::num_user_events(&effects) == 1, 0);
+ 
+-        // You shall not pass!
+-        migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
++    //     // You shall not pass!
++    //     migrate(&mut worm_state, UPGRADE_VAA, &the_clock);
+ 
+-        abort 42
+-    }
++    //     abort 42
++    // }
+ }
+--- a/sources/governance_message.move
++++ b/sources/governance_message.move
+@@ -285,56 +285,57 @@
+         test_scenario::end(my_scenario);
+     }
+ 
+-    #[test]
+-    fun test_local_action() {
+-        // Set up.
+-        let caller = person();
+-        let my_scenario = test_scenario::begin(caller);
+-        let scenario = &mut my_scenario;
+-
+-        let wormhole_fee = 350;
+-        set_up_wormhole(scenario, wormhole_fee);
++    // IOTA: disabled, payload was created for Sui
++    // #[test]
++    // fun test_local_action() {
++    //     // Set up.
++    //     let caller = person();
++    //     let my_scenario = test_scenario::begin(caller);
++    //     let scenario = &mut my_scenario;
+ 
+-        // Prepare test setting sender to `caller`.
+-        test_scenario::next_tx(scenario, caller);
++    //     let wormhole_fee = 350;
++    //     set_up_wormhole(scenario, wormhole_fee);
+ 
+-        let worm_state = take_state(scenario);
+-        let the_clock = take_clock(scenario);
++    //     // Prepare test setting sender to `caller`.
++    //     test_scenario::next_tx(scenario, caller);
+ 
+-        let verified_vaa =
+-            vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
+-        let (
+-            _,
+-            _,
+-            _,
+-            expected_payload
+-        ) = governance_message::deserialize_test_only(
+-            vaa::payload(&verified_vaa)
+-        );
++    //     let worm_state = take_state(scenario);
++    //     let the_clock = take_clock(scenario);
++
++    //     let verified_vaa =
++    //         vaa::parse_and_verify(&worm_state, VAA_SET_FEE_1, &the_clock);
++    //     let (
++    //         _,
++    //         _,
++    //         _,
++    //         expected_payload
++    //     ) = governance_message::deserialize_test_only(
++    //         vaa::payload(&verified_vaa)
++    //     );
+ 
+-        let ticket =
+-            governance_message::authorize_verify_local(
+-                GovernanceWitness {},
+-                state::governance_chain(&worm_state),
+-                state::governance_contract(&worm_state),
+-                state::governance_module(),
+-                3 // set fee
+-            );
+-        let receipt =
+-            governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+-
+-        let consumed = consumed_vaas::new(&mut tx_context::dummy());
+-        let payload = governance_message::take_payload(&mut consumed, receipt);
+-        assert!(payload == expected_payload, 0);
+-
+-        // Clean up.
+-        consumed_vaas::destroy(consumed);
+-        return_state(worm_state);
+-        return_clock(the_clock);
++    //     let ticket =
++    //         governance_message::authorize_verify_local(
++    //             GovernanceWitness {},
++    //             state::governance_chain(&worm_state),
++    //             state::governance_contract(&worm_state),
++    //             state::governance_module(),
++    //             3 // set fee
++    //         );
++    //     let receipt =
++    //         governance_message::verify_vaa(&worm_state, verified_vaa, ticket);
+ 
+-        // Done.
+-        test_scenario::end(my_scenario);
+-    }
++    //     let consumed = consumed_vaas::new(&mut tx_context::dummy());
++    //     let payload = governance_message::take_payload(&mut consumed, receipt);
++    //     assert!(payload == expected_payload, 0);
++
++    //     // Clean up.
++    //     consumed_vaas::destroy(consumed);
++    //     return_state(worm_state);
++    //     return_clock(the_clock);
++
++    //     // Done.
++    //     test_scenario::end(my_scenario);
++    // }
+ 
+     #[test]
+     #[expected_failure(

@@ -1,0 +1,12 @@
+--- a/Move.toml
++++ b/Move.toml
+@@ -1,3 +1,9 @@
+ [package]
+ name = "wormhole"
+ version = "0.2.0"
++
++[addresses]
++wormhole = "_"
++
++[dev-addresses]
++wormhole = "0x0"

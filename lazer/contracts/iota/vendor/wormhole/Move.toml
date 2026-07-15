@@ -3,5 +3,7 @@ name = "wormhole"
 version = "0.2.0"
 
 [addresses]
-# TODO(iota): proper address?
-wormhole = "0xdead1"
+wormhole = "_"
+
+[dev-addresses]
+wormhole = "0x0"
