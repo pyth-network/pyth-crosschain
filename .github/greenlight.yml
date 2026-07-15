@@ -1,0 +1,31 @@
+enabled: true
+required_reviewer_checks: []
+# auto_approve_paths is an allowlist: only PR files matching one of these
+# patterns are eligible for self-authorized auto-merge. Everything else
+# (all on-chain contracts, price-service/hermes, publisher/pusher & keeper
+# services, wormhole/quorum, pythnet programs, governance & deployment
+# tooling) stays behind human review. Fail-safe: when in doubt, leave out.
+auto_approve_paths:
+  # Documentation — inert markdown at any depth (READMEs, guides, SECURITY.md, etc.)
+  - "**/*.md"
+  # Repo-wide coding standards / contributor guides (no runtime surface)
+  - "standards/**"
+  # CI / build tooling scripts
+  - "scripts/**"
+  # Documentation sites
+  - "apps/api-reference/**"
+  - "apps/developer-hub/**"
+  # Read-only consumer frontends (consume prices, never produce them)
+  - "apps/entropy-explorer/**"
+  - "apps/insights/**"
+  # Off-chain market-data recorders (ingest external data into ClickHouse for
+  # research; not on the price-delivery wire)
+  - "apps/binance-recorder/**"
+  - "apps/hyperliquid-recorder/**"
+  - "apps/ondo-recorder/**"
+  # Presentational UI packages (not imported by any critical-path tool)
+  - "packages/component-library/**"
+  - "packages/known-publishers/**"
+  # Scaffolding / test-config dev tooling
+  - "packages/create-pyth-package/**"
+  - "packages/jest-config/**"
