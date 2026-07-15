@@ -1,0 +1,22 @@
+--- a/sources/state.move
++++ b/sources/state.move
+@@ -42,7 +42,7 @@
+     const E_INVALID_BUILD_DIGEST: u64 = 1;
+ 
+     /// Iota's chain ID is hard-coded to one value.
+-    const CHAIN_ID: u16 = 21;
++    const CHAIN_ID: u16 = __CHAIN_ID__;
+ 
+     /// Capability reflecting that the current build version is used to invoke
+     /// state methods.
+--- a/sources/governance_message.move
++++ b/sources/governance_message.move
+@@ -66,7 +66,7 @@
+     }
+ 
+     /// This method prepares `DecreeTicket` for local governance action. This
+-    /// means the VAA encodes target chain ID == 21 (Iota's).
++    /// means the VAA encodes target chain ID == __CHAIN_ID__ (Iota's).
+     public fun authorize_verify_local<T: drop>(
+         _witness: T,
+         governance_chain: u16,
