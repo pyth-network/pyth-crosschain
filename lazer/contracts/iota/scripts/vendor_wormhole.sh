@@ -81,7 +81,10 @@ done
     || die_usage "--chain-id must fit in a u16 (0-65535), got $CHAIN_ID"
 
 [ -n "$TARGET_DIR" ] || die_usage "TARGET_DIR is required"
-TARGET_DIR="$(cd "$(dirname "$TARGET_DIR")" 2>/dev/null && pwd)/$(basename "$TARGET_DIR")"
+case "$TARGET_DIR" in
+    /*) : ;;
+    *)  TARGET_DIR="$PWD/$TARGET_DIR" ;;
+esac
 
 command -v git   >/dev/null 2>&1 || die "git is required"
 command -v patch >/dev/null 2>&1 || die "patch is required"
