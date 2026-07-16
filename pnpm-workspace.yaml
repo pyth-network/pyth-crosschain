@@ -184,6 +184,8 @@ engineStrict: true
 
 ignoredBuiltDependencies:
   - "@stellar/stellar-sdk"
+  - eccrypto
+  - ssh2
 
 managePackageManagerVersions: true
 
@@ -204,7 +206,6 @@ onlyBuiltDependencies:
   - core-js
   - core-js-pure
   - cpu-features
-  - eccrypto
   - es5-ext
   - esbuild
   - keccak
@@ -216,7 +217,6 @@ onlyBuiltDependencies:
   - protobufjs
   - secp256k1
   - sharp
-  - ssh2
   - tiny-secp256k1
   - truffle
   - usb
