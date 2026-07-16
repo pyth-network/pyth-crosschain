@@ -1,0 +1,113 @@
+{
+  "date": "2026-07-16",
+  "label": "Thursday",
+  "summary": {
+    "added": 2,
+    "went_live": 7,
+    "removed": 2
+  },
+  "hero": "2 new feeds announced, 7 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.SON6/USD",
+      "lazerId": 3083,
+      "asset": "Pyth Price In Us Cents For Soybean 14 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-16",
+      "quote": "USD",
+      "hermesId": "0d03b648a12b297160e2fdce53cd643d993f7ade4549f8e91ec6e593cc085c21"
+    },
+    {
+      "id": "Commodities.CON6/USD",
+      "lazerId": 3019,
+      "asset": "Pyth Price In Us Cents For Corn 14 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-16",
+      "quote": "USD",
+      "hermesId": "fafacefa9dbab943d0bcbfb14bbdb6d37657220ff756b1328edfb6c4aef80c8a"
+    },
+    {
+      "id": "InterestRate.US7Y/USD",
+      "lazerId": 2910,
+      "asset": "United States 7 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US5Y/USD",
+      "lazerId": 2909,
+      "asset": "United States 5 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US3Y/USD",
+      "lazerId": 2908,
+      "asset": "United States 3 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US30Y/USD",
+      "lazerId": 2907,
+      "asset": "United States 30 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US20Y/USD",
+      "lazerId": 2906,
+      "asset": "United States 20 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US2Y/USD",
+      "lazerId": 2905,
+      "asset": "United States 2 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "InterestRate.US10Y/USD",
+      "lazerId": 2903,
+      "asset": "United States 10 Year Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-07-16",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.Index.JP225/JPY",
+      "lazerId": 3449,
+      "asset": "Pyth Price In Jpy For Jp225 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-16",
+      "quote": "JPY"
+    },
+    {
+      "id": "Equity.Index.KR200/KRW",
+      "lazerId": 3448,
+      "asset": "Pyth Price In Krw For Kr200 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-16",
+      "quote": "KRW"
+    }
+  ]
+}
