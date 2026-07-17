@@ -134,7 +134,15 @@ module pyth::state {
         *table::borrow(&latest_price_info.info, price_identifier)
     }
 
-    public fun get_contract_upgrade_authorized_hash(): Hash acquires ContractUpgradeAuthorized {
+    /// Deprecated. Retained only to preserve the module's public ABI under the
+    /// `compatible` upgrade policy, which forbids removing or narrowing a
+    /// `public fun`. It is disabled and aborts; the upgrade path uses the
+    /// friend-only `take_contract_upgrade_authorized_hash`.
+    public fun get_contract_upgrade_authorized_hash(): Hash {
+        abort error::unauthorized_upgrade()
+    }
+
+    public(friend) fun take_contract_upgrade_authorized_hash(): Hash acquires ContractUpgradeAuthorized {
         assert!(exists<ContractUpgradeAuthorized>(@pyth), error::unauthorized_upgrade());
         let ContractUpgradeAuthorized { hash } = move_from<ContractUpgradeAuthorized>(@pyth);
         hash

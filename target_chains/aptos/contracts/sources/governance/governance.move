@@ -199,7 +199,7 @@ module pyth::governance_test {
         governance::execute_governance_instruction(vaa_bytes);
         assert!(state::get_last_executed_governance_sequence() == 5, 1);
 
-        assert!(state::get_contract_upgrade_authorized_hash() ==
+        assert!(state::take_contract_upgrade_authorized_hash() ==
             contract_upgrade_hash::from_byte_vec(x"a381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56"), 1);
     }
 
@@ -223,7 +223,7 @@ module pyth::governance_test {
         governance::execute_governance_instruction(vaa_bytes);
         assert!(state::get_last_executed_governance_sequence() == 5, 1);
 
-        assert!(state::get_contract_upgrade_authorized_hash() ==
+        assert!(state::take_contract_upgrade_authorized_hash() ==
             contract_upgrade_hash::from_byte_vec(x"a381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56"), 1);
     }
 

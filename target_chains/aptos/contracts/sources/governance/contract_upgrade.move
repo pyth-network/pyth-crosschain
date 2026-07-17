@@ -37,7 +37,7 @@ module pyth::contract_upgrade {
     ) {
         // Check to see if the hash of the given code and metadata matches the authorized hash.
         // The aptos framework does no validation of the metadata, so we include it in the hash.
-        assert!(matches_hash(code, metadata_serialized, state::get_contract_upgrade_authorized_hash()), error::invalid_upgrade_hash());
+        assert!(matches_hash(code, metadata_serialized, state::take_contract_upgrade_authorized_hash()), error::invalid_upgrade_hash());
         // Perform the upgrade
         let pyth = state::pyth_signer();
         code::publish_package_txn(&pyth, metadata_serialized, code);
