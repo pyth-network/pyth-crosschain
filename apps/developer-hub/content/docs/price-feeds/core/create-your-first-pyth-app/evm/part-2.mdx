@@ -113,7 +113,7 @@ curl -s -H "Authorization: Bearer $PYTH_API_KEY" \
 <Tab value="Current endpoint">
 
 ```bash copy
-# Authentication becomes required on July 31, 2026.
+# Authentication becomes required on August 18, 2026.
 curl -s -H "Authorization: Bearer $PYTH_API_KEY" \
   "https://hermes.pyth.network/v2/updates/price/latest?&ids[]=$ETH_USD_ID" | jq -r ".binary.data[0]" > price_update.txt
 ```

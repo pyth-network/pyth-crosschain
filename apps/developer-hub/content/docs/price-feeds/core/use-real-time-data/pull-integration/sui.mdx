@@ -12,7 +12,7 @@ This guide explains how to use real-time Pyth data in Sui applications.
 <UpgradeCallout chain="sui" />
 
 <Callout type="info">
-  After **July 31, 2026**, replace the Pyth package `rev` below with
+  After **August 18, 2026**, replace the Pyth package `rev` below with
   `sui-pro-compatible-contract-mainnet` (or `sui-pro-compatible-contract-testnet`)
   and update the Pyth State / Wormhole State IDs to the [upgraded Sui addresses](/price-feeds/core/upgrade/contracts#sui).
   See the [upgrade guide](/price-feeds/core/upgrade/preparing) for details.
@@ -146,7 +146,7 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 /// Step 1: Get the off-chain data.
 const connection = new SuiPriceServiceConnection(
   "https://pyth.dourolabs.app/hermes", // upgraded endpoint
-  // Or: "https://hermes.pyth.network" — auth required from July 31, 2026
+  // Or: "https://hermes.pyth.network" — auth required from August 18, 2026
   {
     accessToken: process.env.PYTH_API_KEY,
     // Provide this option to retrieve signed price updates for on-chain contracts!
@@ -255,7 +255,7 @@ npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396f
 
 ### Contract Addresses
 
-Consult [Sui Contract Addresses](../../contract-addresses/sui) to find the current package IDs, or the [upgraded Sui addresses](/price-feeds/core/upgrade/contracts#sui) for the post-July 31, 2026 upgrade.
+Consult [Sui Contract Addresses](../../contract-addresses/sui) to find the current package IDs, or the [upgraded Sui addresses](/price-feeds/core/upgrade/contracts#sui) for the post-August 18, 2026 upgrade.
 
 ### Pyth Price Feed IDs
 

@@ -36,7 +36,7 @@ const SUPPORTED_PARTIAL = new Set<Chain>(["evm"]);
 
 type Props = { chain: Chain };
 
-const TITLE = "Pyth Core upgrades on July 31, 2026";
+const TITLE = "Pyth Core upgrades on August 18, 2026";
 
 export const UpgradeCallout = ({ chain }: Props) => {
   const upgradeGuide = "/price-feeds/core/upgrade/preparing";
@@ -56,7 +56,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
           </li>
           <li>
             Existing integrations using the current addresses will be
-            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            automatically upgraded by the DAO on <strong>August 18, 2026</strong>.
             See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
         </ul>
@@ -71,7 +71,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
     return (
       <Callout
         type="warn"
-        title={`Pyth Core on ${label} is upgrading on July 31, 2026`}
+        title={`Pyth Core on ${label} is upgrading on August 18, 2026`}
       >
         <ul className="list-disc pl-5 my-0! space-y-1">
           <li>
@@ -80,7 +80,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
           </li>
           <li>
             Existing integrations using the current addresses will be
-            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            automatically upgraded by the DAO on <strong>August 18, 2026</strong>.
             See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
         </ul>
@@ -92,7 +92,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
     return (
       <Callout
         type="warn"
-        title={`Pyth Core on ${label} chains is upgrading on July 31, 2026`}
+        title={`Pyth Core on ${label} chains is upgrading on August 18, 2026`}
       >
         <ul className="list-disc pl-5 my-0! space-y-1">
           <li>
@@ -101,7 +101,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
           </li>
           <li>
             Existing integrations on {label} chains in the upgrade will be
-            automatically upgraded by the DAO on <strong>July 31, 2026</strong>.
+            automatically upgraded by the DAO on <strong>August 18, 2026</strong>.
             See the <Link href={upgradeGuide}>upgrade guide</Link> for details.
           </li>
           <li>
@@ -116,7 +116,7 @@ export const UpgradeCallout = ({ chain }: Props) => {
   return (
     <Callout
       type="warn"
-      title={`Pyth Core will no longer support ${label} after July 31, 2026`}
+      title={`Pyth Core will no longer support ${label} after August 18, 2026`}
     >
       <ul className="list-disc pl-5 my-0! space-y-1">
         <li>
