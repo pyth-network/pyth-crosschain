@@ -57,6 +57,9 @@ catalogs:
     '@heroicons/react':
       specifier: ^2.2.0
       version: 2.2.0
+    '@ltd/j-toml':
+      specifier: ^1.38.0
+      version: 1.38.0
     '@next/third-parties':
       specifier: ^16.1.1
       version: 16.1.1
@@ -1390,6 +1393,9 @@ importers:
       '@iota/iota-sdk':
         specifier: ^1.11.0
         version: 1.11.0(typescript@5.9.3)
+      '@ltd/j-toml':
+        specifier: 'catalog:'
+        version: 1.38.0
       '@mysten/move-bytecode-template':
         specifier: ^0.3.0
         version: 0.3.0

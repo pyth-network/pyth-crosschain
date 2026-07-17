@@ -4,12 +4,16 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
   access,
+  cp,
+  mkdtemp,
   readFile,
   readlink,
+  rm,
   symlink,
   unlink,
   writeFile,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
@@ -18,6 +22,7 @@ import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction as IotaTransaction } from "@iota/iota-sdk/transactions";
 import { IOTA_CLOCK_OBJECT_ID, NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import * as toml from "@ltd/j-toml";
 import * as suiBytecode from "@mysten/move-bytecode-template";
 import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
@@ -919,6 +924,16 @@ export type MoveLazerMeta = {
   receiver_chain_id: number;
 };
 
+export type IotaWormholeInitConfig = {
+  governanceChain: number;
+  governanceEmitter: Buffer;
+  initialGuardians: number[][];
+  guardianSetSecondsToLive: number;
+};
+
+type TomlTable = ReturnType<typeof toml.parse>;
+type TomlReadonlyTable = Parameters<typeof toml.stringify>[0];
+
 /**
  * IOTA transport selector, kept symmetric with {@link SuiEndpointType} so the
  * chain config schema is consistent across the two Move chains. The IOTA SDK
@@ -1000,6 +1015,23 @@ export class IotaChain extends Chain {
     throw new Error(`Invalid byte vector in ${description}`);
   }
 
+  static bytesFromHex(
+    value: string,
+    byteLength: number,
+    description: string,
+  ): Buffer {
+    const normalized = value.replace(/^0x/i, "");
+    if (
+      normalized.length !== byteLength * 2 ||
+      !/^[0-9a-f]+$/i.test(normalized)
+    ) {
+      throw new Error(
+        `${description} must be exactly ${byteLength.toString()} bytes of hex`,
+      );
+    }
+    return Buffer.from(normalized, "hex");
+  }
+
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
@@ -1064,9 +1096,33 @@ export class IotaChain extends Chain {
     return stdout.trim();
   }
 
+  static async setPackageAddress(path: string, address: string) {
+    const manifestPath = nodePath.join(path, "Move.toml");
+    const manifest = toml.parse(await readFile(manifestPath, "utf8"), {
+      x: { literal: true, order: true, comment: true },
+    });
+
+    const packageName = (manifest.package as TomlTable | undefined)?.name?.toString();
+    if (!packageName) {
+      throw new Error("expected [package].name in Move.toml");
+    }
+    (manifest.package as TomlTable)["published-at"] = toml.basic(address);
+    (manifest.addresses as TomlTable)[packageName] = toml.basic(address);
+
+    if (manifest["dev-addresses"] && packageName in (manifest["dev-addresses"] as TomlTable)) {
+      delete (manifest["dev-addresses"] as TomlTable)[packageName];
+      if (Object.keys(manifest["dev-addresses"] as TomlTable).length === 0) {
+        delete manifest["dev-addresses"];
+      }
+    }
+
+    const updatedManifest = toml.stringify(manifest as TomlReadonlyTable, { newline: "\n" });
+    await writeFile(manifestPath, updatedManifest.trimStart());
+  }
+
   async buildPackage(path: string): Promise<MovePackage> {
     const activeEnv = await this.getCliEnv();
-    if (`iota_sui_${activeEnv}` !== this.wormholeChainName) {
+    if (activeEnv !== "localnet" && `iota_sui_${activeEnv}` !== this.wormholeChainName) {
       throw new Error(
         `IOTA CLI is currently set to ${activeEnv}. Switch to correct environment and try again.`,
       );
@@ -1084,6 +1140,24 @@ export class IotaChain extends Chain {
         throw new Error(`${result.stdout}\n${result.stderr}`);
       }
       throw error;
+    }
+  }
+
+  async buildWormholePackage(path: string): Promise<MovePackage> {
+    const temporaryRoot = await mkdtemp(
+      nodePath.join(tmpdir(), "iota-wormhole-"),
+    );
+    const temporaryPackage = nodePath.join(temporaryRoot, "wormhole");
+    try {
+      await cp(path, temporaryPackage, {
+        filter: (source) =>
+          !["build", "Move.lock"].includes(nodePath.basename(source)),
+        recursive: true,
+      });
+      await IotaChain.setPackageAddress(temporaryPackage, "0x0");
+      return await this.buildPackage(temporaryPackage);
+    } finally {
+      await rm(temporaryRoot, { force: true, recursive: true });
     }
   }
 
@@ -1118,6 +1192,70 @@ export class IotaChain extends Chain {
       throw new Error("Could not find UpgradeCap ID in transaction results");
     }
     return { packageId, upgradeCapId };
+  }
+
+  async publishWormholePackage(
+    { modules, dependencies }: MovePackage,
+    signer: IotaEd25519Keypair,
+  ): Promise<{
+    packageId: string;
+    upgradeCapId: string;
+    deployerCapId: string;
+    digest: string;
+  }> {
+    const tx = new IotaTransaction();
+    const [upgradeCap] = tx.publish({ dependencies, modules });
+    if (!upgradeCap) {
+      throw new Error("IOTA Wormhole publish did not return an UpgradeCap");
+    }
+    tx.transferObjects([upgradeCap], signer.toIotaAddress());
+
+    const executed = await this.executeTransaction(tx, signer);
+    const publishedChanges =
+      executed.objectChanges?.filter((change) => change.type === "published") ??
+      [];
+    if (publishedChanges.length !== 1) {
+      throw new Error(
+        `Expected one published IOTA Wormhole package, found ${publishedChanges.length.toString()}`,
+      );
+    }
+    const packageId = publishedChanges[0]?.packageId;
+    const upgradeCapChange = executed.objectChanges?.find(
+      (change) =>
+        change.type === "created" &&
+        change.objectType.endsWith("::package::UpgradeCap"),
+    );
+    const deployerCapChange = executed.objectChanges?.find(
+      (change) =>
+        change.type === "created" &&
+        change.objectType.endsWith("::setup::DeployerCap"),
+    );
+    if (!packageId) {
+      throw new Error(
+        "Could not find Wormhole package ID in transaction results",
+      );
+    }
+    if (!upgradeCapChange || upgradeCapChange.type !== "created") {
+      throw new Error(
+        "Could not find Wormhole UpgradeCap ID in transaction results",
+      );
+    }
+    if (!deployerCapChange || deployerCapChange.type !== "created") {
+      throw new Error(
+        "Could not find Wormhole DeployerCap ID in transaction results",
+      );
+    }
+    if (!deployerCapChange.objectType.startsWith(`${packageId}::`)) {
+      throw new Error(
+        `Wormhole DeployerCap belongs to unexpected package ${deployerCapChange.objectType}`,
+      );
+    }
+    return {
+      deployerCapId: deployerCapChange.objectId,
+      digest: executed.digest,
+      packageId,
+      upgradeCapId: upgradeCapChange.objectId,
+    };
   }
 
   async publishLazerPackage(
@@ -1211,6 +1349,109 @@ export class IotaChain extends Chain {
         "Could not find IOTA Lazer meta receiver_chain_id function",
       );
     }
+  }
+
+  async initWormholeContract({
+    packageId,
+    upgradeCapId,
+    deployerCapId,
+    config,
+    signer,
+  }: {
+    packageId: string;
+    upgradeCapId: string;
+    deployerCapId: string;
+    config: IotaWormholeInitConfig;
+    signer: IotaEd25519Keypair;
+  }): Promise<{ stateId: string; digest: string }> {
+    const tx = new IotaTransaction();
+    tx.moveCall({
+      arguments: [
+        tx.object(deployerCapId),
+        tx.object(upgradeCapId),
+        tx.pure.u16(config.governanceChain),
+        tx.pure.vector("u8", config.governanceEmitter),
+        tx.pure.u32(0),
+        tx.pure.vector("vector<u8>", config.initialGuardians),
+        tx.pure.u32(config.guardianSetSecondsToLive),
+        tx.pure.u64(0n),
+      ],
+      target: `${packageId}::setup::complete`,
+    });
+
+    const executed = await this.executeTransaction(tx, signer);
+    const stateChange = executed.objectChanges?.find(
+      (change) =>
+        change.type === "created" &&
+        change.objectType === `${packageId}::state::State`,
+    );
+    if (!stateChange || stateChange.type !== "created") {
+      throw new Error(
+        "Could not find Wormhole State ID in transaction results",
+      );
+    }
+    const deployerCapDeleted = executed.objectChanges?.some(
+      (change) =>
+        change.type === "deleted" && change.objectId === deployerCapId,
+    );
+    if (!deployerCapDeleted) {
+      throw new Error("Wormhole setup did not consume its DeployerCap");
+    }
+    return { digest: executed.digest, stateId: stateChange.objectId };
+  }
+
+  async updateWormholeGuardianSet({
+    stateId,
+    vaa,
+    signer,
+  }: {
+    stateId: string;
+    vaa: Uint8Array;
+    signer: IotaEd25519Keypair;
+  }): Promise<string> {
+    const client = this.getProvider();
+    const { package: packageId } = await this.getStatePackageInfo(
+      client,
+      stateId,
+    );
+    const tx = new IotaTransaction();
+    const [verifiedVaa] = tx.moveCall({
+      arguments: [
+        tx.object(stateId),
+        tx.pure.vector("u8", vaa),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
+      ],
+      target: `${packageId}::vaa::parse_and_verify`,
+    });
+    if (!verifiedVaa) {
+      throw new Error("IOTA Wormhole VAA verification returned no value");
+    }
+    const [decreeTicket] = tx.moveCall({
+      arguments: [tx.object(stateId)],
+      target: `${packageId}::update_guardian_set::authorize_governance`,
+    });
+    if (!decreeTicket) {
+      throw new Error("IOTA Wormhole governance returned no decree ticket");
+    }
+    const [decreeReceipt] = tx.moveCall({
+      arguments: [tx.object(stateId), verifiedVaa, decreeTicket],
+      target: `${packageId}::governance_message::verify_vaa`,
+      typeArguments: [`${packageId}::update_guardian_set::GovernanceWitness`],
+    });
+    if (!decreeReceipt) {
+      throw new Error("IOTA Wormhole governance returned no decree receipt");
+    }
+    tx.moveCall({
+      arguments: [
+        tx.object(stateId),
+        decreeReceipt,
+        tx.object(IOTA_CLOCK_OBJECT_ID),
+      ],
+      target: `${packageId}::update_guardian_set::update_guardian_set`,
+    });
+
+    const { digest } = await this.executeTransaction(tx, signer);
+    return digest;
   }
 
   async initLazerContract(
@@ -1437,6 +1678,10 @@ export class IotaChain extends Chain {
       );
     }
     return executed;
+  }
+
+  async waitForTransaction(digest: string): Promise<void> {
+    await this.getProvider().waitForTransaction({ digest });
   }
 
   explorerUrl(type: "object" | "address" | "txblock", id: string): string {

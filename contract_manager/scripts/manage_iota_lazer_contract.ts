@@ -10,13 +10,19 @@ import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import { getDefaultDeploymentConfig } from "../src/core/base";
 import { IotaChain } from "../src/core/chains";
-import { IotaLazerContract } from "../src/core/contracts";
+import { IotaLazerContract, IotaWormholeContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 function updateContractInStore(contract: IotaLazerContract) {
   DefaultStore.lazer_contracts[contract.getId()] = contract;
+  DefaultStore.saveAllContracts();
+}
+
+function updateWormholeContractInStore(contract: IotaWormholeContract) {
+  DefaultStore.wormhole_contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
 }
 
@@ -46,6 +52,77 @@ function connectMainnetVault(wallet: Wallet) {
 }
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const WORMHOLE_GUARDIAN_SET_VAAS_URL =
+  "https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/guardianSetVAAs.csv";
+
+type GuardianSetUpgrade = {
+  index: number;
+  vaa: Buffer;
+};
+
+function parseGuardianSetUpgrade(
+  label: string,
+  vaaHex: string,
+): GuardianSetUpgrade {
+  const match = /^gs([1-9]\d*)$/.exec(label);
+  if (!match?.[1]) {
+    throw new Error(`Invalid guardian-set label '${label}'`);
+  }
+  return { index: Number.parseInt(match[1]), vaa: Buffer.from(vaaHex, "hex") };
+}
+
+async function fetchGuardianSetUpgrades(): Promise<GuardianSetUpgrade[]> {
+  const response = await fetch(WORMHOLE_GUARDIAN_SET_VAAS_URL);
+  if (!response.ok) {
+    throw new Error(
+      `Guardian-set VAA fetch failed: ${response.status.toString()} ${response.statusText}`,
+    );
+  }
+  const csv = (await response.text()).trim();
+  if (csv.length === 0) {
+    throw new Error("Guardian-set VAA response is empty");
+  }
+  return csv.split(/\r?\n/).map((line, position) => {
+    const parts = line.trim().split(",");
+    if (!parts[0] || !parts[1]) {
+      throw new Error(
+        `Invalid guardian-set VAA CSV row ${(position + 1).toString()}`,
+      );
+    }
+    return parseGuardianSetUpgrade(parts[0], parts[1]);
+  });
+}
+
+async function applyGuardianSetUpgrades(
+  chain: IotaChain,
+  signer: Ed25519Keypair,
+  stateId: string,
+  upgrades: GuardianSetUpgrade[],
+) {
+  for (const upgrade of upgrades) {
+    console.info(`Applying guardian set ${upgrade.index.toString()}...`);
+    const digest = await chain.updateWormholeGuardianSet({
+      signer,
+      stateId,
+      vaa: upgrade.vaa,
+    });
+    await chain.waitForTransaction(digest);
+    console.info(`  transaction: ${chain.explorerUrl("txblock", digest)}`);
+  }
+}
+
+function getWormholeVendorPath(chain: IotaChain) {
+  const network = chain.wormholeChainName.replace(/^iota_sui_/, "");
+  if (network === chain.wormholeChainName) {
+    throw new Error(
+      `Cannot derive Wormhole vendor from chain name '${chain.wormholeChainName}'`,
+    );
+  }
+  return path.resolve(
+    scriptDir,
+    `../../lazer/contracts/iota/vendor/wormhole_${network}`,
+  );
+}
 
 const parser = yargs()
   .usage("Deployment, upgrades and management of IOTA PythLazer contracts.")
@@ -123,6 +200,144 @@ const commonOptions = {
     type: "string",
   },
 } as const satisfies Record<string, Options>;
+
+parser.command(
+  "deploy-wormhole",
+  "build, publish, initialize and save the vendored Wormhole contract",
+  (b) =>
+    b.options({
+      "governance-chain": {
+        description: "override the Wormhole governance chain ID",
+        type: "number",
+      },
+      "governance-emitter": {
+        description: "override the 32-byte Wormhole governance emitter",
+        type: "string",
+      },
+      "guardian-set-ttl": {
+        description:
+          "seconds a replaced guardian set remains valid for non-governance VAAs",
+        required: true,
+        type: "number",
+      },
+      "initial-guardian": {
+        array: true,
+        description:
+          "override an initial 20-byte guardian address; repeat for each guardian",
+        type: "string",
+      },
+      "private-key": commonOptions["private-key"],
+      "upgrade-guardian-set": {
+        description:
+          "fetch and apply official guardian-set upgrade VAAs after initialization",
+        type: "boolean",
+      },
+    }),
+  async ({
+    chain,
+    governanceEmitter,
+    governanceChain,
+    guardianSetTtl,
+    initialGuardian,
+    privateKey,
+    upgradeGuardianSet,
+  }) => {
+    const { wormholeConfig: defaults } = getDefaultDeploymentConfig("stable");
+    const initialGuardians = initialGuardian ?? defaults.initialGuardianSet;
+    const config = {
+      governanceChain: governanceChain ?? defaults.governanceChainId,
+      governanceEmitter: IotaChain.bytesFromHex(
+        governanceEmitter ?? defaults.governanceContract,
+        32,
+        "Wormhole governance emitter",
+      ),
+      guardianSetSecondsToLive: guardianSetTtl,
+      initialGuardians: initialGuardians.map((guardian, index) => [
+        ...IotaChain.bytesFromHex(
+          guardian,
+          20,
+          `Wormhole guardian ${index.toString()}`,
+        ),
+      ]),
+    };
+    const packagePath = getWormholeVendorPath(chain);
+    const signer = Ed25519Keypair.fromSecretKey(privateKey);
+
+    console.info(
+      `Deploying vendored Wormhole '${packagePath}' to '${chain.getId()}'`,
+    );
+    console.info(`  governance chain: ${config.governanceChain.toString()}`);
+    console.info(
+      `  governance emitter: ${config.governanceEmitter.toString("hex")}`,
+    );
+    console.info(
+      `  initial guardian set: ${config.initialGuardians.length.toString()} guardian(s)`,
+    );
+    console.info(
+      `  expired guardian-set TTL: ${config.guardianSetSecondsToLive.toString()} seconds`,
+    );
+
+    console.info("Building vendored Wormhole package...");
+    const pkg = await chain.buildWormholePackage(packagePath);
+    console.info(`Package digest: ${Buffer.from(pkg.digest).toString("hex")}`);
+
+    console.info("Publishing Wormhole package...");
+    const published = await chain.publishWormholePackage(pkg, signer);
+    console.info(
+      `Publish transaction: ${chain.explorerUrl("txblock", published.digest)}`,
+    );
+    console.info(
+      `  package: ${chain.explorerUrl("object", published.packageId)}`,
+    );
+    console.info(
+      `  UpgradeCap: ${chain.explorerUrl("object", published.upgradeCapId)}`,
+    );
+    console.info(
+      `  DeployerCap: ${chain.explorerUrl("object", published.deployerCapId)}`,
+    );
+    await chain.waitForTransaction(published.digest);
+
+    console.info("Initializing Wormhole shared state...");
+    const initialized = await chain.initWormholeContract({
+      config,
+      deployerCapId: published.deployerCapId,
+      packageId: published.packageId,
+      signer,
+      upgradeCapId: published.upgradeCapId,
+    });
+    console.info(
+      `Initialization transaction: ${chain.explorerUrl("txblock", initialized.digest)}`,
+    );
+    console.info(
+      `  State: ${chain.explorerUrl("object", initialized.stateId)}`,
+    );
+    await chain.waitForTransaction(initialized.digest);
+
+    if (upgradeGuardianSet) {
+      console.info(
+        `Fetching canonical guardian-set VAAs from ${WORMHOLE_GUARDIAN_SET_VAAS_URL}`,
+      );
+      const guardianSetUpgrades = await fetchGuardianSetUpgrades();
+      console.info(
+        `  fetched ${guardianSetUpgrades.length.toString()} guardian-set upgrade VAA(s)`,
+      );
+      await applyGuardianSetUpgrades(
+        chain,
+        signer,
+        initialized.stateId,
+        guardianSetUpgrades,
+      );
+    }
+
+    console.info("Recording published Wormhole address in Move.toml...");
+    await IotaChain.setPackageAddress(packagePath, published.packageId);
+
+    console.info("Saving Wormhole contract in store...");
+    const contract = new IotaWormholeContract(chain, initialized.stateId);
+    updateWormholeContractInStore(contract);
+    console.info(`Contract ID: ${contract.getId()}`);
+  },
+);
 
 parser.command(
   "deploy",
