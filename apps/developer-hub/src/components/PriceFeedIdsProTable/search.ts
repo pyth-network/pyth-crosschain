@@ -112,8 +112,9 @@ export const filterFeedsBySearch = <T extends SearchableFeed>(
   }
 
   // Return exact pyth_lazer_id matches first, then other matches sorted by ID
-  const otherMatchesArray = [...otherMatches.values()].sort(
-    (a, b) => a.pyth_lazer_id - b.pyth_lazer_id,
-  );
+  const exactIds = new Set(exactIdMatches.map((m) => m.pyth_lazer_id));
+  const otherMatchesArray = [...otherMatches.values()]
+    .filter((item) => !exactIds.has(item.pyth_lazer_id))
+    .sort((a, b) => a.pyth_lazer_id - b.pyth_lazer_id);
   return [...exactIdMatches, ...otherMatchesArray];
 };
