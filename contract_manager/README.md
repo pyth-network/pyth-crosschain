@@ -18,7 +18,7 @@ loaded from `store` by the `DefaultStore`.
 - **Chain** (`Chain`) — a blockchain network the tooling can target; holds RPC/network config and builds and submits transactions and governance payloads.
 - **Price feed contract** (`PriceFeedContract`) — the core Pyth contract that receives price updates and is configured through governance.
 - **Wormhole contract** (`WormholeContract`) — the Wormhole core bridge contract used to verify and submit governance VAAs.
-- **Lazer contract** (`EvmLazerContract` / `SuiLazerContract` / `StellarLazerContract`) — the Pyth Lazer verifier, which checks signed Lazer price updates and holds the trusted signer set.
+- **Lazer contract** (`EvmLazerContract` / `SuiLazerContract` / `IotaLazerContract` / `StellarLazerContract`) — the Pyth Lazer verifier, which checks signed Lazer price updates and holds the trusted signer set.
 - **Executor contract** (`EvmExecutorContract` / `StellarExecutorContract`) — the governance executor that verifies a Pyth governance VAA and dispatches the decoded action to its target contract (or upgrades itself).
 - **Entropy contract** (`EvmEntropyContract`) — the Pyth Entropy contract serving on-chain secure randomness requests.
 - **Pulse contract** (`EvmPulseContract`) — the Pyth Pulse contract for scheduled, on-demand price-update callbacks.

@@ -2,7 +2,14 @@
 /** biome-ignore-all lint/suspicious/noConsole: utils used through CLI */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import {
+  access,
+  readFile,
+  readlink,
+  symlink,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
@@ -1123,6 +1130,25 @@ export class IotaChain extends Chain {
   }
 
   async updateLazerMeta(packagePath: string, meta: MoveLazerMeta) {
+    const manifestFileName = `Move.${this.wormholeChainName.replace(/^iota_sui_/, "")}.toml`;
+    const manifestPath = nodePath.resolve(packagePath, manifestFileName);
+    await access(manifestPath);
+    const activeManifestPath = nodePath.resolve(packagePath, "Move.toml");
+    let activeManifest: string | undefined;
+    try {
+      activeManifest = await readlink(activeManifestPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+    if (activeManifest !== manifestFileName) {
+      if (activeManifest !== undefined) {
+        await unlink(activeManifestPath);
+      }
+      await symlink(manifestFileName, activeManifestPath);
+    }
+
     const templatePath = nodePath.resolve(
       packagePath,
       "sources/meta.move.mustache",

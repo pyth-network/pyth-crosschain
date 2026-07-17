@@ -231,7 +231,7 @@ parser.command(
 
 parser.command(
   "update-contract-meta",
-  "updates `meta` module in package source using current on-chain contract",
+  "updates `meta` module and links `Move.toml` for the selected chain",
   (b) =>
     b.options({
       contract: commonOptions.contract,
