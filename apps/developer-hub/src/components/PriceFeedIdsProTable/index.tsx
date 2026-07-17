@@ -8,12 +8,12 @@ import type { ColumnConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { Callout } from "fumadocs-ui/components/callout";
-import { matchSorter } from "match-sorter";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import { SYMBOLS_API_URL } from "../../config/pyth-pro-public";
 import styles from "./index.module.scss";
+import { filterFeedsBySearch } from "./search";
 
 const CHANNELS = [
   { id: "real_time", label: "RT", fullName: "Real Time" },
@@ -197,85 +197,7 @@ export const PriceFeedIdsProTable = () => {
       }
       return 0;
     },
-    (items, searchString) => {
-      if (!searchString) {
-        return items;
-      }
-      // Split by commas or spaces to support multiple search terms
-      const searchTerms = searchString
-        .split(/[,\s]+/)
-        .map((term) => term.trim().toLowerCase())
-        .filter((term) => term.length > 0);
-
-      if (searchTerms.length === 0) {
-        return items;
-      }
-
-      // For single term, use matchSorter directly for better ranking
-      const firstTerm = searchTerms[0];
-      if (searchTerms.length === 1 && firstTerm !== undefined) {
-        return matchSorter(items, firstTerm, {
-          keys: ["pyth_lazer_id", "symbol", "name", "description"],
-        });
-      }
-
-      // For multiple terms, use exact/substring matching with OR logic
-      // This ensures each term finds its specific matches
-      const termMatchesItem = (
-        item: (typeof items)[number],
-        term: string,
-      ): boolean => {
-        // Numeric ID match - exact match for numeric terms
-        if (/^\d+$/.test(term)) {
-          return String(item.pyth_lazer_id) === term;
-        }
-
-        // String match - case-insensitive substring match
-        const symbol = item.symbol.toLowerCase();
-        const name = item.name.toLowerCase();
-        const description = item.description.toLowerCase();
-
-        return (
-          symbol.includes(term) ||
-          name.includes(term) ||
-          description.includes(term)
-        );
-      };
-
-      // Collect matches with priority: exact ID matches first, then others
-      const exactIdMatches: (typeof items)[number][] = [];
-      const otherMatches = new Map<number, (typeof items)[number]>();
-
-      for (const term of searchTerms) {
-        const isNumericTerm = /^\d+$/.test(term);
-        for (const item of items) {
-          if (termMatchesItem(item, term)) {
-            // Exact ID matches get priority
-            if (isNumericTerm && String(item.pyth_lazer_id) === term) {
-              if (
-                !exactIdMatches.some(
-                  (m) => m.pyth_lazer_id === item.pyth_lazer_id,
-                )
-              ) {
-                exactIdMatches.push(item);
-              }
-            } else if (
-              !exactIdMatches.some(
-                (m) => m.pyth_lazer_id === item.pyth_lazer_id,
-              )
-            ) {
-              otherMatches.set(item.pyth_lazer_id, item);
-            }
-          }
-        }
-      }
-
-      // Return exact ID matches first, then other matches sorted by ID
-      const otherMatchesArray = [...otherMatches.values()].sort(
-        (a, b) => a.pyth_lazer_id - b.pyth_lazer_id,
-      );
-      return [...exactIdMatches, ...otherMatchesArray];
-    },
+    filterFeedsBySearch,
     {
       defaultSort: "pyth_lazer_id",
       defaultPageSize: 10,
@@ -347,7 +269,7 @@ export const PriceFeedIdsProTable = () => {
     <>
       <SearchInput
         label="Search price feeds"
-        placeholder="Search by symbol, name, or ID (comma/space separated)"
+        placeholder="Search by symbol, name, ID, or hex feed ID"
         value={search}
         onChange={updateSearch}
         className={styles.searchInput ?? ""}
@@ -465,6 +387,9 @@ const pythProSchema = z.array(
     exponent: z.number(),
     state: z.enum(["stable", "coming_soon", "inactive"]),
     min_channel: z.string(),
+    hermes_id: z.string().nullable().optional(),
+    nasdaq_symbol: z.string().nullable().optional(),
+    cmc_id: z.number().int().nullable().optional(),
   }),
 );
 
