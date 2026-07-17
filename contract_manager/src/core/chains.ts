@@ -6,9 +6,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
+import type { IotaTransactionBlockResponse } from "@iota/iota-sdk/client";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import { Transaction as IotaTransaction } from "@iota/iota-sdk/transactions";
+import { IOTA_CLOCK_OBJECT_ID, NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import * as suiBytecode from "@mysten/move-bytecode-template";
 import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
@@ -533,7 +535,7 @@ export class SuiChain extends Chain {
     return stdout.trim();
   }
 
-  async buildPackage(path: string): Promise<SuiPackage> {
+  async buildPackage(path: string): Promise<MovePackage> {
     const activeEnv = await this.getCliEnv();
     if (`sui_${activeEnv}` !== this.getId()) {
       throw new Error(
@@ -555,7 +557,7 @@ export class SuiChain extends Chain {
       { encoding: "utf8" },
     );
     try {
-      return JSON.parse(result.stdout) as SuiPackage;
+      return JSON.parse(result.stdout) as MovePackage;
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new Error(`${result.stdout}\n${result.stderr}`);
@@ -565,7 +567,7 @@ export class SuiChain extends Chain {
   }
 
   async publishPackage(
-    { modules, dependencies }: SuiPackage,
+    { modules, dependencies }: MovePackage,
     signer: SuiEd25519Keypair,
   ): Promise<{ packageId: string; upgradeCapId: string }> {
     const tx = new SuiTransaction();
@@ -589,15 +591,15 @@ export class SuiChain extends Chain {
   }
 
   async publishLazerPackage(
-    pkg: SuiPackage,
-    meta: SuiLazerMeta,
+    pkg: MovePackage,
+    meta: MoveLazerMeta,
     signer: SuiEd25519Keypair,
   ) {
     this.verifyLazerMeta(pkg, meta);
     return await this.publishPackage(pkg, signer);
   }
 
-  async updateLazerMeta(packagePath: string, meta: SuiLazerMeta) {
+  async updateLazerMeta(packagePath: string, meta: MoveLazerMeta) {
     const templatePath = nodePath.resolve(
       packagePath,
       "sources/meta.move.mustache",
@@ -613,8 +615,8 @@ export class SuiChain extends Chain {
    * set correctly.
    */
   verifyLazerMeta(
-    { modules }: SuiPackage,
-    { version, receiver_chain_id }: SuiLazerMeta,
+    { modules }: MovePackage,
+    { version, receiver_chain_id }: MoveLazerMeta,
   ) {
     for (const bytes of modules) {
       const {
@@ -832,8 +834,8 @@ export class SuiChain extends Chain {
   }: {
     stateId: string;
     wormholeStateId: string;
-    pkg: SuiPackage;
-    meta: SuiLazerMeta;
+    pkg: MovePackage;
+    meta: MoveLazerMeta;
     vaa: Uint8Array;
     signer: SuiEd25519Keypair;
   }) {
@@ -899,13 +901,13 @@ export class SuiChain extends Chain {
   }
 }
 
-export type SuiPackage = {
+export type MovePackage = {
   modules: string[];
   dependencies: string[];
   digest: number[];
 };
 
-export type SuiLazerMeta = {
+export type MoveLazerMeta = {
   version: string;
   receiver_chain_id: number;
 };
@@ -960,12 +962,70 @@ export class IotaChain extends Chain {
     return IotaChain.type;
   }
 
+  static getMoveStructFields(
+    value: unknown,
+    description: string,
+  ): Record<string, unknown> {
+    if (typeof value !== "object" || value === null || !("fields" in value)) {
+      throw new Error(`Could not find fields in ${description}`);
+    }
+    const { fields } = value;
+    if (
+      typeof fields !== "object" ||
+      fields === null ||
+      Array.isArray(fields)
+    ) {
+      throw new Error(`Invalid fields in ${description}`);
+    }
+    return fields as Record<string, unknown>;
+  }
+
+  static bytesFromMoveField(value: unknown, description: string): Buffer {
+    if (typeof value === "string") {
+      return Buffer.from(value, "base64");
+    }
+    if (
+      Array.isArray(value) &&
+      value.every((byte) => Number.isInteger(byte) && byte >= 0 && byte <= 255)
+    ) {
+      return Buffer.from(value);
+    }
+    throw new Error(`Invalid byte vector in ${description}`);
+  }
+
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for Lazer
+   * contracts deployed on this chain.
+   */
+  generateGovernanceUpgradeLazerPayload(
+    version: bigint,
+    digest: string,
+  ): Buffer {
+    return new UpgradeSuiLazerContract(
+      this.wormholeChainName,
+      version,
+      digest,
+    ).encode();
+  }
+
+  /** Returns the payload for a trusted Lazer signer update. */
+  generateGovernanceUpdateTrustedSignerPayload(
+    publicKey: string,
+    expiresAt: bigint,
+  ): Buffer {
+    return new UpdateTrustedSigner264Bit(
+      this.wormholeChainName,
+      publicKey,
+      expiresAt,
+    ).encode();
   }
 
   getProvider(): IotaClient {
@@ -990,6 +1050,373 @@ export class IotaChain extends Chain {
       owner: await this.getAccountAddress(privateKey),
     });
     return Number(balance.totalBalance) / Number(NANOS_PER_IOTA);
+  }
+
+  async getCliEnv(): Promise<string> {
+    const { stdout } = await execFileAsync("iota", ["client", "active-env"]);
+    return stdout.trim();
+  }
+
+  async buildPackage(path: string): Promise<MovePackage> {
+    const activeEnv = await this.getCliEnv();
+    if (`iota_sui_${activeEnv}` !== this.wormholeChainName) {
+      throw new Error(
+        `IOTA CLI is currently set to ${activeEnv}. Switch to correct environment and try again.`,
+      );
+    }
+
+    const result = await execFileAsync(
+      "iota",
+      ["move", "build", "--dump-bytecode-as-base64", "--path", path],
+      { encoding: "utf8" },
+    );
+    try {
+      return JSON.parse(result.stdout) as MovePackage;
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(`${result.stdout}\n${result.stderr}`);
+      }
+      throw error;
+    }
+  }
+
+  async publishPackage(
+    { modules, dependencies }: MovePackage,
+    signer: IotaEd25519Keypair,
+  ): Promise<{ packageId: string; upgradeCapId: string }> {
+    const tx = new IotaTransaction();
+    const [upgradeCap] = tx.publish({ dependencies, modules });
+    if (!upgradeCap) {
+      throw new Error("IOTA publish did not return an UpgradeCap");
+    }
+    tx.transferObjects([upgradeCap], signer.toIotaAddress());
+
+    const executed = await this.executeTransaction(tx, signer);
+    const packageId = executed.objectChanges?.find(
+      (change) => change.type === "published",
+    )?.packageId;
+    const upgradeCapChange = executed.objectChanges?.find(
+      (change) =>
+        change.type === "created" &&
+        change.objectType.endsWith("::package::UpgradeCap"),
+    );
+    const upgradeCapId =
+      upgradeCapChange?.type === "created"
+        ? upgradeCapChange.objectId
+        : undefined;
+    if (!packageId) {
+      throw new Error("Could not find package ID in transaction results");
+    }
+    if (!upgradeCapId) {
+      throw new Error("Could not find UpgradeCap ID in transaction results");
+    }
+    return { packageId, upgradeCapId };
+  }
+
+  async publishLazerPackage(
+    pkg: MovePackage,
+    meta: MoveLazerMeta,
+    signer: IotaEd25519Keypair,
+  ) {
+    this.verifyLazerMeta(pkg, meta);
+    return await this.publishPackage(pkg, signer);
+  }
+
+  async updateLazerMeta(packagePath: string, meta: MoveLazerMeta) {
+    const templatePath = nodePath.resolve(
+      packagePath,
+      "sources/meta.move.mustache",
+    );
+    const template = await readFile(templatePath, { encoding: "utf8" });
+    const outputPath = nodePath.resolve(packagePath, "sources/meta.move");
+    const output = micromustache.render(template, meta);
+    await writeFile(outputPath, output, { encoding: "utf8" });
+  }
+
+  /** Inspects the compiled `pyth_lazer::meta` module metadata. */
+  verifyLazerMeta(
+    { modules }: MovePackage,
+    { version, receiver_chain_id }: MoveLazerMeta,
+  ) {
+    let foundMeta = false;
+    let foundVersion = false;
+    let foundReceiverChainId = false;
+
+    for (const bytes of modules) {
+      const {
+        self_module_handle_idx,
+        module_handles,
+        identifiers,
+        function_handles,
+        function_defs,
+      } = suiBytecode.deserialize(Buffer.from(bytes, "base64"));
+      const name = identifiers[module_handles[self_module_handle_idx].name];
+      if (name !== "meta") continue;
+
+      foundMeta = true;
+      for (const def of function_defs) {
+        const funName = identifiers[function_handles[def.function].name];
+        if (funName === "version") {
+          foundVersion = true;
+          assert.deepEqual(
+            def.code.code,
+            [{ LdU64: BigInt(version) }, "Ret"],
+            "IOTA Lazer meta version does not match",
+          );
+        } else if (funName === "receiver_chain_id") {
+          foundReceiverChainId = true;
+          assert.deepEqual(
+            def.code.code,
+            [{ LdU16: receiver_chain_id }, "Ret"],
+            "IOTA Lazer meta receiver_chain_id does not match",
+          );
+        }
+      }
+    }
+
+    if (!foundMeta) {
+      throw new Error("Could not find IOTA Lazer meta module");
+    }
+    if (!foundVersion) {
+      throw new Error("Could not find IOTA Lazer meta version function");
+    }
+    if (!foundReceiverChainId) {
+      throw new Error(
+        "Could not find IOTA Lazer meta receiver_chain_id function",
+      );
+    }
+  }
+
+  async initLazerContract(
+    packageId: string,
+    upgradeCapId: string,
+    { emitterChain, emitterAddress }: DataSource,
+    signer: IotaEd25519Keypair,
+  ): Promise<{ stateId: string }> {
+    const tx = new IotaTransaction();
+    tx.moveCall({
+      arguments: [
+        tx.object(upgradeCapId),
+        tx.pure.u16(emitterChain),
+        tx.pure.vector(
+          "u8",
+          Buffer.from(emitterAddress.replace(/^0x/, ""), "hex"),
+        ),
+      ],
+      target: `${packageId}::actions::init_lazer`,
+    });
+
+    const executed = await this.executeTransaction(tx, signer);
+    const stateChange = executed.objectChanges?.find(
+      (change) =>
+        change.type === "created" &&
+        change.objectType.endsWith("::state::State"),
+    );
+    const stateId =
+      stateChange?.type === "created" ? stateChange.objectId : undefined;
+    if (!stateId) {
+      throw new Error("Could not find State ID in transaction results");
+    }
+    return { stateId };
+  }
+
+  async getUpgradeCapPackage(upgradeCapId: string): Promise<string> {
+    const fields = await this.getObjectFields(this.getProvider(), upgradeCapId);
+    if (typeof fields.package !== "string") {
+      throw new TypeError("Could not find package string in UpgradeCap object");
+    }
+    return fields.package;
+  }
+
+  async getStatePackageInfo(
+    client: IotaClient,
+    stateId: string,
+  ): Promise<{ package: string; version: string }> {
+    const state = await this.getObjectFields(client, stateId);
+    const upgradeCap = IotaChain.getMoveStructFields(
+      state.upgrade_cap,
+      "state UpgradeCap",
+    );
+    if (typeof upgradeCap.package !== "string") {
+      throw new Error("Could not find 'package' string in UpgradeCap");
+    }
+    if (typeof upgradeCap.version !== "string") {
+      throw new Error("Could not find 'version' number in UpgradeCap");
+    }
+    return {
+      package: upgradeCap.package,
+      version: upgradeCap.version,
+    };
+  }
+
+  async getStateGovernanceInfo(client: IotaClient, stateId: string) {
+    const state = await this.getObjectFields(client, stateId);
+    const governance = IotaChain.getMoveStructFields(
+      state.governance,
+      "state Governance",
+    );
+    if (typeof governance.seen_sequence !== "string") {
+      throw new Error("Could not find 'seen_sequence' BigInt in Governance");
+    }
+    return { seen_sequence: BigInt(governance.seen_sequence) };
+  }
+
+  private async getObjectFields(
+    client: IotaClient,
+    objectId: string,
+  ): Promise<Record<string, unknown>> {
+    const result = await client.getObject({
+      id: objectId,
+      options: { showContent: true },
+    });
+    if (
+      !result.data?.content ||
+      result.data.content.dataType !== "moveObject"
+    ) {
+      throw new Error(`Failed to get object content for ${objectId}`);
+    }
+    return result.data.content.fields as Record<string, unknown>;
+  }
+
+  async updateTrustedSigner({
+    stateId,
+    wormholeStateId,
+    vaa,
+    signer,
+  }: {
+    stateId: string;
+    wormholeStateId: string;
+    vaa: Uint8Array;
+    signer: IotaEd25519Keypair;
+  }): Promise<string> {
+    const client = this.getProvider();
+    const tx = new IotaTransaction();
+    const { package: wormholeId } = await this.getStatePackageInfo(
+      client,
+      wormholeStateId,
+    );
+    const { package: packageId } = await this.getStatePackageInfo(
+      client,
+      stateId,
+    );
+
+    const [verifiedVaa] = tx.moveCall({
+      arguments: [
+        tx.object(wormholeStateId),
+        tx.pure.vector("u8", vaa),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
+      ],
+      target: `${wormholeId}::vaa::parse_and_verify`,
+    });
+    if (!verifiedVaa) {
+      throw new Error("IOTA Wormhole VAA verification returned no value");
+    }
+    tx.moveCall({
+      arguments: [tx.object(stateId), verifiedVaa],
+      target: `${packageId}::actions::update_trusted_signer`,
+    });
+
+    const { digest } = await this.executeTransaction(tx, signer);
+    return digest;
+  }
+
+  async upgradeLazerContract({
+    stateId,
+    wormholeStateId,
+    pkg,
+    meta,
+    vaa,
+    signer,
+  }: {
+    stateId: string;
+    wormholeStateId: string;
+    pkg: MovePackage;
+    meta: MoveLazerMeta;
+    vaa: Uint8Array;
+    signer: IotaEd25519Keypair;
+  }): Promise<string> {
+    this.verifyLazerMeta(pkg, meta);
+
+    const client = this.getProvider();
+    const tx = new IotaTransaction();
+    const { package: wormholeId } = await this.getStatePackageInfo(
+      client,
+      wormholeStateId,
+    );
+    const { package: packageId } = await this.getStatePackageInfo(
+      client,
+      stateId,
+    );
+
+    const [verifiedVaa] = tx.moveCall({
+      arguments: [
+        tx.object(wormholeStateId),
+        tx.pure.vector("u8", vaa),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
+      ],
+      target: `${wormholeId}::vaa::parse_and_verify`,
+    });
+    if (!verifiedVaa) {
+      throw new Error("IOTA Wormhole VAA verification returned no value");
+    }
+    const [ticket] = tx.moveCall({
+      arguments: [tx.object(stateId), verifiedVaa],
+      target: `${packageId}::actions::upgrade`,
+    });
+    if (!ticket) {
+      throw new Error("IOTA Lazer upgrade returned no ticket");
+    }
+    const [receipt] = tx.upgrade({
+      dependencies: pkg.dependencies,
+      modules: pkg.modules,
+      package: packageId,
+      ticket,
+    });
+    if (!receipt) {
+      throw new Error("IOTA package upgrade returned no receipt");
+    }
+    tx.moveCall({
+      arguments: [tx.object(stateId), receipt],
+      target: `${packageId}::actions::commit_upgrade`,
+    });
+
+    const { digest } = await this.executeTransaction(tx, signer);
+    return digest;
+  }
+
+  async executeTransaction(
+    tx: IotaTransaction,
+    keypair: IotaEd25519Keypair,
+  ): Promise<IotaTransactionBlockResponse> {
+    const provider = this.getProvider();
+    tx.setSender(keypair.toIotaAddress());
+    const dryRun = await provider.dryRunTransactionBlock({
+      transactionBlock: await tx.build({ client: provider }),
+    });
+    if (dryRun.effects.status.status === "failure") {
+      throw new Error(
+        `Transaction dry run failed: ${dryRun.effects.status.error ?? "unknown error"}`,
+      );
+    }
+    tx.setGasBudget(BigInt(dryRun.input.gasData.budget) * 2n);
+
+    const executed = await provider.signAndExecuteTransaction({
+      options: { showEffects: true, showObjectChanges: true },
+      signer: keypair,
+      transaction: tx,
+    });
+    if (executed.effects?.status.status === "failure") {
+      throw new Error(
+        `Transaction ${executed.digest} failed on-chain: ${executed.effects.status.error ?? "unknown error"}`,
+      );
+    }
+    return executed;
+  }
+
+  explorerUrl(type: "object" | "address" | "txblock", id: string): string {
+    return `https://explorer.iota.org/${type}/${id}?network=${
+      this.isMainnet() ? "mainnet" : "testnet"
+    }`;
   }
 }
 

@@ -42,6 +42,7 @@ import {
   EvmWormholeContract,
   FuelPriceFeedContract,
   FuelWormholeContract,
+  IotaLazerContract,
   IotaPriceFeedContract,
   IotaWormholeContract,
   SolanaLazerContract,
@@ -80,6 +81,7 @@ export class Store {
   public lazer_contracts: Record<
     string,
     | EvmLazerContract
+    | IotaLazerContract
     | SuiLazerContract
     | StellarLazerContract
     | CardanoLazerContract
@@ -220,6 +222,7 @@ export class Store {
       [IotaPriceFeedContract.type]: IotaPriceFeedContract,
       [IotaWormholeContract.type]: IotaWormholeContract,
       [EvmLazerContract.type]: EvmLazerContract,
+      [IotaLazerContract.type]: IotaLazerContract,
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
       [SolanaLazerContract.type]: SolanaLazerContract,
@@ -261,6 +264,7 @@ export class Store {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmLazerContract ||
+          chainContract instanceof IotaLazerContract ||
           chainContract instanceof SuiLazerContract ||
           chainContract instanceof StellarLazerContract ||
           chainContract instanceof CardanoLazerContract ||
