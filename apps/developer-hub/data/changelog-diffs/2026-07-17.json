@@ -1,0 +1,59 @@
+{
+  "date": "2026-07-17",
+  "label": "Friday",
+  "summary": {
+    "added": 3,
+    "went_live": 0,
+    "removed": 2
+  },
+  "hero": "3 new feeds announced, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.CAN6/USD",
+      "lazerId": 3172,
+      "asset": "Pyth Price In Usd For Cocoa Futures 16 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-17",
+      "quote": "USD",
+      "hermesId": "792f4c7123c28599193f4e8dca72368083c2707cd885b6bdc6842afb116a351e"
+    },
+    {
+      "id": "Equity.US.HOLX/USD",
+      "lazerId": 1180,
+      "asset": "Hologic Inc",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-07-17",
+      "quote": "USD",
+      "hermesId": "7c19118ae1715b2b289d122ef5983fd31231e31e410937cbb64aa307ac91dcea"
+    },
+    {
+      "id": "Metal.CC3M/USD",
+      "lazerId": 3451,
+      "asset": "Pyth Price In Usd For Copper 3-Month",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-07-17",
+      "quote": "USD"
+    },
+    {
+      "id": "Metal.AL3M/USD",
+      "lazerId": 3450,
+      "asset": "Pyth Price In Usd For Aluminium 3-Month",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-07-17",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.BR.BOVA11/BRL",
+      "lazerId": 3447,
+      "asset": "Ishares Ibovespa Fundo De Indice",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-17",
+      "quote": "BRL"
+    }
+  ]
+}
