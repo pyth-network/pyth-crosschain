@@ -22,13 +22,13 @@ export async function BasePage(props: { params: { slug: string[] } }) {
 
   // Hide PageActions for api-reference and changelog pages
   const isApiReference = url.startsWith("/api-reference");
-  const isChangelog = url === "/price-feeds/changelog";
+  const isChangelog = url === "/changelog";
 
   return (
     <DocsPage
-      toc={page.data.toc}
-      tableOfContent={{ style: "clerk" }}
       full={page.data.full}
+      tableOfContent={{ style: "clerk" }}
+      toc={page.data.toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>

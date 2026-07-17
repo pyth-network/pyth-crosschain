@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The Developer Hub is a Next.js app rooted in `src/`: routes live under `src/app`, shared UI in `src/components`, config helpers in `src/config`, and utilities in `src/lib`. Documentation sits in `content/docs`, grouped per product with `index.mdx`, supporting guides, and a `meta.json` navigation manifest; assets belong in `public/images`.
+The Developer Hub is a Next.js app rooted in `src/`: routes live under `src/app`, shared UI in `src/components`, config helpers in `src/config`, and utilities in `src/lib`. Documentation sits in `content/docs`, grouped per product with `index.mdx`, supporting guides, and a `meta.json` navigation manifest; assets belong in `public/images`. Changelog entries for the unified `/changelog` page live in `content/changelog` — one MDX file per entry, named `<YYYY-MM-DD>-<slug>.mdx` (the filename is the entry's stable share anchor), with frontmatter enforced by the `changelog` collection schema in `source.config.ts`: `product` (exactly one of `pyth-pro`/`pyth-core`/`entropy`), `type` (exactly one of `feature`/`fix`/`breaking-change`/`deprecation`/`docs`), optional `area` (at most one of `apis`/`terminal`/`market-data`/`network`/`contracts`/`randomness`), plus `title` and `date`.
 
 ## Build, Test, and Development Commands
 

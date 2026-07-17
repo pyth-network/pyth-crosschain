@@ -1,0 +1,502 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Hero bar (tabs + subscribe) ─────────────────────────────────────────
+
+.heroBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: theme.spacing(3.5);
+  padding-bottom: theme.spacing(4.5);
+  border-bottom: 1px solid theme.color("border");
+  margin-bottom: theme.spacing(8);
+}
+
+.tabToggle {
+  display: inline-flex;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+  padding: 2px;
+  background: theme.color("background", "card-secondary");
+}
+
+.tabButton {
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  font-weight: theme.font-weight("semibold");
+  padding: theme.spacing(1.25) theme.spacing(3);
+  border: 0;
+  background: transparent;
+  color: theme.color("muted");
+  border-radius: theme.border-radius("sm");
+  letter-spacing: theme.letter-spacing("wider");
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+
+  &:hover:not(.tabButtonActive) {
+    color: theme.color("foreground");
+  }
+}
+
+.tabButtonActive {
+  background: theme.color("background", "secondary");
+  color: theme.color("foreground");
+  cursor: default;
+}
+
+// ─── Subscribe menu ──────────────────────────────────────────────────────
+
+.subscribe {
+  position: relative;
+  margin-left: auto;
+}
+
+.subscribeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.5);
+  padding: theme.spacing(1.5) theme.spacing(3);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+  background: transparent;
+  color: theme.color("paragraph");
+  font-size: 0.75rem;
+  font-weight: theme.font-weight("medium");
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    border-color: theme.color("muted");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+}
+
+.subscribeMenu {
+  position: absolute;
+  top: calc(100% + theme.spacing(1.5));
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+  padding: theme.spacing(1.5);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background: theme.color("background", "primary");
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+
+.subscribeHeading {
+  padding: theme.spacing(1) theme.spacing(2.5);
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("widest");
+  text-transform: uppercase;
+  color: theme.color("muted");
+}
+
+.subscribeItem {
+  padding: theme.spacing(1.5) theme.spacing(2.5);
+  border-radius: theme.border-radius("sm");
+  font-size: 0.8125rem;
+  color: theme.color("paragraph");
+  text-decoration: none;
+
+  &:hover {
+    background: theme.color("background", "secondary");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    background: theme.color("background", "secondary");
+    color: theme.color("foreground");
+    outline: 2px solid theme.color("highlight");
+    outline-offset: -1px;
+  }
+}
+
+// ─── Filter bar ──────────────────────────────────────────────────────────
+
+.filterBar {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+  margin-bottom: theme.spacing(8);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: theme.spacing(2.5);
+}
+
+.filterGroupLabel {
+  flex: 0 0 3.5rem;
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("widest");
+  text-transform: uppercase;
+  color: theme.color("muted");
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(1.5);
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.75);
+  padding: theme.spacing(1.25) theme.spacing(3);
+  border-radius: theme.border-radius("base");
+  border: 1px solid theme.color("border");
+  background: transparent;
+  color: theme.color("paragraph");
+  font-size: 0.75rem;
+  font-weight: theme.font-weight("medium");
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    border-color: theme.color("muted");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+}
+
+.filterChipActive {
+  border-color: theme.color("foreground");
+  background: theme.color("background", "secondary");
+  color: theme.color("foreground");
+}
+
+.filterChipEmpty {
+  opacity: 0.45;
+}
+
+.filterDot {
+  width: 6px;
+  height: 6px;
+  border-radius: theme.border-radius("full");
+  flex-shrink: 0;
+  background: theme.color("muted");
+}
+
+.typeDotFeature {
+  background: theme.color("states", "success", "base");
+}
+
+.typeDotFix {
+  background: theme.color("states", "info", "normal");
+}
+
+.typeDotBreaking {
+  background: theme.color("states", "error", "base");
+}
+
+.typeDotDeprecation {
+  background: theme.color("states", "warning", "normal");
+}
+
+.typeDotDocs {
+  background: theme.color("muted");
+}
+
+.filterCount {
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  color: theme.color("muted");
+}
+
+.filterClear {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("link", "primary");
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 2px;
+  }
+}
+
+// ─── Date groups ─────────────────────────────────────────────────────────
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(12);
+}
+
+.groupDate {
+  margin: 0 0 theme.spacing(4);
+  font-size: 1.5rem;
+  font-weight: theme.font-weight("medium");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1.1;
+  color: theme.color("foreground");
+}
+
+.groupEntries {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
+
+// ─── Entry card ──────────────────────────────────────────────────────────
+
+.entryCard {
+  scroll-margin-top: theme.spacing(8);
+  padding: theme.spacing(5) theme.spacing(6);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background: theme.color("background", "card-secondary");
+}
+
+.entryCardHighlighted {
+  animation: changelog-entry-flash 2.4s ease-out;
+}
+
+@keyframes changelog-entry-flash {
+  0%,
+  12% {
+    background: theme.color("background", "secondary");
+    box-shadow: 0 0 0 theme.spacing(2) theme.color("background", "secondary");
+  }
+
+  100% {
+    background: theme.color("background", "card-secondary");
+    box-shadow: 0 0 0 theme.spacing(2) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entryCardHighlighted {
+    animation: none;
+    background: theme.color("background", "secondary");
+  }
+}
+
+.entryHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
+  margin-bottom: theme.spacing(3);
+}
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: theme.spacing(0.75) theme.spacing(2.5);
+  border-radius: theme.border-radius("full");
+  font-family: theme.font-family("monospace");
+  font-size: 0.625rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("wider");
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.typeBadgeFeature {
+  background: theme.color("states", "success", "background");
+  color: theme.color("states", "success", "base");
+}
+
+.typeBadgeFix {
+  background: theme.color("states", "info", "background");
+  color: theme.color("states", "info", "normal");
+}
+
+.typeBadgeBreaking {
+  background: theme.color("states", "error", "background");
+  color: theme.color("states", "error", "base");
+}
+
+.typeBadgeDeprecation {
+  background: theme.color("states", "warning", "background");
+  color: theme.color("states", "warning", "normal");
+}
+
+.typeBadgeDocs {
+  background: theme.color("background", "secondary");
+  color: theme.color("muted");
+}
+
+.productTag {
+  font-size: 0.75rem;
+  font-weight: theme.font-weight("medium");
+  color: theme.color("foreground");
+}
+
+.areaTag {
+  font-size: 0.75rem;
+  color: theme.color("muted");
+
+  &::before {
+    content: "·";
+    margin-inline-end: theme.spacing(2);
+  }
+}
+
+.entryTitle {
+  margin: 0 0 theme.spacing(2.5);
+  font-size: 1.25rem;
+  font-weight: theme.font-weight("medium");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1.3;
+  color: theme.color("foreground");
+}
+
+.entryBody {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: theme.color("paragraph");
+
+  & > :first-child {
+    margin-top: 0;
+  }
+
+  & > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+// ─── Copy link ───────────────────────────────────────────────────────────
+
+.copyLink {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1.5);
+  margin-left: auto;
+  padding: theme.spacing(1) theme.spacing(2);
+  border: none;
+  border-radius: theme.border-radius("sm");
+  background: transparent;
+  font-family: theme.font-family("monospace");
+  font-size: 0.6875rem;
+  color: theme.color("muted");
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
+
+  &:hover {
+    background: theme.color("background", "secondary");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+}
+
+.entryCard:hover .copyLink {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .copyLink {
+    opacity: 1;
+  }
+}
+
+.copyLinkActive {
+  opacity: 1;
+  color: theme.color("states", "success", "base");
+
+  &:hover {
+    color: theme.color("states", "success", "base");
+  }
+}
+
+.copyLinkIcon {
+  flex-shrink: 0;
+}
+
+.copyLinkText {
+  line-height: 1;
+}
+
+// ─── Empty state / load more ─────────────────────────────────────────────
+
+.emptyState {
+  padding: theme.spacing(6) theme.spacing(7);
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  font-style: italic;
+  color: theme.color("muted");
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.loadMore {
+  display: block;
+  margin: theme.spacing(8) auto 0;
+  padding: theme.spacing(2) theme.spacing(5);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+  background: transparent;
+  color: theme.color("paragraph");
+  font-size: 0.8125rem;
+  font-weight: theme.font-weight("medium");
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    border-color: theme.color("muted");
+    color: theme.color("foreground");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 1px;
+  }
+}

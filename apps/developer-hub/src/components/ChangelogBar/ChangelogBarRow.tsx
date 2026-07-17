@@ -85,7 +85,7 @@ export const ChangelogBarRow = ({ items }: { items: ChangelogBarItem[] }) => {
 
   return (
     <div className={styles.bar}>
-      <Link className={styles.link} href="/price-feeds/changelog">
+      <Link className={styles.link} href="/changelog?tab=market-data">
         <span className={styles.tag}>Feed updates</span>
         <div className={styles.viewport} ref={viewportRef}>
           {/* Off-screen copy holding every item, used only to measure how many
