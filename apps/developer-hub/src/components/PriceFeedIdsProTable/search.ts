@@ -73,9 +73,7 @@ export const filterFeedsBySearch = <T extends SearchableFeed>(
       return true;
     }
 
-    if (item.nasdaq_symbol != null) {
-      if (item.nasdaq_symbol.toLowerCase().includes(term)) return true;
-    }
+    if (item.nasdaq_symbol?.toLowerCase().includes(term)) return true;
 
     if (item.hermes_id != null) {
       const hermesTerm = stripHexPrefix(term);
