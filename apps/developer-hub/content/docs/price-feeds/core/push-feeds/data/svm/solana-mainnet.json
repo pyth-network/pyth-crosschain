@@ -169,7 +169,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NEON/USD",
@@ -340,7 +340,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NTBILL/USD.RR",
@@ -349,7 +349,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NBASIS/USD.RR",
@@ -358,7 +358,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NWISDOM/USD.RR",
@@ -367,7 +367,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NALPHA/USD.RR",
@@ -376,7 +376,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "NFALCON/USD.RR",
@@ -385,7 +385,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "CASH/RD.RR",
@@ -421,7 +421,7 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     }
   ]
 }

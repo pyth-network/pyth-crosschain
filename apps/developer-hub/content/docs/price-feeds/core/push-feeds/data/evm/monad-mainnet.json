@@ -86,7 +86,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "SUI/USD",
@@ -206,7 +206,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "RSETH/USD",
@@ -230,7 +230,7 @@
       "time_difference": 3600,
       "price_deviation": 0.2,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "RSETH/ETH.RR",

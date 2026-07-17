@@ -25,7 +25,7 @@ const PRO_COMPATIBLE_DOCS_URL = "/price-feeds/core/upgrade/preparing";
  *   2. For each feed, set "available" if its `id` is present in that listing,
  *      otherwise "coming_soon".
  *
- * Last refreshed 2026-07-03. To refresh, re-run the steps above.
+ * Last refreshed 2026-07-17. To refresh, re-run the steps above.
  */
 type ProCompatibleStatus = "available" | "coming_soon";
 

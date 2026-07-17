@@ -110,7 +110,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "LHYPE/USD",
@@ -174,7 +174,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "UBTC/USD",
@@ -182,7 +182,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "CMETH/METH.RR",
@@ -206,7 +206,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "XAU/USD",
@@ -270,7 +270,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "KHYPE/USD",
@@ -278,7 +278,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "HAHYPE/HYPE.RR",
@@ -310,7 +310,7 @@
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "USDN/USD",
