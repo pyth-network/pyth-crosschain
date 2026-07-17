@@ -22,7 +22,7 @@ const OPTIONS: Option[] = [
   {
     value: "wait",
     title: "Wait for automatic",
-    caption: "DAO upgrades contract on July 31",
+    caption: "DAO upgrades contract on August 18",
   },
 ];
 

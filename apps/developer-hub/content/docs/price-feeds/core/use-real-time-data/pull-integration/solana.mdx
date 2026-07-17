@@ -157,7 +157,7 @@ To use price update accounts, the frontend code needs to perform two different t
 
 #### Fetch price updates
 
-Use `HermesClient` from `@pythnetwork/hermes-client` to fetch Pyth price updates from Hermes. The new endpoint `pyth.dourolabs.app/hermes` is the upgraded backend (recommended); the current `hermes.pyth.network` keeps working until cutover and requires an API key from July 31, 2026:
+Use `HermesClient` from `@pythnetwork/hermes-client` to fetch Pyth price updates from Hermes. The new endpoint `pyth.dourolabs.app/hermes` is the upgraded backend (recommended); the current `hermes.pyth.network` keeps working until cutover and requires an API key from August 18, 2026:
 
 <Tabs items={["Upgraded endpoint", "Current endpoint"]}>
 <Tab value="Upgraded endpoint">
@@ -177,7 +177,7 @@ const priceServiceConnection = new HermesClient(
 ```typescript copy
 import { HermesClient } from "@pythnetwork/hermes-client";
 
-// Authentication becomes required on July 31, 2026.
+// Authentication becomes required on August 18, 2026.
 const priceServiceConnection = new HermesClient(
   "https://hermes.pyth.network",
   { accessToken: process.env.PYTH_API_KEY },

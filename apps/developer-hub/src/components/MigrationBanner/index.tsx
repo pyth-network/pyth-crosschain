@@ -22,7 +22,7 @@ export const MigrationBanner = () => {
         href="/price-feeds/core/upgrade/preparing"
         className="hover:underline"
       >
-        Pyth Core upgrade July 31, 2026. Every Core user will need an API Key.
+        Pyth Core upgrade August 18, 2026. Every Core user will need an API Key.
         Learn more →
       </Link>
     </Banner>
