@@ -16,10 +16,10 @@ import styles from "./index.module.scss";
 import { filterFeedsBySearch } from "./search";
 
 const CHANNELS = [
-  { id: "real_time", label: "RT", fullName: "Real Time" },
-  { id: "fixed_rate@50ms", label: "50ms", fullName: "fixed_rate@50ms" },
-  { id: "fixed_rate@200ms", label: "200ms", fullName: "fixed_rate@200ms" },
-  { id: "fixed_rate@1000ms", label: "1s", fullName: "fixed_rate@1000ms" },
+  { fullName: "Real Time", id: "real_time", label: "RT" },
+  { fullName: "fixed_rate@50ms", id: "fixed_rate@50ms", label: "50ms" },
+  { fullName: "fixed_rate@200ms", id: "fixed_rate@200ms", label: "200ms" },
+  { fullName: "fixed_rate@1000ms", id: "fixed_rate@1000ms", label: "1s" },
 ] as const;
 
 const normalizeChannelId = (channelId: string) =>
@@ -53,26 +53,26 @@ const ChannelSupportIndicator = ({ minChannel }: { minChannel: string }) => {
   const label = `Fastest channel: ${minChannelLabel}. Supported channels: ${supportedChannels}.`;
 
   return (
-    <div className={styles.channelIndicator} role="img" aria-label={label}>
-      <div className={styles.channelTrack} aria-hidden="true">
+    <div aria-label={label} className={styles.channelIndicator} role="img">
+      <div aria-hidden="true" className={styles.channelTrack}>
         {CHANNELS.map((channel, index) => (
           <span
-            key={channel.id}
             className={[
               styles.channelSegment,
               index >= minChannelIndex ? styles.channelSegmentActive : "",
             ].join(" ")}
+            key={channel.id}
           />
         ))}
       </div>
-      <div className={styles.channelLabels} aria-hidden="true">
+      <div aria-hidden="true" className={styles.channelLabels}>
         {CHANNELS.map((channel, index) => (
           <span
-            key={channel.id}
             className={[
               styles.channelLabel,
               index >= minChannelIndex ? styles.channelLabelActive : "",
             ].join(" ")}
+            key={channel.id}
             title={channel.fullName}
           >
             {channel.label}
@@ -84,14 +84,14 @@ const ChannelSupportIndicator = ({ minChannel }: { minChannel: string }) => {
 };
 
 const LEGEND_DESCRIPTIONS: Record<(typeof CHANNELS)[number]["id"], string> = {
-  real_time:
-    "Minimum channel: Real Time. Published on Real Time, fixed_rate@50ms, fixed_rate@200ms, and fixed_rate@1000ms.",
   "fixed_rate@50ms":
     "Minimum channel: fixed_rate@50ms. Published on fixed_rate@50ms, fixed_rate@200ms, and fixed_rate@1000ms.",
   "fixed_rate@200ms":
     "Minimum channel: fixed_rate@200ms. Published on fixed_rate@200ms and fixed_rate@1000ms.",
   "fixed_rate@1000ms":
     "Minimum channel: fixed_rate@1000ms. Published on fixed_rate@1000ms only.",
+  real_time:
+    "Minimum channel: Real Time. Published on Real Time, fixed_rate@50ms, fixed_rate@200ms, and fixed_rate@1000ms.",
 };
 
 export const ChannelLegend = () => (
@@ -103,7 +103,7 @@ export const ChannelLegend = () => (
     </p>
     <ul className={styles.legendRows}>
       {CHANNELS.map((channel) => (
-        <li key={channel.id} className={styles.legendRow}>
+        <li className={styles.legendRow} key={channel.id}>
           <ChannelSupportIndicator minChannel={channel.id} />
           <span className={styles.legendText}>
             {LEGEND_DESCRIPTIONS[channel.id]}
@@ -118,18 +118,18 @@ const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
 type FeedState = (typeof FEED_STATES)[number];
 
 const FEED_STATE_LABELS: Record<FeedState, string> = {
-  stable: "Stable",
   coming_soon: "Coming Soon",
   inactive: "Inactive",
+  stable: "Stable",
 };
 
 const FEED_STATE_BADGE_VARIANT: Record<
   FeedState,
   "success" | "warning" | "neutral"
 > = {
-  stable: "success",
   coming_soon: "warning",
   inactive: "neutral",
+  stable: "success",
 };
 
 export const PriceFeedIdsProTable = () => {
@@ -168,7 +168,7 @@ export const PriceFeedIdsProTable = () => {
     { id: "description", name: "Description" },
     { id: "name", name: "Name" },
     { id: "symbol", name: "Symbol" },
-    { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
+    { id: "pyth_lazer_id", isRowHeader: true, name: "Pyth Pro ID" },
     { id: "exponent", name: "Exponent" },
     { id: "state", name: "Status" },
     { id: "channels", name: "Channels" },
@@ -199,9 +199,9 @@ export const PriceFeedIdsProTable = () => {
     },
     filterFeedsBySearch,
     {
-      defaultSort: "pyth_lazer_id",
-      defaultPageSize: 10,
       defaultDescending: false,
+      defaultPageSize: 10,
+      defaultSort: "pyth_lazer_id",
     },
   );
 
@@ -246,50 +246,50 @@ export const PriceFeedIdsProTable = () => {
   const allSelected = selectedStates.size === FEED_STATES.length;
 
   const rows = paginatedItems.map((feed) => ({
-    id: feed.pyth_lazer_id,
     data: {
       asset_type: feed.asset_type,
+      channels: <ChannelSupportIndicator minChannel={feed.min_channel} />,
       description: (
         <div className={styles.descriptionContent}>{feed.description}</div>
       ),
-      name: feed.name,
-      symbol: feed.symbol,
-      pyth_lazer_id: feed.pyth_lazer_id,
       exponent: feed.exponent,
+      name: feed.name,
+      pyth_lazer_id: feed.pyth_lazer_id,
       state: (
-        <Badge variant={FEED_STATE_BADGE_VARIANT[feed.state]} size="xs">
+        <Badge size="xs" variant={FEED_STATE_BADGE_VARIANT[feed.state]}>
           {FEED_STATE_LABELS[feed.state]}
         </Badge>
       ),
-      channels: <ChannelSupportIndicator minChannel={feed.min_channel} />,
+      symbol: feed.symbol,
     },
+    id: feed.pyth_lazer_id,
   }));
 
   return (
     <>
       <SearchInput
+        className={styles.searchInput ?? ""}
         label="Search price feeds"
+        onChange={updateSearch}
         placeholder="Search by symbol, name, ID, or hex feed ID"
         value={search}
-        onChange={updateSearch}
-        className={styles.searchInput ?? ""}
       />
 
       {statusCounts && (
         <div
+          aria-label="Filter by status"
           className={styles.statusFilters}
           role="group"
-          aria-label="Filter by status"
         >
           <button
-            type="button"
             className={styles.filterButton}
             onClick={toggleAll}
+            type="button"
           >
             <Badge
-              variant={allSelected ? "info" : "neutral"}
-              style="outline"
               size="md"
+              style="outline"
+              variant={allSelected ? "info" : "neutral"}
             >
               {allSelected && <Check className={styles.checkIcon} />}
               All ({statusCounts.all})
@@ -299,19 +299,19 @@ export const PriceFeedIdsProTable = () => {
             const isSelected = selectedStates.has(feedState);
             return (
               <button
-                key={feedState}
-                type="button"
                 className={styles.filterButton}
+                key={feedState}
                 onClick={() => {
                   toggleState(feedState);
                 }}
+                type="button"
               >
                 <Badge
+                  size="md"
+                  style="outline"
                   variant={
                     isSelected ? FEED_STATE_BADGE_VARIANT[feedState] : "neutral"
                   }
-                  style="outline"
-                  size="md"
                 >
                   {isSelected && <Check className={styles.checkIcon} />}
                   {FEED_STATE_LABELS[feedState]} ({statusCounts[feedState]})
@@ -325,23 +325,23 @@ export const PriceFeedIdsProTable = () => {
       <div className={styles.tableWrapper}>
         <Table<Col>
           {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
-          label="Pyth Pro price feed ids"
           columns={columns}
+          fill
+          label="Pyth Pro price feed ids"
           onSortChange={updateSortDescriptor}
+          rounded
           sortDescriptor={sortDescriptor}
           stickyHeader="top"
-          fill
-          rounded
         />
       </div>
       <Paginator
-        numPages={numPages}
-        currentPage={page}
-        onPageChange={updatePage}
-        pageSize={pageSize}
-        onPageSizeChange={updatePageSize}
-        mkPageLink={mkPageLink}
         className={styles.paginator ?? ""}
+        currentPage={page}
+        mkPageLink={mkPageLink}
+        numPages={numPages}
+        onPageChange={updatePage}
+        onPageSizeChange={updatePageSize}
+        pageSize={pageSize}
       />
     </>
   );
@@ -355,13 +355,13 @@ enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
+  Failed: (error: unknown) => ({ error, type: StateType.Error as const }),
   Loaded: (feeds: Awaited<ReturnType<typeof getPythProFeeds>>) => ({
-    type: StateType.Loaded as const,
     feeds,
+    type: StateType.Loaded as const,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -380,16 +380,16 @@ const getPythProFeeds = async () => {
 const pythProSchema = z.array(
   z.object({
     asset_type: z.string(),
-    description: z.string(),
-    name: z.string(),
-    symbol: z.string(),
-    pyth_lazer_id: z.number().int().positive(),
-    exponent: z.number(),
-    state: z.enum(["stable", "coming_soon", "inactive"]),
-    min_channel: z.string(),
-    hermes_id: z.string().nullable().optional(),
-    nasdaq_symbol: z.string().nullable().optional(),
     cmc_id: z.number().int().nullable().optional(),
+    description: z.string(),
+    exponent: z.number(),
+    hermes_id: z.string().nullable().optional(),
+    min_channel: z.string(),
+    name: z.string(),
+    nasdaq_symbol: z.string().nullable().optional(),
+    pyth_lazer_id: z.number().int().positive(),
+    state: z.enum(["stable", "coming_soon", "inactive"]),
+    symbol: z.string(),
   }),
 );
 

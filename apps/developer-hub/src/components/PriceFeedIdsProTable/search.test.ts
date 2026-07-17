@@ -4,55 +4,55 @@ import { filterFeedsBySearch } from "./search";
 type TestFeed = SearchableFeed;
 
 const btc: TestFeed = {
-  pyth_lazer_id: 1,
-  symbol: "Crypto.BTC/USD",
-  name: "BTC/USD",
+  cmc_id: 1,
   description: "Bitcoin / US Dollar",
   hermes_id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+  name: "BTC/USD",
   nasdaq_symbol: null,
-  cmc_id: 1,
+  pyth_lazer_id: 1,
+  symbol: "Crypto.BTC/USD",
 };
 
 const eth: TestFeed = {
-  pyth_lazer_id: 2,
-  symbol: "Crypto.ETH/USD",
-  name: "ETH/USD",
+  cmc_id: 1027,
   description: "Ether / US Dollar",
   hermes_id: "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+  name: "ETH/USD",
   nasdaq_symbol: null,
-  cmc_id: 1027,
+  pyth_lazer_id: 2,
+  symbol: "Crypto.ETH/USD",
 };
 
 const bkng: TestFeed = {
-  pyth_lazer_id: 100,
-  symbol: "Equity.US.BKNG/USD",
-  name: "Booking Holdings",
+  cmc_id: null,
   description: "Booking Holdings Inc.",
   hermes_id: null,
+  name: "Booking Holdings",
   nasdaq_symbol: "BKNG",
-  cmc_id: null,
+  pyth_lazer_id: 100,
+  symbol: "Equity.US.BKNG/USD",
 };
 
 // A decoy feed whose hermes_id happens to contain the digit "1" as a substring
 // (nearly every hex hermes_id does). Used to prove pyth_lazer_id=1 wins.
 const decoy: TestFeed = {
-  pyth_lazer_id: 500,
-  symbol: "Crypto.FAKE/USD",
-  name: "FAKE/USD",
+  cmc_id: null,
   description: "Decoy asset",
   hermes_id: "1111111111111111111111111111111111111111111111111111111111111111",
+  name: "FAKE/USD",
   nasdaq_symbol: null,
-  cmc_id: null,
+  pyth_lazer_id: 500,
+  symbol: "Crypto.FAKE/USD",
 };
 
 const nullish: TestFeed = {
-  pyth_lazer_id: 999,
-  symbol: "Crypto.NUL/USD",
-  name: "NUL/USD",
+  cmc_id: null,
   description: "Feed with null identifiers",
   hermes_id: null,
+  name: "NUL/USD",
   nasdaq_symbol: null,
-  cmc_id: null,
+  pyth_lazer_id: 999,
+  symbol: "Crypto.NUL/USD",
 };
 
 const allFeeds = [btc, eth, bkng, decoy, nullish];
