@@ -141,7 +141,7 @@
 .filterBar {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(3);
+  gap: theme.spacing(2.5);
   margin-bottom: theme.spacing(8);
 }
 
@@ -172,7 +172,7 @@
   display: inline-flex;
   align-items: center;
   gap: theme.spacing(1.75);
-  padding: theme.spacing(1.25) theme.spacing(3);
+  padding: theme.spacing(1) theme.spacing(2.5);
   border-radius: theme.border-radius("base");
   border: 1px solid theme.color("border");
   background: transparent;
@@ -263,18 +263,47 @@
 // ─── Date groups ─────────────────────────────────────────────────────────
 
 .groups {
+  --rail-gutter: #{theme.spacing(7)};
+
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(12);
+}
+
+// Each date group hangs off a continuous vertical timeline rail (the
+// group's left border); the date marker sits as a node on the rail.
+.group {
+  position: relative;
+  padding-left: var(--rail-gutter);
+  padding-bottom: theme.spacing(11);
+  border-left: 2px solid theme.color("border");
+
+  &:last-child {
+    padding-bottom: 0;
+  }
 }
 
 .groupDate {
+  position: relative;
   margin: 0 0 theme.spacing(4);
   font-size: 1.5rem;
   font-weight: theme.font-weight("medium");
   letter-spacing: theme.letter-spacing("tight");
   line-height: 1.1;
   color: theme.color("foreground");
+
+  // Timeline node, centered on the rail and on the date text.
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: calc(-1px - var(--rail-gutter));
+    width: 11px;
+    height: 11px;
+    transform: translate(-50%, -50%);
+    border: 2px solid theme.color("muted");
+    border-radius: theme.border-radius("full");
+    background: theme.color("background", "primary");
+  }
 }
 
 .groupEntries {
@@ -283,14 +312,43 @@
   gap: theme.spacing(4);
 }
 
+@media (width <= 48rem) {
+  .groups {
+    --rail-gutter: #{theme.spacing(5)};
+  }
+}
+
 // ─── Entry card ──────────────────────────────────────────────────────────
 
 .entryCard {
   scroll-margin-top: theme.spacing(8);
   padding: theme.spacing(5) theme.spacing(6);
   border: 1px solid theme.color("border");
+
+  // A type-keyed accent runs down the left edge (color set per-type below).
+  border-left: 3px solid theme.color("border");
   border-radius: theme.border-radius("md");
   background: theme.color("background", "card-secondary");
+}
+
+.entryCardFeature {
+  border-left-color: theme.color("states", "success", "base");
+}
+
+.entryCardFix {
+  border-left-color: theme.color("states", "info", "normal");
+}
+
+.entryCardBreaking {
+  border-left-color: theme.color("states", "error", "base");
+}
+
+.entryCardDeprecation {
+  border-left-color: theme.color("states", "warning", "normal");
+}
+
+.entryCardDocs {
+  border-left-color: theme.color("muted");
 }
 
 .entryCardHighlighted {

@@ -14,6 +14,14 @@ const TYPE_BADGE_CLASS: Record<ChangelogType, string | undefined> = {
   fix: styles.typeBadgeFix,
 };
 
+const TYPE_ACCENT_CLASS: Record<ChangelogType, string | undefined> = {
+  "breaking-change": styles.entryCardBreaking,
+  deprecation: styles.entryCardDeprecation,
+  docs: styles.entryCardDocs,
+  feature: styles.entryCardFeature,
+  fix: styles.entryCardFix,
+};
+
 export const EntryCard = ({
   entry,
   isHighlighted,
@@ -24,6 +32,7 @@ export const EntryCard = ({
   <article
     className={clsx(
       styles.entryCard,
+      TYPE_ACCENT_CLASS[entry.type],
       isHighlighted && styles.entryCardHighlighted,
     )}
     id={entry.slug}
