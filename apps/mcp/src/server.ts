@@ -5,6 +5,7 @@ import type { Logger } from "pino";
 import { HistoryClient } from "./clients/history.js";
 import { RouterClient } from "./clients/router.js";
 import type { Config } from "./config.js";
+import { registerCodeModeTools } from "./codemode/registry.js";
 import { registerAllResources } from "./resources/index.js";
 import { registerAllTools } from "./tools/index.js";
 import { logSessionEnd } from "./utils/logger.js";
@@ -94,4 +95,51 @@ export function createCleanupHandler(
     await new Promise<void>((resolve) => logger.flush(() => resolve()));
     await server.close();
   };
+}
+
+/**
+ * Code Mode-only server — public endpoint. Registers only search and execute.
+ * No legacy tools, no resources. Token for get_latest_price injected server-side.
+ * Transport-agnostic — does not install process handlers or call process.exit().
+ */
+export function createServerCodeModeOnly(
+  config: Config,
+  logger: Logger,
+): {
+  server: McpServer;
+  sessionContext: SessionContext;
+} {
+  const historyClient = new HistoryClient(config, logger);
+  const routerClient = new RouterClient(config, logger);
+
+  const sessionContext: SessionContext = {
+    serverVersion: version,
+    sessionId: randomUUID(),
+    sessionStartTime: Date.now(),
+    toolCallCount: 0,
+  };
+
+  const server = new McpServer({
+    name: "@pyth-network/mcp-server-codemode",
+    version,
+  });
+
+  let executionCounter = 0;
+  registerCodeModeTools(
+    server,
+    {
+      config,
+      historyClient,
+      logger,
+      routerClient,
+      serverToken: config.pythProAccessToken,
+    },
+    {
+      executionId: () => `exec-${sessionContext.sessionId}-${++executionCounter}`,
+      onToolCall: () => { sessionContext.toolCallCount += 1; },
+      sessionId: sessionContext.sessionId,
+    },
+  );
+
+  return { server, sessionContext };
 }
