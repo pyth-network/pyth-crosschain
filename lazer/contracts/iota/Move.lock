@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "F57B9B3FDF96A29BDFF253DB42598344DC56DFB28D441E3BC7A910809B4A47D3"
+manifest_digest = "72C969217AD36DDD68718FBB974F5B64BC9975D50B3F61E0F4A30D130C3674BA"
 deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
 dependencies = [
   { id = "Iota", name = "Iota" },
@@ -44,7 +44,7 @@ dependencies = [
 
 [[move.package]]
 id = "wormhole"
-source = { local = "vendor/wormhole" }
+source = { local = "vendor/wormhole_testnet" }
 
 dependencies = [
   { id = "Iota", name = "Iota" },

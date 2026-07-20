@@ -1,13 +1,1 @@
-[package]
-name = "pyth_lazer"
-edition = "2024"
-
-[dependencies]
-wormhole = { local = "./vendor/wormhole" }
-
-[addresses]
-pyth_lazer = "0x0"
-
-[dev-addresses]
-# TODO: replace with proper address
-wormhole = "0xdead1"
+Move.testnet.toml

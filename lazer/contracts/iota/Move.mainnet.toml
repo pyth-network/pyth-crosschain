@@ -1,0 +1,11 @@
+[package]
+name = "pyth_lazer"
+edition = "2024"
+
+[dependencies]
+wormhole = { local = "./vendor/wormhole_mainnet" }
+
+[addresses]
+pyth_lazer = "0x0"
+# TODO: proper address
+wormhole = "0xdead1"
