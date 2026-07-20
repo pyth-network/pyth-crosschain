@@ -57,9 +57,6 @@ catalogs:
     '@heroicons/react':
       specifier: ^2.2.0
       version: 2.2.0
-    '@ltd/j-toml':
-      specifier: ^1.38.0
-      version: 1.38.0
     '@next/third-parties':
       specifier: ^16.1.1
       version: 16.1.1
