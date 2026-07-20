@@ -1,13 +1,16 @@
 "use client";
-// eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer as IsomorphicBuffer } from "buffer";
 
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { ColumnConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
-import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
+import {
+  getPriceFeedAccountForProgram,
+  PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
+} from "@pythnetwork/pyth-solana-receiver";
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
 import { useEffect, useState } from "react";
@@ -30,10 +33,17 @@ export const PriceFeedIdsCoreTable = () => {
   }, []);
 
   const columns: ColumnConfig<Col>[] = [
-    { id: "symbol", name: "Symbol", isRowHeader: true },
+    { id: "symbol", isRowHeader: true, name: "Symbol" },
     { id: "stableFeedId", name: "Stable Price Feed ID" },
     { id: "betaFeedId", name: "Beta Price Feed ID" },
-    { id: "solanaPriceFeedAccount", name: "Solana Price Feed Account" },
+    {
+      id: "solanaPriceFeedAccount",
+      name: "Current Solana Price Feed Account",
+    },
+    {
+      id: "upgradedSolanaPriceFeedAccount",
+      name: "Upgraded Solana Price Feed Account",
+    },
   ];
 
   const {
@@ -59,10 +69,11 @@ export const PriceFeedIdsCoreTable = () => {
           "stableFeedId",
           "betaFeedId",
           "solanaPriceFeedAccount",
+          "upgradedSolanaPriceFeedAccount",
         ],
       });
     },
-    { defaultSort: "symbol", defaultPageSize: 10 },
+    { defaultPageSize: 10, defaultSort: "symbol" },
   );
 
   if (state.type === StateType.Error) {
@@ -73,49 +84,55 @@ export const PriceFeedIdsCoreTable = () => {
     state.type === StateType.Loading || state.type === StateType.NotLoaded;
 
   const rows = paginatedItems.map((feed) => ({
-    id: feed.symbol,
     data: {
-      symbol: feed.symbol,
-      stableFeedId: feed.stableFeedId ? (
-        <CopyAddress maxLength={6} address={feed.stableFeedId} />
-      ) : undefined,
       betaFeedId: feed.betaFeedId ? (
-        <CopyAddress maxLength={6} address={feed.betaFeedId} />
+        <CopyAddress address={feed.betaFeedId} maxLength={6} />
       ) : undefined,
       solanaPriceFeedAccount: feed.solanaPriceFeedAccount ? (
-        <CopyAddress maxLength={6} address={feed.solanaPriceFeedAccount} />
+        <CopyAddress address={feed.solanaPriceFeedAccount} maxLength={6} />
+      ) : undefined,
+      stableFeedId: feed.stableFeedId ? (
+        <CopyAddress address={feed.stableFeedId} maxLength={6} />
+      ) : undefined,
+      symbol: feed.symbol,
+      upgradedSolanaPriceFeedAccount: feed.upgradedSolanaPriceFeedAccount ? (
+        <CopyAddress
+          address={feed.upgradedSolanaPriceFeedAccount}
+          maxLength={6}
+        />
       ) : undefined,
     },
+    id: feed.symbol,
   }));
 
   return (
     <>
       <SearchInput
+        className={styles.searchInput ?? ""}
         label="Search price feeds"
+        onChange={updateSearch}
         placeholder="Search by symbol or feed id"
         value={search}
-        onChange={updateSearch}
-        className={styles.searchInput ?? ""}
       />
 
       <Table<Col>
         {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
-        label="Price feed ids"
         columns={columns}
+        fill
+        label="Price feed ids"
         onSortChange={updateSortDescriptor}
+        rounded
         sortDescriptor={sortDescriptor}
         stickyHeader="top"
-        fill
-        rounded
       />
       <Paginator
-        numPages={numPages}
-        currentPage={page}
-        onPageChange={updatePage}
-        pageSize={pageSize}
-        onPageSizeChange={updatePageSize}
-        mkPageLink={mkPageLink}
         className={styles.paginator ?? ""}
+        currentPage={page}
+        mkPageLink={mkPageLink}
+        numPages={numPages}
+        onPageChange={updatePage}
+        onPageSizeChange={updatePageSize}
+        pageSize={pageSize}
       />
     </>
   );
@@ -139,13 +156,13 @@ enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
+  Failed: (error: unknown) => ({ error, type: StateType.Error as const }),
   Loaded: (feeds: Awaited<ReturnType<typeof getFeeds>>) => ({
-    type: StateType.Loaded as const,
     feeds,
+    type: StateType.Loaded as const,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -165,15 +182,22 @@ const getFeeds = async () => {
       stableFeedId?: string;
       betaFeedId?: string;
       solanaPriceFeedAccount?: string;
+      upgradedSolanaPriceFeedAccount?: string;
     }
   >();
 
   for (const feed of pythnet ?? []) {
+    const feedIdBuffer = IsomorphicBuffer.from(feed.id, "hex");
     feeds.set(feed.attributes.symbol, {
-      stableFeedId: `0x${feed.id}`,
       solanaPriceFeedAccount: getPriceFeedAccountForProgram(
         0,
-        IsomorphicBuffer.from(feed.id, "hex"),
+        feedIdBuffer,
+      ).toBase58(),
+      stableFeedId: `0x${feed.id}`,
+      upgradedSolanaPriceFeedAccount: getPriceFeedAccountForProgram(
+        0,
+        feedIdBuffer,
+        PRO_COMPATIBLE_PUSH_ORACLE_PROGRAM_ID,
       ).toBase58(),
     });
   }
@@ -203,9 +227,14 @@ const getFeedsFromHermes = async (
 
 const hermesSchema = z.array(
   z.object({
-    id: z.string(),
     attributes: z.object({ symbol: z.string() }),
+    id: z.string(),
   }),
 );
 
-type Col = "symbol" | "stableFeedId" | "betaFeedId" | "solanaPriceFeedAccount";
+type Col =
+  | "symbol"
+  | "stableFeedId"
+  | "betaFeedId"
+  | "solanaPriceFeedAccount"
+  | "upgradedSolanaPriceFeedAccount";
