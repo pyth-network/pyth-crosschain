@@ -1122,7 +1122,7 @@ export class IotaChain extends Chain {
 
   async buildPackage(path: string): Promise<MovePackage> {
     const activeEnv = await this.getCliEnv();
-    if (activeEnv !== "localnet" && `iota_sui_${activeEnv}` !== this.wormholeChainName) {
+    if (`iota_${activeEnv}` !== this.getId()) {
       throw new Error(
         `IOTA CLI is currently set to ${activeEnv}. Switch to correct environment and try again.`,
       );
