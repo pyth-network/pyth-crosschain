@@ -57,6 +57,11 @@ export const EntryCopyLink = ({
       <div className={clsx(styles.rock, isCopied && styles.rockCopied)}>
         {isCopied ? "Link copied" : relative}
       </div>
+      {/* The visible confirmation above is a plain div; mirror it into a live
+          region so screen readers announce the copy. */}
+      <span className={styles.srStatus} role="status">
+        {isCopied ? "Link copied" : ""}
+      </span>
     </>
   );
 };

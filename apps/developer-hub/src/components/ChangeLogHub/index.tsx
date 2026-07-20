@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-
 import { relativeDate } from "../../lib/changelog";
 import { getChangelogEntries } from "../../lib/changelog-data";
 import { getMDXComponents } from "../../mdx-components";
@@ -29,15 +27,14 @@ export const ChangeLogHub = () => {
     };
   });
 
-  // `useSearchParams` in the client tree needs a Suspense boundary so the
-  // page can still be statically prerendered.
+  // No Suspense boundary needed: the tab/filter components initialize to their
+  // defaults and reconcile URL state after mount, so the full feed renders
+  // straight into the static HTML rather than bailing out to client rendering.
   return (
-    <Suspense>
-      <HubTabs
-        marketDataDates={marketData.days.map((day) => day.date)}
-        marketDataPanel={<ChangeLogView log={marketData} />}
-        productUpdatesPanel={<ProductUpdates entries={entries} />}
-      />
-    </Suspense>
+    <HubTabs
+      marketDataDates={marketData.days.map((day) => day.date)}
+      marketDataPanel={<ChangeLogView log={marketData} />}
+      productUpdatesPanel={<ProductUpdates entries={entries} />}
+    />
   );
 };

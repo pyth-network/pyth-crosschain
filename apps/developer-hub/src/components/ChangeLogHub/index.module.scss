@@ -350,6 +350,10 @@
   color: theme.color("states", "success", "base");
 }
 
+.srStatus {
+  @include theme.sr-only;
+}
+
 // Tinted type tag.
 .kind {
   display: inline-flex;

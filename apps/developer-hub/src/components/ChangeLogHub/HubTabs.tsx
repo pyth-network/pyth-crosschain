@@ -1,9 +1,9 @@
 "use client";
 
 import clsx from "clsx";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { KeyboardEvent, ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
 import { SubscribeMenu } from "./SubscribeMenu";
@@ -27,14 +27,39 @@ export const HubTabs = ({
   marketDataPanel,
   marketDataDates,
 }: HubTabsProps) => {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const tab: Tab =
-    searchParams.get("tab") === "market-data" ? "market-data" : "updates";
+
+  // Tab defaults to "updates" so its panel renders during the static prerender;
+  // the URL-driven tab is reconciled from window.location after mount. Reading
+  // useSearchParams during render would bail the panels out of the static HTML.
+  const [tab, setTabState] = useState<Tab>("updates");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    // Legacy /price-feeds/changelog#<date> links redirect to /changelog with
+    // the hash intact; when the hash names a market-data day, land on the
+    // Market Data tab so the day view can scroll to it.
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash !== "" && marketDataDates.includes(hash)) {
+      setTabState("market-data");
+      if (params.get("tab") !== "market-data") {
+        params.set("tab", "market-data");
+        router.replace(
+          `${pathname}?${params.toString()}${window.location.hash}`,
+          { scroll: false },
+        );
+      }
+      return;
+    }
+    setTabState(
+      params.get("tab") === "market-data" ? "market-data" : "updates",
+    );
+  }, [marketDataDates, pathname, router]);
 
   const setTab = (next: Tab) => {
-    const params = new URLSearchParams(searchParams.toString());
+    setTabState(next);
+    const params = new URLSearchParams(window.location.search);
     if (next === "updates") {
       params.delete("tab");
     } else {
@@ -45,21 +70,6 @@ export const HubTabs = ({
       scroll: false,
     });
   };
-
-  // Legacy /price-feeds/changelog#<date> links redirect to /changelog with
-  // the hash intact; when the hash names a market-data day, land on the
-  // Market Data tab so the day view can scroll to it.
-  useEffect(() => {
-    const hash = window.location.hash.replace(/^#/, "");
-    if (hash === "" || !marketDataDates.includes(hash)) {
-      return;
-    }
-    const params = new URLSearchParams(window.location.search);
-    params.set("tab", "market-data");
-    router.replace(`${pathname}?${params.toString()}${window.location.hash}`, {
-      scroll: false,
-    });
-  }, [marketDataDates, pathname, router]);
 
   // Roving-tabindex keyboard support for the tablist (WAI-ARIA tabs pattern):
   // Arrow keys move between tabs (with automatic activation), Home/End jump to

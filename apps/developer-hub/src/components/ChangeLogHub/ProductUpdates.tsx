@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@pythnetwork/component-library/Button";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ChangelogEntryMeta, ChangelogFilters } from "../../lib/changelog";
 import {
@@ -40,14 +40,14 @@ export const ProductUpdates = ({
 }: {
   entries: ProductUpdatesEntry[];
 }) => {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const filters = useMemo(
-    () => readFilters(new URLSearchParams(searchParams.toString())),
-    [searchParams],
-  );
+  // Filter state defaults to "no filters" so the full feed renders during the
+  // static prerender; it is reconciled from the URL after mount. Reading the
+  // URL via useSearchParams during render would bail the whole feed out of the
+  // static HTML until hydration.
+  const [filters, setFilters] = useState<ChangelogFilters>(EMPTY_FILTERS);
 
   const hasFilters =
     filters.products.length > 0 ||
@@ -61,7 +61,8 @@ export const ProductUpdates = ({
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const writeFilters = (next: ChangelogFilters) => {
-    const params = new URLSearchParams(searchParams.toString());
+    setFilters(next);
+    const params = new URLSearchParams(window.location.search);
     const lists: [string, string[]][] = [
       ["product", next.products],
       ["type", next.types],
@@ -115,27 +116,31 @@ export const ProductUpdates = ({
     [entries, filters],
   );
 
-  // Deep-link support: opening #<entry-slug> scrolls to and highlights the
-  // entry. If the active filters would hide it, drop them — a shared link
-  // should always land on its entry.
   const [highlighted, setHighlighted] = useState<string | undefined>(undefined);
+  const scrolledFor = useRef<string | undefined>(undefined);
+
+  // Reconcile filters from the URL after mount, and handle deep links: opening
+  // #<entry-slug> reveals and highlights the entry, dropping any URL filters
+  // that would hide it so a shared link always lands on its target.
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlFilters = readFilters(params);
     const slug = window.location.hash.replace(/^#/, "");
     const index = entries.findIndex((entry) => entry.slug === slug);
     const entry = entries[index];
+
     if (slug === "" || entry === undefined) {
+      setFilters(urlFilters);
       return;
     }
-    if (
-      !matchesFilters(
-        entry,
-        readFilters(new URLSearchParams(window.location.search)),
-      )
-    ) {
-      const params = new URLSearchParams(window.location.search);
+    if (matchesFilters(entry, urlFilters)) {
+      setFilters(urlFilters);
+    } else {
+      // Drop the filters that hide the shared entry, in both state and the URL.
       params.delete("product");
       params.delete("type");
       params.delete("area");
+      setFilters(EMPTY_FILTERS);
       const qs = params.toString();
       router.replace(
         `${qs === "" ? pathname : `${pathname}?${qs}`}${window.location.hash}`,
@@ -144,21 +149,33 @@ export const ProductUpdates = ({
     }
     setLimit((l) => Math.max(l, index + 1));
     setHighlighted(slug);
-    const scrollTimer = window.setTimeout(() => {
-      document
-        .getElementById(slug)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
     const clearTimer = window.setTimeout(() => {
       setHighlighted(undefined);
     }, 2600);
     return () => {
-      window.clearTimeout(scrollTimer);
       window.clearTimeout(clearTimer);
     };
   }, [entries, pathname, router]);
 
   const visible = filtered.slice(0, limit);
+
+  // Scroll to a deep-linked entry once it actually mounts. Clearing filters or
+  // raising the pagination limit can reveal the target on a *later* render than
+  // the one that set `highlighted`, so gate on its presence in `visible` and
+  // scroll exactly once (guarded by the ref) rather than on a fixed timer that
+  // may fire before the card exists.
+  useEffect(() => {
+    if (highlighted === undefined || scrolledFor.current === highlighted) {
+      return;
+    }
+    if (!visible.some((entry) => entry.slug === highlighted)) {
+      return;
+    }
+    scrolledFor.current = highlighted;
+    document
+      .getElementById(highlighted)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [highlighted, visible]);
 
   return (
     <div>

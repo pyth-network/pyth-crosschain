@@ -8,11 +8,11 @@ import {
   CHANGELOG_PRODUCTS,
   feedUrl,
   PRODUCT_LABELS,
+  SITE,
   TYPE_LABELS,
 } from "../../../lib/changelog";
 import { getChangelogEntries } from "../../../lib/changelog-data";
 
-const SITE = "https://docs.pyth.network";
 const DESCRIPTION = "Product updates across Pyth Pro, Pyth Core, and Entropy.";
 
 // Minimal, fully server-renderable component map for RSS content. Fumadocs'
@@ -60,7 +60,9 @@ export const GET = async (request: Request): Promise<Response> => {
   // function — rendering entry bodies to HTML strings here is exactly what
   // renderToStaticMarkup is for.
   const { renderToStaticMarkup } = await import("react-dom/server");
-  const productParam = new URL(request.url).searchParams.get("product");
+  // A bare `?product=` yields "" (not null); treat it as absent so it serves
+  // the all-products feed rather than 400-ing, matching feedUrl's contract.
+  const productParam = new URL(request.url).searchParams.get("product") || null;
   if (
     productParam !== null &&
     !(CHANGELOG_PRODUCTS as readonly string[]).includes(productParam)

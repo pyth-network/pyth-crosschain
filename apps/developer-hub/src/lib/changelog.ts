@@ -119,9 +119,16 @@ export const fmtEntryDate = (iso: string): string => {
 // at build time. A changelog only needs approximate recency, so drift between
 // builds is fine.
 export const relativeDate = (iso: string, now: Date = new Date()): string => {
-  const days = Math.round(
-    (now.getTime() - new Date(`${iso}T00:00:00Z`).getTime()) / 86_400_000,
+  // Difference whole UTC calendar days: compare the entry's UTC midnight to
+  // *today's* UTC midnight, not to `now` itself. Using `now` directly would
+  // fold in the current time-of-day and tip the label over a day early for
+  // any render at/after 12:00 UTC.
+  const startOfToday = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
   );
+  const days = (startOfToday - Date.parse(`${iso}T00:00:00Z`)) / 86_400_000;
   if (days <= 0) {
     return "Today";
   }
