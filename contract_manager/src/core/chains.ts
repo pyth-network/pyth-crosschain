@@ -3,17 +3,12 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
-  access,
-  cp,
-  mkdtemp,
   readFile,
   readlink,
-  rm,
   symlink,
   unlink,
   writeFile,
 } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
@@ -21,8 +16,11 @@ import type { IotaTransactionBlockResponse } from "@iota/iota-sdk/client";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction as IotaTransaction } from "@iota/iota-sdk/transactions";
-import { IOTA_CLOCK_OBJECT_ID, NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
-import * as toml from "@ltd/j-toml";
+import {
+  IOTA_CLOCK_OBJECT_ID,
+  NANOS_PER_IOTA,
+  normalizeIotaAddress,
+} from "@iota/iota-sdk/utils";
 import * as suiBytecode from "@mysten/move-bytecode-template";
 import type { ClientWithCoreApi, SuiClientTypes } from "@mysten/sui/client";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
@@ -931,9 +929,6 @@ export type IotaWormholeInitConfig = {
   guardianSetSecondsToLive: number;
 };
 
-type TomlTable = ReturnType<typeof toml.parse>;
-type TomlReadonlyTable = Parameters<typeof toml.stringify>[0];
-
 /**
  * IOTA transport selector, kept symmetric with {@link SuiEndpointType} so the
  * chain config schema is consistent across the two Move chains. The IOTA SDK
@@ -1096,38 +1091,18 @@ export class IotaChain extends Chain {
     return stdout.trim();
   }
 
-  static async setPackageAddress(path: string, address: string) {
-    const manifestPath = nodePath.join(path, "Move.toml");
-    const manifest = toml.parse(await readFile(manifestPath, "utf8"), {
-      x: { literal: true, order: true, comment: true },
-    });
-
-    const packageName = (manifest.package as TomlTable | undefined)?.name?.toString();
-    if (!packageName) {
-      throw new Error("expected [package].name in Move.toml");
-    }
-    (manifest.package as TomlTable)["published-at"] = toml.basic(address);
-    (manifest.addresses as TomlTable)[packageName] = toml.basic(address);
-
-    if (manifest["dev-addresses"] && packageName in (manifest["dev-addresses"] as TomlTable)) {
-      delete (manifest["dev-addresses"] as TomlTable)[packageName];
-      if (Object.keys(manifest["dev-addresses"] as TomlTable).length === 0) {
-        delete manifest["dev-addresses"];
-      }
-    }
-
-    const updatedManifest = toml.stringify(manifest as TomlReadonlyTable, { newline: "\n" });
-    await writeFile(manifestPath, updatedManifest.trimStart());
-  }
-
-  async buildPackage(path: string): Promise<MovePackage> {
+  private async assertCliEnv(): Promise<string> {
     const activeEnv = await this.getCliEnv();
     if (`iota_${activeEnv}` !== this.getId()) {
       throw new Error(
         `IOTA CLI is currently set to ${activeEnv}. Switch to correct environment and try again.`,
       );
     }
+    return activeEnv;
+  }
 
+  async buildPackage(path: string): Promise<MovePackage> {
+    await this.assertCliEnv();
     const result = await execFileAsync(
       "iota",
       ["move", "build", "--dump-bytecode-as-base64", "--path", path],
@@ -1144,21 +1119,77 @@ export class IotaChain extends Chain {
   }
 
   async buildWormholePackage(path: string): Promise<MovePackage> {
-    const temporaryRoot = await mkdtemp(
-      nodePath.join(tmpdir(), "iota-wormhole-"),
+    await this.assertCliEnv();
+    const result = await execFileAsync(
+      "iota",
+      [
+        "move",
+        "build",
+        "--dump-bytecode-as-base64",
+        "--ignore-chain",
+        "--path",
+        path,
+      ],
+      { encoding: "utf8" },
     );
-    const temporaryPackage = nodePath.join(temporaryRoot, "wormhole");
     try {
-      await cp(path, temporaryPackage, {
-        filter: (source) =>
-          !["build", "Move.lock"].includes(nodePath.basename(source)),
-        recursive: true,
-      });
-      await IotaChain.setPackageAddress(temporaryPackage, "0x0");
-      return await this.buildPackage(temporaryPackage);
-    } finally {
-      await rm(temporaryRoot, { force: true, recursive: true });
+      return JSON.parse(result.stdout) as MovePackage;
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(`${result.stdout}\n${result.stderr}`);
+      }
+      throw error;
     }
+  }
+
+  async buildLazerPackage(
+    path: string,
+    wormholeStateId: string,
+  ): Promise<MovePackage> {
+    const { package: wormholePackageId } = await this.getStatePackageInfo(
+      this.getProvider(),
+      wormholeStateId,
+    );
+    const pkg = await this.buildPackage(path);
+    const expectedDependency = normalizeIotaAddress(wormholePackageId);
+    if (
+      !pkg.dependencies.some(
+        (dependency) => normalizeIotaAddress(dependency) === expectedDependency,
+      )
+    ) {
+      throw new Error(
+        `Built IOTA Lazer package does not depend on Wormhole package ${expectedDependency}`,
+      );
+    }
+    return pkg;
+  }
+
+  async recordPackagePublication(
+    path: string,
+    {
+      originalId,
+      latestId,
+      version,
+    }: { originalId: string; latestId: string; version: string },
+  ): Promise<void> {
+    const environment = await this.assertCliEnv();
+    const networkId = await this.getProvider().getChainIdentifier();
+    await execFileAsync("iota", [
+      "move",
+      "manage-package",
+      "--path",
+      path,
+      "--environment",
+      environment,
+      "--network-id",
+      networkId,
+      "--original-id",
+      originalId,
+      "--latest-id",
+      latestId,
+      "--version-number",
+      version,
+    ]);
   }
 
   async publishPackage(
@@ -1267,10 +1298,31 @@ export class IotaChain extends Chain {
     return await this.publishPackage(pkg, signer);
   }
 
-  async updateLazerMeta(packagePath: string, meta: MoveLazerMeta) {
-    const manifestFileName = `Move.${this.wormholeChainName.replace(/^iota_sui_/, "")}.toml`;
+  async updateLazerMeta(
+    packagePath: string,
+    meta: MoveLazerMeta,
+    lazerAddress: string,
+  ) {
+    const chainName = this.getId().replace(/^iota_/, "");
+    if (chainName === this.getId()) {
+      throw new Error(
+        `Cannot derive IOTA network name from chain ID '${this.getId()}'`,
+      );
+    }
+
+    const manifestFileName = `Move.${chainName}.toml`;
     const manifestPath = nodePath.resolve(packagePath, manifestFileName);
-    await access(manifestPath);
+    const manifestTemplatePath = nodePath.resolve(
+      packagePath,
+      "Move.toml.mustache",
+    );
+    const manifestTemplate = await readFile(manifestTemplatePath, "utf8");
+    const manifest = micromustache.render(manifestTemplate, {
+      chain_name: chainName,
+      lazer_address: lazerAddress,
+    });
+    await writeFile(manifestPath, manifest, { encoding: "utf8" });
+
     const activeManifestPath = nodePath.resolve(packagePath, "Move.toml");
     let activeManifest: string | undefined;
     try {
@@ -1287,14 +1339,14 @@ export class IotaChain extends Chain {
       await symlink(manifestFileName, activeManifestPath);
     }
 
-    const templatePath = nodePath.resolve(
+    const metaTemplatePath = nodePath.resolve(
       packagePath,
       "sources/meta.move.mustache",
     );
-    const template = await readFile(templatePath, { encoding: "utf8" });
-    const outputPath = nodePath.resolve(packagePath, "sources/meta.move");
-    const output = micromustache.render(template, meta);
-    await writeFile(outputPath, output, { encoding: "utf8" });
+    const metaTemplate = await readFile(metaTemplatePath, { encoding: "utf8" });
+    const metaPath = nodePath.resolve(packagePath, "sources/meta.move");
+    const metaSource = micromustache.render(metaTemplate, meta);
+    await writeFile(metaPath, metaSource, { encoding: "utf8" });
   }
 
   /** Inspects the compiled `pyth_lazer::meta` module metadata. */
@@ -1487,12 +1539,36 @@ export class IotaChain extends Chain {
     return { stateId };
   }
 
-  async getUpgradeCapPackage(upgradeCapId: string): Promise<string> {
+  async getPackageDependencyOriginalIds(packageId: string) {
+    const result = await this.getProvider().getObject({
+      id: packageId,
+      options: { showBcs: true },
+    });
+    if (!result.data?.bcs || result.data.bcs.dataType !== "package") {
+      throw new Error(`Could not find package BCS for ${packageId}`);
+    }
+    return new Set(
+      Object.keys(result.data.bcs.linkageTable).map((dependency) =>
+        normalizeIotaAddress(dependency),
+      ),
+    );
+  }
+
+  async getUpgradeCapInfo(
+    upgradeCapId: string,
+  ): Promise<{ package: string; version: string }> {
     const fields = await this.getObjectFields(this.getProvider(), upgradeCapId);
     if (typeof fields.package !== "string") {
       throw new TypeError("Could not find package string in UpgradeCap object");
     }
-    return fields.package;
+    if (typeof fields.version !== "string") {
+      throw new TypeError("Could not find version string in UpgradeCap object");
+    }
+    return { package: fields.package, version: fields.version };
+  }
+
+  async getUpgradeCapPackage(upgradeCapId: string): Promise<string> {
+    return (await this.getUpgradeCapInfo(upgradeCapId)).package;
   }
 
   async getStatePackageInfo(

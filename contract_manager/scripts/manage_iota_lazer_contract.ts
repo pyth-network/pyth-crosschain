@@ -1,9 +1,22 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
+import { execFile } from "node:child_process";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import type { Wallet } from "@coral-xyz/anchor";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { normalizeIotaAddress } from "@iota/iota-sdk/utils";
 import type { PythCluster } from "@pythnetwork/client";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import type { Options } from "yargs";
@@ -15,6 +28,307 @@ import { IotaChain } from "../src/core/chains";
 import { IotaLazerContract, IotaWormholeContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
+
+const DEFAULT_WORMHOLE_REPOSITORY =
+  "https://github.com/wormhole-foundation/wormhole.git";
+const DEFAULT_WORMHOLE_REF = "main";
+
+type CommandResult = {
+  stderr: string;
+  stdout: string;
+};
+
+type CommandRunner = (
+  command: string,
+  args: readonly string[],
+) => Promise<CommandResult>;
+
+const execFileAsync = promisify(execFile);
+
+const runCommand: CommandRunner = async (command, args) => {
+  const { stderr, stdout } = await execFileAsync(command, [...args], {
+    encoding: "utf8",
+  });
+  return { stderr, stdout };
+};
+
+function isMissingFile(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error as Error & { code: unknown }).code === "ENOENT"
+  );
+}
+
+async function readIfExists(file: string): Promise<Buffer | undefined> {
+  try {
+    return await readFile(file);
+  } catch (error) {
+    if (isMissingFile(error)) return undefined;
+    throw error;
+  }
+}
+
+async function rewriteMoveSources(directory: string): Promise<void> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await rewriteMoveSources(entryPath);
+    } else if (entry.isFile() && entry.name.endsWith(".move")) {
+      const source = await readFile(entryPath, "utf8");
+      const rewritten = source
+        .replaceAll(/\bSUI\b/g, "IOTA")
+        .replaceAll(/\bSui\b/g, "Iota")
+        .replaceAll(/\bsui\b/g, "iota");
+      if (source !== rewritten) await writeFile(entryPath, rewritten);
+    }
+  }
+}
+
+async function applyPatch(
+  runner: CommandRunner,
+  packageDirectory: string,
+  patchFile: string,
+  dryRun = false,
+): Promise<void> {
+  await runner("patch", [
+    ...(dryRun ? ["--dry-run"] : []),
+    "-p1",
+    "-d",
+    packageDirectory,
+    "-N",
+    "-s",
+    "-V",
+    "none",
+    "-i",
+    patchFile,
+  ]);
+}
+
+type WormholePublicationPatchOptions = {
+  packageDirectory: string;
+  patchesDirectory: string;
+  runCommand?: CommandRunner;
+};
+
+async function applyWormholePublicationPatch({
+  dryRun,
+  packageDirectory,
+  packageId,
+  patchesDirectory,
+  runCommand: runner = runCommand,
+}: WormholePublicationPatchOptions & {
+  dryRun: boolean;
+  packageId: string;
+}): Promise<void> {
+  const normalizedPackageId = normalizeIotaAddress(packageId, false, true);
+  const workDirectory = await mkdtemp(
+    path.join(path.dirname(packageDirectory), ".record-wormhole-"),
+  );
+
+  try {
+    const publicationPatchTemplate = await readFile(
+      path.join(patchesDirectory, "publication.patch.tmpl"),
+      "utf8",
+    );
+    const publicationPatchFile = path.join(workDirectory, "publication.patch");
+    await writeFile(
+      publicationPatchFile,
+      publicationPatchTemplate.replaceAll(
+        "__PACKAGE_ID__",
+        normalizedPackageId,
+      ),
+    );
+    await applyPatch(runner, packageDirectory, publicationPatchFile, dryRun);
+  } finally {
+    await rm(workDirectory, { force: true, recursive: true });
+  }
+}
+
+async function assertWormholePublicationPatchApplies(
+  options: WormholePublicationPatchOptions,
+): Promise<void> {
+  await applyWormholePublicationPatch({
+    ...options,
+    dryRun: true,
+    packageId: "0x0",
+  });
+}
+
+async function recordWormholePublication(
+  options: WormholePublicationPatchOptions & { packageId: string },
+): Promise<void> {
+  await applyWormholePublicationPatch({
+    ...options,
+    dryRun: false,
+  });
+}
+
+async function replaceDirectory(
+  stagedDirectory: string,
+  targetDirectory: string,
+  workDirectory: string,
+): Promise<void> {
+  const previousDirectory = path.join(workDirectory, "previous");
+  let hasPreviousDirectory = false;
+  try {
+    await rename(targetDirectory, previousDirectory);
+    hasPreviousDirectory = true;
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
+
+  try {
+    await rename(stagedDirectory, targetDirectory);
+  } catch (error) {
+    if (hasPreviousDirectory) await rename(previousDirectory, targetDirectory);
+    throw error;
+  }
+
+  if (hasPreviousDirectory) {
+    await rm(previousDirectory, { force: true, recursive: true });
+  }
+}
+
+function getIotaNetworkName(chainId: string): string {
+  const network = chainId.replace(/^iota_/, "");
+  if (network === chainId || network.length === 0) {
+    throw new Error(
+      `Cannot derive IOTA network name from chain ID '${chainId}'`,
+    );
+  }
+  return network;
+}
+
+async function vendorWormhole({
+  chainId,
+  onProgress = () => undefined,
+  patchesDirectory,
+  ref = DEFAULT_WORMHOLE_REF,
+  repository = DEFAULT_WORMHOLE_REPOSITORY,
+  runCommand: runner = runCommand,
+  targetDirectory,
+}: {
+  chainId: number;
+  onProgress?: (message: string) => void;
+  patchesDirectory: string;
+  ref?: string;
+  repository?: string;
+  runCommand?: CommandRunner;
+  targetDirectory: string;
+}): Promise<{ testOutput: string }> {
+  if (!Number.isInteger(chainId) || chainId < 0 || chainId > 65_535) {
+    throw new Error(
+      `Wormhole chain ID must fit in a u16 (0-65535), got ${chainId.toString()}`,
+    );
+  }
+
+  const targetParent = path.dirname(targetDirectory);
+  await mkdir(targetParent, { recursive: true });
+  const workDirectory = await mkdtemp(
+    path.join(targetParent, ".vendor-wormhole-"),
+  );
+  const repositoryDirectory = path.join(workDirectory, "repository");
+  const stagedDirectory = path.join(workDirectory, "package");
+  const existingLock = await readIfExists(
+    path.join(targetDirectory, "Move.lock"),
+  );
+
+  try {
+    onProgress(`Fetching ${repository} @ ${ref}`);
+    await runner("git", [
+      "clone",
+      "--quiet",
+      "--filter=blob:none",
+      "--no-checkout",
+      repository,
+      repositoryDirectory,
+    ]);
+    await runner("git", [
+      "-C",
+      repositoryDirectory,
+      "sparse-checkout",
+      "init",
+      "--cone",
+    ]);
+    await runner("git", [
+      "-C",
+      repositoryDirectory,
+      "sparse-checkout",
+      "set",
+      "sui/wormhole",
+    ]);
+    await runner("git", [
+      "-C",
+      repositoryDirectory,
+      "checkout",
+      "--quiet",
+      ref,
+    ]);
+
+    const sourceDirectory = path.join(repositoryDirectory, "sui", "wormhole");
+    await cp(sourceDirectory, stagedDirectory, { recursive: true });
+    await Promise.all([
+      rm(path.join(stagedDirectory, ".git"), {
+        force: true,
+        recursive: true,
+      }),
+      rm(path.join(stagedDirectory, "build"), {
+        force: true,
+        recursive: true,
+      }),
+      rm(path.join(stagedDirectory, "Move.lock"), { force: true }),
+      rm(path.join(stagedDirectory, "Published.toml"), { force: true }),
+    ]);
+    if (existingLock) {
+      await writeFile(path.join(stagedDirectory, "Move.lock"), existingLock);
+    }
+
+    onProgress("Rewriting Sui sources for IOTA");
+    await rewriteMoveSources(stagedDirectory);
+
+    const staticPatches = (await readdir(patchesDirectory))
+      .filter((file) => /^\d.*\.patch$/.test(file))
+      .sort();
+    if (staticPatches.length === 0) {
+      throw new Error(`No static patches found in ${patchesDirectory}`);
+    }
+    for (const patchFile of staticPatches) {
+      onProgress(`Applying ${patchFile}`);
+      await applyPatch(
+        runner,
+        stagedDirectory,
+        path.join(patchesDirectory, patchFile),
+      );
+    }
+
+    onProgress(`Applying Wormhole chain ID ${chainId.toString()}`);
+    const chainPatchTemplate = await readFile(
+      path.join(patchesDirectory, "chain-id.patch.tmpl"),
+      "utf8",
+    );
+    const chainPatchFile = path.join(workDirectory, "chain-id.patch");
+    await writeFile(
+      chainPatchFile,
+      chainPatchTemplate.replaceAll("__CHAIN_ID__", chainId.toString()),
+    );
+    await applyPatch(runner, stagedDirectory, chainPatchFile);
+
+    onProgress("Running vendored Wormhole tests");
+    const { stdout } = await runner("iota", [
+      "move",
+      "test",
+      "-p",
+      stagedDirectory,
+    ]);
+
+    await replaceDirectory(stagedDirectory, targetDirectory, workDirectory);
+    return { testOutput: stdout.trim() };
+  } finally {
+    await rm(workDirectory, { force: true, recursive: true });
+  }
+}
 
 function updateContractInStore(contract: IotaLazerContract) {
   DefaultStore.lazer_contracts[contract.getId()] = contract;
@@ -52,6 +366,10 @@ function connectMainnetVault(wallet: Wallet) {
 }
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const wormholePatchesDirectory = path.resolve(
+  scriptDir,
+  "../../lazer/contracts/iota/patches",
+);
 const WORMHOLE_GUARDIAN_SET_VAAS_URL =
   "https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/guardianSetVAAs.csv";
 
@@ -112,16 +430,41 @@ async function applyGuardianSetUpgrades(
 }
 
 function getWormholeVendorPath(chain: IotaChain) {
-  const network = chain.wormholeChainName.replace(/^iota_sui_/, "");
-  if (network === chain.wormholeChainName) {
-    throw new Error(
-      `Cannot derive Wormhole vendor from chain name '${chain.wormholeChainName}'`,
-    );
-  }
+  const network = getIotaNetworkName(chain.getId());
   return path.resolve(
     scriptDir,
     `../../lazer/contracts/iota/vendor/wormhole_${network}`,
   );
+}
+
+async function findWormholeContractForPackage(
+  chain: IotaChain,
+  packageId: string,
+): Promise<IotaWormholeContract> {
+  const dependencyIds = await chain.getPackageDependencyOriginalIds(packageId);
+  const candidates = Object.values(DefaultStore.wormhole_contracts).filter(
+    (contract): contract is IotaWormholeContract =>
+      contract instanceof IotaWormholeContract &&
+      contract.chain.getId() === chain.getId(),
+  );
+  const matches = (
+    await Promise.all(
+      candidates.map(async (contract) => ({
+        contract,
+        packageId: (
+          await chain.getStatePackageInfo(chain.getProvider(), contract.stateId)
+        ).package,
+      })),
+    )
+  ).filter(({ packageId: dependency }) =>
+    dependencyIds.has(normalizeIotaAddress(dependency)),
+  );
+  if (matches.length !== 1 || !matches[0]) {
+    throw new Error(
+      `Expected exactly one stored Wormhole contract linked by Lazer package ${packageId}, found ${matches.length.toString()}`,
+    );
+  }
+  return matches[0].contract;
 }
 
 const parser = yargs()
@@ -137,7 +480,7 @@ const parser = yargs()
         }
       },
       demandOption: true,
-      description: "chain name to deploy to (from IotaChains.json)",
+      description: "IOTA chain ID from IotaChains.json",
       type: "string",
     },
   })
@@ -202,18 +545,44 @@ const commonOptions = {
 } as const satisfies Record<string, Options>;
 
 parser.command(
+  "vendor-wormhole",
+  "vendor and test the upstream Wormhole contract for the selected IOTA chain",
+  (b) =>
+    b.options({
+      ref: {
+        default: DEFAULT_WORMHOLE_REF,
+        description: "Git ref of the Wormhole repository to vendor",
+        type: "string",
+      },
+      repo: {
+        default: DEFAULT_WORMHOLE_REPOSITORY,
+        description: "Git URL or local path of the Wormhole repository",
+        type: "string",
+      },
+    }),
+  async ({ chain, ref, repo }) => {
+    const targetDirectory = getWormholeVendorPath(chain);
+    console.info(
+      `Vendoring Wormhole for '${chain.getId()}' into '${targetDirectory}'`,
+    );
+    const { testOutput } = await vendorWormhole({
+      chainId: chain.getWormholeChainId(),
+      onProgress: (message) => console.info(`==> ${message}`),
+      patchesDirectory: wormholePatchesDirectory,
+      ref,
+      repository: repo,
+      targetDirectory,
+    });
+    if (testOutput.length > 0) console.info(testOutput);
+    console.info(`Vendored Wormhole is ready: ${targetDirectory}`);
+  },
+);
+
+parser.command(
   "deploy-wormhole",
   "build, publish, initialize and save the vendored Wormhole contract",
   (b) =>
     b.options({
-      "governance-chain": {
-        description: "override the Wormhole governance chain ID",
-        type: "number",
-      },
-      "governance-emitter": {
-        description: "override the 32-byte Wormhole governance emitter",
-        type: "string",
-      },
       "guardian-set-ttl": {
         description:
           "seconds a replaced guardian set remains valid for non-governance VAAs",
@@ -235,8 +604,6 @@ parser.command(
     }),
   async ({
     chain,
-    governanceEmitter,
-    governanceChain,
     guardianSetTtl,
     initialGuardian,
     privateKey,
@@ -245,9 +612,9 @@ parser.command(
     const { wormholeConfig: defaults } = getDefaultDeploymentConfig("stable");
     const initialGuardians = initialGuardian ?? defaults.initialGuardianSet;
     const config = {
-      governanceChain: governanceChain ?? defaults.governanceChainId,
+      governanceChain: defaults.governanceChainId,
       governanceEmitter: IotaChain.bytesFromHex(
-        governanceEmitter ?? defaults.governanceContract,
+        defaults.governanceContract,
         32,
         "Wormhole governance emitter",
       ),
@@ -277,6 +644,12 @@ parser.command(
       `  expired guardian-set TTL: ${config.guardianSetSecondsToLive.toString()} seconds`,
     );
 
+    console.info("Checking Wormhole publication patch...");
+    await assertWormholePublicationPatchApplies({
+      packageDirectory: packagePath,
+      patchesDirectory: wormholePatchesDirectory,
+    });
+
     console.info("Building vendored Wormhole package...");
     const pkg = await chain.buildWormholePackage(packagePath);
     console.info(`Package digest: ${Buffer.from(pkg.digest).toString("hex")}`);
@@ -297,6 +670,20 @@ parser.command(
     );
     await chain.waitForTransaction(published.digest);
 
+    console.info("Recording published Wormhole address in Move.toml...");
+    await recordWormholePublication({
+      packageDirectory: packagePath,
+      packageId: published.packageId,
+      patchesDirectory: wormholePatchesDirectory,
+    });
+
+    console.info("Recording published Wormhole address in Move.lock...");
+    await chain.recordPackagePublication(packagePath, {
+      latestId: published.packageId,
+      originalId: published.packageId,
+      version: "1",
+    });
+
     console.info("Initializing Wormhole shared state...");
     const initialized = await chain.initWormholeContract({
       config,
@@ -313,6 +700,11 @@ parser.command(
     );
     await chain.waitForTransaction(initialized.digest);
 
+    console.info("Saving Wormhole contract in store...");
+    const contract = new IotaWormholeContract(chain, initialized.stateId);
+    updateWormholeContractInStore(contract);
+    console.info(`Contract ID: ${contract.getId()}`);
+
     if (upgradeGuardianSet) {
       console.info(
         `Fetching canonical guardian-set VAAs from ${WORMHOLE_GUARDIAN_SET_VAAS_URL}`,
@@ -328,14 +720,6 @@ parser.command(
         guardianSetUpgrades,
       );
     }
-
-    console.info("Recording published Wormhole address in Move.toml...");
-    await IotaChain.setPackageAddress(packagePath, published.packageId);
-
-    console.info("Saving Wormhole contract in store...");
-    const contract = new IotaWormholeContract(chain, initialized.stateId);
-    updateWormholeContractInStore(contract);
-    console.info(`Contract ID: ${contract.getId()}`);
   },
 );
 
@@ -343,30 +727,37 @@ parser.command(
   "deploy",
   "deploy contract to a selected chain",
   (b) =>
-    b.options({
-      "governance-address": {
-        description: "address of the governance contract on its chain",
-        type: "string",
-      },
-      "governance-chain": {
-        default: CHAINS.solana,
-        demandOption: true,
-        description: "Wormhole chain ID where the governance is located",
-        type: "number",
-      },
-      path: commonOptions.packagePath,
-      "private-key": commonOptions["private-key"],
-      "upgrade-cap": {
-        description: "existing UpgradeCap ID to use instead of publishing",
-        type: "string",
-      },
-      wormhole: commonOptions.wormhole,
-    }),
+    b
+      .options({
+        "governance-address": {
+          description: "address of the governance contract on its chain",
+          type: "string",
+        },
+        "governance-chain": {
+          default: CHAINS.solana,
+          demandOption: true,
+          description: "Wormhole chain ID where the governance is located",
+          type: "number",
+        },
+        path: commonOptions.packagePath,
+        "private-key": commonOptions["private-key"],
+        "upgrade-cap": {
+          description: "existing UpgradeCap ID to resume initialization",
+          type: "string",
+        },
+        wormhole: { ...commonOptions.wormhole, demandOption: false },
+      })
+      .check(({ upgradeCap, wormhole }) => {
+        if ((upgradeCap === undefined) === (wormhole === undefined)) {
+          throw new Error("Specify exactly one of --wormhole or --upgrade-cap");
+        }
+        return true;
+      }),
   async ({
     chain,
     privateKey,
     path: packagePath,
-    wormhole: wormholeStateId,
+    wormhole: requestedWormholeStateId,
     governanceChain,
     governanceAddress,
     upgradeCap: existingUpgradeCapId,
@@ -383,33 +774,52 @@ parser.command(
       }
     }
 
-    console.info(`Checking Wormhole state ${wormholeStateId}...`);
-    const { package: wormholeId } = await chain.getStatePackageInfo(
-      chain.getProvider(),
-      wormholeStateId,
-    );
-    console.info(`Found Wormhole package: ${wormholeId}`);
-
     const signer = Ed25519Keypair.fromSecretKey(privateKey);
     console.info(`Deploying '${packagePath}' to '${chain.getId()}':`);
 
     let packageId: string;
     let upgradeCapId: string;
+    let wormholeStateId: string;
     if (existingUpgradeCapId) {
       console.info("Got UpgradeCap ID, finding existing package...");
-      packageId = await chain.getUpgradeCapPackage(existingUpgradeCapId);
+      const packageInfo = await chain.getUpgradeCapInfo(existingUpgradeCapId);
+      packageId = packageInfo.package;
       upgradeCapId = existingUpgradeCapId;
+      const wormholeContract = await findWormholeContractForPackage(
+        chain,
+        packageId,
+      );
+      wormholeStateId = wormholeContract.stateId;
+      await chain.updateLazerMeta(
+        packagePath,
+        {
+          receiver_chain_id: chain.getWormholeChainId(),
+          version: packageInfo.version,
+        },
+        packageId,
+      );
       console.info("Found package:");
     } else {
+      if (!requestedWormholeStateId) {
+        throw new Error("Missing Wormhole state ID");
+      }
+      wormholeStateId = requestedWormholeStateId;
+      console.info(`Checking Wormhole state ${wormholeStateId}...`);
+      const { package: wormholePackageId } = await chain.getStatePackageInfo(
+        chain.getProvider(),
+        wormholeStateId,
+      );
+      console.info(`Found Wormhole package: ${wormholePackageId}`);
+
       console.info("Initializing package metadata...");
       const meta = {
         receiver_chain_id: chain.getWormholeChainId(),
         version: "1",
       };
-      await chain.updateLazerMeta(packagePath, meta);
+      await chain.updateLazerMeta(packagePath, meta, "0x0");
 
       console.info("Building package...");
-      const pkg = await chain.buildPackage(packagePath);
+      const pkg = await chain.buildLazerPackage(packagePath, wormholeStateId);
       const digest = Buffer.from(pkg.digest).toString("hex");
       console.info(`Package digest: ${digest}`);
 
@@ -419,6 +829,7 @@ parser.command(
         meta,
         signer,
       ));
+      await chain.updateLazerMeta(packagePath, meta, packageId);
       console.info("Package published:");
     }
     console.info(`  package: ${chain.explorerUrl("object", packageId)}`);
@@ -453,14 +864,18 @@ parser.command(
       path: commonOptions.packagePath,
     }),
   async ({ chain, path: packagePath, contract }) => {
-    const { version } = await chain.getStatePackageInfo(
+    const { package: packageId, version } = await chain.getStatePackageInfo(
       chain.getProvider(),
       contract.stateId,
     );
-    await chain.updateLazerMeta(packagePath, {
-      receiver_chain_id: chain.getWormholeChainId(),
-      version,
-    });
+    await chain.updateLazerMeta(
+      packagePath,
+      {
+        receiver_chain_id: chain.getWormholeChainId(),
+        version,
+      },
+      packageId,
+    );
   },
 );
 
@@ -491,7 +906,10 @@ parser.command(
     const meta = await contract.fetchAndBumpMeta(chain, packagePath);
 
     console.info("Building package update...");
-    const pkg = await chain.buildPackage(packagePath);
+    const pkg = await chain.buildLazerPackage(
+      packagePath,
+      contract.wormholeStateId,
+    );
     const digest = Buffer.from(pkg.digest).toString("hex");
     console.info(`Package update digest: ${digest}`);
 
@@ -593,7 +1011,10 @@ parser.command(
     const { version } = await contract.fetchAndBumpMeta(chain, packagePath);
 
     console.info("Building package update...");
-    const pkg = await chain.buildPackage(packagePath);
+    const pkg = await chain.buildLazerPackage(
+      packagePath,
+      contract.wormholeStateId,
+    );
     const digest = Buffer.from(pkg.digest).toString("hex");
     console.info(`Package update digest: ${digest}`);
 

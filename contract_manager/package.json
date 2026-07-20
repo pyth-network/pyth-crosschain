@@ -7,7 +7,6 @@
     "@cosmjs/stargate": "^0.32.3",
     "@injectivelabs/networks": "^1.14.6",
     "@iota/iota-sdk": "^1.11.0",
-    "@ltd/j-toml": "catalog:",
     "@mysten/move-bytecode-template": "^0.3.0",
     "@mysten/sui": "^2.7.0",
     "@pythnetwork/client": "catalog:",

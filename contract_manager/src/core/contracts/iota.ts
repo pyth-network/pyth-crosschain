@@ -660,7 +660,10 @@ export class IotaLazerContract extends Storable {
         );
         console_.info("  (will fail if not on correct source version)");
         const meta = await this.fetchAndBumpMeta(chain, packagePath);
-        const pkg = await chain.buildPackage(packagePath);
+        const pkg = await chain.buildLazerPackage(
+          packagePath,
+          this.wormholeStateId,
+        );
         const digest = await chain.upgradeLazerContract({
           meta,
           pkg,
@@ -736,7 +739,7 @@ export class IotaLazerContract extends Storable {
     chain: IotaChain,
     packagePath: string,
   ): Promise<MoveLazerMeta> {
-    const { version } = await chain.getStatePackageInfo(
+    const { package: packageId, version } = await chain.getStatePackageInfo(
       chain.getProvider(),
       this.stateId,
     );
@@ -744,7 +747,7 @@ export class IotaLazerContract extends Storable {
       receiver_chain_id: chain.getWormholeChainId(),
       version: (BigInt(version) + 1n).toString(),
     };
-    await chain.updateLazerMeta(packagePath, meta);
+    await chain.updateLazerMeta(packagePath, meta, packageId);
     return meta;
   }
 }

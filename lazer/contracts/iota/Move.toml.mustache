@@ -6,7 +6,7 @@ name = "pyth_lazer"
 edition = "2024"
 
 [dependencies]
-wormhole = { local = "./vendor/wormhole_mainnet" }
+wormhole = { local = "./vendor/wormhole_{{chain_name}}" }
 
 [addresses]
-pyth_lazer = "0x0"
+pyth_lazer = "{{lazer_address}}"
