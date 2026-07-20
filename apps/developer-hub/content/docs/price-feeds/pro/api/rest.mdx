@@ -18,7 +18,9 @@ https://pyth-lazer.dourolabs.app
   `Authorization: Bearer <PRO_API_KEY>`; API-key auth is supported today, so add
   the header now to stay forward-compatible. Do not expose the key in browser
   apps — keep it server-side. See [Authentication](#authentication) for the
-  header format and frontend-safe guidance, and the
+  header format, and
+  [Frontend Authentication](/price-feeds/pro/frontend-auth) for browser apps,
+  and the
   [announcement](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808)
   for details.
 </Callout>
@@ -77,10 +79,9 @@ curl -X POST -H "Authorization: Bearer $PRO_API_KEY" \
 
 **Do not embed your Pro API key in frontend or browser applications.** The key
 must stay server-side. Route requests through your own backend, which injects
-the `Authorization` header before forwarding to this API. A client-safe JWT
-authentication option is available for teams that do not want to run their own
-proxy. See the [History API](/price-feeds/pro/api/history#jwt-authentication)
-for details.
+the `Authorization` header before forwarding to this API. For browser/frontend
+apps that cannot hold a secret, see
+[Frontend Authentication](/price-feeds/pro/frontend-auth).
 
 See [Acquire an API Key](/price-feeds/pro/acquire-api-key) to obtain a key.
 
