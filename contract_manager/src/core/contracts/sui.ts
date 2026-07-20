@@ -617,7 +617,7 @@ export class SuiLazerContract extends Storable {
         throw new Error("'seen_sequence' bigger than JS integer");
       }
 
-      since = Number(seen_sequence);
+      since = Number(seen_sequence + 1n);
     }
 
     for (let i = since; ; i++) {

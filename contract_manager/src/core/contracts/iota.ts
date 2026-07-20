@@ -622,7 +622,7 @@ export class IotaLazerContract extends Storable {
       if (seen_sequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
         throw new Error("'seen_sequence' bigger than JS integer");
       }
-      since = Number(seen_sequence);
+      since = Number(seen_sequence + 1n);
     }
 
     for (let sequence = since; ; sequence++) {
