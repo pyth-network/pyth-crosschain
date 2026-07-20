@@ -1,0 +1,150 @@
+---
+title: Frontend Authentication
+description: Use short-lived tokens to call Pyth Pro from browser apps
+slug: /price-feeds/pro/frontend-auth
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Overview
+
+Browser bundles are public — anything shipped to the client can be extracted, so a long-lived `PRO_API_KEY` must never appear in frontend code. Pyth Pro solves this by having your backend mint a short-lived JWT via `POST /auth/token`, then handing that JWT to the browser to present as `Authorization: Bearer <JWT>` against the History, REST, and WebSocket APIs.
+
+## When to use which pattern
+
+| Client                | Pattern                                                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Server-to-server      | Present the long-lived Pro API key directly as `Authorization: Bearer <PRO_API_KEY>`. Simplest — prefer this whenever the client can hold a secret. |
+| Browser / frontend    | Your backend calls `POST /auth/token` with the Pro API key and returns the short-lived JWT to the browser, which presents it as `Authorization: Bearer <JWT>`. |
+
+<Callout type="warning">
+  **Never expose the long-lived `PRO_API_KEY` in browser code, mobile apps, or
+  any distributed binary.** Anything in the client bundle is public — treat it
+  as leaked the moment you ship it.
+</Callout>
+
+## The flow
+
+1. The browser client asks its own backend for a Pyth JWT.
+2. The backend calls `POST https://pyth.dourolabs.app/auth/token` with `Authorization: Bearer <PRO_API_KEY>`.
+3. The backend returns the JWT (and its `expires_at`) to the browser.
+4. The browser presents the JWT as `Authorization: Bearer <JWT>` on every Pyth Pro API request until it nears expiry, then repeats step 1.
+
+## `POST /auth/token` reference
+
+- **Base URL**: `https://pyth.dourolabs.app`
+- **Method / path**: `POST /auth/token`
+- **Auth**: `Authorization: Bearer <PRO_API_KEY>` (the long-lived Pro API key)
+- **Content-Type**: `application/json`
+
+**Request body** (optional)
+
+| Field         | Type              | Required | Description                                                                                                    |
+| ------------- | ----------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `ttl_seconds` | `integer \| null` | No       | Requested token lifetime in seconds. Server-clamped to its maximum; omit (or send `null`) to receive the max.  |
+
+**Response 200**
+
+| Field          | Type     | Description                                                              |
+| -------------- | -------- | ------------------------------------------------------------------------ |
+| `access_token` | `string` | Short-lived JWT to present as `Authorization: Bearer <access_token>`.    |
+| `expires_at`   | `string` | RFC 3339 datetime at which the token expires.                            |
+| `token_type`   | `string` | Always `"Bearer"`.                                                       |
+
+**Errors**
+
+| Status | Meaning                                              |
+| ------ | ---------------------------------------------------- |
+| `401`  | Missing or malformed API key.                        |
+| `404`  | Token broker is not enabled on this deployment.      |
+
+## Backend example
+
+Expose a token-minting endpoint from your own backend. Never expose the raw `PRO_API_KEY` to the browser — only the short-lived JWT.
+
+```ts copy
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+// Requires PRO_API_KEY in the backend's environment.
+// Protect this route with your own auth — see "Protecting the token endpoint" below.
+app.post("/pyth-token", async (req, res) => {
+  const body: Record<string, unknown> = {};
+  if (typeof req.body?.ttl_seconds === "number") {
+    // Optional pass-through: let callers request a shorter TTL than the server default.
+    body.ttl_seconds = req.body.ttl_seconds;
+  }
+
+  const response = await fetch("https://pyth.dourolabs.app/auth/token", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.PRO_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    res.status(response.status).send(await response.text());
+    return;
+  }
+
+  // { access_token, expires_at, token_type }
+  res.json(await response.json());
+});
+```
+
+<Callout type="warning">
+  **Do not cache the minted JWT server-side across users** unless your design
+  has an explicit per-user scope story. A JWT is bearer-equivalent: whoever
+  holds it can spend your quota until it expires.
+</Callout>
+
+## Frontend example
+
+Cache the JWT in memory, refresh it a few seconds before `expires_at`, and present it as a bearer token against any Pyth Pro API.
+
+```ts copy
+type PythToken = { access_token: string; expires_at: string };
+
+let cached: PythToken | undefined;
+
+async function getPythToken(): Promise<string> {
+  // Refresh 30s before the token actually expires so an in-flight request
+  // doesn't race the expiry.
+  const safetyMarginMs = 30_000;
+  if (cached && Date.parse(cached.expires_at) - Date.now() > safetyMarginMs) {
+    return cached.access_token;
+  }
+
+  const response = await fetch("/pyth-token", { method: "POST" });
+  if (!response.ok) throw new Error(`Failed to mint Pyth token: ${response.status}`);
+  cached = (await response.json()) as PythToken;
+  return cached.access_token;
+}
+
+// Call the History API from the browser using the short-lived JWT.
+const jwt = await getPythToken();
+const priceRes = await fetch(
+  "https://pyth.dourolabs.app/v1/fixed_rate@200ms/price?ids=1&timestamp=1704067200000000",
+  { headers: { Authorization: `Bearer ${jwt}` } },
+);
+```
+
+The same JWT authenticates the REST API on `https://pyth-lazer.dourolabs.app` and the WebSocket `subscribe` message — anywhere the docs say `Authorization: Bearer <PRO_API_KEY>`, a browser client can pass the JWT instead.
+
+## Protecting the token endpoint
+
+- **Require your own auth on `POST /pyth-token`** (session cookie, first-party JWT, etc.). Anyone who can hit this endpoint can spend your Pro API-key quota.
+- **Rate-limit it.** A bare token endpoint is an easy target for abuse.
+- **Quota accounting**: API usage from JWTs counts against the minting API key's quota.
+
+## Related
+
+- [Acquire an API Key](/price-feeds/pro/acquire-api-key)
+- [REST API](/price-feeds/pro/api/rest)
+- [History API](/price-feeds/pro/api/history)
+- [WebSocket API](/price-feeds/pro/api/websocket)
+- [Auth API Swagger UI](https://pyth.dourolabs.app/docs/?urls.primaryName=Auth+API#/Auth/mint-token)

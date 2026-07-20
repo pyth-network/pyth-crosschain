@@ -47,10 +47,14 @@ curl -H "Authorization: Bearer $PRO_API_KEY" \
 ```
 
 Browser and frontend apps must not embed the key — route requests through your
-own backend, which injects the header before forwarding. See the Authentication
-sections on the [History](/price-feeds/pro/api/history#authentication) and
+own backend, which injects the header before forwarding, or use the short-lived
+JWT flow described in
+[Frontend Authentication](/price-feeds/pro/frontend-auth). See the
+Authentication sections on the
+[History](/price-feeds/pro/api/history#authentication) and
 [REST](/price-feeds/pro/api/rest#authentication) API pages for full details.
 
 ## Next Steps
 
-After acquiring your API key, you can proceed to [subscribe to price feeds](./subscribe-to-prices) using the Pyth Pro websocket API.
+- [Subscribe to price feeds](./subscribe-to-prices) using the Pyth Pro websocket API.
+- For browser/frontend apps, follow [Frontend Authentication](/price-feeds/pro/frontend-auth) to hand out short-lived JWTs instead of embedding the API key.
