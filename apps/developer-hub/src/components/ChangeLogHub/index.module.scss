@@ -1,115 +1,79 @@
 @use "@pythnetwork/component-library/theme";
 
+// Cross-product changelog UI. Editorial layout matched to the Pyth Lazer
+// (@pythnetwork/components) design language: Inter (the docs shell font),
+// violet accent, tinted semantic type tags, a faceted checkbox filter, and a
+// solid primary Subscribe. Rendered inside fumadocs' DocsBody, below the
+// shell-provided <h1>Changelog</h1> + description.
+
 .root {
   display: flex;
   flex-direction: column;
+  max-width: 54rem;
 }
 
-// ─── Hero bar (tabs + subscribe) ─────────────────────────────────────────
+// ─── Controls row: tabs + subscribe ──────────────────────────────────────
 
 .heroBar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: theme.spacing(3.5);
-  padding-bottom: theme.spacing(4.5);
+  gap: theme.spacing(4);
+  padding-bottom: theme.spacing(4);
   border-bottom: 1px solid theme.color("border");
-  margin-bottom: theme.spacing(8);
+  margin-bottom: theme.spacing(7);
 }
 
 .tabToggle {
   display: inline-flex;
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("base");
-  padding: 2px;
-  background: theme.color("background", "card-secondary");
+  align-items: baseline;
+  gap: theme.spacing(7);
 }
 
 .tabButton {
-  font-family: theme.font-family("monospace");
-  font-size: 0.6875rem;
-  font-weight: theme.font-weight("semibold");
-  padding: theme.spacing(1.25) theme.spacing(3);
+  appearance: none;
+  padding: 0;
   border: 0;
-  background: transparent;
+  background: none;
+  font-size: 1.35rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("tight");
+  line-height: 1.1;
   color: theme.color("muted");
-  border-radius: theme.border-radius("sm");
-  letter-spacing: theme.letter-spacing("wider");
-  text-transform: uppercase;
   cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
+  transition: color 120ms ease;
 
   &:focus-visible {
     outline: 2px solid theme.color("highlight");
-    outline-offset: 1px;
+    outline-offset: 4px;
+    border-radius: theme.border-radius("sm");
   }
 
   &:hover:not(.tabButtonActive) {
-    color: theme.color("foreground");
+    color: theme.color("paragraph");
   }
 }
 
 .tabButtonActive {
-  background: theme.color("background", "secondary");
   color: theme.color("foreground");
   cursor: default;
 }
 
-// ─── Subscribe menu ──────────────────────────────────────────────────────
+// ─── Subscribe ───────────────────────────────────────────────────────────
 
 .subscribe {
-  position: relative;
   margin-left: auto;
 }
 
-.subscribeButton {
-  display: inline-flex;
-  align-items: center;
-  gap: theme.spacing(1.5);
-  padding: theme.spacing(1.5) theme.spacing(3);
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("base");
-  background: transparent;
-  color: theme.color("paragraph");
-  font-size: 0.75rem;
-  font-weight: theme.font-weight("medium");
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    color 120ms ease;
-
-  &:hover {
-    border-color: theme.color("muted");
-    color: theme.color("foreground");
-  }
-
-  &:focus-visible {
-    outline: 2px solid theme.color("highlight");
-    outline-offset: 1px;
-  }
-}
-
 .subscribeMenu {
-  position: absolute;
-  top: calc(100% + theme.spacing(1.5));
-  right: 0;
-  z-index: 10;
   display: flex;
   flex-direction: column;
-  min-width: 11rem;
-  padding: theme.spacing(1.5);
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("md");
-  background: theme.color("background", "primary");
-  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+  min-width: 12rem;
 }
 
 .subscribeHeading {
-  padding: theme.spacing(1) theme.spacing(2.5);
-  font-family: theme.font-family("monospace");
-  font-size: 0.625rem;
+  padding: theme.spacing(1) theme.spacing(2);
+  font-size: 0.68rem;
   font-weight: theme.font-weight("semibold");
   letter-spacing: theme.letter-spacing("widest");
   text-transform: uppercase;
@@ -117,136 +81,60 @@
 }
 
 .subscribeItem {
-  padding: theme.spacing(1.5) theme.spacing(2.5);
-  border-radius: theme.border-radius("sm");
-  font-size: 0.8125rem;
-  color: theme.color("paragraph");
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: theme.spacing(3);
+  padding: theme.spacing(2) theme.spacing(2.5);
+  border-radius: theme.border-radius("md");
+  font-size: 0.875rem;
+  color: theme.color("foreground");
   text-decoration: none;
 
   &:hover {
     background: theme.color("background", "secondary");
-    color: theme.color("foreground");
   }
 
   &:focus-visible {
-    background: theme.color("background", "secondary");
-    color: theme.color("foreground");
     outline: 2px solid theme.color("highlight");
-    outline-offset: -1px;
+    outline-offset: -2px;
   }
 }
 
-// ─── Filter bar ──────────────────────────────────────────────────────────
-
-.filterBar {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(2.5);
-  margin-bottom: theme.spacing(8);
+.subscribeItem .feedTag {
+  font-size: 0.7rem;
+  letter-spacing: theme.letter-spacing("wide");
+  color: theme.color("muted");
 }
 
-.filterGroup {
+// ─── Faceted checklist filter ────────────────────────────────────────────
+
+.filters {
+  margin-bottom: theme.spacing(6);
+}
+
+.filtersHead {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
-  gap: theme.spacing(2.5);
+  justify-content: space-between;
+  gap: theme.spacing(3);
+  margin-bottom: theme.spacing(3.5);
 }
 
-.filterGroupLabel {
-  flex: 0 0 3.5rem;
-  font-family: theme.font-family("monospace");
-  font-size: 0.625rem;
+.filtersLabel {
+  font-size: 0.7rem;
   font-weight: theme.font-weight("semibold");
   letter-spacing: theme.letter-spacing("widest");
   text-transform: uppercase;
   color: theme.color("muted");
 }
 
-.filterChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: theme.spacing(1.5);
-}
-
-.filterChip {
-  display: inline-flex;
-  align-items: center;
-  gap: theme.spacing(1.75);
-  padding: theme.spacing(1) theme.spacing(2.5);
-  border-radius: theme.border-radius("base");
-  border: 1px solid theme.color("border");
-  background: transparent;
-  color: theme.color("paragraph");
-  font-size: 0.75rem;
-  font-weight: theme.font-weight("medium");
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease,
-    color 120ms ease;
-
-  &:hover {
-    border-color: theme.color("muted");
-    color: theme.color("foreground");
-  }
-
-  &:focus-visible {
-    outline: 2px solid theme.color("highlight");
-    outline-offset: 1px;
-  }
-}
-
-.filterChipActive {
-  border-color: theme.color("foreground");
-  background: theme.color("background", "secondary");
-  color: theme.color("foreground");
-}
-
-.filterChipEmpty {
-  opacity: 0.45;
-}
-
-.filterDot {
-  width: 6px;
-  height: 6px;
-  border-radius: theme.border-radius("full");
-  flex-shrink: 0;
-  background: theme.color("muted");
-}
-
-.typeDotFeature {
-  background: theme.color("states", "success", "base");
-}
-
-.typeDotFix {
-  background: theme.color("states", "info", "normal");
-}
-
-.typeDotBreaking {
-  background: theme.color("states", "error", "base");
-}
-
-.typeDotDeprecation {
-  background: theme.color("states", "warning", "normal");
-}
-
-.typeDotDocs {
-  background: theme.color("muted");
-}
-
-.filterCount {
-  font-family: theme.font-family("monospace");
-  font-size: 0.625rem;
-  color: theme.color("muted");
-}
-
-.filterClear {
-  align-self: flex-start;
+.clear {
+  appearance: none;
   padding: 0;
   border: 0;
-  background: transparent;
-  font-family: theme.font-family("monospace");
-  font-size: 0.6875rem;
+  background: none;
+  font-size: 0.8rem;
   color: theme.color("link", "primary");
   cursor: pointer;
 
@@ -257,98 +145,117 @@
   &:focus-visible {
     outline: 2px solid theme.color("highlight");
     outline-offset: 2px;
+    border-radius: theme.border-radius("sm");
   }
 }
 
-// ─── Date groups ─────────────────────────────────────────────────────────
+// Mobile-only disclosure that collapses the facets.
+.filtersToggle {
+  display: none;
+}
 
-.groups {
-  --rail-gutter: #{theme.spacing(7)};
+.facets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: theme.spacing(1) theme.spacing(8);
+  padding-bottom: theme.spacing(6);
+  border-bottom: 1px solid theme.color("border");
+}
 
+.facetHead {
+  margin: 0 0 theme.spacing(2);
+  font-size: 0.7rem;
+  font-weight: theme.font-weight("semibold");
+  letter-spacing: theme.letter-spacing("widest");
+  text-transform: uppercase;
+  color: theme.color("muted");
+}
+
+.frow {
   display: flex;
-  flex-direction: column;
-}
-
-// Each date group hangs off a continuous vertical timeline rail (the
-// group's left border); the date marker sits as a node on the rail.
-.group {
-  position: relative;
-  padding-left: var(--rail-gutter);
-  padding-bottom: theme.spacing(11);
-  border-left: 2px solid theme.color("border");
-
-  &:last-child {
-    padding-bottom: 0;
-  }
-}
-
-.groupDate {
-  position: relative;
-  margin: 0 0 theme.spacing(4);
-  font-size: 1.5rem;
-  font-weight: theme.font-weight("medium");
-  letter-spacing: theme.letter-spacing("tight");
-  line-height: 1.1;
-  color: theme.color("foreground");
-
-  // Timeline node, centered on the rail and on the date text.
-  &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: calc(-1px - var(--rail-gutter));
-    width: 11px;
-    height: 11px;
-    transform: translate(-50%, -50%);
-    border: 2px solid theme.color("muted");
-    border-radius: theme.border-radius("full");
-    background: theme.color("background", "primary");
-  }
-}
-
-.groupEntries {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(4);
-}
-
-@media (width <= 48rem) {
-  .groups {
-    --rail-gutter: #{theme.spacing(5)};
-  }
-}
-
-// ─── Entry card ──────────────────────────────────────────────────────────
-
-.entryCard {
-  scroll-margin-top: theme.spacing(8);
-  padding: theme.spacing(5) theme.spacing(6);
-  border: 1px solid theme.color("border");
-
-  // A type-keyed accent runs down the left edge (color set per-type below).
-  border-left: 3px solid theme.color("border");
+  align-items: center;
+  gap: theme.spacing(2.5);
+  margin: 0 theme.spacing(-1.5);
+  padding: theme.spacing(1.5) theme.spacing(1.5);
+  border: 0;
   border-radius: theme.border-radius("md");
-  background: theme.color("background", "card-secondary");
+  background: none;
+  font-size: 0.9rem;
+  color: theme.color("foreground");
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: theme.color("background", "secondary");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: -2px;
+  }
 }
 
-.entryCardFeature {
-  border-left-color: theme.color("states", "success", "base");
+.frowEmpty {
+  color: theme.color("muted");
 }
 
-.entryCardFix {
-  border-left-color: theme.color("states", "info", "normal");
+.box {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1.5px solid theme.color("border");
+  border-radius: theme.border-radius("sm");
+  color: transparent;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
-.entryCardBreaking {
-  border-left-color: theme.color("states", "error", "base");
+.frowChecked .box {
+  border-color: theme.color("highlight");
+  background: theme.color("highlight");
+  color: theme.color("background", "primary");
 }
 
-.entryCardDeprecation {
-  border-left-color: theme.color("states", "warning", "normal");
+.boxIcon {
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
-.entryCardDocs {
-  border-left-color: theme.color("muted");
+.frowLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frowCount {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: theme.color("muted");
+}
+
+// ─── Feed ────────────────────────────────────────────────────────────────
+
+.feed {
+  display: flex;
+  flex-direction: column;
+}
+
+.rel {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: theme.spacing(8);
+  padding: theme.spacing(9) 0;
+  border-top: 1px solid theme.color("border");
+  scroll-margin-top: theme.spacing(8);
+
+  &:first-child {
+    border-top: 0;
+  }
 }
 
 .entryCardHighlighted {
@@ -359,12 +266,12 @@
   0%,
   12% {
     background: theme.color("background", "secondary");
-    box-shadow: 0 0 0 theme.spacing(2) theme.color("background", "secondary");
+    box-shadow: 0 0 0 theme.spacing(3) theme.color("background", "secondary");
   }
 
   100% {
-    background: theme.color("background", "card-secondary");
-    box-shadow: 0 0 0 theme.spacing(2) transparent;
+    background: transparent;
+    box-shadow: 0 0 0 theme.spacing(3) transparent;
   }
 }
 
@@ -375,80 +282,160 @@
   }
 }
 
-.entryHeader {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: theme.spacing(2);
-  margin-bottom: theme.spacing(3);
+.aside {
+  padding-top: theme.spacing(0.5);
 }
 
-.typeBadge {
+// Date-as-permalink.
+.datelink {
   display: inline-flex;
   align-items: center;
-  padding: theme.spacing(0.75) theme.spacing(2.5);
-  border-radius: theme.border-radius("full");
-  font-family: theme.font-family("monospace");
-  font-size: 0.625rem;
+  gap: theme.spacing(1.5);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: theme.color("foreground");
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 3px;
+    border-radius: theme.border-radius("sm");
+  }
+
+  &:hover {
+    color: theme.color("link", "primary");
+  }
+}
+
+.dt {
+  font-size: 0.9rem;
+  font-weight: theme.font-weight("medium");
+  font-variant-numeric: tabular-nums;
+}
+
+.chain {
+  width: 12px;
+  height: 12px;
+  color: theme.color("muted");
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease;
+}
+
+.datelinkCopied {
+  color: theme.color("states", "success", "base");
+}
+
+.datelinkCopied .chain {
+  opacity: 1;
+  color: theme.color("states", "success", "base");
+}
+
+.rel:hover .chain,
+.datelink:hover .chain {
+  opacity: 1;
+}
+
+.rock {
+  margin-top: theme.spacing(0.5);
+  font-size: 0.8rem;
+  color: theme.color("muted");
+  transition: color 120ms ease;
+}
+
+.rockCopied {
+  color: theme.color("states", "success", "base");
+}
+
+// Tinted type tag.
+.kind {
+  display: inline-flex;
+  align-items: center;
+  margin-top: theme.spacing(3);
+  padding: theme.spacing(0.75) theme.spacing(1.75);
+  border-radius: theme.border-radius("sm");
+  font-size: 0.66rem;
   font-weight: theme.font-weight("semibold");
   letter-spacing: theme.letter-spacing("wider");
   text-transform: uppercase;
   line-height: 1;
 }
 
-.typeBadgeFeature {
+.kindFeature {
   background: theme.color("states", "success", "background");
   color: theme.color("states", "success", "base");
 }
 
-.typeBadgeFix {
+.kindFix {
   background: theme.color("states", "info", "background");
   color: theme.color("states", "info", "normal");
 }
 
-.typeBadgeBreaking {
+.kindBreaking {
   background: theme.color("states", "error", "background");
   color: theme.color("states", "error", "base");
 }
 
-.typeBadgeDeprecation {
+.kindDeprecation {
   background: theme.color("states", "warning", "background");
   color: theme.color("states", "warning", "normal");
 }
 
-.typeBadgeDocs {
+.kindDocs {
   background: theme.color("background", "secondary");
   color: theme.color("muted");
 }
 
-.productTag {
-  font-size: 0.75rem;
-  font-weight: theme.font-weight("medium");
-  color: theme.color("foreground");
+.who {
+  margin-top: theme.spacing(2.5);
+  font-size: 0.82rem;
+  color: theme.color("paragraph");
 }
 
-.areaTag {
-  font-size: 0.75rem;
+.whoDot {
+  margin: 0 theme.spacing(1.5);
   color: theme.color("muted");
+}
 
-  &::before {
-    content: "·";
-    margin-inline-end: theme.spacing(2);
-  }
+// Entry body column.
+.content {
+  min-width: 0;
 }
 
 .entryTitle {
-  margin: 0 0 theme.spacing(2.5);
-  font-size: 1.25rem;
-  font-weight: theme.font-weight("medium");
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: theme.font-weight("semibold");
   letter-spacing: theme.letter-spacing("tight");
-  line-height: 1.3;
+  line-height: 1.32;
   color: theme.color("foreground");
+  text-wrap: balance;
+}
+
+.entryTitle a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: theme.color("muted");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 3px;
+    border-radius: theme.border-radius("sm");
+  }
 }
 
 .entryBody {
+  margin-top: theme.spacing(2.5);
   font-size: 0.9375rem;
-  line-height: 1.65;
+  line-height: 1.62;
   color: theme.color("paragraph");
 
   & > :first-child {
@@ -460,101 +447,87 @@
   }
 }
 
-// ─── Copy link ───────────────────────────────────────────────────────────
-
-.copyLink {
-  display: inline-flex;
-  align-items: center;
-  gap: theme.spacing(1.5);
-  margin-left: auto;
-  padding: theme.spacing(1) theme.spacing(2);
-  border: none;
-  border-radius: theme.border-radius("sm");
-  background: transparent;
-  font-family: theme.font-family("monospace");
-  font-size: 0.6875rem;
-  color: theme.color("muted");
-  cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity 0.12s ease,
-    color 0.12s ease,
-    background 0.12s ease;
-
-  &:hover {
-    background: theme.color("background", "secondary");
-    color: theme.color("foreground");
-  }
-
-  &:focus-visible {
-    opacity: 1;
-    outline: 2px solid theme.color("highlight");
-    outline-offset: 1px;
-  }
-}
-
-.entryCard:hover .copyLink {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .copyLink {
-    opacity: 1;
-  }
-}
-
-.copyLinkActive {
-  opacity: 1;
-  color: theme.color("states", "success", "base");
-
-  &:hover {
-    color: theme.color("states", "success", "base");
-  }
-}
-
-.copyLinkIcon {
-  flex-shrink: 0;
-}
-
-.copyLinkText {
-  line-height: 1;
-}
-
 // ─── Empty state / load more ─────────────────────────────────────────────
 
-.emptyState {
-  padding: theme.spacing(6) theme.spacing(7);
-  background: theme.color("background", "secondary");
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("md");
-  font-style: italic;
-  color: theme.color("muted");
+.empty {
+  padding: theme.spacing(12) 0;
+}
+
+.emptyText {
+  margin: 0 0 theme.spacing(3.5);
   font-size: 1rem;
-  line-height: 1.55;
+  color: theme.color("muted");
 }
 
 .loadMore {
-  display: block;
-  margin: theme.spacing(8) auto 0;
-  padding: theme.spacing(2) theme.spacing(5);
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("base");
-  background: transparent;
-  color: theme.color("paragraph");
-  font-size: 0.8125rem;
-  font-weight: theme.font-weight("medium");
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    color 120ms ease;
+  display: flex;
+  justify-content: center;
+  margin-top: theme.spacing(8);
+}
 
-  &:hover {
-    border-color: theme.color("muted");
-    color: theme.color("foreground");
+// ─── Responsive ──────────────────────────────────────────────────────────
+
+@media (width <= 48rem) {
+  .filtersToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: theme.spacing(2);
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0.7rem;
+    font-weight: theme.font-weight("semibold");
+    letter-spacing: theme.letter-spacing("widest");
+    text-transform: uppercase;
+    color: theme.color("muted");
+    cursor: pointer;
   }
 
-  &:focus-visible {
-    outline: 2px solid theme.color("highlight");
-    outline-offset: 1px;
+  .filtersToggleCaret {
+    width: 12px;
+    height: 12px;
+    transition: transform 150ms ease;
+  }
+
+  .filtersToggleOpen .filtersToggleCaret {
+    transform: rotate(180deg);
+  }
+
+  .facets {
+    grid-template-columns: 1fr 1fr;
+    gap: theme.spacing(0.5) theme.spacing(6);
+  }
+
+  .facetsCollapsed {
+    display: none;
+  }
+
+  .rel {
+    grid-template-columns: 1fr;
+    gap: theme.spacing(2.5);
+    padding: theme.spacing(7) 0;
+  }
+
+  .aside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: theme.spacing(2) theme.spacing(3.5);
+    padding-top: 0;
+  }
+
+  .rock:not(.rockCopied) {
+    display: none;
+  }
+
+  .kind,
+  .who {
+    margin-top: 0;
+  }
+}
+
+@media (width <= 26rem) {
+  .facets {
+    grid-template-columns: 1fr;
   }
 }

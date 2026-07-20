@@ -11,8 +11,8 @@ import { SubscribeMenu } from "./SubscribeMenu";
 type Tab = "updates" | "market-data";
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: "updates", label: "Product Updates" },
-  { key: "market-data", label: "Market Data" },
+  { key: "updates", label: "Product updates" },
+  { key: "market-data", label: "Market data" },
 ];
 
 type HubTabsProps = {

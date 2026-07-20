@@ -93,6 +93,10 @@ export const filterEntries = <T extends ChangelogEntryMeta>(
 
 export const CHANGELOG_PATH = "/changelog";
 
+// Canonical origin, used to build shareable permalinks that resolve to the
+// docs site regardless of where the copy happens.
+export const SITE = "https://docs.pyth.network";
+
 // RSS feed URLs. No `product` → the all-products feed.
 export const feedUrl = (product?: ChangelogProduct): string =>
   product === undefined
@@ -107,7 +111,26 @@ export const fmtEntryDate = (iso: string): string => {
     day: "numeric",
     month: "long",
     timeZone: "UTC",
-    weekday: "long",
     year: "numeric",
   });
+};
+
+// Coarse relative label ("Yesterday", "3 days ago", "2 months ago"), computed
+// at build time. A changelog only needs approximate recency, so drift between
+// builds is fine.
+export const relativeDate = (iso: string, now: Date = new Date()): string => {
+  const days = Math.round(
+    (now.getTime() - new Date(`${iso}T00:00:00Z`).getTime()) / 86_400_000,
+  );
+  if (days <= 0) {
+    return "Today";
+  }
+  if (days === 1) {
+    return "Yesterday";
+  }
+  if (days < 30) {
+    return `${days.toString()} days ago`;
+  }
+  const months = Math.round(days / 30);
+  return months === 1 ? "1 month ago" : `${months.toString()} months ago`;
 };

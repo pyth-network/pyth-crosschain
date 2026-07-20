@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@pythnetwork/component-library/Button";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +12,6 @@ import {
   CHANGELOG_TYPES,
   EMPTY_FILTERS,
   filterEntries,
-  fmtEntryDate,
   matchesFilters,
 } from "../../lib/changelog";
 import { EntryCard } from "./EntryCard";
@@ -23,6 +23,8 @@ import styles from "./index.module.scss";
 export type ProductUpdatesEntry = ChangelogEntryMeta & {
   /** The entry's MDX body, rendered on the server and passed as a node. */
   body: ReactNode;
+  /** Coarse relative-time label ("3 days ago"), computed at build time. */
+  relative: string;
 };
 
 const PAGE_SIZE = 20;
@@ -156,16 +158,7 @@ export const ProductUpdates = ({
     };
   }, [entries, pathname, router]);
 
-  // Group the visible window by date, preserving the date-desc ordering.
-  const groups: [string, ProductUpdatesEntry[]][] = [];
-  for (const entry of filtered.slice(0, limit)) {
-    const last = groups.at(-1);
-    if (last && last[0] === entry.date) {
-      last[1].push(entry);
-    } else {
-      groups.push([entry.date, [entry]]);
-    }
-  }
+  const visible = filtered.slice(0, limit);
 
   return (
     <div>
@@ -178,40 +171,42 @@ export const ProductUpdates = ({
       />
 
       {filtered.length === 0 ? (
-        <div className={styles.emptyState}>
-          {entries.length === 0
-            ? "No product updates yet — check back soon."
-            : "No entries match these filters."}
+        <div className={styles.empty}>
+          <p className={styles.emptyText}>
+            {entries.length === 0
+              ? "No product updates yet — check back soon."
+              : "No updates match these filters."}
+          </p>
+          {entries.length > 0 && (
+            <Button onPress={clearFilters} size="sm" variant="ghost">
+              Clear all filters
+            </Button>
+          )}
         </div>
       ) : (
-        <div className={styles.groups}>
-          {groups.map(([date, dayEntries]) => (
-            <section className={styles.group} key={date}>
-              <h2 className={styles.groupDate}>{fmtEntryDate(date)}</h2>
-              <div className={styles.groupEntries}>
-                {dayEntries.map((entry) => (
-                  <EntryCard
-                    entry={entry}
-                    isHighlighted={entry.slug === highlighted}
-                    key={entry.slug}
-                  />
-                ))}
-              </div>
-            </section>
+        <div className={styles.feed}>
+          {visible.map((entry) => (
+            <EntryCard
+              entry={entry}
+              isHighlighted={entry.slug === highlighted}
+              key={entry.slug}
+            />
           ))}
         </div>
       )}
 
       {filtered.length > limit && (
-        <button
-          className={styles.loadMore}
-          onClick={() => {
-            setLimit((l) => l + PAGE_SIZE);
-          }}
-          type="button"
-        >
-          Load more ({(filtered.length - limit).toString()} remaining)
-        </button>
+        <div className={styles.loadMore}>
+          <Button
+            onPress={() => {
+              setLimit((l) => l + PAGE_SIZE);
+            }}
+            size="sm"
+            variant="outline"
+          >
+            Load more ({(filtered.length - limit).toString()} remaining)
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -1,25 +1,22 @@
 import clsx from "clsx";
 
 import type { ChangelogType } from "../../lib/changelog";
-import { AREA_LABELS, PRODUCT_LABELS, TYPE_LABELS } from "../../lib/changelog";
+import {
+  AREA_LABELS,
+  fmtEntryDate,
+  PRODUCT_LABELS,
+  TYPE_LABELS,
+} from "../../lib/changelog";
 import { EntryCopyLink } from "./EntryCopyLink";
 import styles from "./index.module.scss";
 import type { ProductUpdatesEntry } from "./ProductUpdates";
 
-const TYPE_BADGE_CLASS: Record<ChangelogType, string | undefined> = {
-  "breaking-change": styles.typeBadgeBreaking,
-  deprecation: styles.typeBadgeDeprecation,
-  docs: styles.typeBadgeDocs,
-  feature: styles.typeBadgeFeature,
-  fix: styles.typeBadgeFix,
-};
-
-const TYPE_ACCENT_CLASS: Record<ChangelogType, string | undefined> = {
-  "breaking-change": styles.entryCardBreaking,
-  deprecation: styles.entryCardDeprecation,
-  docs: styles.entryCardDocs,
-  feature: styles.entryCardFeature,
-  fix: styles.entryCardFix,
+const KIND_CLASS: Record<ChangelogType, string | undefined> = {
+  "breaking-change": styles.kindBreaking,
+  deprecation: styles.kindDeprecation,
+  docs: styles.kindDocs,
+  feature: styles.kindFeature,
+  fix: styles.kindFix,
 };
 
 export const EntryCard = ({
@@ -30,24 +27,33 @@ export const EntryCard = ({
   isHighlighted: boolean;
 }) => (
   <article
-    className={clsx(
-      styles.entryCard,
-      TYPE_ACCENT_CLASS[entry.type],
-      isHighlighted && styles.entryCardHighlighted,
-    )}
+    className={clsx(styles.rel, isHighlighted && styles.entryCardHighlighted)}
     id={entry.slug}
   >
-    <header className={styles.entryHeader}>
-      <span className={clsx(styles.typeBadge, TYPE_BADGE_CLASS[entry.type])}>
+    <div className={styles.aside}>
+      <EntryCopyLink
+        date={fmtEntryDate(entry.date)}
+        relative={entry.relative}
+        slug={entry.slug}
+      />
+      <span className={clsx(styles.kind, KIND_CLASS[entry.type])}>
         {TYPE_LABELS[entry.type]}
       </span>
-      <span className={styles.productTag}>{PRODUCT_LABELS[entry.product]}</span>
-      {entry.area !== undefined && (
-        <span className={styles.areaTag}>{AREA_LABELS[entry.area]}</span>
-      )}
-      <EntryCopyLink slug={entry.slug} title={entry.title} />
-    </header>
-    <h3 className={styles.entryTitle}>{entry.title}</h3>
-    <div className={styles.entryBody}>{entry.body}</div>
+      <div className={styles.who}>
+        {PRODUCT_LABELS[entry.product]}
+        {entry.area !== undefined && (
+          <>
+            <span className={styles.whoDot}>·</span>
+            {AREA_LABELS[entry.area]}
+          </>
+        )}
+      </div>
+    </div>
+    <div className={styles.content}>
+      <h3 className={styles.entryTitle}>
+        <a href={`#${entry.slug}`}>{entry.title}</a>
+      </h3>
+      <div className={styles.entryBody}>{entry.body}</div>
+    </div>
   </article>
 );

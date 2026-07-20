@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { relativeDate } from "../../lib/changelog";
 import { getChangelogEntries } from "../../lib/changelog-data";
 import { getMDXComponents } from "../../mdx-components";
 import { ChangeLogView } from "../ChangeLog/ChangeLogView";
@@ -21,6 +22,7 @@ export const ChangeLogHub = () => {
       body: <Body components={getMDXComponents()} />,
       date: entry.date,
       product: entry.product,
+      relative: relativeDate(entry.date),
       slug: entry.slug,
       title: entry.title,
       type: entry.type,
