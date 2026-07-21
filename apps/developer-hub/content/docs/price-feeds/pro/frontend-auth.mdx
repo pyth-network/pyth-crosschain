@@ -6,9 +6,7 @@ slug: /price-feeds/pro/frontend-auth
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-## Overview
-
-Browser bundles are public: anyone can read the code you ship to the client, so a long-lived `PRO_API_KEY` must never appear in frontend code. Instead, your backend mints a short-lived JWT through `POST /auth/token` and hands it to the browser, which sends it to the History, REST, and WebSocket APIs in place of the API key.
+This guide explains how to call Pyth Pro from browser and frontend apps without shipping your `PRO_API_KEY` to users. Anything in a browser bundle is public, so your backend mints a short-lived JWT with `POST /auth/token` and hands it to the browser. The browser then sends that token to the History, REST, and WebSocket APIs in place of the API key.
 
 ## When to use which pattern
 
