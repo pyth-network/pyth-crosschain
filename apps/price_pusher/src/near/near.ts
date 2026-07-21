@@ -116,7 +116,7 @@ export class NearPricePusher implements IPricePusher {
           true,
         );
         if (is_success) {
-          this.logger.info(
+          this.logger.debug(
             { hash: outcome.transaction.hash },
             "updatePriceFeeds successful.",
           );

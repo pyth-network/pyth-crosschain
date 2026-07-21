@@ -4,6 +4,9 @@
     "isolatedModules": false,
     "noEmit": false
   },
-  "exclude": ["dist/", "node_modules/"],
+  "exclude": [
+    "dist/",
+    "node_modules/"
+  ],
   "extends": "./tsconfig.json"
 }

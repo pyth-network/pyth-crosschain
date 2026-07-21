@@ -101,7 +101,7 @@ export class Controller {
         }
       }
       if (pushThresholdMet) {
-        this.logger.info(
+        this.logger.debug(
           {
             priceIds: pricesToPush.map((priceConfig) => ({
               alias: priceConfig.alias,
@@ -160,7 +160,7 @@ export class Controller {
           }
         }
       } else {
-        this.logger.info("None of the checks were triggered. No push needed.");
+        this.logger.debug("None of the checks were triggered. No push needed.");
       }
 
       // Liveness heartbeat: mark this loop iteration as completed.

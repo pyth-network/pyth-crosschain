@@ -97,7 +97,7 @@ export async function sendTransactionsJito(
 
       try {
         await currentClient.sendBundle(bundle);
-        logger.info(
+        logger.debug(
           { clientIndex: i, totalAttempts },
           `Successfully sent bundle to Jito client after ${totalAttempts.toString()} attempts`,
         );

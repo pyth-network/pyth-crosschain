@@ -129,7 +129,7 @@ export class FuelPricePusher implements IPricePusher {
         })
         .call();
 
-      this.logger.info(
+      this.logger.debug(
         { transactionId: result?.transactionId },
         "updatePriceFeed successful",
       );

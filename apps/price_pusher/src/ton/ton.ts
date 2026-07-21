@@ -120,7 +120,7 @@ export class TonPricePusher implements IPricePusher {
         );
       }
 
-      this.logger.info("updatePriceFeed successful");
+      this.logger.debug("updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
     }

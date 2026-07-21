@@ -194,7 +194,7 @@ export class AptosPricePusher implements IPricePusher {
         timeoutSecs: 10,
       });
 
-      this.logger.info({ hash: txHash }, `Transaction confirmed.`);
+      this.logger.debug({ hash: txHash }, `Transaction confirmed.`);
     } catch (error) {
       this.logger.error(
         { err: error, hash: txHash },
