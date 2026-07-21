@@ -1,0 +1,10 @@
+# Placeholder / example URLs in code snippets
+YOUR_
+REPLACE_
+example\.com
+
+# Blockchain explorer links with placeholder addresses
+0xYOUR
+
+# RPC / API endpoints that require auth or may rate-limit
+https://hermes\.pyth\.network/docs/openapi\.json
