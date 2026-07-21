@@ -238,6 +238,13 @@ const config = {
         source: "/price-feeds/lazer/:path*",
       },
 
+      // Proxy (Beta) API page removed - replaced by the Frontend Authentication guide
+      {
+        destination: "/price-feeds/pro/frontend-auth",
+        permanent: true,
+        source: "/price-feeds/pro/api/proxy",
+      },
+
       {
         destination: "/price-feeds/core/:path",
         permanent: true,
