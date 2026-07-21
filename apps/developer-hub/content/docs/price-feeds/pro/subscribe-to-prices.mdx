@@ -45,6 +45,12 @@ Use the API key to authenticate the websocket connection by passing it as an `Au
   and is a violation of our terms of service.
 </Callout>
 
+A browser can't set the `Authorization` header on a WebSocket. For frontend apps, mint a short-lived JWT (see [Frontend Authentication](/price-feeds/pro/frontend-auth)) and pass it as the `ACCESS_TOKEN` query parameter on the connection URL instead:
+
+```
+wss://pyth-lazer-0.dourolabs.app/v1/stream?ACCESS_TOKEN=<JWT>
+```
+
   </Step>
   <Step>
   ### 2. Configure subscription parameters

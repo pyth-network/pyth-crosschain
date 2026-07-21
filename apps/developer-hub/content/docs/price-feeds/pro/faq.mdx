@@ -144,6 +144,10 @@ Starting **July 24, 2026**, `POST /v1/price` will require the `Authorization: Be
 
 Do not embed your Pro access token in browsers or frontend apps. Route requests through your own backend that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. Or have your backend hand out short-lived JWTs the browser can use directly — see [Frontend Authentication](/price-feeds/pro/frontend-auth).
 
+#### Q. What happened to the Proxy API?
+
+The beta Proxy service (`pyth-lazer-proxy-{1,2,3}`) gave unauthenticated frontend access and is no longer available. For browser and frontend apps, mint a short-lived JWT and use it over the WebSocket, REST, and History APIs instead — see [Frontend Authentication](/price-feeds/pro/frontend-auth). The raw API key stays server-side.
+
 ## Access Tokens & Permissions
 
 #### Q. How are access tokens permissioned for different asset classes?
