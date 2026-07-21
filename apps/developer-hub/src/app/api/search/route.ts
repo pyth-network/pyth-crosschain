@@ -1,30 +1,16 @@
 import type { AdvancedIndex } from "fumadocs-core/search/server";
 import { createSearchAPI } from "fumadocs-core/search/server";
-import { z } from "zod";
 
-import { SYMBOLS_API_URL } from "../../../config/pyth-pro-public";
+import type { HermesFeed, LazerFeed, PriceFeedsSnapshot } from "./feed-schemas";
+import priceFeeds from "../../../generated/price-feeds.json";
 import { source } from "../../../lib/source";
 
-// Define schemas for type safety
-const hermesSchema = z.array(
-  z.object({
-    id: z.string(),
-    attributes: z.object({ symbol: z.string() }),
-  }),
-);
+// Feed lists are fetched at build time by
+// `scripts/generate-price-feeds-snapshot.ts` and imported statically here, so
+// the search route performs zero external HTTP calls at runtime.
+const snapshot = priceFeeds as PriceFeedsSnapshot;
 
-const lazerSchema = z.array(
-  z.object({
-    symbol: z.string(),
-    name: z.string(),
-    pyth_lazer_id: z.number(),
-    description: z.string(),
-  }),
-);
-
-function toAdvancedIndex(
-  fee: z.infer<typeof hermesSchema>[number],
-): AdvancedIndex {
+function hermesToAdvancedIndex(fee: HermesFeed): AdvancedIndex {
   return {
     title: `${fee.attributes.symbol} (Core)`,
     description: `Price Feed ID: ${fee.id}`,
@@ -41,60 +27,27 @@ function toAdvancedIndex(
   };
 }
 
-async function getHermesFeeds(): Promise<AdvancedIndex[]> {
-  try {
-    const results = await Promise.all(
-      ["https://hermes.pyth.network", "https://hermes-beta.pyth.network"].map(
-        async (url): Promise<AdvancedIndex[]> => {
-          const hermesResult = await fetch(new URL("/v2/price_feeds", url), {
-            next: { revalidate: 3600 },
-          });
-          const parsed = hermesSchema.safeParse(await hermesResult.json());
-          return parsed.success
-            ? parsed.data.map((feed) => toAdvancedIndex(feed))
-            : [];
-        },
-      ),
-    );
-
-    return results.flat();
-  } catch (error: unknown) {
-    throw new Error("Failed to fetch Hermes feeds", { cause: error });
-  }
-}
-
-async function getLazerFeeds(): Promise<AdvancedIndex[]> {
-  try {
-    const res = await fetch(SYMBOLS_API_URL, { next: { revalidate: 3600 } });
-    const parsed = lazerSchema.safeParse(await res.json());
-
-    if (!parsed.success) {
-      return [];
-    }
-
-    return parsed.data.map((feed) => ({
-      title: `${feed.name} (Pro)`,
-      description: `${feed.symbol} - ${feed.description} (ID: ${String(feed.pyth_lazer_id)})`,
-      url: `/price-feeds/pro/price-feed-ids?search=${feed.symbol}`,
-      id: `lazer-${String(feed.pyth_lazer_id)}`,
-      tag: "price-feed-pro",
-      structuredData: {
-        headings: [],
-        contents: [
-          { heading: "Symbol", content: feed.symbol },
-          { heading: "Name", content: feed.name },
-          { heading: "Description", content: feed.description },
-          { heading: "ID", content: String(feed.pyth_lazer_id) },
-        ],
-      },
-    }));
-  } catch (error: unknown) {
-    throw new Error("Failed to fetch Lazer feeds", { cause: error });
-  }
+function lazerToAdvancedIndex(feed: LazerFeed): AdvancedIndex {
+  return {
+    title: `${feed.name} (Pro)`,
+    description: `${feed.symbol} - ${feed.description} (ID: ${String(feed.pyth_lazer_id)})`,
+    url: `/price-feeds/pro/price-feed-ids?search=${feed.symbol}`,
+    id: `lazer-${String(feed.pyth_lazer_id)}`,
+    tag: "price-feed-pro",
+    structuredData: {
+      headings: [],
+      contents: [
+        { heading: "Symbol", content: feed.symbol },
+        { heading: "Name", content: feed.name },
+        { heading: "Description", content: feed.description },
+        { heading: "ID", content: String(feed.pyth_lazer_id) },
+      ],
+    },
+  };
 }
 
 export const { GET } = createSearchAPI("advanced", {
-  indexes: async () => {
+  indexes: () => {
     const staticPages = source.getPages().map((page) => ({
       title: page.data.title,
       description: page.data.description,
@@ -103,13 +56,11 @@ export const { GET } = createSearchAPI("advanced", {
       structuredData: page.data.structuredData,
     })) as AdvancedIndex[];
 
-    // Added these two functions to get the price feeds from the Hermes and Pro APIs
-    const [hermesFeeds, lazerFeeds] = await Promise.all([
-      getHermesFeeds(),
-      getLazerFeeds(),
-    ]);
+    const hermesFeeds = [...snapshot.hermes, ...snapshot.hermesBeta].map(
+      (feed) => hermesToAdvancedIndex(feed),
+    );
+    const lazerFeeds = snapshot.lazer.map((feed) => lazerToAdvancedIndex(feed));
 
-    // Combine the static pages, Hermes feeds, and Pro feeds
     return [...staticPages, ...hermesFeeds, ...lazerFeeds];
   },
 });

@@ -3,7 +3,17 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["generate:docs", "generate:changelog"],
+      "dependsOn": [
+        "generate:docs",
+        "generate:changelog",
+        "generate:price-feeds"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".source/**",
+        "src/generated/**"
+      ],
       "env": [
         "VERCEL_ENV",
         "COOKIE_SIGNING_SECRET",
@@ -41,6 +51,10 @@
     "generate:docs": {
       "dependsOn": ["//#install:modules", "^build"],
       "outputs": ["content/docs/api-reference/**"]
+    },
+    "generate:price-feeds": {
+      "dependsOn": ["//#install:modules"],
+      "outputs": ["src/generated/**"]
     },
     "start:prod": {
       "dependsOn": ["//#install:modules", "build"]
