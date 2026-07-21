@@ -6,7 +6,7 @@ slug: /price-feeds/pro/frontend-auth
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-This guide explains how to call Pyth Pro from browser and frontend apps without shipping your `PRO_API_KEY` to users. Anything in a browser bundle is public, so your backend mints a short-lived JWT with `POST /auth/token` and hands it to the browser. The browser then presents that JWT in place of the API key — as an `Authorization: Bearer` header on the History and REST APIs, and as the `ACCESS_TOKEN` query parameter on a WebSocket connection.
+This guide explains how to call Pyth Pro from browser and frontend apps without shipping your `PRO_API_KEY` to users. Anything in a browser bundle is public, so your backend mints a short-lived JWT with `POST /auth/token` and hands it to the browser. The browser then presents that JWT in place of the API key — as an `Authorization: Bearer` header on the History and REST APIs, and through the `pyth-lazer-auth` subprotocol on a WebSocket connection.
 
 <Callout type="info" title="Replacing the Proxy (Beta) API?">
   This is the replacement. The beta Proxy (`pyth-lazer-proxy-{1,2,3}`) gave
@@ -20,7 +20,7 @@ This guide explains how to call Pyth Pro from browser and frontend apps without 
 | Client                | Pattern                                                                                                                       |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Server-to-server      | Present the long-lived Pro API key directly as `Authorization: Bearer <PRO_API_KEY>`. Simplest — prefer this whenever the client can hold a secret. |
-| Browser / frontend    | Your backend mints a JWT via `POST /auth/token` and returns it to the browser, which presents it in place of the API key: `Authorization: Bearer <JWT>` on the History and REST APIs, or `?ACCESS_TOKEN=<JWT>` on a WebSocket. |
+| Browser / frontend    | Your backend mints a JWT via `POST /auth/token` and returns it to the browser, which presents it in place of the API key: `Authorization: Bearer <JWT>` on the History and REST APIs, or the `pyth-lazer-auth` WebSocket subprotocol for streaming. |
 
 <Callout type="warning">
   **Never expose the long-lived `PRO_API_KEY` in browser code, mobile apps, or
@@ -141,13 +141,16 @@ console.log(await res.json());
 
 The same JWT works against the REST API on `https://pyth-lazer.dourolabs.app` — send it as `Authorization: Bearer <JWT>`, exactly as on the History API.
 
-For the WebSocket API, a browser cannot set an `Authorization` header on the connection, so pass the JWT as the `ACCESS_TOKEN` query parameter instead:
+For the WebSocket API, a browser cannot set request headers on the connection, so pass the JWT through the subprotocol list instead. Offer the marker `pyth-lazer-auth` immediately followed by the token:
 
-```
-wss://pyth-lazer-0.dourolabs.app/v1/stream?ACCESS_TOKEN=<JWT>
+```ts copy
+const ws = new WebSocket(
+  "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+  ["pyth-lazer-auth", jwt],
+);
 ```
 
-The server accepts the token from the header or this query parameter, so the rest of the [subscribe flow](/price-feeds/pro/subscribe-to-prices) is unchanged. Because the token is part of the URL, keep its lifetime short.
+The server reads the token from that value, authenticates, and completes the handshake by echoing back the `pyth-lazer-auth` subprotocol — your client accepts it and does nothing with it. The rest of the [subscribe flow](/price-feeds/pro/subscribe-to-prices) is unchanged.
 
 ## Protecting the token endpoint
 
