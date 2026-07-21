@@ -8,7 +8,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## Overview
 
-Browser bundles are public — anything shipped to the client can be extracted, so a long-lived `PRO_API_KEY` must never appear in frontend code. Pyth Pro solves this by having your backend mint a short-lived JWT via `POST /auth/token`, then handing that JWT to the browser to present as `Authorization: Bearer <JWT>` against the History, REST, and WebSocket APIs.
+Browser bundles are public: anyone can read the code you ship to the client, so a long-lived `PRO_API_KEY` must never appear in frontend code. Instead, your backend mints a short-lived JWT through `POST /auth/token` and hands it to the browser, which sends it to the History, REST, and WebSocket APIs in place of the API key.
 
 ## When to use which pattern
 
@@ -28,7 +28,7 @@ Browser bundles are public — anything shipped to the client can be extracted, 
 1. The browser client asks its own backend for a Pyth JWT.
 2. The backend calls `POST https://pyth.dourolabs.app/auth/token` with `Authorization: Bearer <PRO_API_KEY>`.
 3. The backend returns the JWT (and its `expires_at`) to the browser.
-4. The browser presents the JWT as `Authorization: Bearer <JWT>` on every Pyth Pro API request until it nears expiry, then repeats step 1.
+4. The browser sends the JWT with each Pyth Pro request in place of the API key, and repeats from step 1 as the token nears expiry.
 
 ## `POST /auth/token` reference
 
@@ -41,7 +41,7 @@ Browser bundles are public — anything shipped to the client can be extracted, 
 
 | Field         | Type              | Required | Description                                                                                                    |
 | ------------- | ----------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
-| `ttl_seconds` | `integer \| null` | No       | Requested token lifetime in seconds. Server-clamped to its maximum; omit (or send `null`) to receive the max.  |
+| `ttl_seconds` | `integer \| null` | No       | How long the token should live, in seconds. The server caps it at its maximum; omit it (or send `null`) to get that maximum.  |
 
 **Response 200**
 
@@ -60,7 +60,7 @@ Browser bundles are public — anything shipped to the client can be extracted, 
 
 ## Backend example
 
-Expose a token-minting endpoint from your own backend. Never expose the raw `PRO_API_KEY` to the browser — only the short-lived JWT.
+Add a token endpoint to your own backend. Never send the raw `PRO_API_KEY` to the browser — hand out only the short-lived JWT.
 
 ```ts copy
 import express from "express";
@@ -97,14 +97,14 @@ app.post("/pyth-token", async (req, res) => {
 ```
 
 <Callout type="warning">
-  **Do not cache the minted JWT server-side across users** unless your design
-  has an explicit per-user scope story. A JWT is bearer-equivalent: whoever
-  holds it can spend your quota until it expires.
+  **Do not cache the minted JWT on the server across users** unless you scope
+  each token to one user. A JWT is a bearer token: whoever holds it can spend
+  your quota until it expires.
 </Callout>
 
 ## Frontend example
 
-Cache the JWT in memory, refresh it a few seconds before `expires_at`, and present it as a bearer token against any Pyth Pro API.
+Cache the JWT in memory, refresh it a few seconds before `expires_at`, and send it as a bearer token on each request.
 
 ```ts copy
 type PythToken = { access_token: string; expires_at: string };
@@ -133,13 +133,21 @@ const priceRes = await fetch(
 );
 ```
 
-The same JWT authenticates the REST API on `https://pyth-lazer.dourolabs.app` and the WebSocket `subscribe` message — anywhere the docs say `Authorization: Bearer <PRO_API_KEY>`, a browser client can pass the JWT instead.
+The same JWT works against the REST API on `https://pyth-lazer.dourolabs.app` the same way: send it as `Authorization: Bearer <JWT>` wherever the docs show the API key.
+
+The WebSocket API works too, with one difference: a browser cannot set an `Authorization` header on a WebSocket connection, so pass the JWT as the `ACCESS_TOKEN` query parameter on the connection URL instead.
+
+```
+wss://pyth-lazer-0.dourolabs.app/v1/stream?ACCESS_TOKEN=<JWT>
+```
+
+The server reads the token from the header or this query parameter, so the rest of the [subscribe flow](/price-feeds/pro/subscribe-to-prices) stays the same. Because the token is part of the URL, keep its lifetime short.
 
 ## Protecting the token endpoint
 
-- **Require your own auth on `POST /pyth-token`** (session cookie, first-party JWT, etc.). Anyone who can hit this endpoint can spend your Pro API-key quota.
-- **Rate-limit it.** A bare token endpoint is an easy target for abuse.
-- **Quota accounting**: API usage from JWTs counts against the minting API key's quota.
+- **Require your own auth on `POST /pyth-token`** (session cookie, first-party JWT, etc.). Anyone who can reach this endpoint can spend your Pro API-key quota.
+- **Rate-limit it.** Without a limit, the endpoint is easy to abuse.
+- **Quota accounting**: calls made with a JWT count against the quota of the API key that minted it.
 
 ## Related
 
