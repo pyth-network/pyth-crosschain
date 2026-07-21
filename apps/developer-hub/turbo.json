@@ -11,8 +11,7 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        ".source/**",
-        "src/generated/**"
+        ".source/**"
       ],
       "env": [
         "VERCEL_ENV",
@@ -53,6 +52,7 @@
       "outputs": ["content/docs/api-reference/**"]
     },
     "generate:price-feeds": {
+      "cache": false,
       "dependsOn": ["//#install:modules"],
       "outputs": ["src/generated/**"]
     },
