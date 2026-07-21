@@ -34,24 +34,7 @@ const DEFAULT_WORMHOLE_REPOSITORY =
   "https://github.com/wormhole-foundation/wormhole.git";
 const DEFAULT_WORMHOLE_REF = "main";
 
-type CommandResult = {
-  stderr: string;
-  stdout: string;
-};
-
-type CommandRunner = (
-  command: string,
-  args: readonly string[],
-) => Promise<CommandResult>;
-
 const execFileAsync = promisify(execFile);
-
-const runCommand: CommandRunner = async (command, args) => {
-  const { stderr, stdout } = await execFileAsync(command, [...args], {
-    encoding: "utf8",
-  });
-  return { stderr, stdout };
-};
 
 function isMissingFile(error: unknown): boolean {
   return (
@@ -88,12 +71,11 @@ async function rewriteMoveSources(directory: string): Promise<void> {
 }
 
 async function applyPatch(
-  runner: CommandRunner,
   packageDirectory: string,
   patchFile: string,
   dryRun = false,
 ): Promise<void> {
-  await runner("patch", [
+  await execFileAsync("patch", [
     ...(dryRun ? ["--dry-run"] : []),
     "-p1",
     "-d",
@@ -110,7 +92,6 @@ async function applyPatch(
 type WormholePublicationPatchOptions = {
   packageDirectory: string;
   patchesDirectory: string;
-  runCommand?: CommandRunner;
 };
 
 async function applyWormholePublicationPatch({
@@ -118,7 +99,6 @@ async function applyWormholePublicationPatch({
   packageDirectory,
   packageId,
   patchesDirectory,
-  runCommand: runner = runCommand,
 }: WormholePublicationPatchOptions & {
   dryRun: boolean;
   packageId: string;
@@ -141,7 +121,7 @@ async function applyWormholePublicationPatch({
         normalizedPackageId,
       ),
     );
-    await applyPatch(runner, packageDirectory, publicationPatchFile, dryRun);
+    await applyPatch(packageDirectory, publicationPatchFile, dryRun);
   } finally {
     await rm(workDirectory, { force: true, recursive: true });
   }
@@ -208,7 +188,6 @@ async function vendorWormhole({
   patchesDirectory,
   ref = DEFAULT_WORMHOLE_REF,
   repository = DEFAULT_WORMHOLE_REPOSITORY,
-  runCommand: runner = runCommand,
   targetDirectory,
 }: {
   chainId: number;
@@ -216,7 +195,6 @@ async function vendorWormhole({
   patchesDirectory: string;
   ref?: string;
   repository?: string;
-  runCommand?: CommandRunner;
   targetDirectory: string;
 }): Promise<{ testOutput: string }> {
   if (!Number.isInteger(chainId) || chainId < 0 || chainId > 65_535) {
@@ -238,7 +216,7 @@ async function vendorWormhole({
 
   try {
     onProgress(`Fetching ${repository} @ ${ref}`);
-    await runner("git", [
+    await execFileAsync("git", [
       "clone",
       "--quiet",
       "--filter=blob:none",
@@ -246,21 +224,21 @@ async function vendorWormhole({
       repository,
       repositoryDirectory,
     ]);
-    await runner("git", [
+    await execFileAsync("git", [
       "-C",
       repositoryDirectory,
       "sparse-checkout",
       "init",
       "--cone",
     ]);
-    await runner("git", [
+    await execFileAsync("git", [
       "-C",
       repositoryDirectory,
       "sparse-checkout",
       "set",
       "sui/wormhole",
     ]);
-    await runner("git", [
+    await execFileAsync("git", [
       "-C",
       repositoryDirectory,
       "checkout",
@@ -298,7 +276,6 @@ async function vendorWormhole({
     for (const patchFile of staticPatches) {
       onProgress(`Applying ${patchFile}`);
       await applyPatch(
-        runner,
         stagedDirectory,
         path.join(patchesDirectory, patchFile),
       );
@@ -314,15 +291,15 @@ async function vendorWormhole({
       chainPatchFile,
       chainPatchTemplate.replaceAll("__CHAIN_ID__", chainId.toString()),
     );
-    await applyPatch(runner, stagedDirectory, chainPatchFile);
+    await applyPatch(stagedDirectory, chainPatchFile);
 
     onProgress("Running vendored Wormhole tests");
-    const { stdout } = await runner("iota", [
+    const { stdout } = await execFileAsync("iota", [
       "move",
       "test",
       "-p",
       stagedDirectory,
-    ]);
+    ], { encoding: "utf8" });
 
     await replaceDirectory(stagedDirectory, targetDirectory, workDirectory);
     return { testOutput: stdout.trim() };
