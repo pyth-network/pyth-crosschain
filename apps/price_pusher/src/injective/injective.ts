@@ -221,7 +221,7 @@ export class InjectivePricePusher implements IPricePusher {
 
       const rs = await this.signAndBroadcastMsg(msg, chunkIndex);
 
-      this.logger.info(
+      this.logger.debug(
         { hash: rs.txHash },
         `Successfully broadcasted txHash for chunk ${chunkIndex}`,
       );

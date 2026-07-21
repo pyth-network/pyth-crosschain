@@ -97,8 +97,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
-    // @ts-expect-error - TODO: this class member is unused. remove this exception when it is
-    private overrideGasPriceMultiplier: number,
+    _overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;
   }
@@ -194,7 +193,7 @@ export class AptosPricePusher implements IPricePusher {
         timeoutSecs: 10,
       });
 
-      this.logger.info({ hash: txHash }, `Transaction confirmed.`);
+      this.logger.debug({ hash: txHash }, `Transaction confirmed.`);
     } catch (error) {
       this.logger.error(
         { err: error, hash: txHash },

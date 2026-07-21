@@ -19,7 +19,8 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 import { buildJitoTipInstruction } from "./jito";
 
 /**
@@ -426,6 +427,7 @@ export async function sendTransactions(
   connection: Connection,
   wallet: AnchorWallet,
   maxRetries?: number,
+  logger: Logger = dummyLogger,
 ): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
@@ -498,15 +500,9 @@ export async function sendTransactions(
       if (maxRetries && maxRetries < retryCount) {
         break;
       }
-      console.log(
-        "Retrying transaction",
-        index,
-        "of",
-        transactions.length - 1,
-        "with signature:",
-        txSignature,
-        "Retry count:",
-        retryCount,
+      logger.debug(
+        { index, retryCount, txSignature },
+        `Retrying transaction ${index} of ${transactions.length - 1} with signature ${txSignature} and retry count ${retryCount}`,
       );
       retryCount++;
 

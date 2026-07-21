@@ -138,7 +138,7 @@ export function shouldUpdate(
     (Number(sourceLatestPrice.conf) / Number(sourceLatestPrice.price)) * 100,
   );
 
-  logger.info(
+  logger.debug(
     {
       sourcePrice: sourceLatestPrice,
       symbol: priceConfig.alias,

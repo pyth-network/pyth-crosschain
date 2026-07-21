@@ -148,6 +148,8 @@ export class SolanaPricePusher implements IPricePusher {
         transactions,
         this.pythSolanaReceiver.connection,
         this.pythSolanaReceiver.wallet,
+        undefined,
+        this.logger,
       );
       this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
