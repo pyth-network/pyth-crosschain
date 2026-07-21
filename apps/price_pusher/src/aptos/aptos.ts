@@ -97,8 +97,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
-    // @ts-expect-error - TODO: this class member is unused. remove this exception when it is
-    private overrideGasPriceMultiplier: number,
+    _overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;
   }
