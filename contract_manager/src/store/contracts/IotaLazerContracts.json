@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "chain": "iota_testnet",
+    "stateId": "0xf1d6ae91b61ae8aebafe81c016c87ad2405fa7bf0cc0378b8b5f84040a927792",
+    "type": "IotaLazerContract",
+    "wormholeStateId": "0xad261798ec5b6026082b495647837f97cb8b6b38c16ebc3060d331d35805a717"
+  }
+]

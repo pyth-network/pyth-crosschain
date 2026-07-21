@@ -9,4 +9,4 @@ edition = "2024"
 wormhole = { local = "./vendor/wormhole_testnet" }
 
 [addresses]
-pyth_lazer = "0x0"
+pyth_lazer = "0x0737771e2ecf605331e299bfeae6fec4aa8a038db0bf600f7d34f38e471c36f2"
