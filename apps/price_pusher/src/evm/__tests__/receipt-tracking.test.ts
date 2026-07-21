@@ -109,7 +109,7 @@ const gasPriceConfig: GasPriceConfig = {
   strategy: "eip1559",
 };
 
-type LogEntry = { hash?: Hash };
+type LogEntry = { hash?: Hash; msg?: string };
 
 const makeLogger = (): {
   logger: Logger;
@@ -120,8 +120,18 @@ const makeLogger = (): {
     info: [] as LogEntry[],
     warn: [] as LogEntry[],
   };
-  const record = (arr: LogEntry[]) => (obj: unknown) => {
-    arr.push((obj ?? {}) as LogEntry);
+  // The success line shares the debug channel with several other hash-bearing
+  // messages ("Price update sent", the gave-up-at-deadline line), so the
+  // message has to be captured to tell them apart.
+  const record = (arr: LogEntry[]) => (obj: unknown, msg?: unknown) => {
+    if (typeof obj === "string") {
+      arr.push({ msg: obj });
+      return;
+    }
+    arr.push({
+      ...((obj ?? {}) as { hash?: Hash }),
+      msg: typeof msg === "string" ? msg : undefined,
+    });
   };
   const logger = {
     debug: record(logs.debug),
@@ -156,8 +166,10 @@ const PRICE_IDS = [
   "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
 ];
 const PUB_TIMES: UnixTimestamp[] = [1000];
-const hashLogs = (entries: LogEntry[]): LogEntry[] =>
-  entries.filter((entry) => entry.hash !== undefined);
+// Emitted by evm.ts once per landed, successful tx. Kept at debug level.
+const SUCCESS_MSG = "Price update successful";
+const successLogs = (entries: LogEntry[]): LogEntry[] =>
+  entries.filter((entry) => entry.msg === SUCCESS_MSG && entry.hash !== undefined);
 
 describe("EvmPricePusher receipt tracking (leak fix)", () => {
   it("happy path: logs success once, polls only getTransactionReceipt, never getTransactionByHash", async () => {
@@ -169,11 +181,11 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(120);
 
-    const successLogs = hashLogs(logs.info).filter(
+    const landed = successLogs(logs.debug).filter(
       (entry) =>
         entry.hash !== undefined && chain.sentHashes.includes(entry.hash),
     );
-    expect(successLogs).toHaveLength(1);
+    expect(landed).toHaveLength(1);
     expect(chain.calls.getTransactionByHash).toBe(0);
     expect(chain.calls.waitForTransactionReceipt).toBe(0);
     expect(chain.calls.getTransactionReceipt).toBeLessThanOrEqual(2);
@@ -199,7 +211,7 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     // After the deadline, polling must have fully stopped.
     await sleep(200);
     expect(chain.calls.getTransactionReceipt).toBe(countAtDeadline);
-    expect(hashLogs(logs.info)).toHaveLength(0);
+    expect(successLogs(logs.debug)).toHaveLength(0);
     expect(chain.calls.getTransactionByHash).toBe(0);
   });
 
@@ -234,10 +246,10 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     chain.policyByHash.set(hashA, "success");
     await sleep(90);
 
-    const successHashes = hashLogs(logs.info).map((entry) => entry.hash);
+    const successHashes = successLogs(logs.debug).map((entry) => entry.hash);
     expect(successHashes).toContain(hashA); // A's landing IS logged
     expect(successHashes).not.toContain(hashB); // B never lands
-    expect(hashLogs(logs.info)).toHaveLength(1);
+    expect(successLogs(logs.debug)).toHaveLength(1);
 
     pusher.dispose();
     await sleep(20);
@@ -262,7 +274,7 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     await sleep(90);
 
     // A's landing is logged via the final lookup on abort.
-    const successHashes = hashLogs(logs.info).map((entry) => entry.hash);
+    const successHashes = successLogs(logs.debug).map((entry) => entry.hash);
     expect(successHashes).toContain(hashA);
 
     // A is then aborted -> no longer polled (bounded across the nonce boundary).
@@ -283,7 +295,7 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(120);
 
-    expect(hashLogs(logs.info)).toHaveLength(0);
+    expect(successLogs(logs.debug)).toHaveLength(0);
     expect(chain.calls.getTransactionReceipt).toBeLessThanOrEqual(2);
     expect(chain.calls.getTransactionByHash).toBe(0);
   });
