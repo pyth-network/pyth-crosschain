@@ -1,0 +1,50 @@
+{
+  "date": "2026-07-21",
+  "label": "Tuesday",
+  "summary": {
+    "added": 2,
+    "went_live": 2,
+    "removed": 0
+  },
+  "hero": "2 new feeds announced, 2 went live.",
+  "events": [
+    {
+      "id": "Equity.US.NET/USD",
+      "lazerId": 2829,
+      "asset": "Cloudflare Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-21",
+      "quote": "USD",
+      "hermesId": "d3a9e76862950b2f21a7037fd64df913794b14d0e2938a9d383b0b7387ca0081"
+    },
+    {
+      "id": "Crypto.XBTC/USD",
+      "lazerId": 1598,
+      "asset": "Okx Wrapped Btc",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-07-21",
+      "quote": "USD",
+      "hermesId": "ae8f269ed9c4bed616c99a98cf6dfe562bd3202e7f91821a471ff854713851b4"
+    },
+    {
+      "id": "Equity.US.TMF/USD",
+      "lazerId": 3457,
+      "asset": "Direxion Daily 20+ Year Treasury Bull 3X Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-21",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MSTX/USD",
+      "lazerId": 3456,
+      "asset": "Defiance Daily Target 2X Long Mstr Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-21",
+      "quote": "USD"
+    }
+  ]
+}
