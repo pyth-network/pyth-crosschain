@@ -132,10 +132,11 @@ async function getPythToken(): Promise<string> {
 
 // Call the History API from the browser using the short-lived JWT.
 const jwt = await getPythToken();
-const priceRes = await fetch(
+const res = await fetch(
   "https://pyth.dourolabs.app/v1/fixed_rate@200ms/price?ids=1&timestamp=1704067200000000",
   { headers: { Authorization: `Bearer ${jwt}` } },
 );
+console.log(await res.json());
 ```
 
 The same JWT works against the REST API on `https://pyth-lazer.dourolabs.app` — send it as `Authorization: Bearer <JWT>`, exactly as on the History API.
