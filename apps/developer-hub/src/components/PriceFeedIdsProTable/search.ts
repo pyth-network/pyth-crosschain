@@ -56,7 +56,12 @@ export const filterFeedsBySearch = <T extends SearchableFeed>(
     // Numeric ID match - exact match for numeric terms against pyth_lazer_id or cmc_id
     if (/^\d+$/.test(term)) {
       if (String(item.pyth_lazer_id) === term) return true;
-      if (item.cmc_id != null && String(item.cmc_id) === term) return true;
+      if (
+        item.cmc_id !== null &&
+        item.cmc_id !== undefined &&
+        String(item.cmc_id) === term
+      )
+        return true;
       return false;
     }
 
@@ -75,7 +80,7 @@ export const filterFeedsBySearch = <T extends SearchableFeed>(
 
     if (item.nasdaq_symbol?.toLowerCase().includes(term)) return true;
 
-    if (item.hermes_id != null) {
+    if (item.hermes_id !== null && item.hermes_id !== undefined) {
       const hermesTerm = stripHexPrefix(term);
       if (hermesTerm && item.hermes_id.toLowerCase().includes(hermesTerm)) {
         return true;
