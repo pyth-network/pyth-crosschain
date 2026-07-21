@@ -1,19 +1,20 @@
 ---
 title: Frontend Authentication
-description: Use short-lived tokens to call Pyth Pro from browser apps
+description: Use short-lived tokens to call the Pyth Pro History API from browser apps
 slug: /price-feeds/pro/frontend-auth
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-This guide explains how to call Pyth Pro from browser and frontend apps without shipping your `PRO_API_KEY` to users. Anything in a browser bundle is public, so your backend mints a short-lived JWT with `POST /auth/token` and hands it to the browser. The browser then sends that token as a bearer header on its History and REST API calls, in place of the API key.
+This guide explains how to call Pyth Pro from browser and frontend apps without shipping your `PRO_API_KEY` to users. Anything in a browser bundle is public, so your backend mints a short-lived JWT with `POST /auth/token` and hands it to the browser. The browser then sends that token as a bearer header on its History API calls, in place of the API key.
 
 ## When to use which pattern
 
 | Client                | Pattern                                                                                                                       |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Server-to-server      | Present the long-lived Pro API key directly as `Authorization: Bearer <PRO_API_KEY>`. Simplest — prefer this whenever the client can hold a secret. |
-| Browser / frontend    | Your backend calls `POST /auth/token` with the Pro API key and returns the short-lived JWT to the browser, which presents it as `Authorization: Bearer <JWT>`. |
+| Browser — History API      | Your backend calls `POST /auth/token` with the Pro API key and returns a short-lived JWT to the browser, which sends it as `Authorization: Bearer <JWT>`. |
+| Browser — REST / WebSocket | Route the request through your backend; the browser never holds the API key. The JWT does not authenticate these APIs. |
 
 <Callout type="warning">
   **Never expose the long-lived `PRO_API_KEY` in browser code, mobile apps, or
@@ -131,9 +132,9 @@ const priceRes = await fetch(
 );
 ```
 
-The same JWT also authenticates the REST API on `https://pyth-lazer.dourolabs.app`: send it as `Authorization: Bearer <JWT>` wherever the docs show the API key.
+This JWT is scoped to the History API on `https://pyth.dourolabs.app` — the host that mints it. It does not authenticate the REST or WebSocket APIs on `https://pyth-lazer.dourolabs.app`.
 
-That bearer-header flow covers the History and REST APIs. A browser cannot attach an `Authorization` header to a native WebSocket, so keep WebSocket streaming behind your backend — open the authenticated socket there and relay updates to the client.
+To reach those from a browser, keep the request behind your backend: hold the API key there, call the REST or WebSocket API from your server, and relay the result to the client.
 
 ## Protecting the token endpoint
 
