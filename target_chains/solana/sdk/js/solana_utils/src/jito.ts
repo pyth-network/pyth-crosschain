@@ -9,8 +9,13 @@ import type {
 } from "@solana/web3.js";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import bs58 from "bs58";
+// jito-ts is loaded lazily inside `sendTransactionsJito` so that consumers
+// who only use the non-Jito transaction helpers do not pay the cost of
+// jito-ts pulling its nested `@solana/web3.js@~1.77.3` (which transitively
+// `require`s a rpc-websockets path removed in rpc-websockets@>=7.11). See
+// https://github.com/pyth-network/pyth-crosschain/issues/1838.
 import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
-import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
+import type { Bundle as BundleType } from "jito-ts/dist/sdk/block-engine/types";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
@@ -85,7 +90,10 @@ export async function sendTransactionsJito(
     signedTransactions[0]?.signatures[0]!,
   );
 
-  const bundle = new Bundle(signedTransactions, 2);
+  // Dynamic import so jito-ts (and its old @solana/web3.js transitive dep)
+  // is only resolved when this code path is actually taken.
+  const { Bundle } = await import("jito-ts/dist/sdk/block-engine/types");
+  const bundle: BundleType = new Bundle(signedTransactions, 2);
 
   let lastError: Error | null | undefined;
   let totalAttempts = 0;
