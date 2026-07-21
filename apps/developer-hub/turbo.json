@@ -4,6 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["generate:docs", "generate:changelog"],
+      "outputs": [
+        "lib/**",
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        ".source/**"
+      ],
       "env": [
         "VERCEL_ENV",
         "COOKIE_SIGNING_SECRET",
