@@ -230,6 +230,8 @@ You can configure the log level of some of the modules of the price pusher as we
 is responsible for connecting to the Hermes price service, and Controller, which is responsible for checking the prices from the Hermes
 and the on-chain Pyth contract and deciding whether to push a new price. You can configure the log level of these modules by passing the `--controller-log-level` arguments, respectively.
 
+For the EVM network, you can also pass `--gas-log-level` to configure the log level of the EVM price pusher, which emits the gas estimation, update fee, and simulated-transaction logs. Set it to `debug` to surface the gas estimation logs without turning on debug logging globally (e.g. `--gas-log-level debug`).
+
 ### Example
 
 For example, to push `BTC/USD` and `BNB/USD` prices on Sonic blaze testnet, run the following command:

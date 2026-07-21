@@ -86,6 +86,19 @@ export const controllerLogLevel = {
   } as Options,
 };
 
+export const gasLogLevel = {
+  "gas-log-level": {
+    choices: ["trace", "debug", "info", "warn", "error"],
+    default: "info",
+    description:
+      "Log level for the EVM price pusher, which emits the gas estimation, " +
+      "update fee, and simulated-transaction debug logs. Set to `debug` to " +
+      "surface gas estimation logs without turning on debug logging globally.",
+    required: false,
+    type: "string",
+  } as Options,
+};
+
 export const enableMetrics = {
   "enable-metrics": {
     default: true,
