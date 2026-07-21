@@ -495,7 +495,7 @@ export class EvmPricePusher implements IPricePusher {
         if (receipt.status === "success") {
           // Keep one non-debug hash line per landed tx: the bundled Grafana
           // "Tx Hash" panel scrapes this message from Loki and extracts {{.hash}}.
-          this.logger.debug({ hash }, "Price update successful");
+          this.logger.info({ hash }, "Price update successful");
         } else {
           this.logger.debug(
             { hash, receipt },
