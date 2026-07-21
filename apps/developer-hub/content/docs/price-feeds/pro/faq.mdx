@@ -142,7 +142,7 @@ Starting **July 24, 2026**, `POST /v1/price` will require the `Authorization: Be
 
 #### Q. How should I authenticate the History and REST endpoints from a frontend app?
 
-Do not embed your Pro access token in browsers or frontend apps. Route requests through your own backend that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. For the History API, your backend can hand out short-lived JWTs instead of proxying every request — see [Frontend Authentication](/price-feeds/pro/frontend-auth).
+Do not embed your Pro access token in browsers or frontend apps. Route requests through your own backend that injects the `Authorization: Bearer <PRO_API_KEY>` header before forwarding. Or have your backend hand out short-lived JWTs the browser can use directly — see [Frontend Authentication](/price-feeds/pro/frontend-auth).
 
 ## Access Tokens & Permissions
 
