@@ -905,9 +905,7 @@ export class SuiChain extends Chain {
   }
 
   explorerUrl(type: "object" | "address" | "txblock", id: string): string {
-    return `https://explorer.polymedia.app/${type}/${id}?network=${
-      this.isMainnet() ? "mainnet" : "testnet"
-    }`;
+    return `https://explorer.polymedia.app/${type}/${id}?network=${this.id.replace(/^sui_/, "")}`;
   }
 }
 
@@ -1761,9 +1759,7 @@ export class IotaChain extends Chain {
   }
 
   explorerUrl(type: "object" | "address" | "txblock", id: string): string {
-    return `https://explorer.iota.org/${type}/${id}?network=${
-      this.isMainnet() ? "mainnet" : "testnet"
-    }`;
+    return `https://explorer.iota.org/${type}/${id}?network=${this.id.replace(/^iota_/, "")}`;
   }
 }
 

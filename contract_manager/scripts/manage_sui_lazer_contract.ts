@@ -14,6 +14,7 @@ import { SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
+import { sleep } from "../src/utils/sleep";
 
 function updateContractInStore(contract: SuiLazerContract) {
   DefaultStore.lazer_contracts[contract.getId()] = contract;
@@ -210,15 +211,26 @@ parser.command(
     console.info(`  UpgradeCap: ${chain.explorerUrl("object", upgradeCapId)}`);
 
     console.info("Initializing package state...");
-    const { stateId } = await chain.initLazerContract(
-      packageId,
-      upgradeCapId,
-      {
-        emitterAddress: governanceAddress,
-        emitterChain: governanceChain,
-      },
-      signer,
-    );
+    let stateId: string | undefined;
+    for (let i = 0; i < 5; i++) {
+      try {
+        ({ stateId } = await chain.initLazerContract(
+          packageId,
+          upgradeCapId,
+          {
+            emitterAddress: governanceAddress,
+            emitterChain: governanceChain,
+          },
+          signer,
+        ));
+      } catch (e) {
+        console.warn(`  attempt #${i + 1} failed:`, (e as Error).message);
+        await sleep(1000);
+      }
+    }
+    if (!stateId) {
+      throw new Error("Failed to initialize package state");
+    }
     console.info("Package state initialized:");
     console.info(`  State: ${chain.explorerUrl("object", stateId)}`);
 
