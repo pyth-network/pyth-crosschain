@@ -4,5 +4,11 @@
     "stateId": "0xf1d6ae91b61ae8aebafe81c016c87ad2405fa7bf0cc0378b8b5f84040a927792",
     "type": "IotaLazerContract",
     "wormholeStateId": "0xad261798ec5b6026082b495647837f97cb8b6b38c16ebc3060d331d35805a717"
+  },
+  {
+    "chain": "iota_mainnet",
+    "stateId": "0xbfaaf85f467dd5d9af0f064afb61ceb8c5f0f27c480d4a68ccd4d85cf1c634fb",
+    "type": "IotaLazerContract",
+    "wormholeStateId": "0x7fa7eb76e4c840102d2a57589b658c44ac506847f972c6fdacdf824cb8f53cb4"
   }
 ]

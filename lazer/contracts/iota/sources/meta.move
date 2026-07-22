@@ -16,5 +16,5 @@ public(package) fun version(): u64 {
 /// - https://wormhole.com/docs/products/reference/chain-ids/#__tabbed_1_1
 /// - `/governance/xc_admin/packages/xc_admin_common/src/chains.ts`
 public(package) fun receiver_chain_id(): u16 {
-    50118
+    60085
 }
