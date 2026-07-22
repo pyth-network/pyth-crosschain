@@ -1148,7 +1148,9 @@ multisigCommand(
     // Read the reward-custody mint from the on-chain pool config so we derive
     // the custody account (and default amount) against the real configuration.
     const poolConfigData =
-      await integrityPoolProgram.account.poolConfig?.fetch(poolConfig);
+      (await integrityPoolProgram.account.poolConfig?.fetch(poolConfig)) as {
+        pythTokenMint: PublicKey;
+      };
     const pythTokenMint = new PublicKey(poolConfigData.pythTokenMint);
     const poolRewardCustody = await getAssociatedTokenAddress(
       pythTokenMint,
