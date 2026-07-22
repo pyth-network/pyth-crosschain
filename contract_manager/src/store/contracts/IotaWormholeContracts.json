@@ -13,5 +13,10 @@
     "chain": "iota_testnet",
     "stateId": "0xad261798ec5b6026082b495647837f97cb8b6b38c16ebc3060d331d35805a717",
     "type": "IotaWormholeContract"
+  },
+  {
+    "chain": "iota_mainnet",
+    "stateId": "0x7fa7eb76e4c840102d2a57589b658c44ac506847f972c6fdacdf824cb8f53cb4",
+    "type": "IotaWormholeContract"
   }
 ]
