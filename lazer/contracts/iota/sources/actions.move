@@ -71,28 +71,32 @@ public fun update_trusted_signer(state: &mut State, vaa: VAA) {
 
 // TODO: test assumes current version 1 - make it parameterized?
 #[test_only]
-const TEST_UPGRADE_VAA: vector<u8> = vector[1,0,0,0,0,1,0,62,191,234,208,186,78,125,210,45,4,92,222,86,204,156,241,198,137,172,250,223,202,62,169,134,101,126,196,192,193,208,2,42,239,153,148,22,28,185,33,169,145,83,144,129,19,10,250,137,126,68,69,147,34,15,88,251,181,223,210,68,218,3,57,1,105,96,189,159,0,0,0,0,0,1,163,98,52,239,55,73,162,201,65,54,182,52,91,206,255,69,7,145,239,30,188,153,233,24,241,111,128,117,164,65,187,36,0,0,0,0,0,0,0,3,1,80,84,71,77,3,0,234,181,0,0,0,0,0,0,0,2,150,25,135,237,196,172,202,28,255,8,183,26,248,190,44,218,232,231,228,145,102,251,208,126,38,83,236,196,200,98,162,166];
+const TEST_UPGRADE_VAA: vector<u8> = vector[1,0,0,0,0,1,0,62,191,234,208,186,78,125,210,45,4,92,222,86,204,156,241,198,137,172,250,223,202,62,169,134,101,126,196,192,193,208,2,42,239,153,148,22,28,185,33,169,145,83,144,129,19,10,250,137,126,68,69,147,34,15,88,251,181,223,210,68,218,3,57,1,105,96,189,159,0,0,0,0,0,1,163,98,52,239,55,73,162,201,65,54,182,52,91,206,255,69,7,145,239,30,188,153,233,24,241,111,128,117,164,65,187,36,0,0,0,0,0,0,0,3,1,80,84,71,77,3,0,195,198,0,0,0,0,0,0,0,2,150,25,135,237,196,172,202,28,255,8,183,26,248,190,44,218,232,231,228,145,102,251,208,126,38,83,236,196,200,98,162,166];
 
 #[test_only]
-const TEST_UPDATE_TRUSTED_SIGNER_ADD: vector<u8> = vector[1,0,0,0,0,1,0,130,99,43,67,229,38,185,128,163,7,136,200,43,255,225,6,91,170,185,122,98,216,114,251,178,140,39,95,47,69,81,168,71,44,182,30,4,172,249,65,194,69,202,90,80,3,247,96,179,73,252,64,129,83,157,178,236,208,160,223,104,216,209,8,1,105,96,163,154,0,0,0,0,0,1,163,98,52,239,55,73,162,201,65,54,182,52,91,206,255,69,7,145,239,30,188,153,233,24,241,111,128,117,164,65,187,36,0,0,0,0,0,0,0,2,1,80,84,71,77,3,1,234,181,3,164,56,15,1,19,110,178,100,15,144,193,126,30,49,158,2,187,175,190,239,46,110,103,220,72,175,83,249,130,126,21,91,0,0,0,0,107,65,2,245];
+const TEST_UPDATE_TRUSTED_SIGNER_ADD: vector<u8> = vector[1,0,0,0,0,1,0,234,83,124,39,121,208,192,140,211,201,103,211,97,61,215,254,114,47,118,191,136,20,228,116,80,133,16,111,240,32,247,248,48,10,199,239,3,72,136,238,68,232,44,18,193,79,147,63,125,15,98,29,171,66,188,10,95,30,230,125,192,131,134,45,0,106,95,70,49,0,0,0,0,0,1,11,254,215,118,242,4,212,154,104,231,232,41,51,43,43,216,92,147,140,114,234,120,164,66,174,221,197,220,63,183,47,12,0,0,0,0,0,0,0,1,1,80,84,71,77,3,1,195,198,3,164,56,15,1,19,110,178,100,15,144,193,126,30,49,158,2,187,175,190,239,46,110,103,220,72,175,83,249,130,126,21,91,0,0,0,0,125,46,145,224];
 
 #[test_only]
-const TEST_UPDATE_TRUSTED_SIGNER_REMOVE: vector<u8> = vector[1,0,0,0,0,1,0,126,229,228,215,73,253,91,76,106,169,218,253,166,44,124,73,160,137,101,208,42,14,31,50,50,159,142,115,96,250,75,21,28,255,109,56,88,214,114,100,168,141,151,198,96,216,246,79,179,46,99,200,178,135,166,181,2,17,188,60,92,27,119,247,1,105,96,191,6,0,0,0,0,0,1,163,98,52,239,55,73,162,201,65,54,182,52,91,206,255,69,7,145,239,30,188,153,233,24,241,111,128,117,164,65,187,36,0,0,0,0,0,0,0,4,1,80,84,71,77,3,1,234,181,3,164,56,15,1,19,110,178,100,15,144,193,126,30,49,158,2,187,175,190,239,46,110,103,220,72,175,83,249,130,126,21,91,0,0,0,0,0,0,0,0];
+const TEST_UPDATE_TRUSTED_SIGNER_REMOVE: vector<u8> = vector[1,0,0,0,0,1,0,126,229,228,215,73,253,91,76,106,169,218,253,166,44,124,73,160,137,101,208,42,14,31,50,50,159,142,115,96,250,75,21,28,255,109,56,88,214,114,100,168,141,151,198,96,216,246,79,179,46,99,200,178,135,166,181,2,17,188,60,92,27,119,247,1,105,96,191,6,0,0,0,0,0,1,163,98,52,239,55,73,162,201,65,54,182,52,91,206,255,69,7,145,239,30,188,153,233,24,241,111,128,117,164,65,187,36,0,0,0,0,0,0,0,4,1,80,84,71,77,3,1,195,198,3,164,56,15,1,19,110,178,100,15,144,193,126,30,49,158,2,187,175,190,239,46,110,103,220,72,175,83,249,130,126,21,91,0,0,0,0,0,0,0,0];
 
 #[test_only]
 const TEST_TRUSTED_SIGNER: vector<u8> = x"03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b";
 
 #[test_only]
-fun test_governance(): Governance {
-    governance::new(1, external_address::new(bytes32::new(
-        x"a36234ef3749a2c94136b6345bceff450791ef1ebc99e918f16f8075a441bb24"
-    )))
+const TEST_GOVERNANCE_ADDRESS: vector<u8> = x"a36234ef3749a2c94136b6345bceff450791ef1ebc99e918f16f8075a441bb24";
+
+#[test_only]
+const TEST_UPDATE_TRUSTED_SIGNER_ADD_GOVERNANCE_ADDRESS: vector<u8> = x"0bfed776f204d49a68e7e829332b2bd85c938c72ea78a442aeddc5dc3fb72f0c";
+
+#[test_only]
+fun test_governance(address: vector<u8>): Governance {
+    governance::new(1, external_address::new(bytes32::new(address)))
 }
 
 #[test]
 public fun test_upgrade() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx, test_governance());
+    let mut state = state::new_for_test(&mut ctx, test_governance(TEST_GOVERNANCE_ADDRESS));
 
     let (_, verifiedVaa) = vaa::parse_test_only(TEST_UPGRADE_VAA);
     let ticket = upgrade(&mut state, verifiedVaa);
@@ -106,7 +110,10 @@ public fun test_upgrade() {
 #[test]
 public fun test_update_trusted_signer_add() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx, test_governance());
+    let mut state = state::new_for_test(
+        &mut ctx,
+        test_governance(TEST_UPDATE_TRUSTED_SIGNER_ADD_GOVERNANCE_ADDRESS)
+    );
     let current_cap = state.current_cap();
 
     let (_, verifiedVaa) = vaa::parse_test_only(TEST_UPDATE_TRUSTED_SIGNER_ADD);
@@ -115,7 +122,7 @@ public fun test_update_trusted_signer_add() {
     let signers = state.trusted_signers(&current_cap);
     assert_eq!(signers.length(), 1);
     let signer = &signers[0];
-    assert_eq!(signer.expires_at_ms(), 1799422709 * 1000);
+    assert_eq!(signer.expires_at_ms(), 2100204000 * 1000);
     assert_eq!(*signer.public_key(), TEST_TRUSTED_SIGNER);
 
     state.destroy();
@@ -124,7 +131,7 @@ public fun test_update_trusted_signer_add() {
 #[test]
 public fun test_update_trusted_signer_remove() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx, test_governance());
+    let mut state = state::new_for_test(&mut ctx, test_governance(TEST_GOVERNANCE_ADDRESS));
     let current_cap = state.current_cap();
 
     state.update_trusted_signer(&current_cap, TEST_TRUSTED_SIGNER, 1799422709);
