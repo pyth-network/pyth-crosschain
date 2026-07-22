@@ -9,7 +9,7 @@ import type { VAA } from "@wormhole-foundation/sdk-definitions";
 import * as wormhole from "@wormhole-foundation/sdk-definitions";
 
 const GUARDIAN_SET_VAAS_URL =
-  "https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/deployments/mainnet/guardianSetVAAs.csv";
+  "https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/guardianSetVAAs.csv";
 
 export type PreparedVAA = {
   vaa: Uint8Array;
