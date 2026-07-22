@@ -61,6 +61,8 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
 import { program } from "commander";
@@ -1107,6 +1109,106 @@ multisigCommand(
         DEFAULT_PRIORITY_FEE_CONFIG,
       );
     }
+  });
+
+multisigCommand(
+  "withdraw-integrity-pool-rewards",
+  "Withdraw PYTH rewards from the Integrity Pool reward custody",
+)
+  .requiredOption(
+    "-d, --destination <pubkey>",
+    "destination PYTH token account that receives the withdrawn rewards",
+  )
+  .option(
+    "-a, --amount <amount>",
+    "amount to withdraw, in raw base units (all digits). If omitted, the full reward custody balance is withdrawn.",
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+    const connection = new Connection(
+      options.rpcUrlOverride ?? getPythClusterApiUrl(targetCluster),
+    );
+
+    const rewardProgramAuthority =
+      await vault.getVaultAuthorityPDA(targetCluster);
+    const destination = new PublicKey(options.destination);
+
+    const poolConfig = PublicKey.findProgramAddressSync(
+      [Buffer.from("pool_config")],
+      INTEGRITY_POOL_PROGRAM_ID,
+    )[0];
+
+    const integrityPoolProgram = new Program(
+      integrityPoolIdl as Idl,
+      INTEGRITY_POOL_PROGRAM_ID,
+      vault.getAnchorProvider(),
+    );
+
+    // Read the reward-custody mint from the on-chain pool config so we derive
+    // the custody account (and default amount) against the real configuration.
+    const poolConfigData =
+      await integrityPoolProgram.account.poolConfig?.fetch(poolConfig);
+    const pythTokenMint = new PublicKey(poolConfigData.pythTokenMint);
+    const poolRewardCustody = await getAssociatedTokenAddress(
+      pythTokenMint,
+      poolConfig,
+      true,
+    );
+
+    // Default to the full reward-custody balance when no amount is provided.
+    let amount: BN;
+    if (options.amount === undefined) {
+      const balance =
+        await connection.getTokenAccountBalance(poolRewardCustody);
+      amount = new BN(balance.value.amount);
+    } else {
+      amount = new BN(options.amount);
+    }
+
+    const withdrawInstruction = await integrityPoolProgram.methods
+      .withdraw?.(amount)
+      .accounts({
+        destination,
+        poolRewardCustody,
+        rewardProgramAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .instruction();
+
+    if (!withdrawInstruction) {
+      throw new Error("Failed to build the withdraw instruction");
+    }
+
+    // Simulate the withdraw before proposing so we never queue a proposal that
+    // would fail when the multisig executes it. sigVerify is disabled because
+    // the reward_program_authority signature is produced by the vault PDA only
+    // at execution time.
+    const { blockhash } = await connection.getLatestBlockhash();
+    const message = new TransactionMessage({
+      instructions: [withdrawInstruction],
+      payerKey: rewardProgramAuthority,
+      recentBlockhash: blockhash,
+    }).compileToV0Message();
+    const simulation = await connection.simulateTransaction(
+      new VersionedTransaction(message),
+      { replaceRecentBlockhash: true, sigVerify: false },
+    );
+    if (simulation.value.err) {
+      console.error(simulation.value.logs?.join("\n"));
+      throw new Error(
+        `Withdraw simulation failed: ${JSON.stringify(simulation.value.err)}`,
+      );
+    }
+    console.log(
+      `Withdraw simulation succeeded; proposing withdraw of ${amount.toString()} base units to ${destination.toBase58()}.`,
+    );
+
+    await vault.proposeInstructions(
+      [withdrawInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG,
+    );
   });
 
 multisigCommand("withdraw-er-native-fees", "Withdraw Express Relay native fees")

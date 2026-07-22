@@ -1,4 +1,34 @@
 {
+  "accounts": [
+    {
+      "name": "PoolConfig",
+      "type": {
+        "fields": [
+          {
+            "name": "poolData",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardProgramAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "pythTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "y",
+            "type": "u64"
+          },
+          {
+            "name": "slashCustody",
+            "type": "publicKey"
+          }
+        ],
+        "kind": "struct"
+      }
+    }
+  ],
   "instructions": [
     {
       "accounts": [
@@ -84,6 +114,51 @@
         }
       ],
       "name": "updateY"
+    },
+    {
+      "accounts": [
+        {
+          "isMut": false,
+          "isSigner": true,
+          "name": "rewardProgramAuthority"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "poolConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool_config"
+              }
+            ]
+          }
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "poolRewardCustody"
+        },
+        {
+          "isMut": true,
+          "isSigner": false,
+          "name": "destination"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ],
+      "name": "withdraw"
     }
   ],
   "name": "integrity-pool",
