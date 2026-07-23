@@ -25,8 +25,13 @@ import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { CosmWasmChain, EvmChain, SuiChain } from "../src/core/chains";
-import { SuiLazerContract } from "../src/core/contracts";
+import {
+  CosmWasmChain,
+  EvmChain,
+  IotaChain,
+  SuiChain,
+} from "../src/core/chains";
+import { IotaLazerContract, SuiLazerContract } from "../src/core/contracts";
 import {
   EvmEntropyContract,
   EvmLazerContract,
@@ -316,6 +321,70 @@ async function main() {
             console.log("Proposal package digest does not match local build:");
             console.log(`  expected ${buildHash}`);
             console.log(`     found ${hash}`);
+          }
+        } else if (targetChainId.startsWith("iota_sui_")) {
+          const chain = Object.values(DefaultStore.chains).find(
+            (candidate) =>
+              candidate instanceof IotaChain &&
+              candidate.wormholeChainName === targetChainId,
+          );
+
+          if (!(chain instanceof IotaChain)) {
+            console.error(`'${targetChainId}' is not a valid IOTA chain`);
+            continue;
+          }
+
+          const packagePath = path.resolve(
+            scriptDir,
+            "../../lazer/contracts/iota",
+          );
+
+          const contracts = Object.values(DefaultStore.lazer_contracts)
+            .filter((contract) => contract instanceof IotaLazerContract)
+            .filter((contract) => contract.chain.getId() === chain.getId());
+
+          if (contracts.length === 0) {
+            console.error(
+              `Could not find valid IOTA Lazer contract for '${targetChainId}' in store`,
+            );
+            continue;
+          }
+
+          const client = chain.getProvider();
+          for (const contract of contracts) {
+            const info = await chain.getStatePackageInfo(
+              client,
+              contract.stateId,
+            );
+            if (BigInt(info.version) + 1n !== version) {
+              console.log(
+                "Proposal upgrade version does not follow current version:",
+              );
+              console.log(
+                `  current version is ${info.version}, proposed ${version}`,
+              );
+            }
+
+            await chain.updateLazerMeta(
+              packagePath,
+              {
+                receiver_chain_id: chain.getWormholeChainId(),
+                version: version.toString(),
+              },
+              info.package,
+            );
+            const pkg = await chain.buildLazerPackage(
+              packagePath,
+              contract.wormholeStateId,
+            );
+            const buildHash = Buffer.from(pkg.digest).toString("hex");
+            if (buildHash !== hash) {
+              console.log(
+                "Proposal package digest does not match local build:",
+              );
+              console.log(`  expected ${buildHash}`);
+              console.log(`     found ${hash}`);
+            }
           }
         } else {
           console.log(`Unsupported target chain '${targetChainId}'`);

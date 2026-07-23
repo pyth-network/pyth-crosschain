@@ -4,9 +4,10 @@
 [package]
 name = "pyth_lazer"
 edition = "2024"
+published-at = "0x8aa43bd5c14eac8de636e2106f53a1cc9dc2bc0e1a1ad51c9846a0b167552e29"
 
 [dependencies]
 wormhole = { local = "./vendor/wormhole_mainnet" }
 
 [addresses]
-pyth_lazer = "0x0"
+pyth_lazer = "0x8aa43bd5c14eac8de636e2106f53a1cc9dc2bc0e1a1ad51c9846a0b167552e29"
