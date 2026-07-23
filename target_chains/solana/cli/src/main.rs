@@ -336,6 +336,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// The guardian-set upgrade chain increments `current_guardian_set_index` after every step so adding
+// the next upgrade is a mechanical append; the final increment is intentionally never read.
+#[allow(unused_assignments)]
 fn initialize_wormhole_receiver(
     rpc_client: &RpcClient,
     wormhole: Pubkey,
