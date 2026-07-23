@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-console */
 import type { Wallet } from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import { getPythProgramKeyForCluster } from "@pythnetwork/client";
 import {
@@ -559,7 +560,9 @@ export const Proposal = ({
                                   ? instruction.args[key].toString()
                                   : typeof instruction.args[key] === "bigint"
                                     ? instruction.args[key].toString()
-                                    : JSON.stringify(instruction.args[key])}
+                                    : BN.isBN(instruction.args[key])
+                                      ? instruction.args[key].toString()
+                                      : JSON.stringify(instruction.args[key])}
                             </div>
                           )}
                         </div>
