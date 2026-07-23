@@ -1,6 +1,7 @@
 import type { HermesClient, UnixTimestamp } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
+import type { ReceiptOutcome } from "../evm.js";
 import { EvmPricePusher } from "../evm.js";
 import type { GasPriceConfig } from "../gas-price.js";
 import type { PythContract } from "../pyth-contract.js";
@@ -109,50 +110,42 @@ const gasPriceConfig: GasPriceConfig = {
   strategy: "eip1559",
 };
 
-type LogEntry = { hash?: Hash; msg?: string };
+// Logging is not what these tests observe; the tracker reports its terminal
+// state through `onReceiptOutcome` instead.
+const noopLogger = {
+  debug: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined,
+} as unknown as Logger;
 
-const makeLogger = (): {
-  logger: Logger;
-  logs: { info: LogEntry[]; debug: LogEntry[]; warn: LogEntry[] };
+// Collects every tracker outcome, in order. This is the seam the assertions
+// read, so they are coupled to the tracker's behaviour rather than to the
+// wording or level of any log line.
+const makeOutcomes = (): {
+  outcomes: ReceiptOutcome[];
+  onReceiptOutcome: (outcome: ReceiptOutcome) => void;
 } => {
-  const logs = {
-    debug: [] as LogEntry[],
-    info: [] as LogEntry[],
-    warn: [] as LogEntry[],
+  const outcomes: ReceiptOutcome[] = [];
+  return {
+    onReceiptOutcome: (outcome) => {
+      outcomes.push(outcome);
+    },
+    outcomes,
   };
-  // The success line shares the debug channel with several other hash-bearing
-  // messages ("Price update sent", the gave-up-at-deadline line), so the
-  // message has to be captured to tell them apart.
-  const record = (arr: LogEntry[]) => (obj: unknown, msg?: unknown) => {
-    if (typeof obj === "string") {
-      arr.push({ msg: obj });
-      return;
-    }
-    arr.push({
-      ...((obj ?? {}) as { hash?: Hash }),
-      msg: typeof msg === "string" ? msg : undefined,
-    });
-  };
-  const logger = {
-    debug: record(logs.debug),
-    error: record(logs.debug),
-    info: record(logs.info),
-    warn: record(logs.warn),
-  } as unknown as Logger;
-  return { logger, logs };
 };
 
 const makePusher = (
   chain: MockChain,
-  logger: Logger,
   timeoutMs: number,
   intervalMs: number,
+  onReceiptOutcome?: (outcome: ReceiptOutcome) => void,
 ): EvmPricePusher =>
   new EvmPricePusher(
     hermesClient,
     chain.client,
     chain.pythContract,
-    logger,
+    noopLogger,
     1.1, // overrideGasPriceMultiplier
     5, // overrideGasPriceMultiplierCap
     1, // updateFeeMultiplier
@@ -160,32 +153,31 @@ const makePusher = (
     undefined, // gasLimit
     timeoutMs, // receiptWaitTimeoutMs
     intervalMs, // receiptPollIntervalMs
+    onReceiptOutcome,
   );
 
 const PRICE_IDS = [
   "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
 ];
 const PUB_TIMES: UnixTimestamp[] = [1000];
-// Emitted by evm.ts once per landed, successful tx. Kept at debug level.
-const SUCCESS_MSG = "Price update successful";
-const successLogs = (entries: LogEntry[]): LogEntry[] =>
-  entries.filter((entry) => entry.msg === SUCCESS_MSG && entry.hash !== undefined);
+const successHashesOf = (outcomes: ReceiptOutcome[]): Hash[] =>
+  outcomes
+    .filter((outcome) => outcome.status === "success")
+    .map((outcome) => outcome.hash);
 
 describe("EvmPricePusher receipt tracking (leak fix)", () => {
-  it("happy path: logs success once, polls only getTransactionReceipt, never getTransactionByHash", async () => {
+  it("happy path: reports success once, polls only getTransactionReceipt, never getTransactionByHash", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "success"; // lands on first poll
-    const { logger, logs } = makeLogger();
-    const pusher = makePusher(chain, logger, 500, 20);
+    const { outcomes, onReceiptOutcome } = makeOutcomes();
+    const pusher = makePusher(chain, 500, 20, onReceiptOutcome);
 
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(120);
 
-    const landed = successLogs(logs.debug).filter(
-      (entry) =>
-        entry.hash !== undefined && chain.sentHashes.includes(entry.hash),
-    );
-    expect(landed).toHaveLength(1);
+    expect(outcomes).toEqual([
+      { hash: chain.sentHashes[0], status: "success" },
+    ]);
     expect(chain.calls.getTransactionByHash).toBe(0);
     expect(chain.calls.waitForTransactionReceipt).toBe(0);
     expect(chain.calls.getTransactionReceipt).toBeLessThanOrEqual(2);
@@ -194,10 +186,10 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
   it("never-lands: the receipt poll is BOUNDED and stops (no leak)", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "pending"; // never lands
-    const { logger, logs } = makeLogger();
+    const { outcomes, onReceiptOutcome } = makeOutcomes();
     const timeoutMs = 200;
     const intervalMs = 40;
-    const pusher = makePusher(chain, logger, timeoutMs, intervalMs);
+    const pusher = makePusher(chain, timeoutMs, intervalMs, onReceiptOutcome);
 
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(timeoutMs + 150);
@@ -211,19 +203,22 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     // After the deadline, polling must have fully stopped.
     await sleep(200);
     expect(chain.calls.getTransactionReceipt).toBe(countAtDeadline);
-    expect(successLogs(logs.debug)).toHaveLength(0);
+    // It gave up at the deadline rather than landing.
+    expect(outcomes).toEqual([
+      { hash: chain.sentHashes[0], status: "timeout" },
+    ]);
     expect(chain.calls.getTransactionByHash).toBe(0);
   });
 
-  it("same-nonce escalation: both hashes stay watched; the OLD tx winning the race is still logged (Codex)", async () => {
+  it("same-nonce escalation: both hashes stay watched; the OLD tx winning the race is still reported (Codex)", async () => {
     // On a same-nonce gas escalation the original and repriced tx compete for
     // the nonce, and a miner may include the OLD one over the replacement. The
-    // original's tracker must NOT be cancelled, or its landing is never logged
-    // and the Grafana Tx-Hash panel misses a tx that actually landed.
+    // original's tracker must NOT be cancelled, or its landing is never reported
+    // and a tx that actually landed goes unobserved.
     const chain = new MockChain();
     chain.defaultPolicy = "pending"; // both pending -> same-nonce escalation path
-    const { logger, logs } = makeLogger();
-    const pusher = makePusher(chain, logger, 10_000, 30);
+    const { outcomes, onReceiptOutcome } = makeOutcomes();
+    const pusher = makePusher(chain, 10_000, 30, onReceiptOutcome);
 
     // Push A (nonce 5), then push B — same nonce (A not landed), escalated gas.
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
@@ -246,20 +241,18 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     chain.policyByHash.set(hashA, "success");
     await sleep(90);
 
-    const successHashes = successLogs(logs.debug).map((entry) => entry.hash);
-    expect(successHashes).toContain(hashA); // A's landing IS logged
-    expect(successHashes).not.toContain(hashB); // B never lands
-    expect(successLogs(logs.debug)).toHaveLength(1);
+    // A's landing IS reported, and B never lands.
+    expect(successHashesOf(outcomes)).toEqual([hashA]);
 
     pusher.dispose();
     await sleep(20);
   });
 
-  it("nonce advance: the resolved nonce's stragglers are aborted (bounded) but its landed tx is still logged", async () => {
+  it("nonce advance: the resolved nonce's stragglers are aborted (bounded) but its landed tx is still reported", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "pending";
-    const { logger, logs } = makeLogger();
-    const pusher = makePusher(chain, logger, 10_000, 30);
+    const { outcomes, onReceiptOutcome } = makeOutcomes();
+    const pusher = makePusher(chain, 10_000, 30, onReceiptOutcome);
 
     // Push A (nonce 5), pending.
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
@@ -267,15 +260,14 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     const hashA = chain.sentHashes[0] as Hash;
 
     // A lands and the on-chain nonce advances; the next push uses nonce 6, a
-    // DIFFERENT nonce, which aborts A's straggler while still logging A.
+    // DIFFERENT nonce, which aborts A's straggler while still reporting A.
     chain.policyByHash.set(hashA, "success");
     chain.minedTxCount = 6;
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(90);
 
-    // A's landing is logged via the final lookup on abort.
-    const successHashes = successLogs(logs.debug).map((entry) => entry.hash);
-    expect(successHashes).toContain(hashA);
+    // A's landing is reported via the final lookup on abort.
+    expect(successHashesOf(outcomes)).toContain(hashA);
 
     // A is then aborted -> no longer polled (bounded across the nonce boundary).
     const aAfter = chain.receiptCallsByHash.get(hashA) ?? 0;
@@ -286,16 +278,18 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
     await sleep(20);
   });
 
-  it("reverted tx: no success log, tracker stops", async () => {
+  it("reverted tx: reported as reverted rather than success, tracker stops", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "reverted";
-    const { logger, logs } = makeLogger();
-    const pusher = makePusher(chain, logger, 500, 20);
+    const { outcomes, onReceiptOutcome } = makeOutcomes();
+    const pusher = makePusher(chain, 500, 20, onReceiptOutcome);
 
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     await sleep(120);
 
-    expect(successLogs(logs.debug)).toHaveLength(0);
+    expect(outcomes).toEqual([
+      { hash: chain.sentHashes[0], status: "reverted" },
+    ]);
     expect(chain.calls.getTransactionReceipt).toBeLessThanOrEqual(2);
     expect(chain.calls.getTransactionByHash).toBe(0);
   });
@@ -303,9 +297,8 @@ describe("EvmPricePusher receipt tracking (leak fix)", () => {
   it("pushes stop: the last un-landing tracker self-terminates at the deadline", async () => {
     const chain = new MockChain();
     chain.defaultPolicy = "pending";
-    const { logger } = makeLogger();
     const timeoutMs = 150;
-    const pusher = makePusher(chain, logger, timeoutMs, 30);
+    const pusher = makePusher(chain, timeoutMs, 30);
 
     await pusher.updatePriceFeed(PRICE_IDS, PUB_TIMES);
     // Controller goes idle (no more pushes). The tracker must not poll forever.
