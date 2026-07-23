@@ -1162,5 +1162,11 @@
     "chain": "robinhood_testnet",
     "type": "EvmWormholeContract",
     "deploymentType": "stable"
+  },
+  {
+    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "chain": "bsc",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
