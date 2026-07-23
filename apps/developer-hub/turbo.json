@@ -4,13 +4,6 @@
   "tasks": {
     "build": {
       "dependsOn": ["generate:docs", "generate:changelog"],
-      "outputs": [
-        "lib/**",
-        "dist/**",
-        ".next/**",
-        "!.next/cache/**",
-        ".source/**"
-      ],
       "env": [
         "VERCEL_ENV",
         "COOKIE_SIGNING_SECRET",
@@ -21,6 +14,13 @@
         "PLAYGROUND_MAX_STREAM_DURATION_MS",
         "PLAYGROUND_RATE_LIMIT_WINDOW_MS",
         "PLAYGROUND_RATE_LIMIT_MAX_REQUESTS"
+      ],
+      "outputs": [
+        "lib/**",
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        ".source/**"
       ]
     },
     "fix:lint": {
