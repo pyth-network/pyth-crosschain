@@ -24,7 +24,7 @@ import type { Vault } from "../../node/utils/governance";
 import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract, Storable, toDeploymentType } from "../base";
-import type { Chain, SuiLazerMeta } from "../chains";
+import type { Chain, MoveLazerMeta } from "../chains";
 import { SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
@@ -617,7 +617,7 @@ export class SuiLazerContract extends Storable {
         throw new Error("'seen_sequence' bigger than JS integer");
       }
 
-      since = Number(seen_sequence);
+      since = Number(seen_sequence + 1n);
     }
 
     for (let i = since; ; i++) {
@@ -718,7 +718,7 @@ export class SuiLazerContract extends Storable {
   async fetchAndBumpMeta(
     chain: SuiChain,
     packagePath: string,
-  ): Promise<SuiLazerMeta> {
+  ): Promise<MoveLazerMeta> {
     const { version } = await chain.getStatePackageInfo(
       chain.getProvider(),
       this.stateId,

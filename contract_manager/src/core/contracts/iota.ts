@@ -1,22 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-base-to-string */
+/** biome-ignore-all lint/style/noNonNullAssertion: legacy code */
+import { parseVaa } from "@certusone/wormhole-sdk";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
 import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import {
+  decodeGovernancePayload,
+  UpdateTrustedSigner264Bit,
+  UpgradeSuiLazerContract,
+} from "@pythnetwork/xc-admin-common";
 
+import type { Vault } from "../../node/utils/governance";
+import { SubmittedWormholeMessage } from "../../node/utils/governance";
 import type { PrivateKey, TxResult } from "../base";
-import { PriceFeedContract } from "../base";
-import type { Chain } from "../chains";
+import { PriceFeedContract, Storable } from "../base";
+import type { Chain, MoveLazerMeta } from "../chains";
 import { IotaChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
@@ -84,7 +84,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
    * @param objectId - the object id to get
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    return this.client.getPackageId(objectId);
+    return await this.client.getPackageId(objectId);
   }
 
   async getPythPackageId(): Promise<ObjectId> {
@@ -99,7 +99,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     return `${this.chain.getId()}_${this.stateId}`;
   }
 
-  private async parsePrice(priceInfo: {
+  private parsePrice(priceInfo: {
     type: string;
     fields: {
       expo: { fields: { magnitude: string; negative: boolean } };
@@ -139,14 +139,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
       );
     }
     return {
-      emaPrice: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      emaPrice: this.parsePrice(
         // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields
           .ema_price,
       ),
-      price: await this.parsePrice(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      price: this.parsePrice(
         // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields.price,
       ),
@@ -176,7 +174,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeUpdatePriceFeed(): Promise<TxResult> {
+  executeUpdatePriceFeed(): Promise<TxResult> {
     // We need the feed ids to be able to execute the transaction
     // it may be possible to get them from the VAA but in batch transactions,
     // it is also possible to hava fewer feeds that user wants to update compared to
@@ -324,7 +322,6 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
   async getValidTimePeriod() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return Number(fields.stale_price_threshold);
   }
@@ -346,7 +343,6 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Data Sources type mismatch");
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return result.data.content.fields.value.fields.keys.map(
       ({
@@ -369,7 +365,6 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const governanceFields = fields.governance_data_source.fields;
     const chainId = governanceFields.emitter_chain;
@@ -383,14 +378,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return { amount: fields.base_update_fee };
   }
 
   async getLastExecutedGovernanceSequence() {
     const fields = await this.getStateFields();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return Number(fields.last_executed_governance_sequence);
   }
@@ -471,8 +464,8 @@ export class IotaWormholeContract extends WormholeContract {
   // via a Iota transaction due to the linear nature of the language, this is
   // enforced at the TransactionBlock level by only allowing you to receive
   // receipts.
-  async getChainId(): Promise<number> {
-    return this.chain.getWormholeChainId();
+  getChainId(): Promise<number> {
+    return Promise.resolve(this.chain.getWormholeChainId());
   }
 
   // NOTE: There's no way to getChain() on the main interface, should update
@@ -532,7 +525,7 @@ export class IotaWormholeContract extends WormholeContract {
     return { id: result.digest, info: result };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: TODO
   private async getStateFields(): Promise<any> {
     const provider = this.chain.getProvider();
     const result = await provider.getObject({
@@ -565,5 +558,196 @@ export class IotaWormholeContract extends WormholeContract {
       signer: keypair,
       transaction: tx,
     });
+  }
+}
+
+export class IotaLazerContract extends Storable {
+  static type = "IotaLazerContract";
+
+  constructor(
+    public readonly chain: IotaChain,
+    public readonly stateId: string,
+    public readonly wormholeStateId: string,
+  ) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.stateId}`;
+  }
+
+  getType(): string {
+    return IotaLazerContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      stateId: this.stateId,
+      type: IotaLazerContract.type,
+      wormholeStateId: this.wormholeStateId,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; stateId: string; wormholeStateId: string },
+  ): IotaLazerContract {
+    if (parsed.type !== IotaLazerContract.type) {
+      throw new Error("Invalid type");
+    }
+    if (!(chain instanceof IotaChain)) {
+      throw new Error(`Wrong chain type ${chain}`);
+    }
+    return new IotaLazerContract(chain, parsed.stateId, parsed.wormholeStateId);
+  }
+
+  async executeGovernanceProposals(
+    signer: Ed25519Keypair,
+    chain: IotaChain,
+    vault: Vault,
+    packagePath: string,
+    since?: number,
+    console_: Pick<Console, "info" | "warn"> = console,
+  ) {
+    const client = chain.getProvider();
+    const emitterKey = await vault.getEmitter();
+
+    if (since === undefined) {
+      console_.info("Fetching last seen sequence ID...");
+      const { seen_sequence } = await chain.getStateGovernanceInfo(
+        client,
+        this.stateId,
+      );
+      if (seen_sequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("'seen_sequence' bigger than JS integer");
+      }
+      since = Number(seen_sequence + 1n);
+    }
+
+    for (let sequence = since; ; sequence++) {
+      const vaaRef = new SubmittedWormholeMessage(
+        emitterKey,
+        sequence,
+        vault.cluster,
+      );
+      let vaa: Uint8Array;
+      try {
+        vaa = await vaaRef.fetchVaa();
+      } catch {
+        console_.warn(`Could not find VAA #${sequence.toString()}, ending.`);
+        break;
+      }
+
+      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      if (!action) {
+        console_.warn(
+          `Could not parse VAA #${sequence.toString()} action, skipping...`,
+        );
+        continue;
+      }
+      if (action.targetChainId !== chain.wormholeChainName) {
+        console_.warn(
+          `Expected chain '${chain.wormholeChainName}',`,
+          `VAA #${sequence.toString()} targets '${action.targetChainId}', skipping... `,
+        );
+        continue;
+      }
+
+      if (action instanceof UpgradeSuiLazerContract) {
+        console_.info(
+          `Attempting contract upgrade to version ${action.version.toString()}...`,
+        );
+        console_.info("  (will fail if not on correct source version)");
+        const meta = await this.fetchAndBumpMeta(chain, packagePath);
+        const pkg = await chain.buildLazerPackage(
+          packagePath,
+          this.wormholeStateId,
+        );
+        const digest = await chain.upgradeLazerContract({
+          meta,
+          pkg,
+          signer,
+          stateId: this.stateId,
+          vaa,
+          wormholeStateId: this.wormholeStateId,
+        });
+        console_.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else if (action instanceof UpdateTrustedSigner264Bit) {
+        console_.info(`Updating trusted signer ${action.publicKey}...`);
+        const digest = await chain.updateTrustedSigner({
+          signer,
+          stateId: this.stateId,
+          vaa,
+          wormholeStateId: this.wormholeStateId,
+        });
+        console_.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else {
+        console_.warn(
+          `Unknown governance action in VAA #${sequence.toString()}, skipping...`,
+        );
+      }
+    }
+  }
+
+  async getTrustedSigners(): Promise<
+    { publicKey: string; expiresAt: bigint }[]
+  > {
+    const result = await this.chain.getProvider().getObject({
+      id: this.stateId,
+      options: { showContent: true },
+    });
+    if (
+      !result.data?.content ||
+      result.data.content.dataType !== "moveObject"
+    ) {
+      throw new Error("Unable to fetch Lazer state object");
+    }
+
+    const stateFields = result.data.content.fields;
+    if (Array.isArray(stateFields)) {
+      throw new Error("Invalid fields in Lazer state object");
+    }
+    const trustedSigners = (stateFields as Record<string, unknown>)
+      .trusted_signers;
+    if (!Array.isArray(trustedSigners)) {
+      throw new Error("Invalid trusted_signers field in Lazer state object");
+    }
+    return trustedSigners.map((signer) => {
+      const fields = IotaChain.getMoveStructFields(signer, "TrustedSignerInfo");
+      if (
+        typeof fields.expires_at !== "string" &&
+        typeof fields.expires_at !== "number"
+      ) {
+        throw new Error("Invalid expires_at field in TrustedSignerInfo");
+      }
+      return {
+        expiresAt: BigInt(fields.expires_at),
+        publicKey: IotaChain.bytesFromMoveField(
+          fields.public_key,
+          "TrustedSignerInfo.public_key",
+        ).toString("hex"),
+      };
+    });
+  }
+
+  async fetchAndBumpMeta(
+    chain: IotaChain,
+    packagePath: string,
+  ): Promise<MoveLazerMeta> {
+    const { package: packageId, version } = await chain.getStatePackageInfo(
+      chain.getProvider(),
+      this.stateId,
+    );
+    const meta = {
+      receiver_chain_id: chain.getWormholeChainId(),
+      version: (BigInt(version) + 1n).toString(),
+    };
+    await chain.updateLazerMeta(packagePath, meta, packageId);
+    return meta;
   }
 }
