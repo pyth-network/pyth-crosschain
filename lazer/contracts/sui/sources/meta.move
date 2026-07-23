@@ -9,7 +9,7 @@ module pyth_lazer::meta;
 /// `UpgradeCap` version, and thus attempts to publish or upgrade the package
 /// using an invalid version will result in the package becoming locked.
 public(package) fun version(): u64 {
-    2
+    1
 }
 
 /// References:
