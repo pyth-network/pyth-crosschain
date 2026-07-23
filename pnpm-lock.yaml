@@ -57,6 +57,9 @@ catalogs:
     '@heroicons/react':
       specifier: ^2.2.0
       version: 2.2.0
+    '@iota/iota-sdk':
+      specifier: ^1.11.0
+      version: 1.11.0
     '@next/third-parties':
       specifier: ^16.1.1
       version: 16.1.1
@@ -66,6 +69,9 @@ catalogs:
     '@pythnetwork/client':
       specifier: ^2.22.1
       version: 2.22.1
+    '@pythnetwork/pyth-lazer-sdk':
+      specifier: ^5.2.0
+      version: 5.2.1
     '@react-hookz/web':
       specifier: ^25.1.0
       version: 25.1.0
@@ -2025,6 +2031,40 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 17.0.33
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
+      yargs:
+        specifier: 'catalog:'
+        version: 18.0.0
+
+  lazer/contracts/iota/sdk/js:
+    dependencies:
+      '@iota/iota-sdk':
+        specifier: 'catalog:'
+        version: 1.11.0(typescript@5.9.3)
+    devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 4.0.2(typescript@5.9.3)
+      '@pythnetwork/jest-config':
+        specifier: 'workspace:'
+        version: link:../../../../../packages/jest-config
+      '@pythnetwork/pyth-lazer-sdk':
+        specifier: 'catalog:'
+        version: 5.2.1(bufferutil@4.0.9)(utf-8-validate@6.0.3)
+      '@types/jest':
+        specifier: 'catalog:'
+        version: 29.5.14
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
+      '@types/yargs':
+        specifier: 'catalog:'
+        version: 17.0.33
+      jest:
+        specifier: 'catalog:'
+        version: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))
       tsx:
         specifier: 'catalog:'
         version: 4.20.6
