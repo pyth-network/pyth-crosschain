@@ -4,6 +4,7 @@
 [package]
 name = "pyth_lazer"
 edition = "2024"
+published-at = "0x0737771e2ecf605331e299bfeae6fec4aa8a038db0bf600f7d34f38e471c36f2"
 
 [dependencies]
 wormhole = { local = "./vendor/wormhole_testnet" }
