@@ -1140,5 +1140,11 @@
     "chain": "robinhood_testnet",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
+    "chain": "bsc",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
