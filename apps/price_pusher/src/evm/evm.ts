@@ -143,6 +143,13 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 }
 
+// The terminal state of a receipt tracker. Reported through `onReceiptOutcome`
+// so the tracker's result is observable without scraping log output.
+export type ReceiptOutcome =
+  | { hash: `0x${string}`; status: "success" }
+  | { hash: `0x${string}`; status: "reverted" }
+  | { hash: `0x${string}`; status: "timeout" };
+
 export class EvmPricePusher implements IPricePusher {
   private pusherAddress: `0x${string}` | undefined;
   private lastPushAttempt: PushAttempt | undefined;
@@ -177,6 +184,10 @@ export class EvmPricePusher implements IPricePusher {
     private receiptWaitTimeoutMs = 60_000,
     // How often to poll `eth_getTransactionReceipt` while waiting.
     private receiptPollIntervalMs = 2000,
+    // Called once per tracker with its terminal state. Unset in production,
+    // where the outcome is only logged; it exists so the tracker's result can
+    // be asserted on directly instead of through log output.
+    private onReceiptOutcome?: (outcome: ReceiptOutcome) => void,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -441,10 +452,10 @@ export class EvmPricePusher implements IPricePusher {
   }
 
   // Start a receipt tracker for a freshly-sent tx. Fire-and-forget by design —
-  // the receipt is observational (it only produces the "Price update successful"
-  // log the Grafana Tx-Hash panel scrapes); the controller never blocks on it,
-  // and the re-send/nonce/gas decision is driven by a fresh `getTransactionCount`
-  // each cycle, not by the receipt.
+  // the receipt is observational (it reports an outcome via `onReceiptOutcome`
+  // and logs it); the controller never blocks on it, and the re-send/nonce/gas
+  // decision is driven by a fresh `getTransactionCount` each cycle, not by the
+  // receipt.
   private trackTransactionReceipt(hash: `0x${string}`, nonce: number): void {
     // A new nonce means the previous nonce already resolved (a tx for it landed,
     // advancing the on-chain count), so abort the stragglers still polling the
@@ -493,10 +504,10 @@ export class EvmPricePusher implements IPricePusher {
       // would miss the hash of a tx that landed just as the next push started).
       if (receipt !== undefined) {
         if (receipt.status === "success") {
-          // Keep one non-debug hash line per landed tx: the bundled Grafana
-          // "Tx Hash" panel scrapes this message from Loki and extracts {{.hash}}.
+          this.onReceiptOutcome?.({ hash, status: "success" });
           this.logger.debug({ hash }, "Price update successful");
         } else {
+          this.onReceiptOutcome?.({ hash, status: "reverted" });
           this.logger.debug(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
@@ -512,6 +523,7 @@ export class EvmPricePusher implements IPricePusher {
         return;
       }
       if (Date.now() >= deadline) {
+        this.onReceiptOutcome?.({ hash, status: "timeout" });
         this.logger.debug(
           { hash },
           "Gave up waiting for the transaction receipt within the timeout. " +
