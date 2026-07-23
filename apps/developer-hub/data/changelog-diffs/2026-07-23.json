@@ -1,0 +1,589 @@
+{
+  "date": "2026-07-23",
+  "label": "Thursday",
+  "summary": {
+    "added": 61,
+    "went_live": 1,
+    "removed": 2
+  },
+  "hero": "61 new feeds announced, 1 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Metal.AL3M/USD",
+      "lazerId": 3450,
+      "asset": "Pyth Price In Usd For Aluminium 3-Month",
+      "assetType": "metal",
+      "changeType": "removed",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.WTIQ6/USD",
+      "lazerId": 3069,
+      "asset": "Pyth Price In Usd For Wti 21 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-23",
+      "quote": "USD",
+      "hermesId": "05e7c9b556df67e455c52ea2d31658744e3f4ade60db7dab887008844f2ae472"
+    },
+    {
+      "id": "Commodities.Index.COPPER/USD",
+      "lazerId": 3266,
+      "asset": "Pyth Price In Usd For Copper 24",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.CN.688825/CNY",
+      "lazerId": 3520,
+      "asset": "Changxin Memory Technologies",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.US.BITO/USD",
+      "lazerId": 3518,
+      "asset": "Proshares Bitcoin Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.YUMC/USD",
+      "lazerId": 3517,
+      "asset": "Yum China Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.WWD/USD",
+      "lazerId": 3516,
+      "asset": "Woodward Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.WTRG/USD",
+      "lazerId": 3515,
+      "asset": "Essential Utils Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.WSO/USD",
+      "lazerId": 3514,
+      "asset": "Watsco Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.WPC/USD",
+      "lazerId": 3513,
+      "asset": "Wp Carey Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.VEEV/USD",
+      "lazerId": 3512,
+      "asset": "Veeva Sys Inc Cl A Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.UTHR/USD",
+      "lazerId": 3511,
+      "asset": "United Therapeutics Corp Del Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TW/USD",
+      "lazerId": 3510,
+      "asset": "Tradeweb Mkts Inc Cl A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TRU/USD",
+      "lazerId": 3509,
+      "asset": "Transunion Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TOST/USD",
+      "lazerId": 3508,
+      "asset": "Toast Inc Cl A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SUI/USD",
+      "lazerId": 3507,
+      "asset": "Sun Cmntys Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.STRL/USD",
+      "lazerId": 3506,
+      "asset": "Sterling Infrastructure Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SSNC/USD",
+      "lazerId": 3505,
+      "asset": "Ss&C Tech Hldgs Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SOLS/USD",
+      "lazerId": 3504,
+      "asset": "Solstice Advanced Matls Inc Com Shs",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.SNX/USD",
+      "lazerId": 3503,
+      "asset": "Td Synnex Corp Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.RS/USD",
+      "lazerId": 3502,
+      "asset": "Reliance, Inc. Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.RPRX/USD",
+      "lazerId": 3501,
+      "asset": "Royalty Pharma Plc Shs Class A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.RPM/USD",
+      "lazerId": 3500,
+      "asset": "Rpm Intl Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.RGLD/USD",
+      "lazerId": 3499,
+      "asset": "Royal Gold Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.QSR/USD",
+      "lazerId": 3498,
+      "asset": "Restaurant Brands Intl Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.Q/USD",
+      "lazerId": 3497,
+      "asset": "Qnity Electronics Inc Common Stock",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.PNFP/USD",
+      "lazerId": 3496,
+      "asset": "Pinnacle Finl Partners Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.OKTA/USD",
+      "lazerId": 3495,
+      "asset": "Okta Inc Cl A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NXT/USD",
+      "lazerId": 3494,
+      "asset": "Nextpower Inc Class A Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.NVT/USD",
+      "lazerId": 3493,
+      "asset": "Nvent Elec Plc Shs",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MTZ/USD",
+      "lazerId": 3492,
+      "asset": "Mastec Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MTSI/USD",
+      "lazerId": 3491,
+      "asset": "Macom Tech Solutions Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MRSH/USD",
+      "lazerId": 3490,
+      "asset": "Marsh & Mclennan Cos Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MKL/USD",
+      "lazerId": 3489,
+      "asset": "Markel Group Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.LPLA/USD",
+      "lazerId": 3488,
+      "asset": "Lpl Finl Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.LNG/USD",
+      "lazerId": 3487,
+      "asset": "Cheniere Energy Inc Com New",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.JAZZ/USD",
+      "lazerId": 3486,
+      "asset": "Jazz Pharmaceuticals Plc Shs Usd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ILMN/USD",
+      "lazerId": 3485,
+      "asset": "Illumina Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.HEIa/USD",
+      "lazerId": 3484,
+      "asset": "Heico Corp New Cl A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.GLPI/USD",
+      "lazerId": 3483,
+      "asset": "Gaming & Leisure P Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.GGG/USD",
+      "lazerId": 3482,
+      "asset": "Graco Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.FWONK/USD",
+      "lazerId": 3481,
+      "asset": "Liberty Media Corp Del Com Lbty One S C",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.FTI/USD",
+      "lazerId": 3480,
+      "asset": "Technipfmc Plc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.FTAI/USD",
+      "lazerId": 3479,
+      "asset": "Ftai Aviation Ltd Shs",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.FNF/USD",
+      "lazerId": 3478,
+      "asset": "Fidelity Natl Finl Inc Com Shs",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.FIX/USD",
+      "lazerId": 3477,
+      "asset": "Comfort Sys Usa Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ENTG/USD",
+      "lazerId": 3476,
+      "asset": "Entegris Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.EME/USD",
+      "lazerId": 3475,
+      "asset": "Emcor Group Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.DT/USD",
+      "lazerId": 3474,
+      "asset": "Dynatrace Inc Com New",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.DOCU/USD",
+      "lazerId": 3473,
+      "asset": "Docusign Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CVNA/USD",
+      "lazerId": 3472,
+      "asset": "Carvana Co Cl A",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CSL/USD",
+      "lazerId": 3471,
+      "asset": "Carlisle Cos Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CRS/USD",
+      "lazerId": 3470,
+      "asset": "Carpenter Technology Corp Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CG/USD",
+      "lazerId": 3469,
+      "asset": "Carlyle Group Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CDE/USD",
+      "lazerId": 3468,
+      "asset": "Coeur Mng Inc Com New",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.CCK/USD",
+      "lazerId": 3467,
+      "asset": "Crown Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.BWXT/USD",
+      "lazerId": 3466,
+      "asset": "Bwx Technologies Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.BURL/USD",
+      "lazerId": 3465,
+      "asset": "Burlington Stores Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.BJ/USD",
+      "lazerId": 3464,
+      "asset": "Bjs Whsl Club Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ATI/USD",
+      "lazerId": 3463,
+      "asset": "Ati Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ARES/USD",
+      "lazerId": 3462,
+      "asset": "Ares Management Corporation Cl A Com Stk",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ARCC/USD",
+      "lazerId": 3461,
+      "asset": "Ares Capital Corp Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.ALLY/USD",
+      "lazerId": 3460,
+      "asset": "Ally Finl Inc Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.AA/USD",
+      "lazerId": 3459,
+      "asset": "Alcoa Corp Com",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-07-23",
+      "quote": "USD"
+    }
+  ]
+}
