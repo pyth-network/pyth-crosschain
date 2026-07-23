@@ -1,6 +1,6 @@
 [
   {
-    "endpointType": "json-rpc",
+    "endpointType": "grpc",
     "id": "sui_testnet",
     "mainnet": false,
     "rpcUrl": "https://fullnode.testnet.sui.io:443",

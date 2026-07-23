@@ -3,3 +3,9 @@ chain-id = "35834a8a"
 published-at = "0xefbfd064480777699fd9c557a5804d72ace7bc82661fdc8d1f1a44ea6d92ee10"
 original-id = "0x7b502c8a7bcb3915892347f11086745570e759fe9708d03c03accf4c90bbf580"
 version = 2
+
+[published.testnet]
+chain-id = "4c78adac"
+published-at = "0x80dda7c855587ca6573916d9753ead37532bf1e5d016946f0f3573d9454e9b41"
+original-id = "0x80dda7c855587ca6573916d9753ead37532bf1e5d016946f0f3573d9454e9b41"
+version = 1
