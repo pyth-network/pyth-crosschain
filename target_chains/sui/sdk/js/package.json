@@ -8,7 +8,7 @@
   },
   "description": "Pyth Network Sui Utilities",
   "devDependencies": {
-    "@mysten/sui": "^2.7.0",
+    "@mysten/sui": "^2.22.1",
     "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
@@ -71,7 +71,7 @@
   "module": "./dist/esm/index.mjs",
   "name": "@pythnetwork/pyth-sui-js",
   "peerDependencies": {
-    "@mysten/sui": "^2.7.0"
+    "@mysten/sui": "^2.22.1"
   },
   "publishConfig": {
     "access": "public"

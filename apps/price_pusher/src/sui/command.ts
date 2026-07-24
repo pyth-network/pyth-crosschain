@@ -74,12 +74,6 @@ export default {
       required: true,
       type: "string",
     } as Options,
-    "num-gas-objects": {
-      default: 30,
-      description: "Number of gas objects in the pool.",
-      required: true,
-      type: "number",
-    } as Options,
     "pyth-state-id": {
       description:
         "Pyth State Id. Can be found here" +
@@ -124,7 +118,6 @@ export default {
       pollingFrequency,
       pythStateId,
       wormholeStateId,
-      numGasObjects,
       ignoreGasObjects,
       gasBudget,
       accountIndex,
@@ -212,7 +205,7 @@ export default {
       grpcMetadata,
     );
 
-    const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
+    const suiPusher = await SuiPricePusher.createWithAddressBalanceGas(
       hermesClient,
       logger.child({ module: "SuiPricePusher" }),
       pythStateId,
@@ -222,7 +215,6 @@ export default {
       network,
       keypair,
       gasBudget,
-      numGasObjects,
       ignoreGasObjects,
       grpcMetadata,
     );

@@ -9,7 +9,7 @@
     "@injectivelabs/networks": "1.14.47",
     "@injectivelabs/sdk-ts": "1.14.50",
     "@injectivelabs/utils": "^1.14.48",
-    "@mysten/sui": "^2.7.0",
+    "@mysten/sui": "^2.22.1",
     "@protobuf-ts/grpc-transport": "^2.11.1",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-sdk": "workspace:^",
