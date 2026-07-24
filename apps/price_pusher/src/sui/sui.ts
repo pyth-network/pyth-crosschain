@@ -19,10 +19,15 @@ import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
 
-const GAS_FEE_FOR_SPLIT = 2_000_000_000;
+// The SUI coin type, used for address-balance withdrawals and deposits.
+const SUI_COIN_TYPE = "0x2::sui::SUI";
+// Gas budget for the one-time startup transaction that consolidates the wallet's
+// Coin objects into its SIP-58 address balance. It doubles as the amount left
+// behind in the gas coin to pay for that transaction; the small remainder stays
+// as a residual coin and is swept into the address balance on the next startup.
+const GAS_BUDGET_FOR_CONSOLIDATION = 100_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
-const MAX_NUM_OBJECTS_IN_ARGUMENT = 510;
 
 type ObjectId = string;
 type SuiAddress = string;
@@ -209,9 +214,10 @@ export class SuiPriceListener extends ChainPriceListener {
  * 1. This implementation does not use `update_price_feeds_if_necssary` and simulate the transaction
  *    before submission. If multiple instances of this pusher are running in parallel, all of them will
  *    land all of their pushed updates on-chain.
- * 2. The pusher will split the Coin balance in the provided account into a pool of different Coin objects.
- *    Each transaction will be allocated a Coin object from this pool as needed. This process enables the
- *    transactions to avoid referencing the same owned objects, which allows them to be processed in parallel.
+ * 2. The pusher pays both transaction gas and the per-update fee directly from the account's SIP-58
+ *    address balance instead of from owned Coin objects. Address-balance withdrawals settle through the
+ *    accumulator with no per-object locking, so many pushes execute in parallel without contending on a
+ *    shared gas coin. On startup all pre-existing Coin objects are consolidated into the address balance.
  */
 export class SuiPricePusher implements IPricePusher {
   constructor(
@@ -220,15 +226,16 @@ export class SuiPricePusher implements IPricePusher {
     private logger: Logger,
     private hermesClient: HermesClient,
     private gasBudget: number,
-    private gasPool: SuiObjectRef[],
     private pythClient: SuiPythClient,
   ) {}
 
   /**
-   * Create a price pusher with a pool of `numGasObjects` gas coins that will be used to send transactions.
-   * The gas coins of the wallet for the provided keypair will be merged and then evenly split into `numGasObjects`.
+   * Create a price pusher that pays gas from the account's SIP-58 address balance.
+   * On startup every Coin object owned by the provided keypair is consolidated into
+   * that address balance so subsequent pushes can draw gas from it in parallel.
+   * `ignoreGasObjects` lists coins to leave untouched during consolidation (e.g. locked objects).
    */
-  static async createWithAutomaticGasPool(
+  static async createWithAddressBalanceGas(
     hermesClient: HermesClient,
     logger: Logger,
     pythStateId: string,
@@ -238,16 +245,9 @@ export class SuiPricePusher implements IPricePusher {
     network: SuiNetwork,
     keypair: Ed25519Keypair,
     gasBudget: number,
-    numGasObjects: number,
     ignoreGasObjects: string[],
     grpcMetadata?: SuiGrpcMetadata,
   ): Promise<SuiPricePusher> {
-    if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
-      throw new Error(
-        `numGasObjects cannot be greater than ${MAX_NUM_OBJECTS_IN_ARGUMENT} until we implement split chunking`,
-      );
-    }
-
     const provider = createSuiProvider(
       endpointType,
       network,
@@ -255,10 +255,9 @@ export class SuiPricePusher implements IPricePusher {
       grpcMetadata,
     );
 
-    const gasPool = await SuiPricePusher.initializeGasPool(
+    await SuiPricePusher.consolidateCoinsIntoAddressBalance(
       keypair,
       provider,
-      numGasObjects,
       ignoreGasObjects,
       logger,
     );
@@ -275,7 +274,6 @@ export class SuiPricePusher implements IPricePusher {
       logger,
       hermesClient,
       gasBudget,
-      gasPool,
       pythClient,
     );
   }
@@ -291,13 +289,10 @@ export class SuiPricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
-    if (this.gasPool.length === 0) {
-      this.logger.warn("Skipping update: no available gas coin.");
-      return;
-    }
-
     // 3 price feeds per transaction is the optimal number for gas cost.
     const priceIdChunks = chunkArray(priceIds, 3);
+
+    const baseUpdateFee = await this.pythClient.getBaseUpdateFee();
 
     const txBlocks: Transaction[] = [];
 
@@ -317,11 +312,30 @@ export class SuiPricePusher implements IPricePusher {
         }
         const vaa = response.binary.data[0];
         const tx = new Transaction();
-        await this.pythClient.updatePriceFeeds(
+        // Draw the per-update fee from the SIP-58 address balance rather than
+        // from the gas coin (there is none — gas is paid from the address
+        // balance too). `useGasCoin: false` forces the withdrawal path.
+        const feeCoin = tx.coin({
+          balance: baseUpdateFee * priceIdChunk.length,
+          useGasCoin: false,
+        });
+        const feeCoins = tx.splitCoins(
+          feeCoin,
+          priceIdChunk.map(() => tx.pure.u64(baseUpdateFee)),
+        );
+        await this.pythClient.updatePriceFeedsWithCoins(
           tx,
           [Buffer.from(vaa ?? "", "base64")],
           priceIdChunk,
+          feeCoins,
         );
+        // The fee coin is emptied by the splits above; destroy the zero remainder
+        // so the PTB has no dangling value.
+        tx.moveCall({
+          arguments: [feeCoin],
+          target: "0x2::coin::destroy_zero",
+          typeArguments: [SUI_COIN_TYPE],
+        });
         txBlocks.push(tx);
       }),
     );
@@ -334,18 +348,13 @@ export class SuiPricePusher implements IPricePusher {
     return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)));
   }
 
-  /** Send a single transaction block using a gas coin from the pool. */
+  /** Send a single transaction block, paying gas from the SIP-58 address balance. */
   private async sendTransactionBlock(tx: Transaction): Promise<void> {
-    const gasObject = this.gasPool.shift();
-    if (gasObject === undefined) {
-      this.logger.warn("No available gas coin. Skipping push.");
-      return;
-    }
-
-    let nextGasObject: SuiObjectRef | undefined = undefined;
+    // An empty gas payment tells the network to withdraw gas from the sender's
+    // address balance (SIP-58) instead of an owned gas coin.
+    tx.setGasPayment([]);
+    tx.setGasBudget(this.gasBudget);
     try {
-      tx.setGasPayment([gasObject]);
-      tx.setGasBudget(this.gasBudget);
       const result = await this.provider.core.signAndExecuteTransaction({
         include: { effects: true },
         signer: this.signer,
@@ -364,12 +373,6 @@ export class SuiPricePusher implements IPricePusher {
         );
       }
 
-      const gasObjectChange = executed.effects.gasObject;
-      nextGasObject =
-        gasObjectChange && gasObjectChange.objectId === gasObject.objectId
-          ? changedObjectToRef(gasObjectChange)
-          : undefined;
-
       // Keep at INFO: the bundled Grafana "Tx Hash" panel scrapes this message
       // from Loki and extracts {{.hash}}; debug is not emitted under the default
       // log level, which would hide successful Sui hashes from the dashboard.
@@ -380,40 +383,28 @@ export class SuiPricePusher implements IPricePusher {
     } catch (error: any) {
       if (
         String(error).includes("Balance of gas object") ||
-        String(error).includes("GasBalanceTooLow")
+        String(error).includes("GasBalanceTooLow") ||
+        String(error).includes("InsufficientBalanceForWithdraw")
       ) {
         this.logger.error(error, "Insufficient gas balance");
         // If the error is caused by insufficient gas, we should panic
         throw error;
       } else {
-        this.logger.error(
-          error,
-          "Failed to update price. Trying to refresh gas object references.",
-        );
-        // Refresh the coin object here in case the error is caused by an object version mismatch.
-        nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
-          this.provider,
-          gasObject,
-        );
+        this.logger.error(error, "Failed to update price.");
       }
-    }
-
-    if (nextGasObject !== undefined) {
-      this.gasPool.push(nextGasObject);
     }
   }
 
-  // This function will smash all coins owned by the signer into one, and then
-  // split them equally into numGasObjects.
-  // ignoreGasObjects is a list of gas objects that will be ignored during the
-  // merging -- use this to store any locked objects on initialization.
-  private static async initializeGasPool(
+  // Smash every Coin object owned by the signer into one and deposit it into the
+  // signer's own SIP-58 address balance, leaving only a small residual coin to pay
+  // for this transaction. Subsequent pushes then draw gas from the address balance.
+  // ignoreGasObjects is a list of coins to leave untouched (e.g. locked objects).
+  private static async consolidateCoinsIntoAddressBalance(
     signer: Ed25519Keypair,
     provider: ClientWithCoreApi,
-    numGasObjects: number,
     ignoreGasObjects: string[],
     logger: Logger,
-  ): Promise<SuiObjectRef[]> {
+  ): Promise<void> {
     const signerAddress = signer.toSuiAddress();
 
     if (ignoreGasObjects.length > 0) {
@@ -421,6 +412,20 @@ export class SuiPricePusher implements IPricePusher {
         { ignoreGasObjects },
         "Ignoring some gas objects for coin merging",
       );
+    }
+
+    const gasCoins = await SuiPricePusher.getAllGasCoins(
+      provider,
+      signerAddress,
+    );
+    const coinsToConsolidate = gasCoins.filter(
+      (coin) => !ignoreGasObjects.includes(coin.objectId),
+    );
+    if (coinsToConsolidate.length === 0) {
+      logger.info(
+        "No coins to consolidate; gas will be paid from the address balance.",
+      );
+      return;
     }
 
     const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
@@ -435,36 +440,45 @@ export class SuiPricePusher implements IPricePusher {
       objectId: consolidatedCoin.objectId,
     });
     if (!object.json) throw new Error("Bad coin object");
-    const balance = object.json.balance as string;
-    const splitAmount =
-      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
+    const balance = BigInt(object.json.balance as string);
+    const depositAmount = balance - BigInt(GAS_BUDGET_FOR_CONSOLIDATION);
+    if (depositAmount <= 0n) {
+      logger.warn(
+        { balance: balance.toString() },
+        "Consolidated coin balance too low to seed the address balance; leaving it as an owned coin.",
+      );
+      return;
+    }
 
-    const gasPool = await SuiPricePusher.splitGasCoinEqually(
-      signer,
-      provider,
-      signerAddress,
-      Number(splitAmount),
-      numGasObjects,
-      consolidatedCoin,
-    );
-    logger.info({ gasPool }, "Gas pool is filled with coins");
-    return gasPool;
-  }
-
-  // Attempt to refresh the version of the provided object reference to point to the current version
-  // of the object. Throws an error if the object cannot be refreshed.
-  private static async tryRefreshObjectReference(
-    provider: ClientWithCoreApi,
-    ref: SuiObjectRef,
-  ): Promise<SuiObjectRef> {
-    const { object } = await provider.core.getObject({
-      objectId: ref.objectId,
+    const tx = new Transaction();
+    tx.setGasPayment([consolidatedCoin]);
+    tx.setGasBudget(GAS_BUDGET_FOR_CONSOLIDATION);
+    const [deposit] = tx.splitCoins(tx.gas, [tx.pure.u64(depositAmount)]);
+    tx.moveCall({
+      arguments: [deposit!, tx.pure.address(signerAddress)],
+      target: "0x2::coin::send_funds",
+      typeArguments: [SUI_COIN_TYPE],
     });
-    return {
-      digest: object.digest,
-      objectId: object.objectId,
-      version: object.version,
-    };
+    const executed = getExecutedTransaction(
+      await provider.core.signAndExecuteTransaction({
+        include: { effects: true },
+        signer,
+        transaction: tx,
+      }),
+    );
+    if (executed.effects.status.error) {
+      throw new Error(
+        `Failed to deposit coins into the address balance: ${JSON.stringify(executed.effects.status.error)}. Try re-running the script`,
+      );
+    }
+    // Block until the deposit is settled before the pusher starts drawing gas
+    // from the address balance (gRPC endpoints are load-balanced across
+    // fullnodes at different checkpoints).
+    await provider.core.waitForTransaction({ digest: executed.digest });
+    logger.info(
+      { depositAmount: depositAmount.toString(), digest: executed.digest },
+      "Consolidated coins into the address balance",
+    );
   }
 
   private static async getAllGasCoins(
@@ -497,48 +511,6 @@ export class SuiPricePusher implements IPricePusher {
       throw new Error("Unexpected listCoins result: duplicate coins found");
     }
     return [...coins].map((item) => JSON.parse(item));
-  }
-
-  private static async splitGasCoinEqually(
-    signer: Ed25519Keypair,
-    provider: ClientWithCoreApi,
-    signerAddress: SuiAddress,
-    splitAmount: number,
-    numGasObjects: number,
-    gasCoin: SuiObjectRef,
-  ): Promise<SuiObjectRef[]> {
-    // TODO: implement chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
-    const tx = new Transaction();
-    const coins = tx.splitCoins(
-      tx.gas,
-      Array.from({ length: numGasObjects }, () => tx.pure.u64(splitAmount)),
-    );
-
-    tx.transferObjects(
-      Array.from({ length: numGasObjects }, (_, i) => coins[i]!),
-      tx.pure.address(signerAddress),
-    );
-    tx.setGasPayment([gasCoin]);
-    const result = await provider.core.signAndExecuteTransaction({
-      include: { effects: true },
-      signer,
-      transaction: tx,
-    });
-    const effects = getExecutedTransaction(result).effects;
-    if (effects.status.error) {
-      throw new Error(
-        `Failed to initialize gas pool: ${JSON.stringify(effects.status.error)}. Try re-running the script`,
-      );
-    }
-    const newCoins = effects.changedObjects
-      .filter((obj) => obj.idOperation === "Created")
-      .map(changedObjectToRef);
-    if (newCoins.length !== numGasObjects) {
-      throw new Error(
-        `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${JSON.stringify(newCoins)}`,
-      );
-    }
-    return newCoins;
   }
 
   private static async mergeGasCoinsIntoOne(
