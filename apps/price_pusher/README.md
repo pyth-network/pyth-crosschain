@@ -152,8 +152,7 @@ pnpm run start sui \
   --price-config-file ./price-config.beta.sample.yaml \
   [--endpoint-type json-rpc] \
   [--pushing-frequency 10] \
-  [--polling-frequency 5] \
-  [--num-gas-objects 30]
+  [--polling-frequency 5]
 
 # `--endpoint-type` selects the Sui RPC transport: `json-rpc` (default) or `grpc`.
 # Sui Foundation is deprecating JSON-RPC (public endpoints off July 2026, removed

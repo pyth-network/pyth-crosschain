@@ -2,7 +2,10 @@ import { Buffer } from "node:buffer";
 
 import { bcs } from "@mysten/sui/bcs";
 import type { ClientWithCoreApi } from "@mysten/sui/client";
-import type { Transaction } from "@mysten/sui/transactions";
+import type {
+  Transaction,
+  TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import { parseStructTag, SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import type { HexString } from "@pythnetwork/hermes-client";
 
@@ -168,7 +171,7 @@ export class SuiPythClient {
     feedIds: HexString[],
     // biome-ignore lint/suspicious/noExplicitAny: the hot potato is an opaque transaction argument threaded between move calls
     priceUpdatesHotPotato: any,
-    coins: NestedTransactionResult[],
+    coins: TransactionObjectArgument[],
   ) {
     const priceInfoObjects: ObjectId[] = [];
     let coinId = 0;
@@ -244,7 +247,7 @@ export class SuiPythClient {
     tx: Transaction,
     updates: Buffer[],
     feedIds: HexString[],
-    coins: NestedTransactionResult[],
+    coins: TransactionObjectArgument[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
     const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
