@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-24",
+  "label": "Friday",
+  "summary": {
+    "added": 0,
+    "went_live": 1,
+    "removed": 1
+  },
+  "hero": "1 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.VXN6",
+      "lazerId": 3120,
+      "asset": "Pyth Price For Vix Index Future 22 July 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-07-24",
+      "quote": "POINTS",
+      "hermesId": "d3db308bb4553b65be8ee78869811cbd0676c3004c85ca76cc4cb733e0ec4629"
+    },
+    {
+      "id": "Equity.US.VXU6",
+      "lazerId": 3122,
+      "asset": "Pyth Price For Vix Index Future 16 September 2026",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-24",
+      "quote": "POINTS",
+      "hermesId": "a4feb92c5206fb4738f9c7dae6768e373b3dcea18d395270b712b7b338429d8d"
+    }
+  ]
+}
