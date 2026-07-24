@@ -59,13 +59,6 @@ export default {
       required: false,
       type: "array",
     } as Options,
-    "ignore-gas-objects": {
-      default: [],
-      description:
-        "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
-      required: false,
-      type: "array",
-    } as Options,
     network: {
       choices: ["mainnet", "testnet", "devnet", "localnet"],
       description:
@@ -73,12 +66,6 @@ export default {
         "endpoint serves; it does not change which `--endpoint` URL is used.",
       required: true,
       type: "string",
-    } as Options,
-    "num-gas-objects": {
-      default: 30,
-      description: "Number of gas objects in the pool.",
-      required: true,
-      type: "number",
     } as Options,
     "pyth-state-id": {
       description:
@@ -124,8 +111,6 @@ export default {
       pollingFrequency,
       pythStateId,
       wormholeStateId,
-      numGasObjects,
-      ignoreGasObjects,
       gasBudget,
       accountIndex,
       grpcMetadata: grpcMetadataArgs,
@@ -212,7 +197,7 @@ export default {
       grpcMetadata,
     );
 
-    const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
+    const suiPusher = await SuiPricePusher.createWithAddressBalanceGas(
       hermesClient,
       logger.child({ module: "SuiPricePusher" }),
       pythStateId,
@@ -222,8 +207,6 @@ export default {
       network,
       keypair,
       gasBudget,
-      numGasObjects,
-      ignoreGasObjects,
       grpcMetadata,
     );
 
