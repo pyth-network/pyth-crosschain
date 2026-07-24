@@ -1,7 +1,10 @@
 # Change Log automation
 
-How the Price Feeds [Change Log](../content/docs/price-feeds/changelog.mdx) page
-stays up to date.
+How the Market Data stream on the unified [Change Log](../content/docs/changelog.mdx)
+page (`/changelog?tab=market-data`) stays up to date. Manually-authored product
+entries (Pyth Pro / Pyth Core / Entropy) are separate: one MDX file per entry
+under `content/changelog/`, validated at build time by the `changelog`
+collection schema in `source.config.ts`.
 
 ## Architecture
 

@@ -246,6 +246,11 @@ const config = {
       },
 
       {
+        destination: "/changelog",
+        permanent: true,
+        source: "/price-feeds/changelog",
+      },
+      {
         destination: "/price-feeds/core/:path",
         permanent: true,
         source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)|changelog(?:/|$|\.mdx?$)).*)`,

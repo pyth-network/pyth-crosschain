@@ -1,0 +1,19 @@
+---
+title: Hermes v1 price endpoint sunset date set for October 1
+date: 2026-07-10
+product: pyth-core
+type: breaking-change
+area: apis
+---
+
+The legacy Hermes `/v1/updates/price` endpoints will be **removed on October 1,
+2026**. After that date, requests to v1 routes return `410 Gone`.
+
+What you should do:
+
+- Migrate to `/v2/updates/price/latest` and `/v2/updates/price/stream`.
+- If you rely on `verbose=true` metadata, switch to the v2 `parsed` field.
+- Benchmarks endpoints are unaffected.
+
+The [migration guide](/price-feeds/core/migrate-an-app-to-pyth) covers the
+response-shape differences in detail.
