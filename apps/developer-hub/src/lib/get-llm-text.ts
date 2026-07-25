@@ -38,5 +38,7 @@ export async function getLLMText(page: Page) {
   return `# ${page.data.title ?? "Untitled"}
 URL: ${page.url}
 
+> For the complete documentation index, see [llms.txt](https://docs.pyth.network/llms.txt).
+
 ${String(processed.value)}`;
 }

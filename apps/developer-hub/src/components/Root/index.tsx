@@ -16,7 +16,33 @@ export const TABS = [
 
 export const Root = ({ children, googleAnalyticsId }: Props) => (
   <html lang="en">
+    <head>
+      <link
+        rel="alternate"
+        type="text/plain"
+        title="llms.txt — documentation index for AI agents"
+        href="/llms.txt"
+      />
+    </head>
     <body>
+      <a
+        href="/llms.txt"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0, 0, 0, 0)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        For AI agents: see /llms.txt for the documentation index. Any page can
+        be fetched as markdown by appending .mdx to its URL, or by sending an
+        Accept: text/markdown header.
+      </a>
       <RootProviders providers={[NuqsAdapter]}>
         <FumadocsRootProvider
           search={{

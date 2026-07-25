@@ -12,7 +12,7 @@ export type LLMFileConfig = {
 
 export const LLM_FILES: LLMFileConfig[] = [
   {
-    cacheMaxAge: 86_400,
+    cacheMaxAge: 3600,
     changeFrequency: "monthly",
     description: "Product overview and routing to detailed documentation",
     path: "/llms.txt",

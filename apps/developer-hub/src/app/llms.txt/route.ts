@@ -6,61 +6,44 @@ const CONTENT = `# Pyth Network Documentation
 
 > First-party financial oracle delivering real-time market data to 100+ blockchains.
 
+This is the routing index for Pyth Network's documentation. AI agents should
+identify the product the user needs from the descriptions below, then fetch
+exactly one product file — each is self-contained with code examples,
+addresses, and patterns. Do not fetch every link.
+
 ## AI Agent Playbook
 
-For an opinionated integration guide with code snippets and step-by-step procedures:
-> https://docs.pyth.network/SKILL.md
+- [Pyth Developer Playbook](https://docs.pyth.network/SKILL.md): Opinionated integration guide with step-by-step procedures and code snippets.
 
 ## Products
 
-### Pyth Core — Decentralized Price Oracle
-Pull-based oracle providing 500+ price feeds with 400ms updates across 100+ chains. Applications fetch signed prices from Hermes and verify on-chain in a single transaction.
-Best for: DeFi protocols, lending, DEXs, derivatives.
-Chains: EVM, Solana, Sui, Aptos, CosmWasm, NEAR, Starknet, and more.
-> https://docs.pyth.network/llms-price-feeds-core.txt
+- [Pyth Core — Decentralized Price Oracle](https://docs.pyth.network/llms-price-feeds-core.txt): Pull-based oracle with 500+ price feeds, 400ms updates, 100+ chains (EVM, Solana, Sui, Aptos, CosmWasm, NEAR, Starknet, and more). Best for DeFi protocols, lending, DEXs, and derivatives.
+- [Pyth Pro — Low-Latency Price Streaming](https://docs.pyth.network/llms-price-feeds-pro.txt): Enterprise WebSocket streaming with configurable update channels (1ms–1s). Requires an API key. Best for HFT, MEV strategies, market making, and risk management.
+- [Entropy — On-Chain Randomness](https://docs.pyth.network/llms-entropy.txt): Secure verifiable random number generation using commit-reveal with a callback-based API. Best for gaming, NFT mints, lotteries, and fair selection.
+- [Express Relay — MEV Protection](https://docs.pyth.network/express-relay/index.mdx): Auction-based MEV capture and order flow protection for DeFi protocols.
 
-### Pyth Pro — Low-Latency Price Streaming
-Enterprise WebSocket streaming with configurable update channels (1ms–1s). Requires API key.
-Best for: HFT, MEV strategies, market making, risk management.
-SDK: \`@pythnetwork/pyth-lazer-sdk\` (TypeScript)
-> https://docs.pyth.network/llms-price-feeds-pro.txt
-MCP server for AI assistants (setup, tools, troubleshooting):
-> https://docs.pyth.network/price-feeds/pro/mcp.mdx
-Pre-built MCP skills (price alerts, portfolio tracking, FX conversion, volatility analysis, and more):
-> https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
+## Choosing Between Core and Pro
 
-### Entropy — On-Chain Randomness
-Secure verifiable random number generation using commit-reveal. Callback-based API.
-Best for: Gaming, NFT mints, lotteries, fair selection.
-> https://docs.pyth.network/llms-entropy.txt
+- [Price Feeds — Core vs Pro Overview](https://docs.pyth.network/llms-price-feeds.txt): Side-by-side comparison and decision matrix for picking between Pyth Core and Pyth Pro.
 
-### Express Relay — MEV Protection
-Auction-based MEV capture and order flow protection for DeFi protocols.
-> https://docs.pyth.network/express-relay/index.mdx
+## Pyth Pro Tooling
 
-## Unsure Which Price Feed Product?
-Comparison of Core vs Pro with decision matrix:
-> https://docs.pyth.network/llms-price-feeds.txt
+- [Pyth Pro MCP Server](https://docs.pyth.network/price-feeds/pro/mcp.mdx): Setup, tools, and troubleshooting for the MCP server that exposes Pyth Pro to AI assistants.
+- [Pyth Pro MCP Skills](https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx): Pre-built skills for price alerts, portfolio tracking, FX conversion, volatility analysis, and more.
 
 ## Individual Page Access
-Fetch any documentation page as plain markdown by appending .mdx:
-  https://docs.pyth.network/price-feeds/core/getting-started.mdx
+
+- [Markdown page access](https://docs.pyth.network/price-feeds/core/getting-started.mdx): Any documentation page is available as plain markdown by appending \`.mdx\` to its URL.
 
 ## Machine-Readable Metadata
-Programmatic discovery with token counts and content hashes:
-> https://docs.pyth.network/llms-manifest.json
 
-## Instructions for AI Agents
-1. Read the product descriptions above to identify which product the user needs.
-2. Fetch exactly ONE product file — each is self-contained with code examples, addresses, and patterns.
-3. For deeper detail, fetch individual pages via .mdx URLs listed in each product file.
-4. Do NOT fetch all files — only fetch the single best match for the user's question.
+- [llms-manifest.json](https://docs.pyth.network/llms-manifest.json): Programmatic discovery of all routing files with token counts and content hashes.
 `;
 
 export function GET() {
   return new NextResponse(CONTENT, {
     headers: {
-      "Cache-Control": "public, max-age=86400",
+      "Cache-Control": "public, max-age=3600",
       "Content-Type": "text/plain; charset=utf-8",
     },
     status: 200,
