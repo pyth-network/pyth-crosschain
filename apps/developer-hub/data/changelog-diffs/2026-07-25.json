@@ -1,0 +1,67 @@
+{
+  "date": "2026-07-25",
+  "label": "Saturday",
+  "summary": {
+    "added": 4,
+    "went_live": 1,
+    "removed": 1
+  },
+  "hero": "4 new feeds announced, 1 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.CFN6/USc",
+      "lazerId": 3209,
+      "asset": "Deprecated Feef - Pyth Price In Us Cents For Coffee 21 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-25",
+      "quote": "USc",
+      "hermesId": "c6b3721832ee7e8d2fca5c51dda52f7da32d375231a9b87a450a76c289f6be0d"
+    },
+    {
+      "id": "Equity.KR.069500/KRW",
+      "lazerId": 3364,
+      "asset": "Samsung Kodex 200 Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-25",
+      "quote": "KRW"
+    },
+    {
+      "id": "Commodities.HNZ6/USD",
+      "lazerId": 3524,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 25 November 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-07-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.HNX6/USD",
+      "lazerId": 3523,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 28 October 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-07-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.HNV6/USD",
+      "lazerId": 3522,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 28 September 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-07-25",
+      "quote": "USD"
+    },
+    {
+      "id": "Commodities.HNU6/USD",
+      "lazerId": 3521,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 27 August 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-07-25",
+      "quote": "USD"
+    }
+  ]
+}
