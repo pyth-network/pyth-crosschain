@@ -25,14 +25,12 @@
 
 import * as fs from "node:fs/promises";
 import path from "node:path";
-
-import {
-  hermesSchema,
-  lazerSchema,
-  type HermesFeed,
-  type LazerFeed,
-  type PriceFeedsSnapshot,
+import type {
+  HermesFeed,
+  LazerFeed,
+  PriceFeedsSnapshot,
 } from "../src/app/api/search/feed-schemas";
+import { hermesSchema, lazerSchema } from "../src/app/api/search/feed-schemas";
 import { SYMBOLS_API_URL } from "../src/config/pyth-pro-public";
 
 const OUTPUT_PATH = "./src/generated/price-feeds.json";
@@ -87,7 +85,10 @@ async function fetchSource<T>(
 
 async function writeSnapshot(snapshot: PriceFeedsSnapshot): Promise<void> {
   await fs.mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
-  await fs.writeFile(OUTPUT_PATH, JSON.stringify(snapshot, undefined, 2) + "\n");
+  await fs.writeFile(
+    OUTPUT_PATH,
+    JSON.stringify(snapshot, undefined, 2) + "\n",
+  );
 }
 
 // Guarantees the route's static-import target exists even if generation blew up
@@ -131,9 +132,12 @@ try {
 } catch (error) {
   // Snapshot generation is best-effort: the previously-committed (or empty)
   // snapshot is sufficient for the build. Never fail the build on this script.
-  const message = error instanceof Error ? error.stack ?? error.message : error;
+  const message =
+    error instanceof Error ? (error.stack ?? error.message) : error;
   // eslint-disable-next-line no-console
-  console.warn("\n⚠ Price feeds snapshot generation failed, continuing anyway:");
+  console.warn(
+    "\n⚠ Price feeds snapshot generation failed, continuing anyway:",
+  );
   // eslint-disable-next-line no-console
   console.warn(message);
   await ensureSnapshotFile();
