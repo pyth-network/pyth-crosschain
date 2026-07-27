@@ -8,6 +8,15 @@
         "generate:changelog",
         "generate:price-feeds"
       ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!**/*.test.*",
+        "!jest.config.js",
+        "!eslint.config.js",
+        "!vercel.json",
+        "src/generated/**"
+      ],
       "env": [
         "VERCEL_ENV",
         "COOKIE_SIGNING_SECRET",
