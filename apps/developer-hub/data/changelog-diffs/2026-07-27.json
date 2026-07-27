@@ -1,0 +1,57 @@
+{
+  "date": "2026-07-27",
+  "label": "Monday",
+  "summary": {
+    "added": 0,
+    "went_live": 5,
+    "removed": 0
+  },
+  "hero": "5 went live.",
+  "events": [
+    {
+      "id": "Equity.CN.688825/CNY",
+      "lazerId": 3520,
+      "asset": "Changxin Memory Technologies",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-27",
+      "quote": "CNY"
+    },
+    {
+      "id": "Equity.US.BITO/USD",
+      "lazerId": 3518,
+      "asset": "Proshares Bitcoin Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-27",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TBT/USD",
+      "lazerId": 3458,
+      "asset": "Proshares Ultrashort 20+ Year Treasury",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-27",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.TMF/USD",
+      "lazerId": 3457,
+      "asset": "Direxion Daily 20+ Year Treasury Bull 3X Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-27",
+      "quote": "USD"
+    },
+    {
+      "id": "Equity.US.MSTX/USD",
+      "lazerId": 3456,
+      "asset": "Defiance Daily Target 2X Long Mstr Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-27",
+      "quote": "USD"
+    }
+  ]
+}
