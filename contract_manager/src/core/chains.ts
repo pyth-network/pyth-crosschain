@@ -50,6 +50,7 @@ import {
   SetDataSources,
   SetFee,
   SetValidPeriod,
+  SetWormholeAddressAndDataSources,
   toChainId,
   UpdateTrustedSigner264Bit,
   UpgradeContract256Bit,
@@ -1909,6 +1910,29 @@ export class EvmChain extends Chain {
 
   generateGovernanceSetWormholeAddressPayload(address: string): Buffer {
     return new EvmSetWormholeAddress(this.wormholeChainName, address).encode();
+  }
+
+  /**
+   * Returns the payload for a governance SetWormholeAddressAndDataSources
+   * instruction (action 10). Used for legacy → pro-compatible in-place migrate.
+   * @param address - hex string of the 20 byte wormhole receiver address without the 0x prefix
+   * @param dataSources - the new valid data sources
+   * @param feeValue - single-update fee value (migrate uses 0)
+   * @param feeExpo - single-update fee exponent (migrate uses 0)
+   */
+  generateGovernanceSetWormholeAddressAndDataSourcesPayload(
+    address: string,
+    dataSources: DataSource[],
+    feeValue: bigint,
+    feeExpo: bigint,
+  ): Buffer {
+    return new SetWormholeAddressAndDataSources(
+      this.wormholeChainName,
+      address,
+      dataSources,
+      feeValue,
+      feeExpo,
+    ).encode();
   }
 
   toJson(): KeyValueConfig {

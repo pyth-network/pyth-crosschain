@@ -13,6 +13,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  SetWormholeAddressAndDataSources,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
@@ -25,6 +26,7 @@ import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import { getDefaultDeploymentConfig } from "../src/core/base";
 import {
   CosmWasmChain,
   EvmChain,
@@ -124,6 +126,99 @@ async function main() {
             );
             console.log(
               `${chain.getId()}  Address:\t\t${address}\nproxy digest:\t\t${proxyDigest}\nimplementation digest:\t${implementationDigest} \nguardian set index:\t${currentIndex} \nguardian set:\t\t${guardianSetDigest}`,
+            );
+          }
+        }
+      }
+      if (
+        instruction.governanceAction instanceof SetWormholeAddressAndDataSources
+      ) {
+        const action = instruction.governanceAction;
+        console.log(
+          `Verifying SetWormholeAddressAndDataSources on ${action.targetChainId}`,
+        );
+        console.log(`  wormhole address:\t${action.address}`);
+        console.log(
+          `  data sources:\t\t${JSON.stringify(action.dataSources)}`,
+        );
+        console.log(
+          `  fee value/expo:\t${action.newFeeValue} / ${action.newFeeExpo}`,
+        );
+
+        if (action.newFeeValue !== 0n || action.newFeeExpo !== 0n) {
+          console.log(
+            `  WARNING: expected fee 0/0 for pro migrate, got ${action.newFeeValue}/${action.newFeeExpo}`,
+          );
+        }
+
+        const proProductionSources =
+          getDefaultDeploymentConfig("pro-compatible-production").dataSources;
+        const proStagingSources =
+          getDefaultDeploymentConfig("pro-compatible-staging").dataSources;
+        const matchesProduction =
+          JSON.stringify(action.dataSources) ===
+          JSON.stringify(proProductionSources);
+        const matchesStaging =
+          JSON.stringify(action.dataSources) ===
+          JSON.stringify(proStagingSources);
+        if (matchesProduction) {
+          console.log("  data sources match pro-compatible-production");
+        } else if (matchesStaging) {
+          console.log("  data sources match pro-compatible-staging");
+        } else {
+          console.log(
+            "  WARNING: data sources do not match pro-compatible-production or pro-compatible-staging",
+          );
+          console.log(
+            `  expected production:\t${JSON.stringify(proProductionSources)}`,
+          );
+        }
+
+        for (const chain of Object.values(DefaultStore.chains)) {
+          if (
+            !(chain instanceof EvmChain) ||
+            chain.wormholeChainName !== action.targetChainId
+          ) {
+            continue;
+          }
+          if (chain.isMainnet() !== (cluster === "mainnet-beta")) {
+            continue;
+          }
+
+          const expectedWormholes = Object.values(
+            DefaultStore.wormhole_contracts,
+          ).filter(
+            (c): c is EvmWormholeContract =>
+              c instanceof EvmWormholeContract &&
+              c.getChain().getId() === chain.getId() &&
+              (c.deploymentType === "pro-compatible-production" ||
+                c.deploymentType === "pro-compatible-staging"),
+          );
+
+          const normalizedActionAddress = action.address
+            .replace(/^0x/i, "")
+            .toLowerCase();
+          const matching = expectedWormholes.find(
+            (c) =>
+              c.address.replace(/^0x/i, "").toLowerCase() ===
+              normalizedActionAddress,
+          );
+          if (matching) {
+            console.log(
+              `  ${chain.getId()}: wormhole matches store entry ${matching.getId()} (${matching.deploymentType})`,
+            );
+          } else if (expectedWormholes.length > 0) {
+            console.log(
+              `  ${chain.getId()}: WARNING wormhole ${action.address} not in store; known pro wormholes:`,
+            );
+            for (const wh of expectedWormholes) {
+              console.log(
+                `    ${wh.address} (${wh.deploymentType})`,
+              );
+            }
+          } else {
+            console.log(
+              `  ${chain.getId()}: no pro-compatible wormhole in store — verify manually: ${action.address}`,
             );
           }
         }
