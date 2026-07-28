@@ -1,18 +1,18 @@
 ---
-title: Consume Data on Sui
-description: Consume and verify Pyth Pro price updates in Sui Move smart contracts
-slug: /price-feeds/pro/integrate-as-consumer/sui
+title: Consume Data on IOTA
+description: Consume and verify Pyth Pro price updates in IOTA Move smart contracts
+slug: /price-feeds/pro/integrate-as-consumer/iota
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 
-This guide is intended to serve users who want to consume prices from Pyth Pro on **Sui**.
+This guide is intended to serve users who want to consume prices from Pyth Pro on **IOTA**.
 
 Integrating with Pyth Pro in smart contracts as a consumer is a three-step process:
 
 1. **Subscribe** to Pyth Pro websocket to receive price updates on backend or frontend.
-2. **Verify** price updates in a Programmable Transaction Block (PTB) using the Pyth Lazer Sui SDK.
+2. **Verify** price updates in a Programmable Transaction Block (PTB) using the Pyth Lazer IOTA SDK.
 3. **Consume** the verified `Update` in your smart contract.
 
 <Steps>
@@ -23,7 +23,7 @@ Pyth Pro provides a websocket endpoint to receive price updates. Pyth Pro also p
 
 Consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices) for a complete step-by-step guide.
 
-When subscribing, request the `leEcdsa` format which is compatible with Sui's secp256k1 signature verification:
+When subscribing, request the `leEcdsa` format which is compatible with IOTA's secp256k1 signature verification:
 
 ```typescript copy
 client.subscribe({
@@ -31,7 +31,7 @@ client.subscribe({
   subscriptionId: 1,
   priceFeedIds: [1, 2],  // BTC/USD, ETH/USD
   properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
-  formats: ["leEcdsa"],  // Required for Sui
+  formats: ["leEcdsa"],  // Required for IOTA
   channel: "fixed_rate@200ms",
   jsonBinaryEncoding: "hex",
 });
@@ -41,27 +41,30 @@ client.subscribe({
   <Step>
   ### Verify price updates in a PTB
 
-Pyth Pro provides a [Sui TypeScript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) that handles the verification call for you.
+Pyth Pro provides an [IOTA TypeScript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/iota/sdk/js) that handles the verification call for you.
 
 <Callout type="warning">
-  Always call `parse_and_verify_le_ecdsa_update_v2` in a Programmable Transaction Block (PTB), not inside your smart contract.
+  Always call `parse_and_verify_le_ecdsa_update` in a Programmable Transaction Block (PTB), not inside your smart contract.
   This allows your contract to work with any newer version of the Pyth Lazer contract, since the `Update` type remains stable.
 </Callout>
 
-Install the Sui SDK:
+{/* TODO: requires release of the SDK
+
+Install the IOTA SDK:
 
 ```bash copy
-npm install @pythnetwork/pyth-lazer-sui-js
+npm install @pythnetwork/pyth-lazer-iota-js
 ```
+*/}
 
 Use the SDK to build your transaction:
 
 ```typescript copy
-import { SuiGrpcClient } from "@mysten/sui/grpc";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { Transaction } from "@mysten/sui/transactions";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
-import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-sui-js";
+import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-iota-js";
 
 // 1. Fetch the price update from Pyth Lazer in "leEcdsa" format:
 const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
@@ -74,14 +77,14 @@ const latestPrice = await lazer.getLatestPrice({
 });
 const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
 
-// 2. Create a new Sui transaction:
-const signer = Ed25519Keypair.fromSecretKey(SUI_KEY);
-const client = new SuiGrpcClient({ baseUrl, network });
+// 2. Create a new IOTA transaction:
+const signer = Ed25519Keypair.fromSecretKey(IOTA_KEY);
+const client = new IotaClient({ url: IOTA_FULLNODE_URL });
 const tx = new Transaction();
 
 // 3. Add the parse and verify call:
 const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
-  client: client.core,
+  client,
   stateObjectId: STATE_ID,
   tx,
   update,
@@ -101,7 +104,7 @@ const result = await client.signAndExecuteTransaction({
 ```
 
 <Callout type="info">
-  The `stateObjectId` is the Pyth Lazer State object on Sui. See the [Contract Addresses](/price-feeds/pro/contract-addresses#sui) page for the current mainnet and testnet state object IDs.
+  The `stateObjectId` is the Pyth Lazer State object on IOTA. See the [Contract Addresses](/price-feeds/pro/contract-addresses#iota) page for the current mainnet and testnet state object IDs.
 </Callout>
 
   </Step>
@@ -112,17 +115,13 @@ Your contract receives a verified `Update` object and can extract the price data
 
 ```toml copy
 [dependencies]
-pyth_lazer = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "lazer/contracts/sui", rev = "main" }
+pyth_lazer = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "lazer/contracts/iota", rev = "main" }
 ```
-
-<Callout type="info">
-  To use testnet version of Pyth Lazer contract, use `rev = "sui-testnet"` instead. We use custom deployment of the [Wormhole](https://wormhole.com/) contract on testnet for maintenance purposes.
-</Callout>
 
 Import the necessary modules and write a function that accepts the `Update`:
 
 ```move copy
-use pyth_lazer::update_v2::Update;
+use pyth_lazer::update::Update;
 use pyth_lazer::feed::Feed;
 
 public fun consume_price(update: Update) {
@@ -146,7 +145,7 @@ public fun consume_price(update: Update) {
 }
 ```
 
-See [`pyth_lazer::feed`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/sui/sources/feed.move) module for additional fields and their types.
+See [`pyth_lazer::feed`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/iota/sources/feed.move) module for additional fields and their types.
 
 <Callout type="warning">
   Many feed properties return `Option<Option<T>>`. The outer `Option` indicates whether the property was requested in the subscription.
@@ -186,7 +185,7 @@ if (price_opt.is_some()) {
 
 ## Additional Resources
 
-You may find these additional resources helpful for consuming prices from Pyth Pro in your Sui smart contracts.
+You may find these additional resources helpful for consuming prices from Pyth Pro in your IOTA smart contracts.
 
 ### Price Feed IDs
 
@@ -194,6 +193,6 @@ Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/pri
 
 ### Examples
 
-Lazer Sui SDK contains a [complete example](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/sui/sdk/js/src/examples/fetch-and-verify.ts) of building a transaction using Lazer Sui contract.
+Lazer IOTA SDK contains a [complete example](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/iota/sdk/js/src/examples/fetch-and-verify.ts) of building a transaction using Lazer IOTA contract.
 
 [pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) is a simple example for subscribing to the Pyth Pro websocket.
