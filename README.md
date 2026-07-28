@@ -1,5 +1,7 @@
 # Pyth Crosschain
 
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.pyth-network%2Fmcp.svg)](https://mcptoplist.com/server/io.github.pyth-network%2Fmcp)
+
 This repository acts as a monorepo for the various components that make up
 Pyth protocols.
 
