@@ -229,6 +229,16 @@
         "types": "./dist/cjs/governance_payload/SetWormholeAddress.d.ts"
       }
     },
+    "./governance_payload/SetWormholeAddressAndDataSources": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetWormholeAddressAndDataSources.mjs",
+        "types": "./dist/esm/governance_payload/SetWormholeAddressAndDataSources.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetWormholeAddressAndDataSources.cjs",
+        "types": "./dist/cjs/governance_payload/SetWormholeAddressAndDataSources.d.ts"
+      }
+    },
     "./governance_payload/StellarExecutorAction": {
       "import": {
         "default": "./dist/esm/governance_payload/StellarExecutorAction.mjs",

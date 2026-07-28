@@ -21,6 +21,7 @@ export const TargetAction = {
   SetFeeInToken: 7,
   SetTransactionFee: 8,
   WithdrawFee: 9,
+  SetWormholeAddressAndDataSources: 10,
 } as const;
 
 export const EvmExecutorAction = {
@@ -74,6 +75,8 @@ export function toActionName(
         return "SetTransactionFee";
       case 9:
         return "WithdrawFee";
+      case 10:
+        return "SetWormholeAddressAndDataSources";
     }
   } else if (
     deserialized.moduleId == MODULE_EVM_EXECUTOR &&

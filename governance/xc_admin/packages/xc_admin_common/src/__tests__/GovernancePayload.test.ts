@@ -31,6 +31,7 @@ import { SetDataSources } from "../governance_payload/SetDataSources";
 import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
 import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
+import { SetWormholeAddressAndDataSources } from "../governance_payload/SetWormholeAddressAndDataSources";
 import {
   CosmosUpgradeContract,
   EvmUpgradeContract,
@@ -271,6 +272,90 @@ test("GovernancePayload ser/de", () => {
     ),
   ).toBeTruthy();
 
+  const setWormholeAddressAndDataSources =
+    new SetWormholeAddressAndDataSources(
+      "ethereum",
+      "0102030405060708090a0b0c0d0e0f1011121314",
+      [
+        {
+          emitterAddress:
+            "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+          emitterChain: 1,
+        },
+        {
+          emitterAddress:
+            "000000000000000000000000000000000000000000000000000000000000012d",
+          emitterChain: 3,
+        },
+      ],
+      42n,
+      8n,
+    );
+  const setWormholeAddressAndDataSourcesBuffer =
+    setWormholeAddressAndDataSources.encode();
+  console.log(setWormholeAddressAndDataSourcesBuffer.toJSON());
+  expect(
+    setWormholeAddressAndDataSourcesBuffer.equals(
+      Buffer.from([
+        // header: PTGM | module=1 | action=10 | ethereum chain id
+        80, 84, 71, 77, 1, 10, 0, 2,
+        // wormhole address (20 bytes)
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        // numSources = 2
+        2,
+        // data source 1
+        0, 1, 107, 177, 69, 9, 166, 18, 240, 31, 187, 196, 207, 254, 235, 212,
+        187, 251, 73, 42, 134, 223, 113, 126, 190, 146, 235, 109, 244, 50, 163,
+        240, 10, 37,
+        // data source 2
+        0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 45,
+        // fee value = 42, expo = 8
+        0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 8,
+      ]),
+    ),
+  ).toBeTruthy();
+  const decodedSetWormholeAddressAndDataSources =
+    SetWormholeAddressAndDataSources.decode(
+      setWormholeAddressAndDataSourcesBuffer,
+    );
+  expect(decodedSetWormholeAddressAndDataSources?.targetChainId).toBe(
+    "ethereum",
+  );
+  expect(decodedSetWormholeAddressAndDataSources?.address).toBe(
+    "0102030405060708090a0b0c0d0e0f1011121314",
+  );
+  expect(decodedSetWormholeAddressAndDataSources?.dataSources).toEqual([
+    {
+      emitterAddress:
+        "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+      emitterChain: 1,
+    },
+    {
+      emitterAddress:
+        "000000000000000000000000000000000000000000000000000000000000012d",
+      emitterChain: 3,
+    },
+  ]);
+  expect(decodedSetWormholeAddressAndDataSources?.newFeeValue).toBe(42n);
+  expect(decodedSetWormholeAddressAndDataSources?.newFeeExpo).toBe(8n);
+  expect(
+    decodeGovernancePayload(setWormholeAddressAndDataSourcesBuffer),
+  ).toBeInstanceOf(SetWormholeAddressAndDataSources);
+
+  // Fee fields are always present even when zero (migrate path).
+  const migratePayload = new SetWormholeAddressAndDataSources(
+    "ethereum",
+    "0102030405060708090a0b0c0d0e0f1011121314",
+    [],
+    0n,
+    0n,
+  );
+  const migrateBuffer = migratePayload.encode();
+  expect(migrateBuffer.length).toBe(8 + 20 + 1 + 16);
+  expect(migrateBuffer.subarray(-16).equals(Buffer.alloc(16))).toBeTruthy();
+  expect(migrateBuffer[5]).toBe(10);
+
   const upgradeContract = new UpgradeContract256Bit(
     "starknet",
     "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
@@ -483,6 +568,23 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         },
       );
       return fc.oneof(evmArb, starknetArb);
+    } else if (header.action === "SetWormholeAddressAndDataSources") {
+      return fc
+        .record({
+          address: hexBytesArb({ maxLength: 20, minLength: 20 }),
+          dataSources: fc.array(dataSourceArb()),
+          newFeeExpo: fc.bigUintN(64),
+          newFeeValue: fc.bigUintN(64),
+        })
+        .map(({ address, dataSources, newFeeValue, newFeeExpo }) => {
+          return new SetWormholeAddressAndDataSources(
+            header.targetChainId,
+            address,
+            dataSources,
+            newFeeValue,
+            newFeeExpo,
+          );
+        });
     } else if (header.action === "Execute") {
       return fc
         .record({
