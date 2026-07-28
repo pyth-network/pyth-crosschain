@@ -29,3 +29,6 @@ auto_approve_paths:
   # Scaffolding / test-config dev tooling
   - "packages/create-pyth-package/**"
   - "packages/jest-config/**"
+  # Deployment record JSONs (chains, contracts, tokens, vaults) written by
+  # contract_manager tooling; the tooling itself stays behind human review
+  - "contract_manager/src/store/**"
