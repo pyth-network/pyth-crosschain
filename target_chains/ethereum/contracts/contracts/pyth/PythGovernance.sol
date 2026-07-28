@@ -105,6 +105,14 @@ abstract contract PythGovernance is
             setTransactionFee(parseSetTransactionFeePayload(gi.payload));
         } else if (gi.action == GovernanceAction.WithdrawFee) {
             withdrawFee(parseWithdrawFeePayload(gi.payload));
+        } else if (
+            gi.action == GovernanceAction.SetWormholeAddressAndDataSources
+        ) {
+            if (gi.targetChainId == 0)
+                revert PythErrors.InvalidGovernanceTarget();
+            setWormholeAddressAndDataSources(
+                parseSetWormholeAddressAndDataSourcesPayload(gi.payload)
+            );
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -250,6 +258,31 @@ abstract contract PythGovernance is
             revert PythErrors.InvalidWormholeAddressToSet();
 
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
+    }
+
+    /// @dev Sets wormhole address, data sources, and fee without dual-VAA re-verify.
+    /// Used for legacy → pro-compatible migration where guardian sets do not overlap.
+    function setWormholeAddressAndDataSources(
+        SetWormholeAddressAndDataSourcesPayload memory payload
+    ) internal {
+        if (payload.newWormholeAddress == address(0))
+            revert PythErrors.InvalidWormholeAddressToSet();
+
+        uint256 codeSize;
+        address newWormholeAddress = payload.newWormholeAddress;
+        assembly {
+            codeSize := extcodesize(newWormholeAddress)
+        }
+        if (codeSize == 0) revert PythErrors.InvalidWormholeAddressToSet();
+
+        address oldWormholeAddress = address(wormhole());
+        setWormhole(payload.newWormholeAddress);
+        emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
+
+        setDataSources(
+            SetDataSourcesPayload({dataSources: payload.dataSources})
+        );
+        setFee(SetFeePayload({newFee: payload.newFee}));
     }
 
     function setTransactionFee(

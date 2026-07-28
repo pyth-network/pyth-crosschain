@@ -647,6 +647,243 @@ contract PythGovernanceTest is
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
     }
 
+    function testSetWormholeAddressAndDataSources() public {
+        address newWormhole = address(setUpWormholeReceiver(1));
+        bytes32 newEmitter = bytes32(
+            0x0000000000000000000000000000000000000000000000000000000000002222
+        );
+
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            newWormhole,
+            uint8(1), // Number of data sources
+            uint16(26), // Chain ID
+            newEmitter,
+            uint64(0), // fee value
+            uint64(0) // fee expo
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        address oldWormhole = address(PythGetters(address(pyth)).wormhole());
+        PythInternalStructs.DataSource[] memory oldDataSources = PythGetters(
+            address(pyth)
+        ).validDataSources();
+        uint oldFee = PythGetters(address(pyth)).singleUpdateFeeInWei();
+
+        PythInternalStructs.DataSource[]
+            memory newDataSources = new PythInternalStructs.DataSource[](1);
+        newDataSources[0] = PythInternalStructs.DataSource(26, newEmitter);
+
+        vm.expectEmit(true, true, true, true);
+        emit WormholeAddressSet(oldWormhole, newWormhole);
+        vm.expectEmit(true, true, true, true);
+        emit DataSourcesSet(oldDataSources, newDataSources);
+        vm.expectEmit(true, true, true, true);
+        emit FeeSet(oldFee, 0);
+
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+
+        assertEq(address(PythGetters(address(pyth)).wormhole()), newWormhole);
+        assertFalse(
+            PythGetters(address(pyth)).isValidDataSource(
+                TEST_PYTH2_WORMHOLE_CHAIN_ID,
+                TEST_PYTH2_WORMHOLE_EMITTER
+            )
+        );
+        assertTrue(
+            PythGetters(address(pyth)).isValidDataSource(26, newEmitter)
+        );
+        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), 0);
+    }
+
+    function testSetWormholeAddressAndDataSourcesRejectsZeroAddress() public {
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            address(0),
+            uint8(1),
+            uint16(26),
+            bytes32(
+                0x0000000000000000000000000000000000000000000000000000000000002222
+            ),
+            uint64(0),
+            uint64(0)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidWormholeAddressToSet.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressAndDataSourcesRejectsNoCode() public {
+        address noCode = makeAddr("noCodeWormhole");
+
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            noCode,
+            uint8(1),
+            uint16(26),
+            bytes32(
+                0x0000000000000000000000000000000000000000000000000000000000002222
+            ),
+            uint64(0),
+            uint64(0)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidWormholeAddressToSet.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressAndDataSourcesRejectsTrailingBytes()
+        public
+    {
+        address newWormhole = address(setUpWormholeReceiver(1));
+
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            newWormhole,
+            uint8(1),
+            uint16(26),
+            bytes32(
+                0x0000000000000000000000000000000000000000000000000000000000002222
+            ),
+            uint64(0),
+            uint64(0),
+            uint8(0xff) // Trailing byte
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidGovernanceMessage.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressAndDataSourcesRejectsTruncatedPayload()
+        public
+    {
+        address newWormhole = address(setUpWormholeReceiver(1));
+
+        // Missing fee expo (truncated after fee value)
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            newWormhole,
+            uint8(1),
+            uint16(26),
+            bytes32(
+                0x0000000000000000000000000000000000000000000000000000000000002222
+            ),
+            uint64(0) // fee value only — missing expo
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert();
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressAndDataSourcesRejectsChainIdZero() public {
+        address newWormhole = address(setUpWormholeReceiver(1));
+
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            uint16(0), // Chain ID 0 (unset)
+            newWormhole,
+            uint8(1),
+            uint16(26),
+            bytes32(
+                0x0000000000000000000000000000000000000000000000000000000000002222
+            ),
+            uint64(0),
+            uint64(0)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidGovernanceTarget.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressAndDataSourcesSetsNonZeroFee() public {
+        address newWormhole = address(setUpWormholeReceiver(1));
+        bytes32 newEmitter = bytes32(
+            0x0000000000000000000000000000000000000000000000000000000000003333
+        );
+
+        // fee = 5 * 10^3 = 5000
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
+            TARGET_CHAIN_ID,
+            newWormhole,
+            uint8(1),
+            uint16(26),
+            newEmitter,
+            uint64(5),
+            uint64(3)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), 5000);
+    }
+
     function encodeAndSignWormholeMessage(
         bytes memory data,
         uint16 emitterChainId,

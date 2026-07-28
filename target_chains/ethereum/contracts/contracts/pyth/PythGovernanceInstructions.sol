@@ -41,7 +41,8 @@ contract PythGovernanceInstructions {
         SetWormholeAddress, // 6
         SetFeeInToken, // 7 - No-op for EVM chains
         SetTransactionFee, // 8
-        WithdrawFee // 9
+        WithdrawFee, // 9
+        SetWormholeAddressAndDataSources // 10
     }
 
     struct GovernanceInstruction {
@@ -92,6 +93,12 @@ contract PythGovernanceInstructions {
         address targetAddress;
         // Fee in wei, matching the native uint256 type used for address.balance in EVM
         uint256 fee;
+    }
+
+    struct SetWormholeAddressAndDataSourcesPayload {
+        address newWormholeAddress;
+        PythInternalStructs.DataSource[] dataSources;
+        uint newFee;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -272,6 +279,48 @@ contract PythGovernanceInstructions {
         index += 8;
 
         wf.fee = uint256(val) * uint256(10) ** uint256(expo);
+
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
+    }
+
+    /// @dev Parse a SetWormholeAddressAndDataSourcesPayload (action 10) with minimal validation
+    function parseSetWormholeAddressAndDataSourcesPayload(
+        bytes memory encodedPayload
+    )
+        public
+        pure
+        returns (SetWormholeAddressAndDataSourcesPayload memory payload)
+    {
+        uint index = 0;
+
+        payload.newWormholeAddress = address(encodedPayload.toAddress(index));
+        index += 20;
+
+        uint8 dataSourcesLength = encodedPayload.toUint8(index);
+        index += 1;
+
+        payload.dataSources = new PythInternalStructs.DataSource[](
+            dataSourcesLength
+        );
+
+        for (uint i = 0; i < dataSourcesLength; i++) {
+            payload.dataSources[i].chainId = encodedPayload.toUint16(index);
+            index += 2;
+
+            payload.dataSources[i].emitterAddress = encodedPayload.toBytes32(
+                index
+            );
+            index += 32;
+        }
+
+        uint64 val = encodedPayload.toUint64(index);
+        index += 8;
+
+        uint64 expo = encodedPayload.toUint64(index);
+        index += 8;
+
+        payload.newFee = uint256(val) * uint256(10) ** uint256(expo);
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();
