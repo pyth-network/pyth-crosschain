@@ -1915,23 +1915,18 @@ export class EvmChain extends Chain {
   /**
    * Returns the payload for a governance SetWormholeAddressAndDataSources
    * instruction (action 10). Used for legacy → pro-compatible in-place migrate.
+   * Fee is set separately via SetFee before migration.
    * @param address - hex string of the 20 byte wormhole receiver address without the 0x prefix
    * @param dataSources - the new valid data sources
-   * @param feeValue - single-update fee value (migrate uses 0)
-   * @param feeExpo - single-update fee exponent (migrate uses 0)
    */
   generateGovernanceSetWormholeAddressAndDataSourcesPayload(
     address: string,
     dataSources: DataSource[],
-    feeValue: bigint,
-    feeExpo: bigint,
   ): Buffer {
     return new SetWormholeAddressAndDataSources(
       this.wormholeChainName,
       address,
       dataSources,
-      feeValue,
-      feeExpo,
     ).encode();
   }
 

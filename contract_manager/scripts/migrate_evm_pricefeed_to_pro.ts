@@ -61,7 +61,8 @@ const parser = yargs(hideBin(process.argv))
       "wormhole + data sources.\n" +
       "Per chain: resolve/deploy pro wormhole, deploy new PythUpgradable impl, " +
       "then propose UpgradeContract + SetWormholeAddressAndDataSources " +
-      "(fee 0/0) for the legacy proxy.\n" +
+      "for the legacy proxy.\n" +
+      "Assumes single-update fee was already set to 0 via SetFee beforehand.\n" +
       `Uses a cache file (${CACHE_FILE}) to avoid deploying contracts twice.\n` +
       "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> " +
       "--ops-key-path <ops_key_path> --std-output <pyth_upgradable.json> " +
@@ -175,8 +176,6 @@ async function main() {
       chain.generateGovernanceSetWormholeAddressAndDataSourcesPayload(
         proWormhole.address.replace("0x", ""),
         proDataSources,
-        0n,
-        0n,
       ),
     );
     console.log(

@@ -141,15 +141,6 @@ async function main() {
         console.log(
           `  data sources:\t\t${JSON.stringify(action.dataSources)}`,
         );
-        console.log(
-          `  fee value/expo:\t${action.newFeeValue} / ${action.newFeeExpo}`,
-        );
-
-        if (action.newFeeValue !== 0n || action.newFeeExpo !== 0n) {
-          console.log(
-            `  WARNING: expected fee 0/0 for pro migrate, got ${action.newFeeValue}/${action.newFeeExpo}`,
-          );
-        }
 
         const proProductionSources =
           getDefaultDeploymentConfig("pro-compatible-production").dataSources;
