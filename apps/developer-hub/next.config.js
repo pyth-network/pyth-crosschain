@@ -245,6 +245,13 @@ const config = {
         source: "/price-feeds/pro/api/proxy",
       },
 
+      // Express Relay wound down (OP-PIP-124) — funnel deep links to the sunset page
+      {
+        destination: "/express-relay",
+        permanent: true,
+        source: "/express-relay/:path+",
+      },
+
       {
         destination: "/price-feeds/core/:path",
         permanent: true,

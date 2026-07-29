@@ -34,10 +34,6 @@ Secure verifiable random number generation using commit-reveal. Callback-based A
 Best for: Gaming, NFT mints, lotteries, fair selection.
 > https://docs.pyth.network/llms-entropy.txt
 
-### Express Relay — MEV Protection
-Auction-based MEV capture and order flow protection for DeFi protocols.
-> https://docs.pyth.network/express-relay/index.mdx
-
 ## Unsure Which Price Feed Product?
 Comparison of Core vs Pro with decision matrix:
 > https://docs.pyth.network/llms-price-feeds.txt

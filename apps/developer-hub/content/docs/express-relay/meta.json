@@ -1,19 +1,7 @@
 {
   "root": true,
   "title": "Express Relay",
-  "description": "Eliminate MEV",
+  "description": "Wound down — see OP-PIP-124",
   "icon": "Gavel",
-  "pages": [
-    "index",
-    "---How-To Guides---",
-    "integrate-as-protocol",
-    "integrate-as-searcher",
-    "---Reference Material---",
-    "http-api-reference",
-    "websocket-api-reference",
-    "contract-addresses",
-    "errors",
-    "---Understanding Express Relay---",
-    "how-express-relay-works"
-  ]
+  "pages": ["index"]
 }

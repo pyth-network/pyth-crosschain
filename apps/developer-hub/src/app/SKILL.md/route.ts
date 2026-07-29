@@ -58,7 +58,6 @@ Use this Skill when the user asks for:
 - Standard DeFi: Pyth Core + \`hermes-client\` + \`pyth-sdk-solidity\`
 - Low latency HFT: Pyth Pro + \`pyth-lazer-sdk\`
 - Randomness: Entropy + \`entropy-sdk-solidity\`
-- MEV protection: Express Relay + \`express-relay-js\`
 
 ### 3. Implement with Pyth-specific correctness
 Always be explicit about:
@@ -111,7 +110,6 @@ When you implement changes, provide:
 | **Pyth Core** | DeFi price feeds | 400ms | Pull-based, pay-per-update |
 | **Pyth Pro** | HFT, MEV strategies | <50ms | Subscription, WebSocket streaming |
 | **Entropy** | On-chain randomness | ~1 block | Commit-reveal, callback-based |
-| **Express Relay** | MEV protection | Instant | Auction-based routing |
 
 ---
 

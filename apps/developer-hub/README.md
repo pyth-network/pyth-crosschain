@@ -47,7 +47,6 @@ Documentation content lives in the `content/docs/` directory:
 content/docs/
 ├── price-feeds/     # Price feeds documentation
 ├── entropy/         # Entropy (RNG) documentation
-├── express-relay/   # Express Relay documentation
 └── ...
 ```
 
