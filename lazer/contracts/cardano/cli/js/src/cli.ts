@@ -137,12 +137,15 @@ const commonOptions = {
 parser.command(
   "new-wallet",
   "generates a new wallet mnemonic and appends it to .env",
-  (b) => b.options({}),
-  async () => {
+  (b) => b.options({ network: commonOptions.network }),
+  async ({ network }) => {
     const mnemonic = PrivateKey.generateMnemonic();
     const envPath = path.resolve(import.meta.dirname, "../.env");
     await fs.appendFile(envPath, `\nCARDANO_MNEMONIC="${mnemonic}"\n`);
-    const address = await Client.make(Chain.preview).withSeed({ mnemonic }).address();
+    // Address derivation reads only `chain.id`; for `devnet` (no running
+    // cluster yet to query slot config from) fall back to the preview preset.
+    const chain = network === "devnet" ? Chain.preview : Chain[network];
+    const address = await Client.make(chain).withSeed({ mnemonic }).address();
     console.log("Funding address:", Address.toBech32(address));
   },
 );
