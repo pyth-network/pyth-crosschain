@@ -288,8 +288,6 @@ test("GovernancePayload ser/de", () => {
           emitterChain: 3,
         },
       ],
-      42n,
-      8n,
     );
   const setWormholeAddressAndDataSourcesBuffer =
     setWormholeAddressAndDataSources.encode();
@@ -310,8 +308,6 @@ test("GovernancePayload ser/de", () => {
         // data source 2
         0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 1, 45,
-        // fee value = 42, expo = 8
-        0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 8,
       ]),
     ),
   ).toBeTruthy();
@@ -337,23 +333,18 @@ test("GovernancePayload ser/de", () => {
       emitterChain: 3,
     },
   ]);
-  expect(decodedSetWormholeAddressAndDataSources?.newFeeValue).toBe(42n);
-  expect(decodedSetWormholeAddressAndDataSources?.newFeeExpo).toBe(8n);
   expect(
     decodeGovernancePayload(setWormholeAddressAndDataSourcesBuffer),
   ).toBeInstanceOf(SetWormholeAddressAndDataSources);
 
-  // Fee fields are always present even when zero (migrate path).
+  // Empty data sources is a valid payload (header + address + numSources=0).
   const migratePayload = new SetWormholeAddressAndDataSources(
     "ethereum",
     "0102030405060708090a0b0c0d0e0f1011121314",
     [],
-    0n,
-    0n,
   );
   const migrateBuffer = migratePayload.encode();
-  expect(migrateBuffer.length).toBe(8 + 20 + 1 + 16);
-  expect(migrateBuffer.subarray(-16).equals(Buffer.alloc(16))).toBeTruthy();
+  expect(migrateBuffer.length).toBe(8 + 20 + 1);
   expect(migrateBuffer[5]).toBe(10);
 
   const upgradeContract = new UpgradeContract256Bit(
@@ -573,16 +564,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         .record({
           address: hexBytesArb({ maxLength: 20, minLength: 20 }),
           dataSources: fc.array(dataSourceArb()),
-          newFeeExpo: fc.bigUintN(64),
-          newFeeValue: fc.bigUintN(64),
         })
-        .map(({ address, dataSources, newFeeValue, newFeeExpo }) => {
+        .map(({ address, dataSources }) => {
           return new SetWormholeAddressAndDataSources(
             header.targetChainId,
             address,
             dataSources,
-            newFeeValue,
-            newFeeExpo,
           );
         });
     } else if (header.action === "Execute") {

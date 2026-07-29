@@ -12,18 +12,13 @@ const DataSourceLayout: BufferLayout.Structure<DataSource> =
     BufferLayoutExt.hexBytes(32, "emitterAddress"),
   ]);
 
-const FeeLayout: BufferLayout.Structure<
-  Readonly<{ newFeeValue: bigint; newFeeExpo: bigint }>
-> = BufferLayout.struct([
-  BufferLayoutExt.u64be("newFeeValue"),
-  BufferLayoutExt.u64be("newFeeExpo"),
-]);
-
 /**
- * Set the wormhole address, data sources, and fee on the target chain.
+ * Set the wormhole address and data sources on the target chain.
  *
  * Wire format after the governance header:
- *   newWormholeAddress(20) | numSources(u8) | dataSources* | newFeeValue(u64be) | newFeeExpo(u64be)
+ *   newWormholeAddress(20) | numSources(u8) | dataSources*
+ *
+ * Fee is not included; set fee separately via SetFee before migration.
  */
 export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
   readonly actionName: ActionName;
@@ -32,8 +27,6 @@ export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
     readonly targetChainId: ChainName,
     readonly address: string,
     readonly dataSources: DataSource[],
-    readonly newFeeValue: bigint,
-    readonly newFeeExpo: bigint,
   ) {
     this.actionName = "SetWormholeAddressAndDataSources";
   }
@@ -56,14 +49,14 @@ export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
       index += DataSourceLayout.span;
     }
 
-    const fee = FeeLayout.decode(data, index);
+    if (index !== data.length) {
+      return undefined;
+    }
 
     return new SetWormholeAddressAndDataSources(
       header.targetChainId,
       address,
       dataSources,
-      fee.newFeeValue,
-      fee.newFeeExpo,
     );
   }
 
@@ -85,21 +78,11 @@ export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
       return buf;
     });
 
-    const feeBuf = Buffer.alloc(FeeLayout.span);
-    FeeLayout.encode(
-      {
-        newFeeExpo: this.newFeeExpo,
-        newFeeValue: this.newFeeValue,
-      },
-      feeBuf,
-    );
-
     return safeBufferConcat([
       headerBuffer,
       addressBuf,
       numSourcesBuf,
       ...dataSourceBufs,
-      feeBuf,
     ]);
   }
 }
