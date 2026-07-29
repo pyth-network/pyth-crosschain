@@ -185,20 +185,18 @@ You may find these additional resources helpful for developing your IOTA applica
 
 ### CLI Example
 
-[This example](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/iota/cli) shows how to update prices on a IOTA network. It does the following:
+[This example](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/sui/cli-iota) shows how to update prices on a IOTA network. It does the following:
 
 1. Fetches update data from Hermes for the given price feeds.
 1. Call the Pyth IOTA contract with a price update.
 
-You can run this example with `npm run example-relay`. A full command that updates prices on the IOTA testnet looks like this:
+You can run this example with `npm run cli -- update-feeds`. A full command that updates prices on the IOTA testnet looks like this:
 
 ```bash
-export IOTA_KEY=YOUR_PRIV_KEY;
-npm run example-relay -- --feed-id "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" \
---hermes "https://hermes.pyth.network" \
---full-node "https://api.testnet.iota.cafe" \
---pyth-state-id "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1" \
---wormhole-state-id "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b"
+npm run cli -- update-feeds --feed-id "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" \
+--endpoint "https://hermes.pyth.network" \
+--contract "iota_testnet_0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1" \
+--private-key YOUR_PRIV_KEY
 ```
 
 ### Contract Addresses

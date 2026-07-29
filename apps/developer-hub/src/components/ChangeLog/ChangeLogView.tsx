@@ -25,7 +25,7 @@ const Footer = () => (
     <span className={styles.footerSpacer} />
     <a
       className={styles.footerEdit}
-      href="https://github.com/pyth-network/pyth-crosschain/tree/main/apps/developer-hub/data/changelog-diffs"
+      href="https://github.com/pyth-network/pyth-crosschain/tree/changelog-data/apps/developer-hub/data/changelog-diffs"
       rel="noopener noreferrer"
       target="_blank"
     >
