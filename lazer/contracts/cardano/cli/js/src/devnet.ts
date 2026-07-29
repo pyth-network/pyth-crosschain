@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noConsole: used in CLI */
 import { Cluster, Config, Container, Genesis } from "@evolution-sdk/devnet";
-import type { SigningClient } from "@evolution-sdk/evolution";
 import { Address } from "@evolution-sdk/evolution";
+import type { SigningClient } from "@evolution-sdk/evolution/sdk/client/Client";
 import * as dateFns from "date-fns";
 
 const CLEAR_LINE = "\r\x1b[K";

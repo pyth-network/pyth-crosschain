@@ -274,18 +274,14 @@ export class SpendingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       hash,
-      receive: (ctx, assets, datumValue) => {
-        const payment = {
-          address: ctx.newAddress(hash),
-          assets,
-          datum: new InlineDatum.InlineDatum({
-            data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
-          }),
-          script,
-        };
-        payment.assets = ctx.assetsWithFee(payment);
-        return payment;
-      },
+      receive: (ctx, assets, datumValue) => ({
+        address: ctx.newAddress(hash),
+        assets,
+        datum: new InlineDatum.InlineDatum({
+          data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
+        }),
+        script,
+      }),
       script,
     };
   }

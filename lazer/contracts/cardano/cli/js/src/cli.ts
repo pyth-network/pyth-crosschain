@@ -6,15 +6,15 @@ import process from "node:process";
 import {
   Address,
   Assets,
-  createClient,
+  Client,
   PolicyId,
   PrivateKey,
   ScriptHash,
   TransactionHash,
 } from "@evolution-sdk/evolution";
-import { generateTypeScript } from "@evolution-sdk/evolution/blueprint/codegen";
-import { createCodegenConfig } from "@evolution-sdk/evolution/blueprint/codegen-config";
-import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint/types";
+import * as Chain from "@evolution-sdk/evolution/sdk/client/Chain";
+import type { Types } from "@evolution-sdk/evolution/blueprint";
+import { Codegen, CodegenConfig, } from "@evolution-sdk/evolution/blueprint";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { Network } from "./client.js";
@@ -142,10 +142,7 @@ parser.command(
     const mnemonic = PrivateKey.generateMnemonic();
     const envPath = path.resolve(import.meta.dirname, "../.env");
     await fs.appendFile(envPath, `\nCARDANO_MNEMONIC="${mnemonic}"\n`);
-    const address = await createClient({
-      network: 0,
-      wallet: { mnemonic, type: "seed" },
-    }).address();
+    const address = await Client.make(Chain.preview).withSeed({ mnemonic }).address();
     console.log("Funding address:", Address.toBech32(address));
   },
 );
@@ -179,20 +176,20 @@ parser.command(
         path.resolve(import.meta.dirname, "../../../plutus.json"),
         "utf8",
       ),
-    ) as PlutusBlueprint;
+    ) as Types.PlutusBlueprint;
 
-    const offchainSrc = generateTypeScript(
+    const offchainSrc = Codegen.generateTypeScript(
       blueprint,
-      createCodegenConfig({
+      CodegenConfig.createCodegenConfig({
         imports: {
           data: [
             "/** biome-ignore-all assist/source/useSortedKeys: generated code */",
             "/** biome-ignore-all assist/source/organizeImports: generated code */",
             'import { Data } from "@evolution-sdk/evolution";',
           ].join("\n"),
+          schema: 'import { Schema } from "@evolution-sdk/evolution";',
           tschema: 'import { TSchema } from "@evolution-sdk/evolution";',
         },
-        useSuspend: false,
       }),
     );
     await fs.writeFile(
