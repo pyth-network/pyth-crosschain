@@ -1,0 +1,30 @@
+{
+  "date": "2026-07-29",
+  "label": "Wednesday",
+  "summary": {
+    "added": 1,
+    "went_live": 1,
+    "removed": 0
+  },
+  "hero": "1 new feed announced, 1 went live.",
+  "events": [
+    {
+      "id": "Metal.OGV6/USD",
+      "lazerId": 3218,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 28 September 2026",
+      "assetType": "metal",
+      "changeType": "went_live",
+      "date": "2026-07-29",
+      "quote": "USD"
+    },
+    {
+      "id": "Metal.AL3M/USD",
+      "lazerId": 3450,
+      "asset": "Pyth Price In Usd For Aluminium 3-Month",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-07-29",
+      "quote": "USD"
+    }
+  ]
+}
