@@ -661,9 +661,7 @@ contract PythGovernanceTest is
             newWormhole,
             uint8(1), // Number of data sources
             uint16(26), // Chain ID
-            newEmitter,
-            uint64(0), // fee value
-            uint64(0) // fee expo
+            newEmitter
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -677,7 +675,7 @@ contract PythGovernanceTest is
         PythInternalStructs.DataSource[] memory oldDataSources = PythGetters(
             address(pyth)
         ).validDataSources();
-        uint oldFee = PythGetters(address(pyth)).singleUpdateFeeInWei();
+        uint feeBefore = PythGetters(address(pyth)).singleUpdateFeeInWei();
 
         PythInternalStructs.DataSource[]
             memory newDataSources = new PythInternalStructs.DataSource[](1);
@@ -687,8 +685,6 @@ contract PythGovernanceTest is
         emit WormholeAddressSet(oldWormhole, newWormhole);
         vm.expectEmit(true, true, true, true);
         emit DataSourcesSet(oldDataSources, newDataSources);
-        vm.expectEmit(true, true, true, true);
-        emit FeeSet(oldFee, 0);
 
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
 
@@ -702,7 +698,8 @@ contract PythGovernanceTest is
         assertTrue(
             PythGetters(address(pyth)).isValidDataSource(26, newEmitter)
         );
-        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), 0);
+        // Fee is unchanged — set separately via SetFee before migration.
+        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), feeBefore);
     }
 
     function testSetWormholeAddressAndDataSourcesRejectsZeroAddress() public {
@@ -716,9 +713,7 @@ contract PythGovernanceTest is
             uint16(26),
             bytes32(
                 0x0000000000000000000000000000000000000000000000000000000000002222
-            ),
-            uint64(0),
-            uint64(0)
+            )
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -745,9 +740,7 @@ contract PythGovernanceTest is
             uint16(26),
             bytes32(
                 0x0000000000000000000000000000000000000000000000000000000000002222
-            ),
-            uint64(0),
-            uint64(0)
+            )
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -777,8 +770,6 @@ contract PythGovernanceTest is
             bytes32(
                 0x0000000000000000000000000000000000000000000000000000000000002222
             ),
-            uint64(0),
-            uint64(0),
             uint8(0xff) // Trailing byte
         );
 
@@ -798,7 +789,7 @@ contract PythGovernanceTest is
     {
         address newWormhole = address(setUpWormholeReceiver(1));
 
-        // Missing fee expo (truncated after fee value)
+        // Missing emitter address (truncated after chain id)
         bytes memory data = abi.encodePacked(
             MAGIC,
             uint8(GovernanceModule.Target),
@@ -806,11 +797,7 @@ contract PythGovernanceTest is
             TARGET_CHAIN_ID,
             newWormhole,
             uint8(1),
-            uint16(26),
-            bytes32(
-                0x0000000000000000000000000000000000000000000000000000000000002222
-            ),
-            uint64(0) // fee value only — missing expo
+            uint16(26)
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -837,9 +824,7 @@ contract PythGovernanceTest is
             uint16(26),
             bytes32(
                 0x0000000000000000000000000000000000000000000000000000000000002222
-            ),
-            uint64(0),
-            uint64(0)
+            )
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -851,37 +836,6 @@ contract PythGovernanceTest is
 
         vm.expectRevert(PythErrors.InvalidGovernanceTarget.selector);
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
-    }
-
-    function testSetWormholeAddressAndDataSourcesSetsNonZeroFee() public {
-        address newWormhole = address(setUpWormholeReceiver(1));
-        bytes32 newEmitter = bytes32(
-            0x0000000000000000000000000000000000000000000000000000000000003333
-        );
-
-        // fee = 5 * 10^3 = 5000
-        bytes memory data = abi.encodePacked(
-            MAGIC,
-            uint8(GovernanceModule.Target),
-            uint8(GovernanceAction.SetWormholeAddressAndDataSources),
-            TARGET_CHAIN_ID,
-            newWormhole,
-            uint8(1),
-            uint16(26),
-            newEmitter,
-            uint64(5),
-            uint64(3)
-        );
-
-        bytes memory vaa = encodeAndSignMessage(
-            data,
-            TEST_GOVERNANCE_CHAIN_ID,
-            TEST_GOVERNANCE_EMITTER,
-            1
-        );
-
-        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
-        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), 5000);
     }
 
     function encodeAndSignWormholeMessage(

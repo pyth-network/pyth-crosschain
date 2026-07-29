@@ -260,8 +260,9 @@ abstract contract PythGovernance is
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
     }
 
-    /// @dev Sets wormhole address, data sources, and fee without dual-VAA re-verify.
+    /// @dev Sets wormhole address and data sources without dual-VAA re-verify.
     /// Used for legacy → pro-compatible migration where guardian sets do not overlap.
+    /// Fee is set separately via SetFee before migration.
     function setWormholeAddressAndDataSources(
         SetWormholeAddressAndDataSourcesPayload memory payload
     ) internal {
@@ -282,7 +283,6 @@ abstract contract PythGovernance is
         setDataSources(
             SetDataSourcesPayload({dataSources: payload.dataSources})
         );
-        setFee(SetFeePayload({newFee: payload.newFee}));
     }
 
     function setTransactionFee(
