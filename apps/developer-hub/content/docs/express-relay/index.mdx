@@ -1,59 +1,15 @@
 ---
 title: "Express Relay"
 description: >-
-  Express Relay enables better orderflow mechanisms that eliminate MEV. Protocol developers can recapture MEV while searchers get unified access to opportunities.
+  Express Relay has been wound down following Pyth governance decision OP-PIP-124.
 icon: Gavel
 full: true
 ---
 
-import { IntegrationCard } from "../../../src/components/IntegrationCard";
-import {
-  Files,
-  MagnifyingGlass,
-  Question,
-} from "@phosphor-icons/react/dist/ssr";
+# Express Relay has been wound down
 
-# Introduction
+In July 2026, Pyth governance passed [OP-PIP-124: Express Relay Wind-Down](https://forum.pyth.network/t/passed-op-pip-124-express-relay-wind-down/2642). Express Relay is no longer an actively supported Pyth product; the auction service, SDKs (`@pythnetwork/express-relay-js`, `express_relay` Python), and on-chain `ExpressRelay` contracts are being retired.
 
-Express Relay is a priority auction which enables better orderflow mechanisms that eliminate [Maximal Extractable Value](https://www.ledger.com/academy/glossary/maximal-extractable-value-mev) (MEV).
+**Existing integrators**: reach out on the [Pyth Discord](https://discord.gg/PythNetwork) if you need migration guidance.
 
-- **For Protocol Developers:** Express Relay allows protocols to recapture MEV and access a network of searchers for more competitive pricing than on-chain sources provide.
-  With Express Relay, protocols get access to plug-and-play liquidity.
-
-- **For Searchers:** Express Relay provides easy and unified access to a range of orderflow opportunities across integrated DeFi protocols.
-
-## Integration
-
-To integrate with Express Relay, you can integrate as a protocol (to power token swaps) or as a searcher.
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-  <IntegrationCard
-    href="/express-relay/integrate-as-protocol"
-    colorScheme="blue"
-    title="Integrate as a Protocol"
-    description="Power token swaps and recapture MEV with Express Relay integration"
-    icon={<Files size={16} />}
-  />
-
-  <IntegrationCard
-    href="/express-relay/integrate-as-searcher"
-    colorScheme="green"
-    title="Integrate as a Searcher"
-    description="Access unified orderflow opportunities across DeFi protocols"
-    icon={<MagnifyingGlass size={16} />}
-  />
-</div>
-
-## Learn
-
-To learn more about Express Relay, refer to the following resources:
-
-<div className="mt-8">
-  <IntegrationCard
-    href="/express-relay/how-express-relay-works"
-    colorScheme="purple"
-    title="How Express Relay Works"
-    description="Understand the mechanics behind Express Relay's priority auction system"
-    icon={<Question size={16} />}
-  />
-</div>
+For Pyth's other products, see [Price Feeds](/price-feeds) and [Entropy](/entropy).
