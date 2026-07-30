@@ -1,12 +1,12 @@
 {
   "dependencies": {
-    "@evolution-sdk/devnet": "1.1.29",
-    "@evolution-sdk/evolution": "0.3.29",
+    "@evolution-sdk/devnet": "3.0.12",
+    "@evolution-sdk/evolution": "0.5.11",
     "@noble/curves": "^2.0.1",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@wormhole-foundation/sdk-definitions": "^0.10.12",
     "date-fns": "catalog:",
-    "effect": "3.19.19",
+    "effect": "^3.21.1",
     "yargs": "catalog:"
   },
   "description": "TypeScript SDK for the Pyth Lazer Cardano contract",

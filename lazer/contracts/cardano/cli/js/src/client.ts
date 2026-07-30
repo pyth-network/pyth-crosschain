@@ -1,9 +1,8 @@
 /** biome-ignore-all lint/suspicious/noConsole: utilities used in CLI */
-import type { Time, UTxO } from "@evolution-sdk/evolution";
+import type { Assets, UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
-  Assets,
-  createClient,
+  Client,
   DatumOption,
   Effect,
   TransactionHash,
@@ -11,31 +10,22 @@ import {
 import { Address } from "@evolution-sdk/evolution/Address";
 import type { Data } from "@evolution-sdk/evolution/Data";
 import type { KeyHash } from "@evolution-sdk/evolution/KeyHash";
-import type { Script } from "@evolution-sdk/evolution/Script";
 import type { ScriptHash } from "@evolution-sdk/evolution/ScriptHash";
+import type { SlotConfig } from "@evolution-sdk/evolution/SlotConfig";
 import type { PayToAddressParams } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
-import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
+import * as Chain from "@evolution-sdk/evolution/sdk/client/Chain";
 import type {
-  NetworkId,
+  KupmiosConfig,
   SigningClient,
 } from "@evolution-sdk/evolution/sdk/client/Client";
-import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
 import { Schedule } from "effect";
 
-export type Network = Exclude<NetworkId, number> | "devnet";
+export type Network = "mainnet" | "preprod" | "preview" | "devnet";
 
-const DEVNET_PROVIDER = {
+const DEVNET_PROVIDER: KupmiosConfig = {
   kupoUrl: "http://localhost:1442",
   ogmiosUrl: "http://localhost:1337",
-  type: "kupmios",
-} as const;
-
-export type Payment = {
-  address: Address;
-  assets: Assets.Assets;
-  datum?: DatumOption.DatumOption;
-  script?: Script;
 };
 
 export type Provider =
@@ -56,7 +46,6 @@ export class ClientContext {
   private constructor(
     readonly network: Network,
     readonly client: SigningClient,
-    readonly parameters: ProtocolParameters,
     readonly debug: boolean,
   ) {}
 
@@ -66,62 +55,49 @@ export class ClientContext {
     mnemonic: string,
     options: { debug?: boolean } = {},
   ): Promise<ClientContext> {
+    const debug = options.debug ?? false;
+    const wallet = { accountIndex: 0, mnemonic };
+
     if (network === "devnet") {
-      const client = createClient({
-        network: 0,
-        provider: DEVNET_PROVIDER,
+      const chain = {
+        ...Chain.preview,
+        name: "Cardano Devnet",
         slotConfig: await getDevnetSlotConfig(),
-        wallet: {
-          accountIndex: 0,
-          mnemonic,
-          type: "seed",
-        },
-      });
-      return new ClientContext(
-        "devnet",
-        client,
-        await client.getProtocolParameters(),
-        options.debug ?? false,
-      );
-    } else {
-      const wallet = {
-        accountIndex: 0,
-        mnemonic,
-        type: "seed",
-      } as const;
-      let baseUrl: string;
-      switch (provider.type) {
-        case "blockfrost": {
-          baseUrl = `https://cardano-${network}.blockfrost.io/api/v0`;
-          break;
-        }
-        case "koios": {
-          baseUrl = `https://${
-            {
-              mainnet: "api",
-              preprod: "preprod",
-              preview: "preview",
-            }[network]
-          }.koios.rest/api/v1`;
-          break;
-        }
-        case "maestro": {
-          baseUrl = `https://${network}.gomaestro-api.org/v1`;
-          break;
-        }
-      }
-      const client = createClient({
-        network,
-        provider: { baseUrl, ...provider },
-        wallet,
-      });
-      return new ClientContext(
-        network,
-        client,
-        await client.getProtocolParameters(),
-        options.debug ?? false,
-      );
+      };
+      const client = Client.make(chain)
+        .withKupmios(DEVNET_PROVIDER)
+        .withSeed(wallet);
+      return new ClientContext("devnet", client, debug);
     }
+
+    const chain = Chain[network];
+    let client: SigningClient;
+    switch (provider.type) {
+      case "blockfrost": {
+        const baseUrl = `https://cardano-${network}.blockfrost.io/api/v0`;
+        client = Client.make(chain)
+          .withBlockfrost({ baseUrl, projectId: provider.projectId })
+          .withSeed(wallet);
+        break;
+      }
+      case "koios": {
+        const baseUrl = `https://${
+          network === "mainnet" ? "api" : network
+        }.koios.rest/api/v1`;
+        client = Client.make(chain)
+          .withKoios({ baseUrl, token: provider.token })
+          .withSeed(wallet);
+        break;
+      }
+      case "maestro": {
+        const baseUrl = `https://${network}.gomaestro-api.org/v1`;
+        client = Client.make(chain)
+          .withMaestro({ apiKey: provider.apiKey, baseUrl })
+          .withSeed(wallet);
+        break;
+      }
+    }
+    return new ClientContext(network, client, debug);
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: false positive
@@ -145,27 +121,18 @@ export class ClientContext {
       const built = yield* Effect.catchAllDefect((e) =>
         // .buildEffect `throw`s internally, we need to handle that
         Effect.fail(e as Error),
-      )(tx.buildEffect({ debug }));
-      const digest = yield* built.Effect.signAndSubmit();
+      )(tx.buildEffect({ autoMinUtxo: true, debug }));
+      const digest = yield* built.effect.signAndSubmit();
       if (debug) console.debug(`digest ${TransactionHash.toHex(digest)}...`);
-      yield* client.Effect.awaitTx(digest);
+      yield* client.effect.awaitTx(digest);
       if (debug) console.debug(`...confirmed`);
       return [digest, ...res] as const;
-    }).pipe(Effect.retry({ schedule: Schedule.spaced("5 seconds"), times }));
-  }
-
-  calculateFee({ script, ...args }: Payment): bigint {
-    return Effect.runSync(
-      calculateMinimumUtxoLovelace({
-        ...args,
-        coinsPerUtxoByte: this.parameters.coinsPerUtxoByte,
-        ...(script ? { scriptRef: script } : {}),
-      }),
-    );
-  }
-
-  assetsWithFee(payment: Payment): Assets.Assets {
-    return Assets.addLovelace(payment.assets, this.calculateFee(payment));
+    }).pipe(
+      Effect.retry({ schedule: Schedule.spaced("5 seconds"), times }),
+    ) as Effect.Effect<
+      readonly [TransactionHash.TransactionHash, ...R],
+      Error
+    >;
   }
 
   newAddress(paymentCredential: KeyHash | ScriptHash): Address {
@@ -185,9 +152,7 @@ export class ClientContext {
 
   async payToMe(assets: Assets.Assets): Promise<PayToAddressParams> {
     const address = await this.client.address();
-    const payment = { address, assets };
-    payment.assets = this.assetsWithFee(payment);
-    return payment;
+    return { address, assets };
   }
 
   async getNftUtxo(
@@ -205,7 +170,7 @@ export class ClientContext {
   }
 }
 
-async function getDevnetSlotConfig(): Promise<Time.SlotConfig> {
+async function getDevnetSlotConfig(): Promise<SlotConfig> {
   const healthRes = await fetch("http://localhost:1337/health");
   const { startTime } = await healthRes.json();
 
@@ -227,8 +192,6 @@ async function getDevnetSlotConfig(): Promise<Time.SlotConfig> {
 }
 
 export const getOfflineDevnetClient = (mnemonic: string): SigningClient =>
-  createClient({
-    network: 0,
-    provider: DEVNET_PROVIDER,
-    wallet: { accountIndex: 0, mnemonic, type: "seed" },
-  });
+  Client.make({ ...Chain.preview, name: "Cardano Devnet" })
+    .withKupmios(DEVNET_PROVIDER)
+    .withSeed({ accountIndex: 0, mnemonic });

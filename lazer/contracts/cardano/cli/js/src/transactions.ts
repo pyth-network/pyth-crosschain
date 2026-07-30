@@ -169,10 +169,7 @@ export async function applyGovernanceAction(
   const {
     input,
     datums: [oldState],
-  } = pythStateSpend.spend([state], {
-    _tag: "GovernanceAction",
-    governanceAction: action.vaa,
-  });
+  } = pythStateSpend.spend([state], { GovernanceAction: { value: action.vaa } });
 
   const guardians = await ctx.getNftUtxo(
     Buffer.from(oldState.governance.wormhole).toString("hex"),
@@ -263,7 +260,7 @@ export async function verifyUpdates(
     ctx.client
       .newTx()
       // without validity set, Evolution SDK seems to default to no bounds
-      .setValidity({ from: now, to: now + 300_000n })
+      .setValidity({ from: now - 100_000n, to: now + 300_000n })
       .readFrom({ referenceInputs: [state] })
       .withdraw(withdrawer.withdraw(0n, updates)),
   ];
@@ -279,9 +276,7 @@ export async function purgeExpiredPythWithdrawScripts(
   const {
     input,
     datums: [oldState],
-  } = pythStateSpend.spend([state], {
-    _tag: "PurgeExpiredWithdrawScripts",
-  });
+  } = pythStateSpend.spend([state], { PurgeExpiredWithdrawScripts: {} });
 
   const guardians = await ctx.getNftUtxo(
     Buffer.from(oldState.governance.wormhole).toString("hex"),
@@ -289,7 +284,7 @@ export async function purgeExpiredPythWithdrawScripts(
   );
 
   const now = BigInt(Date.now());
-  const validityRange = { from: now, to: now + 300_000n };
+  const validityRange = { from: now - 100_000n, to: now + 300_000n };
 
   const spender = pythStateSpend.script();
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
@@ -349,21 +344,21 @@ const interval = (range: { from?: bigint; to?: bigint }): ValidityRange => ({
   lower_bound:
     "from" in range
       ? {
-          bound_type: { _tag: "Finite", finite: range.from },
+          bound_type: { Finite: { value: range.from } },
           is_inclusive: true,
         }
       : {
-          bound_type: { _tag: "NegativeInfinity" },
+          bound_type: { NegativeInfinity: {} },
           is_inclusive: false,
         },
   upper_bound:
     "to" in range
       ? {
-          bound_type: { _tag: "Finite", finite: range.to },
+          bound_type: { Finite: { value: range.to } },
           is_inclusive: true,
         }
       : {
-          bound_type: { _tag: "PositiveInfinity" },
+          bound_type: { PositiveInfinity: {} },
           is_inclusive: false,
         },
 });
