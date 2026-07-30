@@ -78,7 +78,7 @@ Pyth Pro can be configured to behave as needed for your use case via **market se
 
 #### Q. Is it mandatory to call `verifyUpdate` to get the payload when using Pyth Pro on-chain?
 
-**No**. You can trim the payload off-chain and extract the data (from byte 71 onwards) without calling `verifyUpdate`. See the [verify function](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/evm/src/PythLazer.sol#L70-L106) in the contract or the [Rust SDK protocol module](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/message.rs).
+**No**. You can trim the payload off-chain and extract the data (from byte 71 onwards) without calling `verifyUpdate`. See the [verify function](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/evm/src/PythLazer.sol#L70-L106) in the contract or the [Rust SDK protocol module](https://github.com/pyth-network/pyth-lazer-public/blob/main/sdk/rust/protocol/src/message.rs).
 
 We strongly discourage using the data on-chain without signature verification, as it poses security risks. If you are using the data on-chain without signature verification, you are responsible for verifying the data yourself.
 
