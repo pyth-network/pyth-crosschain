@@ -70,42 +70,32 @@ export class ClientContext {
       return new ClientContext("devnet", client, debug);
     }
 
-    let baseUrl: string;
-    switch (provider.type) {
-      case "blockfrost": {
-        baseUrl = `https://cardano-${network}.blockfrost.io/api/v0`;
-        break;
-      }
-      case "koios": {
-        baseUrl = `https://${
-          network === "mainnet" ? "api" : network
-        }.koios.rest/api/v1`;
-        break;
-      }
-      case "maestro": {
-        baseUrl = `https://${network}.gomaestro-api.org/v1`;
-        break;
-      }
-    }
-
     const chain = Chain[network];
     let client: SigningClient;
     switch (provider.type) {
-      case "blockfrost":
+      case "blockfrost": {
+        const baseUrl = `https://cardano-${network}.blockfrost.io/api/v0`;
         client = Client.make(chain)
           .withBlockfrost({ baseUrl, projectId: provider.projectId })
           .withSeed(wallet);
         break;
-      case "koios":
+      }
+      case "koios": {
+        const baseUrl = `https://${
+          network === "mainnet" ? "api" : network
+        }.koios.rest/api/v1`;
         client = Client.make(chain)
           .withKoios({ baseUrl, token: provider.token })
           .withSeed(wallet);
         break;
-      case "maestro":
+      }
+      case "maestro": {
+        const baseUrl = `https://${network}.gomaestro-api.org/v1`;
         client = Client.make(chain)
-          .withMaestro({ baseUrl, apiKey: provider.apiKey })
+          .withMaestro({ apiKey: provider.apiKey, baseUrl })
           .withSeed(wallet);
         break;
+      }
     }
     return new ClientContext(network, client, debug);
   }
