@@ -3,5 +3,15 @@
     "chain": "cardano_mainnet",
     "policyId": "c935c937d0deda8975142c7b77aeef8f8cd48791e89a8ca7a0edc154",
     "type": "CardanoLazerContract"
+  },
+  {
+    "chain": "cardano_preprod",
+    "policyId": "c7d51d897fdfceb7682f4a1a9ef428a027ec0582cadee158429f7e45",
+    "type": "CardanoLazerContract"
+  },
+  {
+    "chain": "cardano_preview",
+    "policyId": "61259ebe1bf7524d22b61ac04380ca1cab4f262fc1f6d1e2544ae938",
+    "type": "CardanoLazerContract"
   }
 ]
