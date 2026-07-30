@@ -55,18 +55,34 @@ function findLegacyPriceFeedContract(
   return undefined;
 }
 
+function normalizeEmitterAddress(address: string): string {
+  const normalized = address.replace(/^0x/i, "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(normalized)) {
+    throw new Error(
+      `--governance-emitter-address must be a 32-byte hex string (64 hex chars), got: ${address}`,
+    );
+  }
+  return normalized;
+}
+
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Migrates legacy EVM Pyth price feed proxies in place to pro-compatible " +
-      "wormhole + data sources.\n" +
+      "wormhole + data sources + governance emitter.\n" +
       "Per chain: resolve/deploy pro wormhole, deploy new PythUpgradable impl, " +
-      "then propose UpgradeContract + SetWormholeAddressAndDataSources " +
+      "then propose UpgradeContract + MigrateGovernanceAndWormhole " +
       "for the legacy proxy.\n" +
-      "Assumes single-update fee was already set to 0 via SetFee beforehand.\n" +
+      "Prerequisite: single-update fee must already be 0 via SetFee.\n" +
+      "MigrateGovernanceAndWormhole switches governance to the new emitter " +
+      "(index must be > current on-chain index) and resets the executed sequence.\n" +
       `Uses a cache file (${CACHE_FILE}) to avoid deploying contracts twice.\n` +
       "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> " +
       "--ops-key-path <ops_key_path> --std-output <pyth_upgradable.json> " +
-      "--std-output-dir <forge_out_dir> [--deployment-type pro-compatible-production] [--dry-run]",
+      "--std-output-dir <forge_out_dir> " +
+      "--governance-emitter-chain <chain_id> " +
+      "--governance-emitter-address <32_byte_hex> " +
+      "--governance-data-source-index <u32> " +
+      "[--deployment-type pro-compatible-production] [--dry-run]",
   )
   .options({
     ...COMMON_UPGRADE_OPTIONS,
@@ -81,6 +97,21 @@ const parser = yargs(hideBin(process.argv))
       default: false,
       desc: "Deploy contracts and build payloads but do not submit the vault proposal",
       type: "boolean",
+    },
+    "governance-data-source-index": {
+      demandOption: true,
+      desc: "New governance data source index (u32); must be strictly greater than the current on-chain index",
+      type: "number",
+    },
+    "governance-emitter-address": {
+      demandOption: true,
+      desc: "New governance emitter address as 32-byte hex (with or without 0x)",
+      type: "string",
+    },
+    "governance-emitter-chain": {
+      demandOption: true,
+      desc: "New governance emitter wormhole chain id",
+      type: "number",
     },
     "std-output": {
       demandOption: true,
@@ -102,6 +133,20 @@ async function main() {
   ) as DeploymentType;
   const { dataSources: proDataSources } =
     getDefaultDeploymentConfig(deploymentType);
+  const governanceDataSource = {
+    emitterAddress: normalizeEmitterAddress(argv["governance-emitter-address"]),
+    emitterChain: argv["governance-emitter-chain"],
+  };
+  const governanceDataSourceIndex = argv["governance-data-source-index"];
+  if (
+    !Number.isInteger(governanceDataSourceIndex) ||
+    governanceDataSourceIndex < 0 ||
+    governanceDataSourceIndex > 0xffff_ffff
+  ) {
+    throw new Error(
+      `--governance-data-source-index must be a u32 integer, got: ${governanceDataSourceIndex}`,
+    );
+  }
   const dryRun = argv["dry-run"];
 
   const isMainnet = selectedChains[0]?.isMainnet() ?? false;
@@ -113,6 +158,12 @@ async function main() {
   console.log(
     "Migrating legacy proxies on chains",
     selectedChains.map((c) => c.getId()),
+  );
+  console.log(
+    "New governance emitter",
+    `chain=${governanceDataSource.emitterChain}`,
+    `address=${governanceDataSource.emitterAddress}`,
+    `index=${governanceDataSourceIndex}`,
   );
   if (dryRun) {
     console.log("Dry run enabled — will not propose governance");
@@ -173,13 +224,15 @@ async function main() {
       chain.generateGovernanceUpgradePayload(implAddress.replace("0x", "")),
     );
     payloads.push(
-      chain.generateGovernanceSetWormholeAddressAndDataSourcesPayload(
+      chain.generateGovernanceMigrateGovernanceAndWormholePayload(
         proWormhole.address.replace("0x", ""),
         proDataSources,
+        governanceDataSource,
+        governanceDataSourceIndex,
       ),
     );
     console.log(
-      `Queued UpgradeContract + SetWormholeAddressAndDataSources for ${chain.getId()}`,
+      `Queued UpgradeContract + MigrateGovernanceAndWormhole for ${chain.getId()}`,
     );
   }
 

@@ -47,10 +47,10 @@ import {
   EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
+  MigrateGovernanceAndWormhole,
   SetDataSources,
   SetFee,
   SetValidPeriod,
-  SetWormholeAddressAndDataSources,
   toChainId,
   UpdateTrustedSigner264Bit,
   UpgradeContract256Bit,
@@ -1913,20 +1913,27 @@ export class EvmChain extends Chain {
   }
 
   /**
-   * Returns the payload for a governance SetWormholeAddressAndDataSources
+   * Returns the payload for a governance MigrateGovernanceAndWormhole
    * instruction (action 10). Used for legacy → pro-compatible in-place migrate.
-   * Fee is set separately via SetFee before migration.
+   * Atomically sets wormhole, price data sources, and the new governance emitter
+   * (plus index / sequence reset). Fee must already be 0 via SetFee.
    * @param address - hex string of the 20 byte wormhole receiver address without the 0x prefix
-   * @param dataSources - the new valid data sources
+   * @param dataSources - the new valid price data sources
+   * @param governanceDataSource - the new governance emitter
+   * @param governanceDataSourceIndex - u32 index; must be strictly greater than the current on-chain index
    */
-  generateGovernanceSetWormholeAddressAndDataSourcesPayload(
+  generateGovernanceMigrateGovernanceAndWormholePayload(
     address: string,
     dataSources: DataSource[],
+    governanceDataSource: DataSource,
+    governanceDataSourceIndex: number,
   ): Buffer {
-    return new SetWormholeAddressAndDataSources(
+    return new MigrateGovernanceAndWormhole(
       this.wormholeChainName,
       address,
       dataSources,
+      governanceDataSource,
+      governanceDataSourceIndex,
     ).encode();
   }
 

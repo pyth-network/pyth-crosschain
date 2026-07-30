@@ -12,8 +12,8 @@ import {
   EvmSetWormholeAddress,
   EvmUpgradeContract,
   getProposalInstructions,
+  MigrateGovernanceAndWormhole,
   MultisigParser,
-  SetWormholeAddressAndDataSources,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
@@ -131,37 +131,71 @@ async function main() {
         }
       }
       if (
-        instruction.governanceAction instanceof SetWormholeAddressAndDataSources
+        instruction.governanceAction instanceof MigrateGovernanceAndWormhole
       ) {
         const action = instruction.governanceAction;
         console.log(
-          `Verifying SetWormholeAddressAndDataSources on ${action.targetChainId}`,
+          `Verifying MigrateGovernanceAndWormhole on ${action.targetChainId}`,
         );
         console.log(`  wormhole address:\t${action.address}`);
         console.log(
           `  data sources:\t\t${JSON.stringify(action.dataSources)}`,
         );
+        console.log(
+          `  governance emitter:\t${JSON.stringify(action.governanceDataSource)}`,
+        );
+        console.log(
+          `  governance index:\t${action.governanceDataSourceIndex}`,
+        );
 
-        const proProductionSources =
-          getDefaultDeploymentConfig("pro-compatible-production").dataSources;
-        const proStagingSources =
-          getDefaultDeploymentConfig("pro-compatible-staging").dataSources;
-        const matchesProduction =
+        const proProduction = getDefaultDeploymentConfig(
+          "pro-compatible-production",
+        );
+        const proStaging = getDefaultDeploymentConfig(
+          "pro-compatible-staging",
+        );
+        const matchesProductionSources =
           JSON.stringify(action.dataSources) ===
-          JSON.stringify(proProductionSources);
-        const matchesStaging =
+          JSON.stringify(proProduction.dataSources);
+        const matchesStagingSources =
           JSON.stringify(action.dataSources) ===
-          JSON.stringify(proStagingSources);
-        if (matchesProduction) {
+          JSON.stringify(proStaging.dataSources);
+        if (matchesProductionSources) {
           console.log("  data sources match pro-compatible-production");
-        } else if (matchesStaging) {
+        } else if (matchesStagingSources) {
           console.log("  data sources match pro-compatible-staging");
         } else {
           console.log(
             "  WARNING: data sources do not match pro-compatible-production or pro-compatible-staging",
           );
           console.log(
-            `  expected production:\t${JSON.stringify(proProductionSources)}`,
+            `  expected production:\t${JSON.stringify(proProduction.dataSources)}`,
+          );
+        }
+
+        const matchesProductionGov =
+          JSON.stringify(action.governanceDataSource) ===
+          JSON.stringify(proProduction.governanceDataSource);
+        const matchesStagingGov =
+          JSON.stringify(action.governanceDataSource) ===
+          JSON.stringify(proStaging.governanceDataSource);
+        if (matchesProductionGov) {
+          console.log(
+            "  governance emitter matches pro-compatible-production default",
+          );
+        } else if (matchesStagingGov) {
+          console.log(
+            "  governance emitter matches pro-compatible-staging default",
+          );
+        } else {
+          console.log(
+            "  WARNING: governance emitter does not match pro-compatible-production or pro-compatible-staging defaults",
+          );
+          console.log(
+            `  expected production:\t${JSON.stringify(proProduction.governanceDataSource)}`,
+          );
+          console.log(
+            `  expected staging:\t${JSON.stringify(proStaging.governanceDataSource)}`,
           );
         }
 
@@ -213,6 +247,10 @@ async function main() {
             );
           }
         }
+
+        console.log(
+          "  NOTE: governanceDataSourceIndex must be strictly greater than the current on-chain index",
+        );
       }
       if (instruction.governanceAction instanceof EvmUpgradeContract) {
         console.log(
