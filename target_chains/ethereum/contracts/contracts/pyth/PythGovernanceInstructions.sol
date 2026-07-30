@@ -42,7 +42,7 @@ contract PythGovernanceInstructions {
         SetFeeInToken, // 7 - No-op for EVM chains
         SetTransactionFee, // 8
         WithdrawFee, // 9
-        SetWormholeAddressAndDataSources // 10
+        MigrateGovernanceAndWormhole // 10
     }
 
     struct GovernanceInstruction {
@@ -95,9 +95,11 @@ contract PythGovernanceInstructions {
         uint256 fee;
     }
 
-    struct SetWormholeAddressAndDataSourcesPayload {
+    struct MigrateGovernanceAndWormholePayload {
         address newWormholeAddress;
         PythInternalStructs.DataSource[] dataSources;
+        PythInternalStructs.DataSource governanceDataSource;
+        uint32 governanceDataSourceIndex;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -283,13 +285,13 @@ contract PythGovernanceInstructions {
             revert PythErrors.InvalidGovernanceMessage();
     }
 
-    /// @dev Parse a SetWormholeAddressAndDataSourcesPayload (action 10) with minimal validation
-    function parseSetWormholeAddressAndDataSourcesPayload(
+    /// @dev Parse a MigrateGovernanceAndWormholePayload (action 10) with minimal validation
+    function parseMigrateGovernanceAndWormholePayload(
         bytes memory encodedPayload
     )
         public
         pure
-        returns (SetWormholeAddressAndDataSourcesPayload memory payload)
+        returns (MigrateGovernanceAndWormholePayload memory payload)
     {
         uint index = 0;
 
@@ -312,6 +314,17 @@ contract PythGovernanceInstructions {
             );
             index += 32;
         }
+
+        payload.governanceDataSource.chainId = encodedPayload.toUint16(index);
+        index += 2;
+
+        payload.governanceDataSource.emitterAddress = encodedPayload.toBytes32(
+            index
+        );
+        index += 32;
+
+        payload.governanceDataSourceIndex = encodedPayload.toUint32(index);
+        index += 4;
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();

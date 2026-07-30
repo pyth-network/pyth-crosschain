@@ -106,12 +106,12 @@ abstract contract PythGovernance is
         } else if (gi.action == GovernanceAction.WithdrawFee) {
             withdrawFee(parseWithdrawFeePayload(gi.payload));
         } else if (
-            gi.action == GovernanceAction.SetWormholeAddressAndDataSources
+            gi.action == GovernanceAction.MigrateGovernanceAndWormhole
         ) {
             if (gi.targetChainId == 0)
                 revert PythErrors.InvalidGovernanceTarget();
-            setWormholeAddressAndDataSources(
-                parseSetWormholeAddressAndDataSourcesPayload(gi.payload)
+            migrateGovernanceAndWormhole(
+                parseMigrateGovernanceAndWormholePayload(gi.payload)
             );
         } else {
             revert PythErrors.InvalidGovernanceMessage();
@@ -260,11 +260,12 @@ abstract contract PythGovernance is
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
     }
 
-    /// @dev Sets wormhole address and data sources without dual-VAA re-verify.
-    /// Used for legacy → pro-compatible migration where guardian sets do not overlap.
+    /// @dev Atomically migrates wormhole address, valid data sources, and
+    /// governance emitter without dual-VAA re-verify. Resets the last executed
+    /// governance sequence so the new emitter can start from sequence 0.
     /// Fee is set separately via SetFee before migration.
-    function setWormholeAddressAndDataSources(
-        SetWormholeAddressAndDataSourcesPayload memory payload
+    function migrateGovernanceAndWormhole(
+        MigrateGovernanceAndWormholePayload memory payload
     ) internal {
         if (payload.newWormholeAddress == address(0))
             revert PythErrors.InvalidWormholeAddressToSet();
@@ -276,12 +277,33 @@ abstract contract PythGovernance is
         }
         if (codeSize == 0) revert PythErrors.InvalidWormholeAddressToSet();
 
+        if (payload.governanceDataSource.emitterAddress == bytes32(0))
+            revert PythErrors.InvalidGovernanceDataSource();
+
         address oldWormholeAddress = address(wormhole());
         setWormhole(payload.newWormholeAddress);
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
 
         setDataSources(
             SetDataSourcesPayload({dataSources: payload.dataSources})
+        );
+
+        // Governance data source index must strictly increase to prevent replay.
+        if (
+            payload.governanceDataSourceIndex <= governanceDataSourceIndex()
+        ) revert PythErrors.OldGovernanceMessage();
+
+        PythInternalStructs.DataSource
+            memory oldGovernanceDataSource = governanceDataSource();
+
+        setGovernanceDataSourceIndex(payload.governanceDataSourceIndex);
+        setGovernanceDataSource(payload.governanceDataSource);
+        setLastExecutedGovernanceSequence(0);
+
+        emit GovernanceDataSourceSet(
+            oldGovernanceDataSource,
+            governanceDataSource(),
+            lastExecutedGovernanceSequence()
         );
     }
 
