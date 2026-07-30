@@ -14,7 +14,7 @@ import {
   EvmSetWormholeAddress,
   StarknetSetWormholeAddress,
 } from "./SetWormholeAddress";
-import { SetWormholeAddressAndDataSources } from "./SetWormholeAddressAndDataSources";
+import { MigrateGovernanceAndWormhole } from "./MigrateGovernanceAndWormhole";
 import {
   CallStellarExecutor,
   UpgradeStellarExecutor,
@@ -85,8 +85,8 @@ export function decodeGovernancePayload(
         return undefined;
       }
     }
-    case "SetWormholeAddressAndDataSources":
-      return SetWormholeAddressAndDataSources.decode(data);
+    case "MigrateGovernanceAndWormhole":
+      return MigrateGovernanceAndWormhole.decode(data);
     case "Execute":
       return EvmExecute.decode(data);
     case "SetTransactionFee":
@@ -128,7 +128,7 @@ export * from "./SetFee";
 export * from "./SetTransactionFee";
 export * from "./SetValidPeriod";
 export * from "./SetWormholeAddress";
-export * from "./SetWormholeAddressAndDataSources";
+export * from "./MigrateGovernanceAndWormhole";
 export * from "./StellarExecutorAction";
 export * from "./UpdateTrustedSigner";
 export * from "./UpgradeContract";

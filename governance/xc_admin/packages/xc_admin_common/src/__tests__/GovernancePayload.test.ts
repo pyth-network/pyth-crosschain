@@ -31,7 +31,7 @@ import { SetDataSources } from "../governance_payload/SetDataSources";
 import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
 import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
-import { SetWormholeAddressAndDataSources } from "../governance_payload/SetWormholeAddressAndDataSources";
+import { MigrateGovernanceAndWormhole } from "../governance_payload/MigrateGovernanceAndWormhole";
 import {
   CosmosUpgradeContract,
   EvmUpgradeContract,
@@ -272,28 +272,33 @@ test("GovernancePayload ser/de", () => {
     ),
   ).toBeTruthy();
 
-  const setWormholeAddressAndDataSources =
-    new SetWormholeAddressAndDataSources(
-      "ethereum",
-      "0102030405060708090a0b0c0d0e0f1011121314",
-      [
-        {
-          emitterAddress:
-            "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
-          emitterChain: 1,
-        },
-        {
-          emitterAddress:
-            "000000000000000000000000000000000000000000000000000000000000012d",
-          emitterChain: 3,
-        },
-      ],
-    );
-  const setWormholeAddressAndDataSourcesBuffer =
-    setWormholeAddressAndDataSources.encode();
-  console.log(setWormholeAddressAndDataSourcesBuffer.toJSON());
+  const migrateGovernanceAndWormhole = new MigrateGovernanceAndWormhole(
+    "ethereum",
+    "0102030405060708090a0b0c0d0e0f1011121314",
+    [
+      {
+        emitterAddress:
+          "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+        emitterChain: 1,
+      },
+      {
+        emitterAddress:
+          "000000000000000000000000000000000000000000000000000000000000012d",
+        emitterChain: 3,
+      },
+    ],
+    {
+      emitterAddress:
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      emitterChain: 1,
+    },
+    2,
+  );
+  const migrateGovernanceAndWormholeBuffer =
+    migrateGovernanceAndWormhole.encode();
+  console.log(migrateGovernanceAndWormholeBuffer.toJSON());
   expect(
-    setWormholeAddressAndDataSourcesBuffer.equals(
+    migrateGovernanceAndWormholeBuffer.equals(
       Buffer.from([
         // header: PTGM | module=1 | action=10 | ethereum chain id
         80, 84, 71, 77, 1, 10, 0, 2,
@@ -308,20 +313,22 @@ test("GovernancePayload ser/de", () => {
         // data source 2
         0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 1, 45,
+        // governance emitter
+        0, 1, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170,
+        170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170,
+        170, 170, 170, 170, 170,
+        // governanceDataSourceIndex = 2
+        0, 0, 0, 2,
       ]),
     ),
   ).toBeTruthy();
-  const decodedSetWormholeAddressAndDataSources =
-    SetWormholeAddressAndDataSources.decode(
-      setWormholeAddressAndDataSourcesBuffer,
-    );
-  expect(decodedSetWormholeAddressAndDataSources?.targetChainId).toBe(
-    "ethereum",
-  );
-  expect(decodedSetWormholeAddressAndDataSources?.address).toBe(
+  const decodedMigrateGovernanceAndWormhole =
+    MigrateGovernanceAndWormhole.decode(migrateGovernanceAndWormholeBuffer);
+  expect(decodedMigrateGovernanceAndWormhole?.targetChainId).toBe("ethereum");
+  expect(decodedMigrateGovernanceAndWormhole?.address).toBe(
     "0102030405060708090a0b0c0d0e0f1011121314",
   );
-  expect(decodedSetWormholeAddressAndDataSources?.dataSources).toEqual([
+  expect(decodedMigrateGovernanceAndWormhole?.dataSources).toEqual([
     {
       emitterAddress:
         "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
@@ -333,18 +340,33 @@ test("GovernancePayload ser/de", () => {
       emitterChain: 3,
     },
   ]);
+  expect(decodedMigrateGovernanceAndWormhole?.governanceDataSource).toEqual({
+    emitterAddress:
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    emitterChain: 1,
+  });
+  expect(decodedMigrateGovernanceAndWormhole?.governanceDataSourceIndex).toBe(
+    2,
+  );
   expect(
-    decodeGovernancePayload(setWormholeAddressAndDataSourcesBuffer),
-  ).toBeInstanceOf(SetWormholeAddressAndDataSources);
+    decodeGovernancePayload(migrateGovernanceAndWormholeBuffer),
+  ).toBeInstanceOf(MigrateGovernanceAndWormhole);
 
-  // Empty data sources is a valid payload (header + address + numSources=0).
-  const migratePayload = new SetWormholeAddressAndDataSources(
+  // Empty data sources is a valid payload
+  // (header + address + numSources=0 + governance emitter + index).
+  const migratePayload = new MigrateGovernanceAndWormhole(
     "ethereum",
     "0102030405060708090a0b0c0d0e0f1011121314",
     [],
+    {
+      emitterAddress:
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      emitterChain: 1,
+    },
+    2,
   );
   const migrateBuffer = migratePayload.encode();
-  expect(migrateBuffer.length).toBe(8 + 20 + 1);
+  expect(migrateBuffer.length).toBe(8 + 20 + 1 + 34 + 4);
   expect(migrateBuffer[5]).toBe(10);
 
   const upgradeContract = new UpgradeContract256Bit(
@@ -559,19 +581,30 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         },
       );
       return fc.oneof(evmArb, starknetArb);
-    } else if (header.action === "SetWormholeAddressAndDataSources") {
+    } else if (header.action === "MigrateGovernanceAndWormhole") {
       return fc
         .record({
           address: hexBytesArb({ maxLength: 20, minLength: 20 }),
           dataSources: fc.array(dataSourceArb()),
+          governanceDataSource: dataSourceArb(),
+          governanceDataSourceIndex: fc.nat({ max: 0xffff_ffff }),
         })
-        .map(({ address, dataSources }) => {
-          return new SetWormholeAddressAndDataSources(
-            header.targetChainId,
+        .map(
+          ({
             address,
             dataSources,
-          );
-        });
+            governanceDataSource,
+            governanceDataSourceIndex,
+          }) => {
+            return new MigrateGovernanceAndWormhole(
+              header.targetChainId,
+              address,
+              dataSources,
+              governanceDataSource,
+              governanceDataSourceIndex,
+            );
+          },
+        );
     } else if (header.action === "Execute") {
       return fc
         .record({

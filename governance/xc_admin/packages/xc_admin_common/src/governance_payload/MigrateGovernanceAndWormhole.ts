@@ -13,27 +13,33 @@ const DataSourceLayout: BufferLayout.Structure<DataSource> =
   ]);
 
 /**
- * Set the wormhole address and data sources on the target chain.
+ * Migrate the wormhole address, price data sources, and governance emitter
+ * on the target chain.
  *
  * Wire format after the governance header:
- *   newWormholeAddress(20) | numSources(u8) | dataSources*
+ *   newWormholeAddress(20) |
+ *   numSources(u8) | [emitterChain(u16be) | emitterAddress(32)]* |
+ *   governanceEmitterChain(u16be) | governanceEmitterAddress(32) |
+ *   governanceDataSourceIndex(u32be)
  *
  * Fee is not included; set fee separately via SetFee before migration.
  */
-export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
+export class MigrateGovernanceAndWormhole implements PythGovernanceAction {
   readonly actionName: ActionName;
 
   constructor(
     readonly targetChainId: ChainName,
     readonly address: string,
     readonly dataSources: DataSource[],
+    readonly governanceDataSource: DataSource,
+    readonly governanceDataSourceIndex: number,
   ) {
-    this.actionName = "SetWormholeAddressAndDataSources";
+    this.actionName = "MigrateGovernanceAndWormhole";
   }
 
-  static decode(data: Buffer): SetWormholeAddressAndDataSources | undefined {
+  static decode(data: Buffer): MigrateGovernanceAndWormhole | undefined {
     const header = PythGovernanceHeader.decode(data);
-    if (!header || header.action !== "SetWormholeAddressAndDataSources") {
+    if (!header || header.action !== "MigrateGovernanceAndWormhole") {
       return undefined;
     }
 
@@ -49,21 +55,29 @@ export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
       index += DataSourceLayout.span;
     }
 
+    const governanceDataSource = DataSourceLayout.decode(data, index);
+    index += DataSourceLayout.span;
+
+    const governanceDataSourceIndex = BufferLayout.u32be().decode(data, index);
+    index += 4;
+
     if (index !== data.length) {
       return undefined;
     }
 
-    return new SetWormholeAddressAndDataSources(
+    return new MigrateGovernanceAndWormhole(
       header.targetChainId,
       address,
       dataSources,
+      governanceDataSource,
+      governanceDataSourceIndex,
     );
   }
 
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,
-      "SetWormholeAddressAndDataSources",
+      "MigrateGovernanceAndWormhole",
     ).encode();
 
     const addressBuf = Buffer.alloc(20);
@@ -78,11 +92,25 @@ export class SetWormholeAddressAndDataSources implements PythGovernanceAction {
       return buf;
     });
 
+    const governanceDataSourceBuf = Buffer.alloc(DataSourceLayout.span);
+    DataSourceLayout.encode(
+      this.governanceDataSource,
+      governanceDataSourceBuf,
+    );
+
+    const governanceDataSourceIndexBuf = Buffer.alloc(4);
+    BufferLayout.u32be().encode(
+      this.governanceDataSourceIndex,
+      governanceDataSourceIndexBuf,
+    );
+
     return safeBufferConcat([
       headerBuffer,
       addressBuf,
       numSourcesBuf,
       ...dataSourceBufs,
+      governanceDataSourceBuf,
+      governanceDataSourceIndexBuf,
     ]);
   }
 }

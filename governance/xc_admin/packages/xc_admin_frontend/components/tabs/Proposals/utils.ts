@@ -6,6 +6,7 @@ import {
   MultisigParser,
   PythGovernanceActionImpl,
   SetDataSources,
+  MigrateGovernanceAndWormhole,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
 import type { PublicKey } from "@solana/web3.js";
@@ -88,7 +89,10 @@ const getInstructionSummary = (
       );
     } else if (governanceAction instanceof PythGovernanceActionImpl) {
       return [{ name: governanceAction.action } as const];
-    } else if (governanceAction instanceof SetDataSources) {
+    } else if (
+      governanceAction instanceof SetDataSources ||
+      governanceAction instanceof MigrateGovernanceAndWormhole
+    ) {
       return [{ name: governanceAction.actionName } as const];
     } else {
       return [{ name: "unknown" } as const];
