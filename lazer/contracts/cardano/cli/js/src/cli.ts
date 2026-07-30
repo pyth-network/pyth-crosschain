@@ -12,9 +12,9 @@ import {
   ScriptHash,
   TransactionHash,
 } from "@evolution-sdk/evolution";
-import * as Chain from "@evolution-sdk/evolution/sdk/client/Chain";
 import type { Types } from "@evolution-sdk/evolution/blueprint";
-import { Codegen, CodegenConfig, } from "@evolution-sdk/evolution/blueprint";
+import { Codegen, CodegenConfig } from "@evolution-sdk/evolution/blueprint";
+import * as Chain from "@evolution-sdk/evolution/sdk/client/Chain";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { Network } from "./client.js";
