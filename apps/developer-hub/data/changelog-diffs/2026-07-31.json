@@ -1,0 +1,50 @@
+{
+  "date": "2026-07-31",
+  "label": "Friday",
+  "summary": {
+    "added": 0,
+    "went_live": 3,
+    "removed": 1
+  },
+  "hero": "3 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.TGEQ6/EUR",
+      "lazerId": 3090,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 30 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-07-31",
+      "quote": "EUR",
+      "hermesId": "c45c94d2390175b5e8b47497e63af2e2b5036c716eb448629c4a23312cf73488"
+    },
+    {
+      "id": "Equity.Index.KR200/KRW",
+      "lazerId": 3448,
+      "asset": "Pyth Price In Krw For Kr200 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-07-31",
+      "quote": "KRW"
+    },
+    {
+      "id": "Crypto.NAV.USDM/RESERVES",
+      "lazerId": 3326,
+      "asset": "Us Dollar Moneta",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-07-31",
+      "quote": "USD"
+    },
+    {
+      "id": "Crypto.NAV.ONYC/USD",
+      "lazerId": 1829,
+      "asset": "Onre Reinsurance Underwriting Pool",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-07-31",
+      "quote": "USD",
+      "hermesId": "babbfcc7f46b6e7df73adcccece8b6782408ed27c4e77f35ba39a449440170ab"
+    }
+  ]
+}
