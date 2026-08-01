@@ -54,7 +54,24 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
 const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
 
-const HIDDEN_CHAINS = new Set(["taiko"]);
+// Entropy support ends August 15, 2026 for the chains below; see
+// https://dev-forum.pyth.network/t/deprecation-notice-pyth-entropy-deprecation-for-selected-chains-august-15-2026/816
+const HIDDEN_CHAINS = new Set([
+  "blast",
+  "blast-testnet",
+  "etherlink",
+  "etherlink-testnet",
+  "sei-evm",
+  "sei-evm-testnet",
+  "story",
+  "story-testnet",
+  "tabi-testnet",
+  "taiko",
+  "unichain",
+  "unichain-sepolia",
+  "zetachain",
+  "zetachain-testnet",
+]);
 
 export async function fetchEntropyDeployments(
   url: string,
