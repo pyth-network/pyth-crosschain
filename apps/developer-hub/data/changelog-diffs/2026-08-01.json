@@ -1,0 +1,32 @@
+{
+  "date": "2026-08-01",
+  "label": "Saturday",
+  "summary": {
+    "added": 0,
+    "went_live": 0,
+    "removed": 2
+  },
+  "hero": "2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.BLDU6/USD",
+      "lazerId": 3157,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 31 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-01",
+      "quote": "USD",
+      "hermesId": "525062885453b936685f9440d6f1065e7332656b98ec16d667b25777f44cf5be"
+    },
+    {
+      "id": "Commodities.BRENTU6/USD",
+      "lazerId": 3043,
+      "asset": "Pyth Price In Usd For Brent 31 July 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-01",
+      "quote": "USD",
+      "hermesId": "93fdb7c6f23c6ba97baf2f086891e6749461a5f6cd620338102845acf210e96b"
+    }
+  ]
+}
