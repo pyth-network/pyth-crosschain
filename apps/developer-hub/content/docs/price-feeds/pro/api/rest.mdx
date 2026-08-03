@@ -12,25 +12,12 @@ import { Callout } from "fumadocs-ui/components/callout";
 https://pyth-lazer.dourolabs.app
 ```
 
-<Callout type="warning" title="API key required for POST /v1/price starting July 24, 2026">
-  Starting **July 24, 2026**, `POST /v1/price` requires API-key authentication,
-  and unauthenticated access to it will be disabled. Pass
-  `Authorization: Bearer <PRO_API_KEY>`; API-key auth is supported today, so add
-  the header now to stay forward-compatible. Do not expose the key in browser
-  apps — keep it server-side. See [Authentication](#authentication) for the
-  header format, and
-  [Frontend Authentication](/price-feeds/pro/frontend-auth) for browser apps,
-  and the
-  [announcement](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808)
-  for details.
-</Callout>
-
 ## Endpoints
 
-| Method | Path               | Auth                       | Description                                         |
-| ------ | ------------------ | -------------------------- | --------------------------------------------------- |
-| POST   | `/v1/latest_price` | Yes                        | Fetch the latest price for one or more price feeds  |
-| POST   | `/v1/price`        | Yes (from July 24, 2026)   | Fetch price data at a specific historical timestamp |
+| Method | Path               | Auth | Description                                         |
+| ------ | ------------------ | ---- | --------------------------------------------------- |
+| POST   | `/v1/latest_price` | Yes  | Fetch the latest price for one or more price feeds  |
+| POST   | `/v1/price`        | Yes  | Fetch price data at a specific historical timestamp |
 
 ### POST /v1/latest_price
 
@@ -66,9 +53,8 @@ For the full response schema — including price feed fields, signed payloads, a
 
 ## Authentication
 
-Starting **July 24, 2026**, `POST /v1/price` requires API-key authentication,
-and unauthenticated access to it will be disabled. Pass your Pro API key as a
-bearer token:
+`POST /v1/latest_price` and `POST /v1/price` require API-key authentication.
+Pass your Pro API key as a bearer token:
 
 ```bash copy
 curl -X POST -H "Authorization: Bearer $PRO_API_KEY" \
