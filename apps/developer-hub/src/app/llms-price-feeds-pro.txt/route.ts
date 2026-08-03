@@ -143,8 +143,9 @@ You MUST connect to all three endpoints simultaneously. Any single endpoint may 
 - POST /v1/price — Fetch price at a specific historical timestamp (Unix microseconds)
 
 ### History API (base: https://pyth.dourolabs.app/v1)
-- GET /{channel}/history — OHLC candlestick data
-- GET /{channel}/price — Price at specific timestamp
+- GET /{channel}/history — OHLC candlestick data (requires auth)
+- GET /{channel}/price — Price at specific timestamp (requires auth)
+- GET /{channel}/price/range — Paginated prices over a time window (requires auth)
 - GET /symbols — List available symbols (no auth required)
 - Supports TradingView UDF specification
 
