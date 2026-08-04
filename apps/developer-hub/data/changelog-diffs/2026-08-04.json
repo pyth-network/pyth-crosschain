@@ -1,0 +1,72 @@
+{
+  "date": "2026-08-04",
+  "label": "Tuesday",
+  "summary": {
+    "added": 3,
+    "went_live": 3,
+    "removed": 0
+  },
+  "hero": "3 new feeds announced, 3 went live.",
+  "events": [
+    {
+      "id": "Commodities.TGEX6/EUR",
+      "lazerId": 3093,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 29 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-04",
+      "quote": "EUR",
+      "hermesId": "a43a70231f5aca3698bbc5ff53cc3b008ec4882abbe2466655f07304b2fdeef8"
+    },
+    {
+      "id": "InterestRate.US5Y",
+      "lazerId": 1534,
+      "asset": "United States 5 Year Government Bonds Yield",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-08-04",
+      "quote": "%",
+      "hermesId": "7d220b081152db0d74a93d3ce383c61d0ec5250c6dd2b2cdb2d1e4b8919e1a6e"
+    },
+    {
+      "id": "InterestRate.US2Y",
+      "lazerId": 1530,
+      "asset": "United States 2 Year Government Bonds Yield",
+      "assetType": "interest-rate",
+      "changeType": "went_live",
+      "date": "2026-08-04",
+      "quote": "%",
+      "hermesId": "7d01ec0cb9d38918cd497f97b24cb6cea5552993f5da05863886e6a2d33ee0aa"
+    },
+    {
+      "id": "Equity.US.AGX/USD",
+      "lazerId": 3576,
+      "asset": "Argan Inc.",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-04",
+      "quote": "USD",
+      "hermesId": "705e9703a25421214ca18afc79db2b4bd7af74b1a0925a405d868a8ac99724b4"
+    },
+    {
+      "id": "Equity.US.SKUU/USD",
+      "lazerId": 3575,
+      "asset": "Graniteshares 2X Long Sk Hynix Daily Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-04",
+      "quote": "USD",
+      "hermesId": "1e01caca2c7be1ae9c93580bcd3c0ab54f7d7eeed0b5afb3c238c2b5f751cf07"
+    },
+    {
+      "id": "Equity.US.SKDD/USD",
+      "lazerId": 3574,
+      "asset": "Graniteshares 2X Short Sk Hynix Daily Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-04",
+      "quote": "USD",
+      "hermesId": "bc47b69cb88ac5139e853856242b63e86a71dc62ee5bcb8392f28e0a308dd661"
+    }
+  ]
+}
