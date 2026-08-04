@@ -31,7 +31,6 @@ All `{channel}` path segments refer to a price channel (e.g. `real_time`, `fixed
 | GET    | `/{channel}/history`     | Yes  | OHLC candlestick data               |
 | GET    | `/{channel}/search`      | No   | Search symbols                      |
 | GET    | `/{channel}/symbols`     | No   | Resolve a single symbol             |
-| GET    | `/{channel}/streaming`   | No   | SSE price stream                    |
 | GET    | `/{channel}/config`      | No   | TradingView configuration           |
 | GET    | `/publisher_updates`     | Yes  | Raw publisher updates               |
 
@@ -176,12 +175,6 @@ Resolve a single symbol to its full configuration.
 | Parameter | Type     | Required | Description                    |
 | --------- | -------- | -------- | ------------------------------ |
 | `symbol`  | `string` | Yes      | Symbol name (case-insensitive) |
-
----
-
-### GET /\{channel\}/streaming
-
-Server-sent events (SSE) stream of live price updates.
 
 ---
 
