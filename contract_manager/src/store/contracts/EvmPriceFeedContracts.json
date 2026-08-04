@@ -1146,5 +1146,11 @@
     "chain": "bsc",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "chain": "flow_mainnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
