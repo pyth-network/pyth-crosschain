@@ -143,8 +143,9 @@ You MUST connect to all three endpoints simultaneously. Any single endpoint may 
 - POST /v1/price — Fetch price at a specific historical timestamp (Unix microseconds)
 
 ### History API (base: https://pyth.dourolabs.app/v1)
-- GET /{channel}/history — OHLC candlestick data
-- GET /{channel}/price — Price at specific timestamp
+- GET /{channel}/history — OHLC candlestick data (requires auth)
+- GET /{channel}/price — Price at specific timestamp (requires auth)
+- GET /{channel}/price/range — Paginated prices over a time window (requires auth)
 - GET /symbols — List available symbols (no auth required)
 - Supports TradingView UDF specification
 
@@ -154,7 +155,7 @@ Pyth Pro also provides an MCP server so agents can discover feeds and fetch pric
 
 - MCP endpoint: https://mcp.pyth.network/mcp
 - Tool workflow: \`get_symbols\` -> \`get_latest_price\` / \`get_historical_price\` -> \`get_candlestick_data\`
-- Token behavior: \`get_latest_price\` requires \`access_token\`; \`get_historical_price\` and \`get_candlestick_data\` require it as of July 24, 2026
+- Token behavior: \`get_latest_price\`, \`get_historical_price\`, and \`get_candlestick_data\` require \`access_token\`
 - 9 pre-built skills for Claude Code: price alerts, cross-asset comparison, volatility analysis, FX conversion, portfolio tracking, funding rate monitoring, data export, time-series snapshots, and integration guidance
 - Skills docs: https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
 
