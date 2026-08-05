@@ -1,0 +1,292 @@
+{
+  "date": "2026-08-05",
+  "label": "Wednesday",
+  "summary": {
+    "added": 16,
+    "went_live": 12,
+    "removed": 0
+  },
+  "hero": "16 new feeds announced, 12 went live.",
+  "events": [
+    {
+      "id": "Equity.CN.688525/CNY",
+      "lazerId": 3373,
+      "asset": "Biwin Storage Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "a49166d1f5becc2af2e347e2e665fd1f6bdbda0208441a09f28c8690de35f2ad"
+    },
+    {
+      "id": "Equity.CN.688521/CNY",
+      "lazerId": 3372,
+      "asset": "Verisilicon Microelectronics Shanghai Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "d8973bfb00e3675d97105027260b6b5f09d050f4fcbe4a49523778513ea3cedf"
+    },
+    {
+      "id": "Equity.CN.688012/CNY",
+      "lazerId": 3371,
+      "asset": "Advanced Micro-Fabrication Equipment Inc China",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "2df65c81bd540da3579e977ed69cab16a3a4fe41227ed39c200353bca0d2cc5a"
+    },
+    {
+      "id": "Equity.CN.688048/CNY",
+      "lazerId": 3370,
+      "asset": "Suzhou Everbright Photonics Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "e635ebc1853ba04a17fb0ccceafc20e40d932ec7615c0fa30a5c67542ab24c04"
+    },
+    {
+      "id": "Equity.CN.600584/CNY",
+      "lazerId": 3369,
+      "asset": "Jcet Group Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "d34160411c56db59a5aae51051c460ecea95c3a62d454ae707f26b03bcd2e2bd"
+    },
+    {
+      "id": "Equity.CN.688041/CNY",
+      "lazerId": 3368,
+      "asset": "Hygon Information Technology Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "827d6b63b769c88347d375c825831486ec6136f1fcc07fde870f8228e3f0a0e2"
+    },
+    {
+      "id": "Equity.CN.688981/CNY",
+      "lazerId": 3367,
+      "asset": "Semiconductor Manufacturing Intl Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "09e829f75e127f5c2a955476e5fd0dc0286a481f873e6571d15864cf8fcc1a37"
+    },
+    {
+      "id": "Equity.CN.600519/CNY",
+      "lazerId": 3309,
+      "asset": "Kweichow Moutai Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "74382688625fe4066dbd189053fcb95bea0aafa52e79170fd84677b08aea6503"
+    },
+    {
+      "id": "Equity.CN.601398/CNY",
+      "lazerId": 3308,
+      "asset": "Industrial And Commerical Bank Of China",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "36fd117b6a7589b5d4cfc4d2fc360528a261120f49e36bc190b9e8bfcb93f652"
+    },
+    {
+      "id": "Metal.OGZ6/USD",
+      "lazerId": 3219,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 25 November 2026",
+      "assetType": "metal",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "19134abe3edbbaa88047e1658f7f25c70c68d9e90d54a77090f82ce67dfea1a4"
+    },
+    {
+      "id": "Equity.KR.005380/KRW",
+      "lazerId": 2176,
+      "asset": "Hyundai Motor",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "KRW",
+      "hermesId": "24ee596816f1bd1b141c3498e079d7ae7dc6ad1f864c79a08768bfd08a735092"
+    },
+    {
+      "id": "Crypto.SDAI/USD",
+      "lazerId": 551,
+      "asset": "Savings Dai",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "710659c5a68e2416ce4264ca8d50d34acc20041d91289110eea152c52ff3dc39"
+    },
+    {
+      "id": "Commodities.RSV7/USc",
+      "lazerId": 3590,
+      "asset": "Pyth Price In Us Cents For Raw Sugar 30 September 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "efd34a2176051996bead14b3376c0344bc7518f63be290e72326048ef08fba92"
+    },
+    {
+      "id": "Commodities.RSN7/USc",
+      "lazerId": 3589,
+      "asset": "Pyth Price In Us Cents For Raw Sugar 30 June 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "c37e7f5bd25fb012ee17e029f99f0173c1cbc26be35bdc6d0eaae3ebf76eb2ab"
+    },
+    {
+      "id": "Commodities.CFZ7/USc",
+      "lazerId": 3588,
+      "asset": "Pyth Price In Us Cents For Coffee 20 December 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "0087d7a8a876d9b123e78359761d5638fae9a36008ee50f5c49402fc1b0161e3"
+    },
+    {
+      "id": "Commodities.CFU7/USc",
+      "lazerId": 3587,
+      "asset": "Pyth Price In Us Cents For Coffee 20 September 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "11a31b7acd3b7b724dba681e2fd4044e6d7c673a49f982b91d9b5229eb3e0878"
+    },
+    {
+      "id": "Commodities.CFN7/USc",
+      "lazerId": 3586,
+      "asset": "Pyth Price In Us Cents For Coffee 20 July 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "8739cbc8fb3d2265e3ffbf8b0a75ffbaf2ef9065dc7202759c68fcd68dce229c"
+    },
+    {
+      "id": "Commodities.CFK7/USc",
+      "lazerId": 3585,
+      "asset": "Pyth Price In Us Cents For Coffee 18 May 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "f614ec99b64f8ba1135266ced52bfb6e632659249a291d1c059a6fee75be5edb"
+    },
+    {
+      "id": "Commodities.CFH7/USc",
+      "lazerId": 3584,
+      "asset": "Pyth Price In Us Cents For Coffee 18 March 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "6d2ae51093c677632d215bc74b37314e61994e5dd8ec311372f468617dd30299"
+    },
+    {
+      "id": "Commodities.CAZ7/USD",
+      "lazerId": 3583,
+      "asset": "Pyth Price In Usd For Cocoa Futures 15 December 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "fa20e29b3c73d6687de278abe1bb7ccd96340bce668dbdc49af674b021a6df4d"
+    },
+    {
+      "id": "Commodities.CAU7/USD",
+      "lazerId": 3582,
+      "asset": "Pyth Price In Usd For Cocoa Futures 15 September 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "1bb69a02f3a8da3d4534a154ae32802d85e5681c41e200b085d00e22d209b02a"
+    },
+    {
+      "id": "Commodities.CAN7/USD",
+      "lazerId": 3581,
+      "asset": "Pyth Price In Usd For Cocoa Futures 15 July 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "7c9686f0658e5a7c0a1f80ae0d7d455b98c66204132ac4b43be1ae57983cb971"
+    },
+    {
+      "id": "Commodities.CAK7/USD",
+      "lazerId": 3580,
+      "asset": "Pyth Price In Usd For Cocoa Futures 13 May 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "e2ea02bac17b594278057524ce1d0e857f9d9101f8c2176a58d5019ad1ebf2e8"
+    },
+    {
+      "id": "Commodities.CAH7/USD",
+      "lazerId": 3579,
+      "asset": "Pyth Price In Usd For Cocoa Futures 15 March 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USD",
+      "hermesId": "600f4865bb8a69e773b716bf954597399861bd945cc35e06f03c42fc4f539c0c"
+    },
+    {
+      "id": "Commodities.RSK7/USc",
+      "lazerId": 3578,
+      "asset": "Pyth Price In Us Cents For Raw Sugar 30 April 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "a8a457bbf507310aefe27c87ca551bef971754b6f5dc794c3981fc6b38192b1d"
+    },
+    {
+      "id": "Commodities.RSH7/USc",
+      "lazerId": 3577,
+      "asset": "Pyth Price In Us Cents For Raw Sugar 26 February 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "USc",
+      "hermesId": "dff723417798bd324ca03d568c04b22462a0fe9b6236e0fce1077d13d2ea69b4"
+    },
+    {
+      "id": "Equity.HK.3308/HKD",
+      "lazerId": 3443,
+      "asset": "Zhongji Innolight Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "HKD",
+      "hermesId": "4c4f11d6b8f87506a237f6a9cb44ebc9f9e52d49a2b31fb0ecb339c5d6569eeb"
+    },
+    {
+      "id": "Equity.CN.688836/CNY",
+      "lazerId": 3442,
+      "asset": "Unitree Robotics",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-05",
+      "quote": "CNY",
+      "hermesId": "665a0c28099754c6b2591beff9ca5aa3be4c5c134ef1e5ba906cb146218c4f39"
+    }
+  ]
+}
