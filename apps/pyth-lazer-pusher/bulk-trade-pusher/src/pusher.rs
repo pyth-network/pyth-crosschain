@@ -19,11 +19,16 @@ pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
     info!("initializing bulk-trade-pusher");
 
     let signing_key = load_signing_key(&config.bulk.signing_key_path)?;
-    let signer = BulkSigner::new(&signing_key, &config.bulk.oracle_account_pubkey_base58)
-        .context("failed to initialize signer")?;
+    let signer = BulkSigner::new(
+        &signing_key,
+        &config.bulk.oracle_account_pubkey_base58,
+        config.bulk.signature_domain,
+    )
+    .context("failed to initialize signer")?;
     info!(
         signer_pubkey = signer.pubkey_base58(),
         oracle_account = %config.bulk.oracle_account_pubkey_base58,
+        signature_domain = %config.bulk.signature_domain,
         "initialized signer"
     );
 

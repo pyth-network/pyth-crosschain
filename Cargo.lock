@@ -1615,9 +1615,9 @@ dependencies = [
 
 [[package]]
 name = "bulk-keychain"
-version = "0.1.17"
+version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53d5457b6283f66350e7a1f2662ec345c73ebe856d75509b7ce16ab427580b3c"
+checksum = "5eabf77b66b11a5004defee5885707b080491beda8fc2c22178e4a8c7b46314e"
 dependencies = [
  "base64 0.22.1",
  "bincode",

@@ -38,17 +38,25 @@ endpoints = [
     "wss://exchange-wss.bulk.trade/ws",
 ]
 
-# Ed25519 signing key (base58 encoded private key)
+# Path to the file holding the Ed25519 signing key (base58 encoded private key)
 # Each pusher instance has its OWN signing key that's approved for the oracle account.
-# Can also be set via BULK_PUSHER__BULK__SIGNING_KEY_BASE58 env var
-# IMPORTANT: Keep this secret! Use env var in production.
-signing_key_base58 = "your-base58-encoded-private-key"
+# Can also be set via BULK_PUSHER__BULK__SIGNING_KEY_PATH env var
+# IMPORTANT: Keep the key file secret and mount it as a secret in production.
+signing_key_path = "/secrets/signing.key"
 
 # Oracle account public key (base58 encoded)
 # This is the "account" field in the transaction - SHARED by all pushers.
 # The signing key must be approved/whitelisted for this account on Bulk's side.
 # Must be a valid base58-encoded Ed25519 public key.
 oracle_account_pubkey_base58 = "your-base58-encoded-oracle-account-pubkey"
+
+# BULK network this pusher signs for: "mainnet", "testnet", or "devnet".
+# REQUIRED - there is no default.
+# Must match the network that the endpoints above belong to. The domain is committed
+# into the signature but is NOT sent over the wire, so a wrong value yields a
+# well-formed transaction that the validator silently rejects as a bad signature.
+# Can also be set via BULK_PUSHER__BULK__SIGNATURE_DOMAIN env var.
+signature_domain = "mainnet"
 
 # Feed Configuration
 [feeds]

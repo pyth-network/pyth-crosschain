@@ -19,6 +19,8 @@ endpoints = [
 ]
 signing_key_path = "/secrets/signing.key"
 oracle_account_pubkey_base58 = "gCGUPL8RFfxndjVYrAQL3z28XtQjY2zJcFu7Tk3CT9Z"
+# Local dev targets the mock validator, which does not verify signatures.
+signature_domain = "devnet"
 
 [feeds]
 update_interval = "500ms"
