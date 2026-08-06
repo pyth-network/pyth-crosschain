@@ -6,7 +6,9 @@
 //! the account.
 
 use anyhow::Result;
-use bulk_keychain::{Action, Keypair, Pubkey, PythOraclePrice, SignedTransaction, Signer};
+use bulk_keychain::{
+    Action, Keypair, Pubkey, PythOraclePrice, SignatureDomain, SignedTransaction, Signer,
+};
 
 /// Wrapper for signing keys using bulk-keychain.
 ///
@@ -21,7 +23,15 @@ pub struct BulkSigner {
 
 impl BulkSigner {
     /// Create a new signer from a base58-encoded private key and oracle account.
-    pub fn new(private_key_base58: &str, oracle_account_base58: &str) -> Result<Self> {
+    ///
+    /// `signature_domain` selects the BULK network the signature commits to; it must
+    /// match the network the configured validator endpoints belong to, otherwise the
+    /// signature is rejected (see `BulkConfig::signature_domain`).
+    pub fn new(
+        private_key_base58: &str,
+        oracle_account_base58: &str,
+        signature_domain: SignatureDomain,
+    ) -> Result<Self> {
         let keypair = Keypair::from_base58(private_key_base58)
             .map_err(|e| anyhow::anyhow!("failed to parse keypair: {}", e))?;
 
@@ -29,7 +39,7 @@ impl BulkSigner {
             .map_err(|e| anyhow::anyhow!("failed to parse oracle account pubkey: {}", e))?;
 
         let pubkey_base58 = keypair.pubkey().to_string();
-        let signer = Signer::new(keypair);
+        let signer = Signer::new(keypair, signature_domain);
 
         Ok(Self {
             signer,
@@ -66,33 +76,39 @@ mod tests {
     // Test keypair (generated offline, safe for tests only)
     const TEST_PRIVATE_KEY_BASE58: &str = "4wBqpZM9k1k4reVTJezJTqcPYLkuJSYwZYfwJC3xjYw9";
 
+    const TEST_DOMAIN: SignatureDomain = SignatureDomain::Devnet;
+
     fn test_oracle_account() -> String {
         // Use the signer's own pubkey as oracle account for tests
         let keypair = Keypair::from_base58(TEST_PRIVATE_KEY_BASE58).unwrap();
         keypair.pubkey().to_string()
     }
 
+    fn test_signer() -> BulkSigner {
+        BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account(), TEST_DOMAIN).unwrap()
+    }
+
     #[test]
     fn test_signer_creation() {
-        let signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let signer = test_signer();
         assert!(!signer.pubkey_base58().is_empty());
     }
 
     #[test]
     fn test_signer_invalid_key() {
-        let result = BulkSigner::new("invalid-key", "invalid-account");
+        let result = BulkSigner::new("invalid-key", "invalid-account", TEST_DOMAIN);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_signer_empty_key() {
-        let result = BulkSigner::new("", "");
+        let result = BulkSigner::new("", "", TEST_DOMAIN);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_sign_transaction() {
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let mut signer = test_signer();
 
         let oracles = vec![PythOraclePrice {
             timestamp: 1704067200000,
@@ -112,7 +128,8 @@ mod tests {
     #[test]
     fn test_sign_transaction_multiple_oracles() {
         let oracle_account = test_oracle_account();
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &oracle_account).unwrap();
+        let mut signer =
+            BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &oracle_account, TEST_DOMAIN).unwrap();
 
         let oracles = vec![
             PythOraclePrice {
@@ -149,7 +166,8 @@ mod tests {
     fn test_sign_transaction_uses_oracle_account() {
         // Verify the transaction uses the oracle account, not the signer's own pubkey
         let oracle_account = test_oracle_account();
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &oracle_account).unwrap();
+        let mut signer =
+            BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &oracle_account, TEST_DOMAIN).unwrap();
 
         let oracles = vec![PythOraclePrice {
             timestamp: 1000,
@@ -165,8 +183,41 @@ mod tests {
     }
 
     #[test]
+    fn test_signature_domain_changes_signature() {
+        // The domain is committed into the signature preimage but is not part of the
+        // transaction payload, so a mismatch is only observable as a rejected signature.
+        // Signing identical input under different domains must diverge.
+        let oracle_account = test_oracle_account();
+        let oracles = vec![PythOraclePrice {
+            timestamp: 1000,
+            feed_index: 1,
+            price: 100,
+            exponent: -2,
+        }];
+
+        let sign_with = |domain| {
+            BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &oracle_account, domain)
+                .unwrap()
+                .sign_transaction(oracles.clone(), 42)
+                .unwrap()
+        };
+
+        let mainnet = sign_with(SignatureDomain::Mainnet);
+        let testnet = sign_with(SignatureDomain::Testnet);
+        let devnet = sign_with(SignatureDomain::Devnet);
+
+        assert_ne!(mainnet.signature, testnet.signature);
+        assert_ne!(mainnet.signature, devnet.signature);
+        assert_ne!(testnet.signature, devnet.signature);
+
+        // The domain must not leak into the serialized payload.
+        let json = serde_json::to_string(&mainnet).unwrap();
+        assert!(!json.contains("mainnet"));
+    }
+
+    #[test]
     fn test_deterministic_signature() {
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let mut signer = test_signer();
 
         let oracles = vec![PythOraclePrice {
             timestamp: 1000,
@@ -184,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_different_nonce_different_signature() {
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let mut signer = test_signer();
 
         let oracles1 = vec![PythOraclePrice {
             timestamp: 1000,
@@ -202,7 +253,7 @@ mod tests {
 
     #[test]
     fn test_transaction_json_format() {
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let mut signer = test_signer();
 
         let oracles = vec![
             PythOraclePrice {
@@ -249,7 +300,7 @@ mod tests {
         use bulk_keychain::ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
         let keypair = Keypair::from_base58(TEST_PRIVATE_KEY_BASE58).unwrap();
-        let mut signer = BulkSigner::new(TEST_PRIVATE_KEY_BASE58, &test_oracle_account()).unwrap();
+        let mut signer = test_signer();
 
         let oracles = vec![PythOraclePrice {
             timestamp: 1704067200000,

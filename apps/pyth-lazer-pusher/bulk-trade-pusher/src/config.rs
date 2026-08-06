@@ -1,4 +1,5 @@
 use anyhow::Context as _;
+use bulk_keychain::SignatureDomain;
 use config::{Environment, File};
 use pusher_base::BaseConfig;
 use serde::Deserialize;
@@ -41,6 +42,14 @@ pub struct BulkConfig {
     /// This is the "account" field in the transaction - shared by all pushers.
     /// The signing key must be approved/whitelisted for this account.
     pub oracle_account_pubkey_base58: String,
+
+    /// BULK network the transactions are signed for ("mainnet", "testnet", or "devnet").
+    ///
+    /// Required - there is deliberately no default. The domain is committed into the
+    /// signature preimage but is *not* part of the transaction sent over the wire, so a
+    /// wrong value produces a well-formed transaction that the validator silently rejects
+    /// as an invalid signature. Failing at startup is much easier to diagnose than guessing.
+    pub signature_domain: SignatureDomain,
 }
 
 /// Load configuration from a TOML file and validate it.
