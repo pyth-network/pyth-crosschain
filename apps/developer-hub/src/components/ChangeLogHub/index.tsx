@@ -8,8 +8,10 @@ import { SubscribeMenu } from "./SubscribeMenu";
 
 // Server component: loads the hand-authored changelog entry collection at build
 // time, renders each entry's MDX body, and hands the result to the client
-// product-updates feed. The automated market-data changelog is a separate,
-// public page (`/price-feeds/changelog`) and is intentionally not shown here.
+// product-updates feed. The composed header (title + description + Subscribe)
+// replaces the shell's DocsTitle/DocsDescription, which BasePage omits for this
+// page. The automated market-data changelog is a separate, public page
+// (`/price-feeds/changelog`) and is intentionally not shown here.
 export const ChangeLogHub = () => {
   const entries: ProductUpdatesEntry[] = getChangelogEntries().map((entry) => {
     const Body = entry.body;
@@ -27,9 +29,15 @@ export const ChangeLogHub = () => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.heroBar}>
+      <header className={styles.pageHead}>
+        <div>
+          <h1 className={styles.pageTitle}>Changelog</h1>
+          <p className={styles.pageDesc}>
+            Product updates across Pyth Pro, Pyth Core, and Entropy.
+          </p>
+        </div>
         <SubscribeMenu />
-      </div>
+      </header>
       <ProductUpdates entries={entries} />
     </div>
   );

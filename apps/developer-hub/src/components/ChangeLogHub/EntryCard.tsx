@@ -30,16 +30,19 @@ export const EntryCard = ({
     className={clsx(styles.rel, isHighlighted && styles.entryCardHighlighted)}
     id={entry.slug}
   >
-    <div className={styles.aside}>
+    <span aria-hidden className={styles.dot} />
+    <div className={styles.meta}>
       <EntryCopyLink
         date={fmtEntryDate(entry.date)}
         relative={entry.relative}
         slug={entry.slug}
       />
+    </div>
+    <div className={styles.tags}>
       <span className={clsx(styles.kind, KIND_CLASS[entry.type])}>
         {TYPE_LABELS[entry.type]}
       </span>
-      <div className={styles.who}>
+      <span className={styles.who}>
         {PRODUCT_LABELS[entry.product]}
         {entry.area !== undefined && (
           <>
@@ -47,13 +50,11 @@ export const EntryCard = ({
             {AREA_LABELS[entry.area]}
           </>
         )}
-      </div>
+      </span>
     </div>
-    <div className={styles.content}>
-      <h3 className={styles.entryTitle}>
-        <a href={`#${entry.slug}`}>{entry.title}</a>
-      </h3>
-      <div className={styles.entryBody}>{entry.body}</div>
-    </div>
+    <h3 className={styles.entryTitle}>
+      <a href={`#${entry.slug}`}>{entry.title}</a>
+    </h3>
+    <div className={styles.entryBody}>{entry.body}</div>
   </article>
 );

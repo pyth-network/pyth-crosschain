@@ -8,8 +8,8 @@ import { CHANGELOG_PATH, SITE } from "../../lib/changelog";
 import styles from "./index.module.scss";
 
 // The entry date doubles as its permalink: clicking copies a canonical
-// docs.pyth.network deep link and anchors the URL to the entry. The
-// relative-time line flips to a "Link copied" confirmation while active.
+// docs.pyth.network deep link and anchors the URL to the entry. The adjacent
+// relative-time label flips to a "Link copied" confirmation while active.
 export const EntryCopyLink = ({
   slug,
   date,
@@ -36,14 +36,17 @@ export const EntryCopyLink = ({
         }}
         type="button"
       >
-        <span className={styles.dt}>{date}</span>
+        <time className={styles.dt}>{date}</time>
         <LinkIcon aria-hidden className={styles.chain} />
       </button>
-      <div className={clsx(styles.rock, isCopied && styles.rockCopied)}>
+      <span aria-hidden className={styles.sep}>
+        ·
+      </span>
+      <span className={clsx(styles.relTime, isCopied && styles.relCopied)}>
         {isCopied ? "Link copied" : relative}
-      </div>
-      {/* The visible confirmation above is a plain div; mirror it into a live
-          region so screen readers announce the copy. */}
+      </span>
+      {/* The visible confirmation is a plain span; mirror it into a live region
+          so screen readers announce the copy. */}
       <span className={styles.srStatus} role="status">
         {isCopied ? "Link copied" : ""}
       </span>
