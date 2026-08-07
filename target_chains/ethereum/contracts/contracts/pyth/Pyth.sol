@@ -700,7 +700,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.5-alpha.1";
+        return "1.4.6";
     }
 
     /// @notice Calculates TWAP from two price points
