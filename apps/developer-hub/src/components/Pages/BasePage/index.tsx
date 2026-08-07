@@ -20,15 +20,16 @@ export async function BasePage(props: { params: { slug: string[] } }) {
   const title = page.data.title;
   const url = page.url;
 
-  // Hide PageActions for api-reference and changelog pages
+  // Hide PageActions for api-reference and both changelog pages (the public
+  // market-data changelog and the unlisted product-updates changelog).
   const isApiReference = url.startsWith("/api-reference");
-  const isChangelog = url === "/price-feeds/changelog";
+  const isChangelog = url === "/price-feeds/changelog" || url === "/changelog";
 
   return (
     <DocsPage
-      toc={page.data.toc}
-      tableOfContent={{ style: "clerk" }}
       full={page.data.full}
+      tableOfContent={{ style: "clerk" }}
+      toc={page.data.toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>

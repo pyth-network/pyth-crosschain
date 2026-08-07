@@ -1,0 +1,24 @@
+---
+title: WebSocket v2 streams with per-feed subscription filters
+date: 2026-07-15
+product: pyth-pro
+type: feature
+area: apis
+---
+
+The Pyth Pro WebSocket API now supports per-feed subscription filters, so a
+single connection can carry independent update streams for different symbol
+sets and chains.
+
+```json
+{
+  "type": "subscribe",
+  "channel": "prices",
+  "symbols": ["Crypto.BTC/USD", "Crypto.ETH/USD"],
+  "minIntervalMs": 50
+}
+```
+
+Existing v1 connections are unaffected. See the
+[WebSocket API reference](/price-feeds/pro/api/websocket) for the full
+subscription schema.
