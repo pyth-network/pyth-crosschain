@@ -24,6 +24,10 @@ export async function BasePage(props: { params: { slug: string[] } }) {
   // market-data changelog and the unlisted product-updates changelog).
   const isApiReference = url.startsWith("/api-reference");
   const isChangelog = url === "/price-feeds/changelog" || url === "/changelog";
+  // The product-updates changelog renders its own composed header (title +
+  // Subscribe) inside ChangeLogHub, so suppress the shell's title/description
+  // there to avoid a duplicate heading. The market-data changelog keeps them.
+  const isProductChangelog = url === "/changelog";
 
   return (
     <DocsPage
@@ -31,8 +35,10 @@ export async function BasePage(props: { params: { slug: string[] } }) {
       tableOfContent={{ style: "clerk" }}
       toc={page.data.toc}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      {!isProductChangelog && <DocsTitle>{page.data.title}</DocsTitle>}
+      {!isProductChangelog && (
+        <DocsDescription>{page.data.description}</DocsDescription>
+      )}
       {!isApiReference && !isChangelog && (
         <PageActions content={content} title={title} url={url} />
       )}

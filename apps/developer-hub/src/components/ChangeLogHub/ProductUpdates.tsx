@@ -166,54 +166,62 @@ export const ProductUpdates = ({
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [highlighted, visible]);
 
+  // Nothing authored yet: a single message in place of the rail + timeline.
+  if (entries.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <p className={styles.emptyText}>
+          No product updates yet. Check back soon.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className={styles.layout}>
       <FilterBar
         countFor={countFor}
+        filteredCount={filtered.length}
         filters={filters}
         hasFilters={hasFilters}
         onClear={clearFilters}
         onToggle={toggle}
       />
 
-      {filtered.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>
-            {entries.length === 0
-              ? "No product updates yet — check back soon."
-              : "No updates match these filters."}
-          </p>
-          {entries.length > 0 && (
+      <div className={styles.main}>
+        {filtered.length === 0 ? (
+          <div className={styles.empty}>
+            <p className={styles.emptyText}>No updates match these filters.</p>
             <Button onPress={clearFilters} size="sm" variant="ghost">
               Clear all filters
             </Button>
-          )}
-        </div>
-      ) : (
-        <div className={styles.feed}>
-          {visible.map((entry) => (
-            <EntryCard
-              entry={entry}
-              isHighlighted={entry.slug === highlighted}
-              key={entry.slug}
-            />
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className={styles.timeline}>
+            {visible.map((entry) => (
+              <EntryCard
+                entry={entry}
+                isHighlighted={entry.slug === highlighted}
+                key={entry.slug}
+              />
+            ))}
+          </div>
+        )}
 
-      {filtered.length > limit && (
-        <div className={styles.loadMore}>
-          <Button
-            onPress={() => {
-              setLimit((l) => l + PAGE_SIZE);
-            }}
-            size="sm"
-            variant="outline"
-          >
-            Load more ({filtered.length - limit} remaining)
-          </Button>
-        </div>
-      )}
+        {filtered.length > limit && (
+          <div className={styles.loadMore}>
+            <Button
+              onPress={() => {
+                setLimit((l) => l + PAGE_SIZE);
+              }}
+              size="sm"
+              variant="outline"
+            >
+              Load more ({filtered.length - limit} remaining)
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
