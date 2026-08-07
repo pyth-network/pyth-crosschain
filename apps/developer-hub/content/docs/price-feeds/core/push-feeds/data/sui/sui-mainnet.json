@@ -273,6 +273,14 @@
       "pro_compatible_status": "coming_soon"
     },
     {
+      "alias": "XAGM/USD.RR",
+      "id": "2e8a0af780e18d2cf68bebd172d720a69f21e528e63c642b97fcb40ebc3ba3db",
+      "time_difference": 10,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100,
+      "pro_compatible_status": "available"
+    },
+    {
       "alias": "UP/USD",
       "id": "c591a547856b091560b120ee14b165a84ca58eca23b2ab635df641340bde1f10",
       "time_difference": 10,
