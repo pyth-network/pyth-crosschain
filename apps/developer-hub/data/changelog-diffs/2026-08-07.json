@@ -1,0 +1,592 @@
+{
+  "date": "2026-08-07",
+  "label": "Friday",
+  "summary": {
+    "added": 3,
+    "went_live": 54,
+    "removed": 1
+  },
+  "hero": "3 new feeds announced, 54 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.EA/USD",
+      "lazerId": 1094,
+      "asset": "Electronic Arts Inc",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "4a6538143c76292692d430d939d868cc15ca22b9c551cf683f1c59374b38594b"
+    },
+    {
+      "id": "Equity.US.SKUU/USD",
+      "lazerId": 3575,
+      "asset": "Graniteshares 2X Long Sk Hynix Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "1e01caca2c7be1ae9c93580bcd3c0ab54f7d7eeed0b5afb3c238c2b5f751cf07"
+    },
+    {
+      "id": "Equity.US.SKDD/USD",
+      "lazerId": 3574,
+      "asset": "Graniteshares 2X Short Sk Hynix Daily Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "bc47b69cb88ac5139e853856242b63e86a71dc62ee5bcb8392f28e0a308dd661"
+    },
+    {
+      "id": "Equity.US.STM/USD",
+      "lazerId": 3573,
+      "asset": "Stmicroelectronics N.V.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "46a20d321a432ff821d19bc459c7c6170efef48cb8244dff075d63c90e551481"
+    },
+    {
+      "id": "Equity.US.WULF/USD",
+      "lazerId": 3572,
+      "asset": "Terawulf Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "7717b73c7f19ffb1e6e5da542836fa3464559ec971df475455471433a005e2a6"
+    },
+    {
+      "id": "Equity.US.FN/USD",
+      "lazerId": 3571,
+      "asset": "Fabrinet",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "2132dbe12a6d7520b29553bafb7c81c178bcc7583112dec25aacfcac99b9049f"
+    },
+    {
+      "id": "Equity.US.CIFR/USD",
+      "lazerId": 3570,
+      "asset": "Cipher Digital Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "55a91bd14858a0039cb21d56ac87bd796fb257a78786d3a81d64e8dff2373af3"
+    },
+    {
+      "id": "Equity.US.HUT/USD",
+      "lazerId": 3569,
+      "asset": "Hut 8 Corp.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "fb88ad7526f97f7ca6f43aaa7d3b620f412968db2cbcfac1e906362def8456f3"
+    },
+    {
+      "id": "Equity.US.PL/USD",
+      "lazerId": 3567,
+      "asset": "Planet Labs Pbc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "562e632de00dd4ad4a70b024afc3e2a220c1b05116d58cf96089825303f94762"
+    },
+    {
+      "id": "Equity.US.AMKR/USD",
+      "lazerId": 3565,
+      "asset": "Amkor Technology Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "f8208ffb5822c912f596ac3df95514222eb1adaa0dd341408b41fed15821c414"
+    },
+    {
+      "id": "Equity.US.PINS/USD",
+      "lazerId": 3562,
+      "asset": "Pinterest, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "05b0a4d52786320f28d1389ed8f236c3eca5854376431cfdf7ce37b6326402d2"
+    },
+    {
+      "id": "Equity.US.FPS/USD",
+      "lazerId": 3561,
+      "asset": "Forgent Power Solutions, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "a98d4a82473c0a85d2416c185df4845ef8b1e7ed8606717ad1c4485c7a1b2840"
+    },
+    {
+      "id": "Equity.US.VSH/USD",
+      "lazerId": 3560,
+      "asset": "Vishay Intertechnology, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "1062b0f61c3bbf6bdb79120e6a8826d36c1f3f8b0bc1990804e53770d38c3ca2"
+    },
+    {
+      "id": "Equity.US.CORZ/USD",
+      "lazerId": 3559,
+      "asset": "Core Scientific, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "214fc87a8f0f5adc797fc1f7927e1040650366e8f943e20caf13ad0d6e806956"
+    },
+    {
+      "id": "Equity.US.PBR/USD",
+      "lazerId": 3558,
+      "asset": "Petroleo Brasileiro S.A.-Petrobras Ads (Rep 1 Common Share)",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "146f8290eb9b56e6e19338902f7b975e7f9e50f9fe40b35a127c6ee7992f5102"
+    },
+    {
+      "id": "Equity.US.COPX/USD",
+      "lazerId": 3557,
+      "asset": "Global X Copper Miners Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "8bbaca50510ba7108093fd89100523a01d4eee8087de21c9ca807292933e5479"
+    },
+    {
+      "id": "Equity.US.TLN/USD",
+      "lazerId": 3556,
+      "asset": "Talen Energy Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "05ff869230bb56bf2df26342880f6a2b9cab2f2eb4c1b59f00ec38e405d65db0"
+    },
+    {
+      "id": "Equity.US.LSCC/USD",
+      "lazerId": 3555,
+      "asset": "Lattice Semiconductor Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "134837b42e99cde7e5b85cc795dd06a658326098c35bd298274763619b577121"
+    },
+    {
+      "id": "Equity.US.FORM/USD",
+      "lazerId": 3554,
+      "asset": "Formfactor Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "0e7569b870edec883f44b54ba4a63cb50bece2704a215448cadad7913ce5e1d6"
+    },
+    {
+      "id": "Equity.US.VICR/USD",
+      "lazerId": 3553,
+      "asset": "Vicor Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "872c1525e06d841dab75d710af2b34feebb5a3547466ff712a655b52fcbe5d3c"
+    },
+    {
+      "id": "Equity.US.JAAA/USD",
+      "lazerId": 3552,
+      "asset": "Janus Henderson Aaa Clo Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "01ce9758cabc32e7344032cc921433cdf194a31c2e4b11e42d6fc3217cc94871"
+    },
+    {
+      "id": "Equity.US.SOXQ/USD",
+      "lazerId": 3551,
+      "asset": "Invesco Phlx Semiconductor Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "916f99d33c702bb925e90d86452bed7a3d1fee416030ccc284f142f5fc25f112"
+    },
+    {
+      "id": "Equity.US.FCEL/USD",
+      "lazerId": 3550,
+      "asset": "Fuelcell Energy Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "06f2079da8284ccb8810c0af9ca66fb608fcbcb90288754e42a0101dc5d34f9b"
+    },
+    {
+      "id": "Equity.US.ACHR/USD",
+      "lazerId": 3548,
+      "asset": "Archer Aviation Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "641c99f709570911f4ce41237b56092ae86b792e7dcce15317fb3175e81f8eb9"
+    },
+    {
+      "id": "Equity.US.AG/USD",
+      "lazerId": 3547,
+      "asset": "First Majestic Silver Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "7f50344390e79dc231fc08c3789b2e332bdd344751bc18842ac53f953f44d7f2"
+    },
+    {
+      "id": "Equity.US.ENB/USD",
+      "lazerId": 3546,
+      "asset": "Enbridge, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "5ede535f959e6184f24815c1d7819ab8bf79d850afbd73151bc994e1935de686"
+    },
+    {
+      "id": "Equity.US.NVMI/USD",
+      "lazerId": 3545,
+      "asset": "Nova Ltd.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "3e707ff33b5d0e1491423de340a4d15151d9a94f260eab441a88481dd3fcc4a4"
+    },
+    {
+      "id": "Equity.US.PLUG/USD",
+      "lazerId": 3544,
+      "asset": "Plug Power Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "8f2af61cd4f049bce70d454e7a23c78760c68fff9d547d6144d9ae95a76a8913"
+    },
+    {
+      "id": "Equity.US.KEEL/USD",
+      "lazerId": 3543,
+      "asset": "Keel Infrastructure Corp.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "bbea8136728ebb190eb529248350944c0e15dde357963a9ee32bab84ab754b7f"
+    },
+    {
+      "id": "Equity.US.PSQ/USD",
+      "lazerId": 3541,
+      "asset": "Proshares Short Qqq",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "52d75219bbd61a396f93a964b830fc1362f3208701dd4fb80b501b603312bc8c"
+    },
+    {
+      "id": "Equity.US.CLF/USD",
+      "lazerId": 3540,
+      "asset": "Cleveland-Cliffs Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "8f3a268ae8d3f99160d889c0ad05c5ccf926a67aa86ce530e76e82454e8b31c7"
+    },
+    {
+      "id": "Equity.US.TIP/USD",
+      "lazerId": 3539,
+      "asset": "Ishares Tips Bond Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "8acba411efb415896ba97afbb6995385ab25e7056422f239c9e513f1acfc9aca"
+    },
+    {
+      "id": "Equity.US.POWL/USD",
+      "lazerId": 3538,
+      "asset": "Powell Industries Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "dd3857f9265d3be5cecd44d80aca8e1e9c55a9127c971eb6ceac5e80a8ff8fea"
+    },
+    {
+      "id": "Equity.US.BAI/USD",
+      "lazerId": 3537,
+      "asset": "Ishares A.I. Innovation And Tech Active Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "d0805a15ab9b061a858417e37281424fade678dd7a68d9d36ea18a55889652d7"
+    },
+    {
+      "id": "Equity.US.SEDG/USD",
+      "lazerId": 3536,
+      "asset": "Solaredge Technologies, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "8adefab8e9d47055c1487bf2f962ee15ce29c5e3542044047147956621c43cf7"
+    },
+    {
+      "id": "Equity.US.AUR/USD",
+      "lazerId": 3535,
+      "asset": "Aurora Innovation, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "91d942b363c77592a40d4590a96283e9ad95c55ec40a06f57d9a840229786715"
+    },
+    {
+      "id": "Equity.US.OUST/USD",
+      "lazerId": 3534,
+      "asset": "Ouster, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "33e337a21f74f02e0a5aa4a6ca8bcac777456865d1a27cc3e0495bd25d8d1b07"
+    },
+    {
+      "id": "Equity.US.UUUU/USD",
+      "lazerId": 3533,
+      "asset": "Energy Fuels Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "1d27fb8230f11104a8bd4ed3ae44d0d61559261512c6508863d7af2c3f2059af"
+    },
+    {
+      "id": "Equity.US.OSCR/USD",
+      "lazerId": 3532,
+      "asset": "Oscar Health, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "4af609fcabd2fc48ac3c17232d00dc6ecf8e6ca7f6561976826174c19240f0cc"
+    },
+    {
+      "id": "Equity.US.DYNF/USD",
+      "lazerId": 3531,
+      "asset": "Ishares U.S. Equity Factor Rotation Active Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "14aed40d5a17de04d65a0a54e956f6bce322122e621d8278300331ab02deb6e7"
+    },
+    {
+      "id": "Equity.US.BNO/USD",
+      "lazerId": 3530,
+      "asset": "United States Brent Oil Fund, Lp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "3488e477571c3c8aa861d02044a96a71fd81299cf0d915aa019af96335498874"
+    },
+    {
+      "id": "Equity.US.OIH/USD",
+      "lazerId": 3529,
+      "asset": "Vaneck Oil Services Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "64c24c75ad871df257440cafa78fbd8aaad18ac41ac04fc3f50a90d346855473"
+    },
+    {
+      "id": "Equity.US.IWN/USD",
+      "lazerId": 3528,
+      "asset": "Ishares Russell 2000 Value Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "a8b8aec1b1b1e492b14570d24fe63fcd98aec1a648570c4543afa286eca4dc3e"
+    },
+    {
+      "id": "Equity.US.SPCE/USD",
+      "lazerId": 3527,
+      "asset": "Virgin Galactic Holdings, Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "fce02687a8a49f19f78f7f97bd686c779135221429206bbd8735d5ad4c782130"
+    },
+    {
+      "id": "Equity.US.UEC/USD",
+      "lazerId": 3526,
+      "asset": "Uranium Energy Corp.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "b913007c5d32d88a882832b16dfb8a93665ff52e6da2c02d94b6eee717b97941"
+    },
+    {
+      "id": "Equity.US.XOP/USD",
+      "lazerId": 2899,
+      "asset": "Spdr S&P Oil & Gas Exploration & Production Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "c706cce81639eed699bf23a427ea8742ac6e7cc775b2a8a8e70cba8a49393e42"
+    },
+    {
+      "id": "Equity.US.SOUN/USD",
+      "lazerId": 2862,
+      "asset": "Soundhound Ai Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "88232bfe2ca44449224f24fc862d4b4fed9144e53f6cf9f0a939f88b82b4f8cd"
+    },
+    {
+      "id": "Equity.US.PAVE/USD",
+      "lazerId": 2837,
+      "asset": "Global X Us Infra Developments Ucits Etf Usd Acc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "4c2e4cf5dc8426f6e54d0de8020d2a7e9b6754b7089bd71a75cf6b3da46e747e"
+    },
+    {
+      "id": "Equity.US.IYW/USD",
+      "lazerId": 2806,
+      "asset": "Ishares Us Technology Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "b4279985dec1ff91bc9bd6d8b44ed96da6f0446cfca6bc613d23296182f4fdcf"
+    },
+    {
+      "id": "Equity.US.IGV/USD",
+      "lazerId": 2797,
+      "asset": "Ishares Expanded Tech-Software Sector Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "43b0e3663be6fe9e5f098eb3b2826f053d182682944717cb0f8c57b04db90867"
+    },
+    {
+      "id": "Equity.US.IGEB/USD",
+      "lazerId": 2796,
+      "asset": "Ishares Investment Grade Systematic Bond Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "bb3bf79b043e09da5afc161b0e061971f020c6a31983308a3028bde5675e701a"
+    },
+    {
+      "id": "Equity.US.CLS/USD",
+      "lazerId": 2732,
+      "asset": "Celestica Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "5b1adfefbe3f69cf8c5dc02d521a9f49eb5887d19f4bf1f4170959428d9d6a21"
+    },
+    {
+      "id": "Equity.US.BITX/USD",
+      "lazerId": 2724,
+      "asset": "2X Bitcoin Strategy Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "6acec4867e7c4b0610d0422ff34cdd368552e846ea9df4fc2bbb4681126f724f"
+    },
+    {
+      "id": "Equity.US.BBAI/USD",
+      "lazerId": 2715,
+      "asset": "Bigbearai Holdings Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "d66fd5fb5d53b65340d1772cf658d451eb9dd8f528f6433743cd87f51f43638c"
+    },
+    {
+      "id": "Equity.US.MP/USD",
+      "lazerId": 2415,
+      "asset": "Mp Materials Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "92e03dac647ec6733f61f208a89115ecee4442653736a66008032f4ae588f304"
+    },
+    {
+      "id": "Pyth.Index.OPENAI/USD",
+      "lazerId": 3619,
+      "asset": "Pyth Price In Usd For Openai 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "96d4bb23a3db78fdb72b3a03ce80ead686096f324319166534d9a27c0519c483"
+    },
+    {
+      "id": "Pyth.Index.ANTHROPIC/USD",
+      "lazerId": 3618,
+      "asset": "Pyth Price In Usd For Anthropic 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "5da511a7c68b17a3bc94380cab4756bc83ab87f86307af10ea58467a64b6689d"
+    },
+    {
+      "id": "Equity.US.INFQ/USD",
+      "lazerId": 3519,
+      "asset": "Infleqtion Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-07",
+      "quote": "USD",
+      "hermesId": "4c2c1ce2790e81344d5bba316845299b44e93305a4b163b8a3ca7e1bef0830dc"
+    }
+  ]
+}
