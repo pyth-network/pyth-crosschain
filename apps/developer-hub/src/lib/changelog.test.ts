@@ -1,11 +1,16 @@
 import type { ChangelogEntryMeta, ChangelogFilters } from "./changelog";
 import {
+  compareEntriesForDisplay,
   EMPTY_FILTERS,
   feedUrl,
   filterEntries,
   fmtEntryDate,
+  isChangelogProduct,
   matchesFilters,
+  parseProductParam,
   relativeDate,
+  resolveDeepLink,
+  slugFromPath,
 } from "./changelog";
 
 const entry = (
@@ -104,5 +109,91 @@ describe("relativeDate", () => {
     const now = new Date("2026-07-20T14:00:00Z");
     expect(relativeDate("2026-06-20", now)).toBe("1 month ago");
     expect(relativeDate("2026-05-20", now)).toBe("2 months ago");
+  });
+
+  it("collapses a future/post-dated entry to Today", () => {
+    const now = new Date("2026-07-20T14:00:00Z");
+    expect(relativeDate("2026-07-21", now)).toBe("Today");
+  });
+});
+
+describe("isChangelogProduct", () => {
+  it("narrows only recognised product ids", () => {
+    expect(isChangelogProduct("pyth-pro")).toBe(true);
+    expect(isChangelogProduct("entropy")).toBe(true);
+    expect(isChangelogProduct("nope")).toBe(false);
+    expect(isChangelogProduct("")).toBe(false);
+  });
+});
+
+describe("parseProductParam", () => {
+  it("treats absent or empty as the all-products feed", () => {
+    expect(parseProductParam(null)).toEqual({ ok: true, product: null });
+    expect(parseProductParam("")).toEqual({ ok: true, product: null });
+  });
+
+  it("narrows a recognised value to that product", () => {
+    expect(parseProductParam("pyth-core")).toEqual({
+      ok: true,
+      product: "pyth-core",
+    });
+  });
+
+  it("reports an unrecognised value as unknown", () => {
+    expect(parseProductParam("bogus")).toEqual({ ok: false, value: "bogus" });
+  });
+});
+
+describe("compareEntriesForDisplay", () => {
+  it("orders newest first", () => {
+    const older = entry({ date: "2026-07-01", slug: "a" });
+    const newer = entry({ date: "2026-07-10", slug: "b" });
+    expect([older, newer].sort(compareEntriesForDisplay)).toEqual([
+      newer,
+      older,
+    ]);
+  });
+
+  it("breaks equal dates by ascending title", () => {
+    const beta = entry({ date: "2026-07-10", title: "Beta" });
+    const alpha = entry({ date: "2026-07-10", title: "Alpha" });
+    expect([beta, alpha].sort(compareEntriesForDisplay)).toEqual([alpha, beta]);
+  });
+});
+
+describe("slugFromPath", () => {
+  it("strips the .mdx extension", () => {
+    expect(slugFromPath("2026-07-10-example.mdx")).toBe("2026-07-10-example");
+  });
+
+  it("leaves a path without the extension unchanged", () => {
+    expect(slugFromPath("2026-07-10-example")).toBe("2026-07-10-example");
+  });
+});
+
+describe("resolveDeepLink", () => {
+  const entries = [
+    entry({ product: "pyth-pro", slug: "pro" }),
+    entry({ product: "entropy", slug: "entropy" }),
+  ];
+
+  it("returns undefined for an empty or unknown slug", () => {
+    expect(resolveDeepLink(entries, EMPTY_FILTERS, "")).toBeUndefined();
+    expect(resolveDeepLink(entries, EMPTY_FILTERS, "missing")).toBeUndefined();
+  });
+
+  it("keeps the URL filters when they do not hide the target", () => {
+    const f = filters({ products: ["pyth-pro"] });
+    expect(resolveDeepLink(entries, f, "pro")).toEqual({
+      filters: f,
+      index: 0,
+    });
+  });
+
+  it("drops the filters (returns EMPTY_FILTERS) when they hide the target", () => {
+    const f = filters({ products: ["entropy"] });
+    const resolved = resolveDeepLink(entries, f, "pro");
+    expect(resolved).toEqual({ filters: EMPTY_FILTERS, index: 0 });
+    expect(resolved?.filters).toBe(EMPTY_FILTERS);
   });
 });

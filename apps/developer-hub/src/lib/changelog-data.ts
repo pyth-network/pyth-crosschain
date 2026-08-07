@@ -5,6 +5,7 @@
 
 import { changelog } from "../../.source/server";
 import type { ChangelogEntryMeta } from "./changelog";
+import { compareEntriesForDisplay, slugFromPath } from "./changelog";
 
 type CollectionEntry = (typeof changelog)[number];
 
@@ -13,11 +14,10 @@ export type ChangelogEntry = ChangelogEntryMeta & {
   body: CollectionEntry["body"];
 };
 
-const slugOf = (entry: CollectionEntry): string =>
-  entry.info.path.replace(/\.mdx$/, "");
-
 // The collection is bundled at build time, so this is a synchronous read of
 // a constant — no fetching, loading, or error states needed at the call site.
+// Ordering and slug derivation live in the pure `./changelog` module so they
+// can be unit-tested without the `.source` build artifact.
 export const getChangelogEntries = (): ChangelogEntry[] =>
   changelog
     .map((entry) => ({
@@ -25,10 +25,8 @@ export const getChangelogEntries = (): ChangelogEntry[] =>
       body: entry.body,
       date: entry.date,
       product: entry.product,
-      slug: slugOf(entry),
+      slug: slugFromPath(entry.info.path),
       title: entry.title,
       type: entry.type,
     }))
-    .sort(
-      (a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title),
-    );
+    .sort(compareEntriesForDisplay);

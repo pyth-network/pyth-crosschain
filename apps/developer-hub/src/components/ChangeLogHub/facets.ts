@@ -1,9 +1,10 @@
-import type { ChangelogFilters } from "../../lib/changelog";
+import type { ChangelogEntryMeta, ChangelogFilters } from "../../lib/changelog";
 import {
   AREA_LABELS,
   CHANGELOG_AREAS,
   CHANGELOG_PRODUCTS,
   CHANGELOG_TYPES,
+  matchesFilters,
   PRODUCT_LABELS,
   TYPE_LABELS,
 } from "../../lib/changelog";
@@ -54,3 +55,23 @@ export const parseListParam = <T extends string>(
     .filter((value): value is T =>
       (allowed as readonly string[]).includes(value),
     );
+
+// The faceted count shown on a chip: how many entries match the *other* facets'
+// current selection (this chip's own facet is ignored) and have this facet's
+// value. Ignoring the own facet is what lets every option in a facet keep a
+// live count while one of them is selected.
+export const countForFacet = (
+  entries: ChangelogEntryMeta[],
+  filters: ChangelogFilters,
+  facet: Facet,
+  value: string,
+): number => {
+  const filterKey = FACETS.find((f) => f.key === facet)?.filterKey;
+  if (filterKey === undefined) {
+    return 0;
+  }
+  const others: ChangelogFilters = { ...filters, [filterKey]: [] };
+  return entries.filter(
+    (entry) => matchesFilters(entry, others) && entry[facet] === value,
+  ).length;
+};

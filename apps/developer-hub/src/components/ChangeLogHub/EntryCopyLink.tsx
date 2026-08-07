@@ -1,26 +1,11 @@
 "use client";
 
+import { Link as LinkIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCopy } from "@pythnetwork/component-library/useCopy";
 import clsx from "clsx";
 
 import { CHANGELOG_PATH, SITE } from "../../lib/changelog";
 import styles from "./index.module.scss";
-
-const ChainIcon = () => (
-  <svg
-    aria-hidden="true"
-    className={styles.chain}
-    fill="none"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-  >
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-  </svg>
-);
 
 // The entry date doubles as its permalink: clicking copies a canonical
 // docs.pyth.network deep link and anchors the URL to the entry. The
@@ -52,7 +37,7 @@ export const EntryCopyLink = ({
         type="button"
       >
         <span className={styles.dt}>{date}</span>
-        <ChainIcon />
+        <LinkIcon aria-hidden className={styles.chain} />
       </button>
       <div className={clsx(styles.rock, isCopied && styles.rockCopied)}>
         {isCopied ? "Link copied" : relative}

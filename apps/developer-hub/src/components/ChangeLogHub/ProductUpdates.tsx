@@ -12,12 +12,12 @@ import {
   CHANGELOG_TYPES,
   EMPTY_FILTERS,
   filterEntries,
-  matchesFilters,
+  resolveDeepLink,
 } from "../../lib/changelog";
 import { EntryCard } from "./EntryCard";
 import { FilterBar } from "./FilterBar";
 import type { Facet } from "./facets";
-import { FACETS, parseListParam } from "./facets";
+import { countForFacet, FACETS, parseListParam } from "./facets";
 import styles from "./index.module.scss";
 
 export type ProductUpdatesEntry = ChangelogEntryMeta & {
@@ -91,25 +91,15 @@ export const ProductUpdates = ({
     const next = current.includes(value)
       ? current.filter((v) => v !== value)
       : [...current, value];
-    writeFilters({ ...filters, [filterKey]: next } as ChangelogFilters);
+    writeFilters({ ...filters, [filterKey]: next });
   };
 
   const clearFilters = () => {
     writeFilters(EMPTY_FILTERS);
   };
 
-  // Faceted counts: for a chip, the number of entries it would match given
-  // the *other* facets' current selection (its own facet is ignored).
-  const countFor = (facet: Facet, value: string): number => {
-    const filterKey = FACETS.find((f) => f.key === facet)?.filterKey;
-    if (filterKey === undefined) {
-      return 0;
-    }
-    const others = { ...filters, [filterKey]: [] } as ChangelogFilters;
-    return entries.filter(
-      (entry) => matchesFilters(entry, others) && entry[facet] === value,
-    ).length;
-  };
+  const countFor = (facet: Facet, value: string): number =>
+    countForFacet(entries, filters, facet, value);
 
   const filtered = useMemo(
     () => filterEntries(entries, filters),
@@ -121,33 +111,32 @@ export const ProductUpdates = ({
 
   // Reconcile filters from the URL after mount, and handle deep links: opening
   // #<entry-slug> reveals and highlights the entry, dropping any URL filters
-  // that would hide it so a shared link always lands on its target.
+  // that would hide it so a shared link always lands on its target. The pure
+  // resolution lives in resolveDeepLink; this effect only applies the result.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlFilters = readFilters(params);
     const slug = window.location.hash.replace(/^#/, "");
-    const index = entries.findIndex((entry) => entry.slug === slug);
-    const entry = entries[index];
+    const resolved = resolveDeepLink(entries, urlFilters, slug);
 
-    if (slug === "" || entry === undefined) {
+    if (resolved === undefined) {
       setFilters(urlFilters);
       return;
     }
-    if (matchesFilters(entry, urlFilters)) {
-      setFilters(urlFilters);
-    } else {
-      // Drop the filters that hide the shared entry, in both state and the URL.
+    setFilters(resolved.filters);
+    if (resolved.filters === EMPTY_FILTERS) {
+      // resolveDeepLink returns EMPTY_FILTERS only when it dropped URL filters
+      // that were hiding the shared entry — mirror that in the URL (keep hash).
       params.delete("product");
       params.delete("type");
       params.delete("area");
-      setFilters(EMPTY_FILTERS);
       const qs = params.toString();
       router.replace(
         `${qs === "" ? pathname : `${pathname}?${qs}`}${window.location.hash}`,
         { scroll: false },
       );
     }
-    setLimit((l) => Math.max(l, index + 1));
+    setLimit((l) => Math.max(l, resolved.index + 1));
     setHighlighted(slug);
     const clearTimer = window.setTimeout(() => {
       setHighlighted(undefined);
@@ -221,7 +210,7 @@ export const ProductUpdates = ({
             size="sm"
             variant="outline"
           >
-            Load more ({(filtered.length - limit).toString()} remaining)
+            Load more ({filtered.length - limit} remaining)
           </Button>
         </div>
       )}
