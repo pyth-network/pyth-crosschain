@@ -1,17 +1,19 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-import type { ChangelogProduct } from "../../../lib/changelog";
 import {
   AREA_LABELS,
   CHANGELOG_PATH,
   CHANGELOG_PRODUCTS,
   feedUrl,
   PRODUCT_LABELS,
+  parseProductParam,
   SITE,
   TYPE_LABELS,
 } from "../../../lib/changelog";
 import { getChangelogEntries } from "../../../lib/changelog-data";
+import type { RssItem } from "./feed";
+import { buildFeedXml } from "./feed";
 
 const DESCRIPTION = "Product updates across Pyth Pro, Pyth Core, and Entropy.";
 
@@ -43,104 +45,74 @@ const rssComponents: MDXComponents = {
   pre: ({ children }: ComponentProps<"pre">) => <pre>{children}</pre>,
 };
 
-const escapeXml = (value: string): string =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-
 // RSS 2.0 feed for the cross-product changelog. `/changelog/feed.xml` covers
 // all products; `?product=pyth-pro|pyth-core|entropy` narrows it — this is
-// what the Subscribe menu links to.
+// what the Subscribe menu links to. Serialization lives in ./feed; this
+// handler only validates the param, renders bodies, and assembles the items.
 export const GET = async (request: Request): Promise<Response> => {
   // Loaded dynamically: Next.js rejects a static `react-dom/server` import
   // anywhere in the app module graph, but a route handler is a plain Node
   // function — rendering entry bodies to HTML strings here is exactly what
   // renderToStaticMarkup is for.
   const { renderToStaticMarkup } = await import("react-dom/server");
-  // A bare `?product=` yields "" (not null); treat it as absent so it serves
-  // the all-products feed rather than 400-ing, matching feedUrl's contract.
-  const productParam = new URL(request.url).searchParams.get("product") || null;
-  if (
-    productParam !== null &&
-    !(CHANGELOG_PRODUCTS as readonly string[]).includes(productParam)
-  ) {
+
+  const parsed = parseProductParam(
+    new URL(request.url).searchParams.get("product"),
+  );
+  if (!parsed.ok) {
     return new Response(
-      `Unknown product "${productParam}". Expected one of: ${CHANGELOG_PRODUCTS.join(", ")}.`,
+      `Unknown product "${parsed.value}". Expected one of: ${CHANGELOG_PRODUCTS.join(", ")}.`,
       { headers: { "Content-Type": "text/plain" }, status: 400 },
     );
   }
-  const product = productParam as ChangelogProduct | null;
+  const { product } = parsed;
 
   const entries = getChangelogEntries().filter(
     (entry) => product === null || entry.product === product,
   );
 
-  const title =
-    product === null
-      ? "Pyth Changelog"
-      : `Pyth Changelog — ${PRODUCT_LABELS[product]}`;
-  const description =
-    product === null
-      ? DESCRIPTION
-      : `Product updates for ${PRODUCT_LABELS[product]}.`;
-  const self = `${SITE}${feedUrl(product ?? undefined)}`;
   const latest = entries[0]?.date;
-  const lastBuildDate = latest
-    ? new Date(`${latest}T00:00:00Z`).toUTCString()
-    : new Date().toUTCString();
+  const channel = {
+    description:
+      product === null
+        ? DESCRIPTION
+        : `Product updates for ${PRODUCT_LABELS[product]}.`,
+    lastBuildDate: latest
+      ? new Date(`${latest}T00:00:00Z`).toUTCString()
+      : new Date().toUTCString(),
+    link: `${SITE}${CHANGELOG_PATH}`,
+    self: `${SITE}${feedUrl(product ?? undefined)}`,
+    title:
+      product === null
+        ? "Pyth Changelog"
+        : `Pyth Changelog — ${PRODUCT_LABELS[product]}`,
+  };
 
-  const items = entries
-    .map((entry) => {
-      const Body = entry.body;
-      const link = `${SITE}${CHANGELOG_PATH}#${entry.slug}`;
-      let html: string;
-      try {
-        html = renderToStaticMarkup(<Body components={rssComponents} />);
-      } catch {
-        // A single entry that references an unmapped component must not take
-        // down the whole feed — fall back to a link into the page.
-        html = `<p><a href="${link}">Read this update on docs.pyth.network</a></p>`;
-      }
-      const categories = [
+  const items: RssItem[] = entries.map((entry) => {
+    const Body = entry.body;
+    const link = `${SITE}${CHANGELOG_PATH}#${entry.slug}`;
+    let contentHtml: string;
+    try {
+      contentHtml = renderToStaticMarkup(<Body components={rssComponents} />);
+    } catch {
+      // A single entry that references an unmapped component must not take
+      // down the whole feed — fall back to a link into the page.
+      contentHtml = `<p><a href="${link}">Read this update on docs.pyth.network</a></p>`;
+    }
+    return {
+      categories: [
         PRODUCT_LABELS[entry.product],
         TYPE_LABELS[entry.type],
         entry.area === undefined ? undefined : AREA_LABELS[entry.area],
-      ]
-        .filter((category) => category !== undefined)
-        .map((category) => `<category>${escapeXml(category)}</category>`)
-        .join("");
-      const pubDate = new Date(`${entry.date}T00:00:00Z`).toUTCString();
-      return [
-        "<item>",
-        `<title>${escapeXml(entry.title)}</title>`,
-        `<link>${link}</link>`,
-        `<guid isPermaLink="true">${link}</guid>`,
-        `<pubDate>${pubDate}</pubDate>`,
-        categories,
-        `<content:encoded>${escapeXml(html)}</content:encoded>`,
-        "</item>",
-      ].join("");
-    })
-    .join("\n");
+      ].filter((category) => category !== undefined),
+      contentHtml,
+      link,
+      pubDate: new Date(`${entry.date}T00:00:00Z`).toUTCString(),
+      title: entry.title,
+    };
+  });
 
-  const xml = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
-    "<channel>",
-    `<title>${escapeXml(title)}</title>`,
-    `<link>${SITE}${CHANGELOG_PATH}</link>`,
-    `<atom:link href="${self}" rel="self" type="application/rss+xml"/>`,
-    `<description>${escapeXml(description)}</description>`,
-    `<lastBuildDate>${lastBuildDate}</lastBuildDate>`,
-    items,
-    "</channel>",
-    "</rss>",
-  ].join("\n");
-
-  return new Response(xml, {
+  return new Response(buildFeedXml(channel, items), {
     headers: {
       "Cache-Control": "public, max-age=300, s-maxage=3600",
       "Content-Type": "application/rss+xml; charset=utf-8",

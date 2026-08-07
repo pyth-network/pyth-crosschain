@@ -1,5 +1,6 @@
 "use client";
 
+import { CaretDown, Check } from "@phosphor-icons/react/dist/ssr";
 import clsx from "clsx";
 import { useState } from "react";
 
@@ -7,36 +8,6 @@ import type { ChangelogFilters } from "../../lib/changelog";
 import type { Facet } from "./facets";
 import { FACETS } from "./facets";
 import styles from "./index.module.scss";
-
-const CheckIcon = () => (
-  <svg
-    aria-hidden="true"
-    className={styles.boxIcon}
-    fill="none"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="3.5"
-    viewBox="0 0 24 24"
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
-
-const CaretIcon = () => (
-  <svg
-    aria-hidden="true"
-    className={styles.filtersToggleCaret}
-    fill="none"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-  >
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
 
 type FilterBarProps = {
   filters: ChangelogFilters;
@@ -75,7 +46,7 @@ export const FilterBar = ({
           type="button"
         >
           {open ? "Hide" : "Filters"}
-          <CaretIcon />
+          <CaretDown aria-hidden className={styles.filtersToggleCaret} />
         </button>
         {hasFilters && (
           <button className={styles.clear} onClick={onClear} type="button">
@@ -111,7 +82,11 @@ export const FilterBar = ({
                     type="button"
                   >
                     <span className={styles.box}>
-                      <CheckIcon />
+                      <Check
+                        aria-hidden
+                        className={styles.boxIcon}
+                        weight="bold"
+                      />
                     </span>
                     <span className={styles.frowLabel}>{labelFor(value)}</span>
                     <span className={styles.frowCount}>{count}</span>

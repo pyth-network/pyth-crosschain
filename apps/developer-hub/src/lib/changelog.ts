@@ -89,6 +89,41 @@ export const filterEntries = <T extends ChangelogEntryMeta>(
   filters: ChangelogFilters,
 ): T[] => entries.filter((entry) => matchesFilters(entry, filters));
 
+// Resolve a deep link (#slug) against the URL's current filters: locate the
+// entry and, when those filters would hide it, drop them so a shared link
+// always lands on its target. Returns the filters to apply and the entry's
+// index (to raise the pagination window), or undefined when no such entry.
+export const resolveDeepLink = (
+  entries: ChangelogEntryMeta[],
+  urlFilters: ChangelogFilters,
+  slug: string,
+): { filters: ChangelogFilters; index: number } | undefined => {
+  if (slug === "") {
+    return undefined;
+  }
+  const index = entries.findIndex((entry) => entry.slug === slug);
+  const entry = entries[index];
+  if (entry === undefined) {
+    return undefined;
+  }
+  return {
+    filters: matchesFilters(entry, urlFilters) ? urlFilters : EMPTY_FILTERS,
+    index,
+  };
+};
+
+// ─── Entry ordering ──────────────────────────────────────────────────────
+
+// Newest first, ties broken by title so the order is stable across builds.
+export const compareEntriesForDisplay = (
+  a: ChangelogEntryMeta,
+  b: ChangelogEntryMeta,
+): number => b.date.localeCompare(a.date) || a.title.localeCompare(b.title);
+
+// The entry's stable anchor slug is its MDX filename without the extension.
+export const slugFromPath = (path: string): string =>
+  path.replace(/\.mdx$/, "");
+
 // ─── URLs ────────────────────────────────────────────────────────────────
 
 export const CHANGELOG_PATH = "/changelog";
@@ -102,6 +137,29 @@ export const feedUrl = (product?: ChangelogProduct): string =>
   product === undefined
     ? `${CHANGELOG_PATH}/feed.xml`
     : `${CHANGELOG_PATH}/feed.xml?product=${product}`;
+
+// ─── Product parsing ─────────────────────────────────────────────────────
+
+export const isChangelogProduct = (value: string): value is ChangelogProduct =>
+  (CHANGELOG_PRODUCTS as readonly string[]).includes(value);
+
+// Parse the RSS `?product=` query param: an absent or empty value means the
+// all-products feed, a recognised value narrows to that product, and anything
+// else is reported as unknown so the caller can reject it.
+export const parseProductParam = (
+  raw: string | null,
+):
+  | { ok: true; product: ChangelogProduct | null }
+  | { ok: false; value: string } => {
+  const value = raw ?? "";
+  if (value === "") {
+    return { ok: true, product: null };
+  }
+  if (isChangelogProduct(value)) {
+    return { ok: true, product: value };
+  }
+  return { ok: false, value };
+};
 
 // ─── Display helpers ─────────────────────────────────────────────────────
 
@@ -136,8 +194,8 @@ export const relativeDate = (iso: string, now: Date = new Date()): string => {
     return "Yesterday";
   }
   if (days < 30) {
-    return `${days.toString()} days ago`;
+    return `${days} days ago`;
   }
   const months = Math.round(days / 30);
-  return months === 1 ? "1 month ago" : `${months.toString()} months ago`;
+  return months === 1 ? "1 month ago" : `${months} months ago`;
 };

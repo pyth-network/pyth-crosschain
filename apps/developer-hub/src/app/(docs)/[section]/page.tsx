@@ -22,16 +22,20 @@ export async function generateMetadata(props: {
 
   if (!page) notFound();
 
-  const metadata: Metadata = {
+  const base: Metadata = {
     description: page.data.description,
     title: page.data.title,
   };
 
+  if (params.section !== "changelog") {
+    return base;
+  }
+
   // The changelog is an unlisted, product-updates page: keep it out of search
   // engines, and advertise its RSS feeds for readers that have the link.
-  if (params.section === "changelog") {
-    metadata.robots = { follow: false, index: false };
-    metadata.alternates = {
+  return {
+    ...base,
+    alternates: {
       types: {
         "application/rss+xml": [
           { title: "Pyth Changelog", url: feedUrl() },
@@ -41,8 +45,7 @@ export async function generateMetadata(props: {
           })),
         ],
       },
-    };
-  }
-
-  return metadata;
+    },
+    robots: { follow: false, index: false },
+  };
 }
