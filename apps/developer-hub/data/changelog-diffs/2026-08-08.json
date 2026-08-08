@@ -1,0 +1,62 @@
+{
+  "date": "2026-08-08",
+  "label": "Saturday",
+  "summary": {
+    "added": 2,
+    "went_live": 3,
+    "removed": 0
+  },
+  "hero": "2 new feeds announced, 3 went live.",
+  "events": [
+    {
+      "id": "Pyth.Index.OPENAI/USD",
+      "lazerId": 3619,
+      "asset": "Pyth Price In Usd For Openai 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-08",
+      "quote": "USD",
+      "hermesId": "96d4bb23a3db78fdb72b3a03ce80ead686096f324319166534d9a27c0519c483"
+    },
+    {
+      "id": "Pyth.Index.ANTHROPIC/USD",
+      "lazerId": 3618,
+      "asset": "Pyth Price In Usd For Anthropic 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-08",
+      "quote": "USD",
+      "hermesId": "5da511a7c68b17a3bc94380cab4756bc83ab87f86307af10ea58467a64b6689d"
+    },
+    {
+      "id": "FX.USD/VND",
+      "lazerId": 2659,
+      "asset": "Us Dollar",
+      "assetType": "fx",
+      "changeType": "went_live",
+      "date": "2026-08-08",
+      "quote": "VND",
+      "hermesId": "325e6af848703dacd63f82091d119a3ec8669bb9441b337e821e749f3edd5381"
+    },
+    {
+      "id": "Equity.US.NCLD/USD",
+      "lazerId": 3621,
+      "asset": "Roundhill Neocloud Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-08",
+      "quote": "USD",
+      "hermesId": "29d0036c8199bd498ab18ec52c8aacaae9074e5a36c1add3bb3764cfab966241"
+    },
+    {
+      "id": "Equity.US.LYTE/USD",
+      "lazerId": 3620,
+      "asset": "Roundhill Photonics & Optics Etf",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-08",
+      "quote": "USD",
+      "hermesId": "3dd0ef0b6b582aeb1b1ad93c59f4b149f67159c91c8782d812c7df9567cd23ba"
+    }
+  ]
+}
