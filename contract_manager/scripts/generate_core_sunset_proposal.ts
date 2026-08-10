@@ -157,7 +157,7 @@ async function main() {
     const fee = await contract.getTotalFee();
     const { value, expo } = toValueExpo(fee.amount);
     if (value === 0n) {
-      summary.push(`Withdraw    ${entry.chainName} SKIPPED (balance 0)`);
+      console.log(`Withdraw    ${entry.chainName} SKIPPED (balance 0)`);
       continue;
     }
     payloads.push(
