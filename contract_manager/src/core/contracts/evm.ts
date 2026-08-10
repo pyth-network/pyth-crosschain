@@ -605,8 +605,24 @@ const RANGE_REJECTION_PATTERNS = [
   "too large",
 ];
 
+/**
+ * Errors that mean "the node is busy". Checked before the range patterns because several
+ * public RPCs word a rate limit as "limit exceeded", which would otherwise be read as a range
+ * rejection and answered by shrinking the chunk — halving the range does nothing about a rate
+ * limit, so the scan would ratchet down to tiny chunks and issue *more* requests per block.
+ */
+const RATE_LIMIT_PATTERNS = [
+  "429",
+  "too many requests",
+  "rate limit",
+  "rate-limit",
+  "exceeded the quota",
+];
+
 function isRangeRejection(error: unknown): boolean {
   const message = String(error).toLowerCase();
+  if (RATE_LIMIT_PATTERNS.some((pattern) => message.includes(pattern)))
+    return false;
   return RANGE_REJECTION_PATTERNS.some((pattern) => message.includes(pattern));
 }
 
@@ -767,8 +783,10 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const web3 = this.chain.getWeb3();
 
     let chunkSize = Math.max(1, Math.min(initialChunkSize, maxChunkSize));
-    // Lowered to the size we fall back to as soon as the RPC rejects a range, so that growth
-    // never climbs back into sizes it has already been refused and oscillates there forever.
+    // Lowered to just under the smallest size the RPC has refused, so that growth never
+    // climbs back into a size already known to fail and oscillates there forever. It stays
+    // above the post-halving size on purpose: pinning it to that would freeze the chunk at
+    // the shrunk size for the rest of the scan.
     let growthCeiling = maxChunkSize;
     let cursor = fromBlock;
     let successesSinceGrowth = 0;
@@ -798,8 +816,8 @@ export class EvmPriceFeedContract extends PriceFeedContract {
         );
       } catch (error) {
         if (chunkSize === 1) throw error;
+        growthCeiling = Math.max(1, chunkSize - 1);
         chunkSize = Math.max(1, Math.floor(chunkSize / 2));
-        growthCeiling = chunkSize;
         successesSinceGrowth = 0;
         onRetry?.(`shrinking chunk size to ${chunkSize} blocks: ${error}`);
         continue;
