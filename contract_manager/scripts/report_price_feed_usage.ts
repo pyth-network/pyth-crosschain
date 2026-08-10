@@ -633,6 +633,9 @@ async function main() {
   );
 
   const catalogPromise = fetchFeedCatalog(process.env.PYTH_API_KEY);
+  // Awaited only after the scan, which is hours later. Without a handler attached now, a
+  // Hermes failure would be an unhandled rejection and take the whole run down with it.
+  catalogPromise.catch(() => undefined);
 
   // Block ranges are resolved per chain rather than per contract: the binary search costs
   // ~25 RPC round trips and both of a chain's contracts share the same window.
