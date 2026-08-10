@@ -16,6 +16,7 @@ import {
   ExecutePostedVaa,
   getProgramName,
   MultisigParser,
+  PythGovernanceActionImpl,
   RequestGovernanceDataSourceTransfer,
   SetDataSources,
   SetFee,
@@ -353,10 +354,8 @@ export const WormholeInstructionView = ({
               <div>Expo: {governanceAction.expo.toString()}</div>
               <div>
                 Total Amount (wei):{" "}
-                {(
-                  governanceAction.value *
-                  10n ** governanceAction.expo
-                ).toString()}
+                {governanceAction.getTotalAmount()?.toString() ??
+                  "unrepresentable (exponent too large)"}
               </div>
             </>
           }
@@ -457,9 +456,47 @@ export const WormholeInstructionView = ({
           instruction={governanceAction}
         />
       )}
+      {governanceAction &&
+        !KNOWN_GOVERNANCE_ACTIONS.some(
+          (actionClass) => governanceAction instanceof actionClass,
+        ) && (
+          <GovernanceInstructionView
+            actionName={
+              governanceAction instanceof PythGovernanceActionImpl
+                ? governanceAction.action
+                : "Unknown"
+            }
+            content={
+              <div>
+                This action type has no dedicated view yet; refer to the raw
+                payload below.
+              </div>
+            }
+            instruction={governanceAction}
+          />
+        )}
     </div>
   );
 };
+
+/**
+ * Action types with a dedicated render branch above. Any decoded action not in
+ * this list falls through to a generic view instead of rendering blank.
+ */
+const KNOWN_GOVERNANCE_ACTIONS = [
+  ExecutePostedVaa,
+  EvmUpgradeContract,
+  CosmosUpgradeContract,
+  UpgradeContract256Bit,
+  SetFee,
+  WithdrawFee,
+  SetDataSources,
+  EvmSetWormholeAddress,
+  SetValidPeriod,
+  RequestGovernanceDataSourceTransfer,
+  AuthorizeGovernanceDataSourceTransfer,
+  EvmExecute,
+];
 
 function EvmExecuteCallData({ calldata }: { calldata: Buffer }) {
   const callDataHex = calldata.toString("hex");
