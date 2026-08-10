@@ -4,9 +4,8 @@ import json
 import pytest
 from pydantic import SecretStr
 
-from pusher.config import Config, HermesConfig, HyperliquidConfig, LazerConfig
+from pusher.config import Config, HyperliquidConfig, LazerConfig
 from pusher.exception import StaleConnectionError
-from pusher.hermes_listener import HermesListener
 from pusher.hyperliquid_listener import HyperliquidListener
 from pusher.lazer_listener import LazerListener
 from pusher.price_state import PriceSourceState
@@ -59,11 +58,6 @@ def _minimal_config() -> Config:
         feed_ids=[1],
         stop_after_attempt=3,
     )
-    config.hermes = HermesConfig.model_construct(
-        hermes_urls=["wss://hermes.example"],
-        feed_ids=["feed-id"],
-        stop_after_attempt=3,
-    )
     config.hyperliquid = HyperliquidConfig.model_construct(
         hyperliquid_ws_urls=["wss://hyperliquid.example"],
         market_name="pyth",
@@ -76,12 +70,6 @@ def _minimal_config() -> Config:
 
 def test_lazer_json_decode_error_triggers_reconnect() -> None:
     listener = LazerListener(_minimal_config(), PriceSourceState("lazer"))
-    with pytest.raises(StaleConnectionError, match="decode JSON"):
-        asyncio.run(listener.receive_and_parse_message(_InvalidJsonWs(), timeout=1.0))
-
-
-def test_hermes_json_decode_error_triggers_reconnect() -> None:
-    listener = HermesListener(_minimal_config(), PriceSourceState("hermes"))
     with pytest.raises(StaleConnectionError, match="decode JSON"):
         asyncio.run(listener.receive_and_parse_message(_InvalidJsonWs(), timeout=1.0))
 

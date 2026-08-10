@@ -44,22 +44,7 @@ class LazerConfig(BaseModel):
 
     lazer_urls: list[str]
     lazer_api_key: SecretStr
-    feed_ids: list[int]  # Numeric Lazer feed IDs (different from Hermes hex IDs)
-    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
-
-
-class HermesConfig(BaseModel):
-    """
-    Pythnet/Hermes WebSocket feed configuration.
-
-    Hermes provides traditional Pyth price feeds. Feed IDs are 64-character hex strings.
-    Typically used as a fallback to Lazer in the price waterfall.
-    """
-
-    hermes_urls: list[str]
-    feed_ids: list[
-        str
-    ]  # 64-char hex Pythnet feed IDs (different from Lazer numeric IDs)
+    feed_ids: list[int]  # Numeric Lazer feed IDs
     stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
 
@@ -153,12 +138,11 @@ class PriceSource(BaseModel):
             - "hl_mark": Hyperliquid markPx from activeAssetCtx
             - "hl_mid": Hyperliquid mid price from allMids
             - "lazer": Pyth Lazer feed
-            - "hermes": Pythnet/Hermes feed
             - "seda": SEDA primary price
             - "seda_last": SEDA last/previous price
             - "seda_ema": SEDA EMA price
         source_id: Identifier for the specific feed (format depends on source_name)
-        exponent: For Lazer/Hermes feeds, the price exponent (typically -8).
+        exponent: For Lazer feeds, the price exponent (typically -8).
             Raw price is scaled by 10^(-exponent) to get actual price.
         use_session_flag: If true, only use this source when session_flag is true
             (i.e., during off-market hours). Used for session-aware pricing.
@@ -298,7 +282,6 @@ class Config(BaseModel):
     hyperliquid: HyperliquidConfig
     kms: KMSConfig
     lazer: LazerConfig
-    hermes: HermesConfig
     seda: SedaConfig
     multisig: MultisigConfig
     price: PriceConfig

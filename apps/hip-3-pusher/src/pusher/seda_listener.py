@@ -48,7 +48,7 @@ class SedaListener:
     """
     Poll SEDA HTTP API for custom oracle feeds.
 
-    Unlike Lazer/Hermes (WebSocket), SEDA uses HTTP polling.
+    Unlike Lazer (WebSocket), SEDA uses HTTP polling.
     Each configured feed is polled independently in parallel.
 
     MULTI-STATE STORAGE:
