@@ -5,7 +5,8 @@
     "COREPACK_HOME",
     "FORCE_COLOR",
     "BIOME_BINARY",
-    "KOIOS_TOKEN"
+    "KOIOS_TOKEN",
+    "PYTH_API_KEY"
   ],
   "tasks": {
     "//#fix": {
