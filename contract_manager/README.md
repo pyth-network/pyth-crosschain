@@ -36,17 +36,29 @@ You can run the scripts by executing `pnpm tsx scripts/<script_name>.ts` from th
 ## `report_price_feed_usage.ts`
 
 Reports which price feeds are actually being written on-chain, so that feeds in real use can
-be checked against the Pyth Pro catalog before Pyth Core is switched off. It scans
-`PriceFeedUpdate` logs on every EVM mainnet that has a `pro-compatible-production` price feed
-contract, covering both that contract and the chain's legacy Core contract.
+be checked against the Pyth Pro catalog before Pyth Core is switched off. It covers every EVM
+and Sui mainnet that has a `pro-compatible-production` price feed contract, plus Solana, and
+on each one scans both that deployment and the legacy Core deployment.
+
+The three platforms are counted by different mechanisms, since none is shared:
+
+| platform | position   | mechanism                                                      |
+| -------- | ---------- | -------------------------------------------------------------- |
+| EVM      | block      | `eth_getLogs` on the `PriceFeedUpdate` topic                     |
+| Sui      | checkpoint | GraphQL `events` on `<pkg>::event::PriceFeedUpdateEvent`         |
+| SVM      | slot       | receiver `post_update` instructions decoded from transactions    |
+
+EVM and Sui counts mean the same thing — both events fire only on a *fresh* update. SVM counts
+are write attempts that reached the receiver, which is close but not identical; see the header
+comment in the script.
 
 ```sh
 pnpm tsx scripts/report_price_feed_usage.ts --days 30 --output usage.csv
 ```
 
 This writes three files: `usage.csv` (one row per feed, one column per chain), `usage_split.csv`
-(the same counts split into legacy and upgraded contracts) and `usage_coverage.csv` (the block
-range actually scanned per contract). Run `--help` for the full flag list.
+(the same counts split into legacy and upgraded contracts) and `usage_coverage.csv` (the
+position range actually scanned per contract). Run `--help` for the full flag list.
 
 A 30-day run takes hours and is resumable — re-run the same command to continue from the
 checkpoint file named by `--state-file`.
@@ -59,14 +71,21 @@ means tens of thousands of requests or an outright refusal, so point them at a p
 endpoint with `--rpc <chain>=<url>` (or through the `$ENV_*` placeholder the `rpcUrl` values in
 `src/store/chains/EvmChains.json` already support):
 
-| chain             | problem with the public endpoint in the store         |
-| ----------------- | ----------------------------------------------------- |
-| `injective_inevm` | endpoint is dead; the chain cannot be scanned at all   |
-| `optimism`        | 50-block cap, and 30-day-old logs are refused outright |
-| `monad`           | 100-block cap over ~8.6M blocks per 30 days            |
-| `bsc`, `hyperevm` | 1,000-block cap                                        |
-| `cronos`          | 2,000-block cap                                        |
+| chain             | problem with the public endpoint in the store          |
+| ----------------- | ------------------------------------------------------ |
+| `injective_inevm` | endpoint is dead; the chain cannot be scanned at all    |
+| `optimism`        | 50-block cap, and 30-day-old logs are refused outright  |
+| `monad`           | 100-block cap over ~8.6M blocks per 30 days             |
+| `bsc`, `hyperevm` | 1,000-block cap                                         |
+| `cronos`          | 2,000-block cap                                         |
+| `solana_mainnet`  | needs `SOLANA_MAINNET_API_KEY`; see below               |
+
+Solana is the hardest of these. A count costs one `getTransaction` per receiver transaction,
+and `api.mainnet-beta.solana.com` serves about 1.25 per second before returning HTTP 429 —
+against a receiver that sees roughly 2.1 transactions per second, so the scan cannot keep up
+with real time on the public endpoint. Set `SOLANA_MAINNET_API_KEY` (the `rpcUrl` in
+`src/store/chains/SvmChains.json` already interpolates it) or pass `--rpc solana_mainnet=<url>`.
 
 A chain that cannot be scanned across the whole window is never silently under-counted: its
-column in `usage.csv` is suffixed `_INCOMPLETE` and `usage_coverage.csv` records the block range
-and wall-clock window it actually covered.
+column in `usage.csv` is suffixed `_INCOMPLETE` and `usage_coverage.csv` records the position
+range and wall-clock window it actually covered.

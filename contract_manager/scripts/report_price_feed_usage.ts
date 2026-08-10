@@ -2,17 +2,34 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
 
 /**
- * Reports which Pyth price feeds are actually written on-chain on the EVM mainnets that
- * survive the Pyth Core upgrade, so that every feed in real use can be checked against the
- * Pyth Pro catalog before Core is switched off.
+ * Reports which Pyth price feeds are actually written on-chain on the mainnets that survive
+ * the Pyth Core upgrade, so that every feed in real use can be checked against the Pyth Pro
+ * catalog before Core is switched off.
  *
  * Usage: `pnpm tsx scripts/report_price_feed_usage.ts --days 30 --output usage.csv`
  *
+ * Three platforms are covered, and they are counted by different mechanisms because none of
+ * them share one. Every platform resolves a position range from the requested time window and
+ * then streams counted sub-ranges of it, which is what makes coverage and resume uniform:
+ *
+ * | platform | position  | mechanism                                                  |
+ * |----------|-----------|------------------------------------------------------------|
+ * | EVM      | block     | `eth_getLogs` on the `PriceFeedUpdate` topic                 |
+ * | Sui      | checkpoint| GraphQL `events` on `<pkg>::event::PriceFeedUpdateEvent`     |
+ * | SVM      | slot      | receiver `post_update` instructions decoded from transactions|
+ *
  * How usage is measured, and what the numbers do and do not mean:
  *
- * - A count is the number of `PriceFeedUpdate` logs emitted by a Pyth contract. That event
- *   fires only when an update is *fresh* — carrying a newer `publishTime` than the stored
- *   one — so the counts measure accepted writes, not `updatePriceFeeds` calls.
+ * - On EVM a count is the number of `PriceFeedUpdate` logs emitted by a Pyth contract. That
+ *   event fires only when an update is *fresh* — carrying a newer `publishTime` than the
+ *   stored one — so the counts measure accepted writes, not `updatePriceFeeds` calls. Sui's
+ *   `PriceFeedUpdateEvent` has the same contract: `update_cache` emits it only on a fresh
+ *   update, so Sui counts are directly comparable to EVM ones.
+ * - SVM counts are **not** strictly comparable. The receiver program emits no events, so a
+ *   count there is the number of `post_update` / `post_update_atomic` instructions addressed
+ *   to a feed. Sponsored pushes that the push-oracle rejects as stale never reach the
+ *   receiver and so are not counted, but a consumer pull update that re-posts an already
+ *   known price is. Read SVM numbers as "write attempts that reached the receiver".
  * - A consumer that only *reads* a feed (`getPriceNoOlderThan`) emits nothing and relies on
  *   somebody else pushing. Treat "at least one update in the window" as the in-use signal
  *   and the count itself as a magnitude hint, not a usage share.
@@ -32,9 +49,16 @@
  * Coverage is reported honestly. Public RPCs cap `eth_getLogs` ranges (50 blocks on some
  * chains), rate-limit aggressively, and some refuse 30-day-old logs entirely, so a chain that
  * could not be scanned over the whole window is marked `_INCOMPLETE` in the main CSV and gets
- * the block range it actually covered in the coverage CSV. Point such a chain at a paid
+ * the position range it actually covered in the coverage CSV. Point such a chain at a paid
  * archive endpoint with `--rpc <chain>=<url>` (or through the `$ENV_*` placeholders the chain
  * store already supports) and re-run; the run resumes from its checkpoint file.
+ *
+ * SVM is the chain where that matters most. Reconstructing counts costs one `getTransaction`
+ * per receiver transaction, and `api.mainnet-beta.solana.com` serves ~1.25 of those per second
+ * before returning HTTP 429, against a receiver that sees ~2.1 transactions per second. On the
+ * public endpoint the scan therefore falls behind real time and lands as `_INCOMPLETE`; a
+ * keyed endpoint (`SOLANA_MAINNET_API_KEY`, which the chain store's `rpcUrl` already expects)
+ * is what makes a full window reachable.
  */
 
 import { writeFileSync } from "node:fs";
@@ -44,8 +68,16 @@ import path from "node:path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { EvmChain } from "../src/core/chains";
-import { EvmPriceFeedContract } from "../src/core/contracts";
+import { EvmChain, SvmChain } from "../src/core/chains";
+import {
+  EvmPriceFeedContract,
+  getSuiCheckpointAtTimestamp,
+  getSuiCheckpointTimestamp,
+  getSvmSlotAtTimestamp,
+  SuiPriceFeedContract,
+  SVM_PRICE_FEED_PROGRAMS,
+  SvmPriceFeedUpdateScanner,
+} from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 import { sleep } from "../src/utils/sleep";
 
@@ -101,6 +133,11 @@ const parser = yargs(hideBin(process.argv))
       desc: "Checkpoint file; a run resumes from it unless --fresh is passed",
       type: "string",
     },
+    "svm-batch-size": {
+      default: 5,
+      desc: "getTransaction calls per JSON-RPC batch on SVM chains; public endpoints 429 above ~5",
+      type: "number",
+    },
   })
   .epilogue(
     "A full 30-day run takes hours and is resumable: interrupt it and re-run the same " +
@@ -110,21 +147,69 @@ const parser = yargs(hideBin(process.argv))
 
 type Deployment = "legacy" | "upgraded";
 
+/**
+ * What a chain's scan positions are counted in. Only ever used for labelling — the scan
+ * treats every platform's positions as opaque monotonically increasing integers.
+ */
+type PositionUnit = "block" | "checkpoint" | "slot";
+
+type ScanBatch = {
+  from: number;
+  to: number;
+  counts: Map<string, number>;
+};
+
+type ScanOptions = {
+  requestConcurrency: number;
+  maxChunkSize: number;
+  svmBatchSize: number;
+  onRetry: (message: string) => void;
+};
+
+/**
+ * Per-platform scan mechanics. EVM reads `eth_getLogs`, Sui pages GraphQL events by
+ * checkpoint, SVM decodes receiver instructions out of transactions — but all three resolve a
+ * position range from the time window and then stream counted sub-ranges of it, so the
+ * checkpointing, coverage accounting and reporting are shared.
+ */
+type TargetScanner = {
+  positionUnit: PositionUnit;
+  /**
+   * SVM signatures are only enumerable newest-first, so its scan closes off the range from the
+   * top down while EVM and Sui fill it from the bottom up.
+   */
+  descending: boolean;
+  resolveRange: (state: ReportState) => Promise<{ from: number; to: number }>;
+  timestampAt: (position: number) => Promise<number | undefined>;
+  stream: (
+    range: { from: number; to: number },
+    options: ScanOptions,
+  ) => AsyncGenerator<ScanBatch>;
+};
+
 type ScanTarget = {
   key: string;
   chainId: string;
+  address: string;
   deployment: Deployment;
-  contract: EvmPriceFeedContract;
+  scanner: TargetScanner;
 };
 
 type ScanState = {
   chain: string;
   address: string;
   deployment: Deployment;
-  fromBlock: number;
-  toBlock: number;
-  /** First block not yet counted; equals `toBlock + 1` once the scan is complete. */
-  nextBlock: number;
+  positionUnit: PositionUnit;
+  descending: boolean;
+  fromPosition: number;
+  toPosition: number;
+  /**
+   * The contiguous sub-range of `[fromPosition, toPosition]` counted so far, inclusive.
+   * Undefined until the first batch lands. Ascending scans grow `coveredTo`, descending scans
+   * grow `coveredFrom` downwards; the scan is complete when the two ends meet the range.
+   */
+  coveredFrom?: number;
+  coveredTo?: number;
   counts: Record<string, number>;
   status: "pending" | "complete" | "failed";
   error?: string;
@@ -139,21 +224,30 @@ type ReportState = {
   scans: Record<string, ScanState>;
 };
 
+function deploymentOf(deploymentType: string | undefined): Deployment {
+  return deploymentType === "pro-compatible-production" ? "upgraded" : "legacy";
+}
+
 /**
- * The chains that survive the upgrade: EVM mainnets carrying a price feed contract marked
+ * The chains that survive the upgrade: mainnets carrying a price feed contract marked
  * `pro-compatible-production`. Both that contract and the chain's legacy Core contract are
  * scanned, since integrators migrate at their own pace and traffic is split across the two.
+ *
+ * EVM and Sui deployments are derived from `DefaultStore`. SVM is not in the store — it has no
+ * `PriceFeedContract` implementation — so its two program pairs come from constants, and it is
+ * included only when explicitly listed in `--chains` or when no filter is given.
  */
 function getScanTargets(
   chainFilter: string[] | undefined,
   rpcOverrides: Map<string, string>,
 ): ScanTarget[] {
-  const evmPriceFeedContracts = Object.values(DefaultStore.contracts).filter(
-    (contract): contract is EvmPriceFeedContract =>
-      contract instanceof EvmPriceFeedContract,
+  const priceFeedContracts = Object.values(DefaultStore.contracts).filter(
+    (contract): contract is EvmPriceFeedContract | SuiPriceFeedContract =>
+      contract instanceof EvmPriceFeedContract ||
+      contract instanceof SuiPriceFeedContract,
   );
   const inScopeChains = new Set(
-    evmPriceFeedContracts
+    priceFeedContracts
       .filter(
         (contract) =>
           contract.deploymentType === "pro-compatible-production" &&
@@ -161,6 +255,7 @@ function getScanTargets(
       )
       .map((contract) => contract.getChain().getId()),
   );
+  for (const chainId of svmChainIds()) inScopeChains.add(chainId);
 
   if (chainFilter !== undefined) {
     for (const chainId of chainFilter) {
@@ -171,31 +266,176 @@ function getScanTargets(
       }
     }
   }
+  const included = (chainId: string) =>
+    inScopeChains.has(chainId) &&
+    (chainFilter === undefined || chainFilter.includes(chainId));
 
-  return evmPriceFeedContracts
-    .filter(
-      (contract) =>
-        inScopeChains.has(contract.getChain().getId()) &&
-        (chainFilter === undefined ||
-          chainFilter.includes(contract.getChain().getId())),
-    )
-    .map((contract) => {
-      const chainId = contract.getChain().getId();
-      const overriddenRpc = rpcOverrides.get(chainId);
+  const targets: ScanTarget[] = [];
+  for (const contract of priceFeedContracts) {
+    const chainId = contract.getChain().getId();
+    if (!included(chainId)) continue;
+    const rpcOverride = rpcOverrides.get(chainId);
+    targets.push(
+      contract instanceof EvmPriceFeedContract
+        ? evmTarget(contract, rpcOverride)
+        : suiTarget(contract),
+    );
+  }
+  for (const chainId of svmChainIds()) {
+    if (!included(chainId)) continue;
+    targets.push(...svmTargets(chainId, rpcOverrides.get(chainId)));
+  }
+  return targets.sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function svmChainIds(): string[] {
+  return Object.values(DefaultStore.chains)
+    .filter((chain): chain is SvmChain => chain instanceof SvmChain)
+    .filter((chain) => chain.isMainnet())
+    .map((chain) => chain.getId());
+}
+
+function evmTarget(
+  original: EvmPriceFeedContract,
+  rpcOverride: string | undefined,
+): ScanTarget {
+  const contract =
+    rpcOverride === undefined ? original : withRpcUrl(original, rpcOverride);
+  const chain = contract.getChain();
+  return {
+    address: contract.address,
+    chainId: chain.getId(),
+    deployment: deploymentOf(contract.deploymentType),
+    key: `${chain.getId()}:${contract.address}`,
+    scanner: {
+      descending: false,
+      positionUnit: "block",
+      resolveRange: async (state) => {
+        const [from, to] = await Promise.all([
+          chain.getBlockNumberAtTimestamp(state.windowStartUnix),
+          chain.getBlockNumberAtTimestamp(state.windowEndUnix),
+        ]);
+        return { from, to };
+      },
+      stream: (range, options) =>
+        mapBatches(
+          contract.streamPriceFeedUpdateCounts({
+            concurrency: options.requestConcurrency,
+            fromBlock: range.from,
+            maxChunkSize: options.maxChunkSize,
+            onRetry: options.onRetry,
+            toBlock: range.to,
+          }),
+          (batch) => ({
+            counts: batch.counts,
+            from: batch.fromBlock,
+            to: batch.toBlock,
+          }),
+        ),
+      timestampAt: async (position) =>
+        Number((await chain.getWeb3().eth.getBlock(position)).timestamp),
+    },
+  };
+}
+
+function suiTarget(contract: SuiPriceFeedContract): ScanTarget {
+  const chain = contract.getChain();
+  return {
+    address: contract.stateId,
+    chainId: chain.getId(),
+    deployment: deploymentOf(contract.deploymentType),
+    key: `${chain.getId()}:${contract.stateId}`,
+    scanner: {
+      descending: false,
+      positionUnit: "checkpoint",
+      resolveRange: async (state) => {
+        const [from, to] = await Promise.all([
+          getSuiCheckpointAtTimestamp(chain, state.windowStartUnix),
+          getSuiCheckpointAtTimestamp(chain, state.windowEndUnix),
+        ]);
+        return { from, to };
+      },
+      stream: (range, options) =>
+        mapBatches(
+          contract.streamPriceFeedUpdateCounts({
+            fromCheckpoint: range.from,
+            onRetry: options.onRetry,
+            toCheckpoint: range.to,
+          }),
+          (batch) => ({
+            counts: batch.counts,
+            from: batch.fromCheckpoint,
+            to: batch.toCheckpoint,
+          }),
+        ),
+      timestampAt: (position) => getSuiCheckpointTimestamp(chain, position),
+    },
+  };
+}
+
+function svmTargets(
+  chainId: string,
+  rpcOverride: string | undefined,
+): ScanTarget[] {
+  const stored = DefaultStore.chains[chainId];
+  if (!(stored instanceof SvmChain)) {
+    throw new Error(`${chainId} is not an SVM chain`);
+  }
+  const chain =
+    rpcOverride === undefined
+      ? stored
+      : new SvmChain(
+          stored.getId(),
+          stored.isMainnet(),
+          stored.wormholeChainName,
+          stored.getNativeToken(),
+          rpcOverride,
+        );
+  return Object.entries(SVM_PRICE_FEED_PROGRAMS).map(
+    ([deployment, programs]) => {
+      const scanner = new SvmPriceFeedUpdateScanner(chain, programs.receiver);
       return {
+        address: programs.receiver,
         chainId,
-        contract:
-          overriddenRpc === undefined
-            ? contract
-            : withRpcUrl(contract, overriddenRpc),
-        deployment:
-          contract.deploymentType === "pro-compatible-production"
-            ? ("upgraded" as const)
-            : ("legacy" as const),
-        key: `${chainId}:${contract.address}`,
+        deployment: deployment as Deployment,
+        key: `${chainId}:${programs.receiver}`,
+        scanner: {
+          descending: true,
+          positionUnit: "slot" as const,
+          resolveRange: async (state: ReportState) => {
+            const [from, to] = await Promise.all([
+              getSvmSlotAtTimestamp(chain, state.windowStartUnix),
+              getSvmSlotAtTimestamp(chain, state.windowEndUnix),
+            ]);
+            return { from, to };
+          },
+          stream: (range: { from: number; to: number }, options: ScanOptions) =>
+            mapBatches(
+              scanner.streamPriceFeedUpdateCounts({
+                batchSize: options.svmBatchSize,
+                fromSlot: range.from,
+                onRetry: options.onRetry,
+                toSlot: range.to,
+              }),
+              (batch) => ({
+                counts: batch.counts,
+                from: batch.fromSlot,
+                to: batch.toSlot,
+              }),
+            ),
+          timestampAt: async (position: number) =>
+            (await chain.getConnection().getBlockTime(position)) ?? undefined,
+        },
       };
-    })
-    .sort((a, b) => a.key.localeCompare(b.key));
+    },
+  );
+}
+
+async function* mapBatches<T>(
+  source: AsyncGenerator<T>,
+  toBatch: (item: T) => ScanBatch,
+): AsyncGenerator<ScanBatch> {
+  for await (const item of source) yield toBatch(item);
 }
 
 function withRpcUrl(
@@ -329,35 +569,59 @@ function saveState(stateFile: string, state: ReportState) {
 
 /** A scan only has a meaningful window once its block range resolved; `toBlock` is 0 until then. */
 function hasResolvedRange(scan: ScanState) {
-  return scan.toBlock > 0;
+  return scan.toPosition > 0;
+}
+
+/** Positions counted so far, whichever end of the range the scan is filling from. */
+function positionsScanned(scan: ScanState) {
+  if (scan.coveredFrom === undefined || scan.coveredTo === undefined) return 0;
+  return scan.coveredTo - scan.coveredFrom + 1;
+}
+
+function isFullyCovered(scan: ScanState) {
+  return (
+    scan.coveredFrom !== undefined &&
+    scan.coveredTo !== undefined &&
+    scan.coveredFrom <= scan.fromPosition &&
+    scan.coveredTo >= scan.toPosition
+  );
+}
+
+/** The sub-range still to scan, given what a resumed checkpoint already covers. */
+function remainingRange(scan: ScanState) {
+  if (scan.coveredFrom === undefined || scan.coveredTo === undefined) {
+    return { from: scan.fromPosition, to: scan.toPosition };
+  }
+  return scan.descending
+    ? { from: scan.fromPosition, to: scan.coveredFrom - 1 }
+    : { from: scan.coveredTo + 1, to: scan.toPosition };
+}
+
+function recordBatch(scan: ScanState, batch: ScanBatch) {
+  for (const [feedId, count] of batch.counts) {
+    scan.counts[feedId] = (scan.counts[feedId] ?? 0) + count;
+  }
+  scan.coveredFrom = Math.min(scan.coveredFrom ?? batch.from, batch.from);
+  scan.coveredTo = Math.max(scan.coveredTo ?? batch.to, batch.to);
 }
 
 /**
- * Retries because a single flaky `eth_getBlockByNumber` would otherwise drop a whole chain
- * from the report for the entire run, which reads as "no feeds used here".
+ * Retries because a single flaky range resolution would otherwise drop a whole chain from the
+ * report for the entire run, which reads as "no feeds used here".
  */
-async function resolveBlockRange(chain: EvmChain, state: ReportState) {
+async function resolveScanRange(target: ScanTarget, state: ReportState) {
   const MAX_ATTEMPTS = 3;
   for (let attempt = 1; ; attempt++) {
     try {
-      const [fromBlock, toBlock] = await Promise.all([
-        chain.getBlockNumberAtTimestamp(state.windowStartUnix),
-        chain.getBlockNumberAtTimestamp(state.windowEndUnix),
-      ]);
-      return { fromBlock, toBlock };
+      return await target.scanner.resolveRange(state);
     } catch (error) {
       if (attempt >= MAX_ATTEMPTS) throw error;
       console.warn(
-        `  [${chain.getId()}] resolving block range attempt ${attempt} failed: ${error}`,
+        `  [${target.chainId}] resolving ${target.scanner.positionUnit} range attempt ${attempt} failed: ${error}`,
       );
       await sleep(1000 * attempt);
     }
   }
-}
-
-async function getBlockTimestamp(chain: EvmChain, blockNumber: number) {
-  const block = await chain.getWeb3().eth.getBlock(blockNumber);
-  return Number(block.timestamp);
 }
 
 async function scanTarget(
@@ -366,26 +630,34 @@ async function scanTarget(
   options: {
     requestConcurrency: number;
     maxChunkSize: number;
+    svmBatchSize: number;
     onProgress: () => void;
   },
 ) {
-  for await (const batch of target.contract.streamPriceFeedUpdateCounts({
-    concurrency: options.requestConcurrency,
-    fromBlock: scan.nextBlock,
-    maxChunkSize: options.maxChunkSize,
-    onRetry: (message) => {
-      console.warn(`  [${target.key}] ${message}`);
-    },
-    toBlock: scan.toBlock,
-  })) {
-    for (const [feedId, count] of batch.counts) {
-      scan.counts[feedId] = (scan.counts[feedId] ?? 0) + count;
+  const range = remainingRange(scan);
+  if (range.from <= range.to) {
+    for await (const batch of target.scanner.stream(range, {
+      maxChunkSize: options.maxChunkSize,
+      onRetry: (message) => {
+        console.warn(`  [${target.key}] ${message}`);
+      },
+      requestConcurrency: options.requestConcurrency,
+      svmBatchSize: options.svmBatchSize,
+    })) {
+      recordBatch(scan, batch);
+      options.onProgress();
     }
-    scan.nextBlock = batch.toBlock + 1;
-    options.onProgress();
   }
-  scan.status = "complete";
-  delete scan.error;
+  // A stream can run dry before the range is covered — SVM stops when the endpoint has no
+  // more signatures. That is an incomplete scan, not a complete one, and must not be recorded
+  // as though the uncovered positions held no updates.
+  if (isFullyCovered(scan)) {
+    scan.status = "complete";
+    delete scan.error;
+  } else {
+    scan.status = "pending";
+    scan.error = `stream ended with ${scan.toPosition - scan.fromPosition + 1 - positionsScanned(scan)} ${scan.positionUnit}s uncovered`;
+  }
 }
 
 /**
@@ -393,18 +665,17 @@ async function scanTarget(
  * indistinguishable from a feed that genuinely stopped being updated, which is the exact
  * wrong conclusion for this report to support.
  */
-async function recordScannedWindow(chain: EvmChain, scan: ScanState) {
-  const scannedThrough = scan.nextBlock - 1;
-  if (scannedThrough < scan.fromBlock) return;
+async function recordScannedWindow(target: ScanTarget, scan: ScanState) {
+  if (scan.coveredFrom === undefined || scan.coveredTo === undefined) return;
   try {
     const [from, through] = await Promise.all([
-      getBlockTimestamp(chain, scan.fromBlock),
-      getBlockTimestamp(chain, scannedThrough),
+      target.scanner.timestampAt(scan.coveredFrom),
+      target.scanner.timestampAt(scan.coveredTo),
     ]);
-    scan.scannedFromUnix = from;
-    scan.scannedThroughUnix = through;
+    if (from !== undefined) scan.scannedFromUnix = from;
+    if (through !== undefined) scan.scannedThroughUnix = through;
   } catch {
-    // The endpoint that failed the scan will usually fail this too; the block range in the
+    // The endpoint that failed the scan will usually fail this too; the position range in the
     // coverage CSV still tells the reader what was and was not covered.
   }
 }
@@ -556,11 +827,13 @@ function writeReport(
       "contract_address",
       "deployment",
       "status",
-      "from_block",
-      "to_block",
-      "scanned_through_block",
-      "blocks_scanned",
-      "blocks_missing",
+      "position_unit",
+      "from_position",
+      "to_position",
+      "covered_from_position",
+      "covered_to_position",
+      "positions_scanned",
+      "positions_missing",
       "requested_window_start_utc",
       "requested_window_end_utc",
       "scanned_window_start_utc",
@@ -571,20 +844,23 @@ function writeReport(
     ...scans
       .toSorted((a, b) => a.chain.localeCompare(b.chain))
       .map((scan) => {
-        // A scan whose block range never resolved (dead RPC) has no window to report on, so
-        // its block columns stay blank rather than claiming a scanned range of zero blocks.
+        // A scan whose range never resolved (dead RPC) has no window to report on, so its
+        // position columns stay blank rather than claiming a scanned range of zero.
         const resolved = hasResolvedRange(scan);
-        const scannedBlocks = Math.max(0, scan.nextBlock - scan.fromBlock);
+        const scanned = positionsScanned(scan);
+        const span = scan.toPosition - scan.fromPosition + 1;
         return [
           scan.chain,
           scan.address,
           scan.deployment,
           scan.status,
-          resolved ? scan.fromBlock : "",
-          resolved ? scan.toBlock : "",
-          resolved && scannedBlocks > 0 ? scan.nextBlock - 1 : "",
-          scannedBlocks,
-          resolved ? Math.max(0, scan.toBlock - scan.nextBlock + 1) : "",
+          scan.positionUnit,
+          resolved ? scan.fromPosition : "",
+          resolved ? scan.toPosition : "",
+          resolved && scanned > 0 ? (scan.coveredFrom ?? "") : "",
+          resolved && scanned > 0 ? (scan.coveredTo ?? "") : "",
+          scanned,
+          resolved ? Math.max(0, span - scanned) : "",
           toUtc(state.windowStartUnix),
           toUtc(state.windowEndUnix),
           toUtc(scan.scannedFromUnix),
@@ -637,12 +913,9 @@ async function main() {
   // Hermes failure would be an unhandled rejection and take the whole run down with it.
   catalogPromise.catch(() => undefined);
 
-  // Block ranges are resolved per chain rather than per contract: the binary search costs
-  // ~25 RPC round trips and both of a chain's contracts share the same window.
-  const blockRanges = new Map<
-    string,
-    Promise<{ fromBlock: number; toBlock: number }>
-  >();
+  // Position ranges are resolved per chain rather than per contract: the binary search costs
+  // ~25 round trips and both of a chain's contracts share the same window.
+  const ranges = new Map<string, Promise<{ from: number; to: number }>>();
 
   let lastSaveMs = 0;
   const saveThrottled = () => {
@@ -656,25 +929,25 @@ async function main() {
     targets,
     argv["scan-concurrency"],
     async (target) => {
-      const chain = target.contract.getChain();
       let scan = state.scans[target.key];
       try {
         // A checkpointed scan whose range never resolved covers nothing, so it is retried
         // from scratch instead of being resumed over an empty range and called complete.
         if (scan === undefined || !hasResolvedRange(scan)) {
-          const range =
-            blockRanges.get(target.chainId) ?? resolveBlockRange(chain, state);
-          blockRanges.set(target.chainId, range);
-          const { fromBlock, toBlock } = await range;
+          const pending =
+            ranges.get(target.chainId) ?? resolveScanRange(target, state);
+          ranges.set(target.chainId, pending);
+          const { from, to } = await pending;
           scan = {
-            address: target.contract.address,
+            address: target.address,
             chain: target.chainId,
             counts: {},
             deployment: target.deployment,
-            fromBlock,
-            nextBlock: fromBlock,
+            descending: target.scanner.descending,
+            fromPosition: from,
+            positionUnit: target.scanner.positionUnit,
             status: "pending",
-            toBlock,
+            toPosition: to,
           };
           state.scans[target.key] = scan;
         }
@@ -682,28 +955,31 @@ async function main() {
           console.log(`${target.key}: already complete, skipping`);
           return;
         }
+        const remaining = remainingRange(scan);
         console.log(
-          `${target.key}: scanning blocks ${scan.nextBlock}..${scan.toBlock}`,
+          `${target.key}: scanning ${scan.positionUnit}s ${remaining.from}..${remaining.to}`,
         );
         await scanTarget(target, scan, {
           maxChunkSize: argv["max-chunk-size"],
           onProgress: saveThrottled,
           requestConcurrency: argv["request-concurrency"],
+          svmBatchSize: argv["svm-batch-size"],
         });
         console.log(`${target.key}: complete`);
       } catch (error) {
         if (scan === undefined) {
-          // The block range could not be resolved, so nothing about this contract's window is
+          // The range could not be resolved, so nothing about this contract's window is
           // known. Record it as failed with an empty range so it still shows up in coverage.
           scan = {
-            address: target.contract.address,
+            address: target.address,
             chain: target.chainId,
             counts: {},
             deployment: target.deployment,
-            fromBlock: 0,
-            nextBlock: 0,
+            descending: target.scanner.descending,
+            fromPosition: 0,
+            positionUnit: target.scanner.positionUnit,
             status: "failed",
-            toBlock: 0,
+            toPosition: 0,
           };
           state.scans[target.key] = scan;
         }
@@ -711,7 +987,7 @@ async function main() {
         scan.error = String(error);
         console.error(`${target.key}: FAILED - ${error}`);
       }
-      await recordScannedWindow(chain, scan);
+      await recordScannedWindow(target, scan);
       saveState(argv["state-file"], state);
     },
   );
