@@ -9,8 +9,6 @@ const CLUSTER_URLS: Record<PythCluster, string[]> = {
   localnet: ["http://localhost:8899/"],
   "mainnet-beta": [
     process.env.NEXT_PUBLIC_MAINNET_RPC || getPythClusterApiUrl("mainnet-beta"),
-    "https://pyth-network.rpcpool.com/" +
-      (process.env.NEXT_PUBLIC_RPC_POOL_TOKEN || ""),
     "http://pyth-rpc1.certus.one:8899/",
     "http://pyth-rpc2.certus.one:8899/",
     "https://api.mainnet-beta.solana.com/",
