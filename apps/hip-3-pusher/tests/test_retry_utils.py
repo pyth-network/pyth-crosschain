@@ -45,13 +45,13 @@ def test_log_before_sleep_emits_attempt_metadata(
         exc=StaleConnectionError("socket stale"),
         sleep_seconds=1.0,
     )
-    _log_before_sleep(retry_state, "HermesListener", "wss://hermes.example")
+    _log_before_sleep(retry_state, "LazerListener", "wss://lazer.example")
 
     assert len(captured) == 1
     message, args = captured[0]
     assert "retrying endpoint" in message
-    assert args[0] == "HermesListener"
-    assert args[1] == "wss://hermes.example"
+    assert args[0] == "LazerListener"
+    assert args[1] == "wss://lazer.example"
     assert args[2] == 3
     assert args[3] == 1.0
     assert args[4] == "StaleConnectionError"

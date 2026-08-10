@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Application code lives in `src/pusher/` with listeners (`lazer_listener.py`, `hermes_listener.py`, `hyperliquid_listener.py`), shared config (`config.py`), state (`price_state.py`), and retry/error helpers (`retry.py`, `exception.py`). Executable entrypoints and scripts live in `src/pusher/main.py` and `src/scripts/`. Tests live in `tests/` and are expected to cover listener reconnect behavior and retry edge cases.
+Application code lives in `src/pusher/` with listeners (`lazer_listener.py`, `hyperliquid_listener.py`), shared config (`config.py`), state (`price_state.py`), and retry/error helpers (`retry.py`, `exception.py`). Executable entrypoints and scripts live in `src/pusher/main.py` and `src/scripts/`. Tests live in `tests/` and are expected to cover listener reconnect behavior and retry edge cases.
 
 ## Build, Test, and Development Commands
 - `uv run ruff format src/ tests/`: run formatter exactly as CI does.

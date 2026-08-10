@@ -7,7 +7,6 @@ import tomllib
 from loguru import logger
 
 from pusher.config import Config
-from pusher.hermes_listener import HermesListener
 from pusher.hyperliquid_listener import HyperliquidListener
 from pusher.lazer_listener import LazerListener
 from pusher.metrics import Metrics
@@ -69,7 +68,6 @@ async def main() -> None:
         price_state.hl_mid_state,
     )
     lazer_listener = LazerListener(config, price_state.lazer_state)
-    hermes_listener = HermesListener(config, price_state.hermes_state)
     seda_listener = SedaListener(
         config,
         price_state.seda_state,
@@ -88,7 +86,6 @@ async def main() -> None:
         publisher.run(),
         hyperliquid_listener.subscribe_all(),
         lazer_listener.subscribe_all(),
-        hermes_listener.subscribe_all(),
         seda_listener.run(),
         user_limit_listener.run(),
     )

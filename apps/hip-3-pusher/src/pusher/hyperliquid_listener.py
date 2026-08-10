@@ -11,7 +11,7 @@ DATA SOURCES PROVIDED:
 
 COMMON USE CASE:
 A HIP-3 market might echo the main Hyperliquid oracle as its primary source
-for consistency, using Pyth Lazer/Hermes as fallbacks:
+for consistency, using Pyth Lazer as a fallback:
 
   BTC = [
       { source_type = "single", source = { source_name = "hl_oracle", source_id = "BTC" } },

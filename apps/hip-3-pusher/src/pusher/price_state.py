@@ -12,8 +12,7 @@ When computing prices, we try each source in order until we find a VALID
 Example waterfall for BTC:
   1. Try hl_oracle BTC      -> if fresh, use it ✓
   2. Try lazer BTC/USDT     -> if fresh, use it ✓
-  3. Try hermes BTC/USDT    -> if fresh, use it ✓
-  4. All failed             -> no price published
+  3. All failed             -> no price published
 
 This provides automatic failover when primary sources go down.
 """
@@ -76,7 +75,7 @@ class PriceSourceState:
     """
     In-memory storage for prices from a single data source.
 
-    Each listener (Lazer, Hermes, etc.) writes to its own PriceSourceState.
+    Each listener (Lazer, SEDA, etc.) writes to its own PriceSourceState.
     Keys are source_id values (symbol strings or numeric feed IDs).
     """
 
@@ -108,7 +107,6 @@ class PriceState:
     - HL_MARK: Hyperliquid's markPx from activeAssetCtx subscription
     - HL_MID: Hyperliquid's mid price from allMids subscription
     - LAZER: Pyth Lazer WebSocket feed prices
-    - HERMES: Pythnet/Hermes WebSocket feed prices
     - SEDA: SEDA HTTP polling primary price
     - SEDA_LAST: SEDA previous/last session price
     - SEDA_EMA: SEDA EMA price for mark calculations
@@ -119,7 +117,6 @@ class PriceState:
     HL_MARK = "hl_mark"
     HL_MID = "hl_mid"
     LAZER = "lazer"
-    HERMES = "hermes"
     SEDA = "seda"
     SEDA_LAST = "seda_last"
     SEDA_EMA = "seda_ema"
@@ -139,7 +136,6 @@ class PriceState:
         self.hl_mark_state = PriceSourceState(self.HL_MARK)
         self.hl_mid_state = PriceSourceState(self.HL_MID)
         self.lazer_state = PriceSourceState(self.LAZER)
-        self.hermes_state = PriceSourceState(self.HERMES)
         self.seda_state = PriceSourceState(self.SEDA)
         self.seda_last_state = PriceSourceState(self.SEDA_LAST)
         self.seda_ema_state = PriceSourceState(self.SEDA_EMA)
@@ -153,7 +149,6 @@ class PriceState:
             self.HL_MARK: self.hl_mark_state,
             self.HL_MID: self.hl_mid_state,
             self.LAZER: self.lazer_state,
-            self.HERMES: self.hermes_state,
             self.SEDA: self.seda_state,
             self.SEDA_LAST: self.seda_last_state,
             self.SEDA_EMA: self.seda_ema_state,
@@ -273,7 +268,7 @@ class PriceState:
         Returns None if source is missing, stale, or session_flag doesn't match.
 
         EXPONENT HANDLING:
-        Lazer and Hermes return prices as integers with an exponent.
+        Lazer returns prices as integers with an exponent.
         Example: raw=6500000000000, exponent=-8 -> actual=65000.00
         Formula: actual_price = raw_price / (10 ^ -exponent)
         """

@@ -3,7 +3,7 @@
 `hip-3-pusher` is an oracle updater for [HIP-3 markets](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals) on Hyperliquid.
 
 **Features:**
-- Aggregates prices from multiple sources: Pyth Lazer, Pythnet/Hermes, SEDA, and Hyperliquid
+- Aggregates prices from multiple sources: Pyth Lazer, SEDA, and Hyperliquid
 - Waterfall price resolution with automatic failover
 - AWS KMS and multisig signing support
 - Prometheus metrics for observability
@@ -11,12 +11,12 @@
 ## Architecture
 
 ```
-┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│   Lazer     │ │   Hermes    │ │    SEDA     │ │ Hyperliquid │
-│  WebSocket  │ │  WebSocket  │ │   HTTP      │ │  WebSocket  │
-└──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └──────┬──────┘
-       │               │               │               │
-       └───────────────┴───────┬───────┴───────────────┘
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│   Lazer     │ │    SEDA     │ │ Hyperliquid │
+│  WebSocket  │ │   HTTP      │ │  WebSocket  │
+└──────┬──────┘ └──────┬──────┘ └──────┬──────┘
+       │               │               │
+       └───────────────┴───────┬───────┘
                                │
                         ┌──────▼──────┐
                         │ PriceState  │  Maintains latest prices
@@ -133,8 +133,7 @@ The core concept is the **waterfall**: for each symbol, you configure a prioriti
 BTC Oracle Waterfall Example:
   1. Try hl_oracle BTC      → if fresh, use it ✓
   2. Try lazer BTC/USDT     → if fresh, use it ✓
-  3. Try hermes BTC/USDT    → if fresh, use it ✓
-  4. All failed             → no price published this cycle
+  3. All failed             → no price published this cycle
 ```
 
 A price is considered **stale** if its timestamp is older than `stale_price_threshold_seconds`. This ensures you never publish outdated prices even if a data source goes down.
@@ -261,26 +260,9 @@ lazer_urls = [
 # API key (Bearer token)
 lazer_api_key = "<your-key>"
 
-# Lazer feed IDs (numeric, NOT Pythnet hex IDs)
+# Lazer feed IDs (numeric)
 # Common: 1=BTC, 3=PYTH, 8=USDT
 feed_ids = [1, 3, 8]
-```
-
-### Pythnet/Hermes
-
-Traditional Pyth price feeds (slower than Lazer, battle-tested).
-
-```toml
-[hermes]
-hermes_urls = ["wss://hermes.pyth.network/ws"]
-
-# Pythnet feed IDs (64-char hex, no 0x prefix)
-# Find IDs: https://pyth.network/developers/price-feed-ids
-feed_ids = [
-    "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", # BTC
-    "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff", # PYTH
-    "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b", # USDT
-]
 ```
 
 ### SEDA
@@ -380,14 +362,13 @@ where `local_mark = median(best_bid, best_ask, last_trade)`.
 | `hl_mark` | Hyperliquid markPx | Symbol string |
 | `hl_mid` | Hyperliquid mid price | Symbol string |
 | `lazer` | Pyth Lazer feed | Numeric ID (`1`) |
-| `hermes` | Pythnet/Hermes feed | 64-char hex string |
 | `seda` | SEDA oracle price | Feed name string |
 | `seda_last` | SEDA last price | Feed name string |
 | `seda_ema` | SEDA EMA price | Feed name string |
 
 ### Exponent Handling
 
-Lazer and Hermes return prices as integers with an exponent:
+Lazer returns prices as integers with an exponent:
 
 ```
 actual_price = raw_price × 10^exponent
@@ -413,11 +394,6 @@ BTC = [
     { source_type = "pair",
       base_source = { source_name = "lazer", source_id = 1, exponent = -8 },
       quote_source = { source_name = "lazer", source_id = 8, exponent = -8 } },
-    
-    # Priority 3: Hermes fallback
-    { source_type = "pair",
-      base_source = { source_name = "hermes", source_id = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", exponent = -8 },
-      quote_source = { source_name = "hermes", source_id = "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b", exponent = -8 } },
 ]
 ```
 
@@ -429,9 +405,6 @@ NEWTOKEN = [
     { source_type = "pair",
       base_source = { source_name = "lazer", source_id = 42, exponent = -8 },
       quote_source = { source_name = "lazer", source_id = 8, exponent = -8 } },
-    { source_type = "pair",
-      base_source = { source_name = "hermes", source_id = "<hex-feed-id>", exponent = -8 },
-      quote_source = { source_name = "hermes", source_id = "<usdt-hex-feed-id>", exponent = -8 } },
 ]
 ```
 

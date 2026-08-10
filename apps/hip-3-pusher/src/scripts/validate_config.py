@@ -12,9 +12,8 @@ What it does:
 1. Validates config structure using pydantic
 2. Tests SEDA endpoints by polling them and returning values
 3. Tests Lazer WebSocket by connecting and receiving prices
-4. Tests Hermes WebSocket by connecting and receiving prices
-5. Reports on all configured price sources
-6. Exits with code 0 on success, non-zero on failure
+4. Reports on all configured price sources
+5. Exits with code 0 on success, non-zero on failure
 
 Output is GitHub Markdown friendly for posting as PR comments.
 """
@@ -43,7 +42,6 @@ from pusher.config import (
     SingleSourceConfig,
 )
 from pusher.exception import StaleConnectionError
-from pusher.hermes_listener import HermesListener
 from pusher.lazer_listener import LazerListener
 from pusher.price_state import PriceSourceState
 from pusher.seda_listener import SedaListener
@@ -90,7 +88,7 @@ class ConfigValidator:
         # Step 2: Report on configured sources
         self._report_configured_sources()
 
-        # Step 3-5: Test all data sources
+        # Step 3-4: Test all data sources
         asyncio.run(self._test_all_sources())
 
         # Summary
@@ -105,9 +103,6 @@ class ConfigValidator:
 
         # Test Lazer (WebSocket)
         await self._test_lazer_endpoint()
-
-        # Test Hermes (WebSocket)
-        await self._test_hermes_endpoint()
 
     def _validate_config_structure(self) -> bool:
         """Validate the config file structure using pydantic."""
@@ -529,143 +524,6 @@ class ConfigValidator:
                 ValidationResult(
                     success=False,
                     message=f"Lazer WebSocket error: {e}",
-                )
-            )
-            md_print(f"❌ Connection error: `{e!r}`")
-            md_print()
-
-    # =========================================================================
-    # Hermes Testing (WebSocket)
-    # =========================================================================
-
-    async def _test_hermes_endpoint(self) -> None:
-        """Test Hermes WebSocket by connecting and receiving prices.
-
-        Uses the actual HermesListener class methods:
-        - send_subscribe(): sends the subscribe message
-        - receive_and_parse_message(): receives and parses a single message
-        """
-        assert self.config is not None
-
-        md_print("## 5. Hermes WebSocket Test")
-        md_print()
-
-        hermes_config = self.config.hermes
-        if not hermes_config.feed_ids:
-            md_print("_No Hermes feeds configured, skipping_")
-            md_print()
-            return
-
-        if not hermes_config.hermes_urls:
-            md_print("❌ No Hermes URLs configured")
-            md_print()
-            self.results.append(
-                ValidationResult(success=False, message="No Hermes URLs configured")
-            )
-            return
-
-        hermes_state = PriceSourceState("hermes_validation")
-
-        listener = HermesListener(self.config, hermes_state)
-
-        url = hermes_config.hermes_urls[0]
-        md_print(f"**URL:** `{url}`")
-        md_print()
-        md_print(f"**Feed IDs:** `{[fid[:16] + '...' for fid in listener.feed_ids]}`")
-        md_print()
-
-        try:
-            async with websockets.connect(url) as ws:
-                # Use listener's send_subscribe method
-                await listener.send_subscribe(ws, url)
-
-                # Collect prices until we have all feeds or timeout
-                expected_feeds = set(listener.feed_ids)
-                start_time = asyncio.get_event_loop().time()
-
-                while len(hermes_state.state) < len(expected_feeds):
-                    elapsed = asyncio.get_event_loop().time() - start_time
-                    remaining = WS_RECEIVE_TIMEOUT_SECONDS - elapsed
-                    if remaining <= 0:
-                        break
-
-                    try:
-                        # Use listener's receive_and_parse_message method
-                        await listener.receive_and_parse_message(ws, remaining)
-                    except StaleConnectionError:
-                        # Timeout is expected in validation mode
-                        break
-                    except Exception:
-                        break
-
-                # Report results from the populated state
-                if hermes_state.state:
-                    md_print("| Feed ID | Price (USD) |")
-                    md_print("|---------|-------------|")
-                    for feed_id, update in hermes_state.state.items():
-                        # Scale price by exponent to get USD value
-                        scaled_price = float(update.price) * (10**PYTH_DEFAULT_EXPONENT)
-                        md_print(f"| `{str(feed_id)[:16]}...` | ${scaled_price:,.2f} |")
-                    md_print()
-
-                    # Check for missing feeds - this is a failure condition
-                    missing = expected_feeds - set(hermes_state.state.keys())
-                    if missing:
-                        missing_truncated = [
-                            f"{fid[:16]}..." for fid in sorted(missing)
-                        ]
-                        md_print(f"❌ Missing feeds: `{missing_truncated}`")
-                        md_print()
-                        self.results.append(
-                            ValidationResult(
-                                success=False,
-                                message=f"Hermes WebSocket missing {len(missing)} feed(s): {missing_truncated}",
-                                details={
-                                    "received": list(hermes_state.state.keys()),
-                                    "missing": sorted(missing),
-                                },
-                            )
-                        )
-                    else:
-                        md_print("✅ All configured feeds received")
-                        md_print()
-                        self.results.append(
-                            ValidationResult(
-                                success=True,
-                                message=f"Hermes WebSocket received all {len(hermes_state.state)} configured prices",
-                                details={
-                                    "prices": {
-                                        k: {"price": v.price, "timestamp": v.timestamp}
-                                        for k, v in hermes_state.state.items()
-                                    }
-                                },
-                            )
-                        )
-                else:
-                    md_print("❌ No prices received within timeout")
-                    md_print()
-                    self.results.append(
-                        ValidationResult(
-                            success=False,
-                            message="Hermes WebSocket connected but no prices received",
-                        )
-                    )
-
-        except websockets.exceptions.InvalidStatusCode as e:
-            self.results.append(
-                ValidationResult(
-                    success=False,
-                    message=f"Hermes WebSocket connection rejected: {e.status_code}",
-                )
-            )
-            md_print(f"❌ Connection rejected with status `{e.status_code}`")
-            md_print()
-
-        except Exception as e:
-            self.results.append(
-                ValidationResult(
-                    success=False,
-                    message=f"Hermes WebSocket error: {e}",
                 )
             )
             md_print(f"❌ Connection error: `{e!r}`")
