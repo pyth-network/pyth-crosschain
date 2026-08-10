@@ -350,12 +350,14 @@ export const WormholeInstructionView = ({
                   text={"0x" + governanceAction.targetAddress.toString("hex")}
                 />
               </div>
-              <div>Value: {governanceAction.value.toString()}</div>
-              <div>Expo: {governanceAction.expo.toString()}</div>
               <div>
                 Total Amount (wei):{" "}
-                {governanceAction.getTotalAmount()?.toString() ??
-                  "unrepresentable (exponent too large)"}
+                {governanceAction.expo <= 60n
+                  ? (
+                      governanceAction.value *
+                      10n ** governanceAction.expo
+                    ).toString()
+                  : "unrepresentable (exponent too large)"}
               </div>
             </>
           }
