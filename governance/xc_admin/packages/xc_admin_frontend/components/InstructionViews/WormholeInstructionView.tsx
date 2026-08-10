@@ -21,6 +21,7 @@ import {
   SetFee,
   SetValidPeriod,
   UpgradeContract256Bit,
+  WithdrawFee,
 } from "@pythnetwork/xc-admin-common";
 import { PublicKey } from "@solana/web3.js";
 import type { ReactNode } from "react";
@@ -332,6 +333,31 @@ export const WormholeInstructionView = ({
                 New Fee Value: {governanceAction.newFeeValue.toString()}
               </div>
               <div>New Fee Expo: {governanceAction.newFeeExpo.toString()}</div>
+            </>
+          }
+          instruction={governanceAction}
+        />
+      )}
+      {governanceAction instanceof WithdrawFee && (
+        <GovernanceInstructionView
+          actionName={governanceAction.action}
+          content={
+            <>
+              <div>
+                Target Address:{" "}
+                <CopyText
+                  text={"0x" + governanceAction.targetAddress.toString("hex")}
+                />
+              </div>
+              <div>Value: {governanceAction.value.toString()}</div>
+              <div>Expo: {governanceAction.expo.toString()}</div>
+              <div>
+                Total Amount (wei):{" "}
+                {(
+                  governanceAction.value *
+                  10n ** governanceAction.expo
+                ).toString()}
+              </div>
             </>
           }
           instruction={governanceAction}
