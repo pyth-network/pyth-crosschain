@@ -45,4 +45,19 @@ export class WithdrawFee extends PythGovernanceActionImpl {
       value: this.value,
     });
   }
+
+  /**
+   * Maximum exponent for which getTotalAmount computes a value. Anything
+   * larger would overflow uint256 on-chain (the contract's checked math
+   * reverts), and evaluating 10n ** expo for huge decoded exponents can hang
+   * or throw in the caller.
+   */
+  static MAX_EXPO = 60n;
+
+  /** Total amount in wei (value * 10^expo), or undefined if expo exceeds MAX_EXPO. */
+  getTotalAmount(): bigint | undefined {
+    return this.expo <= WithdrawFee.MAX_EXPO
+      ? this.value * 10n ** this.expo
+      : undefined;
+  }
 }
