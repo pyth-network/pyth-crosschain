@@ -1,3 +1,6 @@
+/** biome-ignore-all lint/suspicious/useAwait: pre-existing in this file */
+/** biome-ignore-all lint/suspicious/noExplicitAny: pre-existing in this file */
+/** biome-ignore-all lint/style/noNonNullAssertion: pre-existing in this file */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
