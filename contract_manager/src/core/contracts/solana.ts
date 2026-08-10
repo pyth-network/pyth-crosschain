@@ -1,3 +1,5 @@
+/** biome-ignore-all assist/source/useSortedKeys: pre-existing in this file */
+
 import { createHash } from "node:crypto";
 
 import { AnchorProvider, Program, utils, Wallet } from "@coral-xyz/anchor";
