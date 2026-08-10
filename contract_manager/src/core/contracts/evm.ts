@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noConsole: utils used through CLI */
+/** biome-ignore-all lint/suspicious/useAwait: legacy code */
 /* eslint-disable tsdoc/syntax */
 /* eslint-disable @typescript-eslint/await-thenable */
 /* eslint-disable no-console */
@@ -13,6 +15,7 @@ import type { DataSource } from "@pythnetwork/xc-admin-common";
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
 
+import { sleep } from "../../utils/sleep";
 import type { DeploymentType, PrivateKey } from "../base";
 import { PriceFeedContract, Storable } from "../base";
 import type { Chain } from "../chains";
@@ -556,6 +559,57 @@ export class EvmExecutorContract extends Storable {
   }
 }
 
+/**
+ * `keccak256("PriceFeedUpdate(bytes32,uint64,int64,uint64)")`, the topic0 of the event
+ * the Pyth contract emits for every feed it freshly writes. The feed id is `topics[1]`,
+ * so counting updates never requires decoding the data field.
+ */
+export const PRICE_FEED_UPDATE_TOPIC =
+  "0xd06a6b7f4918494b3719217d1802786c1f5112a6c1d88fe2cfec00b4584f6aec";
+
+/** Number of `PriceFeedUpdate` logs keyed by 64-char hex feed id, without the `0x` prefix. */
+export type PriceFeedUpdateCounts = Map<string, number>;
+
+export type PriceFeedUpdateBatch = {
+  fromBlock: number;
+  toBlock: number;
+  counts: PriceFeedUpdateCounts;
+};
+
+export type PriceFeedUpdateScanOptions = {
+  fromBlock: number;
+  toBlock: number;
+  /** Block span of the first request. Halved whenever the RPC rejects a range, doubled back up on success. */
+  initialChunkSize?: number;
+  maxChunkSize?: number;
+  /** Number of `eth_getLogs` requests issued in parallel. */
+  concurrency?: number;
+  /** Attempts per request before the range is treated as too large and shrunk. */
+  maxAttempts?: number;
+  onRetry?: (message: string) => void;
+};
+
+/**
+ * Errors that mean "this range is too wide" rather than "the node is busy". Retrying them
+ * verbatim always fails, so they skip the backoff and shrink the chunk immediately. The list
+ * is a best-effort match over the wording public RPCs use; an unmatched error still ends up
+ * shrinking the chunk once its retries are exhausted, so a miss only costs time.
+ */
+const RANGE_REJECTION_PATTERNS = [
+  // Covers "block range is too wide", "eth_getLogs is limited to a 100 range", and friends.
+  "range",
+  "too many results",
+  "query returned more than",
+  "response size",
+  "limit exceeded",
+  "too large",
+];
+
+function isRangeRejection(error: unknown): boolean {
+  const message = String(error).toLowerCase();
+  return RANGE_REJECTION_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
 export class EvmPriceFeedContract extends PriceFeedContract {
   static type = "EvmPriceFeedContract";
 
@@ -686,6 +740,122 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const pythContract = this.getContract();
     const result = await pythContract.methods.getValidTimePeriod().call();
     return Number(result);
+  }
+
+  /**
+   * Yields `PriceFeedUpdate` counts per feed id for successive sub-ranges of
+   * `[fromBlock, toBlock]`, covering the range in order and without gaps.
+   *
+   * Public RPCs cap `eth_getLogs` ranges anywhere between 50 and unlimited blocks and
+   * advertise no way to discover the cap, so the sub-range size is discovered at runtime:
+   * it halves on rejection and doubles back up on success. Each yielded batch ends on a
+   * block boundary the scan has fully covered, which is what makes a scan resumable.
+   * @param options - block range to scan plus request-shaping knobs
+   */
+  async *streamPriceFeedUpdateCounts(
+    options: PriceFeedUpdateScanOptions,
+  ): AsyncGenerator<PriceFeedUpdateBatch> {
+    const {
+      concurrency = 8,
+      fromBlock,
+      initialChunkSize = 10_000,
+      maxAttempts = 5,
+      maxChunkSize = 100_000,
+      onRetry,
+      toBlock,
+    } = options;
+    const web3 = this.chain.getWeb3();
+
+    let chunkSize = Math.max(1, Math.min(initialChunkSize, maxChunkSize));
+    // Lowered to the size we fall back to as soon as the RPC rejects a range, so that growth
+    // never climbs back into sizes it has already been refused and oscillates there forever.
+    let growthCeiling = maxChunkSize;
+    let cursor = fromBlock;
+    let successesSinceGrowth = 0;
+
+    while (cursor <= toBlock) {
+      const ranges: { from: number; to: number }[] = [];
+      for (
+        let start = cursor;
+        start <= toBlock && ranges.length < concurrency;
+      ) {
+        const end = Math.min(start + chunkSize - 1, toBlock);
+        ranges.push({ from: start, to: end });
+        start = end + 1;
+      }
+
+      let batches: PriceFeedUpdateCounts[];
+      try {
+        batches = await Promise.all(
+          ranges.map((range) =>
+            this.countPriceFeedUpdates(
+              web3,
+              range,
+              maxAttempts,
+              onRetry ?? (() => undefined),
+            ),
+          ),
+        );
+      } catch (error) {
+        if (chunkSize === 1) throw error;
+        chunkSize = Math.max(1, Math.floor(chunkSize / 2));
+        growthCeiling = chunkSize;
+        successesSinceGrowth = 0;
+        onRetry?.(`shrinking chunk size to ${chunkSize} blocks: ${error}`);
+        continue;
+      }
+
+      const counts: PriceFeedUpdateCounts = new Map();
+      for (const batch of batches) {
+        for (const [feedId, count] of batch) {
+          counts.set(feedId, (counts.get(feedId) ?? 0) + count);
+        }
+      }
+      const last = ranges.at(-1);
+      if (last === undefined) return;
+      yield { counts, fromBlock: cursor, toBlock: last.to };
+      cursor = last.to + 1;
+
+      successesSinceGrowth += 1;
+      const GROW_AFTER_SUCCESSES = 3;
+      if (successesSinceGrowth >= GROW_AFTER_SUCCESSES) {
+        chunkSize = Math.min(growthCeiling, chunkSize * 2);
+        successesSinceGrowth = 0;
+      }
+    }
+  }
+
+  private async countPriceFeedUpdates(
+    web3: Web3,
+    range: { from: number; to: number },
+    maxAttempts: number,
+    onRetry: (message: string) => void,
+  ): Promise<PriceFeedUpdateCounts> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const logs = await web3.eth.getPastLogs({
+          address: this.address,
+          fromBlock: range.from,
+          toBlock: range.to,
+          topics: [PRICE_FEED_UPDATE_TOPIC],
+        });
+        const counts: PriceFeedUpdateCounts = new Map();
+        for (const log of logs) {
+          const feedId = log.topics[1]?.replace("0x", "");
+          if (feedId !== undefined) {
+            counts.set(feedId, (counts.get(feedId) ?? 0) + 1);
+          }
+        }
+        return counts;
+      } catch (error) {
+        if (attempt >= maxAttempts || isRangeRejection(error)) throw error;
+        const backoffMs = 500 * 2 ** (attempt - 1);
+        onRetry(
+          `blocks ${range.from}-${range.to} attempt ${attempt} failed, retrying in ${backoffMs}ms: ${error}`,
+        );
+        await sleep(backoffMs);
+      }
+    }
   }
 
   /**
@@ -1056,7 +1226,10 @@ export class EvmLazerContract extends Storable {
       const pubkeySlot = await web3.eth.getStorageAt(this.address, 2 * i);
       const pubkey = BigInt(pubkeySlot);
       if (pubkey === 0n) continue;
-      const expiresAtSlot = await web3.eth.getStorageAt(this.address, 2 * i + 1);
+      const expiresAtSlot = await web3.eth.getStorageAt(
+        this.address,
+        2 * i + 1,
+      );
       signers.push({
         address: web3.utils.toChecksumAddress(
           "0x" + pubkey.toString(16).padStart(40, "0"),
