@@ -3,5 +3,10 @@
     "address": "CAYFT5JE3UQTKT4Q6ZOZK4FXVYVT6RE3MFC7STA4UB6WAEGBT65MRU52",
     "chain": "stellar_testnet",
     "type": "StellarLazerContract"
+  },
+  {
+    "address": "CACZ3GBAKUPIAFRILUFO27J5RUH5GJ2VSJ46LP6GJYSKGDRTQ5MS3HCH",
+    "chain": "stellar_mainnet",
+    "type": "StellarLazerContract"
   }
 ]
