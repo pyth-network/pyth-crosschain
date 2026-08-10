@@ -22,6 +22,7 @@ import {
 } from "@pythnetwork/xc-admin-common";
 import type { Vault } from "../../node/utils/governance";
 import { SubmittedWormholeMessage } from "../../node/utils/governance";
+import { sleep } from "../../utils/sleep";
 import type { DeploymentType, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract, Storable, toDeploymentType } from "../base";
 import type { Chain, MoveLazerMeta } from "../chains";
@@ -400,6 +401,202 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     if (!object.json) throw new Error("Unable to fetch pyth state object");
     return getStructFields(object.json);
   }
+
+  /**
+   * The package that *defines* the contract's Move types, which is the package the state
+   * object's own type tag names. Sui upgrades publish a new package id but leave type tags
+   * pointing at the original, so this is the id that `PriceFeedUpdateEvent` is emitted under —
+   * filtering on the current (upgraded) package id silently matches nothing.
+   */
+  async getOriginalPackageId(): Promise<ObjectId> {
+    const { object } = await suiGraphqlQuery<{
+      object: { asMoveObject: { contents: { type: { repr: string } } } } | null;
+    }>(
+      this.chain,
+      `{ object(address: "${this.stateId}") { asMoveObject { contents { type { repr } } } } }`,
+    );
+    if (object === null) {
+      throw new Error(`Sui state object ${this.stateId} not found`);
+    }
+    const [packageId] = object.asMoveObject.contents.type.repr.split("::");
+    if (packageId === undefined) {
+      throw new Error(`Unparseable state object type on ${this.stateId}`);
+    }
+    return packageId;
+  }
+
+  /**
+   * Yields `PriceFeedUpdateEvent` counts per feed id for successive checkpoint sub-ranges of
+   * `[fromCheckpoint, toCheckpoint]`, covering the range in order and without gaps.
+   *
+   * The Sui event carries the same meaning as the EVM `PriceFeedUpdate` log: `update_cache`
+   * emits it only inside its `is_fresh_update` branch, so both count accepted writes.
+   * @param options - checkpoint range to scan plus request-shaping knobs
+   */
+  async *streamPriceFeedUpdateCounts(
+    options: SuiPriceFeedUpdateScanOptions,
+  ): AsyncGenerator<SuiPriceFeedUpdateBatch> {
+    const { chunkSize = 2000, fromCheckpoint, onRetry, toCheckpoint } = options;
+    const eventType = `${await this.getOriginalPackageId()}::event::PriceFeedUpdateEvent`;
+
+    for (let cursor = fromCheckpoint; cursor <= toCheckpoint; ) {
+      const chunkEnd = Math.min(cursor + chunkSize - 1, toCheckpoint);
+      const counts = new Map<string, number>();
+      // `afterCheckpoint` / `beforeCheckpoint` are exclusive, so widen by one on each side.
+      const bounds =
+        (cursor > 0 ? `afterCheckpoint: ${cursor - 1}, ` : "") +
+        `beforeCheckpoint: ${chunkEnd + 1}`;
+      let after: string | undefined;
+      do {
+        const page = await suiGraphqlQuery<{
+          events: {
+            pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            nodes: { contents: { json: SuiPriceFeedUpdateJson } }[];
+          };
+        }>(
+          this.chain,
+          `{ events(filter: { type: "${eventType}", ${bounds} }, first: ${SUI_EVENTS_PAGE_SIZE}${
+            after === undefined ? "" : `, after: "${after}"`
+          }) { pageInfo { hasNextPage endCursor } nodes { contents { json } } } }`,
+          onRetry,
+        );
+        for (const node of page.events.nodes) {
+          const feedId = Buffer.from(
+            node.contents.json.price_feed.price_identifier.bytes,
+            "base64",
+          ).toString("hex");
+          counts.set(feedId, (counts.get(feedId) ?? 0) + 1);
+        }
+        after = page.events.pageInfo.hasNextPage
+          ? (page.events.pageInfo.endCursor ?? undefined)
+          : undefined;
+      } while (after !== undefined);
+
+      yield { counts, fromCheckpoint: cursor, toCheckpoint: chunkEnd };
+      cursor = chunkEnd + 1;
+    }
+  }
+}
+
+/** Page cap the public GraphQL service enforces on `events` (`serviceConfig.maxPageSize`). */
+const SUI_EVENTS_PAGE_SIZE = 50;
+
+/** Number of `PriceFeedUpdateEvent`s keyed by 64-char hex feed id, without the `0x` prefix. */
+export type SuiPriceFeedUpdateCounts = Map<string, number>;
+
+export type SuiPriceFeedUpdateBatch = {
+  fromCheckpoint: number;
+  toCheckpoint: number;
+  counts: SuiPriceFeedUpdateCounts;
+};
+
+export type SuiPriceFeedUpdateScanOptions = {
+  fromCheckpoint: number;
+  toCheckpoint: number;
+  /** Checkpoints covered by a single filter window; each is paged 50 events at a time. */
+  chunkSize?: number;
+  onRetry?: (message: string) => void;
+};
+
+type SuiPriceFeedUpdateJson = {
+  price_feed: { price_identifier: { bytes: string } };
+};
+
+/**
+ * Sui JSON-RPC was retired on public fullnodes in favour of GraphQL and gRPC, and the
+ * `@mysten/sui` gRPC surface has no historical event query, so the scan talks GraphQL
+ * directly. The endpoint is derived from the chain rather than stored, since the chain
+ * store's `rpcUrl` is the (now method-less) JSON-RPC host.
+ */
+export function suiGraphqlEndpoint(chain: SuiChain): string {
+  return chain.isMainnet()
+    ? "https://graphql.mainnet.sui.io/graphql"
+    : "https://graphql.testnet.sui.io/graphql";
+}
+
+async function suiGraphqlQuery<T>(
+  chain: SuiChain,
+  query: string,
+  onRetry?: (message: string) => void,
+): Promise<T> {
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(suiGraphqlEndpoint(chain), {
+        body: JSON.stringify({ query }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+      const body = (await response.json()) as {
+        data?: T;
+        errors?: { message: string }[];
+      };
+      if (body.errors !== undefined && body.errors.length > 0) {
+        throw new Error(body.errors.map((e) => e.message).join("; "));
+      }
+      if (body.data === undefined) throw new Error("empty GraphQL response");
+      return body.data;
+    } catch (error) {
+      if (attempt >= MAX_ATTEMPTS) throw error;
+      const backoffMs = 500 * 2 ** (attempt - 1);
+      onRetry?.(
+        `GraphQL attempt ${attempt} failed, retrying in ${backoffMs}ms: ${error}`,
+      );
+      await sleep(backoffMs);
+    }
+  }
+}
+
+/** Sequence number and unix timestamp of the newest checkpoint the endpoint has. */
+export async function getLatestSuiCheckpoint(chain: SuiChain) {
+  const { checkpoint } = await suiGraphqlQuery<{
+    checkpoint: { sequenceNumber: number; timestamp: string };
+  }>(chain, "{ checkpoint { sequenceNumber timestamp } }");
+  return {
+    sequenceNumber: Number(checkpoint.sequenceNumber),
+    timestamp: Math.floor(Date.parse(checkpoint.timestamp) / 1000),
+  };
+}
+
+export async function getSuiCheckpointTimestamp(
+  chain: SuiChain,
+  sequenceNumber: number,
+): Promise<number | undefined> {
+  const { checkpoint } = await suiGraphqlQuery<{
+    checkpoint: { timestamp: string } | null;
+  }>(chain, `{ checkpoint(sequenceNumber: ${sequenceNumber}) { timestamp } }`);
+  return checkpoint === null
+    ? undefined
+    : Math.floor(Date.parse(checkpoint.timestamp) / 1000);
+}
+
+/**
+ * Lowest checkpoint whose timestamp is at or after `unixTimestamp`, by binary search — the
+ * GraphQL service has no timestamp filter on checkpoints. Pruned checkpoints read as
+ * `undefined` and are treated as "older than the target", which walks the search up into the
+ * retained range instead of failing.
+ */
+export async function getSuiCheckpointAtTimestamp(
+  chain: SuiChain,
+  unixTimestamp: number,
+): Promise<number> {
+  const latest = await getLatestSuiCheckpoint(chain);
+  if (unixTimestamp >= latest.timestamp) return latest.sequenceNumber;
+  let low = 0;
+  let high = latest.sequenceNumber;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const timestamp = await getSuiCheckpointTimestamp(chain, mid);
+    if (timestamp !== undefined && timestamp >= unixTimestamp) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+  return low;
 }
 
 export class SuiWormholeContract extends WormholeContract {
