@@ -16,8 +16,10 @@ function envOrErr(name: string): string {
 }
 
 export default async function (hre: HardhatRuntimeEnvironment) {
-  // Initialize the wallet.
-  const wallet = Wallet.fromMnemonic(envOrErr("MNEMONIC"));
+  // Initialize the wallet from PK (raw private key) or MNEMONIC.
+  const wallet = process.env.PK
+    ? new Wallet(process.env.PK)
+    : Wallet.fromMnemonic(envOrErr("MNEMONIC"));
 
   // Create deployer object and load the artifact of the contract we want to deploy.
   const deployer = new Deployer(hre, wallet);

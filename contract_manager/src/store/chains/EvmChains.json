@@ -1123,7 +1123,7 @@
     "id": "soneium",
     "mainnet": true,
     "networkId": 1868,
-    "rpcUrl": "https://soneium.drpc.org",
+    "rpcUrl": "https://rpc.soneium.org",
     "type": "EvmChain"
   },
   {
@@ -1144,7 +1144,7 @@
     "id": "kraken_ink_mainnet",
     "mainnet": true,
     "networkId": 57073,
-    "rpcUrl": "https://ink-public.nodies.app",
+    "rpcUrl": "https://rpc-gel.inkonchain.com",
     "type": "EvmChain"
   },
   {
