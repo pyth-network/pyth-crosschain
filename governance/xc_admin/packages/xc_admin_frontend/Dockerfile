@@ -1,7 +1,9 @@
 # Defined in Dockerfile.node
 FROM builder-base AS xc-admin-frontend-builder
+ARG NEXT_PUBLIC_ALCHEMY_API_KEY
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV BUILD_STANDALONE true
+ENV NEXT_PUBLIC_ALCHEMY_API_KEY $NEXT_PUBLIC_ALCHEMY_API_KEY
 ENV CI true
 RUN pnpm turbo build --filter @pythnetwork/xc-admin-frontend
 
