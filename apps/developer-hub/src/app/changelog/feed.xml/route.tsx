@@ -5,9 +5,11 @@ import {
   AREA_LABELS,
   CHANGELOG_PATH,
   CHANGELOG_PRODUCTS,
+  CHANGELOG_TYPES,
   feedUrl,
   PRODUCT_LABELS,
   parseProductParam,
+  parseTypeParam,
   SITE,
   TYPE_LABELS,
 } from "../../../lib/changelog";
@@ -15,7 +17,7 @@ import { getChangelogEntries } from "../../../lib/changelog-data";
 import type { RssItem } from "./feed";
 import { buildFeedXml } from "./feed";
 
-const DESCRIPTION = "Product updates across Pyth Pro, Pyth Core, and Entropy.";
+const ALL_PRODUCTS = "across Pyth Pro, Pyth Core, and Entropy";
 
 // Minimal, fully server-renderable component map for RSS content. Fumadocs'
 // getMDXComponents() pulls in *client* components (CodeBlock, Tabs, Link, …)
@@ -46,9 +48,10 @@ const rssComponents: MDXComponents = {
 };
 
 // RSS 2.0 feed for the cross-product changelog. `/changelog/feed.xml` covers
-// all products; `?product=pyth-pro|pyth-core|entropy` narrows it — this is
-// what the Subscribe menu links to. Serialization lives in ./feed; this
-// handler only validates the param, renders bodies, and assembles the items.
+// everything; `?product=pyth-pro|pyth-core|entropy` and
+// `?type=feature|fix|breaking-change|deprecation|docs` narrow it, and combine
+// — this is what the Subscribe menu links to. Serialization lives in ./feed;
+// this handler only validates the params, renders bodies, and assembles items.
 export const GET = async (request: Request): Promise<Response> => {
   // Loaded dynamically: Next.js rejects a static `react-dom/server` import
   // anywhere in the app module graph, but a route handler is a plain Node
@@ -56,36 +59,49 @@ export const GET = async (request: Request): Promise<Response> => {
   // renderToStaticMarkup is for.
   const { renderToStaticMarkup } = await import("react-dom/server");
 
-  const parsed = parseProductParam(
-    new URL(request.url).searchParams.get("product"),
-  );
-  if (!parsed.ok) {
+  const params = new URL(request.url).searchParams;
+  const parsedProduct = parseProductParam(params.get("product"));
+  if (!parsedProduct.ok) {
     return new Response(
-      `Unknown product "${parsed.value}". Expected one of: ${CHANGELOG_PRODUCTS.join(", ")}.`,
+      `Unknown product "${parsedProduct.value}". Expected one of: ${CHANGELOG_PRODUCTS.join(", ")}.`,
       { headers: { "Content-Type": "text/plain" }, status: 400 },
     );
   }
-  const { product } = parsed;
+  const parsedType = parseTypeParam(params.get("type"));
+  if (!parsedType.ok) {
+    return new Response(
+      `Unknown type "${parsedType.value}". Expected one of: ${CHANGELOG_TYPES.join(", ")}.`,
+      { headers: { "Content-Type": "text/plain" }, status: 400 },
+    );
+  }
+  const product = parsedProduct.value;
+  const type = parsedType.value;
 
   const entries = getChangelogEntries().filter(
-    (entry) => product === null || entry.product === product,
+    (entry) =>
+      (product === null || entry.product === product) &&
+      (type === null || entry.type === type),
   );
 
   const latest = entries[0]?.date;
+  const kind = type === null ? "Product updates" : `${TYPE_LABELS[type]} updates`;
+  const scope =
+    product === null ? ALL_PRODUCTS : `for ${PRODUCT_LABELS[product]}`;
+  const narrowing = [
+    product === null ? undefined : PRODUCT_LABELS[product],
+    type === null ? undefined : TYPE_LABELS[type],
+  ].filter((label) => label !== undefined);
   const channel = {
-    description:
-      product === null
-        ? DESCRIPTION
-        : `Product updates for ${PRODUCT_LABELS[product]}.`,
+    description: `${kind} ${scope}.`,
     lastBuildDate: latest
       ? new Date(`${latest}T00:00:00Z`).toUTCString()
       : new Date().toUTCString(),
     link: `${SITE}${CHANGELOG_PATH}`,
-    self: `${SITE}${feedUrl(product ?? undefined)}`,
+    self: `${SITE}${feedUrl({ product: product ?? undefined, type: type ?? undefined })}`,
     title:
-      product === null
+      narrowing.length === 0
         ? "Pyth Changelog"
-        : `Pyth Changelog — ${PRODUCT_LABELS[product]}`,
+        : `Pyth Changelog — ${narrowing.join(", ")}`,
   };
 
   const items: RssItem[] = entries.map((entry) => {

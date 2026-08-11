@@ -54,6 +54,19 @@ describe("buildFeedXml", () => {
     );
   });
 
+  it("escapes the & joining a multi-facet self URL", () => {
+    const xml = buildFeedXml(
+      {
+        ...channel,
+        self: "https://docs.pyth.network/changelog/feed.xml?product=pyth-pro&type=feature",
+      },
+      [item],
+    );
+    expect(xml).toContain(
+      '<atom:link href="https://docs.pyth.network/changelog/feed.xml?product=pyth-pro&amp;type=feature" rel="self" type="application/rss+xml"/>',
+    );
+  });
+
   it("renders a valid channel with no items", () => {
     const xml = buildFeedXml(channel, []);
     expect(xml).toContain("<channel>");

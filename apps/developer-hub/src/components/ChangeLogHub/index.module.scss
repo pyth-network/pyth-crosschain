@@ -58,6 +58,17 @@
   min-width: 12rem;
 }
 
+.subscribeGroup {
+  display: flex;
+  flex-direction: column;
+
+  & + & {
+    padding-top: theme.spacing(1);
+    margin-top: theme.spacing(1);
+    border-top: 1px solid theme.color("border");
+  }
+}
+
 .subscribeHeading {
   padding: theme.spacing(1) theme.spacing(2);
   font-size: theme.font-size("xxs");

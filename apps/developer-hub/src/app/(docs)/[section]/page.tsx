@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 
 import {
   CHANGELOG_PRODUCTS,
+  CHANGELOG_TYPES,
   feedUrl,
   PRODUCT_LABELS,
+  TYPE_LABELS,
 } from "../../../lib/changelog";
 import { source } from "../../../lib/source";
 
@@ -41,7 +43,11 @@ export async function generateMetadata(props: {
           { title: "Pyth Changelog", url: feedUrl() },
           ...CHANGELOG_PRODUCTS.map((product) => ({
             title: `Pyth Changelog — ${PRODUCT_LABELS[product]}`,
-            url: feedUrl(product),
+            url: feedUrl({ product }),
+          })),
+          ...CHANGELOG_TYPES.map((type) => ({
+            title: `Pyth Changelog — ${TYPE_LABELS[type]}`,
+            url: feedUrl({ type }),
           })),
         ],
       },

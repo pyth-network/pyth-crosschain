@@ -6,8 +6,10 @@ import {
   filterEntries,
   fmtEntryDate,
   isChangelogProduct,
+  isChangelogType,
   matchesFilters,
   parseProductParam,
+  parseTypeParam,
   relativeDate,
   resolveDeepLink,
   slugFromPath,
@@ -80,9 +82,24 @@ describe("filterEntries", () => {
 });
 
 describe("feedUrl", () => {
-  it("builds the all-products and per-product feed URLs", () => {
+  it("builds the unfiltered feed URL when given no facets", () => {
     expect(feedUrl()).toBe("/changelog/feed.xml");
-    expect(feedUrl("pyth-pro")).toBe("/changelog/feed.xml?product=pyth-pro");
+    expect(feedUrl({})).toBe("/changelog/feed.xml");
+  });
+
+  it("narrows on a single facet", () => {
+    expect(feedUrl({ product: "pyth-pro" })).toBe(
+      "/changelog/feed.xml?product=pyth-pro",
+    );
+    expect(feedUrl({ type: "breaking-change" })).toBe(
+      "/changelog/feed.xml?type=breaking-change",
+    );
+  });
+
+  it("combines both facets, product first", () => {
+    expect(feedUrl({ product: "entropy", type: "feature" })).toBe(
+      "/changelog/feed.xml?product=entropy&type=feature",
+    );
   });
 });
 
@@ -126,21 +143,59 @@ describe("isChangelogProduct", () => {
   });
 });
 
+describe("isChangelogType", () => {
+  it("narrows only recognised type ids", () => {
+    expect(isChangelogType("feature")).toBe(true);
+    expect(isChangelogType("breaking-change")).toBe(true);
+    expect(isChangelogType("pyth-pro")).toBe(false);
+    expect(isChangelogType("")).toBe(false);
+  });
+});
+
 describe("parseProductParam", () => {
   it("treats absent or empty as the all-products feed", () => {
-    expect(parseProductParam(null)).toEqual({ ok: true, product: null });
-    expect(parseProductParam("")).toEqual({ ok: true, product: null });
+    expect(parseProductParam(null)).toEqual({ ok: true, value: null });
+    expect(parseProductParam("")).toEqual({ ok: true, value: null });
   });
 
   it("narrows a recognised value to that product", () => {
     expect(parseProductParam("pyth-core")).toEqual({
       ok: true,
-      product: "pyth-core",
+      value: "pyth-core",
     });
   });
 
   it("reports an unrecognised value as unknown", () => {
     expect(parseProductParam("bogus")).toEqual({ ok: false, value: "bogus" });
+  });
+
+  it("does not accept a type id", () => {
+    expect(parseProductParam("feature")).toEqual({
+      ok: false,
+      value: "feature",
+    });
+  });
+});
+
+describe("parseTypeParam", () => {
+  it("treats absent or empty as the all-types feed", () => {
+    expect(parseTypeParam(null)).toEqual({ ok: true, value: null });
+    expect(parseTypeParam("")).toEqual({ ok: true, value: null });
+  });
+
+  it("narrows a recognised value to that type", () => {
+    expect(parseTypeParam("breaking-change")).toEqual({
+      ok: true,
+      value: "breaking-change",
+    });
+  });
+
+  it("reports an unrecognised value as unknown", () => {
+    expect(parseTypeParam("bogus")).toEqual({ ok: false, value: "bogus" });
+  });
+
+  it("does not accept a product id", () => {
+    expect(parseTypeParam("entropy")).toEqual({ ok: false, value: "entropy" });
   });
 });
 
