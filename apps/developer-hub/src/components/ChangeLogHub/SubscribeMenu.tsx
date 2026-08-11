@@ -35,6 +35,7 @@ export const SubscribeMenu = () => (
           ))}
         </div>
       }
+      variant="menu"
     >
       <Button
         beforeIcon={<RssSimple weight="bold" />}
