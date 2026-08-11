@@ -3,7 +3,6 @@ import {
   UpgradeStellarExecutor,
 } from "@pythnetwork/xc-admin-common";
 import {
-  BASE_FEE,
   Contract,
   nativeToScVal,
   Keypair as StellarKeypair,
@@ -13,7 +12,6 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
-import { sleep } from "../../utils/sleep";
 import type { PrivateKey, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
@@ -36,6 +34,16 @@ import { WormholeContract } from "./wormhole";
  * PTGM `Call` is submitted to `execute_governance_action`, which invokes the
  * named function on the verifier.
  */
+
+/** How long a submitted transaction stays eligible for inclusion, in seconds. */
+const TX_VALIDITY_SECONDS = 30;
+
+/**
+ * One-second poll attempts to wait for a submitted transaction. Set past
+ * {@link TX_VALIDITY_SECONDS} so that a still-unknown transaction is known to
+ * have expired rather than merely being slow to index.
+ */
+const TX_POLL_ATTEMPTS = 40;
 
 /**
  * The Lazer **verifier** (`pyth-lazer-stellar`).
@@ -348,12 +356,13 @@ export class StellarExecutorContract extends WormholeContract {
     const account = await server.getAccount(keypair.publicKey());
     const executor = new Contract(this.address);
 
+    const fee = this.chain.getInclusionFee();
     const tx = new TransactionBuilder(account, {
-      fee: BASE_FEE,
+      fee,
       networkPassphrase: this.chain.networkPassphrase,
     })
       .addOperation(executor.call(method, xdr.ScVal.scvBytes(vaa)))
-      .setTimeout(30)
+      .setTimeout(TX_VALIDITY_SECONDS)
       .build();
 
     const prepared = await server.prepareTransaction(tx);
@@ -366,10 +375,18 @@ export class StellarExecutorContract extends WormholeContract {
       );
     }
 
-    let result = await server.getTransaction(sent.hash);
-    while (result.status === stellarRpc.Api.GetTransactionStatus.NOT_FOUND) {
-      await sleep(1000);
-      result = await server.getTransaction(sent.hash);
+    const result = await server.pollTransaction(sent.hash, {
+      attempts: TX_POLL_ATTEMPTS,
+    });
+
+    if (result.status === stellarRpc.Api.GetTransactionStatus.NOT_FOUND) {
+      throw new Error(
+        `${method} transaction ${sent.hash} was still unknown to the RPC ` +
+          `${TX_POLL_ATTEMPTS}s after submission, past its ${TX_VALIDITY_SECONDS}s ` +
+          `validity window: it was dropped before reaching a ledger, so nothing ` +
+          `executed and no fee was charged. This usually means the ledger was full ` +
+          `and the inclusion bid of ${fee} stroops was outbid; it is safe to resubmit.`,
+      );
     }
 
     if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {

@@ -2491,6 +2491,9 @@ export class NearChain extends Chain {
   }
 }
 
+/** Inclusion bid on Stellar mainnet, in stroops (0.1 XLM). */
+const STELLAR_MAINNET_INCLUSION_FEE = "1000000";
+
 export class StellarChain extends Chain {
   static override type = "StellarChain";
 
@@ -2545,6 +2548,19 @@ export class StellarChain extends Chain {
     return new stellarRpc.Server(this.rpcUrl, {
       allowHttp: this.rpcUrl.startsWith("http://"),
     });
+  }
+
+  /**
+   * The inclusion bid to build transactions on this chain with, in stroops.
+   *
+   * `prepareTransaction` adds the Soroban resource fee on top of this but never
+   * raises the bid itself, and mainnet ledgers routinely run near capacity, so a
+   * `BASE_FEE` bid gets outbid and the transaction expires without ever reaching
+   * a ledger. Surge pricing charges the market-clearing rate rather than the
+   * bid, so bidding high costs nothing extra on an uncongested ledger.
+   */
+  getInclusionFee(): string {
+    return this.isMainnet() ? STELLAR_MAINNET_INCLUSION_FEE : BASE_FEE;
   }
 
   /**
@@ -2603,7 +2619,7 @@ export class StellarChain extends Chain {
     const account = await server.getAccount(keypair.publicKey());
 
     const tx = new StellarTransactionBuilder(account, {
-      fee: BASE_FEE,
+      fee: this.getInclusionFee(),
       networkPassphrase: this.networkPassphrase,
     })
       .addOperation(StellarOperation.uploadContractWasm({ wasm }))
