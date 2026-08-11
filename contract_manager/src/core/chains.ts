@@ -446,6 +446,11 @@ export class SuiChain extends Chain {
     nativeToken: TokenId | undefined,
     public rpcUrl: string,
     public endpointType: SuiEndpointType = "json-rpc",
+    /**
+     * Scan-time override for the GraphQL endpoint, which is otherwise derived from the
+     * network rather than read from `rpcUrl` (that field is the method-less JSON-RPC host).
+     */
+    public graphqlUrl?: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
