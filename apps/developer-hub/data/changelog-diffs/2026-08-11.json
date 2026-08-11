@@ -1,0 +1,102 @@
+{
+  "date": "2026-08-11",
+  "label": "Tuesday",
+  "summary": {
+    "added": 5,
+    "went_live": 4,
+    "removed": 0
+  },
+  "hero": "5 new feeds announced, 4 went live.",
+  "events": [
+    {
+      "id": "Equity.US.DKS/USD",
+      "lazerId": 3617,
+      "asset": "Dicks Sporting Goods Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "0960fc876589d92329305a38fd7165e7fe6f3b7ee88a5b4362135efa1ec7f5e1"
+    },
+    {
+      "id": "Equity.US.UNM/USD",
+      "lazerId": 3610,
+      "asset": "Unum Group Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "9a9a4bdba3051e7906d69b9a70c21550ebba9eb106d1f5821588595ca97dddc2"
+    },
+    {
+      "id": "Equity.US.WBS/USD",
+      "lazerId": 3609,
+      "asset": "Webster Finl Corp Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "f4d46762b0554b13a6a819888e9e5e2aad468f794902d916d54628fba2c39e31"
+    },
+    {
+      "id": "Equity.HK.3308/HKD",
+      "lazerId": 3443,
+      "asset": "Zhongji Innolight Co Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-11",
+      "quote": "HKD",
+      "hermesId": "4c4f11d6b8f87506a237f6a9cb44ebc9f9e52d49a2b31fb0ecb339c5d6569eeb"
+    },
+    {
+      "id": "InterestRate.US2M/USD",
+      "lazerId": 3626,
+      "asset": "United States 2 Month Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "f20201e78d77dd899e00e37d3c83a4296e6e732bcfb7fdd0bbd2ca1a04324dea"
+    },
+    {
+      "id": "InterestRate.US2M",
+      "lazerId": 3625,
+      "asset": "United States 2 Month Government Bonds Yield",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-11",
+      "quote": "%",
+      "hermesId": "d244d9d92c244f0c40055653629dc2debb4c8470be86487271677280fb3d3f4c"
+    },
+    {
+      "id": "InterestRate.US6M/USD",
+      "lazerId": 3624,
+      "asset": "United States 6 Month Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "6ad220be131dca89a9d9b3937e588f98e5fac572938c7384ecc158030522aaa3"
+    },
+    {
+      "id": "InterestRate.US3M/USD",
+      "lazerId": 3623,
+      "asset": "United States 3 Month Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "c5334d47487e0d06a3af190583b8df4095b80c75946219a46500cfa6af9d5e03"
+    },
+    {
+      "id": "InterestRate.US1M/USD",
+      "lazerId": 3622,
+      "asset": "United States 1 Month Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-11",
+      "quote": "USD",
+      "hermesId": "f2b88cc230ddad05620f4da789c30d5a3fbe53e9f3a73d929a973204889895de"
+    }
+  ]
+}
