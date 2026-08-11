@@ -15,8 +15,9 @@ Why it matters: authentication on the History API has been required since
 The docs now describe that requirement in the present tense, so there is a
 single source of truth for how to call `/{channel}/price`,
 `/{channel}/price/range`, and `/{channel}/history` today. The range endpoint
-lets you pull up to 100 feeds across a bounded time window with opaque cursor
-pagination — useful for backfills, analytics, and TradingView-style scrubbing.
+returns raw prices for up to 100 feeds across a window of at most 60 seconds,
+with opaque cursor pagination for walking dense results. For long-horizon
+charting or TradingView-style OHLC data, keep using `/{channel}/history`.
 
 What to do:
 
@@ -26,14 +27,14 @@ What to do:
   browsers must not.
 - For browser and other public clients, have your backend mint short-lived
   JWTs via `POST /auth/token` and hand those to the frontend. See
-  [Frontend Authentication](https://docs.pyth.network/price-feeds/pro/frontend-auth)
+  [Frontend Authentication](/price-feeds/pro/frontend-auth)
   for the flow and endpoint reference.
 - For paginated historical reads, walk `GET /{channel}/price/range` by passing
   the previous response's `next` cursor as the `after` query parameter until
   `next` is absent.
 
-The [History API reference](https://docs.pyth.network/price-feeds/pro/api/history)
+The [History API reference](/price-feeds/pro/api/history)
 covers the endpoints, parameters, and error codes in full. The older
 server-sent-events streaming route is no longer part of the History API
-reference; use the [WebSocket streaming API](https://docs.pyth.network/price-feeds/pro/api/websocket)
+reference; use the [WebSocket streaming API](/price-feeds/pro/api/websocket)
 for live updates.
