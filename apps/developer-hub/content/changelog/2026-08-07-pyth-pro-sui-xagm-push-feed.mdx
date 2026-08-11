@@ -1,0 +1,22 @@
+---
+title: XAGM/USD.RR sponsored push feed available on Sui mainnet
+date: 2026-08-07
+product: pyth-pro
+type: feature
+area: market-data
+---
+
+Sui mainnet apps can now consume a sponsored `XAGM/USD.RR` push feed without
+running their own price pusher. The feed is Pro-compatible and updates on the
+sponsored Sui push schedule alongside the rest of the Sui sponsored list.
+
+Why it matters: sponsored push feeds are automatically kept fresh on-chain by
+Pyth infrastructure, so integrators do not have to build or operate a pusher
+just to read a live price on Sui.
+
+What to do: read `XAGM/USD.RR` on Sui the same way as any other sponsored feed
+— point at the standard Sui Pyth price feed object and use the feed ID listed
+on the push-feeds page. Existing feed integrations are unchanged.
+
+- [Push feeds on Sui](https://docs.pyth.network/price-feeds/core/push-feeds/sui)
+- [Push feeds overview](https://docs.pyth.network/price-feeds/core/push-feeds)

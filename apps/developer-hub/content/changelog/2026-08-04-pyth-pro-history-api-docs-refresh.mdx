@@ -1,0 +1,39 @@
+---
+title: History API docs cover authenticated access and the price-range endpoint
+date: 2026-08-04
+product: pyth-pro
+type: docs
+area: apis
+---
+
+The Pyth Pro History API reference now reflects two things in one place: how to
+authenticate requests with your Pyth Pro API key, and how to page through
+historical prices with `GET /{channel}/price/range`.
+
+Why it matters: authentication on the History API has been required since
+[July 24, 2026](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808).
+The docs now describe that requirement in the present tense, so there is a
+single source of truth for how to call `/{channel}/price`,
+`/{channel}/price/range`, and `/{channel}/history` today. The range endpoint
+lets you pull up to 100 feeds across a bounded time window with opaque cursor
+pagination — useful for backfills, analytics, and TradingView-style scrubbing.
+
+What to do:
+
+- Present your Pyth Pro API key as
+  `Authorization: Bearer <PRO_API_KEY>` on every authenticated History
+  request. Server-to-server clients can use the long-lived key directly;
+  browsers must not.
+- For browser and other public clients, have your backend mint short-lived
+  JWTs via `POST /auth/token` and hand those to the frontend. See
+  [Frontend Authentication](https://docs.pyth.network/price-feeds/pro/frontend-auth)
+  for the flow and endpoint reference.
+- For paginated historical reads, walk `GET /{channel}/price/range` by passing
+  the previous response's `next` cursor as the `after` query parameter until
+  `next` is absent.
+
+The [History API reference](https://docs.pyth.network/price-feeds/pro/api/history)
+covers the endpoints, parameters, and error codes in full. The older
+server-sent-events streaming route is no longer part of the History API
+reference; use the [WebSocket streaming API](https://docs.pyth.network/price-feeds/pro/api/websocket)
+for live updates.

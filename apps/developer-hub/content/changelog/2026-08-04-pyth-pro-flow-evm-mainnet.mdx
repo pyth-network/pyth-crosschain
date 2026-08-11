@@ -1,0 +1,25 @@
+---
+title: Flow EVM Mainnet joins the Pyth Pro-compatible contract upgrade
+date: 2026-08-04
+product: pyth-pro
+type: feature
+area: contracts
+---
+
+Flow EVM Mainnet is now covered by the Pyth Pro-compatible contract upgrade.
+Apps on Flow EVM Mainnet can point their integrations at the upgraded Pyth
+contract and consume the same Pyth Pro-backed price updates already available
+on other upgraded EVM chains.
+
+Why it matters: the upgraded contract is the single integration surface for
+Pyth on EVM going forward, and adding Flow EVM Mainnet keeps Flow apps aligned
+with the same feed catalog and update semantics as the rest of the upgraded
+network. Legacy Flow EVM Mainnet consumers keep working — the previous Pyth
+contract address is unchanged.
+
+What to do: if you are starting a new integration on Flow EVM Mainnet, use the
+upgraded (Pro-compatible) address. If you are migrating an existing Flow app,
+follow the standard EVM migration steps.
+
+- [EVM contract addresses (upgraded and current)](https://docs.pyth.network/price-feeds/core/contract-addresses/evm)
+- [Migrate an app to Pyth](https://docs.pyth.network/price-feeds/core/migrate-an-app-to-pyth)
