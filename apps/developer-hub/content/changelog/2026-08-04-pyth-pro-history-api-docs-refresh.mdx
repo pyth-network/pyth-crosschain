@@ -10,7 +10,7 @@ The Pyth Pro History API reference now reflects two things in one place: how to
 authenticate requests with your Pyth Pro API key, and how to page through
 historical prices with `GET /{channel}/price/range`.
 
-Why it matters: authentication on the History API has been required since
+**Why it matters:** authentication on the History API has been required since
 [July 24, 2026](https://dev-forum.pyth.network/t/action-required-pyth-pro-history-api-auth-required-starting-july-24/808).
 The docs now describe that requirement in the present tense, so there is a
 single source of truth for how to call `/{channel}/price`,
@@ -19,7 +19,7 @@ returns raw prices for up to 100 feeds across a window of at most 60 seconds,
 with opaque cursor pagination for walking dense results. For long-horizon
 charting or TradingView-style OHLC data, keep using `/{channel}/history`.
 
-What to do:
+**What to do:**
 
 - Present your Pyth Pro API key as
   `Authorization: Bearer <PRO_API_KEY>` on every authenticated History
