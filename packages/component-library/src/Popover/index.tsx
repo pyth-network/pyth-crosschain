@@ -28,6 +28,13 @@ export type PopoverProps = PropsWithChildren &
      * Additional options to apply directly to the popover
      */
     popoverProps?: AriaPopoverProps;
+
+    /**
+     * The surface to render the popover on; `tooltip` is an inverted chip for
+     * short bits of transient content, `menu` is a regular elevated surface for
+     * menus and lists.
+     */
+    variant?: "tooltip" | "menu";
   };
 
 export function Popover({
@@ -35,6 +42,7 @@ export function Popover({
   dialogProps,
   popoverContents,
   popoverProps,
+  variant = "tooltip",
   ...rest
 }: PopoverProps) {
   const { className, placement, ...popoverRest } = popoverProps ?? {};
@@ -44,7 +52,11 @@ export function Popover({
       {children}
       <AriaPopover
         {...popoverRest}
-        className={cx(classes.popoverRoot, className)}
+        className={cx(
+          classes.popoverRoot,
+          variant === "menu" && classes.menu,
+          className,
+        )}
         placement={placement ?? "bottom"}
       >
         <Dialog {...dialogProps}>{popoverContents}</Dialog>
