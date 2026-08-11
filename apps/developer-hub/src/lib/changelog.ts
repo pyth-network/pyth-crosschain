@@ -132,34 +132,59 @@ export const CHANGELOG_PATH = "/changelog";
 // docs site regardless of where the copy happens.
 export const SITE = "https://docs.pyth.network";
 
-// RSS feed URLs. No `product` → the all-products feed.
-export const feedUrl = (product?: ChangelogProduct): string =>
-  product === undefined
-    ? `${CHANGELOG_PATH}/feed.xml`
-    : `${CHANGELOG_PATH}/feed.xml?product=${product}`;
+// A feed's narrowing facets. An omitted facet widens the feed: no `product`
+// covers every product, no `type` every change type.
+export type FeedFacets = {
+  product?: ChangelogProduct | undefined;
+  type?: ChangelogType | undefined;
+};
 
-// ─── Product parsing ─────────────────────────────────────────────────────
+// RSS feed URLs. No facets → the firehose feed.
+export const feedUrl = ({ product, type }: FeedFacets = {}): string => {
+  const query = new URLSearchParams([
+    ...(product === undefined ? [] : [["product", product]]),
+    ...(type === undefined ? [] : [["type", type]]),
+  ]).toString();
+  return `${CHANGELOG_PATH}/feed.xml${query === "" ? "" : `?${query}`}`;
+};
+
+// ─── Facet parsing ───────────────────────────────────────────────────────
 
 export const isChangelogProduct = (value: string): value is ChangelogProduct =>
   (CHANGELOG_PRODUCTS as readonly string[]).includes(value);
 
-// Parse the RSS `?product=` query param: an absent or empty value means the
-// all-products feed, a recognised value narrows to that product, and anything
-// else is reported as unknown so the caller can reject it.
-export const parseProductParam = (
+export const isChangelogType = (value: string): value is ChangelogType =>
+  (CHANGELOG_TYPES as readonly string[]).includes(value);
+
+export type ParsedFacetParam<T> =
+  | { ok: true; value: T | null }
+  | { ok: false; value: string };
+
+// Parse one RSS narrowing query param: an absent or empty value means "don't
+// narrow on this facet", a recognised value narrows to it, and anything else
+// is reported as unknown so the caller can reject it.
+const parseFacetParam = <T extends string>(
   raw: string | null,
-):
-  | { ok: true; product: ChangelogProduct | null }
-  | { ok: false; value: string } => {
+  isValid: (value: string) => value is T,
+): ParsedFacetParam<T> => {
   const value = raw ?? "";
   if (value === "") {
-    return { ok: true, product: null };
+    return { ok: true, value: null };
   }
-  if (isChangelogProduct(value)) {
-    return { ok: true, product: value };
+  if (isValid(value)) {
+    return { ok: true, value };
   }
   return { ok: false, value };
 };
+
+export const parseProductParam = (
+  raw: string | null,
+): ParsedFacetParam<ChangelogProduct> =>
+  parseFacetParam(raw, isChangelogProduct);
+
+export const parseTypeParam = (
+  raw: string | null,
+): ParsedFacetParam<ChangelogType> => parseFacetParam(raw, isChangelogType);
 
 // ─── Display helpers ─────────────────────────────────────────────────────
 

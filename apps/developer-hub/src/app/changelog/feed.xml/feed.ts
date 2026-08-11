@@ -30,7 +30,7 @@ export type RssChannel = {
   description: string;
   /** Human-facing page URL. */
   link: string;
-  /** Canonical self URL of this feed. */
+  /** Canonical self URL of this feed — escaped here, it carries a query. */
   self: string;
   /** RFC-822 date string. */
   lastBuildDate: string;
@@ -57,7 +57,7 @@ export const buildFeedXml = (channel: RssChannel, items: RssItem[]): string =>
     "<channel>",
     `<title>${escapeXml(channel.title)}</title>`,
     `<link>${channel.link}</link>`,
-    `<atom:link href="${channel.self}" rel="self" type="application/rss+xml"/>`,
+    `<atom:link href="${escapeXml(channel.self)}" rel="self" type="application/rss+xml"/>`,
     `<description>${escapeXml(channel.description)}</description>`,
     `<lastBuildDate>${channel.lastBuildDate}</lastBuildDate>`,
     items.map(renderItem).join("\n"),
