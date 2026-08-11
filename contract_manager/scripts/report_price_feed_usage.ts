@@ -68,7 +68,7 @@ import path from "node:path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { EvmChain, SvmChain } from "../src/core/chains";
+import { EvmChain, SuiChain, SvmChain } from "../src/core/chains";
 import {
   EvmPriceFeedContract,
   getSuiCheckpointAtTimestamp,
@@ -119,7 +119,9 @@ const parser = yargs(hideBin(process.argv))
       type: "number",
     },
     rpc: {
-      desc: "Override a chain's RPC endpoint, as <chain>=<url>. Repeatable",
+      desc:
+        "Override a chain's scan endpoint, as <chain>=<url>. Repeatable. " +
+        "sui_mainnet expects a GraphQL endpoint, every other chain a JSON-RPC one",
       string: true,
       type: "array",
     },
@@ -278,7 +280,7 @@ function getScanTargets(
     targets.push(
       contract instanceof EvmPriceFeedContract
         ? evmTarget(contract, rpcOverride)
-        : suiTarget(contract),
+        : suiTarget(contract, rpcOverride),
     );
   }
   for (const chainId of svmChainIds()) {
@@ -338,7 +340,14 @@ function evmTarget(
   };
 }
 
-function suiTarget(contract: SuiPriceFeedContract): ScanTarget {
+function suiTarget(
+  original: SuiPriceFeedContract,
+  rpcOverride: string | undefined,
+): ScanTarget {
+  const contract =
+    rpcOverride === undefined
+      ? original
+      : withSuiGraphqlUrl(original, rpcOverride);
   const chain = contract.getChain();
   return {
     address: contract.stateId,
@@ -452,6 +461,31 @@ function withRpcUrl(
       chain.networkId,
     ),
     contract.address,
+    contract.deploymentType,
+  );
+}
+
+/**
+ * Sui's scan talks GraphQL, so an `--rpc` override for it is a GraphQL endpoint rather than
+ * the JSON-RPC host the chain store holds.
+ */
+function withSuiGraphqlUrl(
+  contract: SuiPriceFeedContract,
+  graphqlUrl: string,
+): SuiPriceFeedContract {
+  const chain = contract.getChain();
+  return new SuiPriceFeedContract(
+    new SuiChain(
+      chain.getId(),
+      chain.isMainnet(),
+      chain.wormholeChainName,
+      chain.getNativeToken(),
+      chain.rpcUrl,
+      chain.endpointType,
+      graphqlUrl,
+    ),
+    contract.stateId,
+    contract.wormholeStateId,
     contract.deploymentType,
   );
 }

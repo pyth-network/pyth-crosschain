@@ -512,6 +512,7 @@ type SuiPriceFeedUpdateJson = {
  * store's `rpcUrl` is the (now method-less) JSON-RPC host.
  */
 export function suiGraphqlEndpoint(chain: SuiChain): string {
+  if (chain.graphqlUrl !== undefined) return chain.graphqlUrl;
   return chain.isMainnet()
     ? "https://graphql.mainnet.sui.io/graphql"
     : "https://graphql.testnet.sui.io/graphql";
