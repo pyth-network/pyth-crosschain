@@ -216,6 +216,10 @@
       "default": "./dist/Popover/index.mjs",
       "types": "./dist/Popover/index.d.ts"
     },
+    "./Popover/popover.test": {
+      "default": "./dist/Popover/popover.test.mjs",
+      "types": "./dist/Popover/popover.test.d.ts"
+    },
     "./package.json": "./package.json",
     "./SearchButton": {
       "default": "./dist/SearchButton/index.mjs",

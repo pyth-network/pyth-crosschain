@@ -14,6 +14,10 @@
     background-color: theme.color("background", "modal");
     border: 1px solid theme.color("border");
     color: theme.color("paragraph");
+
+    // Matches the gutter `Select` puts around its listbox, so menu rows sit
+    // close to the panel edge instead of floating in a tooltip-sized inset.
+    padding: theme.spacing(1);
   }
 
   &[data-placement="bottom"] {
