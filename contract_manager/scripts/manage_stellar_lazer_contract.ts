@@ -12,7 +12,7 @@ import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { toPrivateKey } from "../src/core/base";
+import { getDefaultDeploymentConfig, toPrivateKey } from "../src/core/base";
 import {
   StellarExecutorContract,
   StellarLazerContract,
@@ -45,6 +45,32 @@ function connectMainnetVault(wallet: Wallet): Vault {
   const vault = getMainnetVault();
   vault.connect(wallet, (rpc) => RPCS[rpc]);
   return vault;
+}
+
+/** Fetch the guardian set the Wormhole mainnet guardians are currently signing with. */
+async function fetchLiveMainnetGuardianSet(): Promise<{
+  index: number;
+  addresses: string[];
+}> {
+  const endpoint = WORMHOLE_API_ENDPOINT["mainnet-beta"];
+  const response = await fetch(`${endpoint}/v1/guardianset/current`);
+  const { guardianSet } = (await response.json()) as {
+    guardianSet: { index: number; addresses: string[] };
+  };
+  return guardianSet;
+}
+
+/**
+ * Report whether an on-chain value matches the canonical one, echoing both so the
+ * output stands on its own as an audit record. Returns the verdict so the caller
+ * can fail the command after running every check rather than at the first one.
+ */
+function check(label: string, actual: string, expected: string): boolean {
+  const passed = actual.toLowerCase() === expected.toLowerCase();
+  console.log(`${passed ? "PASS" : "FAIL"}  ${label}`);
+  console.log(`      on-chain: ${actual}`);
+  console.log(`      expected: ${expected}`);
+  return passed;
 }
 
 /** Build a proposal carrying a single Wormhole governance payload. */
@@ -275,11 +301,7 @@ parser.command(
       console.log(`    ${guardian}`);
     }
 
-    const endpoint = WORMHOLE_API_ENDPOINT["mainnet-beta"];
-    const response = await fetch(`${endpoint}/v1/guardianset/current`);
-    const { guardianSet } = (await response.json()) as {
-      guardianSet: { index: number; addresses: string[] };
-    };
+    const guardianSet = await fetchLiveMainnetGuardianSet();
     console.log(
       `Live mainnet guardian set index: ${guardianSet.index.toString()}`,
     );
@@ -290,6 +312,113 @@ parser.command(
         `Executor is ${(guardianSet.index - index).toString()} set(s) behind; run upgrade-guardian-set.`,
       );
     }
+  },
+);
+
+parser.command(
+  "verify-deployment",
+  "audit a deployed executor + verifier pair against the canonical Pyth-DAO governance configuration",
+  (b) =>
+    b.options({
+      executor: commonOptions.executor,
+      verifier: commonOptions.verifier,
+    }),
+  async (argv) => {
+    const { executor, verifier } = argv;
+    if (executor.chain.getId() !== verifier.chain.getId()) {
+      throw new Error(
+        `Executor is on ${executor.chain.getId()} but verifier is on ${verifier.chain.getId()}.`,
+      );
+    }
+
+    console.log(`Chain:    ${executor.chain.getId()}`);
+    console.log(`Executor: ${executor.address}`);
+    console.log(`Verifier: ${verifier.address}\n`);
+
+    const { governanceDataSource, wormholeConfig } =
+      getDefaultDeploymentConfig("stable");
+    const config = await executor.getConfig();
+    const guardianSet = await fetchLiveMainnetGuardianSet();
+    const vault = getMainnetVault();
+    const daoEmitter = await vault.getEmitter();
+
+    const results = [
+      check(
+        "verifier authorizes the registered executor",
+        await verifier.getExecutor(),
+        executor.address,
+      ),
+      check(
+        "Pyth receiver chain id (governance targets this exact id)",
+        config.chainId.toString(),
+        executor.chain.getWormholeChainId().toString(),
+      ),
+      check(
+        "governance (owner) emitter chain",
+        config.ownerEmitterChain.toString(),
+        governanceDataSource.emitterChain.toString(),
+      ),
+      check(
+        "governance (owner) emitter address",
+        config.ownerEmitterAddress,
+        governanceDataSource.emitterAddress,
+      ),
+      // The same address again, but derived live from the DAO Squads multisig
+      // rather than read from this repo's constants — this is what proves only
+      // the DAO can produce a governance VAA the executor accepts.
+      check(
+        `governance emitter is the Wormhole emitter of DAO vault ${vault.getId()}`,
+        config.ownerEmitterAddress,
+        daoEmitter.toBuffer().toString("hex"),
+      ),
+      check(
+        "guardian-set-upgrade emitter chain",
+        config.gsUpgradeEmitterChain.toString(),
+        wormholeConfig.governanceChainId.toString(),
+      ),
+      check(
+        "guardian-set-upgrade emitter address (Wormhole core bridge)",
+        config.gsUpgradeEmitterAddress,
+        wormholeConfig.governanceContract,
+      ),
+      check(
+        "guardian set index matches the live Wormhole mainnet set",
+        (await executor.getCurrentGuardianSetIndex()).toString(),
+        guardianSet.index.toString(),
+      ),
+      check(
+        "guardian set members match the live Wormhole mainnet set",
+        (await executor.getGuardianSet()).join(","),
+        guardianSet.addresses.join(","),
+      ),
+    ];
+
+    // The trusted signer set has no canonical off-chain constant to diff
+    // against, so it is reported rather than compared. `verify_update` against a
+    // live Lazer message is what proves the set is the right one — the contract
+    // only returns a payload if it was signed by a trusted, unexpired signer.
+    const now = BigInt(Math.floor(Date.now() / 1000));
+    const signers = await verifier.getTrustedSigners();
+    console.log(`Trusted Lazer signers (${signers.length.toString()}):`);
+    for (const { expiresAt, publicKey } of signers) {
+      const expiry = new Date(Number(expiresAt) * 1000).toISOString();
+      console.log(
+        `      ${publicKey} expires ${expiry} ${expiresAt > now ? "(active)" : "(EXPIRED)"}`,
+      );
+    }
+    results.push(
+      check(
+        "verifier has at least one unexpired trusted Lazer signer",
+        signers.some(({ expiresAt }) => expiresAt > now).toString(),
+        "true",
+      ),
+    );
+
+    const failed = results.filter((passed) => !passed).length;
+    if (failed > 0) {
+      throw new Error(`${failed.toString()} check(s) FAILED.`);
+    }
+    console.log(`\nAll ${results.length.toString()} checks passed.`);
   },
 );
 

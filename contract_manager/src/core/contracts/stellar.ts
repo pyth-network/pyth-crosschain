@@ -146,9 +146,7 @@ export class StellarLazerContract extends Storable {
    * registered executor means the registry is stale.
    */
   async getExecutor(): Promise<string> {
-    const value = await readInstanceStorage(
-      this.chain,
-      this.address,
+    const value = (await readInstanceStorage(this.chain, this.address)).get(
       "Executor",
     );
     if (!value) {
@@ -206,6 +204,25 @@ export class StellarLazerContract extends Storable {
 }
 
 /**
+ * The deploy-time configuration a {@link StellarExecutorContract} authenticates
+ * governance against. All of it is immutable — the executor's constructor is the
+ * only writer — so a mismatch against the canonical Pyth-DAO values can only be
+ * fixed by redeploying.
+ */
+export type StellarExecutorConfig = {
+  /** Pyth receiver chain id this deployment answers governance for. */
+  chainId: number;
+  /** Guardian-set-upgrade emitter address, 32-byte hex without `0x`. */
+  gsUpgradeEmitterAddress: string;
+  /** Wormhole chain id of the guardian-set-upgrade emitter. */
+  gsUpgradeEmitterChain: number;
+  /** Governance (owner) emitter address, 32-byte hex without `0x`. */
+  ownerEmitterAddress: string;
+  /** Wormhole chain id of the governance (owner) emitter. */
+  ownerEmitterChain: number;
+};
+
+/**
  * The Wormhole governance **executor** (`wormhole-executor-stellar`). It verifies
  * Pyth governance VAAs and dispatches the decoded PTGM action to the verifier, or
  * upgrades itself. Mirrors {@link EvmExecutorContract}.
@@ -242,8 +259,8 @@ export class StellarExecutorContract extends WormholeContract {
     return this.chain;
   }
 
-  getChainId(): Promise<number> {
-    return Promise.resolve(this.chain.getWormholeChainId());
+  async getChainId(): Promise<number> {
+    return (await this.getConfig()).chainId;
   }
 
   toJson() {
@@ -363,6 +380,33 @@ export class StellarExecutorContract extends WormholeContract {
   }
 
   /**
+   * Read the deploy-time governance configuration the executor authenticates
+   * every VAA against. There is no entry point that exposes it, so it is read
+   * straight out of instance storage — one fetch covers all five fields.
+   */
+  async getConfig(): Promise<StellarExecutorConfig> {
+    const values = await readInstanceStorage(this.chain, this.address);
+    const read = (key: string): xdr.ScVal => {
+      const value = values.get(key);
+      if (!value) {
+        throw new Error(`Executor has no ${key} (not initialized)`);
+      }
+      return value;
+    };
+    const toHex = (value: xdr.ScVal): string =>
+      (scValToNative(value) as Buffer).toString("hex");
+    return {
+      chainId: scValToNative(read("ChainId")) as number,
+      gsUpgradeEmitterAddress: toHex(read("GsUpgradeEmitterAddress")),
+      gsUpgradeEmitterChain: scValToNative(
+        read("GsUpgradeEmitterChain"),
+      ) as number,
+      ownerEmitterAddress: toHex(read("OwnerEmitterAddress")),
+      ownerEmitterChain: scValToNative(read("OwnerEmitterChain")) as number,
+    };
+  }
+
+  /**
    * Read the executor's current Wormhole guardian set index.
    *
    * The index lives in *persistent* storage (see the executor's `guardian.rs`),
@@ -475,16 +519,16 @@ async function readPersistentStorage(
 }
 
 /**
- * Read a single entry from a contract's instance storage. Instance storage is
- * bundled inside the contract instance ledger entry (not stored as separate
- * ledger entries), so the whole instance is fetched and its storage map is
- * scanned for `keySymbol`.
+ * Read a contract's whole instance storage, keyed by the leading symbol of each
+ * `DataKey`. Instance storage is bundled inside the contract instance ledger
+ * entry (not stored as separate ledger entries), so every entry arrives in the
+ * one fetch — callers that need several fields should fetch once and index the
+ * result rather than fetching per field.
  */
 async function readInstanceStorage(
   chain: StellarChain,
   contractId: string,
-  keySymbol: string,
-): Promise<xdr.ScVal | undefined> {
+): Promise<Map<string, xdr.ScVal>> {
   const server = chain.getProvider();
   const entry = await server.getContractData(
     contractId,
@@ -492,11 +536,12 @@ async function readInstanceStorage(
     stellarRpc.Durability.Persistent,
   );
   const storage = entry.val.contractData().val().instance().storage() ?? [];
+  const values = new Map<string, xdr.ScVal>();
   for (const item of storage) {
     const key = scValToNative(item.key()) as unknown;
-    if (Array.isArray(key) && key[0] === keySymbol) {
-      return item.val();
+    if (Array.isArray(key) && typeof key[0] === "string") {
+      values.set(key[0], item.val());
     }
   }
-  return undefined;
+  return values;
 }

@@ -48,7 +48,7 @@ import { DefaultStore } from "../src/node/utils/store";
 //    pass them as `--executor-contract` / `--lazer-contract`.
 //
 // Why mainnet-beta? deploy.sh defaults to the Wormhole *mainnet* guardian set
-// (index 4) on both networks, because the canonical owner emitter lives on Solana
+// (index 7) on both networks, because the canonical owner emitter lives on Solana
 // mainnet. The executor checks guardian signatures against the set it holds, so
 // with that default the VAA must be signed by the mainnet guardians — post the
 // message on `mainnet-beta` (the `--guardian-cluster` default) with the `--emitter`

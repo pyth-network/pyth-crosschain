@@ -3,5 +3,10 @@
     "address": "CA542YLVDLBQXTTS2FOERQAED2WE5DQRKLRZUUEG75DQ2TEX2525QNBG",
     "chain": "stellar_testnet",
     "type": "StellarExecutorContract"
+  },
+  {
+    "address": "CDBUGCAVCZIS7RQXYKQTACS32JZ7EOVDBXXNR3BW7AVAHGGMMGGYZY35",
+    "chain": "stellar_mainnet",
+    "type": "StellarExecutorContract"
   }
 ]

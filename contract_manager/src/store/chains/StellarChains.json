@@ -7,5 +7,14 @@
     "rpcUrl": "https://soroban-testnet.stellar.org",
     "type": "StellarChain",
     "wormholeChainName": "stellar_testnet"
+  },
+  {
+    "horizonUrl": "https://horizon.stellar.org",
+    "id": "stellar_mainnet",
+    "mainnet": true,
+    "networkPassphrase": "Public Global Stellar Network ; September 2015",
+    "rpcUrl": "https://mainnet.sorobanrpc.com",
+    "type": "StellarChain",
+    "wormholeChainName": "stellar_mainnet"
   }
 ]
