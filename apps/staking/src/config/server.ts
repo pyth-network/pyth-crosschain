@@ -79,6 +79,8 @@ export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 /**
  * Shows the persistent banner announcing that OIS rewards are paused.  Enabled
  * by default; set `OIS_PAUSED=false` to remove the banner when rewards resume.
+ * `/` is statically prerendered, so this is baked in at build time -- flipping
+ * it needs a redeploy, not just an env var change.
  */
 export const OIS_PAUSED = transformOr("OIS_PAUSED", asBoolean, true);
 // This needs to be a public key that has SOL in it all the time, it will be used as a payer in the transaction simulation to compute the claimable rewards
