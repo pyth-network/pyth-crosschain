@@ -60,6 +60,14 @@ contract PythUpgradable is
         return 0x97a6f304;
     }
 
+    /// The address of the `PythGovernanceModule` library linked into this
+    /// implementation. Governance actions other than `UpgradeContract` are
+    /// executed by `delegatecall`ing into it, so deployment tooling and proposal
+    /// review can use this to confirm the link on-chain.
+    function governanceModule() public pure returns (address) {
+        return address(PythGovernanceModule);
+    }
+
     // Execute a UpgradeContract governance message
     function upgradeUpgradableContract(
         UpgradeContractPayload memory payload
@@ -71,6 +79,13 @@ contract PythUpgradable is
         // the new contract. This call will fail if the method does not exists or the magic
         // is different.
         if (this.pythUpgradableMagic() != 0x97a6f304)
+            revert PythErrors.InvalidGovernanceMessage();
+
+        // The new implementation only handles `UpgradeContract` on its own; every
+        // other governance action lives in its linked governance module. Reject
+        // the upgrade if that library is missing, so a mis-linked deployment
+        // reverts here instead of bricking governance on the proxy.
+        if (this.governanceModule().code.length == 0)
             revert PythErrors.InvalidGovernanceMessage();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());

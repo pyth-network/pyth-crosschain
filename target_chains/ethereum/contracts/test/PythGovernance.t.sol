@@ -58,6 +58,15 @@ contract PythGovernanceTest is
         assertEq(OwnableUpgradeable(address(pyth)).owner(), address(0));
     }
 
+    function testGovernanceModuleIsLinked() public {
+        // Governance actions other than UpgradeContract are executed by the
+        // separately deployed PythGovernanceModule library, so the address it was
+        // linked at must be readable on-chain and must hold code.
+        address module = PythUpgradable(address(pyth)).governanceModule();
+        assertTrue(module != address(0));
+        assertTrue(module.code.length > 0);
+    }
+
     function testValidDataSources() public {
         assertTrue(
             PythGetters(address(pyth)).isValidDataSource(

@@ -46,7 +46,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     ) internal returns (bytes memory vaa) {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -73,7 +73,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     ) internal view returns (bytes memory vaa) {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -161,7 +161,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -235,7 +235,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -320,7 +320,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
         for (uint i = 0; i < forgeItems.length; i++) {
             bytes memory payload = abi.encodePacked(
                 uint32(0x5054474d),
-                PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+                GovernanceModule.EvmExecutor,
                 Executor.ExecutorAction.Execute,
                 CHAIN_ID,
                 address(executor),
@@ -348,7 +348,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testIncorrectOwnerEmitterAddress() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -373,7 +373,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testIncorrectOwnerEmitterChainId() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -405,7 +405,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
 
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -439,7 +439,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testInvalidPayload() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -469,7 +469,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testIncorrectTargetChainId() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             uint16(3),
             address(executor),
@@ -494,7 +494,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testIncorrectTargetAddress() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(0x1),
@@ -519,7 +519,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testIncorrectAction() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             uint8(17),
             CHAIN_ID,
             address(executor),
@@ -544,7 +544,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testCallReverts() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),
@@ -569,7 +569,7 @@ contract ExecutorTest is Test, WormholeTestUtils {
     function testCallToEoaReverts() public {
         bytes memory payload = abi.encodePacked(
             uint32(0x5054474d),
-            PythGovernanceInstructions.GovernanceModule.EvmExecutor,
+            GovernanceModule.EvmExecutor,
             Executor.ExecutorAction.Execute,
             CHAIN_ID,
             address(executor),

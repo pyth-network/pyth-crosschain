@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
-import "../pyth/PythGovernanceInstructions.sol";
+// Imported selectively so that the executor's own `MODULE` constant and
+// `GovernanceInstruction` struct — which differ from the Pyth target-chain ones —
+// do not collide with the file-level declarations of the same name.
+import {MAGIC, GovernanceModule} from "../pyth/PythGovernanceInstructions.sol";
+import "../libraries/external/BytesLib.sol";
 import "../wormhole/interfaces/IWormhole.sol";
 import "./ExecutorErrors.sol";
 
 contract Executor {
     using BytesLib for bytes;
 
-    // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
-    // TODO: it's annoying that we can't import this from PythGovernanceInstructions
-    uint32 constant MAGIC = 0x5054474d;
-
-    PythGovernanceInstructions.GovernanceModule constant MODULE =
-        PythGovernanceInstructions.GovernanceModule.EvmExecutor;
+    GovernanceModule constant MODULE = GovernanceModule.EvmExecutor;
 
     // Instruction indicating that the executor contract on
     // targetChainId at executorAddress should call the contract at callAddress
     // with the provided callData
     struct GovernanceInstruction {
-        PythGovernanceInstructions.GovernanceModule module;
+        GovernanceModule module;
         ExecutorAction action;
         uint16 targetChainId;
         // The address of the specific executor that should perform the call.
@@ -149,7 +148,7 @@ contract Executor {
         index += 4;
 
         uint8 modNumber = encodedInstruction.toUint8(index);
-        gi.module = PythGovernanceInstructions.GovernanceModule(modNumber);
+        gi.module = GovernanceModule(modNumber);
         index += 1;
 
         if (gi.module != MODULE)
