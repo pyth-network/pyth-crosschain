@@ -5,6 +5,7 @@ import { useSelectedLayoutSegment } from "next/navigation";
 import {
   GEO_BLOCKED_SEGMENT,
   GOVERNANCE_ONLY_SEGMENT,
+  VPN_BLOCKED_SEGMENT,
 } from "../../config/isomorphic";
 import { Link } from "../Link";
 
@@ -18,10 +19,13 @@ type Props = {
 export const OisPausedBanner = ({ isEnabled }: Props) => {
   const segment = useSelectedLayoutSegment();
   const isRestrictedMode =
-    segment === GEO_BLOCKED_SEGMENT || segment === GOVERNANCE_ONLY_SEGMENT;
+    segment === GEO_BLOCKED_SEGMENT ||
+    segment === GOVERNANCE_ONLY_SEGMENT ||
+    segment === VPN_BLOCKED_SEGMENT;
 
-  // Restricted regions already get the legal notice banner and can't use OIS
-  // anyway, so showing this too would just stack two banners on those pages.
+  // These segments render the restricted / blocked screens, where OIS is
+  // unavailable and the legal notice may already be showing, so the banner
+  // would either stack with it or advertise actions the user can't take.
   // Render an empty node when hidden to keep the `<body>` grid row count
   // stable.
   return isEnabled && !isRestrictedMode ? (
