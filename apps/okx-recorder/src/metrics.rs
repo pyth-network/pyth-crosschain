@@ -11,10 +11,11 @@ use prometheus::{
 ///
 /// Covers the queue and ClickHouse-insert surface emitted by the stream worker
 /// and writer loop, plus the readiness/liveness surface emitted by the health
-/// probe and stream worker: a ClickHouse-up gauge, a ready-state gauge, and a
-/// per-instrument ToB last-seen timestamp. The funding lane adds its own poll,
-/// insert, and last-event metrics; like every non-ToB lane they feed dashboards
-/// and alerts but never gate `/ready`. `/metrics` exposition is served from
+/// probe and stream worker: a ClickHouse-up gauge, a ready-state gauge, and
+/// per-instrument ToB and trades last-seen timestamps. The funding lane adds
+/// its own poll, insert, and last-event metrics. Only the ToB gauge's
+/// freshness gates `/ready`; every other lane's metrics feed dashboards and
+/// alerts but never gate `/ready`. `/metrics` exposition is served from
 /// [`crate::health`].
 #[derive(Clone)]
 pub struct RecorderMetrics {
@@ -26,6 +27,7 @@ pub struct RecorderMetrics {
     pub insert_rows: Counter,
     pub insert_latency_seconds: Histogram,
     pub tob_last_seen_unix_seconds: GaugeVec,
+    pub trades_last_seen_unix_seconds: GaugeVec,
     pub funding_poll_attempts: CounterVec,
     pub funding_insert_attempts: CounterVec,
     pub funding_insert_rows: Counter,
@@ -77,6 +79,13 @@ impl RecorderMetrics {
             Opts::new(
                 "okx_recorder_tob_last_seen_unix_seconds",
                 "Unix timestamp of the last received top-of-book update per instrument",
+            ),
+            &["inst_id"],
+        )?;
+        let trades_last_seen_unix_seconds = GaugeVec::new(
+            Opts::new(
+                "okx_recorder_trades_last_seen_unix_seconds",
+                "Unix timestamp of the last received trade print per instrument (staleness signal only; never gates /ready)",
             ),
             &["inst_id"],
         )?;
@@ -135,6 +144,7 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_rows.clone()))?;
         registry.register(Box::new(insert_latency_seconds.clone()))?;
         registry.register(Box::new(tob_last_seen_unix_seconds.clone()))?;
+        registry.register(Box::new(trades_last_seen_unix_seconds.clone()))?;
         registry.register(Box::new(funding_poll_attempts.clone()))?;
         registry.register(Box::new(funding_insert_attempts.clone()))?;
         registry.register(Box::new(funding_insert_rows.clone()))?;
@@ -153,6 +163,7 @@ impl RecorderMetrics {
             insert_rows,
             insert_latency_seconds,
             tob_last_seen_unix_seconds,
+            trades_last_seen_unix_seconds,
             funding_poll_attempts,
             funding_insert_attempts,
             funding_insert_rows,
@@ -189,6 +200,15 @@ impl RecorderMetrics {
     /// received.
     pub fn record_tob_seen(&self, inst_id: &str) {
         self.tob_last_seen_unix_seconds
+            .with_label_values(&[inst_id])
+            .set(unix_seconds_now());
+    }
+
+    /// Stamp the per-instrument trades last-seen gauge when a trade print is
+    /// received. Staleness derived from this gauge is observability-only and
+    /// never gates `/ready`.
+    pub fn record_trade_seen(&self, inst_id: &str) {
+        self.trades_last_seen_unix_seconds
             .with_label_values(&[inst_id])
             .set(unix_seconds_now());
     }

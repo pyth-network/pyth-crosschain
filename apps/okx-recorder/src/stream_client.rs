@@ -12,26 +12,27 @@ use tokio_util::sync::CancellationToken;
 
 use crate::health::HealthState;
 use crate::metrics::RecorderMetrics;
-use crate::models::{parse_frame, LaneRow, ParsedFrame, BBO_TBT_CHANNEL};
+use crate::models::{parse_frame, LaneRow, ParsedFrame, BBO_TBT_CHANNEL, TRADES_CHANNEL};
 
 /// A connection that survives this long before failing is considered to have
 /// been healthy, so the reconnect backoff resets instead of compounding.
 const BACKOFF_RESET_AFTER: Duration = Duration::from_secs(60);
 
 /// Run the websocket worker: one connection to the OKX public endpoint
-/// multiplexing a `bbo-tbt` subscription per configured instrument, reconnected
-/// with jittered exponential backoff for the life of the process.
+/// multiplexing a `bbo-tbt` and a `trades` subscription per configured
+/// instrument, reconnected with jittered exponential backoff for the life of
+/// the process.
 ///
 /// Each data frame is stamped with a client-side `received_at`, parsed into
 /// [`LaneRow`]s, and `try_send`-ed into the writer channel. A full channel
 /// increments the per-instrument `queue_drops` metric and drops the row
 /// (bounded buffer, observable drops) rather than blocking the read loop.
 ///
-/// OKX closes a connection that has been idle for 30 seconds; the trades lane
-/// will bring an application-level ping keepalive with it. Until then an idle
+/// OKX closes a connection that has been idle for 30 seconds; an
+/// application-level ping keepalive is a follow-up. Until then an idle
 /// connection (all instruments halted) surfaces as a server close, and this
-/// loop re-subscribes after backoff. Additional channel subscriptions (trades)
-/// extend [`subscribe_payload`] and the `ParsedFrame::Data` dispatch below.
+/// loop re-subscribes after backoff. Additional channel subscriptions extend
+/// [`subscribe_payload`] and the `ParsedFrame::Data` dispatch below.
 pub async fn run_stream_worker(
     ws_url: String,
     inst_ids: Vec<String>,
@@ -119,14 +120,15 @@ async fn stream_once(
     }
 }
 
-/// The single subscribe frame sent after connect: one `bbo-tbt` arg per
-/// instrument, multiplexed on this connection. Follow-up lanes append their
-/// channel args here.
+/// The single subscribe frame sent after connect: one `bbo-tbt` and one
+/// `trades` arg per instrument, multiplexed on this connection. Follow-up
+/// lanes append their channel args here.
 fn subscribe_payload(inst_ids: &[String]) -> serde_json::Value {
-    let args: Vec<serde_json::Value> = inst_ids
-        .iter()
-        .map(|inst_id| json!({ "channel": BBO_TBT_CHANNEL, "instId": inst_id }))
-        .collect();
+    let mut args = Vec::with_capacity(inst_ids.len().saturating_mul(2));
+    for inst_id in inst_ids {
+        args.push(json!({ "channel": BBO_TBT_CHANNEL, "instId": inst_id }));
+        args.push(json!({ "channel": TRADES_CHANNEL, "instId": inst_id }));
+    }
     json!({ "op": "subscribe", "args": args })
 }
 
@@ -140,10 +142,21 @@ fn handle_text_frame(
     match parse_frame(text, received_at) {
         Ok(ParsedFrame::Data { inst_id, rows }) => {
             // Freshness keys on receipt, not insert success: a frame arriving
-            // for `inst_id` proves the ToB lane is live even if the bounded
-            // queue later drops the rows.
-            health.set_instrument_seen(&inst_id);
-            metrics.record_tob_seen(&inst_id);
+            // for `inst_id` proves its lane is live even if the bounded queue
+            // later drops the rows. Every row in a frame belongs to the same
+            // lane, so the first row identifies it. Only the ToB lane feeds
+            // /ready; trades freshness is a metric-only staleness signal (a
+            // quiet trades lane on a thin perp is data, not an outage).
+            match rows.first() {
+                Some(LaneRow::BookTicker(_)) => {
+                    health.set_instrument_seen(&inst_id);
+                    metrics.record_tob_seen(&inst_id);
+                }
+                Some(LaneRow::Trade(_)) => {
+                    metrics.record_trade_seen(&inst_id);
+                }
+                None => {}
+            }
             for row in rows {
                 match sender.try_send(row) {
                     Ok(()) => {}

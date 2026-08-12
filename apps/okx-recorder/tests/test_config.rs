@@ -8,7 +8,7 @@ use std::{
 
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-const ENV_KEYS: [&str; 13] = [
+const ENV_KEYS: [&str; 14] = [
     "OKX_RECORDER__INSTRUMENTS",
     "OKX_RECORDER__WS_URL",
     "OKX_RECORDER__CLICKHOUSE__URL",
@@ -16,6 +16,7 @@ const ENV_KEYS: [&str; 13] = [
     "OKX_RECORDER__CLICKHOUSE__PASSWORD",
     "OKX_RECORDER__CLICKHOUSE__DATABASE",
     "OKX_RECORDER__CLICKHOUSE__BOOK_TICKER_TABLE",
+    "OKX_RECORDER__CLICKHOUSE__TRADES_TABLE",
     "OKX_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
     "OKX_RECORDER__METRICS_PORT",
     "OKX_RECORDER__HEALTH_PORT",
@@ -41,6 +42,7 @@ clickhouse:
   password: "recorder"
   database: "default"
   book_ticker_table: "okx_book_ticker"
+  trades_table: "okx_trades_custom"
 metrics_port: 9095
 health_port: 8085
 batch_max_rows: 5000
@@ -62,6 +64,7 @@ batch_flush_seconds: 1.5
     assert_eq!(config.clickhouse.port, 8123);
     assert!(!config.clickhouse.secure);
     assert_eq!(config.clickhouse.book_ticker_table, "okx_book_ticker");
+    assert_eq!(config.clickhouse.trades_table, "okx_trades_custom");
 
     let _ = fs::remove_file(config_file);
 }
@@ -96,6 +99,7 @@ clickhouse:
     assert_eq!(config.clickhouse.username, "default");
     assert_eq!(config.clickhouse.database, "default");
     assert_eq!(config.clickhouse.book_ticker_table, "okx_book_ticker");
+    assert_eq!(config.clickhouse.trades_table, "okx_trades");
     assert_eq!(config.clickhouse.funding_rates_table, "okx_funding_rates");
     // Funding lane defaults: the public history endpoint on a 5-minute poll.
     assert_eq!(

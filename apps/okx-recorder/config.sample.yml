@@ -19,6 +19,7 @@ clickhouse:
   password: "recorder"
   database: "default"
   book_ticker_table: "okx_book_ticker"
+  trades_table: "okx_trades"
   funding_rates_table: "okx_funding_rates"
 
 metrics_port: 9095
