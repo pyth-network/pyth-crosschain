@@ -38,6 +38,8 @@ const transformOr = <T>(
 const getOr = (key: string, defaultValue: string): string =>
   transform(key, (value) => value ?? defaultValue);
 
+const asBoolean = (value: string): boolean => value.toLowerCase() === "true";
+
 /**
  * Indicates that this server is the live customer-facing production server.
  */
@@ -74,6 +76,11 @@ export const GOVERNANCE_ONLY_REGIONS = transformOr(
   [],
 );
 export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
+/**
+ * Shows the persistent banner announcing that OIS rewards are paused.  Enabled
+ * by default; set `OIS_PAUSED=false` to remove the banner when rewards resume.
+ */
+export const OIS_PAUSED = transformOr("OIS_PAUSED", asBoolean, true);
 // This needs to be a public key that has SOL in it all the time, it will be used as a payer in the transaction simulation to compute the claimable rewards
 // such simulation fails when the payer has no funds.
 export const SIMULATION_PAYER_ADDRESS = getOr(
