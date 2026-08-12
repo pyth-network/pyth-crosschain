@@ -1,0 +1,202 @@
+{
+  "date": "2026-08-12",
+  "label": "Wednesday",
+  "summary": {
+    "added": 0,
+    "went_live": 19,
+    "removed": 0
+  },
+  "hero": "19 went live.",
+  "events": [
+    {
+      "id": "Equity.US.NCLD/USD",
+      "lazerId": 3621,
+      "asset": "Roundhill Neocloud Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "29d0036c8199bd498ab18ec52c8aacaae9074e5a36c1add3bb3764cfab966241"
+    },
+    {
+      "id": "Equity.US.LYTE/USD",
+      "lazerId": 3620,
+      "asset": "Roundhill Photonics & Optics Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "3dd0ef0b6b582aeb1b1ad93c59f4b149f67159c91c8782d812c7df9567cd23ba"
+    },
+    {
+      "id": "Equity.US.NTNX/USD",
+      "lazerId": 3615,
+      "asset": "Nutanix Inc Cl A",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "32462ff5bcef4c30f6215ba45ebd819e9a18b057994eeeb3c9f14498cff43721"
+    },
+    {
+      "id": "Equity.US.TOL/USD",
+      "lazerId": 3614,
+      "asset": "Toll Brothers Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "8b6563adc2cb589407ea03c21c347bc564f899e37fa5ca8fad73b16fef609181"
+    },
+    {
+      "id": "Equity.US.LECO/USD",
+      "lazerId": 3612,
+      "asset": "Lincoln Elec Hldgs Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "a08f897997f4223014aea76709b4236f2d89c132e6f45373ed65e029805cd9fc"
+    },
+    {
+      "id": "Equity.US.JLL/USD",
+      "lazerId": 3611,
+      "asset": "Jones Lang Lasalle Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "ce705b51db5f2fe826dfc3db186c1371ffd61a2a06f0529d732de288db04c222"
+    },
+    {
+      "id": "Equity.US.PFGC/USD",
+      "lazerId": 3607,
+      "asset": "Performance Food Group Co Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "92cffb3f8b650ba9eb2c6e92d510bacf626f7161c08cadf4c7e472fe589c5e0f"
+    },
+    {
+      "id": "Equity.US.THC/USD",
+      "lazerId": 3606,
+      "asset": "Tenet Healthcare Corp Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "9d92af43235347f173a2da159664df0f88a5959d53aa9f407ed7e91ce935d0c2"
+    },
+    {
+      "id": "Equity.US.CLH/USD",
+      "lazerId": 3604,
+      "asset": "Clean Harbors Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "f45f254631ba729fb9eee4cd73dd9814f080b7602a4c2ae992196588201a05ef"
+    },
+    {
+      "id": "Equity.US.OHI/USD",
+      "lazerId": 3602,
+      "asset": "Omega Healthcare Invs Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "eeaf2af62040777467525ee16af7447148e7c1f00654bb48f570be0a4a3afbaa"
+    },
+    {
+      "id": "Equity.US.USFD/USD",
+      "lazerId": 3601,
+      "asset": "Us Foods Hldg Corp Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "2d485efba1b4fbf1643105dcaf55bcd645e2f89b5bd983705c6519ce71a41cc7"
+    },
+    {
+      "id": "Equity.US.EWBC/USD",
+      "lazerId": 3599,
+      "asset": "East West Bancorp Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "90874a0d960f6645924c10b58d7a857a608842f726861683363ef6195fcdf041"
+    },
+    {
+      "id": "Equity.US.NBIX/USD",
+      "lazerId": 3598,
+      "asset": "Neurocrine Biosciences Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "5603d723db34e83d86827f522750bffca5b35f137f02d5afda6329b9a37639fd"
+    },
+    {
+      "id": "Equity.US.MLI/USD",
+      "lazerId": 3597,
+      "asset": "Mueller Inds Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "e1548338663e981fde5c43aa16f21bbde73164994b790aed663fc4190fc6e9db"
+    },
+    {
+      "id": "Equity.US.DTM/USD",
+      "lazerId": 3595,
+      "asset": "Dt Midstream Inc Common Stock",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "92a1e209ab752e83d91381995d1dde40c4affd07b947d5ca1f5d11b4197720a1"
+    },
+    {
+      "id": "Equity.US.NLY/USD",
+      "lazerId": 3591,
+      "asset": "Annaly Capital Management In Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "764ee3e7d82087a6b8b32d1f19197af397884b7ec61abd6da14442a867096209"
+    },
+    {
+      "id": "Crypto.NAV.USDM/RESERVES",
+      "lazerId": 3326,
+      "asset": "Us Dollar Moneta",
+      "assetType": "nav",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "a820c01c484a8284a7a1b66628aa4671fa9583581653c341cdf911aa342cc163"
+    },
+    {
+      "id": "Commodities.BLDZ6/USD",
+      "lazerId": 3160,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 30 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "3a25a8a021b5bf927a887f0152b7b1e068535ce2c859180f54e2a2b1dc39f85c"
+    },
+    {
+      "id": "Commodities.BLDX6/USD",
+      "lazerId": 3159,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 30 September 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-12",
+      "quote": "USD",
+      "hermesId": "579e38caeab043906efec4cb4a93949d13466d8295d7eeaea36dc926f740a3d5"
+    }
+  ]
+}
