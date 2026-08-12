@@ -47,6 +47,8 @@ pub struct AppConfig {
     pub batch_max_rows: usize,
     pub batch_flush_seconds: f64,
     pub reconnect_max_backoff_seconds: u64,
+    pub ping_idle_seconds: u64,
+    pub pong_timeout_seconds: u64,
     pub insert_async: bool,
     pub funding_history_url: String,
     pub funding_poll_seconds: u64,
@@ -118,6 +120,16 @@ impl AppConfig {
                 "reconnect_max_backoff_seconds",
                 default_reconnect_max_backoff_seconds,
             )?,
+            ping_idle_seconds: parse_ping_idle_seconds(get_or_default(
+                &loaded,
+                "ping_idle_seconds",
+                default_ping_idle_seconds,
+            )?)?,
+            pong_timeout_seconds: parse_pong_timeout_seconds(get_or_default(
+                &loaded,
+                "pong_timeout_seconds",
+                default_pong_timeout_seconds,
+            )?)?,
             insert_async: get_or_default(&loaded, "insert_async", default_insert_async)?,
             funding_history_url: get_or_default(
                 &loaded,
@@ -220,6 +232,39 @@ fn parse_clickhouse_target(input: ClickHouseConfig) -> Result<ClickHouseTarget, 
     })
 }
 
+/// OKX terminates a connection with no traffic for 30 seconds, so the keepalive
+/// ping must fire strictly inside that window to be of any use.
+const OKX_IDLE_DISCONNECT_SECONDS: u64 = 30;
+
+/// Sanity ceiling for the pong timeout: a live OKX endpoint answers a ping
+/// within milliseconds, so waiting longer than this only delays the reconnect.
+const MAX_PONG_TIMEOUT_SECONDS: u64 = 60;
+
+/// Validate the idle threshold after which the keepalive ping is sent: it must
+/// be non-zero and beat OKX's server-side idle disconnect.
+fn parse_ping_idle_seconds(value: u64) -> Result<u64, ConfigError> {
+    if value == 0 || value >= OKX_IDLE_DISCONNECT_SECONDS {
+        return Err(ConfigError::Invalid(format!(
+            "ping_idle_seconds must be between 1 and {} (OKX drops connections \
+             idle for {}s); got {value}",
+            OKX_IDLE_DISCONNECT_SECONDS - 1,
+            OKX_IDLE_DISCONNECT_SECONDS,
+        )));
+    }
+    Ok(value)
+}
+
+/// Validate the window after a keepalive ping within which a pong (or any
+/// frame) must arrive before the connection is presumed dead.
+fn parse_pong_timeout_seconds(value: u64) -> Result<u64, ConfigError> {
+    if value == 0 || value > MAX_PONG_TIMEOUT_SECONDS {
+        return Err(ConfigError::Invalid(format!(
+            "pong_timeout_seconds must be between 1 and {MAX_PONG_TIMEOUT_SECONDS}; got {value}"
+        )));
+    }
+    Ok(value)
+}
+
 fn required_string(value: Option<String>, key: &str) -> Result<String, ConfigError> {
     match value {
         Some(value) if !value.trim().is_empty() => Ok(value),
@@ -269,6 +314,16 @@ fn default_batch_flush_seconds() -> f64 {
 /// `stream_client`.
 fn default_reconnect_max_backoff_seconds() -> u64 {
     30
+}
+
+/// Idle threshold before a client-initiated keepalive ping, comfortably inside
+/// OKX's 30-second idle disconnect.
+fn default_ping_idle_seconds() -> u64 {
+    15
+}
+
+fn default_pong_timeout_seconds() -> u64 {
+    5
 }
 
 fn default_insert_async() -> bool {

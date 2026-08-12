@@ -8,6 +8,7 @@ use okx_recorder::{
     health::{start_http_servers, HealthState},
     metrics::RecorderMetrics,
     recorder::{FundingRuntimeConfig, RecorderRuntime, WriterRuntimeConfig},
+    stream_client::KeepaliveConfig,
 };
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -44,6 +45,10 @@ async fn run() -> Result<()> {
         config.ws_url,
         config.instruments,
         config.reconnect_max_backoff_seconds,
+        KeepaliveConfig {
+            ping_idle: Duration::from_secs(config.ping_idle_seconds),
+            pong_timeout: Duration::from_secs(config.pong_timeout_seconds),
+        },
         writer_client,
         WriterRuntimeConfig {
             batch_max_rows: config.batch_max_rows,
