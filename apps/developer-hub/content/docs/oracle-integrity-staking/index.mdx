@@ -7,6 +7,18 @@ full: false
 index: true
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="warning" title="OIS rewards are paused">
+  Following [OP-PIP-103](https://proposals.pyth.network/proposals/103), the OIS
+  reward rate was set to 0 on 22 April 2026, and no rewards are currently
+  distributed to any pool. Staking and slashing remain active — stake assigned to
+  a publisher is still subject to slashing. You can unstake and withdraw at any
+  time, and governance staking is unaffected. See the [governance
+  update](https://forum.pyth.network/t/ois-rewards-update-april-2026/2479) for
+  details.
+</Callout>
+
 This document outlines the design principles and implementation details of the [Oracle Integrity Staking (OIS)](https://staking.pyth.network/) protocol.
 
 ## Design Principles
