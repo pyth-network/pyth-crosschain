@@ -10,9 +10,11 @@ pub const BBO_TBT_CHANNEL: &str = "bbo-tbt";
 
 /// A parsed row destined for ClickHouse, tagged by lane.
 ///
-/// Each lane (channel or poller) maps to its own ClickHouse table; the writer
-/// loop routes rows by variant. Currently only the ToB lane exists — trades and
-/// funding variants bolt on here when their lanes land.
+/// Each websocket lane (channel) maps to its own ClickHouse table; the writer
+/// loop routes rows by variant. Currently only the ToB lane exists — the
+/// trades variant bolts on here when its lane lands. The funding lane arrives
+/// over REST (see [`FundingRate`]) and is inserted by its poller directly, so
+/// it never passes through this enum.
 #[derive(Clone, Debug, PartialEq)]
 pub enum LaneRow {
     BookTicker(BookTicker),
@@ -187,6 +189,116 @@ fn parse_best_level(
     ))
 }
 
-fn parse_decimal(value: &str, side: &str) -> Result<Decimal> {
-    Decimal::from_str(value).with_context(|| format!("invalid decimal in {side} level: {value}"))
+fn parse_decimal(value: &str, field: &str) -> Result<Decimal> {
+    Decimal::from_str(value).with_context(|| format!("invalid decimal in {field}: {value}"))
+}
+
+/// A single settled OKX funding event for one instrument, from the
+/// `funding-rate-history` REST endpoint. This is the SETTLED rate — not the
+/// websocket predicted-rate stream. `(inst_id, funding_time)` identifies the
+/// event: every poll re-fetches the trailing history window and re-inserts
+/// overlapping rows, and `ReplacingMergeTree(ingested_at)` collapses the
+/// duplicates, making the poller idempotent with no client-side dedupe.
+#[derive(Clone, Debug, PartialEq)]
+pub struct FundingRate {
+    pub inst_id: String,
+    pub funding_rate: Decimal,
+    /// OKX's realized rate for the period; can be absent.
+    pub realized_rate: Option<Decimal>,
+    /// Exchange settlement timestamp (`fundingTime` in the raw payload, epoch
+    /// milliseconds).
+    pub funding_time: DateTime<Utc>,
+    /// Client receipt time, stamped when the REST response arrives.
+    pub received_at: DateTime<Utc>,
+}
+
+/// REST envelope for `/api/v5/public/funding-rate-history`: `code` is `"0"` on
+/// success, anything else is an error described by `msg`. `data` lists the
+/// most recent settled funding events first.
+#[derive(Debug, Deserialize)]
+struct RawFundingHistoryResponse {
+    code: String,
+    #[serde(default)]
+    msg: String,
+    #[serde(default)]
+    data: Vec<RawFundingHistoryEntry>,
+}
+
+/// One settled funding event. Decimals and the epoch-millis `fundingTime`
+/// arrive as strings, like everything on the OKX REST API.
+#[derive(Debug, Deserialize)]
+struct RawFundingHistoryEntry {
+    #[serde(rename = "instId")]
+    inst_id: String,
+    #[serde(rename = "fundingRate")]
+    funding_rate: String,
+    #[serde(rename = "realizedRate", default)]
+    realized_rate: Option<String>,
+    #[serde(rename = "fundingTime")]
+    funding_time: String,
+}
+
+/// Parse one `funding-rate-history` REST response body into [`FundingRate`]
+/// rows for `inst_id_hint` (the instrument the request asked for).
+///
+/// An error-code response or a malformed body is an error so the caller can
+/// drop the poll rather than store half-parsed rows. An entry for a different
+/// instrument than requested is dropped with a warning instead of failing the
+/// whole poll. `received_at` is supplied by the caller (stamped when the
+/// response arrives).
+pub fn parse_funding_history(
+    body: &str,
+    inst_id_hint: &str,
+    received_at: DateTime<Utc>,
+) -> Result<Vec<FundingRate>> {
+    let response: RawFundingHistoryResponse =
+        serde_json::from_str(body).context("malformed funding-rate-history response")?;
+    if response.code != "0" {
+        anyhow::bail!(
+            "funding-rate-history error response (code {}): {}",
+            response.code,
+            response.msg
+        );
+    }
+
+    let mut rows = Vec::with_capacity(response.data.len());
+    for entry in response.data {
+        if entry.inst_id != inst_id_hint {
+            tracing::warn!(
+                expected = inst_id_hint,
+                got = %entry.inst_id,
+                "funding-rate-history instrument mismatch; dropping row"
+            );
+            continue;
+        }
+        rows.push(FundingRate::from_entry(entry, received_at)?);
+    }
+    Ok(rows)
+}
+
+impl FundingRate {
+    fn from_entry(entry: RawFundingHistoryEntry, received_at: DateTime<Utc>) -> Result<Self> {
+        let raw_time: i64 = entry
+            .funding_time
+            .parse()
+            .with_context(|| format!("invalid fundingTime: {}", entry.funding_time))?;
+        let funding_time = DateTime::from_timestamp_millis(raw_time)
+            .with_context(|| format!("fundingTime out of range: {raw_time}"))?;
+        let funding_rate = parse_decimal(&entry.funding_rate, "fundingRate")?;
+        // An absent or empty realizedRate is a missing value, not an error.
+        let realized_rate = entry
+            .realized_rate
+            .as_deref()
+            .filter(|value| !value.is_empty())
+            .map(|value| parse_decimal(value, "realizedRate"))
+            .transpose()?;
+
+        Ok(Self {
+            inst_id: entry.inst_id,
+            funding_rate,
+            realized_rate,
+            funding_time,
+            received_at,
+        })
+    }
 }

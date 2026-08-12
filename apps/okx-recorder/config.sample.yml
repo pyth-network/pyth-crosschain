@@ -19,6 +19,7 @@ clickhouse:
   password: "recorder"
   database: "default"
   book_ticker_table: "okx_book_ticker"
+  funding_rates_table: "okx_funding_rates"
 
 metrics_port: 9095
 health_port: 8085
@@ -28,3 +29,12 @@ batch_max_rows: 10000
 batch_flush_seconds: 2.0
 reconnect_max_backoff_seconds: 30
 insert_async: true
+
+# Funding lane: REST poller for the SETTLED funding rate (funding-rate-history
+# endpoint, not the websocket predicted-rate stream). Each poll re-fetches the
+# last `funding_history_limit` events per instrument (OKX caps limit at 100);
+# the overlap is harmless because inserts are idempotent by
+# (inst_id, funding_time). Funding staleness never gates /ready.
+funding_history_url: "https://www.okx.com/api/v5/public/funding-rate-history"
+funding_poll_seconds: 300
+funding_history_limit: 10

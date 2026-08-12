@@ -8,7 +8,7 @@ use std::{
 
 static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-const ENV_KEYS: [&str; 9] = [
+const ENV_KEYS: [&str; 13] = [
     "OKX_RECORDER__INSTRUMENTS",
     "OKX_RECORDER__WS_URL",
     "OKX_RECORDER__CLICKHOUSE__URL",
@@ -16,8 +16,12 @@ const ENV_KEYS: [&str; 9] = [
     "OKX_RECORDER__CLICKHOUSE__PASSWORD",
     "OKX_RECORDER__CLICKHOUSE__DATABASE",
     "OKX_RECORDER__CLICKHOUSE__BOOK_TICKER_TABLE",
+    "OKX_RECORDER__CLICKHOUSE__FUNDING_RATES_TABLE",
     "OKX_RECORDER__METRICS_PORT",
     "OKX_RECORDER__HEALTH_PORT",
+    "OKX_RECORDER__FUNDING_HISTORY_URL",
+    "OKX_RECORDER__FUNDING_POLL_SECONDS",
+    "OKX_RECORDER__FUNDING_HISTORY_LIMIT",
 ];
 
 #[test]
@@ -88,10 +92,18 @@ clickhouse:
     assert_eq!(config.ready_stale_seconds, 10);
     assert_eq!(config.reconnect_max_backoff_seconds, 30);
     assert!(config.insert_async);
-    // ClickHouse target falls back to the default user/database/table.
+    // ClickHouse target falls back to the default user/database/tables.
     assert_eq!(config.clickhouse.username, "default");
     assert_eq!(config.clickhouse.database, "default");
     assert_eq!(config.clickhouse.book_ticker_table, "okx_book_ticker");
+    assert_eq!(config.clickhouse.funding_rates_table, "okx_funding_rates");
+    // Funding lane defaults: the public history endpoint on a 5-minute poll.
+    assert_eq!(
+        config.funding_history_url,
+        "https://www.okx.com/api/v5/public/funding-rate-history"
+    );
+    assert_eq!(config.funding_poll_seconds, 300);
+    assert_eq!(config.funding_history_limit, 10);
 
     let _ = fs::remove_file(config_file);
 }
@@ -201,6 +213,60 @@ instruments:
     assert!(result.is_err(), "missing ClickHouse URL should fail");
 
     let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_poll_seconds_below_minute_rejected() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars(ENV_KEYS);
+
+    let config_file = temp_yaml_path("okx-config-funding-poll");
+    let yaml = r#"
+clickhouse:
+  url: "http://127.0.0.1:8123"
+funding_poll_seconds: 5
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let result = AppConfig::from_sources(Some(&config_file));
+    assert!(result.is_err(), "sub-minute funding poll should fail");
+    let message = result.err().map(|err| err.to_string()).unwrap_or_default();
+    assert!(
+        message.contains("funding_poll_seconds"),
+        "unexpected error: {message}"
+    );
+
+    let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_funding_history_limit_out_of_range_rejected() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars(ENV_KEYS);
+
+    // OKX caps the history `limit` query parameter at 100.
+    for bad_limit in ["0", "101"] {
+        let config_file = temp_yaml_path("okx-config-funding-limit");
+        let yaml = format!(
+            r#"
+clickhouse:
+  url: "http://127.0.0.1:8123"
+funding_history_limit: {bad_limit}
+"#
+        );
+        fs::write(&config_file, yaml).expect("write yaml config");
+        let result = AppConfig::from_sources(Some(&config_file));
+        assert!(
+            result.is_err(),
+            "funding_history_limit {bad_limit} should fail"
+        );
+        let message = result.err().map(|err| err.to_string()).unwrap_or_default();
+        assert!(
+            message.contains("funding_history_limit"),
+            "unexpected error: {message}"
+        );
+
+        let _ = fs::remove_file(config_file);
+    }
 }
 
 fn clear_env_vars<'a>(keys: impl IntoIterator<Item = &'a str>) {

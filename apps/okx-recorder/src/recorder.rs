@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use tokio::{
     sync::mpsc,
@@ -9,9 +9,10 @@ use tokio_util::sync::CancellationToken;
 
 use crate::{
     clickhouse::ClickHouseClient,
+    funding_client::poll_funding_once,
     health::HealthState,
     metrics::RecorderMetrics,
-    models::{BookTicker, LaneRow},
+    models::{BookTicker, FundingRate, LaneRow},
     stream_client::run_stream_worker,
 };
 
@@ -22,6 +23,13 @@ pub struct WriterRuntimeConfig {
     pub queue_max_rows: usize,
 }
 
+#[derive(Clone, Debug)]
+pub struct FundingRuntimeConfig {
+    pub history_url: String,
+    pub poll_seconds: u64,
+    pub history_limit: u32,
+}
+
 /// Orchestrates the recorder pipeline: a single multiplexed websocket worker
 /// feeds an mpsc channel of [`LaneRow`]s, and a writer loop batch-inserts each
 /// lane into its ClickHouse table. Ported from `binance-recorder`'s
@@ -30,14 +38,17 @@ pub struct WriterRuntimeConfig {
 /// over the table's ORDER BY keys). Because `received_at` is part of the ORDER
 /// BY, this collapses byte-identical insert retries only; a genuine exchange
 /// re-send arrives with a new `received_at` and is persisted as a distinct row
-/// by design. Follow-up lanes (trades, funding) add their own [`LaneRow`]
-/// variants and per-lane buffers here.
+/// by design. Follow-up websocket lanes (trades) add their own [`LaneRow`]
+/// variants and per-lane buffers here. The funding lane is REST instead: it
+/// polls on a minutes-scale cadence and inserts its small batches directly,
+/// bypassing the queue.
 pub struct RecorderRuntime {
     ws_url: String,
     instruments: Vec<String>,
     reconnect_max_backoff_seconds: u64,
     writer: ClickHouseClient,
     writer_config: WriterRuntimeConfig,
+    funding_config: FundingRuntimeConfig,
     metrics: Arc<RecorderMetrics>,
     health: HealthState,
     insert_async: bool,
@@ -53,6 +64,7 @@ impl RecorderRuntime {
         reconnect_max_backoff_seconds: u64,
         writer: ClickHouseClient,
         writer_config: WriterRuntimeConfig,
+        funding_config: FundingRuntimeConfig,
         metrics: Arc<RecorderMetrics>,
         health: HealthState,
         insert_async: bool,
@@ -63,6 +75,7 @@ impl RecorderRuntime {
             reconnect_max_backoff_seconds,
             writer,
             writer_config,
+            funding_config,
             metrics,
             health,
             insert_async,
@@ -99,6 +112,7 @@ impl RecorderRuntime {
         });
         self.handles.push(handle);
 
+        self.spawn_funding_loop();
         self.spawn_health_probe_loop();
     }
 
@@ -175,6 +189,70 @@ impl RecorderRuntime {
         self.handles.push(handle);
     }
 
+    /// Poll the settled funding-rate history for every configured instrument
+    /// on a minutes-scale cadence and insert each poll's batch directly.
+    /// Funding settles hourly at most, so each poll yields a handful of rows —
+    /// no queueing or batching needed. Every poll re-fetches a trailing history
+    /// window; the resulting duplicates are collapsed by
+    /// `ReplacingMergeTree(ingested_at)` over `(inst_id, funding_time)`, so
+    /// re-polling is idempotent by design. This lane feeds the funding
+    /// last-event metric but never touches `HealthState` — funding staleness
+    /// must not gate `/ready`.
+    fn spawn_funding_loop(&mut self) {
+        let history_url = self.funding_config.history_url.clone();
+        let instruments = self.instruments.clone();
+        let poll_seconds = self.funding_config.poll_seconds;
+        let history_limit = self.funding_config.history_limit;
+        let max_backoff = self.reconnect_max_backoff_seconds;
+        let writer = self.writer.clone();
+        let metrics = self.metrics.clone();
+        let insert_async = self.insert_async;
+        let stop_token = self.stop_token.clone();
+
+        let handle = tokio::spawn(async move {
+            let http = reqwest::Client::new();
+            let mut backoff: HashMap<String, u64> = HashMap::new();
+            let mut ticker = tokio::time::interval(Duration::from_secs(poll_seconds.max(1)));
+            ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+
+            while stop_token
+                .run_until_cancelled(async {
+                    ticker.tick().await;
+
+                    let batch = poll_funding_once(
+                        &http,
+                        &history_url,
+                        &instruments,
+                        history_limit,
+                        max_backoff,
+                        &metrics,
+                        &mut backoff,
+                        &stop_token,
+                    )
+                    .await;
+
+                    for row in &batch {
+                        metrics.record_funding_event(&row.inst_id, row.funding_time);
+                    }
+
+                    if !batch.is_empty() {
+                        flush_funding_with_retry(
+                            &writer,
+                            &metrics,
+                            batch,
+                            stop_token.clone(),
+                            insert_async,
+                        )
+                        .await;
+                    }
+                })
+                .await
+                .is_some()
+            {}
+        });
+        self.handles.push(handle);
+    }
+
     /// Periodically ping ClickHouse and refresh the readiness gauges.
     /// Per-instrument ToB freshness is driven from the stream worker; this loop
     /// owns only the ClickHouse-up and overall-ready signals.
@@ -246,6 +324,47 @@ async fn flush_with_retry(
                     error = ?err,
                     "failed to insert book ticker batch"
                 );
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+}
+
+async fn flush_funding_with_retry(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    batch: Vec<FundingRate>,
+    stop_token: CancellationToken,
+    insert_async: bool,
+) {
+    loop {
+        match writer.insert_funding_batch(&batch, insert_async).await {
+            Ok((rows, latency)) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["success"])
+                    .inc();
+                metrics.funding_insert_rows.inc_by(rows as f64);
+                metrics.funding_insert_latency_seconds.observe(latency);
+                tracing::debug!("inserted {} funding rows into ClickHouse", rows);
+                return;
+            }
+            Err(err) => {
+                metrics
+                    .funding_insert_attempts
+                    .with_label_values(&["error"])
+                    .inc();
+                tracing::error!(
+                    rows = batch.len(),
+                    error = ?err,
+                    "failed to insert funding batch"
+                );
+                // On shutdown, drop the batch instead of retrying against an
+                // unreachable ClickHouse: the next poll after restart
+                // re-fetches the same window, so a dropped batch self-heals.
+                if stop_token.is_cancelled() {
+                    return;
+                }
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }
         }
