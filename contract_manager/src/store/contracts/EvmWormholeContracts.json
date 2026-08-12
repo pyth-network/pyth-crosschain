@@ -1174,5 +1174,11 @@
     "chain": "flow_mainnet",
     "type": "EvmWormholeContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x7698E925FfC29655576D0b361D75Af579e20AdAc",
+    "chain": "etherlink",
+    "type": "EvmWormholeContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
