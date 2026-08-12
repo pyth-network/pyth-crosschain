@@ -22,10 +22,12 @@ const PRO_COMPATIBLE_DOCS_URL = "/price-feeds/core/upgrade/preparing";
  *
  *   1. Fetch the Pro-compatible Hermes listing:
  *      GET https://pyth.dourolabs.app/hermes/v2/price_feeds
- *   2. For each feed, set "available" if its `id` is present in that listing,
- *      otherwise "coming_soon".
+ *   2. For Sui, require the full Core feed ID to be present in both the
+ *      chain-local upgraded pusher config and the Hermes listing.
+ *   3. For each feed, set "available" only when the chain-specific criteria
+ *      above are met, otherwise "coming_soon".
  *
- * Last refreshed 2026-07-03. To refresh, re-run the steps above.
+ * Last refreshed 2026-08-12.
  */
 type ProCompatibleStatus = "available" | "coming_soon";
 

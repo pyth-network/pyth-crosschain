@@ -74,6 +74,7 @@
     "snapshot:changelog": "tsx ./scripts/snapshot-and-diff.ts",
     "start:dev": "next dev --port 3627",
     "start:prod": "next start --port 3627",
+    "sync:sui-push-feed-status": "tsx ./scripts/sync-sui-push-feed-status.ts",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
     "test:unit": "test-unit"
