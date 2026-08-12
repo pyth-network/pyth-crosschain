@@ -1,0 +1,56 @@
+groups:
+  - name: okx_recorder
+    rules:
+      - alert: OkxRecorderDown
+        expr: up{job="okx_recorder"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OKX recorder is down"
+          description: "Prometheus cannot scrape the okx-recorder instance."
+
+      - alert: OkxRecorderNotReady
+        expr: okx_recorder_ready == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OKX recorder is not ready"
+          description: "The recorder reports not-ready (ClickHouse unreachable or an instrument's ToB lane is stale)."
+
+      - alert: OkxRecorderInsertErrors
+        expr: sum(increase(okx_recorder_insert_attempts_total{status="error"}[10m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OKX recorder ClickHouse insert errors"
+          description: "Insert errors detected in the last 10 minutes."
+
+      - alert: OkxRecorderNoSuccessfulInserts
+        expr: sum(increase(okx_recorder_insert_attempts_total{status="success"}[15m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "OKX recorder has no successful inserts"
+          description: "No successful ClickHouse inserts in the last 15 minutes."
+
+      - alert: OkxRecorderQueueSaturated
+        expr: okx_recorder_queue_fill_ratio > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OKX recorder queue is saturated"
+          description: "Queue fill ratio is above 90%."
+
+      - alert: OkxRecorderInstrumentStale
+        expr: time() - okx_recorder_tob_last_seen_unix_seconds > 60
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OKX recorder instrument ToB lane is stale"
+          description: "An instrument has not received a top-of-book update for over 60 seconds (may be unlisted on OKX)."
