@@ -110,6 +110,10 @@ const activePriceConfigIds = async (filePath: string): Promise<Set<string>> => {
     }
   }
 
+  if (ids.size === 0) {
+    throw new Error(`No feed ids parsed from price config: ${filePath}`);
+  }
+
   return ids;
 };
 
