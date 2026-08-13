@@ -142,6 +142,12 @@ ClickHouse schema is in [`migrations/`](migrations/) (one file per table); for
 local dev it is auto-loaded via the ClickHouse Docker entrypoint. For
 production, apply it manually against the pyth-analytics cluster.
 
+> The compose ClickHouse only runs `/docker-entrypoint-initdb.d` migrations on
+> a **fresh** volume. If you have an older `okx-recorder_clickhouse-local-data`
+> volume from before a migration landed, run `docker volume rm
+> okx-recorder_clickhouse-local-data` (or apply the new migration manually) —
+> otherwise inserts into the newer tables (e.g. funding) will fail.
+
 ```sql
 CREATE TABLE default.okx_book_ticker
 (

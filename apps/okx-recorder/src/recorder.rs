@@ -16,6 +16,15 @@ use crate::{
     stream_client::run_stream_worker,
 };
 
+/// Overall per-request deadline for funding-history polls. The poll loop is
+/// sequential, so a request that never completes would otherwise stall the
+/// funding lane forever without incrementing any error counter.
+const FUNDING_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// TCP connect deadline for funding-history polls, stricter than the overall
+/// request timeout so an unreachable endpoint fails fast.
+const FUNDING_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+
 #[derive(Clone, Debug)]
 pub struct WriterRuntimeConfig {
     pub batch_max_rows: usize,
@@ -209,8 +218,28 @@ impl RecorderRuntime {
         let insert_async = self.insert_async;
         let stop_token = self.stop_token.clone();
 
+        // Explicit timeouts so a hung endpoint surfaces as a normal
+        // per-instrument poll error (error counter + backoff) instead of
+        // stalling the sequential poll loop indefinitely.
+        let http = match reqwest::Client::builder()
+            .timeout(FUNDING_REQUEST_TIMEOUT)
+            .connect_timeout(FUNDING_CONNECT_TIMEOUT)
+            .build()
+        {
+            Ok(http) => http,
+            Err(err) => {
+                // Builder failure means the TLS backend could not initialize;
+                // leave the funding lane down and let the funding staleness
+                // alert surface it rather than polling without timeouts.
+                tracing::error!(
+                    error = ?err,
+                    "failed to build funding HTTP client; funding lane disabled"
+                );
+                return;
+            }
+        };
+
         let handle = tokio::spawn(async move {
-            let http = reqwest::Client::new();
             let mut backoff: HashMap<String, u64> = HashMap::new();
             let mut ticker = tokio::time::interval(Duration::from_secs(poll_seconds.max(1)));
             ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);

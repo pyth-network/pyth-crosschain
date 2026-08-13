@@ -37,7 +37,7 @@ count="$(docker exec "${container_name}" clickhouse-client --user "${user_name}"
 
 echo "local_e2e_check: table=${database_name}.${funding_rates_table} rows=${count}"
 if [[ "${count}" -le 0 ]]; then
-  echo "local_e2e_check: no funding rows found yet; ensure the recorder is up and the configured instruments are listed on OKX (the first poll runs at startup)."
+  echo "local_e2e_check: no funding rows found yet; ensure the recorder is up and the configured instruments are listed on OKX (the first poll runs at startup). Note: a brand-new pre-launch perp legitimately has no settled funding history yet, so zero rows for such an instrument is expected."
   exit 1
 fi
 
