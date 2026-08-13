@@ -26,6 +26,7 @@ pub struct ClickHouseTarget {
     pub secure: bool,
     pub database: String,
     pub book_ticker_table: String,
+    pub trades_table: String,
     pub funding_rates_table: String,
 }
 
@@ -63,6 +64,8 @@ struct ClickHouseConfig {
     database: String,
     #[serde(default = "default_book_ticker_table")]
     book_ticker_table: String,
+    #[serde(default = "default_trades_table")]
+    trades_table: String,
     #[serde(default = "default_funding_rates_table")]
     funding_rates_table: String,
 }
@@ -212,6 +215,7 @@ fn parse_clickhouse_target(input: ClickHouseConfig) -> Result<ClickHouseTarget, 
         secure: parsed.scheme() == "https",
         database: input.database,
         book_ticker_table: input.book_ticker_table,
+        trades_table: input.trades_table,
         funding_rates_table: input.funding_rates_table,
     })
 }
@@ -299,6 +303,10 @@ fn default_clickhouse_database() -> String {
 
 fn default_book_ticker_table() -> String {
     "okx_book_ticker".to_string()
+}
+
+fn default_trades_table() -> String {
+    "okx_trades".to_string()
 }
 
 fn default_funding_rates_table() -> String {

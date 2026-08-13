@@ -12,7 +12,7 @@ use crate::{
     funding_client::poll_funding_once,
     health::HealthState,
     metrics::RecorderMetrics,
-    models::{BookTicker, FundingRate, LaneRow},
+    models::{BookTicker, FundingRate, LaneRow, Trade},
     stream_client::run_stream_worker,
 };
 
@@ -44,13 +44,13 @@ pub struct FundingRuntimeConfig {
 /// lane into its ClickHouse table. Ported from `binance-recorder`'s
 /// `RecorderRuntime`. The writer buffers every update with no in-memory dedupe
 /// — row identity is owned by ClickHouse (`ReplacingMergeTree(ingested_at)`
-/// over the table's ORDER BY keys). Because `received_at` is part of the ORDER
-/// BY, this collapses byte-identical insert retries only; a genuine exchange
-/// re-send arrives with a new `received_at` and is persisted as a distinct row
-/// by design. Follow-up websocket lanes (trades) add their own [`LaneRow`]
-/// variants and per-lane buffers here. The funding lane is REST instead: it
-/// polls on a minutes-scale cadence and inserts its small batches directly,
-/// bypassing the queue.
+/// over each table's ORDER BY keys). Because `received_at` is part of the book
+/// ticker's ORDER BY, this collapses byte-identical insert retries only; a
+/// genuine exchange re-send arrives with a new `received_at` and is persisted
+/// as a distinct row by design. Each websocket lane (ToB, trades) has its own
+/// [`LaneRow`] variant and per-lane buffer here. The funding lane is REST
+/// instead: it polls on a minutes-scale cadence and inserts its small batches
+/// directly, bypassing the queue.
 pub struct RecorderRuntime {
     ws_url: String,
     instruments: Vec<String>,
@@ -146,12 +146,15 @@ impl RecorderRuntime {
 
         let handle = tokio::spawn(async move {
             // Buffer every update: no in-memory dedupe, by design. ClickHouse's
-            // `ReplacingMergeTree(ingested_at)` owns row identity via the
-            // table's ORDER BY keys, which include `received_at` — so only
-            // insert retries (a flush that times out client-side but commits
-            // server-side) collapse at merge time. A genuine exchange re-send
-            // carries a new `received_at` and is persisted as a distinct row.
+            // `ReplacingMergeTree(ingested_at)` owns row identity via each
+            // table's ORDER BY keys — the book ticker's include `received_at`,
+            // so only insert retries (a flush that times out client-side but
+            // commits server-side) collapse at merge time, while a genuine
+            // exchange re-send carries a new `received_at` and is persisted as
+            // a distinct row. One buffer per lane keeps each insert
+            // single-table.
             let mut book_buffer: Vec<BookTicker> = Vec::with_capacity(batch_max_rows);
+            let mut trade_buffer: Vec<Trade> = Vec::with_capacity(batch_max_rows);
             let mut last_flush = Instant::now();
 
             loop {
@@ -166,6 +169,7 @@ impl RecorderRuntime {
                     Ok(Some(row)) => {
                         match row {
                             LaneRow::BookTicker(ticker) => book_buffer.push(ticker),
+                            LaneRow::Trade(trade) => trade_buffer.push(trade),
                         }
                         let size = receiver.len();
                         metrics.queue_depth.set(size as f64);
@@ -177,23 +181,35 @@ impl RecorderRuntime {
                     Err(_) => {}
                 }
 
+                let buffered = book_buffer.len().saturating_add(trade_buffer.len());
                 let should_flush = book_buffer.len() >= batch_max_rows
-                    || (!book_buffer.is_empty()
-                        && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
+                    || trade_buffer.len() >= batch_max_rows
+                    || (buffered > 0 && last_flush.elapsed().as_secs_f64() >= batch_flush_seconds);
                 if should_flush {
-                    let batch = drain_batch(&mut book_buffer);
-                    flush_with_retry(&writer, &metrics, batch, stop_token.clone(), insert_async)
-                        .await;
+                    flush_lanes(
+                        &writer,
+                        &metrics,
+                        &mut book_buffer,
+                        &mut trade_buffer,
+                        &stop_token,
+                        insert_async,
+                    )
+                    .await;
                     last_flush = Instant::now();
                 }
             }
 
             // Bounded shutdown drain: flush whatever is still buffered instead of
             // dropping the last rows.
-            if !book_buffer.is_empty() {
-                let batch = drain_batch(&mut book_buffer);
-                flush_with_retry(&writer, &metrics, batch, stop_token, insert_async).await;
-            }
+            flush_lanes(
+                &writer,
+                &metrics,
+                &mut book_buffer,
+                &mut trade_buffer,
+                &stop_token,
+                insert_async,
+            )
+            .await;
         });
         self.handles.push(handle);
     }
@@ -308,50 +324,99 @@ impl RecorderRuntime {
     }
 }
 
-fn drain_batch(buffer: &mut Vec<BookTicker>) -> Vec<BookTicker> {
-    std::mem::take(buffer)
+/// One lane's drained batch, routed to its ClickHouse table by
+/// [`flush_with_retry`].
+enum LaneBatch {
+    BookTicker(Vec<BookTicker>),
+    Trade(Vec<Trade>),
+}
+
+impl LaneBatch {
+    fn len(&self) -> usize {
+        match self {
+            Self::BookTicker(rows) => rows.len(),
+            Self::Trade(rows) => rows.len(),
+        }
+    }
+
+    /// Human-readable lane name for logs.
+    fn lane(&self) -> &'static str {
+        match self {
+            Self::BookTicker(_) => "book ticker",
+            Self::Trade(_) => "trade",
+        }
+    }
+
+    async fn insert(
+        &self,
+        writer: &ClickHouseClient,
+        insert_async: bool,
+    ) -> anyhow::Result<(usize, f64)> {
+        match self {
+            Self::BookTicker(rows) => writer.insert_book_ticker_batch(rows, insert_async).await,
+            Self::Trade(rows) => writer.insert_trades_batch(rows, insert_async).await,
+        }
+    }
+}
+
+/// Drain every non-empty lane buffer and flush it as its own batch.
+async fn flush_lanes(
+    writer: &ClickHouseClient,
+    metrics: &RecorderMetrics,
+    book_buffer: &mut Vec<BookTicker>,
+    trade_buffer: &mut Vec<Trade>,
+    stop_token: &CancellationToken,
+    insert_async: bool,
+) {
+    if !book_buffer.is_empty() {
+        let batch = LaneBatch::BookTicker(std::mem::take(book_buffer));
+        flush_with_retry(writer, metrics, batch, stop_token, insert_async).await;
+    }
+    if !trade_buffer.is_empty() {
+        let batch = LaneBatch::Trade(std::mem::take(trade_buffer));
+        flush_with_retry(writer, metrics, batch, stop_token, insert_async).await;
+    }
 }
 
 async fn flush_with_retry(
     writer: &ClickHouseClient,
     metrics: &RecorderMetrics,
-    batch: Vec<BookTicker>,
-    stop_token: CancellationToken,
+    batch: LaneBatch,
+    stop_token: &CancellationToken,
     insert_async: bool,
 ) {
-    if batch.is_empty() {
-        return;
-    }
     loop {
         if stop_token.is_cancelled() {
             // On shutdown, make a single best-effort attempt rather than
             // retrying forever against an unreachable ClickHouse.
-            match writer.insert_book_ticker_batch(&batch, insert_async).await {
+            match batch.insert(writer, insert_async).await {
                 Ok((rows, latency)) => {
-                    record_insert_success(metrics, rows, latency);
+                    record_insert_success(metrics, &batch, rows, latency);
                 }
                 Err(err) => {
                     metrics.insert_attempts.with_label_values(&["error"]).inc();
                     tracing::error!(
                         rows = batch.len(),
+                        lane = batch.lane(),
                         error = ?err,
-                        "failed to insert book ticker batch during shutdown drain"
+                        "failed to insert batch during shutdown drain"
                     );
                 }
             }
             return;
         }
-        match writer.insert_book_ticker_batch(&batch, insert_async).await {
+        match batch.insert(writer, insert_async).await {
             Ok((rows, latency)) => {
-                record_insert_success(metrics, rows, latency);
+                record_insert_success(metrics, &batch, rows, latency);
                 return;
             }
             Err(err) => {
                 metrics.insert_attempts.with_label_values(&["error"]).inc();
                 tracing::error!(
                     rows = batch.len(),
+                    lane = batch.lane(),
                     error = ?err,
-                    "failed to insert book ticker batch"
+                    "failed to insert batch"
                 );
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }
@@ -400,12 +465,12 @@ async fn flush_funding_with_retry(
     }
 }
 
-fn record_insert_success(metrics: &RecorderMetrics, rows: usize, latency: f64) {
+fn record_insert_success(metrics: &RecorderMetrics, batch: &LaneBatch, rows: usize, latency: f64) {
     metrics
         .insert_attempts
         .with_label_values(&["success"])
         .inc();
     metrics.insert_rows.inc_by(rows as f64);
     metrics.insert_latency_seconds.observe(latency);
-    tracing::debug!("inserted {} book ticker rows into ClickHouse", rows);
+    tracing::debug!("inserted {} {} rows into ClickHouse", rows, batch.lane());
 }

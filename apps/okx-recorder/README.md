@@ -3,20 +3,23 @@
 Subscribes to OKX perpetual-swap market data over the public websocket
 (`wss://ws.okx.com:8443/ws/v5/public`) for a configurable instrument list and
 persists **every** update to ClickHouse. Records the top-of-book (`bbo-tbt`)
-websocket lane and the settled funding-rate REST lane; the trades lane bolts
-onto the same pipeline.
+and trades (`trades`) websocket lanes plus the settled funding-rate REST lane.
 
 ## What it records
 
-One websocket connection multiplexes a `bbo-tbt` subscription per configured
-instrument. Each update is converted to a row and written to
-`default.okx_book_ticker`. The payload carries an exchange timestamp (`ts`),
+One websocket connection multiplexes a `bbo-tbt` and a `trades` subscription
+per configured instrument. Each update is converted to a row and written to its
+lane's table: top-of-book updates to `default.okx_book_ticker`, trade prints to
+`default.okx_trades`. Every payload carries an exchange timestamp (`ts`),
 recorded as `ts`; the recorder additionally stamps a client-side `received_at`
-when the frame arrives (so transport latency is measurable) and uses OKX's
-per-instrument `seqId` as the ordering tiebreaker. There is **no in-memory
-dedupe** (a deliberate deviation from `binance-recorder`): every received update
-is inserted, and ClickHouse's `ReplacingMergeTree` owns row identity via the
-table's ORDER BY keys, collapsing byte-identical insert retries at merge time.
+when the frame arrives (so transport latency is measurable). On the ToB lane
+OKX's per-instrument `seqId` is the ordering tiebreaker; on the trades lane it
+is `tradeId`, and the stored `count` field distinguishes aggregate prints (OKX
+aggregates fills at the same price/timestamp into one print) from single fills.
+There is **no in-memory dedupe** (a deliberate deviation from
+`binance-recorder`): every received update is inserted, and ClickHouse's
+`ReplacingMergeTree` owns row identity via each table's ORDER BY keys,
+collapsing byte-identical insert retries at merge time.
 
 Alongside the websocket, a REST poller fetches the **settled** funding rate
 (`/api/v5/public/funding-rate-history` — not the websocket predicted-rate
@@ -62,10 +65,11 @@ adding an OKX perp is a config change, no code change.
    bash scripts/local_e2e_check.sh
    ```
 
-   The check confirms rows have landed in `default.okx_book_ticker` and
-   `default.okx_funding_rates`, that funding rows are unique by
-   `(inst_id, funding_time)` after ReplacingMergeTree collapse, and that
-   `/ready` and `/metrics` respond.
+   The check confirms rows have landed in `default.okx_book_ticker`,
+   `default.okx_trades`, and `default.okx_funding_rates`, that funding rows
+   are unique by `(inst_id, funding_time)` after ReplacingMergeTree collapse,
+   and that `/ready` and `/metrics` respond. On a thin instrument the trades
+   assert may need a longer run before a print lands.
 
 ## Services & ports
 
@@ -87,17 +91,19 @@ Overview** dashboard.
 - `GET /ready` (health port) — ready only when ClickHouse is reachable **and
   every** configured instrument's ToB lane is fresh within
   `ready_stale_seconds`. An instrument that never streams therefore keeps
-  `/ready` red, surfacing the gap rather than masking it. The funding lane (and
-  the future trades lane) exposes last-event metrics but **never** gates
-  readiness — funding settles on an hours-scale cadence and sparseness is
-  expected, so its staleness is an alerting signal, not an outage.
+  `/ready` red, surfacing the gap rather than masking it. The trades and
+  funding lanes expose last-event metrics but **never** gate readiness —
+  trades can legitimately go quiet on a thin perp and funding settles on an
+  hours-scale cadence, so their staleness is an alerting signal, not an
+  outage.
 - `GET /metrics` (metrics port) — Prometheus exposition, including
   `okx_recorder_ready`, `okx_recorder_clickhouse_up`,
   `okx_recorder_insert_rows_total`, `okx_recorder_insert_latency_seconds`,
   `okx_recorder_insert_attempts_total{status}`, `okx_recorder_queue_depth`,
   `okx_recorder_queue_fill_ratio`, `okx_recorder_queue_drops_total{inst_id}`,
-  `okx_recorder_stream_reconnects_total`, and
-  `okx_recorder_tob_last_seen_unix_seconds{inst_id}`. The funding lane adds
+  `okx_recorder_stream_reconnects_total`,
+  `okx_recorder_tob_last_seen_unix_seconds{inst_id}`, and
+  `okx_recorder_trades_last_seen_unix_seconds{inst_id}`. The funding lane adds
   `okx_recorder_funding_poll_attempts_total{inst_id,status}`,
   `okx_recorder_funding_insert_attempts_total{status}`,
   `okx_recorder_funding_insert_rows_total`,
@@ -122,7 +128,8 @@ See [config.sample.yml](config.sample.yml) for all options:
 | `ws_url` | `wss://ws.okx.com:8443/ws/v5/public` | OKX public websocket endpoint |
 | `clickhouse.url` | _required_ | ClickHouse URL (`http`/`https` → `secure`) |
 | `clickhouse.user` / `password` | `default` / "" | Credentials |
-| `clickhouse.database` / `book_ticker_table` | `default` / `okx_book_ticker` | Target |
+| `clickhouse.database` | `default` | Target database |
+| `clickhouse.book_ticker_table` / `trades_table` | `okx_book_ticker` / `okx_trades` | Per-lane target tables |
 | `clickhouse.funding_rates_table` | `okx_funding_rates` | Funding lane target table |
 | `metrics_port` | `9095` | Prometheus metrics port |
 | `health_port` | `8085` | Health endpoint port |
@@ -138,9 +145,12 @@ See [config.sample.yml](config.sample.yml) for all options:
 
 ## Schema
 
-ClickHouse schema is in [`migrations/`](migrations/) (one file per table); for
-local dev it is auto-loaded via the ClickHouse Docker entrypoint. For
-production, apply it manually against the pyth-analytics cluster.
+ClickHouse schema is in [`migrations/`](migrations/) (one file per table:
+[`001-init.sql`](migrations/001-init.sql) for the book,
+[`002-funding-rates.sql`](migrations/002-funding-rates.sql) for funding,
+[`003-trades.sql`](migrations/003-trades.sql) for trades); for local dev all
+are auto-loaded via the ClickHouse Docker entrypoint. For production, apply
+them manually against the pyth-analytics cluster.
 
 > The compose ClickHouse only runs `/docker-entrypoint-initdb.d` migrations on
 > a **fresh** volume. If you have an older `okx-recorder_clickhouse-local-data`
@@ -167,15 +177,35 @@ ORDER BY (inst_id, received_at, seq_id)
 TTL toDateTime(received_at) + INTERVAL 90 DAY DELETE;
 ```
 
-- **`ReplacingMergeTree(ingested_at)`** + **`ORDER BY (inst_id, received_at, seq_id)`**
-  owns row identity: the recorder does no in-memory dedupe, and insert retries
-  (a flush that times out client-side but commits server-side, then is retried
-  byte-identical) collapse at merge time because the retried rows land on the
-  same ORDER BY key. Because `received_at` is one of those keys, a genuine
-  exchange re-send arrives with a new `received_at` and is persisted as a
-  distinct row by design.
+```sql
+CREATE TABLE default.okx_trades
+(
+    inst_id     LowCardinality(String),
+    trade_id    String,
+    px          Decimal(38, 12),
+    sz          Decimal(38, 12),
+    side        LowCardinality(String),
+    count       UInt32,
+    ts          DateTime64(3),
+    received_at DateTime64(3),
+    ingested_at DateTime64(3) DEFAULT now64(3)
+)
+ENGINE = ReplacingMergeTree(ingested_at)
+PARTITION BY toYYYYMM(ts)
+ORDER BY (inst_id, ts, trade_id)
+TTL toDateTime(ts) + INTERVAL 90 DAY DELETE;
+```
+
+- **`ReplacingMergeTree(ingested_at)`** + each table's ORDER BY keys own row
+  identity: the recorder does no in-memory dedupe, and insert retries (a flush
+  that times out client-side but commits server-side, then is retried
+  byte-identical) collapse at merge time. On `okx_book_ticker`, `received_at`
+  is one of those keys, so a genuine exchange re-send arrives with a new
+  `received_at` and is persisted as a distinct row by design.
 - **`bid_*`/`ask_*` are `Nullable`** because either book side can be missing on
   `bbo-tbt` when the book is one-sided.
+- **`count`** on `okx_trades` is the number of fills OKX aggregated into the
+  print (same price/timestamp); `1` is a single fill, `>1` an aggregate print.
 - **`ts`** is the exchange timestamp from the payload; **`received_at`** is the
   client receipt time. The pair makes transport latency (`received_at − ts`)
   measurable.

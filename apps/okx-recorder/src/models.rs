@@ -8,16 +8,19 @@ use serde::Deserialize;
 /// OKX public websocket channel name for tick-by-tick top-of-book updates.
 pub const BBO_TBT_CHANNEL: &str = "bbo-tbt";
 
+/// OKX public websocket channel name for trade prints.
+pub const TRADES_CHANNEL: &str = "trades";
+
 /// A parsed row destined for ClickHouse, tagged by lane.
 ///
 /// Each websocket lane (channel) maps to its own ClickHouse table; the writer
-/// loop routes rows by variant. Currently only the ToB lane exists — the
-/// trades variant bolts on here when its lane lands. The funding lane arrives
-/// over REST (see [`FundingRate`]) and is inserted by its poller directly, so
-/// it never passes through this enum.
+/// loop routes rows by variant. The ToB and trades lanes flow through here.
+/// The funding lane arrives over REST (see [`FundingRate`]) and is inserted by
+/// its poller directly, so it never passes through this enum.
 #[derive(Clone, Debug, PartialEq)]
 pub enum LaneRow {
     BookTicker(BookTicker),
+    Trade(Trade),
 }
 
 /// A single OKX top-of-book (`bbo-tbt`) update for one instrument.
@@ -41,6 +44,40 @@ pub struct BookTicker {
     pub received_at: DateTime<Utc>,
 }
 
+/// A single OKX trade print (`trades` channel) for one instrument.
+///
+/// OKX aggregates fills that execute at the same price and timestamp into one
+/// print: `count` is the number of fills the print aggregates (1 = a single
+/// fill), so aggregate prints stay distinguishable from single fills after the
+/// fact, and `trade_id` is the id of the last fill in the aggregate. As on the
+/// ToB lane, the exchange timestamp is kept as `ts` and `received_at` is
+/// stamped client-side when the frame arrives.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Trade {
+    pub inst_id: String,
+    pub trade_id: String,
+    pub px: Decimal,
+    pub sz: Decimal,
+    /// Taker side: `buy` or `sell`, as sent by OKX.
+    pub side: String,
+    /// Number of fills aggregated into this print.
+    pub count: u32,
+    /// Exchange timestamp (`ts` in the raw payload, epoch milliseconds).
+    pub ts: DateTime<Utc>,
+    /// Client receipt time, stamped when the websocket frame arrives.
+    pub received_at: DateTime<Utc>,
+}
+
+/// A recorded websocket channel (lane), derived from a data frame's
+/// `arg.channel`. Carried on [`ParsedFrame::Data`] so callers can dispatch
+/// per-lane bookkeeping (freshness stamping) on the frame itself, even when
+/// the frame carries no rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Channel {
+    BboTbt,
+    Trades,
+}
+
 /// One frame received on the OKX public websocket, classified.
 #[derive(Debug)]
 pub enum ParsedFrame {
@@ -50,9 +87,14 @@ pub enum ParsedFrame {
         code: Option<String>,
         message: Option<String>,
     },
-    /// Data push for a recorded lane. `inst_id` comes from the frame's `arg`
-    /// and is shared by every row in the frame.
-    Data { inst_id: String, rows: Vec<LaneRow> },
+    /// Data push for a recorded lane. `channel` and `inst_id` come from the
+    /// frame's `arg` and are shared by every row in the frame; `rows` can be
+    /// empty (OKX may push a data frame with an empty `data` array).
+    Data {
+        channel: Channel,
+        inst_id: String,
+        rows: Vec<LaneRow>,
+    },
     /// Data push for a channel this recorder does not record.
     UnhandledChannel { channel: String },
 }
@@ -92,6 +134,25 @@ struct RawBboEntry {
     seq_id: i64,
 }
 
+/// A `trades` data entry. All decimals (and `count`) arrive as strings.
+/// `count` is defaulted to `"1"` when absent: OKX's non-aggregating variants
+/// of the channel omit it, and an un-aggregated print is a single fill.
+#[derive(Debug, Deserialize)]
+struct RawTradeEntry {
+    #[serde(rename = "tradeId")]
+    trade_id: String,
+    px: String,
+    sz: String,
+    side: String,
+    #[serde(default = "default_trade_count")]
+    count: String,
+    ts: String,
+}
+
+fn default_trade_count() -> String {
+    "1".to_string()
+}
+
 /// Parse one raw websocket text frame into a [`ParsedFrame`].
 ///
 /// A malformed frame is an error so the caller can drop it rather than poison
@@ -124,6 +185,25 @@ pub fn parse_frame(text: &str, received_at: DateTime<Utc>) -> Result<ParsedFrame
                 )?));
             }
             Ok(ParsedFrame::Data {
+                channel: Channel::BboTbt,
+                inst_id: arg.inst_id,
+                rows,
+            })
+        }
+        TRADES_CHANNEL => {
+            let data = frame.data.context("trades frame missing data")?;
+            let entries: Vec<RawTradeEntry> =
+                serde_json::from_value(data).context("malformed trades data entries")?;
+            let mut rows = Vec::with_capacity(entries.len());
+            for entry in entries {
+                rows.push(LaneRow::Trade(Trade::from_entry(
+                    &arg.inst_id,
+                    entry,
+                    received_at,
+                )?));
+            }
+            Ok(ParsedFrame::Data {
+                channel: Channel::Trades,
                 inst_id: arg.inst_id,
                 rows,
             })
@@ -136,12 +216,7 @@ pub fn parse_frame(text: &str, received_at: DateTime<Utc>) -> Result<ParsedFrame
 
 impl BookTicker {
     fn from_entry(inst_id: &str, entry: RawBboEntry, received_at: DateTime<Utc>) -> Result<Self> {
-        let raw_ts: i64 = entry
-            .ts
-            .parse()
-            .with_context(|| format!("invalid ts: {}", entry.ts))?;
-        let ts = DateTime::from_timestamp_millis(raw_ts)
-            .with_context(|| format!("ts out of range: {raw_ts}"))?;
+        let ts = parse_exchange_ts(&entry.ts)?;
         let (bid_px, bid_qty) = parse_best_level(&entry.bids, "bids")?;
         let (ask_px, ask_qty) = parse_best_level(&entry.asks, "asks")?;
 
@@ -156,6 +231,33 @@ impl BookTicker {
             received_at,
         })
     }
+}
+
+impl Trade {
+    fn from_entry(inst_id: &str, entry: RawTradeEntry, received_at: DateTime<Utc>) -> Result<Self> {
+        let ts = parse_exchange_ts(&entry.ts)?;
+        let count: u32 = entry
+            .count
+            .parse()
+            .with_context(|| format!("invalid trade count: {}", entry.count))?;
+
+        Ok(Self {
+            inst_id: inst_id.to_string(),
+            trade_id: entry.trade_id,
+            px: parse_decimal(&entry.px, "px")?,
+            sz: parse_decimal(&entry.sz, "sz")?,
+            side: entry.side,
+            count,
+            ts,
+            received_at,
+        })
+    }
+}
+
+/// Parse an OKX exchange timestamp (a string of epoch milliseconds).
+fn parse_exchange_ts(raw: &str) -> Result<DateTime<Utc>> {
+    let millis: i64 = raw.parse().with_context(|| format!("invalid ts: {raw}"))?;
+    DateTime::from_timestamp_millis(millis).with_context(|| format!("ts out of range: {millis}"))
 }
 
 /// Extract `(price, size)` from the best level of one book side.

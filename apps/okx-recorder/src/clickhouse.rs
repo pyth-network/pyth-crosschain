@@ -8,13 +8,14 @@ use serde::Serialize;
 
 use crate::{
     config::ClickHouseTarget,
-    models::{BookTicker, FundingRate},
+    models::{BookTicker, FundingRate, Trade},
 };
 
 #[derive(Clone)]
 pub struct ClickHouseClient {
     client: Client,
     book_ticker_table: String,
+    trades_table: String,
     funding_rates_table: String,
 }
 
@@ -33,11 +34,12 @@ impl ClickHouseClient {
 
         Self {
             client,
-            // Bare table name: the client is already scoped to the database via
-            // `with_database`, so the insert target must NOT be qualified (a
-            // dotted name gets quoted as a single identifier and then prefixed
-            // with the connected database, yielding `db.`db.table``).
+            // Bare table names: the client is already scoped to the database
+            // via `with_database`, so an insert target must NOT be qualified
+            // (a dotted name gets quoted as a single identifier and then
+            // prefixed with the connected database, yielding `db.`db.table``).
             book_ticker_table: target.book_ticker_table,
+            trades_table: target.trades_table,
             funding_rates_table: target.funding_rates_table,
         }
     }
@@ -57,16 +59,8 @@ impl ClickHouseClient {
         }
 
         let start = Instant::now();
-        let client = if insert_async {
-            self.client
-                .clone()
-                .with_setting("async_insert", "1")
-                .with_setting("wait_for_async_insert", "1")
-        } else {
-            self.client.clone()
-        };
-
-        let mut insert = client
+        let mut insert = self
+            .insert_client(insert_async)
             .insert::<BookTickerRow>(&self.book_ticker_table)
             .await?;
         for ticker in tickers {
@@ -75,6 +69,29 @@ impl ClickHouseClient {
         insert.end().await?;
 
         Ok((tickers.len(), start.elapsed().as_secs_f64()))
+    }
+
+    /// Insert a batch of trade rows. Returns `(rows_written, latency_seconds)`.
+    pub async fn insert_trades_batch(
+        &self,
+        trades: &[Trade],
+        insert_async: bool,
+    ) -> Result<(usize, f64)> {
+        if trades.is_empty() {
+            return Ok((0, 0.0));
+        }
+
+        let start = Instant::now();
+        let mut insert = self
+            .insert_client(insert_async)
+            .insert::<TradeRow>(&self.trades_table)
+            .await?;
+        for trade in trades {
+            insert.write(&TradeRow::from(trade)).await?;
+        }
+        insert.end().await?;
+
+        Ok((trades.len(), start.elapsed().as_secs_f64()))
     }
 
     /// Insert a batch of settled funding-rate rows. Returns
@@ -89,16 +106,8 @@ impl ClickHouseClient {
         }
 
         let start = Instant::now();
-        let client = if insert_async {
-            self.client
-                .clone()
-                .with_setting("async_insert", "1")
-                .with_setting("wait_for_async_insert", "1")
-        } else {
-            self.client.clone()
-        };
-
-        let mut insert = client
+        let mut insert = self
+            .insert_client(insert_async)
             .insert::<FundingRateRow>(&self.funding_rates_table)
             .await?;
         for rate in rates {
@@ -107,6 +116,17 @@ impl ClickHouseClient {
         insert.end().await?;
 
         Ok((rates.len(), start.elapsed().as_secs_f64()))
+    }
+
+    fn insert_client(&self, insert_async: bool) -> Client {
+        if insert_async {
+            self.client
+                .clone()
+                .with_setting("async_insert", "1")
+                .with_setting("wait_for_async_insert", "1")
+        } else {
+            self.client.clone()
+        }
     }
 }
 
@@ -122,6 +142,35 @@ struct BookTickerRow {
     ts: DateTime<Utc>,
     #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
     received_at: DateTime<Utc>,
+}
+
+#[derive(Row, Serialize)]
+struct TradeRow {
+    inst_id: String,
+    trade_id: String,
+    px: i128,
+    sz: i128,
+    side: String,
+    count: u32,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    ts: DateTime<Utc>,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    received_at: DateTime<Utc>,
+}
+
+impl From<&Trade> for TradeRow {
+    fn from(t: &Trade) -> Self {
+        Self {
+            inst_id: t.inst_id.clone(),
+            trade_id: t.trade_id.clone(),
+            px: decimal_to_d128(&t.px),
+            sz: decimal_to_d128(&t.sz),
+            side: t.side.clone(),
+            count: t.count,
+            ts: t.ts,
+            received_at: t.received_at,
+        }
+    }
 }
 
 impl From<&BookTicker> for BookTickerRow {
