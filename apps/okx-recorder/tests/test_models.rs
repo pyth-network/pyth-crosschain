@@ -1,5 +1,5 @@
 use chrono::{TimeZone, Utc};
-use okx_recorder::models::{parse_frame, LaneRow, ParsedFrame};
+use okx_recorder::models::{parse_frame, Channel, LaneRow, ParsedFrame};
 use rust_decimal::Decimal;
 use std::str::FromStr;
 
@@ -202,7 +202,15 @@ fn parse_frame_handles_empty_data_array() {
         "data": []
     }"#;
     match parse_frame(frame, received_at()).expect("should parse") {
-        ParsedFrame::Data { inst_id, rows } => {
+        ParsedFrame::Data {
+            channel,
+            inst_id,
+            rows,
+        } => {
+            // The lane identity must survive an empty data array: the stream
+            // worker stamps ToB freshness from the frame's channel, so an
+            // empty bbo-tbt frame still counts as ToB liveness.
+            assert_eq!(channel, Channel::BboTbt);
             assert_eq!(inst_id, "OPENAI-USDT-SWAP");
             assert!(rows.is_empty());
         }
@@ -431,7 +439,12 @@ fn parse_trades_frame_handles_empty_data_array() {
         "data": []
     }"#;
     match parse_frame(frame, received_at()).expect("should parse") {
-        ParsedFrame::Data { inst_id, rows } => {
+        ParsedFrame::Data {
+            channel,
+            inst_id,
+            rows,
+        } => {
+            assert_eq!(channel, Channel::Trades);
             assert_eq!(inst_id, "OPENAI-USDT-SWAP");
             assert!(rows.is_empty());
         }

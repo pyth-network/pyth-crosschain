@@ -68,6 +68,16 @@ pub struct Trade {
     pub received_at: DateTime<Utc>,
 }
 
+/// A recorded websocket channel (lane), derived from a data frame's
+/// `arg.channel`. Carried on [`ParsedFrame::Data`] so callers can dispatch
+/// per-lane bookkeeping (freshness stamping) on the frame itself, even when
+/// the frame carries no rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Channel {
+    BboTbt,
+    Trades,
+}
+
 /// One frame received on the OKX public websocket, classified.
 #[derive(Debug)]
 pub enum ParsedFrame {
@@ -77,9 +87,14 @@ pub enum ParsedFrame {
         code: Option<String>,
         message: Option<String>,
     },
-    /// Data push for a recorded lane. `inst_id` comes from the frame's `arg`
-    /// and is shared by every row in the frame.
-    Data { inst_id: String, rows: Vec<LaneRow> },
+    /// Data push for a recorded lane. `channel` and `inst_id` come from the
+    /// frame's `arg` and are shared by every row in the frame; `rows` can be
+    /// empty (OKX may push a data frame with an empty `data` array).
+    Data {
+        channel: Channel,
+        inst_id: String,
+        rows: Vec<LaneRow>,
+    },
     /// Data push for a channel this recorder does not record.
     UnhandledChannel { channel: String },
 }
@@ -170,6 +185,7 @@ pub fn parse_frame(text: &str, received_at: DateTime<Utc>) -> Result<ParsedFrame
                 )?));
             }
             Ok(ParsedFrame::Data {
+                channel: Channel::BboTbt,
                 inst_id: arg.inst_id,
                 rows,
             })
@@ -187,6 +203,7 @@ pub fn parse_frame(text: &str, received_at: DateTime<Utc>) -> Result<ParsedFrame
                 )?));
             }
             Ok(ParsedFrame::Data {
+                channel: Channel::Trades,
                 inst_id: arg.inst_id,
                 rows,
             })

@@ -12,7 +12,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::health::HealthState;
 use crate::metrics::RecorderMetrics;
-use crate::models::{parse_frame, LaneRow, ParsedFrame, BBO_TBT_CHANNEL, TRADES_CHANNEL};
+use crate::models::{parse_frame, Channel, LaneRow, ParsedFrame, BBO_TBT_CHANNEL, TRADES_CHANNEL};
 
 /// A connection that survives this long before failing is considered to have
 /// been healthy, so the reconnect backoff resets instead of compounding.
@@ -140,22 +140,26 @@ fn handle_text_frame(
 ) {
     let received_at = Utc::now();
     match parse_frame(text, received_at) {
-        Ok(ParsedFrame::Data { inst_id, rows }) => {
+        Ok(ParsedFrame::Data {
+            channel,
+            inst_id,
+            rows,
+        }) => {
             // Freshness keys on receipt, not insert success: a frame arriving
-            // for `inst_id` proves its lane is live even if the bounded queue
-            // later drops the rows. Every row in a frame belongs to the same
-            // lane, so the first row identifies it. Only the ToB lane feeds
-            // /ready; trades freshness is a metric-only staleness signal (a
-            // quiet trades lane on a thin perp is data, not an outage).
-            match rows.first() {
-                Some(LaneRow::BookTicker(_)) => {
+            // for `inst_id` proves its lane is live even if the frame carries
+            // no rows (OKX can push a data frame with an empty `data` array)
+            // or the bounded queue later drops them, so stamping dispatches on
+            // the frame's channel rather than its rows. Only the ToB lane
+            // feeds /ready; trades freshness is a metric-only staleness signal
+            // (a quiet trades lane on a thin perp is data, not an outage).
+            match channel {
+                Channel::BboTbt => {
                     health.set_instrument_seen(&inst_id);
                     metrics.record_tob_seen(&inst_id);
                 }
-                Some(LaneRow::Trade(_)) => {
+                Channel::Trades => {
                     metrics.record_trade_seen(&inst_id);
                 }
-                None => {}
             }
             for row in rows {
                 match sender.try_send(row) {
