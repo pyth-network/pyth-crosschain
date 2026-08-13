@@ -1,0 +1,102 @@
+{
+  "date": "2026-08-13",
+  "label": "Thursday",
+  "summary": {
+    "added": 2,
+    "went_live": 6,
+    "removed": 1
+  },
+  "hero": "2 new feeds announced, 6 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Crypto.Index.SILV/USD",
+      "lazerId": 3304,
+      "asset": "Dominion Silver",
+      "assetType": "crypto",
+      "changeType": "removed",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "1ef3283239172174deb11f726fda2d460a058c8c85bc4453751a20ede84422ee"
+    },
+    {
+      "id": "Equity.US.AIT/USD",
+      "lazerId": 3613,
+      "asset": "Applied Indl Technologies Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "0444ad971cd20af326096da92fbcc3460e38d44dbbf54c5a71725767842f762f"
+    },
+    {
+      "id": "Equity.US.TXRH/USD",
+      "lazerId": 3608,
+      "asset": "Texas Roadhouse Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "bd022edbd573a52f57b7e930b8b4c51db94407f3b6a99d08abed9c9a79a0a27d"
+    },
+    {
+      "id": "Equity.US.LAMR/USD",
+      "lazerId": 3605,
+      "asset": "Lamar Advertising Co Cl A",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "e3f07d1ebe4bed7b2e6c12cff292d2850618d58c007700be5ca5d3d18415deae"
+    },
+    {
+      "id": "Equity.US.FIVE/USD",
+      "lazerId": 3600,
+      "asset": "Five Below Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "5a68b463343e82512e5ea36024037971bb44328de682711a671801dc31c22967"
+    },
+    {
+      "id": "Equity.US.ITT/USD",
+      "lazerId": 3594,
+      "asset": "Itt Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "609bc314425a9446649f31e9d36ee6af05e5d445a020cc3674046fd28717bee3"
+    },
+    {
+      "id": "Equity.US.INFQ/USD",
+      "lazerId": 3519,
+      "asset": "Infleqtion Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "4c2c1ce2790e81344d5bba316845299b44e93305a4b163b8a3ca7e1bef0830dc"
+    },
+    {
+      "id": "Crypto.ZAMA/USD",
+      "lazerId": 3628,
+      "asset": "Zama",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "e0d1c08b433ac422d7c09c2027e1aebcc3fcfbfcc64ef7fa33e50319e63e5597"
+    },
+    {
+      "id": "Crypto.KNTQ/USD",
+      "lazerId": 3627,
+      "asset": "Kinetiq",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-08-13",
+      "quote": "USD",
+      "hermesId": "43344a24cea67af4eb4dca97779d45f2341633339e550ea513fc34cfce0b6f35"
+    }
+  ]
+}
