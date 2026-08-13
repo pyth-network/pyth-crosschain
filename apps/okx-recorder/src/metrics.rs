@@ -13,10 +13,11 @@ use prometheus::{
 /// and writer loop, plus the readiness/liveness surface emitted by the health
 /// probe and stream worker: a ClickHouse-up gauge, a ready-state gauge, and
 /// per-instrument ToB and trades last-seen timestamps. The funding lane adds
-/// its own poll, insert, and last-event metrics. Only the ToB gauge's
-/// freshness gates `/ready`; every other lane's metrics feed dashboards and
-/// alerts but never gate `/ready`. `/metrics` exposition is served from
-/// [`crate::health`].
+/// its own poll, insert, and last-event metrics. Connection resilience is
+/// observable via the reconnect, keepalive-ping, and pong-timeout counters.
+/// Only the ToB gauge's freshness gates `/ready`; every other lane's metrics
+/// feed dashboards and alerts but never gate `/ready`. `/metrics` exposition
+/// is served from [`crate::health`].
 #[derive(Clone)]
 pub struct RecorderMetrics {
     registry: Registry,
@@ -34,6 +35,8 @@ pub struct RecorderMetrics {
     pub funding_insert_latency_seconds: Histogram,
     pub funding_last_event_unix_seconds: GaugeVec,
     pub stream_reconnects: Counter,
+    pub keepalive_pings: Counter,
+    pub pong_timeouts: Counter,
     pub clickhouse_up: Gauge,
     pub ready_state: Gauge,
 }
@@ -128,6 +131,14 @@ impl RecorderMetrics {
             "okx_recorder_stream_reconnects_total",
             "Total websocket reconnect attempts after a connection failure",
         ))?;
+        let keepalive_pings = Counter::with_opts(Opts::new(
+            "okx_recorder_keepalive_pings_total",
+            "Total keepalive pings sent on an idle websocket connection",
+        ))?;
+        let pong_timeouts = Counter::with_opts(Opts::new(
+            "okx_recorder_pong_timeouts_total",
+            "Total connections presumed dead after a keepalive ping went unanswered",
+        ))?;
         let clickhouse_up = Gauge::with_opts(Opts::new(
             "okx_recorder_clickhouse_up",
             "Whether ClickHouse is currently reachable (1/0)",
@@ -151,6 +162,8 @@ impl RecorderMetrics {
         registry.register(Box::new(funding_insert_latency_seconds.clone()))?;
         registry.register(Box::new(funding_last_event_unix_seconds.clone()))?;
         registry.register(Box::new(stream_reconnects.clone()))?;
+        registry.register(Box::new(keepalive_pings.clone()))?;
+        registry.register(Box::new(pong_timeouts.clone()))?;
         registry.register(Box::new(clickhouse_up.clone()))?;
         registry.register(Box::new(ready_state.clone()))?;
 
@@ -170,6 +183,8 @@ impl RecorderMetrics {
             funding_insert_latency_seconds,
             funding_last_event_unix_seconds,
             stream_reconnects,
+            keepalive_pings,
+            pong_timeouts,
             clickhouse_up,
             ready_state,
         })

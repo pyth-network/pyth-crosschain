@@ -40,6 +40,19 @@ adding an OKX perp is a config change, no code change.
 > staleness** in `/ready` rather than a crash. Verify each instrument is
 > actually listed on OKX before relying on its data.
 
+## Connection resilience
+
+OKX terminates a websocket with no traffic for 30 seconds, and thin pre-IPO
+perps have genuinely quiet stretches, so the recorder runs a client-initiated
+keepalive: after `ping_idle_seconds` (default 15) without an inbound frame it
+sends a literal `ping` text frame and expects OKX's literal `pong` back. Any
+inbound frame counts as liveness; a connection still silent
+`pong_timeout_seconds` (default 5) after a ping is presumed dead, torn down,
+and reconnected with jittered exponential backoff (ceiling
+`reconnect_max_backoff_seconds`), re-subscribing every configured instrument.
+Recovery is observable via `okx_recorder_stream_reconnects_total`,
+`okx_recorder_keepalive_pings_total`, and `okx_recorder_pong_timeouts_total`.
+
 ## Quick start (local dev)
 
 1. Copy the sample config and (optionally) the env file:
@@ -102,6 +115,7 @@ Overview** dashboard.
   `okx_recorder_insert_attempts_total{status}`, `okx_recorder_queue_depth`,
   `okx_recorder_queue_fill_ratio`, `okx_recorder_queue_drops_total{inst_id}`,
   `okx_recorder_stream_reconnects_total`,
+  `okx_recorder_keepalive_pings_total`, `okx_recorder_pong_timeouts_total`,
   `okx_recorder_tob_last_seen_unix_seconds{inst_id}`, and
   `okx_recorder_trades_last_seen_unix_seconds{inst_id}`. The funding lane adds
   `okx_recorder_funding_poll_attempts_total{inst_id,status}`,
@@ -138,6 +152,8 @@ See [config.sample.yml](config.sample.yml) for all options:
 | `batch_max_rows` | `10000` | Max rows per ClickHouse insert batch |
 | `batch_flush_seconds` | `2.0` | Max time before a partial batch is flushed |
 | `reconnect_max_backoff_seconds` | `30` | Jittered websocket reconnect backoff ceiling |
+| `ping_idle_seconds` | `15` | Idle time without an inbound frame before a keepalive `ping`; must be 1–29 |
+| `pong_timeout_seconds` | `5` | Silence after a `ping` before the connection is presumed dead; must be 1–60 |
 | `insert_async` | `true` | Use ClickHouse async inserts |
 | `funding_history_url` | the OKX public endpoint | Settled funding-rate-history REST endpoint |
 | `funding_poll_seconds` | `300` | Funding poll interval; must be >= 60 |

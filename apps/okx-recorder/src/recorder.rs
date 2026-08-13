@@ -13,7 +13,7 @@ use crate::{
     health::HealthState,
     metrics::RecorderMetrics,
     models::{BookTicker, FundingRate, LaneRow, Trade},
-    stream_client::run_stream_worker,
+    stream_client::{run_stream_worker, KeepaliveConfig},
 };
 
 /// Overall per-request deadline for funding-history polls. The poll loop is
@@ -55,6 +55,7 @@ pub struct RecorderRuntime {
     ws_url: String,
     instruments: Vec<String>,
     reconnect_max_backoff_seconds: u64,
+    keepalive: KeepaliveConfig,
     writer: ClickHouseClient,
     writer_config: WriterRuntimeConfig,
     funding_config: FundingRuntimeConfig,
@@ -71,6 +72,7 @@ impl RecorderRuntime {
         ws_url: String,
         instruments: Vec<String>,
         reconnect_max_backoff_seconds: u64,
+        keepalive: KeepaliveConfig,
         writer: ClickHouseClient,
         writer_config: WriterRuntimeConfig,
         funding_config: FundingRuntimeConfig,
@@ -82,6 +84,7 @@ impl RecorderRuntime {
             ws_url,
             instruments,
             reconnect_max_backoff_seconds,
+            keepalive,
             writer,
             writer_config,
             funding_config,
@@ -104,6 +107,7 @@ impl RecorderRuntime {
         let ws_url = self.ws_url.clone();
         let instruments = self.instruments.clone();
         let reconnect_max_backoff_seconds = self.reconnect_max_backoff_seconds;
+        let keepalive = self.keepalive;
         let metrics = self.metrics.clone();
         let health = self.health.clone();
         let stop_token = self.stop_token.clone();
@@ -112,6 +116,7 @@ impl RecorderRuntime {
                 ws_url,
                 instruments,
                 reconnect_max_backoff_seconds,
+                keepalive,
                 tx,
                 metrics,
                 health,

@@ -94,6 +94,8 @@ clickhouse:
     assert_eq!(config.batch_flush_seconds, 2.0);
     assert_eq!(config.ready_stale_seconds, 10);
     assert_eq!(config.reconnect_max_backoff_seconds, 30);
+    assert_eq!(config.ping_idle_seconds, 15);
+    assert_eq!(config.pong_timeout_seconds, 5);
     assert!(config.insert_async);
     // ClickHouse target falls back to the default user/database/tables.
     assert_eq!(config.clickhouse.username, "default");
@@ -200,6 +202,58 @@ clickhouse:
     assert!(config.clickhouse.secure);
 
     let _ = fs::remove_file(config_file);
+}
+
+#[test]
+fn test_ping_idle_seconds_must_beat_okx_idle_disconnect() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars(ENV_KEYS);
+
+    // 0 disables the keepalive and >=30 fires after OKX has already dropped
+    // the connection; both are rejected.
+    for bad_value in [0, 30, 3600] {
+        let config_file = temp_yaml_path("okx-config-bad-ping-idle");
+        let yaml = format!(
+            r#"
+clickhouse:
+  url: "http://127.0.0.1:8123"
+ping_idle_seconds: {bad_value}
+"#
+        );
+        fs::write(&config_file, yaml).expect("write yaml config");
+        let result = AppConfig::from_sources(Some(&config_file));
+        let message = result.err().map(|err| err.to_string()).unwrap_or_default();
+        assert!(
+            message.contains("ping_idle_seconds"),
+            "ping_idle_seconds = {bad_value} should be rejected; got: {message}"
+        );
+        let _ = fs::remove_file(config_file);
+    }
+}
+
+#[test]
+fn test_pong_timeout_seconds_bounds_enforced() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars(ENV_KEYS);
+
+    for bad_value in [0, 61] {
+        let config_file = temp_yaml_path("okx-config-bad-pong-timeout");
+        let yaml = format!(
+            r#"
+clickhouse:
+  url: "http://127.0.0.1:8123"
+pong_timeout_seconds: {bad_value}
+"#
+        );
+        fs::write(&config_file, yaml).expect("write yaml config");
+        let result = AppConfig::from_sources(Some(&config_file));
+        let message = result.err().map(|err| err.to_string()).unwrap_or_default();
+        assert!(
+            message.contains("pong_timeout_seconds"),
+            "pong_timeout_seconds = {bad_value} should be rejected; got: {message}"
+        );
+        let _ = fs::remove_file(config_file);
+    }
 }
 
 #[test]
