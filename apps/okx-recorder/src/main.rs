@@ -7,7 +7,7 @@ use okx_recorder::{
     config::AppConfig,
     health::{start_http_servers, HealthState},
     metrics::RecorderMetrics,
-    recorder::{RecorderRuntime, WriterRuntimeConfig},
+    recorder::{FundingRuntimeConfig, RecorderRuntime, WriterRuntimeConfig},
 };
 use tokio::signal::unix::{signal, SignalKind};
 
@@ -49,6 +49,11 @@ async fn run() -> Result<()> {
             batch_max_rows: config.batch_max_rows,
             batch_flush_seconds: config.batch_flush_seconds,
             queue_max_rows: config.queue_max_rows,
+        },
+        FundingRuntimeConfig {
+            history_url: config.funding_history_url,
+            poll_seconds: config.funding_poll_seconds,
+            history_limit: config.funding_history_limit,
         },
         metrics,
         health,

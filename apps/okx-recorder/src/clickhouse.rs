@@ -6,12 +6,16 @@ use clickhouse::{Client, Row};
 use rust_decimal::Decimal;
 use serde::Serialize;
 
-use crate::{config::ClickHouseTarget, models::BookTicker};
+use crate::{
+    config::ClickHouseTarget,
+    models::{BookTicker, FundingRate},
+};
 
 #[derive(Clone)]
 pub struct ClickHouseClient {
     client: Client,
     book_ticker_table: String,
+    funding_rates_table: String,
 }
 
 impl ClickHouseClient {
@@ -34,6 +38,7 @@ impl ClickHouseClient {
             // dotted name gets quoted as a single identifier and then prefixed
             // with the connected database, yielding `db.`db.table``).
             book_ticker_table: target.book_ticker_table,
+            funding_rates_table: target.funding_rates_table,
         }
     }
 
@@ -71,6 +76,38 @@ impl ClickHouseClient {
 
         Ok((tickers.len(), start.elapsed().as_secs_f64()))
     }
+
+    /// Insert a batch of settled funding-rate rows. Returns
+    /// `(rows_written, latency_seconds)`.
+    pub async fn insert_funding_batch(
+        &self,
+        rates: &[FundingRate],
+        insert_async: bool,
+    ) -> Result<(usize, f64)> {
+        if rates.is_empty() {
+            return Ok((0, 0.0));
+        }
+
+        let start = Instant::now();
+        let client = if insert_async {
+            self.client
+                .clone()
+                .with_setting("async_insert", "1")
+                .with_setting("wait_for_async_insert", "1")
+        } else {
+            self.client.clone()
+        };
+
+        let mut insert = client
+            .insert::<FundingRateRow>(&self.funding_rates_table)
+            .await?;
+        for rate in rates {
+            insert.write(&FundingRateRow::from(rate)).await?;
+        }
+        insert.end().await?;
+
+        Ok((rates.len(), start.elapsed().as_secs_f64()))
+    }
 }
 
 #[derive(Row, Serialize)]
@@ -102,6 +139,29 @@ impl From<&BookTicker> for BookTickerRow {
     }
 }
 
+#[derive(Row, Serialize)]
+struct FundingRateRow {
+    inst_id: String,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    funding_time: DateTime<Utc>,
+    funding_rate: i128,
+    realized_rate: Option<i128>,
+    #[serde(with = "clickhouse::serde::chrono::datetime64::millis")]
+    received_at: DateTime<Utc>,
+}
+
+impl From<&FundingRate> for FundingRateRow {
+    fn from(r: &FundingRate) -> Self {
+        Self {
+            inst_id: r.inst_id.clone(),
+            funding_time: r.funding_time,
+            funding_rate: decimal_to_rate_d128(&r.funding_rate),
+            realized_rate: r.realized_rate.as_ref().map(decimal_to_rate_d128),
+            received_at: r.received_at,
+        }
+    }
+}
+
 /// Convert a `Decimal` to its `Decimal(38, 12)` (`Decimal128`) wire
 /// representation (i128).
 ///
@@ -117,6 +177,26 @@ fn decimal_to_d128(value: &Decimal) -> i128 {
         tracing::warn!(
             value = %value,
             "Decimal value too large to rescale to Decimal(38, 12); writing 0"
+        );
+        return 0;
+    }
+    scaled.mantissa()
+}
+
+/// Convert a `Decimal` to its `Decimal(38, 18)` (`Decimal128`) wire
+/// representation (i128), used by the funding-rate columns: OKX reports
+/// funding rates with up to ~17 decimal places, so scale 12 would truncate
+/// them. Same failure mode as [`decimal_to_d128`] — a value with more than
+/// 20 digits left of the decimal point (impossible for a funding rate) is
+/// logged and written as 0.
+fn decimal_to_rate_d128(value: &Decimal) -> i128 {
+    const SCALE: u32 = 18;
+    let mut scaled = *value;
+    scaled.rescale(SCALE);
+    if scaled.scale() != SCALE {
+        tracing::warn!(
+            value = %value,
+            "Decimal value too large to rescale to Decimal(38, 18); writing 0"
         );
         return 0;
     }

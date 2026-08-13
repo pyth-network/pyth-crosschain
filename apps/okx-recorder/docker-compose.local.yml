@@ -12,6 +12,7 @@ services:
     volumes:
       - clickhouse-local-data:/var/lib/clickhouse
       - ./migrations/001-init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+      - ./migrations/002-funding-rates.sql:/docker-entrypoint-initdb.d/002-funding-rates.sql:ro
 
   okx-recorder:
     build:

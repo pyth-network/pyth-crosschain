@@ -26,6 +26,7 @@ pub struct ClickHouseTarget {
     pub secure: bool,
     pub database: String,
     pub book_ticker_table: String,
+    pub funding_rates_table: String,
 }
 
 /// Full multi-instrument recorder config. Mirrors `binance-recorder`'s
@@ -46,6 +47,9 @@ pub struct AppConfig {
     pub batch_flush_seconds: f64,
     pub reconnect_max_backoff_seconds: u64,
     pub insert_async: bool,
+    pub funding_history_url: String,
+    pub funding_poll_seconds: u64,
+    pub funding_history_limit: u32,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -59,6 +63,8 @@ struct ClickHouseConfig {
     database: String,
     #[serde(default = "default_book_ticker_table")]
     book_ticker_table: String,
+    #[serde(default = "default_funding_rates_table")]
+    funding_rates_table: String,
 }
 
 impl AppConfig {
@@ -110,6 +116,37 @@ impl AppConfig {
                 default_reconnect_max_backoff_seconds,
             )?,
             insert_async: get_or_default(&loaded, "insert_async", default_insert_async)?,
+            funding_history_url: get_or_default(
+                &loaded,
+                "funding_history_url",
+                default_funding_history_url,
+            )?,
+            funding_poll_seconds: {
+                let value = get_or_default(
+                    &loaded,
+                    "funding_poll_seconds",
+                    default_funding_poll_seconds,
+                )?;
+                if value < 60 {
+                    return Err(ConfigError::Invalid(
+                        "funding_poll_seconds must be >= 60".to_string(),
+                    ));
+                }
+                value
+            },
+            funding_history_limit: {
+                let value: u32 = get_or_default(
+                    &loaded,
+                    "funding_history_limit",
+                    default_funding_history_limit,
+                )?;
+                if !(1..=100).contains(&value) {
+                    return Err(ConfigError::Invalid(
+                        "funding_history_limit must be between 1 and 100".to_string(),
+                    ));
+                }
+                value
+            },
         })
     }
 
@@ -175,6 +212,7 @@ fn parse_clickhouse_target(input: ClickHouseConfig) -> Result<ClickHouseTarget, 
         secure: parsed.scheme() == "https",
         database: input.database,
         book_ticker_table: input.book_ticker_table,
+        funding_rates_table: input.funding_rates_table,
     })
 }
 
@@ -233,6 +271,24 @@ fn default_insert_async() -> bool {
     true
 }
 
+fn default_funding_history_url() -> String {
+    "https://www.okx.com/api/v5/public/funding-rate-history".to_string()
+}
+
+/// Funding settles on an hours-scale cadence, so a minutes-scale poll leaves
+/// generous headroom while staying far under OKX's public rate limits. Values
+/// below one minute are rejected as pointless hammering.
+fn default_funding_poll_seconds() -> u64 {
+    300
+}
+
+/// How many history rows to request per poll (`limit` query parameter; OKX
+/// caps it at 100). Each poll re-fetches this trailing window, so the overlap
+/// both self-heals short outages and exercises the sink's idempotence.
+fn default_funding_history_limit() -> u32 {
+    10
+}
+
 fn default_clickhouse_user() -> String {
     "default".to_string()
 }
@@ -243,4 +299,8 @@ fn default_clickhouse_database() -> String {
 
 fn default_book_ticker_table() -> String {
     "okx_book_ticker".to_string()
+}
+
+fn default_funding_rates_table() -> String {
+    "okx_funding_rates".to_string()
 }

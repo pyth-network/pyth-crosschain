@@ -12,9 +12,10 @@ use prometheus::{
 /// Covers the queue and ClickHouse-insert surface emitted by the stream worker
 /// and writer loop, plus the readiness/liveness surface emitted by the health
 /// probe and stream worker: a ClickHouse-up gauge, a ready-state gauge, and a
-/// per-instrument ToB last-seen timestamp. Future lanes add their own last-seen
-/// gauges here (e.g. trades/funding), which feed dashboards and alerts but
-/// never gate `/ready`. `/metrics` exposition is served from [`crate::health`].
+/// per-instrument ToB last-seen timestamp. The funding lane adds its own poll,
+/// insert, and last-event metrics; like every non-ToB lane they feed dashboards
+/// and alerts but never gate `/ready`. `/metrics` exposition is served from
+/// [`crate::health`].
 #[derive(Clone)]
 pub struct RecorderMetrics {
     registry: Registry,
@@ -25,6 +26,11 @@ pub struct RecorderMetrics {
     pub insert_rows: Counter,
     pub insert_latency_seconds: Histogram,
     pub tob_last_seen_unix_seconds: GaugeVec,
+    pub funding_poll_attempts: CounterVec,
+    pub funding_insert_attempts: CounterVec,
+    pub funding_insert_rows: Counter,
+    pub funding_insert_latency_seconds: Histogram,
+    pub funding_last_event_unix_seconds: GaugeVec,
     pub stream_reconnects: Counter,
     pub clickhouse_up: Gauge,
     pub ready_state: Gauge,
@@ -74,6 +80,41 @@ impl RecorderMetrics {
             ),
             &["inst_id"],
         )?;
+        let funding_poll_attempts = CounterVec::new(
+            Opts::new(
+                "okx_recorder_funding_poll_attempts_total",
+                "Total funding-rate-history poll attempts by instrument and outcome",
+            ),
+            &["inst_id", "status"],
+        )?;
+        let funding_insert_attempts = CounterVec::new(
+            Opts::new(
+                "okx_recorder_funding_insert_attempts_total",
+                "Total ClickHouse insert attempts for funding batches",
+            ),
+            &["status"],
+        )?;
+        let funding_insert_rows = Counter::with_opts(Opts::new(
+            "okx_recorder_funding_insert_rows_total",
+            "Total funding rows inserted into ClickHouse",
+        ))?;
+        let funding_insert_latency_seconds = Histogram::with_opts(
+            HistogramOpts::new(
+                "okx_recorder_funding_insert_latency_seconds",
+                "ClickHouse funding insert latency in seconds",
+            )
+            .buckets(vec![0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0]),
+        )?;
+        let funding_last_event_unix_seconds = GaugeVec::new(
+            Opts::new(
+                "okx_recorder_funding_last_event_unix_seconds",
+                "Exchange settlement timestamp (unix seconds) of the most recent settled \
+                 funding event observed per instrument. Funding settles on an hours-scale \
+                 cadence, so an age of several hours is normal — alert on it, never gate \
+                 readiness with it.",
+            ),
+            &["inst_id"],
+        )?;
         let stream_reconnects = Counter::with_opts(Opts::new(
             "okx_recorder_stream_reconnects_total",
             "Total websocket reconnect attempts after a connection failure",
@@ -94,6 +135,11 @@ impl RecorderMetrics {
         registry.register(Box::new(insert_rows.clone()))?;
         registry.register(Box::new(insert_latency_seconds.clone()))?;
         registry.register(Box::new(tob_last_seen_unix_seconds.clone()))?;
+        registry.register(Box::new(funding_poll_attempts.clone()))?;
+        registry.register(Box::new(funding_insert_attempts.clone()))?;
+        registry.register(Box::new(funding_insert_rows.clone()))?;
+        registry.register(Box::new(funding_insert_latency_seconds.clone()))?;
+        registry.register(Box::new(funding_last_event_unix_seconds.clone()))?;
         registry.register(Box::new(stream_reconnects.clone()))?;
         registry.register(Box::new(clickhouse_up.clone()))?;
         registry.register(Box::new(ready_state.clone()))?;
@@ -107,6 +153,11 @@ impl RecorderMetrics {
             insert_rows,
             insert_latency_seconds,
             tob_last_seen_unix_seconds,
+            funding_poll_attempts,
+            funding_insert_attempts,
+            funding_insert_rows,
+            funding_insert_latency_seconds,
+            funding_last_event_unix_seconds,
             stream_reconnects,
             clickhouse_up,
             ready_state,
@@ -140,6 +191,20 @@ impl RecorderMetrics {
         self.tob_last_seen_unix_seconds
             .with_label_values(&[inst_id])
             .set(unix_seconds_now());
+    }
+
+    /// Advance the per-instrument settled-funding last-event gauge to
+    /// `funding_time` (exchange settlement time). Monotone max: polls return a
+    /// trailing history window, so older events in the same batch must not
+    /// rewind the gauge.
+    pub fn record_funding_event(&self, inst_id: &str, funding_time: chrono::DateTime<chrono::Utc>) {
+        let gauge = self
+            .funding_last_event_unix_seconds
+            .with_label_values(&[inst_id]);
+        let new_value = funding_time.timestamp_millis() as f64 / 1000.0;
+        if new_value > gauge.get() {
+            gauge.set(new_value);
+        }
     }
 
     pub fn to_prometheus_payload(&self) -> Result<Vec<u8>> {

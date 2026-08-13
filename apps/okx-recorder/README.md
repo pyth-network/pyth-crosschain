@@ -2,8 +2,9 @@
 
 Subscribes to OKX perpetual-swap market data over the public websocket
 (`wss://ws.okx.com:8443/ws/v5/public`) for a configurable instrument list and
-persists **every** update to ClickHouse. Currently records the top-of-book
-(`bbo-tbt`) lane; trades and funding lanes bolt onto the same pipeline.
+persists **every** update to ClickHouse. Records the top-of-book (`bbo-tbt`)
+websocket lane and the settled funding-rate REST lane; the trades lane bolts
+onto the same pipeline.
 
 ## What it records
 
@@ -16,6 +17,16 @@ per-instrument `seqId` as the ordering tiebreaker. There is **no in-memory
 dedupe** (a deliberate deviation from `binance-recorder`): every received update
 is inserted, and ClickHouse's `ReplacingMergeTree` owns row identity via the
 table's ORDER BY keys, collapsing byte-identical insert retries at merge time.
+
+Alongside the websocket, a REST poller fetches the **settled** funding rate
+(`/api/v5/public/funding-rate-history` — not the websocket predicted-rate
+stream) per configured instrument every `funding_poll_seconds` and writes it to
+`default.okx_funding_rates`. Each poll re-fetches the last
+`funding_history_limit` events, so overlapping windows are re-inserted on every
+poll; that is deliberate — inserts are idempotent by `(inst_id, funding_time)`
+via `ReplacingMergeTree`, and the overlap self-heals short outages. Funding
+rows carry the exchange settlement time (`funding_time`) plus a client-side
+`received_at`.
 
 The seeded instruments are the pre-launch AI-lab perpetuals on OKX:
 `OPENAI-USDT-SWAP, ANTHROPIC-USDT-SWAP`. Instruments are config-driven only —
@@ -51,7 +62,9 @@ adding an OKX perp is a config change, no code change.
    bash scripts/local_e2e_check.sh
    ```
 
-   The check confirms rows have landed in `default.okx_book_ticker` and that
+   The check confirms rows have landed in `default.okx_book_ticker` and
+   `default.okx_funding_rates`, that funding rows are unique by
+   `(inst_id, funding_time)` after ReplacingMergeTree collapse, and that
    `/ready` and `/metrics` respond.
 
 ## Services & ports
@@ -74,16 +87,24 @@ Overview** dashboard.
 - `GET /ready` (health port) — ready only when ClickHouse is reachable **and
   every** configured instrument's ToB lane is fresh within
   `ready_stale_seconds`. An instrument that never streams therefore keeps
-  `/ready` red, surfacing the gap rather than masking it. Future trades/funding
-  lanes expose last-event-age metrics but **never** gate readiness — trades can
-  legitimately go quiet and funding updates on a slow cadence.
+  `/ready` red, surfacing the gap rather than masking it. The funding lane (and
+  the future trades lane) exposes last-event metrics but **never** gates
+  readiness — funding settles on an hours-scale cadence and sparseness is
+  expected, so its staleness is an alerting signal, not an outage.
 - `GET /metrics` (metrics port) — Prometheus exposition, including
   `okx_recorder_ready`, `okx_recorder_clickhouse_up`,
   `okx_recorder_insert_rows_total`, `okx_recorder_insert_latency_seconds`,
   `okx_recorder_insert_attempts_total{status}`, `okx_recorder_queue_depth`,
   `okx_recorder_queue_fill_ratio`, `okx_recorder_queue_drops_total{inst_id}`,
   `okx_recorder_stream_reconnects_total`, and
-  `okx_recorder_tob_last_seen_unix_seconds{inst_id}`.
+  `okx_recorder_tob_last_seen_unix_seconds{inst_id}`. The funding lane adds
+  `okx_recorder_funding_poll_attempts_total{inst_id,status}`,
+  `okx_recorder_funding_insert_attempts_total{status}`,
+  `okx_recorder_funding_insert_rows_total`,
+  `okx_recorder_funding_insert_latency_seconds`, and
+  `okx_recorder_funding_last_event_unix_seconds{inst_id}` (exchange settlement
+  time of the newest settled funding event — alert on its age, don't gate on
+  it).
 
 ## Configuration
 
@@ -102,6 +123,7 @@ See [config.sample.yml](config.sample.yml) for all options:
 | `clickhouse.url` | _required_ | ClickHouse URL (`http`/`https` → `secure`) |
 | `clickhouse.user` / `password` | `default` / "" | Credentials |
 | `clickhouse.database` / `book_ticker_table` | `default` / `okx_book_ticker` | Target |
+| `clickhouse.funding_rates_table` | `okx_funding_rates` | Funding lane target table |
 | `metrics_port` | `9095` | Prometheus metrics port |
 | `health_port` | `8085` | Health endpoint port |
 | `ready_stale_seconds` | `10` | Per-instrument ToB freshness window for `/ready` |
@@ -110,12 +132,21 @@ See [config.sample.yml](config.sample.yml) for all options:
 | `batch_flush_seconds` | `2.0` | Max time before a partial batch is flushed |
 | `reconnect_max_backoff_seconds` | `30` | Jittered websocket reconnect backoff ceiling |
 | `insert_async` | `true` | Use ClickHouse async inserts |
+| `funding_history_url` | the OKX public endpoint | Settled funding-rate-history REST endpoint |
+| `funding_poll_seconds` | `300` | Funding poll interval; must be >= 60 |
+| `funding_history_limit` | `10` | History rows requested per poll (1–100) |
 
 ## Schema
 
-ClickHouse schema is in [`migrations/001-init.sql`](migrations/001-init.sql);
-for local dev it is auto-loaded via the ClickHouse Docker entrypoint. For
+ClickHouse schema is in [`migrations/`](migrations/) (one file per table); for
+local dev it is auto-loaded via the ClickHouse Docker entrypoint. For
 production, apply it manually against the pyth-analytics cluster.
+
+> The compose ClickHouse only runs `/docker-entrypoint-initdb.d` migrations on
+> a **fresh** volume. If you have an older `okx-recorder_clickhouse-local-data`
+> volume from before a migration landed, run `docker volume rm
+> okx-recorder_clickhouse-local-data` (or apply the new migration manually) —
+> otherwise inserts into the newer tables (e.g. funding) will fail.
 
 ```sql
 CREATE TABLE default.okx_book_ticker
@@ -150,3 +181,27 @@ TTL toDateTime(received_at) + INTERVAL 90 DAY DELETE;
   measurable.
 - **Monthly partitions** with a **90-day TTL** keep storage bounded, consistent
   with the sibling recorders.
+
+```sql
+CREATE TABLE default.okx_funding_rates
+(
+    inst_id       LowCardinality(String),
+    funding_time  DateTime64(3),
+    funding_rate  Decimal(38, 18),
+    realized_rate Nullable(Decimal(38, 18)),
+    received_at   DateTime64(3),
+    ingested_at   DateTime64(3) DEFAULT now64(3)
+)
+ENGINE = ReplacingMergeTree(ingested_at)
+PARTITION BY toYYYYMM(funding_time)
+ORDER BY (inst_id, funding_time)
+TTL toDateTime(funding_time) + INTERVAL 90 DAY DELETE;
+```
+
+- **Idempotent by `(inst_id, funding_time)`**: the poller re-fetches
+  overlapping history windows every poll and re-inserts them; the ORDER BY key
+  plus `ReplacingMergeTree(ingested_at)` collapses the duplicates at merge
+  time. Read with `FINAL` (or aggregate) if pre-merge exactness matters.
+- **`Decimal(38, 18)`** (not the ToB table's `Decimal(38, 12)`) because OKX
+  reports funding rates with up to ~17 decimal places.
+- **`realized_rate` is `Nullable`** because OKX can omit it.
