@@ -37,6 +37,26 @@ export default async function Layout({
           </span>
         </Banner>
       )}
+      {section === "oracle-integrity-staking" && (
+        <Banner
+          changeLayout={false}
+          className="min-h-12 bg-amber-950 py-2 text-amber-100"
+          height="auto"
+        >
+          <span>
+            <strong>OIS rewards are paused.</strong> Staking and slashing remain
+            active — stake is still at risk of slashing. &nbsp;|&nbsp;
+            <a
+              className="underline"
+              href="https://forum.pyth.network/t/ois-rewards-update-april-2026/2479"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Read the governance update.
+            </a>
+          </span>
+        </Banner>
+      )}
       {section === "price-feeds" && <MigrationBanner />}
       <ChangelogBar />
       <DocsLayout {...docsOptions}>{children}</DocsLayout>
