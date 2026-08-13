@@ -1,11 +1,5 @@
-// Disable the following rule because this file is the intended place to declare
-// and load all env variables.
-/* eslint-disable n/no-process-env */
-
-// Disable the following rule because variables in this file are only loaded at
-// runtime and do not influence the build outputs, thus they need not be
-// declared to turbo for it to be able to cache build outputs correctly.
-/* eslint-disable turbo/no-undeclared-env-vars */
+// biome-ignore-all lint/style/noProcessEnv: this file is the intended place to declare and load all env variables
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars: most variables here are only loaded at runtime and do not influence the build outputs, thus they need not be declared to turbo for it to be able to cache build outputs correctly
 
 import "server-only";
 
@@ -38,7 +32,31 @@ const transformOr = <T>(
 const getOr = (key: string, defaultValue: string): string =>
   transform(key, (value) => value ?? defaultValue);
 
-const asBoolean = (value: string): boolean => value.toLowerCase() === "true";
+// Declared here rather than beside `MissingEnvironmentError` at the bottom of
+// the file because `asBoolean` runs during module evaluation, before a class
+// declared further down has left its temporal dead zone.
+class InvalidEnvironmentError extends Error {
+  constructor(name: string, value: string, expected: string) {
+    super(
+      `Invalid value for environment variable ${name}: "${value}" (expected ${expected})!`,
+    );
+    this.name = "InvalidEnvironmentError";
+  }
+}
+
+const asBoolean = (key: string, value: string): boolean => {
+  switch (value.toLowerCase()) {
+    case "true": {
+      return true;
+    }
+    case "false": {
+      return false;
+    }
+    default: {
+      throw new InvalidEnvironmentError(key, value, `"true" or "false"`);
+    }
+  }
+};
 
 /**
  * Indicates that this server is the live customer-facing production server.
@@ -79,10 +97,16 @@ export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 /**
  * Shows the persistent banner announcing that OIS rewards are paused.  Enabled
  * by default; set `OIS_PAUSED=false` to remove the banner when rewards resume.
+ * Anything other than `true` / `false` throws rather than defaulting, so a typo
+ * can't silently drop a notice about ongoing slashing risk.
  * `/` is statically prerendered, so this is baked in at build time -- flipping
  * it needs a redeploy, not just an env var change.
  */
-export const OIS_PAUSED = transformOr("OIS_PAUSED", asBoolean, true);
+export const OIS_PAUSED = transformOr(
+  "OIS_PAUSED",
+  (value) => asBoolean("OIS_PAUSED", value),
+  true,
+);
 // This needs to be a public key that has SOL in it all the time, it will be used as a payer in the transaction simulation to compute the claimable rewards
 // such simulation fails when the payer has no funds.
 export const SIMULATION_PAYER_ADDRESS = getOr(
