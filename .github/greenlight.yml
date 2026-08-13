@@ -22,6 +22,7 @@ auto_approve_paths:
   # research; not on the price-delivery wire)
   - "apps/binance-recorder/**"
   - "apps/hyperliquid-recorder/**"
+  - "apps/okx-recorder/**"
   - "apps/ondo-recorder/**"
   # Presentational UI packages (not imported by any critical-path tool)
   - "packages/component-library/**"
