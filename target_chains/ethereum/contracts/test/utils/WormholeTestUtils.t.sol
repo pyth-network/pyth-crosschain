@@ -81,6 +81,41 @@ abstract contract WormholeTestUtils is Test {
         return wormholeReceiverAddr;
     }
 
+    /// @dev Like `setUpWormholeReceiverHalf`, but guardian private keys start at
+    /// `1 + keyOffset`. A second `setUpWormholeReceiverHalf(n)` call reuses keys
+    /// `1..n` and would share guardians with the first receiver.
+    function setUpWormholeReceiverHalfWithKeyOffset(
+        uint8 numGuardians,
+        uint256 keyOffset
+    ) public returns (address) {
+        ReceiverImplementationHalf wormholeReceiverImpl = new ReceiverImplementationHalf();
+        ReceiverSetup wormholeReceiverSetup = new ReceiverSetup();
+
+        WormholeReceiver wormholeReceiver = new WormholeReceiver(
+            address(wormholeReceiverSetup),
+            new bytes(0)
+        );
+
+        address[] memory initSigners = new address[](numGuardians);
+        currentSigners = new uint256[](numGuardians);
+
+        for (uint256 i = 0; i < numGuardians; ++i) {
+            currentSigners[i] = i + 1 + keyOffset;
+            initSigners[i] = vm.addr(currentSigners[i]);
+        }
+
+        ReceiverSetup(address(wormholeReceiver)).setup(
+            address(wormholeReceiverImpl),
+            initSigners,
+            CHAIN_ID,
+            GOVERNANCE_CHAIN_ID,
+            GOVERNANCE_CONTRACT
+        );
+        wormholeReceiverAddr = address(wormholeReceiver);
+
+        return wormholeReceiverAddr;
+    }
+
     function setUpWormholeReceiver(
         uint8 numGuardians
     ) public returns (address) {
@@ -108,6 +143,41 @@ abstract contract WormholeTestUtils is Test {
             CHAIN_ID, // Ethereum chain ID
             GOVERNANCE_CHAIN_ID, // Governance source chain ID (1 = solana)
             GOVERNANCE_CONTRACT // Governance source address
+        );
+        wormholeReceiverAddr = address(wormholeReceiver);
+
+        return wormholeReceiverAddr;
+    }
+
+    /// @dev Like `setUpWormholeReceiver`, but guardian private keys start at
+    /// `1 + keyOffset`. A second `setUpWormholeReceiver(n)` call reuses keys
+    /// `1..n` and would share guardians with the first receiver.
+    function setUpWormholeReceiverWithKeyOffset(
+        uint8 numGuardians,
+        uint256 keyOffset
+    ) public returns (address) {
+        ReceiverImplementation wormholeReceiverImpl = new ReceiverImplementation();
+        ReceiverSetup wormholeReceiverSetup = new ReceiverSetup();
+
+        WormholeReceiver wormholeReceiver = new WormholeReceiver(
+            address(wormholeReceiverSetup),
+            new bytes(0)
+        );
+
+        address[] memory initSigners = new address[](numGuardians);
+        currentSigners = new uint256[](numGuardians);
+
+        for (uint256 i = 0; i < numGuardians; ++i) {
+            currentSigners[i] = i + 1 + keyOffset;
+            initSigners[i] = vm.addr(currentSigners[i]);
+        }
+
+        ReceiverSetup(address(wormholeReceiver)).setup(
+            address(wormholeReceiverImpl),
+            initSigners,
+            CHAIN_ID,
+            GOVERNANCE_CHAIN_ID,
+            GOVERNANCE_CONTRACT
         );
         wormholeReceiverAddr = address(wormholeReceiver);
 

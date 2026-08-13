@@ -95,10 +95,7 @@ abstract contract PythGovernance is
         } else if (gi.action == GovernanceAction.SetWormholeAddress) {
             if (gi.targetChainId == 0)
                 revert PythErrors.InvalidGovernanceTarget();
-            setWormholeAddress(
-                parseSetWormholeAddressPayload(gi.payload),
-                encodedVM
-            );
+            setWormholeAddress(parseSetWormholeAddressPayload(gi.payload));
         } else if (gi.action == GovernanceAction.SetFeeInToken) {
             // No-op for EVM chains
         } else if (gi.action == GovernanceAction.SetTransactionFee) {
@@ -211,43 +208,16 @@ abstract contract PythGovernance is
     }
 
     function setWormholeAddress(
-        SetWormholeAddressPayload memory payload,
-        bytes memory encodedVM
+        SetWormholeAddressPayload memory payload
     ) internal {
+        if (payload.newWormholeAddress == address(0))
+            revert PythErrors.InvalidWormholeAddressToSet();
+
+        if (payload.newWormholeAddress.code.length == 0)
+            revert PythErrors.InvalidWormholeAddressToSet();
+
         address oldWormholeAddress = address(wormhole());
         setWormhole(payload.newWormholeAddress);
-
-        // We want to verify that the new wormhole address is valid, so we make sure that it can
-        // parse and verify the same governance VAA that is used to set it.
-        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
-            encodedVM
-        );
-
-        if (!valid) revert PythErrors.InvalidGovernanceMessage();
-
-        if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
-            revert PythErrors.InvalidGovernanceMessage();
-
-        if (vm.sequence != lastExecutedGovernanceSequence())
-            revert PythErrors.InvalidWormholeAddressToSet();
-
-        GovernanceInstruction memory gi = parseGovernanceInstruction(
-            vm.payload
-        );
-
-        if (gi.action != GovernanceAction.SetWormholeAddress)
-            revert PythErrors.InvalidWormholeAddressToSet();
-
-        // Purposefully, we don't check whether the chainId is the same as the current chainId because
-        // we might want to change the chain id of the wormhole contract.
-
-        // The following check is not necessary for security, but is a sanity check that the new wormhole
-        // contract parses the payload correctly.
-        SetWormholeAddressPayload
-            memory newPayload = parseSetWormholeAddressPayload(gi.payload);
-
-        if (newPayload.newWormholeAddress != payload.newWormholeAddress)
-            revert PythErrors.InvalidWormholeAddressToSet();
 
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
     }

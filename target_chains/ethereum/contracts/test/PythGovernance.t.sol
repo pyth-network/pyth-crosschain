@@ -47,6 +47,8 @@ contract PythGovernanceTest is
     uint16 constant TEST_PYTH2_WORMHOLE_CHAIN_ID = 1;
     bytes32 constant TEST_PYTH2_WORMHOLE_EMITTER =
         0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
+    bytes32 constant TEST_CUTOVER_PRICE_EMITTER =
+        0x0000000000000000000000000000000000000000000000000000000000001111;
     uint16 constant TARGET_CHAIN_ID = 2;
 
     function setUp() public {
@@ -262,6 +264,267 @@ contract PythGovernanceTest is
 
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
         assertEq(address(PythGetters(address(pyth)).wormhole()), newWormhole);
+    }
+
+    /// @dev Deploy a receiver with distinct guardian keys, then restore
+    /// `currentSigners` / `wormholeReceiverAddr` so later VAAs are still signed
+    /// by the original guardians.
+    function deployUnrelatedWormholeReceiver(
+        uint8 numGuardians,
+        uint256 keyOffset
+    ) internal returns (address newWormhole) {
+        uint256[] memory originalSigners = currentSigners;
+        address originalReceiver = wormholeReceiverAddr;
+        newWormhole = setUpWormholeReceiverWithKeyOffset(
+            numGuardians,
+            keyOffset
+        );
+        currentSigners = originalSigners;
+        wormholeReceiverAddr = originalReceiver;
+    }
+
+    function deployUnrelatedHalfWormholeReceiver(
+        uint8 numGuardians,
+        uint256 keyOffset
+    ) internal returns (address newWormhole) {
+        uint256[] memory originalSigners = currentSigners;
+        address originalReceiver = wormholeReceiverAddr;
+        newWormhole = setUpWormholeReceiverHalfWithKeyOffset(
+            numGuardians,
+            keyOffset
+        );
+        currentSigners = originalSigners;
+        wormholeReceiverAddr = originalReceiver;
+    }
+
+    function encodeSetDataSourcesMessage() internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                MAGIC,
+                uint8(GovernanceModule.Target),
+                uint8(GovernanceAction.SetDataSources),
+                TARGET_CHAIN_ID,
+                uint8(1), // Number of data sources
+                uint16(1), // Chain ID
+                TEST_CUTOVER_PRICE_EMITTER
+            );
+    }
+
+    function encodeSetWormholeAddressMessage(
+        address newWormhole
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                MAGIC,
+                uint8(GovernanceModule.Target),
+                uint8(GovernanceAction.SetWormholeAddress),
+                TARGET_CHAIN_ID,
+                newWormhole
+            );
+    }
+
+    function assertCutoverState(
+        address expectedWormhole,
+        uint64 expectedSequence
+    ) internal {
+        assertFalse(
+            PythGetters(address(pyth)).isValidDataSource(
+                TEST_PYTH2_WORMHOLE_CHAIN_ID,
+                TEST_PYTH2_WORMHOLE_EMITTER
+            )
+        );
+        assertTrue(
+            PythGetters(address(pyth)).isValidDataSource(
+                1,
+                TEST_CUTOVER_PRICE_EMITTER
+            )
+        );
+
+        PythInternalStructs.DataSource[] memory dataSources = PythGetters(
+            address(pyth)
+        ).validDataSources();
+        assertEq(dataSources.length, 1);
+        assertEq(dataSources[0].chainId, 1);
+        assertEq(dataSources[0].emitterAddress, TEST_CUTOVER_PRICE_EMITTER);
+
+        assertEq(
+            address(PythGetters(address(pyth)).wormhole()),
+            expectedWormhole
+        );
+
+        PythInternalStructs.DataSource memory govDs = PythGetters(address(pyth))
+            .governanceDataSource();
+        assertEq(govDs.chainId, TEST_GOVERNANCE_CHAIN_ID);
+        assertEq(govDs.emitterAddress, TEST_GOVERNANCE_EMITTER);
+
+        assertEq(
+            PythGetters(address(pyth)).lastExecutedGovernanceSequence(),
+            expectedSequence
+        );
+    }
+
+    /// @dev After cutover, Pyth must verify VAAs on the new receiver. A payload
+    /// still signed by the legacy guardians is rejected; the same payload signed
+    /// by the new receiver's keys executes.
+    function executeGovernanceWithNewWormhole(
+        address newWormhole,
+        uint8 numGuardians,
+        uint256 keyOffset,
+        uint64 sequence
+    ) internal {
+        bytes memory setFeeMessage = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetFee),
+            TARGET_CHAIN_ID,
+            uint64(5),
+            uint64(3)
+        );
+
+        bytes memory staleVaa = encodeAndSignMessage(
+            setFeeMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            sequence
+        );
+        vm.expectRevert(PythErrors.InvalidWormholeVaa.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(staleVaa);
+
+        uint256[] memory newSigners = new uint256[](numGuardians);
+        for (uint256 i = 0; i < numGuardians; ++i) {
+            newSigners[i] = i + 1 + keyOffset;
+        }
+        currentSigners = newSigners;
+        wormholeReceiverAddr = newWormhole;
+
+        bytes memory setFeeVaa = encodeAndSignMessage(
+            setFeeMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            sequence
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(setFeeVaa);
+        assertEq(PythGetters(address(pyth)).singleUpdateFeeInWei(), 5000);
+    }
+
+    function testSetWormholeAddressToUnrelatedReceiver() public {
+        address newWormhole = deployUnrelatedWormholeReceiver(1, 100);
+
+        bytes memory vaa = encodeAndSignMessage(
+            encodeSetWormholeAddressMessage(newWormhole),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+        assertEq(address(PythGetters(address(pyth)).wormhole()), newWormhole);
+    }
+
+    function testSetWormholeAddressRejectsZero() public {
+        bytes memory vaa = encodeAndSignMessage(
+            encodeSetWormholeAddressMessage(address(0)),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidWormholeAddressToSet.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testSetWormholeAddressRejectsNoCode() public {
+        bytes memory vaa = encodeAndSignMessage(
+            encodeSetWormholeAddressMessage(address(0xdead)),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidWormholeAddressToSet.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
+    function testCutoverSetDataSourcesThenSetWormhole() public {
+        address newWormhole = deployUnrelatedHalfWormholeReceiver(1, 100);
+
+        bytes memory setDataSourcesVaa = encodeAndSignMessage(
+            encodeSetDataSourcesMessage(),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(
+            setDataSourcesVaa
+        );
+
+        bytes memory setWormholeVaa = encodeAndSignMessage(
+            encodeSetWormholeAddressMessage(newWormhole),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            2
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(
+            setWormholeVaa
+        );
+
+        assertCutoverState(newWormhole, 2);
+        executeGovernanceWithNewWormhole(newWormhole, 1, 100, 3);
+    }
+
+    function testCutoverUpgradeThenSetDataSourcesThenSetWormhole() public {
+        PythUpgradable newImplementation = new PythUpgradable();
+        address newWormhole = deployUnrelatedHalfWormholeReceiver(1, 100);
+
+        bytes memory upgradeData = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.UpgradeContract),
+            TARGET_CHAIN_ID,
+            address(newImplementation)
+        );
+        bytes memory upgradeVaa = encodeAndSignMessage(
+            upgradeData,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(upgradeVaa);
+
+        address implAddr = address(
+            uint160(
+                uint256(
+                    vm.load(
+                        address(pyth),
+                        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
+                    )
+                )
+            )
+        );
+        assertEq(implAddr, address(newImplementation));
+
+        bytes memory setDataSourcesVaa = encodeAndSignMessage(
+            encodeSetDataSourcesMessage(),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            2
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(
+            setDataSourcesVaa
+        );
+
+        bytes memory setWormholeVaa = encodeAndSignMessage(
+            encodeSetWormholeAddressMessage(newWormhole),
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            3
+        );
+        PythGovernance(address(pyth)).executeGovernanceInstruction(
+            setWormholeVaa
+        );
+
+        assertCutoverState(newWormhole, 3);
+        executeGovernanceWithNewWormhole(newWormhole, 1, 100, 4);
     }
 
     function testTransferGovernanceDataSource() public {
