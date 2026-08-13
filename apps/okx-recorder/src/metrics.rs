@@ -113,6 +113,22 @@ impl RecorderMetrics {
         })
     }
 
+    /// Pre-initialize the per-instrument ToB last-seen gauge for every
+    /// configured instrument, stamped with the current time (process start).
+    ///
+    /// Without this, the `{inst_id}` series only exists after the first update
+    /// arrives, so an instrument that never streams has no series and
+    /// age-based staleness alerts can never fire for it. Seeding at startup
+    /// makes the age grow from boot when nothing ever arrives.
+    pub fn init_instruments(&self, inst_ids: &[String]) {
+        let started_at = unix_seconds_now();
+        for inst_id in inst_ids {
+            self.tob_last_seen_unix_seconds
+                .with_label_values(&[inst_id])
+                .set(started_at);
+        }
+    }
+
     /// Record a dropped row for `inst_id` when the bounded queue is full.
     pub fn record_queue_drop(&self, inst_id: &str) {
         self.queue_drops.with_label_values(&[inst_id]).inc();

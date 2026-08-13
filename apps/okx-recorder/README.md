@@ -15,7 +15,7 @@ when the frame arrives (so transport latency is measurable) and uses OKX's
 per-instrument `seqId` as the ordering tiebreaker. There is **no in-memory
 dedupe** (a deliberate deviation from `binance-recorder`): every received update
 is inserted, and ClickHouse's `ReplacingMergeTree` owns row identity via the
-table's ORDER BY keys, collapsing exact duplicates at merge time.
+table's ORDER BY keys, collapsing byte-identical insert retries at merge time.
 
 The seeded instruments are the pre-launch AI-lab perpetuals on OKX:
 `OPENAI-USDT-SWAP, ANTHROPIC-USDT-SWAP`. Instruments are config-driven only —
@@ -137,8 +137,12 @@ TTL toDateTime(received_at) + INTERVAL 90 DAY DELETE;
 ```
 
 - **`ReplacingMergeTree(ingested_at)`** + **`ORDER BY (inst_id, received_at, seq_id)`**
-  owns row identity: the recorder does no in-memory dedupe, and duplicates
-  (exchange re-sends, insert retries) collapse at merge time.
+  owns row identity: the recorder does no in-memory dedupe, and insert retries
+  (a flush that times out client-side but commits server-side, then is retried
+  byte-identical) collapse at merge time because the retried rows land on the
+  same ORDER BY key. Because `received_at` is one of those keys, a genuine
+  exchange re-send arrives with a new `received_at` and is persisted as a
+  distinct row by design.
 - **`bid_*`/`ask_*` are `Nullable`** because either book side can be missing on
   `bbo-tbt` when the book is one-sided.
 - **`ts`** is the exchange timestamp from the payload; **`received_at`** is the

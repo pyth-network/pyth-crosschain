@@ -131,6 +131,50 @@ fn parse_frame_handles_both_sides_missing() {
 }
 
 #[test]
+fn parse_frame_handles_placeholder_level() {
+    // Some OKX book channels emit a placeholder level of empty strings for an
+    // empty side instead of an empty array; it must parse as an absent side,
+    // not an error.
+    let frame = r#"{
+        "arg": { "channel": "bbo-tbt", "instId": "OPENAI-USDT-SWAP" },
+        "data": [
+            {
+                "asks": [["","","",""]],
+                "bids": [["111.05","57745","0","24"]],
+                "ts": "1700000000456",
+                "seqId": 8
+            }
+        ]
+    }"#;
+    let ticker = parse_single_row(frame);
+    assert_eq!(ticker.ask_px, None);
+    assert_eq!(ticker.ask_qty, None);
+    assert_eq!(ticker.bid_px, Some(Decimal::from_str("111.05").unwrap()));
+    assert_eq!(ticker.bid_qty, Some(Decimal::from_str("57745").unwrap()));
+}
+
+#[test]
+fn parse_frame_handles_placeholder_levels_on_both_sides() {
+    let frame = r#"{
+        "arg": { "channel": "bbo-tbt", "instId": "OPENAI-USDT-SWAP" },
+        "data": [
+            {
+                "asks": [["","","",""]],
+                "bids": [["","","",""]],
+                "ts": "1700000000456",
+                "seqId": 9
+            }
+        ]
+    }"#;
+    let ticker = parse_single_row(frame);
+    assert_eq!(ticker.seq_id, 9);
+    assert_eq!(ticker.bid_px, None);
+    assert_eq!(ticker.bid_qty, None);
+    assert_eq!(ticker.ask_px, None);
+    assert_eq!(ticker.ask_qty, None);
+}
+
+#[test]
 fn parse_frame_handles_empty_data_array() {
     let frame = r#"{
         "arg": { "channel": "bbo-tbt", "instId": "OPENAI-USDT-SWAP" },

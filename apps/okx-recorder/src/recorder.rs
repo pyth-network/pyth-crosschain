@@ -27,9 +27,11 @@ pub struct WriterRuntimeConfig {
 /// lane into its ClickHouse table. Ported from `binance-recorder`'s
 /// `RecorderRuntime`. The writer buffers every update with no in-memory dedupe
 /// — row identity is owned by ClickHouse (`ReplacingMergeTree(ingested_at)`
-/// over the table's ORDER BY keys), which absorbs both exchange re-sends and
-/// insert-retry duplicates. Follow-up lanes (trades, funding) add their own
-/// [`LaneRow`] variants and per-lane buffers here.
+/// over the table's ORDER BY keys). Because `received_at` is part of the ORDER
+/// BY, this collapses byte-identical insert retries only; a genuine exchange
+/// re-send arrives with a new `received_at` and is persisted as a distinct row
+/// by design. Follow-up lanes (trades, funding) add their own [`LaneRow`]
+/// variants and per-lane buffers here.
 pub struct RecorderRuntime {
     ws_url: String,
     instruments: Vec<String>,
@@ -70,6 +72,10 @@ impl RecorderRuntime {
     }
 
     pub fn start(&mut self) {
+        // Seed per-instrument metric series before any data arrives so
+        // age-based staleness alerts cover instruments that never stream.
+        self.metrics.init_instruments(&self.instruments);
+
         let (tx, rx) = mpsc::channel::<LaneRow>(self.writer_config.queue_max_rows);
         self.spawn_writer_loop(rx);
 
@@ -118,9 +124,10 @@ impl RecorderRuntime {
         let handle = tokio::spawn(async move {
             // Buffer every update: no in-memory dedupe, by design. ClickHouse's
             // `ReplacingMergeTree(ingested_at)` owns row identity via the
-            // table's ORDER BY keys, so duplicates (exchange re-sends, or a
-            // flush that times out client-side but commits server-side) are
-            // collapsed at merge time.
+            // table's ORDER BY keys, which include `received_at` — so only
+            // insert retries (a flush that times out client-side but commits
+            // server-side) collapse at merge time. A genuine exchange re-send
+            // carries a new `received_at` and is persisted as a distinct row.
             let mut book_buffer: Vec<BookTicker> = Vec::with_capacity(batch_max_rows);
             let mut last_flush = Instant::now();
 

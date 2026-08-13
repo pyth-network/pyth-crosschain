@@ -159,9 +159,12 @@ impl BookTicker {
 /// Extract `(price, size)` from the best level of one book side.
 ///
 /// A missing or empty side is a one-sided book, not an error: both fields come
-/// back `None` and the row is still recorded. A present-but-malformed level
-/// (fewer than two elements, or an unparseable decimal) is an error so the row
-/// is dropped instead of stored half-parsed.
+/// back `None` and the row is still recorded. Some OKX book channels emit a
+/// placeholder level with empty-string fields (e.g. `["","","",""]`) for an
+/// empty side instead of an empty array; a level whose price is an empty
+/// string is likewise treated as an absent side. A present-but-malformed level
+/// (fewer than two elements, or a non-empty but unparseable decimal) is an
+/// error so the row is dropped instead of stored half-parsed.
 fn parse_best_level(
     levels: &[Vec<String>],
     side: &str,
@@ -172,6 +175,9 @@ fn parse_best_level(
     let px = level
         .first()
         .with_context(|| format!("{side} level missing price"))?;
+    if px.is_empty() {
+        return Ok((None, None));
+    }
     let qty = level
         .get(1)
         .with_context(|| format!("{side} level missing size"))?;
