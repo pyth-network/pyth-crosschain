@@ -1,0 +1,52 @@
+{
+  "date": "2026-08-14",
+  "label": "Friday",
+  "summary": {
+    "added": 4,
+    "went_live": 0,
+    "removed": 0
+  },
+  "hero": "4 new feeds announced.",
+  "events": [
+    {
+      "id": "InterestRate.US4M/USD",
+      "lazerId": 3632,
+      "asset": "United States 4 Month Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-14",
+      "quote": "USD",
+      "hermesId": "42c1e61b613bf1d806d90e2f18753fee6e626c127061314d41d733816f9368cc"
+    },
+    {
+      "id": "InterestRate.US4M",
+      "lazerId": 3631,
+      "asset": "United States 4 Month Government Bonds Yield",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-14",
+      "quote": "%",
+      "hermesId": "a4e9dbfbdf0e6eff17a4d2bc9233403f6a4606d21d44a37578f06892ba39b203"
+    },
+    {
+      "id": "InterestRate.US6W/USD",
+      "lazerId": 3630,
+      "asset": "United States 6 Week Government Bonds Price",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-14",
+      "quote": "USD",
+      "hermesId": "96e880fa4116b8c5d08ce4a83ab5ac2d03113d80f10b08db68ccada0b136d726"
+    },
+    {
+      "id": "InterestRate.US6W",
+      "lazerId": 3629,
+      "asset": "United States 6 Week Government Bonds Yield",
+      "assetType": "interest-rate",
+      "changeType": "added",
+      "date": "2026-08-14",
+      "quote": "%",
+      "hermesId": "a05b3879c95ae1142a8e0af3b297d3504d9a513ff5a6a3877ef5f1c4381e2eeb"
+    }
+  ]
+}
