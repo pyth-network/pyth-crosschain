@@ -85,6 +85,24 @@ export const EXTENDED_ENTROPY_ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "targetAddress",
+        type: "address",
+      },
+      {
+        internalType: "uint128",
+        name: "amount",
+        type: "uint128",
+      },
+    ],
+    name: "withdrawFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   ...OWNABLE_ABI,
   ...EntropyAbi,
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
