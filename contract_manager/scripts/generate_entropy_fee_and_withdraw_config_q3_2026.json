@@ -1,0 +1,33 @@
+{
+  "setFee": [
+    { "chainName": "abstract", "newFeeInWei": "10000000000000" },
+    { "chainName": "arbitrum", "newFeeInWei": "10000000000000" },
+    { "chainName": "base", "newFeeInWei": "10000000000000" },
+    { "chainName": "blast", "newFeeInWei": "10000000000000" },
+    { "chainName": "optimism", "newFeeInWei": "10000000000000" },
+    { "chainName": "soneium", "newFeeInWei": "10000000000000" },
+    { "chainName": "unichain", "newFeeInWei": "10000000000000" },
+    { "chainName": "monad", "newFeeInWei": "1000000000000000000" },
+    { "chainName": "fantom_sonic_mainnet", "newFeeInWei": "800000000000000000" },
+    { "chainName": "kaia", "newFeeInWei": "600000000000000000" },
+    { "chainName": "zetachain", "newFeeInWei": "600000000000000000" },
+    { "chainName": "sei_evm_mainnet", "newFeeInWei": "400000000000000000" },
+    { "chainName": "berachain_mainnet", "newFeeInWei": "100000000000000000" },
+    { "chainName": "etherlink", "newFeeInWei": "80000000000000000" }
+  ],
+  "withdraw": [
+    { "chainName": "abstract", "targetAddress": "0x146a7a66c008E15E543b78aa3DeB39eaecD8fBcd" },
+    { "chainName": "apechain_mainnet", "targetAddress": "0xaC400398aD744836a30Fb833Ea6A1b2Cb21505D9" },
+    { "chainName": "arbitrum", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "base", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "berachain_mainnet", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "blast", "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918" },
+    { "chainName": "fantom_sonic_mainnet", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "hyperevm", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "monad", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "optimism", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" },
+    { "chainName": "sei_evm_mainnet", "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918" },
+    { "chainName": "soneium", "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918" },
+    { "chainName": "unichain", "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935" }
+  ]
+}

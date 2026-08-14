@@ -265,6 +265,22 @@ export class EvmEntropyContract extends Storable {
     );
   }
 
+  // Generates a payload to withdraw accrued pyth (DAO) fees to targetAddress
+  async generateWithdrawFeePayload(
+    targetAddress: string,
+    amountInWei: string,
+  ): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods
+      .withdrawFee(targetAddress, amountInWei)
+      .encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data,
+    );
+  }
+
   // Generates a payload to upgrade the executor contract, the owner of entropy contracts
   async generateUpgradeExecutorContractsPayload(
     newImplementation: string,
