@@ -1,0 +1,23 @@
+---
+title: Colocation
+description: Pyth Pro data center locations and how to colocate for the lowest latency
+slug: /price-feeds/pro/colocation
+---
+
+Pyth Pro runs in three Equinix data centers in the Tokyo metro area:
+
+| Facility     | Metro         |
+| ------------ | ------------- |
+| Equinix TY8  | Tokyo, Japan  |
+| Equinix TY10 | Tokyo, Japan  |
+| Equinix TY15 | Tokyo, Japan  |
+
+Latency-sensitive consumers should colocate in one of these three facilities. Anywhere else, the network path to Tokyo dominates every other source of latency.
+
+## Choosing a Facility
+
+Any of the three is a good choice. At any given time one of the zones acts as the leader and delivers the lowest latency, but the leader changes over time and the advantage is marginal — roughly 1 ms compared to the other two zones. There is no need to pick a facility based on which zone is currently leading.
+
+## Connecting
+
+Colocation does not change how you connect. Use the same endpoints described in the [WebSocket API](/price-feeds/pro/api/websocket) reference, and keep connections open to all three of them for redundancy — see [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices).

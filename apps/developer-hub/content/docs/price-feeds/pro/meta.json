@@ -15,6 +15,7 @@
     "api",
     "payload-reference",
     "rate-limits",
+    "colocation",
     "error-codes",
     "faq",
     "price-feed-ids",
