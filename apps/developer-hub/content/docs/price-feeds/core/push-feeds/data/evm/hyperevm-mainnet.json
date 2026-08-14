@@ -60,7 +60,7 @@
       "alias": "USH/USD",
       "id": "eaa30c1ef2d9f4fde45d6e699bfda5187b3de200ea4cbab25d676b260ab728c1",
       "time_difference": 3600,
-      "price_deviation": 2,
+      "price_deviation": 5,
       "confidence_ratio": 100,
       "pro_compatible_status": "coming_soon"
     },
@@ -316,7 +316,7 @@
       "alias": "USDN/USD",
       "id": "ee8e0a7de474035b5cbc1a5f762a74d654e5006b25bfe18f390cc5a3915b88ac",
       "time_difference": 3600,
-      "price_deviation": 1,
+      "price_deviation": 5,
       "confidence_ratio": 100,
       "pro_compatible_status": "coming_soon"
     },
