@@ -1,0 +1,32 @@
+{
+  "date": "2026-08-15",
+  "label": "Saturday",
+  "summary": {
+    "added": 1,
+    "went_live": 0,
+    "removed": 1
+  },
+  "hero": "1 new feed announced, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.GOQ6/USD",
+      "lazerId": 3058,
+      "asset": "Pyth Price In Usd For Ls Gasoil 12 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-15",
+      "quote": "USD",
+      "hermesId": "7ab842665dec5c28d345813e8b45ea131053227c31279ad918ad17fbc1f19550"
+    },
+    {
+      "id": "Commodities.Index.TGAS/USD",
+      "lazerId": 3633,
+      "asset": "Pyth Price In Usd For Dutch Ttf Gas 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-15",
+      "quote": "USD",
+      "hermesId": "3cdfe3c9fc024c8df6420ff50686224cfabffce99b9231a4d67ffb4475750d91"
+    }
+  ]
+}
