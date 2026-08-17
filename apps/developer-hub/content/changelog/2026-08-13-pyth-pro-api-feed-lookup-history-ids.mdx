@@ -1,0 +1,24 @@
+---
+title: Pyth Pro APIs can look up feeds by symbol and read historical prices by ID
+date: 2026-08-13
+product: pyth-pro
+type: fix
+area: apis
+---
+
+Pyth Pro API clients can browse the public feed catalog, resolve an individual
+feed by symbol on a channel, and request time-specific prices with `ids=` and
+`timestamp=` parameters.
+
+**Why it matters:** clients can move from feed discovery to historical price
+reads using stable symbols and numeric IDs, instead of maintaining a separate
+mapping layer.
+
+**What to do:** use `/v1/symbols` to browse the catalog, use
+`/v1/{channel}/symbols?symbol=...` to resolve a feed on a channel, and use
+`/v1/{channel}/price?ids=...&timestamp=...` for authenticated historical
+lookups by ID. Existing working API clients do not need to change.
+
+- [Pyth Pro API reference](https://pyth.dourolabs.app/docs/)
+- [Symbology reference](/price-feeds/pro/symbology-reference)
+- [Historical price API](/price-feeds/pro/api/history)

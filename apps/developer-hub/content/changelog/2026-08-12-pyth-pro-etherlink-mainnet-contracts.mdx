@@ -1,0 +1,26 @@
+---
+title: Etherlink Mainnet now supports Pyth Pro-compatible contracts
+date: 2026-08-12
+product: pyth-pro
+type: feature
+area: contracts
+---
+
+Etherlink Mainnet now has deployed Pyth Pro-compatible contracts. New Pro
+integrations can use the shared Pyth Pro / Lazer contract address
+`0xACeA761c27A909d4D3895128EBe6370FDE2dF481`, while Core-compatible
+integrations can use the upgraded contract
+`0x9DF02366A266D79DA5E978aDBEe8B8502117ee1a`.
+
+**Why it matters:** Etherlink apps can integrate against the same Pro-compatible
+contract surface used on other EVM networks, and Core users have a documented
+upgrade path for the new contract.
+
+**What to do:** new Pro integrations should use the Etherlink Mainnet row in
+the Pyth Pro contract catalog. Core integrations should follow the EVM contract
+address table and migration guide; existing apps on the legacy Core contract do
+not need to move immediately.
+
+- [Pyth Pro EVM contract addresses](/price-feeds/pro/contract-addresses#evm-mainnets)
+- [Pyth Core EVM contract addresses](/price-feeds/core/contract-addresses/evm)
+- [Migrate a Core app to Pyth](/price-feeds/core/migrate-an-app-to-pyth)
