@@ -15,14 +15,14 @@ type Option = {
 
 const OPTIONS: Option[] = [
   {
-    value: "now",
-    title: "Early upgrade",
     caption: "Recommended · zero downtime · ~30 min",
+    title: "Early upgrade",
+    value: "now",
   },
   {
-    value: "wait",
+    caption: "DAO upgrades contract on August 26",
     title: "Wait for automatic",
-    caption: "DAO upgrades contract on August 18",
+    value: "wait",
   },
 ];
 
@@ -36,16 +36,21 @@ const HEADING_IDS: Record<MigrationPath, string> = {
 const BranchToggleInner = () => {
   const [path, setPath] = useMigrationPath();
   return (
-    <div className={styles.toggle} role="radiogroup" aria-label="Choose your upgrade path">
+    <div
+      aria-label="Choose your upgrade path"
+      className={styles.toggle}
+      role="radiogroup"
+    >
       {OPTIONS.map((option) => {
         const selected = path === option.value;
         return (
           <button
-            key={option.value}
-            type="button"
-            role="radio"
             aria-checked={selected}
-            className={clsx(styles.toggleOption, selected && styles.toggleOptionSelected)}
+            className={clsx(
+              styles.toggleOption,
+              selected && styles.toggleOptionSelected,
+            )}
+            key={option.value}
             onClick={() => {
               if (selected) return;
               void setPath(option.value);
@@ -53,6 +58,8 @@ const BranchToggleInner = () => {
                 .getElementById(HEADING_IDS[option.value])
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
+            role="radio"
+            type="button"
           >
             <span className={styles.toggleTitle}>{option.title}</span>
             <span className={styles.toggleCaption}>{option.caption}</span>
@@ -70,10 +77,10 @@ export const BranchToggle = () => (
   <Suspense
     fallback={
       <div
+        aria-busy="true"
+        aria-label="Choose your upgrade path"
         className={styles.toggle}
         role="radiogroup"
-        aria-label="Choose your upgrade path"
-        aria-busy="true"
       />
     }
   >

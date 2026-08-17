@@ -19,11 +19,11 @@ export const MigrationBanner = () => {
   return (
     <Banner className="bg-violet-950 text-violet-100 hover:bg-violet-900">
       <Link
-        href="/price-feeds/core/upgrade/preparing"
         className="hover:underline"
+        href="/price-feeds/core/upgrade/preparing"
       >
-        Pyth Core upgrade August 18, 2026. Every Core user will need an API Key.
-        Learn more →
+        Pyth Core upgrade August 26, 2026 at 16:00 UTC. Every Core user will
+        need an API Key. Learn more →
       </Link>
     </Banner>
   );
