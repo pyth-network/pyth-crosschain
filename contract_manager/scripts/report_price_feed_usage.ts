@@ -79,6 +79,7 @@ import {
   SvmPriceFeedUpdateScanner,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { writeCsv } from "../src/utils/csv";
 import { sleep } from "../src/utils/sleep";
 
 const HERMES_CORE_FEEDS_URL = "https://hermes.pyth.network/v2/price_feeds";
@@ -367,6 +368,7 @@ function suiTarget(
       stream: (range, options) =>
         mapBatches(
           contract.streamPriceFeedUpdateCounts({
+            concurrency: options.requestConcurrency,
             fromCheckpoint: range.from,
             onRetry: options.onRetry,
             toCheckpoint: range.to,
@@ -729,18 +731,6 @@ async function runWithConcurrency<T>(
     },
   );
   await Promise.all(runners);
-}
-
-function toCsvField(value: string | number) {
-  const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function writeCsv(filePath: string, rows: (string | number)[][]) {
-  writeFileSync(
-    filePath,
-    rows.map((row) => row.map(toCsvField).join(",")).join("\n") + "\n",
-  );
 }
 
 function toUtc(unixSeconds: number | undefined) {

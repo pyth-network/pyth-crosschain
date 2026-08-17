@@ -308,6 +308,16 @@
       }
     },
     "./package.json": "./package.json",
+    "./utils/csv": {
+      "import": {
+        "default": "./dist/esm/utils/csv.mjs",
+        "types": "./dist/esm/utils/csv.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/csv.cjs",
+        "types": "./dist/cjs/utils/csv.d.ts"
+      }
+    },
     "./utils/exec-file-async": {
       "import": {
         "default": "./dist/esm/utils/exec-file-async.mjs",
