@@ -25,7 +25,7 @@ export const Homepage = () => {
         <div className={styles.migrationFeature}>
           <div className={styles.migrationFeatureText}>
             <h2 className={styles.migrationFeatureTitle}>
-              Pyth Core is upgrading on August 18, 2026
+              Pyth Core is upgrading on August 26, 2026 at 16:00 UTC
             </h2>
             <p className={styles.migrationFeatureBody}>
               All Pyth Core users must register for an API Key
