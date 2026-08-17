@@ -1,0 +1,24 @@
+---
+title: Pyth Benchmarks TradingView shims sunset on August 18
+date: 2026-08-12
+product: pyth-core
+type: deprecation
+area: apis
+---
+
+The Pyth Benchmarks `/v1/shims/tradingview/*` endpoints and
+`/v1/price_differences` are being deprecated as part of the August 18, 2026
+Pyth Core upgrade. Charting apps that depend on those endpoints need to migrate
+to Pyth Pro's History API.
+
+**Why it matters:** TradingView chart integrations need a supported historical
+price source before the shim endpoints are sunset. Remaining Benchmarks
+endpoints stay available through the upgrade, but require an API key.
+
+**What to do:** migrate charting and historical-price reads to the Pyth Pro
+History API, and use frontend authentication for browser-facing chart apps so
+your Pyth Pro API key is not exposed.
+
+- [Deprecation notice](https://dev-forum.pyth.network/t/deprecation-notice-pyth-benchmarks-v1-shims-tradingview-endpoints-sunset-august-18-2026/823)
+- [Pyth Pro History API](/price-feeds/pro/api/history)
+- [Frontend authentication guide](/price-feeds/pro/frontend-auth)

@@ -1,23 +1,23 @@
 ---
-title: SUIUSDE/USD sponsored push feed available on Sui mainnet
+title: SUIUSDE/USD is now Pro-compatible on Sui push feeds
 date: 2026-08-12
 product: pyth-pro
 type: feature
 area: market-data
 ---
 
-Sui mainnet apps can now consume a sponsored `SUIUSDE/USD` push feed without
-running their own price pusher. The feed is listed as available on the Sui
-sponsored feed page with a 10-second heartbeat and 0.5% price-deviation
+The sponsored `SUIUSDE/USD` push feed on Sui mainnet is now available through
+the Pyth Pro-compatible push-feed path. The underlying sponsored feed remains
+listed on the Sui page with a 10-second heartbeat and 0.5% price-deviation
 threshold.
 
-**Why it matters:** sponsored push feeds are automatically kept fresh on-chain
-by Pyth infrastructure, so integrators can read a live SUIUSDE price on Sui
-without operating a pusher.
+**Why it matters:** Sui integrators can use the Pro-compatible feed path for
+SUIUSDE while keeping the same sponsored-feed freshness model, instead of
+treating SUIUSDE as a separate Core-only integration.
 
-**What to do:** read `SUIUSDE/USD` on Sui the same way as any other sponsored
-feed - point at the standard Sui Pyth price feed object and use the feed ID
-listed on the push-feeds page. Existing feed integrations are unchanged.
+**What to do:** use the Sui push-feeds page to find the `SUIUSDE/USD` feed ID
+and consume it through the Pro-compatible Sui push-feed path. Existing Core
+feed integrations do not need to change.
 
 - [Push feeds on Sui](/price-feeds/core/push-feeds/sui)
 - [Push feeds overview](/price-feeds/core/push-feeds)
