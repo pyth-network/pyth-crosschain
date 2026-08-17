@@ -1,0 +1,23 @@
+---
+title: Stellar mainnet can now verify Pyth Pro price updates
+date: 2026-08-11
+product: pyth-pro
+type: feature
+area: contracts
+---
+
+Stellar mainnet apps can now verify Pyth Pro price updates from Soroban
+contracts. The Stellar integration docs list the deployed verifier contract,
+and consumer contracts can call `verify_update` against that verifier before
+using a submitted update.
+
+**Why it matters:** Soroban integrations can keep price verification inside
+their on-chain flow instead of trusting an off-chain relay to submit only valid
+updates.
+
+**What to do:** use the Stellar mainnet verifier from the contract-addresses
+page and pass that contract ID into the Stellar consumer flow. Existing testnet
+integrations are unchanged.
+
+- [Pyth Pro contract addresses](/price-feeds/pro/contract-addresses#stellar)
+- [Integrate as a Stellar consumer](/price-feeds/pro/integrate-as-consumer/stellar)
