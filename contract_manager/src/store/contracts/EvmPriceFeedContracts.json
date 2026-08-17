@@ -1158,5 +1158,11 @@
     "chain": "etherlink",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x16392B49EA47D4A21bb17F69aA9E7aD570284838",
+    "chain": "sei_evm_mainnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
