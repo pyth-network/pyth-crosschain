@@ -1,0 +1,22 @@
+{
+  "date": "2026-08-17",
+  "label": "Monday",
+  "summary": {
+    "added": 0,
+    "went_live": 0,
+    "removed": 1
+  },
+  "hero": "1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.SOQ6/USD",
+      "lazerId": 3084,
+      "asset": "Pyth Price In Us Cents For Soybean 14 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-17",
+      "quote": "USD",
+      "hermesId": "34079575bedf0efb5648f7385b5e4242b3d9bab214049f059b630618d02dbe6f"
+    }
+  ]
+}
