@@ -474,27 +474,6 @@ export const EntropyDeployments = {
     name: "Taiko Hekla",
     rpc: "https://rpc.hekla.taiko.xyz/",
   },
-  unichain: {
-    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-    chainId: 130,
-    explorerAccountTemplate: "https://unichain.blockscout.com/address/$ADDRESS",
-    explorerTxTemplate: "https://unichain.blockscout.com/tx/$ADDRESS",
-    icon: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg?w=20&h=20",
-    isTestnet: false,
-    name: "Unichain",
-    rpc: "https://mainnet.unichain.org",
-  },
-  "unichain-sepolia-testnet": {
-    address: "0x8D254a21b3C86D32F7179855531CE99164721933",
-    chainId: 1301,
-    explorerAccountTemplate:
-      "https://unichain-sepolia.blockscout.com/address/$ADDRESS",
-    explorerTxTemplate: "https://unichain-sepolia.blockscout.com/tx/$ADDRESS",
-    icon: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg?w=20&h=20",
-    isTestnet: true,
-    name: "Unichain Sepolia Testnet",
-    rpc: "https://sepolia.unichain.org",
-  },
   "zetachain-mainnet": {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     chainId: 7000,
