@@ -1,0 +1,92 @@
+{
+  "date": "2026-08-18",
+  "label": "Tuesday",
+  "summary": {
+    "added": 2,
+    "went_live": 4,
+    "removed": 2
+  },
+  "hero": "2 new feeds announced, 4 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.EQR/USD",
+      "lazerId": 1111,
+      "asset": "Equity Residential",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "788fd7744aac2f3ec325be7a944aa6620102f961dac93ca28f752f0b442b4874"
+    },
+    {
+      "id": "Equity.US.AVB/USD",
+      "lazerId": 971,
+      "asset": "Avalonbay Communities Inc",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "aafa1b2ed24a90e5f3fb7dd6b8e546a6068e4432039cc6adf1e6d6a92ff6ecdf"
+    },
+    {
+      "id": "Equity.US.RRX/USD",
+      "lazerId": 3616,
+      "asset": "Regal Rexnord Corporation Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "5bf0c7847f64bed3e7ae092a8d3d0caeb6c14e4c1932dc51c3de0357005b24a6"
+    },
+    {
+      "id": "Equity.US.DY/USD",
+      "lazerId": 3603,
+      "asset": "Dycom Inds Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "433290e6c638d6fd364131518bf75369eddb24626a252e2d472652cb0720154b"
+    },
+    {
+      "id": "Equity.US.EVR/USD",
+      "lazerId": 3596,
+      "asset": "Evercore Inc Class A",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "8906541c889377cf6fcdd063a51508fb97fdf46eafeaca23ac85feec79b65462"
+    },
+    {
+      "id": "Equity.US.RBC/USD",
+      "lazerId": 3592,
+      "asset": "Rbc Bearings Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "a2f38e713d7ca6840f04991622f39be9195317b70bc5b73cf63e60866c17e249"
+    },
+    {
+      "id": "Equity.US.VMRK/USD",
+      "lazerId": 3635,
+      "asset": "Vivmark Residential",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-18",
+      "quote": "USD",
+      "hermesId": "17d26a0251ed485a3044afa5b0e7f9f44912388294742f7f68bc12277ebe1bc2"
+    },
+    {
+      "id": "Equity.HK.6869/HKD",
+      "lazerId": 3634,
+      "asset": "Yangtze Optical Fibre And Cable Jsc Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-18",
+      "quote": "HKD",
+      "hermesId": "dd5cc306141ad9ed6f6d5f96ad6fd4a38323e34767a1842c230eec093f38d3a6"
+    }
+  ]
+}
