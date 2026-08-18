@@ -4,12 +4,12 @@ import { z } from "zod";
 import { EntropyDeploymentsConfig } from "./entropy-deployments-config";
 
 const ApiChainConfigSchema = z.object({
+  contract_addr: z.string(),
+  default_fee: z.number(),
+  gas_limit: z.number(),
   name: z.string(),
   network_id: z.number(),
-  contract_addr: z.string(),
   reveal_delay_blocks: z.number(),
-  gas_limit: z.number(),
-  default_fee: z.number(),
 });
 
 export type EntropyDeployment = {
@@ -39,11 +39,11 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
   const deployment: EntropyDeployment = {
     address: chain.contract_addr,
+    default_fee: chain.default_fee,
     delay: `${String(chain.reveal_delay_blocks)} block${
       chain.reveal_delay_blocks === 1 ? "" : "s"
     }`,
     gasLimit: String(chain.gas_limit),
-    default_fee: chain.default_fee,
     ...(rpc ? { rpc } : {}),
     ...(explorer ? { explorer } : {}),
     ...(nativeCurrency ? { nativeCurrency } : {}),
@@ -56,22 +56,7 @@ const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
 
 // Entropy support ends August 15, 2026 for the chains below; see
 // https://dev-forum.pyth.network/t/deprecation-notice-pyth-entropy-deprecation-for-selected-chains-august-15-2026/816
-const HIDDEN_CHAINS = new Set([
-  "blast",
-  "blast-testnet",
-  "etherlink",
-  "etherlink-testnet",
-  "sei-evm",
-  "sei-evm-testnet",
-  "story",
-  "story-testnet",
-  "tabi-testnet",
-  "taiko",
-  "unichain",
-  "unichain-sepolia",
-  "zetachain",
-  "zetachain-testnet",
-]);
+const HIDDEN_CHAINS = new Set(["etherlink", "etherlink-testnet"]);
 
 export async function fetchEntropyDeployments(
   url: string,
