@@ -55,6 +55,14 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
+    },
+    {
+      "alias": "IHUB/FOGO",
+      "account_address": "HvgxzFhCBDm86cJsffLQMaQbzALNFJwsSDvG2e3uxG5F",
+      "id": "efe499a19819c72e8e5c5a872c328b96dc965f5076f11b621a3084093a2a1c97",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
     }
   ]
 }
