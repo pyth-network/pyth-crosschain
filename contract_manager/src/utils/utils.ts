@@ -3,6 +3,9 @@ import * as chains from "viem/chains";
 import evmChainsData from "../store/chains/EvmChains.json" with {
   type: "json",
 };
+import evmEntropyContractsData from "../store/contracts/EvmEntropyContracts.json" with {
+  type: "json",
+};
 import evmLazerContractsData from "../store/contracts/EvmLazerContracts.json" with {
   type: "json",
 };
@@ -23,13 +26,23 @@ export type EvmLazerContractEntry = (typeof evmLazerContractsData)[number];
 export type EvmPriceFeedContractEntry =
   (typeof evmPriceFeedContractsData)[number];
 
+export type EvmEntropyContractEntry = {
+  address: string;
+  chain: string;
+  deprecated?: boolean;
+  type: string;
+};
+
 export const evmChains: readonly EvmChainEntry[] = evmChainsData;
+export const evmEntropyContracts: readonly EvmEntropyContractEntry[] =
+  evmEntropyContractsData;
 export const evmLazerContracts: readonly EvmLazerContractEntry[] =
   evmLazerContractsData;
 export const evmPriceFeedContracts: readonly EvmPriceFeedContractEntry[] =
   evmPriceFeedContractsData;
 
-export type SolanaLazerContractEntry = (typeof solanaLazerContractsData)[number];
+export type SolanaLazerContractEntry =
+  (typeof solanaLazerContractsData)[number];
 
 export const solanaLazerContracts: readonly SolanaLazerContractEntry[] =
   solanaLazerContractsData;

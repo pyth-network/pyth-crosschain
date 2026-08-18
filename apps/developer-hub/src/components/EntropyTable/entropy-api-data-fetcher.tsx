@@ -1,16 +1,22 @@
+import {
+  evmChains,
+  evmEntropyContracts,
+} from "@pythnetwork/contract-manager/utils/utils";
 import * as chains from "viem/chains";
 import { z } from "zod";
 
 import { EntropyDeploymentsConfig } from "./entropy-deployments-config";
 
 const ApiChainConfigSchema = z.object({
+  contract_addr: z.string(),
+  default_fee: z.number(),
+  gas_limit: z.number(),
   name: z.string(),
   network_id: z.number(),
-  contract_addr: z.string(),
   reveal_delay_blocks: z.number(),
-  gas_limit: z.number(),
-  default_fee: z.number(),
 });
+
+type ApiChainConfig = z.infer<typeof ApiChainConfigSchema>;
 
 export type EntropyDeployment = {
   address: string;
@@ -26,7 +32,7 @@ function getChainData(network_id: number) {
   return Object.values(chains).find((chain) => chain.id === network_id);
 }
 
-const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
+const apiChainConfigToEntry = (chain: ApiChainConfig) => {
   const viemChainData = getChainData(chain.network_id);
 
   const configOverride = EntropyDeploymentsConfig[chain.network_id];
@@ -39,46 +45,53 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
   const deployment: EntropyDeployment = {
     address: chain.contract_addr,
+    default_fee: chain.default_fee,
     delay: `${String(chain.reveal_delay_blocks)} block${
       chain.reveal_delay_blocks === 1 ? "" : "s"
     }`,
     gasLimit: String(chain.gas_limit),
-    default_fee: chain.default_fee,
     ...(rpc ? { rpc } : {}),
     ...(explorer ? { explorer } : {}),
     ...(nativeCurrency ? { nativeCurrency } : {}),
   };
 
   return [chain.name, deployment] as const;
-});
+};
 
-const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
+const entropyDeploymentsSchema = z.array(ApiChainConfigSchema);
 
-// Entropy support ends August 15, 2026 for the chains below; see
-// https://dev-forum.pyth.network/t/deprecation-notice-pyth-entropy-deprecation-for-selected-chains-august-15-2026/816
-const HIDDEN_CHAINS = new Set([
-  "blast",
-  "blast-testnet",
-  "etherlink",
-  "etherlink-testnet",
-  "sei-evm",
-  "sei-evm-testnet",
-  "story",
-  "story-testnet",
-  "tabi-testnet",
-  "taiko",
-  "unichain",
-  "unichain-sepolia",
-  "zetachain",
-  "zetachain-testnet",
-]);
+// Deployments flagged as deprecated in contract_manager stay in the store for ops
+// tooling but are not advertised in the chainlist. Fortuna reports network_id 0 for
+// the chains whose RPC it cannot reach, so match on the chain name as well: Fortuna
+// spells it with dashes and without the `_mainnet` suffix (`sei_evm_mainnet` becomes
+// `sei-evm`).
+const deprecatedDeployments = evmEntropyContracts.filter(
+  (contract) => contract.deprecated,
+);
+const DEPRECATED_NETWORK_IDS = new Set(
+  deprecatedDeployments.flatMap((contract) => {
+    const chain = evmChains.find(({ id }) => id === contract.chain);
+    return chain ? [chain.networkId] : [];
+  }),
+);
+const DEPRECATED_CHAIN_NAMES = new Set(
+  deprecatedDeployments.map((contract) =>
+    contract.chain.replace(/_mainnet$/, "").replaceAll("_", "-"),
+  ),
+);
+
+const isDeprecated = (chain: ApiChainConfig) =>
+  DEPRECATED_NETWORK_IDS.has(chain.network_id) ||
+  DEPRECATED_CHAIN_NAMES.has(chain.name);
 
 export async function fetchEntropyDeployments(
   url: string,
 ): Promise<Record<string, EntropyDeployment>> {
   const response = await fetch(url);
-  const entries = entropyDeploymentsSchema.parse(await response.json());
+  const apiChains = entropyDeploymentsSchema.parse(await response.json());
   return Object.fromEntries(
-    entries.filter(([name]) => !HIDDEN_CHAINS.has(name)),
+    apiChains
+      .filter((chain) => !isDeprecated(chain))
+      .map((chain) => apiChainConfigToEntry(chain)),
   );
 }
