@@ -444,16 +444,6 @@ export const EntropyDeployments = {
     name: "Story Aeneid Testnet",
     rpc: "https://aeneid.storyrpc.io",
   },
-  "tabi-testnet-v2": {
-    address: "0xEbe57e8045F2F230872523bbff7374986E45C486",
-    chainId: 9788,
-    explorerAccountTemplate: "https://testnetv2.tabiscan.com/address/$ADDRESS",
-    explorerTxTemplate: "https://testnetv2.tabiscan.com/tx/$ADDRESS",
-    icon: "https://www.tabichain.com/images/new2/tabi.svg",
-    isTestnet: true,
-    name: "Tabi Testnet v2",
-    rpc: "https://rpc.testnetv2.tabichain.com",
-  },
   "taiko-alethia": {
     address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     chainId: 167_000,
