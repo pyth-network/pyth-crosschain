@@ -66,7 +66,6 @@ const HIDDEN_CHAINS = new Set([
   "story",
   "story-testnet",
   "tabi-testnet",
-  "taiko",
   "unichain",
   "unichain-sepolia",
   "zetachain",
