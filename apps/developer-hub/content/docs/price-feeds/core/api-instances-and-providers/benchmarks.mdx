@@ -11,3 +11,17 @@ The Pyth Data Association hosts a public instance of the Benchmarks API at the f
 | Stable  | https://benchmarks.pyth.network |
 
 There is currently no Benchmarks instance for the Beta channel.
+
+## Endpoint availability after the Pyth Core upgrade
+
+These endpoints stay at the same URLs, but from **August 26, 2026 at 16:00 UTC** every request must include an `Authorization: Bearer $PYTH_API_KEY` header. Get a Pyth API Key on the [billing page](https://app.pyth.com/billing/plans?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=benchmarks-instances-billing).
+
+- `/v1/price_feeds/`
+- `/v1/price_feeds/{id}`
+- `/v1/updates/price/{timestamp}`
+- `/v1/updates/price/{timestamp}/{interval}`
+
+These endpoints are retired at the upgrade, per the [deprecation notice](https://dev-forum.pyth.network/t/deprecation-notice-pyth-benchmarks-v1-shims-tradingview-endpoints-sunset-august-18-2026/823):
+
+- `/v1/shims/tradingview/*` — move charting to the [Pyth Pro History API](/price-feeds/pro/api/history); see [Create TradingView Charts](/price-feeds/core/create-tradingview-charts).
+- `/v1/price_differences` — no replacement.
