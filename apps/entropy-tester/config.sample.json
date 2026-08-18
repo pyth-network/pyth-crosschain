@@ -8,8 +8,8 @@
     "interval": "6h"
   },
   {
-    "chain-id": "blast",
+    "chain-id": "base",
     "interval": "10m",
-    "rpc-endpoint": "https://rpc.blast.io"
+    "rpc-endpoint": "https://mainnet.base.org"
   }
 ]

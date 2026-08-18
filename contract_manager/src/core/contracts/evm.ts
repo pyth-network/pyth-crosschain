@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noConsole: utils used through CLI */
+/** biome-ignore-all lint/suspicious/useAwait: legacy code */
 /* eslint-disable tsdoc/syntax */
 /* eslint-disable @typescript-eslint/await-thenable */
 /* eslint-disable no-console */
@@ -197,6 +199,7 @@ export class EvmEntropyContract extends Storable {
   constructor(
     public chain: EvmChain,
     public address: string,
+    public deprecated = false,
   ) {
     super();
   }
@@ -220,13 +223,13 @@ export class EvmEntropyContract extends Storable {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string },
+    parsed: { type: string; address: string; deprecated?: boolean },
   ): EvmEntropyContract {
     if (parsed.type !== EvmEntropyContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EvmEntropyContract(chain, parsed.address);
+    return new EvmEntropyContract(chain, parsed.address, parsed.deprecated);
   }
 
   // Generates a payload for the newAdmin to call acceptAdmin on the entropy contracts
@@ -296,6 +299,7 @@ export class EvmEntropyContract extends Storable {
     return {
       address: this.address,
       chain: this.chain.getId(),
+      ...(this.deprecated ? { deprecated: true } : {}),
       type: EvmEntropyContract.type,
     };
   }
@@ -1056,7 +1060,10 @@ export class EvmLazerContract extends Storable {
       const pubkeySlot = await web3.eth.getStorageAt(this.address, 2 * i);
       const pubkey = BigInt(pubkeySlot);
       if (pubkey === 0n) continue;
-      const expiresAtSlot = await web3.eth.getStorageAt(this.address, 2 * i + 1);
+      const expiresAtSlot = await web3.eth.getStorageAt(
+        this.address,
+        2 * i + 1,
+      );
       signers.push({
         address: web3.utils.toChecksumAddress(
           "0x" + pubkey.toString(16).padStart(40, "0"),

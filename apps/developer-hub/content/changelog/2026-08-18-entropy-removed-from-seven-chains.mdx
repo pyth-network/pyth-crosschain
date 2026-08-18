@@ -1,0 +1,38 @@
+---
+title: Entropy removed from seven deprecated chains
+date: 2026-08-18
+product: entropy
+type: breaking-change
+area: network
+---
+
+Following the **August 15, 2026** deprecation date, Pyth Entropy no longer runs
+on seven of the chains named in the deprecation notice. The default provider has
+stopped serving requests on these networks, and they no longer appear in the
+Entropy chainlist.
+
+| Chain     | Networks removed    |
+| --------- | ------------------- |
+| ZetaChain | Mainnet and testnet |
+| Unichain  | Mainnet and testnet |
+| Taiko     | Mainnet             |
+| Tabi      | Testnet             |
+| Story     | Mainnet and testnet |
+| Blast     | Mainnet and testnet |
+| Sei EVM   | Mainnet and testnet |
+
+Entropy is deprecated on all seven chains. Taiko only ever ran an Entropy keeper
+on mainnet and Tabi only on testnet, so those are the only networks with anything
+to remove.
+
+**Why it matters:** requests to the default provider on these networks are no
+longer fulfilled. Entropy on every other supported network is unaffected, as are
+Pyth price feeds on all of the chains above — including Sei, where price feeds
+remain fully supported.
+
+**What to do:** if your application still calls Entropy on one of these chains,
+migrate to a [supported network](/entropy/chainlist). Past requests on these
+networks stay browsable in the Entropy Explorer.
+
+- [Deprecation notice: Pyth Entropy deprecation for selected chains (August 15, 2026)](https://dev-forum.pyth.network/t/deprecation-notice-pyth-entropy-deprecation-for-selected-chains-august-15-2026/816)
+- [Entropy chainlist](/entropy/chainlist)

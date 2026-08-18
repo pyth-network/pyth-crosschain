@@ -7,6 +7,7 @@
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "blast_s2_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -32,16 +33,19 @@
   {
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "blast",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     "chain": "zetachain_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "zetachain",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -52,21 +56,25 @@
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "sei_evm_mainnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "chain": "etherlink_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "chain": "etherlink",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "sei_evm_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -122,6 +130,7 @@
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "unichain",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -137,6 +146,7 @@
   {
     "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "chain": "unichain_sepolia",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -147,6 +157,7 @@
   {
     "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
     "chain": "tabi_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -162,11 +173,13 @@
   {
     "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
     "chain": "story",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "story_testnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   },
   {
@@ -202,6 +215,12 @@
   {
     "address": "0x825c0390f379C631f3Cf11A82a37D20BddF93c07",
     "chain": "monad_testnet",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "chain": "taiko_mainnet",
+    "deprecated": true,
     "type": "EvmEntropyContract"
   }
 ]
