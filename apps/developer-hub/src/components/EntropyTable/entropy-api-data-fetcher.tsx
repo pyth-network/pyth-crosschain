@@ -69,8 +69,6 @@ const HIDDEN_CHAINS = new Set([
   "taiko",
   "unichain",
   "unichain-sepolia",
-  "zetachain",
-  "zetachain-testnet",
 ]);
 
 export async function fetchEntropyDeployments(

@@ -60,50 +60,60 @@ export const getRequests = async ({
         const parsed = fortunaSchema.safeParse(await response.json());
         return parsed.success
           ? Result.Success({
-              currentPage: parsed.data.requests.map((request) => {
-                const common = {
-                  chain: getChain(request.network_id),
-                  gasLimit: request.gas_limit,
-                  provider: request.provider,
-                  requestTimestamp: request.created_at,
-                  requestTxHash: request.request_tx_hash,
-                  sender: request.sender,
-                  sequenceNumber: request.sequence,
-                  userContribution: request.user_random_number,
-                };
-                switch (request.state.state) {
-                  case "completed": {
-                    const completedCommon = {
-                      ...common,
-                      callbackTimestamp: request.last_updated_at,
-                      callbackTxHash: request.state.reveal_tx_hash,
-                      gasUsed: request.state.gas_used,
-                      providerContribution:
-                        request.state.provider_random_number,
-                      randomNumber: request.state.combined_random_number,
-                    };
-                    return request.state.callback_failed
-                      ? Request.CallbackErrored({
-                          ...completedCommon,
-                          reason: request.state.callback_return_value,
-                        })
-                      : Request.Complete({
-                          ...completedCommon,
-                        });
+              currentPage: parsed.data.requests
+                .map((request) => {
+                  const chain = getChain(request.network_id);
+                  // Fortuna keeps serving history for chains that have since
+                  // been retired, so a row can reference a deployment that is
+                  // no longer listed here. Drop those instead of failing the
+                  // whole page.
+                  if (chain === undefined) {
+                    return undefined;
                   }
-                  case "pending": {
-                    return Request.Pending(common);
+                  const common = {
+                    chain,
+                    gasLimit: request.gas_limit,
+                    provider: request.provider,
+                    requestTimestamp: request.created_at,
+                    requestTxHash: request.request_tx_hash,
+                    sender: request.sender,
+                    sequenceNumber: request.sequence,
+                    userContribution: request.user_random_number,
+                  };
+                  switch (request.state.state) {
+                    case "completed": {
+                      const completedCommon = {
+                        ...common,
+                        callbackTimestamp: request.last_updated_at,
+                        callbackTxHash: request.state.reveal_tx_hash,
+                        gasUsed: request.state.gas_used,
+                        providerContribution:
+                          request.state.provider_random_number,
+                        randomNumber: request.state.combined_random_number,
+                      };
+                      return request.state.callback_failed
+                        ? Request.CallbackErrored({
+                            ...completedCommon,
+                            reason: request.state.callback_return_value,
+                          })
+                        : Request.Complete({
+                            ...completedCommon,
+                          });
+                    }
+                    case "pending": {
+                      return Request.Pending(common);
+                    }
+                    case "failed": {
+                      return Request.Failed({
+                        ...common,
+                        providerContribution:
+                          request.state.provider_random_number,
+                        reason: request.state.reason.replace(/^Reverted: /, ""),
+                      });
+                    }
                   }
-                  case "failed": {
-                    return Request.Failed({
-                      ...common,
-                      providerContribution:
-                        request.state.provider_random_number,
-                      reason: request.state.reason.replace(/^Reverted: /, ""),
-                    });
-                  }
-                }
-              }),
+                })
+                .filter((request) => request !== undefined),
               numPages: Math.ceil(parsed.data.total_results / pageSize),
             })
           : Result.ErrorResult(parsed.error);
@@ -298,16 +308,10 @@ const toFortunaStatus = (status: string) => {
   }
 };
 
-const getChain = (networkId: number) => {
-  const chain = Object.values(EntropyDeployments).find(
+const getChain = (networkId: number) =>
+  Object.values(EntropyDeployments).find(
     (deployment) => deployment.chainId === networkId,
   );
-  if (chain) {
-    return chain;
-  } else {
-    throw new Error(`Invalid chain id: ${networkId.toString()}`);
-  }
-};
 
 const getFortunaUrl = (chainSlug: ChainSlug) => {
   switch (chainSlug) {
