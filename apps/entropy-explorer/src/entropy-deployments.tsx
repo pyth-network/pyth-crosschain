@@ -495,27 +495,6 @@ export const EntropyDeployments = {
     name: "Unichain Sepolia Testnet",
     rpc: "https://sepolia.unichain.org",
   },
-  "zetachain-mainnet": {
-    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-    chainId: 7000,
-    explorerAccountTemplate:
-      "https://zetachain.blockscout.com/address/$ADDRESS",
-    explorerTxTemplate: "https://zetachain.blockscout.com/tx/$ADDRESS",
-    icon: "https://icons.llamao.fi/icons/chains/rsz_zetachain.jpg?w=20&h=20",
-    isTestnet: false,
-    name: "ZetaChain Mainnet",
-    rpc: "https://zetachain-evm.blockpi.network/v1/rpc/public",
-  },
-  "zetachain-testnet": {
-    address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
-    chainId: 7001,
-    explorerAccountTemplate: "https://explorer.zetachain.com/address/$ADDRESS",
-    explorerTxTemplate: "https://explorer.zetachain.com/tx/$ADDRESS",
-    icon: "https://icons.llamao.fi/icons/chains/rsz_zetachain.jpg?w=20&h=20",
-    isTestnet: true,
-    name: "ZetaChain Testnet",
-    rpc: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
-  },
 } as const satisfies Record<string, EntropyDeployment>;
 
 export const isValidDeploymentSlug = (
