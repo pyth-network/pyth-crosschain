@@ -35,12 +35,16 @@ describe("fetchEntropyDeployments", () => {
     ).toEqual(["base"]);
   });
 
+  it("keeps etherlink, which reports no network id but is not deprecated", async () => {
+    mockApi([apiChain("base", 8453), apiChain("etherlink-testnet", 0)]);
+
+    expect(
+      Object.keys(await fetchEntropyDeployments("https://example.com")),
+    ).toEqual(["base", "etherlink-testnet"]);
+  });
+
   it("drops deprecated deployments the API reports without a network id", async () => {
-    mockApi([
-      apiChain("base", 8453),
-      apiChain("taiko", 0),
-      apiChain("etherlink-testnet", 0),
-    ]);
+    mockApi([apiChain("base", 8453), apiChain("taiko", 0)]);
 
     expect(
       Object.keys(await fetchEntropyDeployments("https://example.com")),
