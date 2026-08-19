@@ -428,9 +428,35 @@ async function collectVaa(
 // CLI
 // ---------------------------------------------------------------------------
 
+/**
+ * The chain to work against, with its RPC endpoint optionally replaced.
+ *
+ * Some `rpcUrl`s in the contract store are public endpoints that have since
+ * moved behind a paid plan — Sepolia's answers every call with "chain is not
+ * available on free plan" as of writing. `--rpc-url` points a run at a working
+ * endpoint, or at a local devnet, without editing the store.
+ */
+function resolveChain(id: string, rpcUrl: string | undefined): EvmChain {
+  const chain = DefaultStore.getChainOrThrow(id, EvmChain);
+  return rpcUrl === undefined
+    ? chain
+    : new EvmChain(
+        chain.getId(),
+        chain.isMainnet(),
+        chain.getNativeToken(),
+        rpcUrl,
+        chain.networkId,
+      );
+}
+
 const chainOption = {
   default: "optimism_sepolia",
   desc: "EVM testnet in the contract store to deploy to and execute on",
+  type: "string",
+} as const;
+
+const rpcUrlOption = {
+  desc: "Override the chain's RPC endpoint from the contract store",
   type: "string",
 } as const;
 
@@ -486,6 +512,7 @@ parser.command(
         type: "string",
       },
       "private-key": privateKeyOption,
+      "rpc-url": rpcUrlOption,
       shard: {
         desc: "Shard whose routers attest the payload (default: the shard imp reports)",
         type: "string",
@@ -502,7 +529,7 @@ parser.command(
       },
     }),
   async (argv) => {
-    const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
+    const chain = resolveChain(argv.chain, argv["rpc-url"]);
     if (chain.isMainnet()) {
       throw new Error(
         `${chain.getId()} is mainnet. This script deploys a throwaway contract and is testnet-only.`,
@@ -637,6 +664,7 @@ parser.command(
         desc: "Proposal id printed by `propose`",
         type: "string",
       },
+      "rpc-url": rpcUrlOption,
       timeout: {
         default: DEFAULT_VAA_TIMEOUT_SECONDS,
         desc: "How long to poll the api service for a quorum, in seconds",
@@ -644,7 +672,7 @@ parser.command(
       },
     }),
   async (argv) => {
-    const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
+    const chain = resolveChain(argv.chain, argv["rpc-url"]);
     const priceFeed = new EvmPriceFeedContract(
       chain,
       argv["price-feed"],
