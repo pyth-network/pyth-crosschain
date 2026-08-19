@@ -6,81 +6,85 @@ slug: /price-feeds/core/current-fees
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-The following tables shows the total fees payable when updating a price feed.
-Please note the fees shown below is the amount paid in `msg.value` per price feed update.
-
-<Callout type="info" title="Default Fee">
-  **Note**: The default fee of all chains **not** mentioned below is **1 (one)**
-  unit of the smallest denomination of the blockchain's native token (e.g., **1
-  wei on Ethereum**).
+<Callout type="warning" title="Update fees are set to 0">
+  Following [OP-PIP-128](https://forum.pyth.network/t/passed-op-pip-128-pyth-core-sunset-fee-zeroing-balance-repatriation/2662),
+  the Pyth Core update fee is being set to **0** across all mainnet EVM chains
+  as part of the [Pyth Core sunset](/price-feeds/core/upgrade). Passing `0` as
+  `msg.value` to `updatePriceFeeds` is sufficient on every network listed
+  below; querying `getUpdateFee` on-chain returns the authoritative fee for a
+  given chain.
 </Callout>
+
+The table below lists the total fee payable, in the chain's native token, when
+updating a price feed on each network — the amount passed as `msg.value` per
+price feed update.
 
 | **Network** | **Fees** |
 | --- | --- |
-| Abstract | 0.000004 **ETH** |
-| Apechain | 0.1 **APE** |
-| Arbitrum | 0.000004 **ETH** |
-| Aurora | 0.000004 **ETH** |
-| Avalanche | 0.002 **AVAX** |
-| Base | 0.000004 **ETH** |
-| Berachain | 0.025 **BERA** |
-| Bittensor | 0.00005 **TAO** |
-| Blast | 0.000004 **ETH** |
-| BNB Smart Chain | 0.00002 **BNB** |
-| BitTorrent Chain | 25,000 **BTT** |
-| Boba | 0.000004 **ETH** |
-| Camp Network | 2 **CAMP** |
-| Celo | 0.2 **CELO** |
-| Chiliz | 0.33 **CHZ** |
-| Conflux | 0.25 **CFX** |
-| Core DAO | 0.2 **CORE** |
-| Cronos | 0.2 **CRO** |
-| Cronos zkEVM | 0.2 **CRO** |
-| Ethereum | 0.000004 **ETH** |
-| Etherlink | 0.05 **XTZ** |
-| Eventum | 0.000004 **ETH** |
-| Filecoin | 0.02 **FIL** |
-| Flow | 0.5 **FLOW** |
-| Fuel | 0.000004 **ETH** |
-| Gnosis | 0.01 **XDAI** |
-| Gravity | 2.5 **G** |
-| Hedera | 0.2 **HBAR** |
-| Hemi | 0.000004 **ETH** |
-| HyperEVM | 0.0003 **HYPE** |
-| Injective EVM | 0.005 **INJ** |
-| IOTA | 0.2 **IOTA** |
-| Kaia | 0.3 **KAIA** |
-| Kraken Ink | 0.000004 **ETH** |
-| LightLink Phoenix | 1 **LL** |
-| Linea | 0.000004 **ETH** |
-| Manta | 0.000004 **ETH** |
-| Mantle | 0.02 **MNT** |
-| Merlin | 0.0000002 **BTC** |
-| MegaETH | 0.000004 **ETH** |
-| Meter | 0.04 **MTR** |
-| Mezo | 0.0000002 **BTC** |
-| Mode | 0.000004 **ETH** |
-| Monad | 0.01 **MON** |
-| Morph | 0.000004 **ETH** |
-| Neon | 0.15 **NEON** |
-| opBNB | 0.00002 **BNB** |
-| Optimism | 0.000004 **ETH** |
-| Plasma | 0.05 **XPL** |
-| Polygon | 0.15 **POL** |
-| Polygon zkEVM | 0.000004 **ETH** |
-| Ronin | 0.2 **RON** |
-| Scroll | 0.000004 **ETH** |
-| Sei EVM | 0.25 **SEI** |
-| Shimmer | 100 **SMR** |
-| Skate | 0.000004 **ETH** |
-| Soneium | 0.000004 **ETH** |
-| Story | 0.006 **IP** |
-| Superseed | 0.000004 **ETH** |
-| Taiko | 0.000004 **ETH** |
-| Unichain | 0.000004 **ETH** |
-| Viction | 0.1 **VIC** |
-| WEMIX | 0.1 **WEMIX** |
-| Worldchain | 0.000004 **ETH** |
-| 0G | 0.2 **0G** |
-| ZetaChain | 0.3 **ZETA** |
-| zkSync | 0.000004 **ETH** |
+| Abstract | 0 **ETH** |
+| Apechain | 0 **APE** |
+| Arbitrum | 0 **ETH** |
+| Aurora | 0 **ETH** |
+| Avalanche | 0 **AVAX** |
+| Base | 0 **ETH** |
+| Berachain | 0 **BERA** |
+| Bittensor | 0 **TAO** |
+| Blast | 0 **ETH** |
+| BNB Smart Chain | 0 **BNB** |
+| BitTorrent Chain | 0 **BTT** |
+| Boba | 0 **ETH** |
+| Camp Network | 0 **CAMP** |
+| Celo | 0 **CELO** |
+| Chiliz | 0 **CHZ** |
+| Conflux | 0 **CFX** |
+| Core DAO | 0 **CORE** |
+| Cronos | 0 **CRO** |
+| Cronos zkEVM | 0 **CRO** |
+| Ethereum | 0 **ETH** |
+| Etherlink | 0 **XTZ** |
+| Eventum | 0 **ETH** |
+| Filecoin | 0 **FIL** |
+| Flow | 0 **FLOW** |
+| Fuel | 0 **ETH** |
+| Gnosis | 0 **XDAI** |
+| Gravity | 0 **G** |
+| Hedera | 0 **HBAR** |
+| Hemi | 0 **ETH** |
+| HyperEVM | 0 **HYPE** |
+| Injective EVM | 0 **INJ** |
+| IOTA | 0 **IOTA** |
+| Kaia | 0 **KAIA** |
+| Kraken Ink | 0 **ETH** |
+| LightLink Phoenix | 0 **LL** |
+| Linea | 0 **ETH** |
+| Manta | 0 **ETH** |
+| Mantle | 0 **MNT** |
+| Merlin | 0 **BTC** |
+| MegaETH | 0 **ETH** |
+| Meter | 0 **MTR** |
+| Mezo | 0 **BTC** |
+| Mode | 0 **ETH** |
+| Monad | 0 **MON** |
+| Morph | 0 **ETH** |
+| Neon | 0 **NEON** |
+| opBNB | 0 **BNB** |
+| Optimism | 0 **ETH** |
+| Plasma | 0 **XPL** |
+| Polygon | 0 **POL** |
+| Polygon zkEVM | 0 **ETH** |
+| Ronin | 0 **RON** |
+| Scroll | 0 **ETH** |
+| Sei EVM | 0 **SEI** |
+| Shimmer | 0 **SMR** |
+| Skate | 0 **ETH** |
+| Soneium | 0 **ETH** |
+| Story | 0 **IP** |
+| Superseed | 0 **ETH** |
+| Taiko | 0 **ETH** |
+| Unichain | 0 **ETH** |
+| Viction | 0 **VIC** |
+| WEMIX | 0 **WEMIX** |
+| Worldchain | 0 **ETH** |
+| 0G | 0 **0G** |
+| ZetaChain | 0 **ZETA** |
+| zkSync | 0 **ETH** |
