@@ -1,5 +1,5 @@
 ---
-title: Entropy chainlist no longer advertises eight chains scheduled for August 15 deprecation
+title: Entropy chainlist no longer advertises seven chains scheduled for August 15 deprecation
 date: 2026-08-04
 product: entropy
 type: deprecation
@@ -7,29 +7,36 @@ area: network
 ---
 
 Entropy continues to run on every currently supported network. Separately, on
-**August 15, 2026**, Entropy is being deprecated on eight specific chains, and
+**August 15, 2026**, Entropy is being deprecated on seven specific chains, and
 the Entropy chainlist no longer advertises those chains so new integrators do
 not pick them up.
 
 Chains scheduled for deprecation on **August 15, 2026**:
 
-| Chain      | Networks              |
-| ---------- | --------------------- |
-| ZetaChain  | Mainnet and testnet   |
-| Unichain   | Mainnet and testnet   |
-| Taiko      | Mainnet and testnet   |
-| Tabi       | Mainnet and testnet   |
-| Story      | Mainnet and testnet   |
-| Blast      | Mainnet and testnet   |
-| Etherlink  | Mainnet and testnet   |
-| Sei EVM    | Mainnet and testnet   |
+| Chain     | Networks            |
+| --------- | ------------------- |
+| ZetaChain | Mainnet and testnet |
+| Unichain  | Mainnet and testnet |
+| Taiko     | Mainnet             |
+| Tabi      | Testnet             |
+| Story     | Mainnet and testnet |
+| Blast     | Mainnet and testnet |
+| Sei EVM   | Mainnet and testnet |
+
+Taiko only ever ran an Entropy keeper on mainnet and Tabi only on testnet, so
+those are the only networks affected for those two chains.
+
+**Etherlink is not affected.** An earlier revision of this entry listed Etherlink
+among the deprecated chains and the chainlist briefly stopped advertising it.
+That was a mistake: Entropy is still fully supported on Etherlink mainnet and
+testnet, and no migration is required.
 
 **Why it matters:** this is a per-chain deprecation, not a change to the
 Entropy product. Apps running Entropy on any of the other supported chains
-keep working exactly as before. Only apps deployed on one of the eight chains
+keep working exactly as before. Only apps deployed on one of the seven chains
 listed above need to take action ahead of the August 15 date.
 
-**What to do:** if your application uses Entropy on any of the eight chains
+**What to do:** if your application uses Entropy on any of the seven chains
 above, plan a migration off that chain before **August 15, 2026**.
 Applications on any other Entropy-supported network do not need to do
 anything.
