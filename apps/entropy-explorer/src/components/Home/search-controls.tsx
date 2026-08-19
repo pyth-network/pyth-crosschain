@@ -15,6 +15,7 @@ import {
   CHAIN_LABELS,
   EntropyDeployments,
   getChainName,
+  isDeprecatedDeployment,
   isSpecialChainKey,
   parseChainSlug,
 } from "../../entropy-deployments";
@@ -256,6 +257,7 @@ const entropyDeploymentsByNetwork = (
   isTestnet: boolean,
 ) =>
   Object.entries(EntropyDeployments)
+    .filter(([, chain]) => !isDeprecatedDeployment(chain))
     .map(([slug, chain]) => {
       return {
         ...chain,
