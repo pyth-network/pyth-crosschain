@@ -80,6 +80,10 @@ const SOLE_ITEM_INDEX = 0;
 const VAA_POLL_INTERVAL_MS = 3000;
 const DEFAULT_VAA_TIMEOUT_SECONDS = 180;
 
+/** How long to let a read catch up with the executed transaction. */
+const STATE_SETTLE_INTERVAL_MS = 2000;
+const STATE_SETTLE_TIMEOUT_SECONDS = 60;
+
 // ---------------------------------------------------------------------------
 // imp and api service clients
 // ---------------------------------------------------------------------------
@@ -422,6 +426,31 @@ async function collectVaa(
           "or some routers are not configured to sign attestations."
         : "Some routers have not answered yet; retry with a longer --timeout."),
   );
+}
+
+/**
+ * Wait until the contract reports the governance watermark the executed VAA
+ * should have set.
+ *
+ * A read issued straight after the send can be answered by a load-balanced RPC
+ * backend that has not imported the block yet, which reads back as "the
+ * transaction changed nothing" — a false failure on an execution that in fact
+ * succeeded. Returns whatever the last read gave, so the caller reports the
+ * mismatch rather than this deciding what it means.
+ */
+async function waitForWatermark(
+  priceFeed: EvmPriceFeedContract,
+  expected: number,
+): Promise<number> {
+  const deadline = Date.now() + STATE_SETTLE_TIMEOUT_SECONDS * 1000;
+  let watermark = await priceFeed.getLastExecutedGovernanceSequence();
+  while (watermark !== expected && Date.now() < deadline) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, STATE_SETTLE_INTERVAL_MS),
+    );
+    watermark = await priceFeed.getLastExecutedGovernanceSequence();
+  }
+  return watermark;
 }
 
 // ---------------------------------------------------------------------------
@@ -785,20 +814,26 @@ parser.command(
     );
     console.log(`  transaction ${id}`);
 
-    const validPeriodAfter = await priceFeed.getValidTimePeriod();
-    const watermarkAfter = await priceFeed.getLastExecutedGovernanceSequence();
-    if (validPeriodAfter !== expectedValidPeriod) {
-      throw new Error(
-        `the transaction succeeded but the valid period is ${validPeriodAfter.toString()}s, not the ` +
-          `${expectedValidPeriod.toString()}s the instruction asked for`,
-      );
-    }
+    const watermarkAfter = await waitForWatermark(
+      priceFeed,
+      assembled.vaa_sequence_no,
+    );
     // The watermark is the replay protection: the contract requires a strictly
     // greater sequence, so consuming it is what makes this VAA single-use.
     if (watermarkAfter !== assembled.vaa_sequence_no) {
       throw new Error(
-        `the governance watermark is ${watermarkAfter.toString()}, not the executed sequence ` +
-          `${assembled.vaa_sequence_no.toString()}; the VAA could be replayed`,
+        `transaction ${id} succeeded but the governance watermark is still ` +
+          `${watermarkAfter.toString()}, not the executed sequence ${assembled.vaa_sequence_no.toString()}. ` +
+          "If the receipt shows success, the RPC endpoint is serving reads from behind the chain head; " +
+          "check the contract directly before believing this.",
+      );
+    }
+    const validPeriodAfter = await priceFeed.getValidTimePeriod();
+    if (validPeriodAfter !== expectedValidPeriod) {
+      throw new Error(
+        `transaction ${id} executed governance sequence ${watermarkAfter.toString()} but the valid ` +
+          `period is ${validPeriodAfter.toString()}s, not the ${expectedValidPeriod.toString()}s the ` +
+          "instruction asked for",
       );
     }
 
