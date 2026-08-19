@@ -1,0 +1,62 @@
+{
+  "date": "2026-08-19",
+  "label": "Wednesday",
+  "summary": {
+    "added": 1,
+    "went_live": 2,
+    "removed": 2
+  },
+  "hero": "1 new feed announced, 2 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Crypto.Index.EBTC/USD",
+      "lazerId": 3182,
+      "asset": "Ember Bitcoin",
+      "assetType": "crypto-index",
+      "changeType": "removed",
+      "date": "2026-08-19",
+      "quote": "USD",
+      "hermesId": "dd74dd07913264db7179833a7e1ef2574cd0361eff0412837ce15951373e5073"
+    },
+    {
+      "id": "Crypto.Index.EXBTC/USD",
+      "lazerId": 3178,
+      "asset": "Ember X Bitcoin",
+      "assetType": "crypto-index",
+      "changeType": "removed",
+      "date": "2026-08-19",
+      "quote": "USD",
+      "hermesId": "fa0bff1c97b20e18f733b2e2706e2bc0b58e64660f2b9176980eb26da0707fe4"
+    },
+    {
+      "id": "Equity.US.VMRK/USD",
+      "lazerId": 3635,
+      "asset": "Vivmark Residential",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-19",
+      "quote": "USD",
+      "hermesId": "17d26a0251ed485a3044afa5b0e7f9f44912388294742f7f68bc12277ebe1bc2"
+    },
+    {
+      "id": "Equity.CN.688836/CNY",
+      "lazerId": 3442,
+      "asset": "Unitree Robotics",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-19",
+      "quote": "CNY",
+      "hermesId": "665a0c28099754c6b2591beff9ca5aa3be4c5c134ef1e5ba906cb146218c4f39"
+    },
+    {
+      "id": "Commodities.WTIF7/USD",
+      "lazerId": 3636,
+      "asset": "Pyth Price In Usd For Wti 21 December 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-19",
+      "quote": "USD",
+      "hermesId": "87f7b1af745a1a6affb67275f813c081a65a3ccd46729c6170284176b5077e9c"
+    }
+  ]
+}
