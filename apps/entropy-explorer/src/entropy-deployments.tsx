@@ -7,6 +7,12 @@ export type EntropyDeployment = {
   icon: string;
   isTestnet: boolean;
   chainId: number;
+  /**
+   * Entropy is no longer served on this chain. The deployment is kept so that
+   * historical requests still resolve to a name, icon and explorer link, but
+   * it is hidden from the chain picker.
+   */
+  deprecated?: boolean;
 };
 
 export const EntropyDeployments = {
@@ -125,6 +131,7 @@ export const EntropyDeployments = {
   blast: {
     address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     chainId: 81_457,
+    deprecated: true,
     explorerAccountTemplate: "https://blastscan.io/address/$ADDRESS",
     explorerTxTemplate: "https://blastscan.io/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_blast.jpg?w=20&h=20",
@@ -135,6 +142,7 @@ export const EntropyDeployments = {
   "blast-sepolia-testnet": {
     address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     chainId: 168_587_773,
+    deprecated: true,
     explorerAccountTemplate: "https://sepolia.blastscan.io/address/$ADDRESS",
     explorerTxTemplate: "https://sepolia.blastscan.io/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_blast.jpg?w=20&h=20",
@@ -354,6 +362,7 @@ export const EntropyDeployments = {
   "sei-network": {
     address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     chainId: 1329,
+    deprecated: true,
     explorerAccountTemplate:
       "https://seitrace.com/address/$ADDRESS?chain=pacific-1",
     explorerTxTemplate: "https://seitrace.com/tx/$ADDRESS?chain=pacific-1",
@@ -365,6 +374,7 @@ export const EntropyDeployments = {
   "sei-testnet": {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     chainId: 1328,
+    deprecated: true,
     explorerAccountTemplate:
       "https://seitrace.com/address/$ADDRESS?chain=atlantic-2",
     explorerTxTemplate: "https://seitrace.com/tx/$ADDRESS?chain=atlantic-2",
@@ -427,6 +437,7 @@ export const EntropyDeployments = {
   story: {
     address: "0xdF21D137Aadc95588205586636710ca2890538d5",
     chainId: 1514,
+    deprecated: true,
     explorerAccountTemplate: "https://storyscan.xyz/address/$ADDRESS",
     explorerTxTemplate: "https://storyscan.xyz/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_story?w=20&h=20",
@@ -437,6 +448,7 @@ export const EntropyDeployments = {
   "story-aeneid-testnet": {
     address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     chainId: 1315,
+    deprecated: true,
     explorerAccountTemplate: "https://aeneid.storyscan.xyz/address/$ADDRESS",
     explorerTxTemplate: "https://aeneid.storyscan.xyz/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_story?w=20&h=20",
@@ -447,6 +459,7 @@ export const EntropyDeployments = {
   "tabi-testnet-v2": {
     address: "0xEbe57e8045F2F230872523bbff7374986E45C486",
     chainId: 9788,
+    deprecated: true,
     explorerAccountTemplate: "https://testnetv2.tabiscan.com/address/$ADDRESS",
     explorerTxTemplate: "https://testnetv2.tabiscan.com/tx/$ADDRESS",
     icon: "https://www.tabichain.com/images/new2/tabi.svg",
@@ -457,6 +470,7 @@ export const EntropyDeployments = {
   "taiko-alethia": {
     address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     chainId: 167_000,
+    deprecated: true,
     explorerAccountTemplate: "https://taikoscan.network/address/$ADDRESS",
     explorerTxTemplate: "https://taikoscan.network/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_taiko.jpg?w=20&h=20",
@@ -467,6 +481,7 @@ export const EntropyDeployments = {
   "taiko-hekla": {
     address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     chainId: 167_009,
+    deprecated: true,
     explorerAccountTemplate: "https://hekla.taikoscan.network/address/$ADDRESS",
     explorerTxTemplate: "https://hekla.taikoscan.network/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_taiko.jpg?w=20&h=20",
@@ -477,6 +492,7 @@ export const EntropyDeployments = {
   unichain: {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     chainId: 130,
+    deprecated: true,
     explorerAccountTemplate: "https://unichain.blockscout.com/address/$ADDRESS",
     explorerTxTemplate: "https://unichain.blockscout.com/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg?w=20&h=20",
@@ -487,6 +503,7 @@ export const EntropyDeployments = {
   "unichain-sepolia-testnet": {
     address: "0x8D254a21b3C86D32F7179855531CE99164721933",
     chainId: 1301,
+    deprecated: true,
     explorerAccountTemplate:
       "https://unichain-sepolia.blockscout.com/address/$ADDRESS",
     explorerTxTemplate: "https://unichain-sepolia.blockscout.com/tx/$ADDRESS",
@@ -498,6 +515,7 @@ export const EntropyDeployments = {
   "zetachain-mainnet": {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     chainId: 7000,
+    deprecated: true,
     explorerAccountTemplate:
       "https://zetachain.blockscout.com/address/$ADDRESS",
     explorerTxTemplate: "https://zetachain.blockscout.com/tx/$ADDRESS",
@@ -509,6 +527,7 @@ export const EntropyDeployments = {
   "zetachain-testnet": {
     address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     chainId: 7001,
+    deprecated: true,
     explorerAccountTemplate: "https://explorer.zetachain.com/address/$ADDRESS",
     explorerTxTemplate: "https://explorer.zetachain.com/tx/$ADDRESS",
     icon: "https://icons.llamao.fi/icons/chains/rsz_zetachain.jpg?w=20&h=20",
@@ -541,6 +560,9 @@ export const parseChainSlug = (value: string | undefined) => {
     }
   }
 };
+
+export const isDeprecatedDeployment = (deployment: EntropyDeployment) =>
+  deployment.deprecated ?? false;
 
 export const getChainName = (chainSlug: ChainSlug) =>
   isSpecialChainKey(chainSlug)
