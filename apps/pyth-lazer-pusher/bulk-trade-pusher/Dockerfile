@@ -6,12 +6,21 @@ ARG RUST_VERSION=1.88.0
 FROM rust:${RUST_VERSION} AS build
 
 WORKDIR /src
+# `cargo build --locked` refuses to rewrite Cargo.lock, and cargo prunes entries
+# for absent workspace members, so every member listed in the root Cargo.toml has
+# to be in the context even though only one is built.
+COPY Cargo.toml Cargo.lock ./
+COPY apps/argus apps/argus
+COPY apps/fortuna apps/fortuna
+COPY apps/hermes/client/rust apps/hermes/client/rust
 COPY apps/pyth-lazer-pusher apps/pyth-lazer-pusher
-COPY Cargo.lock .
+COPY apps/quorum apps/quorum
+COPY lazer/contracts/cardano/cli/rust lazer/contracts/cardano/cli/rust
+COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
+COPY target_chains/starknet/tools/test_vaas target_chains/starknet/tools/test_vaas
 
 RUN --mount=type=cache,target=/root/.cargo/registry \
-    printf '[workspace]\nresolver = "2"\nmembers = ["apps/pyth-lazer-pusher/pusher-utils","apps/pyth-lazer-pusher/pusher-base","apps/pyth-lazer-pusher/websocket-delivery","apps/pyth-lazer-pusher/bulk-trade-pusher"]\n\n[workspace.lints.rust]\nunsafe_code = "deny"\n\n[workspace.lints.clippy]\nexpect_used = "warn"\nunwrap_used = "warn"\n' > Cargo.toml && \
-    cargo build --release -p bulk-pusher
+    cargo build --locked --release -p bulk-pusher
 
 
 # Runtime
