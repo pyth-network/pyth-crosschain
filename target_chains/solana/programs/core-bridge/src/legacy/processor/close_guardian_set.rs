@@ -1,0 +1,47 @@
+use crate::{
+    error::CoreBridgeError,
+    legacy::instruction::EmptyArgs,
+    sdk::legacy::AccountVariant,
+    state::{GuardianSet, BLACKLISTED_GUARDIANS},
+};
+use anchor_lang::prelude::*;
+
+#[derive(Accounts)]
+pub struct CloseGuardianSet<'info> {
+    #[account(
+        mut,
+        close = recipient,
+        seeds = [
+            GuardianSet::SEED_PREFIX,
+            guardian_set.inner().index.to_be_bytes().as_ref()
+        ],
+        bump,
+    )]
+    guardian_set: Account<'info, AccountVariant<GuardianSet>>,
+    #[account(mut)]
+    recipient: UncheckedAccount<'info>,
+}
+
+impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, EmptyArgs>
+    for CloseGuardianSet<'info>
+{
+    const LOG_IX_NAME: &'static str = "LegacyCloseGuardianSet";
+
+    const ANCHOR_IX_FN: fn(Context<Self>, EmptyArgs) -> Result<()> = close_guardian_set;
+}
+
+/// Processor to remove a guardian set account containing a blacklisted guardian.
+/// This instruction is permissionless - anyone can call it.
+fn close_guardian_set(ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Result<()> {
+    // At least one guardian is blacklisted.
+    require!(
+        ctx.accounts
+            .guardian_set
+            .inner()
+            .keys
+            .iter()
+            .any(|key| BLACKLISTED_GUARDIANS.contains(key)),
+        CoreBridgeError::NoBlacklistedGuardians
+    );
+    Ok(())
+}

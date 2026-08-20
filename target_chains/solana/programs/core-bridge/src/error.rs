@@ -15,6 +15,7 @@ use anchor_lang::prelude::error_code;
 /// * \>= 0x600  -- Legacy Guardian Set Update.
 /// * \>= 0x700  -- Legacy Verify Signatures.
 /// * \>= 0x800  -- Legacy Post Message Unreliable.
+/// * \>= 0x900  -- Legacy Close Guardian Set.
 /// * \>= 0x1000 -- Core Bridge Anchor Instruction.
 /// * \>= 0x2000 -- Core Bridge SDK.
 ///
@@ -100,6 +101,9 @@ pub enum CoreBridgeError {
     #[msg("InvalidGuardianSetIndex")]
     InvalidGuardianSetIndex = 0x600,
 
+    #[msg("GuardianBlacklisted")]
+    GuardianBlacklisted = 0x602,
+
     #[msg("GuardianSetMismatch")]
     GuardianSetMismatch = 0x700,
 
@@ -123,6 +127,9 @@ pub enum CoreBridgeError {
 
     #[msg("PayloadSizeMismatch")]
     PayloadSizeMismatch = 0x800,
+
+    #[msg("NoBlacklistedGuardians")]
+    NoBlacklistedGuardians = 0x900,
 
     #[msg("ZeroGuardians")]
     ZeroGuardians = 0x1010,
