@@ -4,7 +4,7 @@ use crate::{
         instruction::EmptyArgs,
         utils::{AccountVariant, LegacyAnchorized},
     },
-    state::{Config, GuardianSet},
+    state::{Config, GuardianSet, BLACKLISTED_GUARDIANS},
     types::Timestamp,
     utils::{self, vaa::VaaAccount},
 };
@@ -138,6 +138,14 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
         .collect();
     // We need at least one guardian for the initial guardian set.
     require!(!keys.is_empty(), CoreBridgeError::ZeroGuardians);
+
+    // We disallow guardian pubkeys that are in the blacklist.
+    for guardian in keys.iter() {
+        require!(
+            !BLACKLISTED_GUARDIANS.contains(guardian),
+            CoreBridgeError::GuardianBlacklisted
+        );
+    }
 
     for (i, guardian) in keys.iter().take(keys.len() - 1).enumerate() {
         // We disallow guardian pubkeys that have zero address.
