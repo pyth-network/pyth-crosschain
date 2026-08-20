@@ -11,8 +11,8 @@ The TradingView integration allows users to view Pyth prices on their own websit
 
 <UpgradeCallout chain="index" />
 
-<Callout type="warn">
-  The Benchmarks endpoints below stay at the same URLs after the upgrade, but from **August 26, 2026 at 16:00 UTC** every request must include an `Authorization: Bearer $PYTH_API_KEY` header. Get a Pyth API Key on the [billing page](https://app.pyth.com/billing/plans?utm_source=developer-hub&utm_campaign=core-upgrade&utm_content=benchmarks-tv-billing).
+<Callout type="warn" title="Benchmarks TradingView endpoints are retired">
+  The Benchmarks `/v1/shims/tradingview/*` endpoints are retired as part of the Pyth Core upgrade on **August 26, 2026 at 16:00 UTC**. Charting integrations must move to the [Pyth Pro History API](/price-feeds/pro/api/history), which implements the same TradingView UDF specification. See the [deprecation notice](https://dev-forum.pyth.network/t/deprecation-notice-pyth-benchmarks-v1-shims-tradingview-endpoints-sunset-august-18-2026/823) for the full list.
 </Callout>
 
 ## Choosing an Implementation Method for TradingView Integration
