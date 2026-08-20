@@ -2,7 +2,6 @@
 //! with a struct defining the input arguments to the method. These should be used directly, when
 //! one wants to serialize instruction data, for example, when speciying instructions on a client.
 
-use crate::types::Commitment;
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 
 /// Legacy instruction selector.
@@ -14,25 +13,27 @@ use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 pub enum LegacyInstruction {
     /// Initialize the program.
     Initialize,
-    /// Publish a Wormhole message by creating a message account reflecting the message.
-    PostMessage,
+    /// Removed instruction (formerly `PostMessage`). This variant is kept as a placeholder so the
+    /// remaining variants keep their original serialized discriminants.
+    _RemovedPostMessage,
     /// Write an account reflecting a verified VAA (Version 1).
     PostVaa,
-    /// **Governance.** Set the fee for posting a message.
-    SetMessageFee,
-    /// **Governance.** Collect Wormhole fees from the program's fee collector.
-    TransferFees,
-    /// **Governance.** Upgrade the program to a new implementation.
-    UpgradeContract,
+    /// Removed instruction (formerly the `SetMessageFee` governance instruction). This variant is
+    /// kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedSetMessageFee,
+    /// Removed instruction (formerly the `TransferFees` governance instruction). This variant is
+    /// kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedTransferFees,
+    /// Removed instruction (formerly the `UpgradeContract` governance instruction). This variant
+    /// is kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedUpgradeContract,
     /// **Governance.** Update the guardian set.
     GuardianSetUpdate,
     /// Verify guardian signatures of a VAA (Version 1).
     VerifySignatures,
-    /// Publish a Wormhole message by either creating or reusing an existing message account.
-    PostMessageUnreliable,
-    /// Update the guardian set TTL to a fixed value (86400 seconds = 24 hours).
-    /// This instruction is permissionless.
-    UpdateGuardianSetTtl,
 }
 
 /// Arguments used to initialize the Core Bridge program.
@@ -41,19 +42,6 @@ pub struct InitializeArgs {
     pub guardian_set_ttl_seconds: u32,
     pub fee_lamports: u64,
     pub initial_guardians: Vec<[u8; 20]>,
-}
-
-/// Arguments used to post a new Wormhole (Core Bridge) message either using
-/// [post_message](crate::legacy::instruction::post_message) or
-/// [post_message_unreliable](crate::legacy::instruction::post_message_unreliable).
-#[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct PostMessageArgs {
-    /// Unique id for this message.
-    pub nonce: u32,
-    /// Encoded message.
-    pub payload: Vec<u8>,
-    /// Solana commitment level for Guardian observation.
-    pub commitment: Commitment,
 }
 
 /// Arguments to post new VAA data after signature verification.
@@ -101,47 +89,3 @@ pub struct VerifySignaturesArgs {
 /// Unit struct used to represent an empty instruction argument.
 #[derive(Debug, AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct EmptyArgs {}
-
-#[cfg(feature = "no-entrypoint")]
-mod __no_entrypoint {
-    use crate::legacy::instruction::{LegacyInstruction, PostMessageArgs};
-    use anchor_lang::{prelude::borsh, ToAccountMetas};
-    use solana_program::instruction::Instruction;
-
-    /// Processor to post (publish) a Wormhole message by setting up the message account for
-    /// Guardian observation.
-    ///
-    /// A message is either created beforehand using the new Anchor instruction to process a message
-    /// or is created at this point.
-    pub fn post_message(
-        accounts: crate::legacy::accounts::PostMessage,
-        args: PostMessageArgs,
-    ) -> Instruction {
-        let message_is_signer = !args.payload.is_empty();
-        Instruction::new_with_bytes(
-            crate::ID,
-            &borsh::to_vec(&(LegacyInstruction::PostMessage, args)).unwrap(),
-            accounts.to_account_metas(Some(message_is_signer)),
-        )
-    }
-
-    /// Processor to post (publish) a Wormhole message by setting up the message account for
-    /// Guardian observation. This message account has either been created already or is created in
-    /// this call.
-    ///
-    /// If this message account already exists, the emitter must be the same as the one encoded in
-    /// the message and the payload must be the same size.
-    pub fn post_message_unreliable(
-        accounts: crate::legacy::accounts::PostMessageUnreliable,
-        args: PostMessageArgs,
-    ) -> Instruction {
-        Instruction::new_with_bytes(
-            crate::ID,
-            &borsh::to_vec(&(LegacyInstruction::PostMessageUnreliable, args)).unwrap(),
-            accounts.to_account_metas(None),
-        )
-    }
-}
-
-#[cfg(feature = "no-entrypoint")]
-pub use __no_entrypoint::*;

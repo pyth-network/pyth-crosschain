@@ -1,15 +1,6 @@
 mod guardian_set_update;
 pub use guardian_set_update::*;
 
-mod set_message_fee;
-pub use set_message_fee::*;
-
-mod transfer_fees;
-pub use transfer_fees::*;
-
-mod upgrade_contract;
-pub use upgrade_contract::*;
-
 use crate::{
     error::CoreBridgeError,
     state::{Config, VaaVersion},
