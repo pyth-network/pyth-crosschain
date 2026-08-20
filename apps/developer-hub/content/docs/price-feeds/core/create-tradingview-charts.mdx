@@ -146,43 +146,15 @@ Note: The TradingView plug-and-play widget does not allow for much customization
 
 ## Using Datafeed URL with Charting Library
 
-We provide a UDF-compatible API that follows the [TradingView UDF spec](https://www.tradingview.com/charting-library-docs/latest/connecting_data/UDF). You can implement your own datafeed utilizing the API or use the built-in UDF adapter with the API. If you need a step-by-step guide, refer to the [How to connect data via Datafeed API](https://www.tradingview.com/charting-library-docs/latest/tutorials/implement_datafeed_tutorial/) tutorial.
+We also provide a UDF-compatible URL that follows the [TradingView UDF spec](https://www.tradingview.com/charting-library-docs/latest/connecting_data/UDF). You can implement your own datafeed utilizing the API or use the built-in UDF adapter with the API. If you need a step-by-step guide, refer to the [How to connect data via Datafeed API](https://www.tradingview.com/charting-library-docs/latest/tutorials/implement_datafeed_tutorial/) tutorial, or you can reference the example [here](https://github.com/cctdaniel/pyth-tv-charting-lib), the main files that may be of interest are: [datafeed.js](https://github.com/cctdaniel/pyth-tv-charting-lib/blob/main/src/utils/datafeed.js) and [streaming.js](https://github.com/cctdaniel/pyth-tv-charting-lib/blob/main/src/utils/streaming.js).
 
-The datafeed URL is `https://pyth.dourolabs.app/v1/{channel}`, where `{channel}` is the price channel you want to chart, such as `real_time` or `fixed_rate@200ms`. The [History API reference](/price-feeds/pro/api/history) documents every route, parameter, and response shape.
-
-### Replacing the Benchmarks endpoints
-
-| Retired Benchmarks endpoint         | Pyth Pro History API replacement                |
-| ----------------------------------- | ----------------------------------------------- |
-| `/v1/shims/tradingview/config`      | `GET /{channel}/config`                         |
-| `/v1/shims/tradingview/symbols`     | `GET /{channel}/symbols`                        |
-| `/v1/shims/tradingview/search`      | `GET /{channel}/search`                         |
-| `/v1/shims/tradingview/history`     | `GET /{channel}/history`                        |
-| `/v1/shims/tradingview/streaming`   | [WebSocket API](/price-feeds/pro/api/websocket) |
-| `/v1/shims/tradingview/symbol_info` | `GET /symbols`                                  |
-| `/v1/shims/tradingview/groups`      | No replacement                                  |
-
-Address a symbol either by its UDF name, such as `BTCUSD`, or by its Pyth symbol, such as `Crypto.BTC/USD`. Both resolve to the same feed; `GET /symbols` lists them.
-
-### Authentication
-
-`GET /{channel}/history` requires a Pyth Pro API key presented as `Authorization: Bearer $PRO_API_KEY`. The `config`, `symbols`, and `search` routes are public.
-
-Because the charting library runs in the browser, **do not ship the long-lived key in your frontend bundle**. Have your backend mint a short-lived JWT and hand that to the chart instead: see [Frontend Authentication](/price-feeds/pro/frontend-auth) for the flow.
+The datafeed URL is [here](https://benchmarks.pyth.network/v1/shims/tradingview) and documentation can be found [here](https://benchmarks.pyth.network/redoc)
 
 ### Example
 
-```bash copy
-# Chart configuration
-curl "https://pyth.dourolabs.app/v1/real_time/config"
-
-# Resolve a symbol
-curl "https://pyth.dourolabs.app/v1/real_time/symbols?symbol=BTCUSD"
-
-# Search for symbols
-curl "https://pyth.dourolabs.app/v1/real_time/search?query=BTC&type=crypto&exchange=PYTH&limit=15"
-
-# OHLC candles (authenticated)
-curl -H "Authorization: Bearer $PRO_API_KEY" \
-  "https://pyth.dourolabs.app/v1/real_time/history?symbol=BTCUSD&resolution=60&from=1755400000&to=1755500000"
-```
+- Symbol Info: https://benchmarks.pyth.network/v1/shims/tradingview/symbol_info
+- History: https://benchmarks.pyth.network/v1/shims/tradingview/history?symbol=Crypto.ETH/USD&resolution=1&from=1690338541&to=1690338741
+- Stream of prices: https://benchmarks.pyth.network/v1/shims/tradingview/streaming
+- Config: https://benchmarks.pyth.network/v1/shims/tradingview/config
+- Symbols: https://benchmarks.pyth.network/v1/shims/tradingview/symbols?symbol=Crypto.BTC/USD
+- Search: https://benchmarks.pyth.network/v1/shims/tradingview/search?query=bitcoin
