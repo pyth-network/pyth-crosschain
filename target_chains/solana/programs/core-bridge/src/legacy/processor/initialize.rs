@@ -108,12 +108,6 @@ fn initialize(ctx: Context<Initialize>, _args: InitializeArgs) -> Result<()> {
     let fee_lamports = 0;
     let initial_guardians = INITIAL_GUARDIANS;
 
-    // We need at least one guardian for the initial guardian set.
-    require!(
-        !initial_guardians.is_empty(),
-        CoreBridgeError::ZeroGuardians
-    );
-
     // Check initial guardians.
     let mut keys = Vec::with_capacity(initial_guardians.len());
     for &guardian in initial_guardians.iter() {
