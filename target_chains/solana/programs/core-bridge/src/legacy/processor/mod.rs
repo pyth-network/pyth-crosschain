@@ -4,14 +4,8 @@ pub use governance::*;
 mod initialize;
 pub use initialize::*;
 
-mod post_message;
-pub use post_message::*;
-
 mod post_vaa;
 pub use post_vaa::*;
-
-mod update_guardian_set_ttl;
-pub use update_guardian_set_ttl::*;
 
 mod verify_signatures;
 pub use verify_signatures::*;
@@ -38,20 +32,8 @@ pub fn process_legacy_instruction<'info>(
         LegacyInstruction::Initialize => {
             Initialize::process_instruction(program_id, account_infos, ix_data)
         }
-        LegacyInstruction::PostMessage => {
-            PostMessage::process_instruction(program_id, account_infos, ix_data)
-        }
         LegacyInstruction::PostVaa => {
             PostVaa::process_instruction(program_id, account_infos, ix_data)
-        }
-        LegacyInstruction::SetMessageFee => {
-            SetMessageFee::process_instruction(program_id, account_infos, ix_data)
-        }
-        LegacyInstruction::TransferFees => {
-            TransferFees::process_instruction(program_id, account_infos, ix_data)
-        }
-        LegacyInstruction::UpgradeContract => {
-            UpgradeContract::process_instruction(program_id, account_infos, ix_data)
         }
         LegacyInstruction::GuardianSetUpdate => {
             GuardianSetUpdate::process_instruction(program_id, account_infos, ix_data)
@@ -59,11 +41,11 @@ pub fn process_legacy_instruction<'info>(
         LegacyInstruction::VerifySignatures => {
             VerifySignatures::process_instruction(program_id, account_infos, ix_data)
         }
-        LegacyInstruction::PostMessageUnreliable => {
-            PostMessageUnreliable::process_instruction(program_id, account_infos, ix_data)
-        }
-        LegacyInstruction::UpdateGuardianSetTtl => {
-            UpdateGuardianSetTtl::process_instruction(program_id, account_infos, ix_data)
+        LegacyInstruction::_RemovedPostMessage
+        | LegacyInstruction::_RemovedSetMessageFee
+        | LegacyInstruction::_RemovedTransferFees
+        | LegacyInstruction::_RemovedUpgradeContract => {
+            err!(crate::error::CoreBridgeError::InstructionRemoved)
         }
     }
 }

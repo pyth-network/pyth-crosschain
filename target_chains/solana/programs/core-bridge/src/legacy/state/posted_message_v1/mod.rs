@@ -4,7 +4,6 @@ pub use unreliable::*;
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    error::CoreBridgeError,
     legacy::utils::LegacyAccount,
     types::{ChainIdSolanaOnly, Timestamp},
 };
@@ -97,15 +96,6 @@ impl DerefMut for PostedMessageV1Data {
     }
 }
 
-impl PostedMessageV1Data {
-    pub(crate) fn compute_size(payload_len: usize) -> usize {
-        4
-        + PostedMessageV1Info::INIT_SPACE
-        + 4 // payload.len()
-        + payload_len
-    }
-}
-
 /// Account used to store a published Wormhole message.
 ///
 /// NOTE: If your integration requires reusable message accounts, please see
@@ -121,64 +111,6 @@ impl PostedMessageV1 {
         + PostedMessageV1Info::INIT_SPACE
         + 4 // payload.len()
         ;
-
-    pub(crate) fn compute_size(payload_len: usize) -> usize {
-        PostedMessageV1Data::compute_size(payload_len)
-    }
-
-    pub(crate) fn require_draft_message(
-        acc_info: &AccountInfo,
-        emitter_authority: &Signer,
-    ) -> Result<bool> {
-        let data = acc_info.try_borrow_data()?;
-        require!(
-            data.len() > 4 && data[..4] == *Self::LEGACY_DISCRIMINATOR,
-            ErrorCode::AccountDidNotDeserialize
-        );
-
-        require_keys_eq!(
-            Self::emitter_authority_unsafe(&data),
-            emitter_authority.key(),
-            CoreBridgeError::EmitterAuthorityMismatch
-        );
-
-        require!(
-            Self::status_unsafe(&data) == MessageStatus::Writing,
-            CoreBridgeError::NotInWritingStatus
-        );
-
-        Ok(true)
-    }
-
-    pub(crate) fn emitter_authority_unsafe(data: &[u8]) -> Pubkey {
-        TryFrom::try_from(&data[5..37]).unwrap()
-    }
-
-    pub(crate) fn status_unsafe(data: &[u8]) -> MessageStatus {
-        AnchorDeserialize::deserialize(&mut &data[37..38]).unwrap()
-    }
-
-    pub(crate) fn payload_size_unsafe(data: &[u8]) -> u32 {
-        u32::from_le_bytes(
-            data[(Self::PAYLOAD_START - 4)..Self::PAYLOAD_START]
-                .try_into()
-                .unwrap(),
-        )
-    }
-
-    pub(crate) fn emitter_unsafe(data: &[u8]) -> Pubkey {
-        TryFrom::try_from(&data[59..91]).unwrap()
-    }
-
-    pub(crate) fn try_deserialize_info(acc_info: &AccountInfo) -> Result<PostedMessageV1Info> {
-        let data = acc_info.try_borrow_data()?;
-        require!(
-            data.len() > 4 && data[..4] == *Self::LEGACY_DISCRIMINATOR,
-            ErrorCode::AccountDidNotDeserialize
-        );
-
-        AnchorDeserialize::deserialize(&mut &data[4..]).map_err(Into::into)
-    }
 }
 
 impl From<PostedMessageV1Data> for PostedMessageV1 {
