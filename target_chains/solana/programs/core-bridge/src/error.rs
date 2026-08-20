@@ -37,6 +37,9 @@ pub enum CoreBridgeError {
     #[msg("InvalidComputeSize")]
     InvalidComputeSize = 0x8,
 
+    #[msg("InstructionRemoved")]
+    InstructionRemoved = 0xa,
+
     #[msg("InvalidChain")]
     InvalidChain = 0x10,
 
