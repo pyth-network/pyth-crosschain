@@ -1,0 +1,52 @@
+{
+  "date": "2026-08-20",
+  "label": "Thursday",
+  "summary": {
+    "added": 0,
+    "went_live": 2,
+    "removed": 2
+  },
+  "hero": "2 went live, 2 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.CLLU6/USD",
+      "lazerId": 3452,
+      "asset": "Pyth Price In Usd For Cll 19 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-20",
+      "quote": "USD",
+      "hermesId": "ad6dcd0664913d4a33132e5148252b77a17047d7cc3d33cd90c16e9a66c2c743"
+    },
+    {
+      "id": "Equity.US.VXQ6",
+      "lazerId": 3121,
+      "asset": "Pyth Price For Vix Index Future 19 August 2026",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-08-20",
+      "quote": "POINTS",
+      "hermesId": "1f1f78ea60af59767a28cdd954f3088aa8895b5d60d2f8f18bb604e6e60439ed"
+    },
+    {
+      "id": "Commodities.CLLX6/USD",
+      "lazerId": 3454,
+      "asset": "Pyth Price In Usd For Cll 19 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-20",
+      "quote": "USD",
+      "hermesId": "498cea0b191242f5fd97f2ff8339db3cb0833001656258261bd0ea1905f475c2"
+    },
+    {
+      "id": "Equity.US.VXV6",
+      "lazerId": 3123,
+      "asset": "Pyth Price For Vix Index Future 21 October 2026",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-20",
+      "quote": "POINTS",
+      "hermesId": "e54670a9fdeded6d5c3000515050418fa284c64182f0317e8abd05c951697c2e"
+    }
+  ]
+}
