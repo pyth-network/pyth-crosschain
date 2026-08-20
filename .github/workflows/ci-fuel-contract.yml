@@ -32,6 +32,6 @@ jobs:
       - name: Rust add wasm32-unknown-unknown target
         run: rustup target add wasm32-unknown-unknown
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --locked --verbose
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --locked --verbose

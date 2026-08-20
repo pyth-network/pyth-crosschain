@@ -36,4 +36,4 @@ jobs:
       - name: Add rust targets ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }}
       - name: Cargo check
-        run: cargo check --release --target ${{ matrix.target }} --no-default-features
+        run: cargo check --locked --release --target ${{ matrix.target }} --no-default-features

@@ -69,4 +69,4 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Cargo clippy
-        run: cargo clippy --all-targets -- --deny warnings
+        run: cargo clippy --locked --all-targets -- --deny warnings
