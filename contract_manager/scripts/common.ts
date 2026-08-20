@@ -23,6 +23,7 @@ import { EvmChain } from "../src/core/chains";
 import type { EvmEntropyContract } from "../src/core/contracts";
 import {
   EvmExecutorContract,
+  EvmPriceFeedContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
@@ -273,6 +274,33 @@ export function findWormholeContract(
     }
   }
   return;
+}
+
+/**
+ * Finds the price feed contracts for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the price feed contracts for.
+ * @param {DeploymentType} deploymentType The deployment type to find the price feed contracts for.
+ * If deploymentType is "stable" or "beta", it will also find price feed contracts with no deployment
+ * type to preserve backwards compatibility.
+ * @returns Every matching price feed contract on the chain, which can be more than one. EVM
+ * governance payloads carry a target chain but no target address, so several proxies on the same
+ * chain can share a single governance stream. Sepolia, for example, hosts two legacy proxies that
+ * have executed the same governance sequence. Callers that act on a contract must handle all of
+ * them rather than assume a single match.
+ */
+export function findPriceFeedContracts(
+  chain: EvmChain,
+  deploymentType: DeploymentType,
+): EvmPriceFeedContract[] {
+  const isCanonicalPriceFeed =
+    deploymentType === "stable" || deploymentType === "beta";
+  return Object.values(DefaultStore.contracts).filter(
+    (contract): contract is EvmPriceFeedContract =>
+      contract instanceof EvmPriceFeedContract &&
+      contract.getChain().getId() === chain.getId() &&
+      (contract.deploymentType === deploymentType ||
+        (isCanonicalPriceFeed && !contract.deploymentType)),
+  );
 }
 
 /**

@@ -226,11 +226,6 @@
   },
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "chain": "manta_testnet",
-    "type": "EvmWormholeContract"
-  },
-  {
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "chiliz_spicy",
     "type": "EvmWormholeContract"
   },

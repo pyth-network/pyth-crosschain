@@ -138,7 +138,7 @@
     "id": "meter",
     "mainnet": true,
     "networkId": 82,
-    "rpcUrl": "https://meter.blockpi.network/v1/rpc/public",
+    "rpcUrl": "https://rpc.meter.io",
     "type": "EvmChain"
   },
   {
@@ -174,7 +174,7 @@
     "id": "cronos",
     "mainnet": true,
     "networkId": 25,
-    "rpcUrl": "https://evm.cronos.com",
+    "rpcUrl": "https://evm.cronos.org",
     "type": "EvmChain"
   },
   {
@@ -301,7 +301,7 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 8453,
-    "rpcUrl": "https://developer-access-mainnet.base.org/",
+    "rpcUrl": "https://base-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
@@ -402,7 +402,7 @@
     "id": "sepolia",
     "mainnet": false,
     "networkId": 11155111,
-    "rpcUrl": "https://sepolia.drpc.org",
+    "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
@@ -452,13 +452,6 @@
     "mainnet": true,
     "networkId": 169,
     "rpcUrl": "https://pacific-rpc.manta.network/http",
-    "type": "EvmChain"
-  },
-  {
-    "id": "manta_testnet",
-    "mainnet": false,
-    "networkId": 3441005,
-    "rpcUrl": "https://manta-pacific-testnet.drpc.org",
     "type": "EvmChain"
   },
   {
@@ -550,7 +543,7 @@
     "id": "viction",
     "mainnet": true,
     "networkId": 88,
-    "rpcUrl": "https://viction.blockpi.network/v1/rpc/public",
+    "rpcUrl": "https://rpc.viction.xyz",
     "type": "EvmChain"
   },
   {
@@ -800,7 +793,7 @@
     "id": "taiko_mainnet",
     "mainnet": true,
     "networkId": 167000,
-    "rpcUrl": "https://taiko-json-rpc.stakely.io/",
+    "rpcUrl": "https://rpc.mainnet.taiko.xyz",
     "type": "EvmChain"
   },
   {
@@ -1144,7 +1137,7 @@
     "id": "kraken_ink_mainnet",
     "mainnet": true,
     "networkId": 57073,
-    "rpcUrl": "https://ink-public.nodies.app",
+    "rpcUrl": "https://rpc-gel.inkonchain.com",
     "type": "EvmChain"
   },
   {
@@ -1235,7 +1228,7 @@
     "id": "swellchain",
     "mainnet": true,
     "networkId": 1923,
-    "rpcUrl": "https://swell-mainnet.alt.technology",
+    "rpcUrl": "https://rpc.ankr.com/swell",
     "type": "EvmChain"
   },
   {
@@ -1277,7 +1270,7 @@
     "id": "camp_network",
     "mainnet": true,
     "networkId": 484,
-    "rpcUrl": "https://rpc.camp.raas.gelato.cloud",
+    "rpcUrl": "https://rpc-mainnet.campnetwork.xyz",
     "type": "EvmChain"
   },
   {

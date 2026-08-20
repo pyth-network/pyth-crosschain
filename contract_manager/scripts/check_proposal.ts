@@ -13,6 +13,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  SetDataSources,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
@@ -40,6 +41,13 @@ import {
   getCodeDigestWithoutAddress,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+import type { ProposedAction } from "./proposal_review";
+import {
+  actionNameOf,
+  groupByTargetChain,
+  identifyDataSources,
+  reviewProposedActions,
+} from "./proposal_review";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +62,11 @@ function getSquadsMesh() {
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
   .options({
+    "allow-governance-transfer": {
+      default: false,
+      desc: "Downgrade governance data source transfer actions from a failure to a warning. Only set this when the proposal is deliberately handing governance to a new emitter",
+      type: "boolean",
+    },
     cluster: {
       demandOption: true,
       desc: "Multsig Cluster name to check proposal on can be one of [devnet, testnet, mainnet-beta]",
@@ -146,6 +159,19 @@ async function main() {
             console.log(`${chain.getId()}  Address:${address} digest:${code}`);
           }
         }
+      }
+      if (instruction.governanceAction instanceof SetDataSources) {
+        const { targetChainId, dataSources } = instruction.governanceAction;
+        console.log(`\nVerifying SetDataSources on ${targetChainId}`);
+        for (const source of dataSources) {
+          console.log(`  ${source.emitterChain}:${source.emitterAddress}`);
+        }
+        const matched = identifyDataSources(dataSources);
+        console.log(
+          matched === undefined
+            ? "  these match no deployment config in this repo"
+            : `  these are the ${matched} data sources`,
+        );
       }
       if (instruction.governanceAction instanceof CosmosUpgradeContract) {
         console.log(
@@ -391,6 +417,45 @@ async function main() {
         }
       }
     }
+  }
+
+  // Governance actions are chain-scoped and only their order within a chain matters, so this is
+  // the shape a reviewer has to reason about, not the flat list above.
+  const proposedActions: ProposedAction[] = parsedInstructions.flatMap(
+    (instruction, index) =>
+      instruction instanceof WormholeMultisigInstruction &&
+      instruction.governanceAction !== undefined
+        ? [{ action: instruction.governanceAction, index }]
+        : [],
+  );
+  const byChain = groupByTargetChain(proposedActions);
+
+  console.log(
+    `\n=== ${proposedActions.length} governance action(s) across ${byChain.size} target chain(s) ===`,
+  );
+  for (const [chainName, entries] of byChain) {
+    console.log(`\n${chainName}`);
+    for (const entry of entries) {
+      console.log(`  #${entry.index + 1}  ${actionNameOf(entry.action)}`);
+    }
+  }
+
+  const findings = reviewProposedActions(proposedActions, {
+    allowGovernanceTransfer: argv.allowGovernanceTransfer,
+  });
+  if (findings.length === 0) {
+    console.log("\nNo problems found.");
+    return;
+  }
+  console.log(`\n=== ${findings.length} finding(s) ===`);
+  for (const finding of findings) {
+    console.log(`  ${finding.severity}  ${finding.message}`);
+  }
+  if (findings.some((finding) => finding.severity === "CRITICAL")) {
+    console.log(
+      "\nDo not approve this proposal until every CRITICAL finding is explained.",
+    );
+    process.exitCode = 1;
   }
 }
 
