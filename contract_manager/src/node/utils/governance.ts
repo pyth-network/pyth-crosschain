@@ -256,13 +256,34 @@ export class MultisigProposal {
       {},
     );
   }
+
+  /**
+   * Every wormhole message this proposal has emitted, oldest first, read back off the
+   * transactions that have touched its account.
+   *
+   * This is deliberately not `execute()`'s return value: that only covers the instructions the
+   * current run executed, so a proposal an earlier run already took through would look as though
+   * it had emitted nothing at all.
+   */
+  async fetchEmittedWormholeMessages(): Promise<SubmittedWormholeMessage[]> {
+    const signatures = await this.squad.connection.getSignaturesForAddress(
+      this.address,
+    );
+    return await fetchSubmittedWormholeMessages(
+      signatures
+        .filter((signature) => signature.err === null)
+        .map((signature) => signature.signature)
+        .reverse(),
+      this.cluster,
+    );
+  }
 }
 
 /**
  * Picks out the wormhole messages emitted by the given transactions, ignoring the ones that did
  * not emit any.
  */
-export async function fetchSubmittedWormholeMessages(
+async function fetchSubmittedWormholeMessages(
   signatures: string[],
   cluster: PythCluster,
 ): Promise<SubmittedWormholeMessage[]> {

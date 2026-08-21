@@ -10,7 +10,9 @@
  * updates from the new Hermes still make it all the way through.
  *
  * Every step checks the on-chain state it is about to produce and skips itself if that state is
- * already there, so a run that fails part way through can simply be repeated.
+ * already there, so a run that fails part way through can simply be repeated — including the
+ * proposals, whose governance messages are read back off the proposal account rather than off
+ * what this particular run executed.
  *
  * Usage:
  *   pnpm exec tsx scripts/execute_svm_guardian_set_migration.ts \
@@ -31,7 +33,6 @@ import type { PrivateKey } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { executeVaa } from "../src/node/utils/executor";
 import {
-  fetchSubmittedWormholeMessages,
   loadHotWallet,
   MultisigProposal,
   SubmittedWormholeMessage,
@@ -79,7 +80,8 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
     },
     proposal: {
-      desc: "Addresses of the proposals to execute. Ones that have already run through are skipped",
+      demandOption: true,
+      desc: "Addresses of the proposals to execute. One that an earlier run already executed still has its governance messages relayed",
       string: true,
       type: "array",
     },
@@ -113,19 +115,17 @@ async function main() {
   );
 
   const messages: SubmittedWormholeMessage[] = [];
-  for (const address of argv.proposal ?? []) {
+  for (const address of argv.proposal) {
     const proposal = new MultisigProposal(
       new PublicKey(address),
       vault.getSquadOrThrow(),
       vault.cluster,
     );
     console.log(`Executing proposal ${address}, ${await proposal.getState()}`);
-    messages.push(
-      ...(await fetchSubmittedWormholeMessages(
-        await proposal.execute(),
-        vault.cluster,
-      )),
-    );
+    await proposal.execute();
+    // Read off the proposal rather than off what this run executed, so a proposal an earlier
+    // run already took through still has its messages relayed.
+    messages.push(...(await proposal.fetchEmittedWormholeMessages()));
   }
   for (const sequence of argv.sequence ?? []) {
     messages.push(
