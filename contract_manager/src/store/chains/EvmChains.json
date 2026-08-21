@@ -1074,7 +1074,7 @@
     "id": "hyperevm_testnet",
     "mainnet": false,
     "networkId": 998,
-    "rpcUrl": "https://rpc.hyperliquid-testnet.xyz/evm",
+    "rpcUrl": "https://hyperliquid-testnet.drpc.org",
     "type": "EvmChain"
   },
   {
