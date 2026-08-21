@@ -32,9 +32,12 @@ pyth-solana-receiver-sdk = { workspace = true }
 rand = { version = "0.8.5", optional = true }
 
 [dev-dependencies]
+bincode = { workspace = true }
 cfg-if = { workspace = true }
 hex = { workspace = true }
+solana-loader-v3-interface = { version = "6", features = ["bincode"] }
 solana-sdk = { workspace = true }
+solana-sdk-ids = { workspace = true }
 solana-program-test = { workspace = true }
 tokio = { workspace = true }
 program-simulator = { path = "../../program_simulator" }
