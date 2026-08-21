@@ -90,7 +90,7 @@ pub struct Initialize<'info> {
     /// CHECK: This system account is created and will be used whenever the post message
     /// instructions are invoked.
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
         space = 0,
         seeds = [crate::constants::FEE_COLLECTOR_SEED_PREFIX],
