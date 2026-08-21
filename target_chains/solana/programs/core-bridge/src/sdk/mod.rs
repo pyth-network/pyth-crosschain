@@ -14,6 +14,9 @@ pub mod system_program {
 }
 
 #[doc(inline)]
+#[cfg(feature = "cpi")]
+pub use crate::utils::vaa::{claim_vaa, ClaimVaa};
+#[doc(inline)]
 pub use crate::{
     constants::{PROGRAM_EMITTER_SEED_PREFIX, SOLANA_CHAIN},
     id,
@@ -23,9 +26,6 @@ pub use crate::{
     utils::quorum,
     utils::vaa::{EmitterInfo, VaaAccount, VAA_START},
 };
-#[doc(inline)]
-#[cfg(feature = "cpi")]
-pub use crate::utils::vaa::{claim_vaa, ClaimVaa};
 
 pub mod io {
     pub use wormhole_io::{Readable, TypePrefixedPayload, Writeable};
