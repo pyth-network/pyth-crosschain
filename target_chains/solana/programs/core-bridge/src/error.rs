@@ -101,8 +101,8 @@ pub enum CoreBridgeError {
     #[msg("InvalidGuardianSetIndex")]
     InvalidGuardianSetIndex = 0x600,
 
-    #[msg("GuardianBlacklisted")]
-    GuardianBlacklisted = 0x602,
+    #[msg("LegacyGuardian")]
+    LegacyGuardian = 0x602,
 
     #[msg("GuardianSetMismatch")]
     GuardianSetMismatch = 0x700,
