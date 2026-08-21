@@ -7,12 +7,15 @@ import { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import {
+  AuthorizeGovernanceDataSourceTransfer,
   CosmosUpgradeContract,
   EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  RequestGovernanceDataSourceTransfer,
+  SetDataSources,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
@@ -24,7 +27,8 @@ import SquadsMeshClass from "@sqds/mesh";
 import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import type { DeploymentType } from "../src/core/base";
+import { getDefaultDeploymentConfig, toDeploymentType } from "../src/core/base";
 import {
   CosmWasmChain,
   EvmChain,
@@ -40,6 +44,11 @@ import {
   getCodeDigestWithoutAddress,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+import {
+  dataSourcesEqual,
+  findStoredWormhole,
+  normalizeHex,
+} from "./evm_pro_cutover";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +57,32 @@ function getSquadsMesh() {
   return (
     (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
     SquadsMeshClass
+  );
+}
+
+type CutoverGroup = {
+  upgrade?: EvmUpgradeContract;
+  setDataSources?: SetDataSources;
+  setWormhole?: EvmSetWormholeAddress;
+  governanceTransfer?: string;
+};
+
+function matchingEvmChains(
+  targetChainId: string,
+  cluster: PythCluster,
+): EvmChain[] {
+  return Object.values(DefaultStore.chains).filter(
+    (chain): chain is EvmChain =>
+      chain instanceof EvmChain &&
+      chain.isMainnet() === (cluster === "mainnet-beta") &&
+      chain.wormholeChainName === targetChainId,
+  );
+}
+
+function guardianSetsEqual(onChain: string[], expected: string[]): boolean {
+  if (onChain.length !== expected.length) return false;
+  return onChain.every(
+    (guardian, i) => normalizeHex(guardian) === normalizeHex(expected[i] ?? ""),
   );
 }
 
@@ -65,6 +100,11 @@ const parser = yargs(hideBin(process.argv))
       desc: "Type of EVM contract to verify (entropy or lazer). Required when checking EvmExecute instructions.",
       type: "string",
     },
+    "deployment-type": {
+      demandOption: false,
+      desc: "Pro deployment config to check against. Defaults from --cluster: mainnet-beta → pro-compatible-production, otherwise pro-compatible-staging",
+      type: "string",
+    },
     proposal: {
       demandOption: true,
       desc: "The proposal address to check",
@@ -72,9 +112,117 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
+async function verifyCutoverGroup(
+  targetChainId: string,
+  group: CutoverGroup,
+  cluster: PythCluster,
+  deploymentType: DeploymentType,
+): Promise<boolean> {
+  const expected = getDefaultDeploymentConfig(deploymentType);
+  let ok = true;
+  console.log(
+    `\nVerifying Pro cutover triple on ${targetChainId} against ${deploymentType}`,
+  );
+
+  if (group.governanceTransfer) {
+    console.error(
+      `FAIL: cutover for ${targetChainId} also contains ${group.governanceTransfer}; governance emitter must not change`,
+    );
+    ok = false;
+  }
+
+  for (const chain of matchingEvmChains(targetChainId, cluster)) {
+    if (group.upgrade) {
+      const contract = new EvmPriceFeedContract(chain, group.upgrade.address);
+      const digest = await contract.getCodeDigestWithoutAddress();
+      console.log(
+        `${chain.getId()}  UpgradeContract address:${group.upgrade.address} digest:${digest}`,
+      );
+    }
+
+    if (group.setDataSources) {
+      const match = dataSourcesEqual(
+        group.setDataSources.dataSources,
+        expected.dataSources,
+      );
+      console.log(
+        `${chain.getId()}  SetDataSources ${match ? "MATCH" : "MISMATCH"} expected ${JSON.stringify(expected.dataSources)} got ${JSON.stringify(group.setDataSources.dataSources)}`,
+      );
+      if (!match) ok = false;
+    }
+
+    if (group.setWormhole) {
+      const address = group.setWormhole.address;
+      const stored = findStoredWormhole(chain, address);
+      if (!stored) {
+        console.error(
+          `FAIL: ${chain.getId()} SetWormholeAddress ${address} is not an EvmWormholeContract in the store`,
+        );
+        ok = false;
+      } else if (stored.deploymentType !== deploymentType) {
+        console.error(
+          `FAIL: ${chain.getId()} wormhole ${address} deploymentType=${stored.deploymentType ?? "unlabeled"}, expected ${deploymentType}`,
+        );
+        ok = false;
+      } else {
+        console.log(
+          `${chain.getId()}  SetWormholeAddress ${address} store deploymentType=${stored.deploymentType} MATCH`,
+        );
+      }
+
+      const prefixed = address.startsWith("0x") ? address : `0x${address}`;
+      const contract = new EvmWormholeContract(chain, prefixed);
+      const currentIndex = await contract.getCurrentGuardianSetIndex();
+      const guardianSet = await contract.getGuardianSet();
+      const proxyContract = new EvmPriceFeedContract(chain, prefixed);
+      const proxyCode = await proxyContract.getCode();
+      const receiverImplementation =
+        await proxyContract.getImplementationAddress();
+      const implementationCode = await new EvmPriceFeedContract(
+        chain,
+        receiverImplementation,
+      ).getCode();
+      const proxyDigest = Web3.utils.keccak256(proxyCode);
+      const implementationDigest = Web3.utils.keccak256(implementationCode);
+      const guardianMatch = guardianSetsEqual(
+        guardianSet,
+        expected.wormholeConfig.initialGuardianSet,
+      );
+      const halfQuorum = Math.floor(guardianSet.length / 2) + 1;
+      console.log(
+        `${chain.getId()}  wormhole proxy digest:\t${proxyDigest}\nimplementation digest:\t${implementationDigest} (should be ReceiverImplementationHalf)\nguardian set index:\t${currentIndex}\nguardian set vs ${deploymentType} initialGuardianSet:\t${guardianMatch ? "MATCH" : "MISMATCH"}\nconfig quorum:\t${expected.wormholeConfig.quorum} (half quorum of ${guardianSet.length} is ${halfQuorum})`,
+      );
+      if (!guardianMatch) ok = false;
+      if (expected.wormholeConfig.quorum !== "half") {
+        console.error(
+          `FAIL: ${deploymentType} wormholeConfig.quorum is ${expected.wormholeConfig.quorum}, expected half`,
+        );
+        ok = false;
+      }
+    }
+  }
+
+  return ok;
+}
+
 async function main() {
   const argv = await parser.argv;
   const cluster = argv.cluster as PythCluster;
+  let deploymentType: DeploymentType;
+  if (argv["deployment-type"]) {
+    deploymentType = toDeploymentType(argv["deployment-type"]);
+  } else if (cluster === "mainnet-beta") {
+    deploymentType = "pro-compatible-production";
+  } else {
+    deploymentType = "pro-compatible-staging";
+  }
+  const cutoverByTarget = new Map<string, CutoverGroup>();
+  const record = (targetChainId: string) => {
+    const current = cutoverByTarget.get(targetChainId) ?? {};
+    cutoverByTarget.set(targetChainId, current);
+    return current;
+  };
+  let failed = false;
   const mesh = getSquadsMesh();
   const squad = mesh.endpoint(
     getPythClusterApiUrl(cluster),
@@ -93,7 +241,26 @@ async function main() {
 
   for (const instruction of parsedInstructions) {
     if (instruction instanceof WormholeMultisigInstruction) {
+      if (
+        instruction.governanceAction instanceof
+          AuthorizeGovernanceDataSourceTransfer ||
+        instruction.governanceAction instanceof
+          RequestGovernanceDataSourceTransfer
+      ) {
+        const targetChainId = instruction.governanceAction.targetChainId;
+        const name =
+          instruction.governanceAction instanceof
+          AuthorizeGovernanceDataSourceTransfer
+            ? "AuthorizeGovernanceDataSourceTransfer"
+            : "RequestGovernanceDataSourceTransfer";
+        console.error(
+          `WARNING: proposal contains ${name} for ${targetChainId}. Cutover must not change the governance emitter.`,
+        );
+        record(targetChainId).governanceTransfer = name;
+      }
       if (instruction.governanceAction instanceof EvmSetWormholeAddress) {
+        record(instruction.governanceAction.targetChainId).setWormhole =
+          instruction.governanceAction;
         console.log(
           `Verifying EVM set wormhole address on ${instruction.governanceAction.targetChainId}`,
         );
@@ -129,6 +296,8 @@ async function main() {
         }
       }
       if (instruction.governanceAction instanceof EvmUpgradeContract) {
+        record(instruction.governanceAction.targetChainId).upgrade =
+          instruction.governanceAction;
         console.log(
           `Verifying EVM Upgrade Contract on ${instruction.governanceAction.targetChainId}`,
         );
@@ -145,6 +314,32 @@ async function main() {
             // this should be the same keccak256 of the deployedCode property generated by truffle
             console.log(`${chain.getId()}  Address:${address} digest:${code}`);
           }
+        }
+      }
+      if (instruction.governanceAction instanceof SetDataSources) {
+        record(instruction.governanceAction.targetChainId).setDataSources =
+          instruction.governanceAction;
+        const expected = getDefaultDeploymentConfig(deploymentType);
+        console.log(
+          `Verifying SetDataSources on ${instruction.governanceAction.targetChainId} against ${deploymentType}`,
+        );
+        const match = dataSourcesEqual(
+          instruction.governanceAction.dataSources,
+          expected.dataSources,
+        );
+        console.log(
+          `  ${match ? "MATCH" : "MISMATCH"} expected ${JSON.stringify(expected.dataSources)} got ${JSON.stringify(instruction.governanceAction.dataSources)}`,
+        );
+        if (!match && argv["deployment-type"]) {
+          failed = true;
+        }
+        for (const chain of matchingEvmChains(
+          instruction.governanceAction.targetChainId,
+          cluster,
+        )) {
+          console.log(
+            `${chain.getId()}  SetDataSources emitters ${match ? "match" : "do not match"} ${deploymentType}`,
+          );
         }
       }
       if (instruction.governanceAction instanceof CosmosUpgradeContract) {
@@ -391,6 +586,30 @@ async function main() {
         }
       }
     }
+  }
+
+  for (const [targetChainId, group] of cutoverByTarget) {
+    if (group.upgrade && group.setDataSources && group.setWormhole) {
+      const ok = await verifyCutoverGroup(
+        targetChainId,
+        group,
+        cluster,
+        deploymentType,
+      );
+      if (!ok) failed = true;
+    } else if (
+      group.governanceTransfer &&
+      (group.upgrade || group.setDataSources || group.setWormhole)
+    ) {
+      console.error(
+        `FAIL: ${targetChainId} mixes ${group.governanceTransfer} with cutover actions`,
+      );
+      failed = true;
+    }
+  }
+
+  if (failed) {
+    throw new Error("Proposal failed cutover / SetDataSources checks");
   }
 }
 
