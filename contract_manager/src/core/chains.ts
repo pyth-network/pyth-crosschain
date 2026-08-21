@@ -1771,12 +1771,13 @@ export class SvmChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
+    public isRemote: boolean,
     public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  static fromJson(parsed: ChainConfig): SvmChain {
+  static fromJson(parsed: ChainConfig & { isRemote: boolean }): SvmChain {
     if (parsed.type !== SvmChain.type) throw new Error("Invalid type");
     if (parsed.wormholeChainName === undefined) {
       throw new Error("wormholeChainName is required");
@@ -1789,6 +1790,7 @@ export class SvmChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
+      parsed.isRemote,
       parsed.rpcUrl,
     );
   }
@@ -1796,6 +1798,7 @@ export class SvmChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
+      isRemote: this.isRemote,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: SvmChain.type,
