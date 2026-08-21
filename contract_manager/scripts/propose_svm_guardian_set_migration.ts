@@ -33,6 +33,12 @@ import {
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
+/** The Hermes serving the network each deployment type's chains are on. */
+const HERMES_URLS = {
+  "pro-compatible-production": "https://hermes.pyth.network",
+  "pro-compatible-staging": "https://hermes-beta.pyth.network",
+};
+
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Proposes the SVM Wormhole guardian set migration to the multisig.\n" +
@@ -51,8 +57,7 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
     },
     "hermes-url": {
-      default: "https://hermes.pyth.network",
-      desc: "Hermes to pull the pre-flight price update from. Its updates have to be signed by the guardian set the chain's core bridge is on, so use https://hermes-beta.pyth.network on a chain that follows the Wormhole testnet guardians",
+      desc: "Hermes to pull the pre-flight price update from. Defaults to the one serving the deployment type's network",
       type: "string",
     },
     "price-feed-id": {
@@ -73,6 +78,7 @@ async function main() {
   );
   const rpcUrl = argv["rpc-url"];
   const registry = rpcUrl ? () => rpcUrl : undefined;
+  const hermesUrl = argv["hermes-url"] ?? HERMES_URLS[argv["deployment-type"]];
 
   const vault = getVaultOrThrow(argv.vault);
   const vaultAuthority = await vault.getEmitter(registry);
@@ -89,23 +95,16 @@ async function main() {
     console.log(`\n=== ${chainId} (governed by ${target.signer.toBase58()})`);
     console.log(await describeChainState(target));
 
-    console.log(`pre-flight price relay from ${argv["hermes-url"]}`);
-    try {
-      console.log(
-        `  ${await relayPriceUpdate(target, wallet, {
-          feedId: argv["price-feed-id"],
-          token: argv["hermes-token"],
-          url: argv["hermes-url"],
-        })}`,
-      );
-    } catch (error) {
-      // Reported rather than fatal. A chain that cannot relay a price today is still worth
-      // migrating — the migration may well be what fixes it — but the execute script's
-      // post-migration relay has nothing to be read against unless this one is known to work.
-      console.log(
-        `  FAILED: ${error instanceof Error ? error.message : error}`,
-      );
-    }
+    // A chain that cannot relay a price before the migration gives the execute script's
+    // post-migration relay nothing to be read against, so this is a hard gate.
+    console.log(`pre-flight price relay from ${hermesUrl}`);
+    console.log(
+      `  ${await relayPriceUpdate(target, wallet, {
+        feedId: argv["price-feed-id"],
+        token: argv["hermes-token"],
+        url: hermesUrl,
+      })}`,
+    );
 
     await checkAuthorities(target);
     await checkUpgradeBuffer(target, state);
@@ -113,7 +112,9 @@ async function main() {
     const instructions = buildMigrationInstructions(target, state);
     if (target.chain.isRemote) {
       remotePayloads.push(
-        target.chain.generateExecutePostedVaaPayload(instructions),
+        ...instructions.map((instruction) =>
+          target.chain.generateExecutePostedVaaPayload(instruction),
+        ),
       );
     } else {
       localInstructions.push(...instructions);
