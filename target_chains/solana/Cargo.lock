@@ -9663,6 +9663,7 @@ name = "wormhole-core-bridge-solana"
 version = "0.0.1-alpha.5"
 dependencies = [
  "anchor-lang",
+ "base64 0.22.1",
  "cfg-if",
  "hex",
  "ruint",

@@ -30,3 +30,6 @@ solana-program.workspace = true
 hex.workspace = true
 ruint.workspace = true
 cfg-if.workspace = true
+
+[dev-dependencies]
+base64 = "0.22"
