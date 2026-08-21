@@ -47,6 +47,7 @@ import {
   EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
+  ExecutePostedVaa,
   SetDataSources,
   SetFee,
   SetValidPeriod,
@@ -55,6 +56,7 @@ import {
   UpgradeContract256Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
+import type { TransactionInstruction } from "@solana/web3.js";
 import {
   Connection,
   Keypair,
@@ -1811,18 +1813,45 @@ export class SvmChain extends Chain {
   }
 
   generateGovernanceUpgradePayload(_programId: string): Buffer {
+    // SVM programs are upgraded through the BPF upgradeable loader rather than by a Pyth
+    // governance handler, so there is no upgrade payload — see generateExecutePostedVaaPayload.
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Returns the payload of the wormhole message that makes a remote chain run `instructions`.
+   *
+   * A vault cannot sign for accounts on a chain it does not live on. Instead it emits this
+   * payload, and the remote executor on the target chain replays the instructions it carries,
+   * signing them with the PDA it derives from the vault's emitter address. Chains the vault lives
+   * on have no such indirection — the multisig signs their instructions directly.
+   */
+  generateExecutePostedVaaPayload(
+    instructions: TransactionInstruction[],
+  ): Buffer {
+    if (!this.isRemote) {
+      throw new Error(
+        `${this.id} is not a remote chain; its instructions are proposed to the vault directly`,
+      );
+    }
+    return new ExecutePostedVaa(this.wormholeChainName, instructions).encode();
   }
 
   getConnection(): Connection {
     return new Connection(parseRpcUrl(this.rpcUrl), "confirmed");
   }
 
+  /**
+   * Returns the keypair for the given private key. `PrivateKey` is a 32-byte hex string, which is
+   * the ed25519 seed rather than the 64-byte expanded secret key that solana keypair files hold —
+   * the two are interchangeable, since the expanded form is the seed followed by the public key.
+   */
+  getKeypair(privateKey: PrivateKey): Keypair {
+    return Keypair.fromSeed(new Uint8Array(Buffer.from(privateKey, "hex")));
+  }
+
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const keypair = Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(privateKey, "hex")),
-    );
-    return Promise.resolve(keypair.publicKey.toBase58());
+    return Promise.resolve(this.getKeypair(privateKey).publicKey.toBase58());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
