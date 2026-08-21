@@ -1,0 +1,122 @@
+{
+  "date": "2026-08-21",
+  "label": "Friday",
+  "summary": {
+    "added": 4,
+    "went_live": 6,
+    "removed": 1
+  },
+  "hero": "4 new feeds announced, 6 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.WTIU6/USD",
+      "lazerId": 3070,
+      "asset": "Pyth Price In Usd For Wti 20 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "17d0b3b03f9ccb6bb6721960f034b8601b3d89ef70743b33f86304a1565cebda"
+    },
+    {
+      "id": "Commodities.WTIF7/USD",
+      "lazerId": 3636,
+      "asset": "Pyth Price In Usd For Wti 21 December 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "87f7b1af745a1a6affb67275f813c081a65a3ccd46729c6170284176b5077e9c"
+    },
+    {
+      "id": "Equity.US.XPO/USD",
+      "lazerId": 3593,
+      "asset": "Xpo Inc Com",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "202820725ea1f2cdda32c4506e910e013bd3ee8489abd9539a5b6653abf63fa6"
+    },
+    {
+      "id": "Equity.US.AGX/USD",
+      "lazerId": 3576,
+      "asset": "Argan Inc.",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "705e9703a25421214ca18afc79db2b4bd7af74b1a0925a405d868a8ac99724b4"
+    },
+    {
+      "id": "Equity.US.PRIM/USD",
+      "lazerId": 3549,
+      "asset": "Primoris Services Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "df2a490455eb1f5ae07ea6a58c16218648d5c4b9c29e1a18ad6942fb48f3d946"
+    },
+    {
+      "id": "Commodities.CLLZ6/USD",
+      "lazerId": 3455,
+      "asset": "Pyth Price In Usd For Cll 19 November 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "46ba8cfc6cb0be8d6203f2b5452548c500f184422e2da05ba12dc98df4f31328"
+    },
+    {
+      "id": "Metal.CC3M/USD",
+      "lazerId": 3451,
+      "asset": "Pyth Price In Usd For Copper 3-Month",
+      "assetType": "metal",
+      "changeType": "went_live",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "719ab84313696fb0d166b7a34064ea5b4da8af2304ccc0b17ad8a881cdfca379"
+    },
+    {
+      "id": "Crypto.GLDX/USD",
+      "lazerId": 3640,
+      "asset": "Gold Xstock",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "e7d1138d0083368634087268c64b7bea0b4101a6365f83915cba9e76a8364b96"
+    },
+    {
+      "id": "Crypto.Index.PPLUS/USD",
+      "lazerId": 3639,
+      "asset": "Ember Pplus",
+      "assetType": "crypto-index",
+      "changeType": "added",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "7fcd339044cb097e22ad99ca8619b176a559ac8a4b3e5324a6d62033933cee61"
+    },
+    {
+      "id": "Crypto.Index.HIGH/USD",
+      "lazerId": 3638,
+      "asset": "Ember High",
+      "assetType": "crypto-index",
+      "changeType": "added",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "b40a0c456f90d362098ac489b05313af4eba29f449577c6cb92864756b4a1b35"
+    },
+    {
+      "id": "Crypto.Index.TRADE/USD",
+      "lazerId": 3637,
+      "asset": "Ember Trade",
+      "assetType": "crypto-index",
+      "changeType": "added",
+      "date": "2026-08-21",
+      "quote": "USD",
+      "hermesId": "b20d7783b1802aa579f571a2c09226b66fa1105fee9b31cfc85974e122aabc3c"
+    }
+  ]
+}
