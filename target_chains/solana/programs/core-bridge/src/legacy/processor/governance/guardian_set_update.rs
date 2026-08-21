@@ -139,11 +139,11 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
     // We need at least one guardian for the initial guardian set.
     require!(!keys.is_empty(), CoreBridgeError::ZeroGuardians);
 
-    // We disallow guardian pubkeys that are in the blacklist.
+    // We disallow guardian pubkeys that are in the legacy guardians list.
     for guardian in keys.iter() {
         require!(
             !LEGACY_GUARDIANS.contains(guardian),
-            CoreBridgeError::GuardianBlacklisted
+            CoreBridgeError::LegacyGuardian
         );
     }
 
