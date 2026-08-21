@@ -18,9 +18,6 @@
  *     --proposal <address> --proposal <address>
  */
 
-import type { Wallet } from "@coral-xyz/anchor";
-import { HermesClient } from "@pythnetwork/hermes-client";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   ComputeBudgetProgram,
   PublicKey,
@@ -50,14 +47,12 @@ import {
   loadMigrationConfig,
   MIGRATION_OPTIONS,
   readMigrationTargetState,
+  relayPriceUpdate,
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
 /** How long to wait for the guardians to sign a governance message the vault just emitted. */
 const VAA_WAIT_SECONDS = 300;
-
-/** How stale a relayed price update may be for the final check to count as a success. */
-const MAX_PRICE_AGE_SECONDS = 120;
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -150,11 +145,13 @@ async function main() {
     await closeGuardianSets(target, state, senderPrivateKey);
   }
   for (const target of targets) {
-    await checkPriceRelay(target, wallet, {
-      feedId: argv["price-feed-id"],
-      token: argv["hermes-token"],
-      url: argv["hermes-url"],
-    });
+    console.log(
+      `${target.chain.getId()}: ${await relayPriceUpdate(target, wallet, {
+        feedId: argv["price-feed-id"],
+        token: argv["hermes-token"],
+        url: argv["hermes-url"],
+      })}`,
+    );
   }
 }
 
@@ -225,73 +222,6 @@ async function closeGuardianSets(
     `${chainId}: closed guardian sets ${toClose
       .map((set) => set.index)
       .join(", ")}${migrated ? "" : " and re-initialized"} in ${signature}`,
-  );
-}
-
-/**
- * Relays a price update from the new Hermes through the migrated receiver, which is the only
- * check that exercises the whole chain of things the migration touched at once: the multisig's
- * signatures, the upgraded bridge's quorum, and the receiver's new data source.
- */
-async function checkPriceRelay(
-  target: SvmMigrationTarget,
-  wallet: Wallet,
-  hermes: { url: string; token: string | undefined; feedId: string },
-) {
-  const chainId = target.chain.getId();
-  const client = new HermesClient(hermes.url, {
-    ...(hermes.token === undefined ? {} : { accessToken: hermes.token }),
-  });
-  const [updateData] = (
-    await client.getLatestPriceUpdates([hermes.feedId], { encoding: "base64" })
-  ).binary.data;
-  if (!updateData) {
-    throw new Error(`Hermes returned no update for ${hermes.feedId}`);
-  }
-
-  const receiver = new PythSolanaReceiver({
-    connection: target.chain.getConnection(),
-    receiverProgramId: target.receiver.getProgramId(),
-    wallet,
-    wormholeProgramId: target.wormhole.getProgramId(),
-  });
-  // The update account is read back after the fact, so it cannot be closed in the same batch.
-  const builder = receiver.newTransactionBuilder({
-    closeUpdateAccounts: false,
-  });
-  await builder.addPostPriceUpdates([updateData]);
-  const priceUpdateAccount = builder.getPriceUpdateAccount(hermes.feedId);
-  await receiver.provider.sendAll(await builder.buildVersionedTransactions({}));
-
-  const update = await receiver.fetchPriceUpdateAccount(priceUpdateAccount);
-  if (!update) {
-    throw new Error(
-      `${chainId}: ${priceUpdateAccount.toBase58()} was not written`,
-    );
-  }
-  const feedId = "0x" + Buffer.from(update.priceMessage.feedId).toString("hex");
-  if (feedId !== hermes.feedId) {
-    throw new Error(
-      `${chainId}: relayed update is for ${feedId}, expected ${hermes.feedId}`,
-    );
-  }
-  const publishTime = update.priceMessage.publishTime.toNumber();
-  const age = Math.floor(Date.now() / 1000) - publishTime;
-  if (age > MAX_PRICE_AGE_SECONDS) {
-    throw new Error(
-      `${chainId}: relayed update was published ${age}s ago, which is not a fresh price`,
-    );
-  }
-  console.log(
-    `${chainId}: relayed ${feedId} published at ${publishTime}, verification ${Object.keys(update.verificationLevel).join()}`,
-  );
-
-  const closeBuilder = receiver.newTransactionBuilder({
-    closeUpdateAccounts: false,
-  });
-  closeBuilder.addInstructions(builder.closeInstructions);
-  await receiver.provider.sendAll(
-    await closeBuilder.buildVersionedTransactions({}),
   );
 }
 
