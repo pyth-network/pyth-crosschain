@@ -125,6 +125,9 @@ pub enum CoreBridgeError {
     #[msg("SignerIndicesMismatch")]
     SignerIndicesMismatch = 0x70a,
 
+    #[msg("SignatureSetGuardianCountMismatch")]
+    SignatureSetGuardianCountMismatch = 0x70c,
+
     #[msg("PayloadSizeMismatch")]
     PayloadSizeMismatch = 0x800,
 
