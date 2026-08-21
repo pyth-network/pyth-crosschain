@@ -22,7 +22,7 @@
     "mainnet": true,
     "rpcUrl": "https://mainnet.fogo.io",
     "type": "SvmChain",
-    "wormholeChainName": "fogo"
+    "wormholeChainName": "fogo_mainnet"
   },
   {
     "id": "fogo_testnet",
@@ -30,6 +30,6 @@
     "mainnet": false,
     "rpcUrl": "https://testnet.fogo.io",
     "type": "SvmChain",
-    "wormholeChainName": "fogo"
+    "wormholeChainName": "fogo_testnet"
   }
 ]
