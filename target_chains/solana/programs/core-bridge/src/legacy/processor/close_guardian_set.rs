@@ -8,6 +8,9 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct CloseGuardianSet<'info> {
+    #[account(mut)]
+    recipient: UncheckedAccount<'info>,
+
     #[account(
         mut,
         close = recipient,
@@ -18,8 +21,6 @@ pub struct CloseGuardianSet<'info> {
         bump,
     )]
     guardian_set: Account<'info, AccountVariant<GuardianSet>>,
-    #[account(mut)]
-    recipient: UncheckedAccount<'info>,
 }
 
 impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, EmptyArgs>
@@ -33,7 +34,7 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, EmptyArgs>
 /// Processor to remove a guardian set account containing a blacklisted guardian.
 /// This instruction is permissionless - anyone can call it.
 fn close_guardian_set(ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Result<()> {
-    // At least one guardian is blacklisted.
+    // At least one guardian is from the legacy guardian sets.
     require!(
         ctx.accounts
             .guardian_set
@@ -41,7 +42,7 @@ fn close_guardian_set(ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Resul
             .keys
             .iter()
             .any(|key| LEGACY_GUARDIANS.contains(key)),
-        CoreBridgeError::NoBlacklistedGuardians
+        CoreBridgeError::NoLegacyGuardians
     );
     Ok(())
 }

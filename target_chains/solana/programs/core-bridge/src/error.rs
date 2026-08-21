@@ -128,8 +128,8 @@ pub enum CoreBridgeError {
     #[msg("PayloadSizeMismatch")]
     PayloadSizeMismatch = 0x800,
 
-    #[msg("NoBlacklistedGuardians")]
-    NoBlacklistedGuardians = 0x900,
+    #[msg("NoLegacyGuardians")]
+    NoLegacyGuardians = 0x900,
 
     #[msg("ZeroGuardians")]
     ZeroGuardians = 0x1010,
