@@ -35,7 +35,7 @@ const parser = yargs(hideBin(process.argv))
     ...MIGRATION_OPTIONS,
     "dry-run": {
       default: false,
-      desc: "Run every check and print the instructions per chain, but do not submit anything",
+      desc: "Print the state of every chain and run every check, but do not submit anything",
       type: "boolean",
     },
   });
@@ -68,18 +68,6 @@ async function main() {
     await checkUpgradeBuffer(target, state);
 
     const instructions = buildMigrationInstructions(target, state);
-    console.log("instructions to propose");
-    for (const instruction of instructions) {
-      console.log(
-        `  ${instruction.programId.toBase58()} data=${instruction.data.toString("hex")}`,
-      );
-      for (const key of instruction.keys) {
-        console.log(
-          `    ${key.pubkey.toBase58()}${key.isSigner ? " signer" : ""}${key.isWritable ? " writable" : ""}`,
-        );
-      }
-    }
-
     if (target.chain.isRemote) {
       remotePayloads.push(
         target.chain.generateExecutePostedVaaPayload(instructions),
