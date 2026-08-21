@@ -32,11 +32,8 @@ import { hideBin } from "yargs/helpers";
 import type { PrivateKey } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { executeVaa } from "../src/node/utils/executor";
-import {
-  loadHotWallet,
-  MultisigProposal,
-  SubmittedWormholeMessage,
-} from "../src/node/utils/governance";
+import type { SubmittedWormholeMessage } from "../src/node/utils/governance";
+import { loadHotWallet, MultisigProposal } from "../src/node/utils/governance";
 import type {
   SvmMigrationTarget,
   SvmMigrationTargetState,
@@ -85,11 +82,6 @@ const parser = yargs(hideBin(process.argv))
       string: true,
       type: "array",
     },
-    sequence: {
-      desc: "Sequence numbers of governance messages the vault has already emitted, to relay without re-executing a proposal",
-      number: true,
-      type: "array",
-    },
   });
 
 async function main() {
@@ -126,11 +118,6 @@ async function main() {
     // Read off the proposal rather than off what this run executed, so a proposal an earlier
     // run already took through still has its messages relayed.
     messages.push(...(await proposal.fetchEmittedWormholeMessages()));
-  }
-  for (const sequence of argv.sequence ?? []) {
-    messages.push(
-      new SubmittedWormholeMessage(vaultAuthority, sequence, vault.cluster),
-    );
   }
 
   for (const message of messages) {
