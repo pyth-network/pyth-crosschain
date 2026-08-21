@@ -33,10 +33,21 @@ import {
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
-/** The Hermes serving the network each deployment type's chains are on. */
-const HERMES_URLS = {
-  "pro-compatible-production": "https://hermes.pyth.network",
-  "pro-compatible-staging": "https://hermes-beta.pyth.network",
+/**
+ * The Hermes serving the network each deployment type's chains are on, and its SOL/USD feed —
+ * the two go together, since a feed id from one instance does not exist on the other.
+ */
+const HERMES = {
+  "pro-compatible-production": {
+    solUsdFeedId:
+      "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+    url: "https://hermes.pyth.network",
+  },
+  "pro-compatible-staging": {
+    solUsdFeedId:
+      "0xfe650f0367d4a7ef9815a593ea15d36593f0643aaaf0149bb04be67ab851decd",
+    url: "https://hermes-beta.pyth.network",
+  },
 };
 
 const parser = yargs(hideBin(process.argv))
@@ -56,17 +67,6 @@ const parser = yargs(hideBin(process.argv))
       desc: "Bearer token for the Hermes instance, if it needs one",
       type: "string",
     },
-    "hermes-url": {
-      desc: "Hermes to pull the pre-flight price update from. Defaults to the one serving the deployment type's network",
-      type: "string",
-    },
-    "price-feed-id": {
-      // SOL/USD.
-      default:
-        "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
-      desc: "Price feed to relay for the pre-flight check",
-      type: "string",
-    },
   });
 
 async function main() {
@@ -78,7 +78,7 @@ async function main() {
   );
   const rpcUrl = argv["rpc-url"];
   const registry = rpcUrl ? () => rpcUrl : undefined;
-  const hermesUrl = argv["hermes-url"] ?? HERMES_URLS[argv["deployment-type"]];
+  const hermes = HERMES[argv["deployment-type"]];
 
   const vault = getVaultOrThrow(argv.vault);
   const vaultAuthority = await vault.getEmitter(registry);
@@ -97,12 +97,12 @@ async function main() {
 
     // A chain that cannot relay a price before the migration gives the execute script's
     // post-migration relay nothing to be read against, so this is a hard gate.
-    console.log(`pre-flight price relay from ${hermesUrl}`);
+    console.log(`pre-flight price relay from ${hermes.url}`);
     console.log(
       `  ${await relayPriceUpdate(target, wallet, {
-        feedId: argv["price-feed-id"],
+        feedId: hermes.solUsdFeedId,
         token: argv["hermes-token"],
-        url: hermesUrl,
+        url: hermes.url,
       })}`,
     );
 
