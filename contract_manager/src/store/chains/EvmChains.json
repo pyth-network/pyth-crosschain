@@ -455,6 +455,13 @@
     "type": "EvmChain"
   },
   {
+    "id": "manta_testnet",
+    "mainnet": false,
+    "networkId": 3441005,
+    "rpcUrl": "https://manta-pacific-testnet.drpc.org",
+    "type": "EvmChain"
+  },
+  {
     "id": "manta_sepolia",
     "mainnet": false,
     "networkId": 3441006,
