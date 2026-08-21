@@ -34,6 +34,14 @@ pub enum LegacyInstruction {
     GuardianSetUpdate,
     /// Verify guardian signatures of a VAA (Version 1).
     VerifySignatures,
+    /// Removed instruction (formerly the `PostMessageUnreliable` governance instruction). This variant is
+    /// kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedPostMessageUnreliable,
+    /// Removed instruction (formerly the `UpdateGuardianSetTtl` governance instruction). This variant is
+    /// kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedUpdateGuardianSetTtl,
 }
 
 /// Arguments used to initialize the Core Bridge program.
