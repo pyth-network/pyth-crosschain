@@ -282,7 +282,7 @@ async fn test_wormhole_insufficient_signatures() {
     let (vaa, _) =
         deserialize_accumulator_update_data(hex::decode(ACCUMULATOR_UPDATE_DATA).unwrap()).unwrap();
 
-    // Trim the VAA to 9 signatures
+    // Trim the VAA to 2 signatures
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
         2,
