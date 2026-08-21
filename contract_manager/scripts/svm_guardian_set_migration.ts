@@ -12,6 +12,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
+import { DEFAULT_PUSH_ORACLE_PROGRAM_ID } from "@pythnetwork/pyth-solana-receiver";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   BPF_UPGRADABLE_LOADER,
@@ -19,6 +20,7 @@ import {
   getProgramDataAddress,
   mapKey,
   PROGRAMDATA_METADATA_SIZE,
+  REMOTE_EXECUTOR_ADDRESS,
 } from "@pythnetwork/xc-admin-common";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
@@ -30,6 +32,7 @@ import type {
   SvmPriceFeedContract,
   SvmWormholeContract,
 } from "../src/core/contracts";
+import { getUpgradeAuthority } from "../src/core/contracts";
 import type { Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -198,6 +201,86 @@ export function buildMigrationInstructions(
       target.signer,
     ),
   ];
+}
+
+/**
+ * The whole of the on-chain state the migration acts on, as a block of text for the operator to
+ * read before approving anything: who can upgrade each of the programs involved, what the
+ * receiver currently accepts price updates from, and what the core bridge's guardian sets are.
+ */
+export async function describeChainState(
+  target: SvmMigrationTarget,
+): Promise<string> {
+  const { chain, receiver, wormhole } = target;
+  const lines: string[] = [];
+
+  if (chain.isRemote) {
+    lines.push(
+      `remote executor ${REMOTE_EXECUTOR_ADDRESS.toBase58()}`,
+      `  upgrade authority: ${describeUpgradeAuthority(await getUpgradeAuthority(chain, REMOTE_EXECUTOR_ADDRESS))}`,
+    );
+  }
+
+  const receiverConfig = await receiver.getConfig();
+  lines.push(
+    `price receiver ${receiver.getProgramId().toBase58()}`,
+    `  upgrade authority: ${describeUpgradeAuthority(await receiver.getUpgradeAuthority())}`,
+    `  config ${receiver.getConfigAddress().toBase58()}`,
+    `    governance authority: ${receiverConfig.governanceAuthority.toBase58()}`,
+    `    target governance authority: ${receiverConfig.targetGovernanceAuthority?.toBase58() ?? "none"}`,
+    `    core bridge: ${receiverConfig.wormhole.toBase58()}`,
+    `    minimum signatures: ${receiverConfig.minimumSignatures}`,
+    `    single update fee: ${receiverConfig.singleUpdateFeeInLamports} lamports`,
+    `    data sources: ${describeList(receiverConfig.validDataSources.map((source) => `${source.emitterChain}/${source.emitterAddress}`))}`,
+  );
+
+  lines.push(
+    `push oracle ${DEFAULT_PUSH_ORACLE_PROGRAM_ID.toBase58()}`,
+    `  upgrade authority: ${describeUpgradeAuthority(await getUpgradeAuthority(chain, DEFAULT_PUSH_ORACLE_PROGRAM_ID))}`,
+  );
+
+  const bridgeConfig = await wormhole.getConfig();
+  const guardianSets = await wormhole.getGuardianSets();
+  lines.push(
+    `core bridge ${wormhole.getProgramId().toBase58()}`,
+    `  upgrade authority: ${describeUpgradeAuthority(await wormhole.getUpgradeAuthority())}`,
+    `  config ${wormhole.getConfigAddress().toBase58()}`,
+    `    guardian set index: ${bridgeConfig.guardianSetIndex}`,
+    `    guardian set ttl: ${bridgeConfig.guardianSetTtlSeconds} seconds`,
+    `    message fee: ${bridgeConfig.feeLamports} lamports`,
+    `  guardian sets still present: ${describeList(guardianSets.map((set) => String(set.index)))}`,
+  );
+
+  const currentSet = guardianSets.find(
+    (set) => set.index === bridgeConfig.guardianSetIndex,
+  );
+  if (currentSet) {
+    lines.push(
+      `  guardian set ${currentSet.index} ${wormhole.getGuardianSetAddress(currentSet.index).toBase58()}`,
+      `    created: ${describeTimestamp(currentSet.creationTime)}`,
+      `    expires: ${currentSet.expirationTime === 0 ? "never" : describeTimestamp(currentSet.expirationTime)}`,
+      `    guardians: ${currentSet.keys.length}`,
+      ...currentSet.keys.map((key) => `      ${key}`),
+    );
+  } else {
+    lines.push(
+      `  guardian set ${bridgeConfig.guardianSetIndex} is the current one but has already been closed`,
+    );
+  }
+
+  return lines.join("\n");
+}
+
+function describeUpgradeAuthority(authority: PublicKey | undefined): string {
+  return authority?.toBase58() ?? "none (the program is immutable)";
+}
+
+function describeList(values: string[]): string {
+  return values.length > 0 ? values.join(", ") : "none";
+}
+
+function describeTimestamp(unixSeconds: number): string {
+  return `${unixSeconds} (${new Date(unixSeconds * 1000).toISOString()})`;
 }
 
 /**

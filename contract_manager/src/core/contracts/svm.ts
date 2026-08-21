@@ -84,6 +84,27 @@ function discriminator(namespace: string, name: string): Buffer {
     .subarray(0, 8);
 }
 
+/**
+ * The key the BPF upgradeable loader lets upgrade `programId`, or `undefined` if the program has
+ * been made immutable.
+ */
+export async function getUpgradeAuthority(
+  chain: SvmChain,
+  programId: PublicKey,
+): Promise<PublicKey | undefined> {
+  const account = await chain
+    .getConnection()
+    .getAccountInfo(getProgramDataAddress(programId));
+  if (!account) {
+    throw new Error(
+      `${chain.getId()}: ${programId.toBase58()} has no program data account — is it deployed with the upgradeable loader?`,
+    );
+  }
+  const reader = new BorshReader(account.data);
+  reader.skip(4 + 8); // UpgradeableLoaderState::ProgramData discriminant, deployment slot
+  return reader.option(() => reader.pubkey());
+}
+
 /** Contents of the receiver's singleton `Config` account. */
 export type SvmReceiverConfig = {
   /** The key allowed to run the receiver's governance instructions. */
@@ -155,6 +176,14 @@ export class SvmPriceFeedContract extends Storable {
 
   getProgramId(): PublicKey {
     return new PublicKey(this.address);
+  }
+
+  /**
+   * The key the BPF upgradeable loader lets upgrade this program, or `undefined`
+   * if the program has been made immutable.
+   */
+  getUpgradeAuthority(): Promise<PublicKey | undefined> {
+    return getUpgradeAuthority(this.chain, this.getProgramId());
   }
 
   /** Address of the singleton `Config` PDA (`b"config"`). */
@@ -250,6 +279,16 @@ export class SvmPriceFeedContract extends Storable {
     };
   }
 }
+
+/** Contents of the core bridge's singleton `Config` account. */
+export type SvmBridgeConfig = {
+  /** Index of the guardian set the bridge currently verifies VAAs against. */
+  guardianSetIndex: number;
+  /** How long a guardian set stays valid after a newer one has replaced it. */
+  guardianSetTtlSeconds: number;
+  /** What the bridge charges to post a message. */
+  feeLamports: bigint;
+};
 
 /** Contents of a core bridge `GuardianSet` account. */
 export type SvmGuardianSet = {
@@ -347,7 +386,7 @@ export class SvmWormholeContract extends Storable {
     )[0];
   }
 
-  async getCurrentGuardianSetIndex(): Promise<number> {
+  async getConfig(): Promise<SvmBridgeConfig> {
     const account = await this.chain
       .getConnection()
       .getAccountInfo(this.getConfigAddress());
@@ -356,9 +395,19 @@ export class SvmWormholeContract extends Storable {
         `Core bridge ${this.getId()} has no config account — is the program initialized?`,
       );
     }
-    // The bridge config is a legacy account: no discriminator, and the guardian
-    // set index is its first field.
-    return account.data.readUInt32LE(0);
+    // The bridge config is a legacy account: no discriminator, and a gap where the
+    // old implementation tracked the fees it had been paid.
+    const reader = new BorshReader(account.data);
+    const guardianSetIndex = reader.u32();
+    reader.skip(8);
+    const guardianSetTtlSeconds = reader.u32();
+    const feeLamports = reader.u64();
+    return { feeLamports, guardianSetIndex, guardianSetTtlSeconds };
+  }
+
+  async getCurrentGuardianSetIndex(): Promise<number> {
+    const { guardianSetIndex } = await this.getConfig();
+    return guardianSetIndex;
   }
 
   /**
@@ -383,18 +432,8 @@ export class SvmWormholeContract extends Storable {
    * The key the BPF upgradeable loader lets upgrade this program, or `undefined`
    * if the program has been made immutable.
    */
-  async getUpgradeAuthority(): Promise<PublicKey | undefined> {
-    const account = await this.chain
-      .getConnection()
-      .getAccountInfo(getProgramDataAddress(this.getProgramId()));
-    if (!account) {
-      throw new Error(
-        `Core bridge ${this.getId()} has no program data account — is it deployed with the upgradeable loader?`,
-      );
-    }
-    const reader = new BorshReader(account.data);
-    reader.skip(4 + 8); // UpgradeableLoaderState::ProgramData discriminant, deployment slot
-    return reader.option(() => reader.pubkey());
+  getUpgradeAuthority(): Promise<PublicKey | undefined> {
+    return getUpgradeAuthority(this.chain, this.getProgramId());
   }
 
   /**
