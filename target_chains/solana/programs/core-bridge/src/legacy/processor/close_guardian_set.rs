@@ -19,6 +19,13 @@ pub struct CloseGuardianSet<'info> {
             guardian_set.inner().index.to_be_bytes().as_ref()
         ],
         bump,
+        // At least one guardian is from the legacy guardian sets.
+        constraint = guardian_set
+            .inner()
+            .keys
+            .iter()
+            .any(|key| LEGACY_GUARDIANS.contains(key))
+            @ CoreBridgeError::NoLegacyGuardians
     )]
     guardian_set: Account<'info, AccountVariant<GuardianSet>>,
 }
@@ -31,18 +38,8 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, EmptyArgs>
     const ANCHOR_IX_FN: fn(Context<Self>, EmptyArgs) -> Result<()> = close_guardian_set;
 }
 
-/// Processor to remove a guardian set account containing a blacklisted guardian.
+/// Processor to remove a guardian set account containing a legacy guardian.
 /// This instruction is permissionless - anyone can call it.
-fn close_guardian_set(ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Result<()> {
-    // At least one guardian is from the legacy guardian sets.
-    require!(
-        ctx.accounts
-            .guardian_set
-            .inner()
-            .keys
-            .iter()
-            .any(|key| LEGACY_GUARDIANS.contains(key)),
-        CoreBridgeError::NoLegacyGuardians
-    );
+fn close_guardian_set(_ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Result<()> {
     Ok(())
 }
