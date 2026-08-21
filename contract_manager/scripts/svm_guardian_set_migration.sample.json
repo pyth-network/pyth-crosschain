@@ -1,0 +1,13 @@
+{
+  "chains": [
+    {
+      "chain": "solana_mainnet",
+      "upgradeBuffer": "<address of the buffer holding the migrated core bridge on solana mainnet>"
+    },
+    {
+      "chain": "fogo_mainnet",
+      "upgradeBuffer": "<address of the buffer holding the migrated core bridge on fogo mainnet>"
+    }
+  ],
+  "coreBridgeArtifact": "../target_chains/solana/target/deploy/wormhole_core_bridge_solana.so"
+}

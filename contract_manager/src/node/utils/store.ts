@@ -51,6 +51,8 @@ import {
   SuiLazerContract,
   SuiPriceFeedContract,
   SuiWormholeContract,
+  SvmPriceFeedContract,
+  SvmWormholeContract,
   TonPriceFeedContract,
   TonWormholeContract,
   WormholeContract,
@@ -76,6 +78,13 @@ export class Store {
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
+  /**
+   * SVM price receivers and core bridges. They are kept apart from `contracts` /
+   * `wormhole_contracts` because neither implements the VAA-driven governance
+   * interface those registries are typed on.
+   */
+  public svm_price_feed_contracts: Record<string, SvmPriceFeedContract> = {};
+  public svm_wormhole_contracts: Record<string, SvmWormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
   public lazer_contracts: Record<
@@ -161,6 +170,8 @@ export class Store {
     contracts.push(...Object.values(this.wormhole_contracts));
     contracts.push(...Object.values(this.executor_contracts));
     contracts.push(...Object.values(this.lazer_contracts));
+    contracts.push(...Object.values(this.svm_price_feed_contracts));
+    contracts.push(...Object.values(this.svm_wormhole_contracts));
     for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -226,6 +237,8 @@ export class Store {
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
       [SolanaLazerContract.type]: SolanaLazerContract,
+      [SvmPriceFeedContract.type]: SvmPriceFeedContract,
+      [SvmWormholeContract.type]: SvmWormholeContract,
       [StellarExecutorContract.type]: StellarExecutorContract,
       [CardanoLazerContract.type]: CardanoLazerContract,
     };
@@ -245,12 +258,18 @@ export class Store {
           this.entropy_contracts[chainContract.getId()] ||
           this.wormhole_contracts[chainContract.getId()] ||
           this.executor_contracts[chainContract.getId()] ||
-          this.lazer_contracts[chainContract.getId()]
+          this.lazer_contracts[chainContract.getId()] ||
+          this.svm_price_feed_contracts[chainContract.getId()] ||
+          this.svm_wormhole_contracts[chainContract.getId()]
         )
           throw new Error(
             `Multiple contracts with id ${chainContract.getId()} found`,
           );
-        if (chainContract instanceof EvmEntropyContract) {
+        if (chainContract instanceof SvmPriceFeedContract) {
+          this.svm_price_feed_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof SvmWormholeContract) {
+          this.svm_wormhole_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
         } else if (
           chainContract instanceof EvmExecutorContract ||

@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { readFileSync } from "node:fs";
 
 import {
@@ -24,6 +19,7 @@ import {
 import type {
   ParsedInstruction,
   PartiallyDecodedInstruction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   Connection,
@@ -228,7 +224,7 @@ export class WormholeEmitter {
   }
 }
 
-export class WormholeMultisigProposal {
+export class MultisigProposal {
   constructor(
     public address: PublicKey,
     public squad: SquadsMeshInstance,
@@ -246,34 +242,44 @@ export class WormholeMultisigProposal {
   }
 
   /**
-   * Executes the proposal and returns the wormhole messages that were sent
-   * The proposal must be already approved.
+   * Executes the instructions of the proposal that have not run yet, one transaction each, and
+   * returns their signatures. The proposal must be already approved. Executing a proposal that
+   * has already run through does nothing and returns no signatures.
    */
-  async execute(): Promise<SubmittedWormholeMessage[]> {
+  async execute(): Promise<string[]> {
     const proposal = await this.squad.getTransaction(this.address);
-    const signatures = await executeProposal(
+    return await executeProposal(
       proposal,
       this.squad,
       this.cluster,
       this.squad.connection.commitment,
       {},
     );
-    const msgs: SubmittedWormholeMessage[] = [];
-    for (const signature of signatures) {
-      try {
-        msgs.push(
-          await SubmittedWormholeMessage.fromTransactionSignature(
-            signature,
-            this.cluster,
-          ),
-        );
-      } catch (error: unknown) {
-        if (!(error instanceof InvalidTransactionError)) throw error;
-      }
-    }
-    if (msgs.length > 0) return msgs;
-    throw new Error("No transactions with wormhole messages found");
   }
+}
+
+/**
+ * Picks out the wormhole messages emitted by the given transactions, ignoring the ones that did
+ * not emit any.
+ */
+export async function fetchSubmittedWormholeMessages(
+  signatures: string[],
+  cluster: PythCluster,
+): Promise<SubmittedWormholeMessage[]> {
+  const msgs: SubmittedWormholeMessage[] = [];
+  for (const signature of signatures) {
+    try {
+      msgs.push(
+        await SubmittedWormholeMessage.fromTransactionSignature(
+          signature,
+          cluster,
+        ),
+      );
+    } catch (error: unknown) {
+      if (!(error instanceof InvalidTransactionError)) throw error;
+    }
+  }
+  return msgs;
 }
 
 /**
@@ -350,8 +356,7 @@ export class Vault extends Storable {
    * Gets the emitter address of the vault
    * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
-  public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
+  public getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const mesh = getSquadsMesh();
     const squad = mesh.endpoint(
       registry(this.cluster),
@@ -368,12 +373,18 @@ export class Vault extends Storable {
    */
   public async getLastSequenceNumber(): Promise<number> {
     const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
-    const emitter = await this.getEmitter();
+    const emitter = this.getEmitter();
     const response = await fetch(
       `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`,
     );
-    const { data } = (await response.json()) as { data: any[] };
-    return data[0].sequence;
+    const { data } = (await response.json()) as {
+      data?: { sequence: number }[];
+    };
+    const [latest] = data ?? [];
+    if (!latest) {
+      throw new Error(`No wormhole messages found for ${emitter.toBase58()}`);
+    }
+    return latest.sequence;
   }
 
   /**
@@ -387,7 +398,7 @@ export class Vault extends Storable {
     payloads: Buffer[],
     proposalAddress?: PublicKey,
     priorityFeeConfig: PriorityFeeConfig = {},
-  ): Promise<WormholeMultisigProposal> {
+  ): Promise<MultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
       squad.wallet as Wallet,
@@ -402,7 +413,37 @@ export class Vault extends Storable {
         proposalAddress,
         priorityFeeConfig,
       );
-    return new WormholeMultisigProposal(txAccount, squad, this.cluster);
+    return new MultisigProposal(txAccount, squad, this.cluster);
+  }
+
+  /**
+   * Proposes running `instructions` on the vault's own cluster, signed by the vault authority.
+   * Requires a wallet to be connected to the vault.
+   *
+   * Instructions targeting another chain cannot go through here — they have to be wrapped in a
+   * wormhole message with {@link proposeWormholeMessage} so the remote executor can replay them.
+   *
+   * @param instructions - the instructions the vault authority should sign
+   */
+  public async proposeInstructions(
+    instructions: TransactionInstruction[],
+    priorityFeeConfig: PriorityFeeConfig = {},
+  ): Promise<MultisigProposal[]> {
+    const squad = this.getSquadOrThrow();
+    const multisigVault = new MultisigVault(
+      squad.wallet as Wallet,
+      this.cluster,
+      squad,
+      this.key,
+    );
+    const txAccounts = await multisigVault.proposeInstructions(
+      instructions,
+      this.cluster,
+      priorityFeeConfig,
+    );
+    return txAccounts.map(
+      (txAccount) => new MultisigProposal(txAccount, squad, this.cluster),
+    );
   }
 }
 
@@ -411,8 +452,7 @@ export class Vault extends Storable {
  * This wallet can be used to connect to a vault and submit proposals
  * @param walletPath - - path to the wallet file
  */
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function loadHotWallet(walletPath: string): Promise<Wallet> {
+export function loadHotWallet(walletPath: string): Wallet {
   return new Wallet(
     Keypair.fromSecretKey(
       Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii"))),
