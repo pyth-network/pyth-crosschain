@@ -53,5 +53,7 @@ jobs:
         run: cargo-test-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run sdk tests
-        run: cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
+        run: |
+          cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
+          cargo test --package pyth-solana-receiver-cli ${{ matrix.features }}
         if: success() || failure()
