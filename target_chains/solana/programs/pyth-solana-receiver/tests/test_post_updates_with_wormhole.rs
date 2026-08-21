@@ -15,7 +15,7 @@ use {
     pythnet_sdk::{
         messages::Message,
         test_utils::{
-            create_accumulator_message, create_dummy_price_feed_message, dummy_guardians_addresses,
+            dummy_guardians_addresses,
             trim_vaa_signatures,
         },
         wire::from_slice,
