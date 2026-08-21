@@ -178,14 +178,6 @@ export class SvmPriceFeedContract extends Storable {
     return new PublicKey(this.address);
   }
 
-  /**
-   * The key the BPF upgradeable loader lets upgrade this program, or `undefined`
-   * if the program has been made immutable.
-   */
-  getUpgradeAuthority(): Promise<PublicKey | undefined> {
-    return getUpgradeAuthority(this.chain, this.getProgramId());
-  }
-
   /** Address of the singleton `Config` PDA (`b"config"`). */
   getConfigAddress(): PublicKey {
     return PublicKey.findProgramAddressSync(

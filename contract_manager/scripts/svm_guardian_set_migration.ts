@@ -12,7 +12,12 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import { DEFAULT_PUSH_ORACLE_PROGRAM_ID } from "@pythnetwork/pyth-solana-receiver";
+import type { Wallet } from "@coral-xyz/anchor";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import {
+  DEFAULT_PUSH_ORACLE_PROGRAM_ID,
+  PythSolanaReceiver,
+} from "@pythnetwork/pyth-solana-receiver";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   BPF_UPGRADABLE_LOADER,
@@ -217,14 +222,14 @@ export async function describeChainState(
   if (chain.isRemote) {
     lines.push(
       `remote executor ${REMOTE_EXECUTOR_ADDRESS.toBase58()}`,
-      `  upgrade authority: ${describeUpgradeAuthority(await getUpgradeAuthority(chain, REMOTE_EXECUTOR_ADDRESS))}`,
+      `  upgrade authority: ${await describeUpgradeAuthority(chain, REMOTE_EXECUTOR_ADDRESS)}`,
     );
   }
 
   const receiverConfig = await receiver.getConfig();
   lines.push(
     `price receiver ${receiver.getProgramId().toBase58()}`,
-    `  upgrade authority: ${describeUpgradeAuthority(await receiver.getUpgradeAuthority())}`,
+    `  upgrade authority: ${await describeUpgradeAuthority(chain, receiver.getProgramId())}`,
     `  config ${receiver.getConfigAddress().toBase58()}`,
     `    governance authority: ${receiverConfig.governanceAuthority.toBase58()}`,
     `    target governance authority: ${receiverConfig.targetGovernanceAuthority?.toBase58() ?? "none"}`,
@@ -236,14 +241,14 @@ export async function describeChainState(
 
   lines.push(
     `push oracle ${DEFAULT_PUSH_ORACLE_PROGRAM_ID.toBase58()}`,
-    `  upgrade authority: ${describeUpgradeAuthority(await getUpgradeAuthority(chain, DEFAULT_PUSH_ORACLE_PROGRAM_ID))}`,
+    `  upgrade authority: ${await describeUpgradeAuthority(chain, DEFAULT_PUSH_ORACLE_PROGRAM_ID)}`,
   );
 
   const bridgeConfig = await wormhole.getConfig();
   const guardianSets = await wormhole.getGuardianSets();
   lines.push(
     `core bridge ${wormhole.getProgramId().toBase58()}`,
-    `  upgrade authority: ${describeUpgradeAuthority(await wormhole.getUpgradeAuthority())}`,
+    `  upgrade authority: ${await describeUpgradeAuthority(chain, wormhole.getProgramId())}`,
     `  config ${wormhole.getConfigAddress().toBase58()}`,
     `    guardian set index: ${bridgeConfig.guardianSetIndex}`,
     `    guardian set ttl: ${bridgeConfig.guardianSetTtlSeconds} seconds`,
@@ -271,8 +276,20 @@ export async function describeChainState(
   return lines.join("\n");
 }
 
-function describeUpgradeAuthority(authority: PublicKey | undefined): string {
-  return authority?.toBase58() ?? "none (the program is immutable)";
+/**
+ * Nothing in the dump is worth failing a run over, so a program that turns out not to be deployed
+ * on this chain — or an RPC that will not answer for it — is reported in place of the key.
+ */
+async function describeUpgradeAuthority(
+  chain: SvmChain,
+  programId: PublicKey,
+): Promise<string> {
+  try {
+    const authority = await getUpgradeAuthority(chain, programId);
+    return authority?.toBase58() ?? "none (the program is immutable)";
+  } catch (error) {
+    return `unavailable: ${error instanceof Error ? error.message : error}`;
+  }
 }
 
 function describeList(values: string[]): string {
@@ -281,6 +298,79 @@ function describeList(values: string[]): string {
 
 function describeTimestamp(unixSeconds: number): string {
   return `${unixSeconds} (${new Date(unixSeconds * 1000).toISOString()})`;
+}
+
+/** How stale a relayed price update may be for the relay to count as a success. */
+const MAX_PRICE_AGE_SECONDS = 120;
+
+/**
+ * Relays one price update from `hermes` through `target`'s receiver and reads the resulting
+ * `PriceUpdateV2` back, returning a one-line description of it.
+ *
+ * This is the only check that exercises everything the migration touches at once — the guardians'
+ * signatures, the core bridge's quorum, and the receiver's data source — so it is worth running
+ * both before the migration, against the Hermes and emitter that are live today, and after it,
+ * against the Pyth Pro ones.
+ */
+export async function relayPriceUpdate(
+  target: SvmMigrationTarget,
+  wallet: Wallet,
+  hermes: { url: string; token: string | undefined; feedId: string },
+): Promise<string> {
+  const chainId = target.chain.getId();
+  const client = new HermesClient(hermes.url, {
+    ...(hermes.token === undefined ? {} : { accessToken: hermes.token }),
+  });
+  const [updateData] = (
+    await client.getLatestPriceUpdates([hermes.feedId], { encoding: "base64" })
+  ).binary.data;
+  if (!updateData) {
+    throw new Error(`Hermes returned no update for ${hermes.feedId}`);
+  }
+
+  const receiver = new PythSolanaReceiver({
+    connection: target.chain.getConnection(),
+    receiverProgramId: target.receiver.getProgramId(),
+    wallet,
+    wormholeProgramId: target.wormhole.getProgramId(),
+  });
+  // The update account is read back after the fact, so it cannot be closed in the same batch.
+  const builder = receiver.newTransactionBuilder({
+    closeUpdateAccounts: false,
+  });
+  await builder.addPostPriceUpdates([updateData]);
+  const priceUpdateAccount = builder.getPriceUpdateAccount(hermes.feedId);
+  await receiver.provider.sendAll(await builder.buildVersionedTransactions({}));
+
+  const update = await receiver.fetchPriceUpdateAccount(priceUpdateAccount);
+  if (!update) {
+    throw new Error(
+      `${chainId}: ${priceUpdateAccount.toBase58()} was not written`,
+    );
+  }
+  const feedId = "0x" + Buffer.from(update.priceMessage.feedId).toString("hex");
+  if (feedId !== hermes.feedId) {
+    throw new Error(
+      `${chainId}: relayed update is for ${feedId}, expected ${hermes.feedId}`,
+    );
+  }
+  const publishTime = update.priceMessage.publishTime.toNumber();
+  const age = Math.floor(Date.now() / 1000) - publishTime;
+  if (age > MAX_PRICE_AGE_SECONDS) {
+    throw new Error(
+      `${chainId}: relayed update was published ${age}s ago, which is not a fresh price`,
+    );
+  }
+
+  const closeBuilder = receiver.newTransactionBuilder({
+    closeUpdateAccounts: false,
+  });
+  closeBuilder.addInstructions(builder.closeInstructions);
+  await receiver.provider.sendAll(
+    await closeBuilder.buildVersionedTransactions({}),
+  );
+
+  return `relayed ${feedId} published at ${publishTime} (${age}s ago), verification ${Object.keys(update.verificationLevel).join()}`;
 }
 
 /**
