@@ -4,7 +4,7 @@ use crate::{
         instruction::EmptyArgs,
         utils::{AccountVariant, LegacyAnchorized},
     },
-    state::{Config, GuardianSet, BLACKLISTED_GUARDIANS},
+    state::{Config, GuardianSet, LEGACY_GUARDIANS},
     types::Timestamp,
     utils::{self, vaa::VaaAccount},
 };
@@ -142,7 +142,7 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
     // We disallow guardian pubkeys that are in the blacklist.
     for guardian in keys.iter() {
         require!(
-            !BLACKLISTED_GUARDIANS.contains(guardian),
+            !LEGACY_GUARDIANS.contains(guardian),
             CoreBridgeError::GuardianBlacklisted
         );
     }

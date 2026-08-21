@@ -2,7 +2,7 @@ use crate::{
     error::CoreBridgeError,
     legacy::instruction::EmptyArgs,
     sdk::legacy::AccountVariant,
-    state::{GuardianSet, BLACKLISTED_GUARDIANS},
+    state::{GuardianSet, LEGACY_GUARDIANS},
 };
 use anchor_lang::prelude::*;
 
@@ -40,7 +40,7 @@ fn close_guardian_set(ctx: Context<CloseGuardianSet>, _args: EmptyArgs) -> Resul
             .inner()
             .keys
             .iter()
-            .any(|key| BLACKLISTED_GUARDIANS.contains(key)),
+            .any(|key| LEGACY_GUARDIANS.contains(key)),
         CoreBridgeError::NoBlacklistedGuardians
     );
     Ok(())

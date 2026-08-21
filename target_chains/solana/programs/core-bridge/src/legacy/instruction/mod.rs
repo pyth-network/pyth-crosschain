@@ -42,7 +42,7 @@ pub enum LegacyInstruction {
     /// kept as a placeholder so the remaining variants keep their original serialized
     /// discriminants.
     _RemovedUpdateGuardianSetTtl,
-    /// Close a guardian set containing a blacklisted guardian.
+    /// Close a guardian set containing a legacy guardian.
     CloseGuardianSet,
 }
 
