@@ -1819,22 +1819,20 @@ export class SvmChain extends Chain {
   }
 
   /**
-   * Returns the payload of the wormhole message that makes a remote chain run `instructions`.
+   * Returns the payload of the wormhole message that makes a remote chain run `instruction`.
    *
    * A vault cannot sign for accounts on a chain it does not live on. Instead it emits this
-   * payload, and the remote executor on the target chain replays the instructions it carries,
-   * signing them with the PDA it derives from the vault's emitter address. Chains the vault lives
+   * payload, and the remote executor on the target chain replays the instruction it carries,
+   * signing it with the PDA it derives from the vault's emitter address. Chains the vault lives
    * on have no such indirection — the multisig signs their instructions directly.
    */
-  generateExecutePostedVaaPayload(
-    instructions: TransactionInstruction[],
-  ): Buffer {
+  generateExecutePostedVaaPayload(instruction: TransactionInstruction): Buffer {
     if (!this.isRemote) {
       throw new Error(
         `${this.id} is not a remote chain; its instructions are proposed to the vault directly`,
       );
     }
-    return new ExecutePostedVaa(this.wormholeChainName, instructions).encode();
+    return new ExecutePostedVaa(this.wormholeChainName, [instruction]).encode();
   }
 
   getConnection(): Connection {
