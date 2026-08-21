@@ -14,10 +14,7 @@ use {
     },
     pythnet_sdk::{
         messages::Message,
-        test_utils::{
-            dummy_guardians_addresses,
-            trim_vaa_signatures,
-        },
+        test_utils::{dummy_guardians_addresses, trim_vaa_signatures},
         wire::from_slice,
     },
     solana_program::instruction::Instruction,
