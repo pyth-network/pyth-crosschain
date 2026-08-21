@@ -18,6 +18,7 @@ import {
   buildMigrationInstructions,
   checkAuthorities,
   checkUpgradeBuffer,
+  describeChainState,
   getVaultOrThrow,
   loadMigrationConfig,
   MIGRATION_OPTIONS,
@@ -61,10 +62,13 @@ async function main() {
   for (const target of targets) {
     const chainId = target.chain.getId();
     console.log(`\n=== ${chainId} (governed by ${target.signer.toBase58()})`);
+    console.log(await describeChainState(target));
+
     await checkAuthorities(target);
     await checkUpgradeBuffer(target, state);
 
     const instructions = buildMigrationInstructions(target, state);
+    console.log("instructions to propose");
     for (const instruction of instructions) {
       console.log(
         `  ${instruction.programId.toBase58()} data=${instruction.data.toString("hex")}`,
@@ -75,12 +79,6 @@ async function main() {
         );
       }
     }
-
-    // Closing these is the permissionless half of the migration, which the execute script runs.
-    const guardianSets = await target.wormhole.getGuardianSets();
-    console.log(
-      `  guardian sets to close afterwards: ${guardianSets.map((set) => set.index).join(", ")}`,
-    );
 
     if (target.chain.isRemote) {
       remotePayloads.push(
