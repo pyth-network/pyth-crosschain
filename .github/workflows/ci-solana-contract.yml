@@ -55,5 +55,5 @@ jobs:
       - name: Run sdk tests
         run: |
           cargo test --locked --package pyth-solana-receiver-sdk ${{ matrix.features }}
-          cargo test --locked --package pyth-solana-receiver-cli ${{ matrix.features }}
+          cargo test --locked --package pyth-solana-receiver-cli
         if: success() || failure()
