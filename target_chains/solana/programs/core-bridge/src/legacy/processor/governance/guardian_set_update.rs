@@ -140,6 +140,7 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
     require!(!keys.is_empty(), CoreBridgeError::ZeroGuardians);
 
     // We disallow guardian pubkeys that are in the legacy guardians list.
+    // This check is actually unnecessary because the guardian set updates that introduce these guardians can't be replayed (because they already have been "claimed").
     for guardian in keys.iter() {
         require!(
             !LEGACY_GUARDIANS.contains(guardian),
