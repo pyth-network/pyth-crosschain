@@ -33,6 +33,7 @@ rand = { version = "0.8.5", optional = true }
 
 [dev-dependencies]
 cfg-if = { workspace = true }
+hex = { workspace = true }
 solana-sdk = { workspace = true }
 solana-program-test = { workspace = true }
 tokio = { workspace = true }
