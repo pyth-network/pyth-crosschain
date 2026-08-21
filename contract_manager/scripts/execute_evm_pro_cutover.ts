@@ -55,6 +55,7 @@ import {
   isProDeploymentType,
   MULTICALL3_ADDRESS,
   sameDataSourceSet,
+  selectGovernedContracts,
   VAULT_BY_DEPLOYMENT_TYPE,
 } from "./pro_cutover";
 import { actionNameOf, reviewProposedActions } from "./proposal_review";
@@ -649,7 +650,13 @@ async function main() {
       console.log("  no cutover VAAs in this range for this chain, skipping");
       continue;
     }
-    for (const contract of findLegacyPriceFeedContracts(chain)) {
+    // Only proxies sharing this deployment type's governance emitter can execute these VAAs.
+    const { governed, skipped } = await selectGovernedContracts(
+      findLegacyPriceFeedContracts(chain),
+      deploymentType,
+    );
+    for (const message of skipped) console.log(`  - skipping ${message}`);
+    for (const contract of governed) {
       try {
         await cutoverProxy(
           contract,

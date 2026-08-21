@@ -58,10 +58,20 @@ export type CutoverPreflight = {
   /** Every legacy proxy the store knows about on this chain, readable or not. */
   legacyContracts: EvmPriceFeedContract[];
   /**
-   * The state of each legacy proxy that could be read. Shorter than `legacyContracts` when a read
-   * failed, in which case a blocker says so.
+   * The state of each legacy proxy this deployment type governs and that could be read. Shorter
+   * than `legacyContracts` when a read failed, in which case a blocker says so, or when a proxy
+   * belongs to another governance lineage, in which case it is in `outOfScopeProxies`.
    */
   legacyProxies: LegacyProxyState[];
+  /**
+   * Proxies on this chain governed by a different emitter.
+   *
+   * They are reported rather than blocked. Their governance rejects the VAAs this cutover
+   * produces, so they provably cannot be affected by it and are simply not ours to migrate. One
+   * chain can host both a `stable` and a `beta` lineage, and each is cut over by the deployment
+   * type that shares its governance emitter.
+   */
+  outOfScopeProxies: LegacyProxyState[];
   /** The Pro receiver from the store, or undefined when one still has to be deployed. */
   proWormhole: EvmWormholeContract | undefined;
   /** Conditions that make a cutover proposal unsafe. A non-empty list means skip this chain. */
@@ -118,6 +128,47 @@ export function findLegacyPriceFeedContracts(
 }
 
 /**
+ * Narrows a chain's legacy proxies to the ones this deployment type's governance emitter reaches.
+ *
+ * One chain can host more than one governance lineage, typically a `stable` deployment alongside
+ * a `beta` one. Each is cut over by the deployment type sharing its emitter, and the other
+ * lineage's proxies reject these VAAs outright, so they are skipped instead of attempted.
+ * @param {EvmPriceFeedContract[]} contracts The chain's legacy proxies.
+ * @param {ProDeploymentType} deploymentType The Pro deployment being cut over to.
+ * @returns The proxies to act on, and a line explaining every proxy skipped.
+ */
+export async function selectGovernedContracts(
+  contracts: EvmPriceFeedContract[],
+  deploymentType: ProDeploymentType,
+): Promise<{ governed: EvmPriceFeedContract[]; skipped: string[] }> {
+  const expected =
+    getDefaultDeploymentConfig(deploymentType).governanceDataSource;
+  const governed: EvmPriceFeedContract[] = [];
+  const skipped: string[] = [];
+  for (const contract of contracts) {
+    let governance: DataSource;
+    try {
+      governance = await contract.getGovernanceDataSource();
+    } catch (error) {
+      skipped.push(
+        `${contract.address}: could not read its governance data source, so it cannot be shown to ` +
+          `be in scope: ${describeError(error)}`,
+      );
+      continue;
+    }
+    if (sameDataSource(governance, expected)) {
+      governed.push(contract);
+      continue;
+    }
+    skipped.push(
+      `${contract.address}: governed by ${governance.emitterChain}:${governance.emitterAddress}, ` +
+        `not the ${deploymentType} emitter, so this cutover does not reach it`,
+    );
+  }
+  return { governed, skipped };
+}
+
+/**
  * Reads the on-chain state of one legacy proxy.
  * @throws {Error} if any of the reads fail, so the caller can turn an unreachable RPC into a
  * blocker for the chain rather than letting it abort a whole batch.
@@ -154,8 +205,8 @@ async function readLegacyProxyState(
  *
  * Blockers (skip the chain):
  * - no legacy proxy in the store
- * - a proxy whose governance data source differs from the Pro config, since this path keeps the
- *   governance emitter and cannot retarget it
+ * - a chain whose legacy proxies all belong to another governance lineage, so this deployment
+ *   type has nothing here to cut over
  * - a Pro receiver in the store whose guardian set is not the configured Pro router set, which
  *   would point the proxy at a verifier nobody can produce VAAs for
  * - an unreadable proxy, so a dead RPC is reported rather than silently skipped
@@ -165,6 +216,7 @@ async function readLegacyProxyState(
  * - proxies on one chain that disagree about how far the cutover has progressed
  * - a proxy left between VAA2 and VAA3, which cannot verify any price update until VAA3 lands
  * - no Pro receiver yet, which the deploy phase creates
+ * - proxies governed by another emitter, which this deployment type does not migrate
  * @param {EvmChain} chain The chain to check.
  * @param {ProDeploymentType} deploymentType The Pro deployment being cut over to.
  * @returns The preflight result for this chain.
@@ -196,6 +248,7 @@ export async function preflightChain(
   }
 
   const legacyProxies: LegacyProxyState[] = [];
+  const outOfScopeProxies: LegacyProxyState[] = [];
   for (const contract of contracts) {
     let state: LegacyProxyState;
     try {
@@ -210,18 +263,15 @@ export async function preflightChain(
       );
       continue;
     }
-    legacyProxies.push(state);
-
+    // A proxy governed by another emitter belongs to a different lineage. Its governance rejects
+    // the VAAs this cutover produces, so it is out of scope rather than a problem to report.
     if (
       !sameDataSource(state.governanceDataSource, expected.governanceDataSource)
     ) {
-      blockers.push(
-        `Price feed contract ${contract.address} has governance data source ` +
-          `${state.governanceDataSource.emitterChain}:${state.governanceDataSource.emitterAddress}, ` +
-          `expected ${expected.governanceDataSource.emitterChain}:${expected.governanceDataSource.emitterAddress}. ` +
-          `This cutover keeps the governance emitter and cannot retarget it.`,
-      );
+      outOfScopeProxies.push(state);
+      continue;
     }
+    legacyProxies.push(state);
 
     if (state.singleUpdateFeeInWei !== "0") {
       warnings.push(
@@ -236,6 +286,25 @@ export async function preflightChain(
           `${state.wormholeAddress}. It cannot verify any price update until SetWormholeAddress lands.`,
       );
     }
+  }
+
+  if (
+    contracts.length > 0 &&
+    legacyProxies.length === 0 &&
+    blockers.length === 0
+  ) {
+    blockers.push(
+      `None of the ${contracts.length} legacy price feed contract(s) on this chain are governed by ` +
+        `${expected.governanceDataSource.emitterChain}:${expected.governanceDataSource.emitterAddress}, ` +
+        `the ${deploymentType} emitter. Nothing here for this deployment type to cut over.`,
+    );
+  }
+
+  if (outOfScopeProxies.length > 0) {
+    warnings.push(
+      `Not migrating ${outOfScopeProxies.map((proxy) => proxy.contract.address).join(", ")}: ` +
+        `governed by another emitter, so this ${deploymentType} cutover does not reach them.`,
+    );
   }
 
   const migrated = legacyProxies.filter((proxy) => proxy.usesProWormhole);
@@ -257,6 +326,7 @@ export async function preflightChain(
     chain,
     legacyContracts: contracts,
     legacyProxies,
+    outOfScopeProxies,
     proWormhole,
     warnings,
   };
@@ -376,6 +446,7 @@ function preflightChainSafe(
     chain,
     legacyContracts: findLegacyPriceFeedContracts(chain),
     legacyProxies: [],
+    outOfScopeProxies: [],
     proWormhole: undefined,
     warnings: [],
   });

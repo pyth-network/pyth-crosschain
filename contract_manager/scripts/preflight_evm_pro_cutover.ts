@@ -51,7 +51,8 @@ function printChainDetail(result: CutoverPreflight, verbose: boolean): void {
       `  pro wormhole: ${result.proWormhole?.address ?? "none in store"}`,
     );
     console.log(
-      `  legacy proxies in store: ${result.legacyContracts.length}, read: ${result.legacyProxies.length}`,
+      `  legacy proxies in store: ${result.legacyContracts.length}, ` +
+        `in scope: ${result.legacyProxies.length}, other lineage: ${result.outOfScopeProxies.length}`,
     );
     for (const proxy of result.legacyProxies) {
       console.log(
@@ -60,6 +61,13 @@ function printChainDetail(result: CutoverPreflight, verbose: boolean): void {
           ` proWormhole=${proxy.usesProWormhole}` +
           ` proDataSources=${proxy.usesProDataSources}` +
           ` fee=${proxy.singleUpdateFeeInWei}`,
+      );
+    }
+    for (const proxy of result.outOfScopeProxies) {
+      console.log(
+        `  proxy ${proxy.contract.address} governed by ` +
+          `${proxy.governanceDataSource.emitterChain}:${proxy.governanceDataSource.emitterAddress}` +
+          ` (other lineage, not migrated by this deployment type)`,
       );
     }
   }

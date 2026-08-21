@@ -7,91 +7,109 @@
   {
     "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
     "chain": "ethereum",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "polygon",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9",
     "chain": "aurora",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "fantom",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "optimism",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "arbitrum",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "gnosis",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65",
     "chain": "polygon_zkevm",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "conflux_espace",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594",
     "chain": "bsc",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "kava",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
     "chain": "avalanche",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "canto",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "linea",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5",
     "chain": "neon",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "mantle",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16",
     "chain": "meter",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
     "chain": "kcc",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -102,81 +120,97 @@
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "celo",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "wemix",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
     "chain": "base",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
     "chain": "cronos",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
     "chain": "zksync",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "ronin",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "horizen_eon",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "shimmer",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     "chain": "boba",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "manta",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "scroll",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "chiliz",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "coredao",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "viction",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     "chain": "arbitrum_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "chain": "fuji",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -192,21 +226,25 @@
   {
     "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
     "chain": "aurora_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "chiado",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
     "chain": "kava_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
     "chain": "conflux_espace_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -217,6 +255,7 @@
   {
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "bsc_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -227,6 +266,7 @@
   {
     "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
     "chain": "kcc_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -237,6 +277,7 @@
   {
     "address": "0x5a71C07a0588074443545eE0c08fb0375564c3E4",
     "chain": "meter_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -262,6 +303,7 @@
   {
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "chain": "chiliz_spicy",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -277,11 +319,13 @@
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "cronos_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "chain": "wemix_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -297,11 +341,13 @@
   {
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "chain": "sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
     "chain": "sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -317,6 +363,7 @@
   {
     "address": "0x0708325268dF9F66270F1401206434524814508b",
     "chain": "zetachain_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -327,36 +374,43 @@
   {
     "address": "0x0708325268dF9F66270F1401206434524814508b",
     "chain": "optimism_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "mode",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "mode_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "bttc_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "bttc",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x056f829183Ec806A78c26C98961678c24faB71af",
     "chain": "zksync_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "base_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -377,26 +431,31 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "zkfair",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "filecoin_calibration",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "filecoin",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "zetachain",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
     "chain": "lightlink_pegasus_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -407,6 +466,7 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "lightlink_phoenix",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -427,16 +487,19 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "hedera_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "hedera",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "blast",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -447,21 +510,25 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "merlin_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "mantle_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "merlin",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "manta_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -497,6 +564,7 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "linea_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -522,16 +590,19 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "polygon_amoy",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "taiko_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "sei_evm_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -542,16 +613,19 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "opbnb",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "gravity",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
     "chain": "opbnb_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -567,11 +641,13 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "etherlink",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "sei_evm_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -582,6 +658,7 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "kaia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -602,11 +679,13 @@
   {
     "address": "0x056f829183Ec806A78c26C98961678c24faB71af",
     "chain": "cronos_zkevm_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6",
     "chain": "cronos_zkevm_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -617,6 +696,7 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "flow_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -627,31 +707,37 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "apechain_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "soneium_minato_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "apechain_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "flow_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486",
     "chain": "abstract_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "unichain_sepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -662,6 +748,7 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "skate",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -672,11 +759,13 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "morph",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "kraken_ink_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -687,16 +776,19 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "superseed_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "superseed_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "hemi_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -712,11 +804,13 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "unichain",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
     "chain": "abstract",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -732,6 +826,7 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "fantom_sonic_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -742,51 +837,61 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "soneium",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "kraken_ink_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "coredao_testnet_v2",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "berachain_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
     "chain": "story",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
     "chain": "bittensor_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "hyperevm",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "bittensor_mainnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "story_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "berachain_bepolia",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -797,6 +902,7 @@
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "worldchain",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -807,16 +913,19 @@
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
     "chain": "swellchain",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "worldchain_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "hemi_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
@@ -827,337 +936,361 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "mezo_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "mezo",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
     "chain": "injective_evm_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "camp_network",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "fluent_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "monad",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "zero_gravity",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "giwa_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "plasma",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "sonic_evm_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "injective_evm",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "etherlink_new_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "hoodi",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "taiko_hoodi",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "morph_hoodi",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "orange",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "celo_sepolia_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "monad_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "arc_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
     "chain": "tempo_testnet",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "tempo",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "megaeth",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "chain": "iota",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "fluent",
+    "deploymentType": "stable",
     "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xBb86bCc951A62DF86826219d9251Ee05F2c1e286",
     "chain": "sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x6b81963B9302091910852337d0071aECe9c0775c",
     "chain": "abstract",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xcc17C35f739da767C231A34a17986876C56AaCe4",
     "chain": "abstract_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xe15357fB7ab31E091583b9c4b4135BB2f176f38e",
     "chain": "arbitrum",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x0B73614636C855Bf23F342F307FB981A3e47f42B",
     "chain": "arbitrum_sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xbC16aee60f64864882BC6C4E428e148Fc0E272F5",
     "chain": "base",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x5f52e4DBEA21f5b23523B6e20d50c29ae0a4EB83",
     "chain": "base_sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2F968931d1B7326d2875E9500980211dcc535eE5",
     "chain": "berachain_mainnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xFfb6DE2684C1259Bc02E1bc66625de1c80fE708C",
     "chain": "berachain_bepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x99fA5f405b795cA03F2AE47Cd48FEd22029892a2",
     "chain": "hyperevm_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x298B2f0ae8Efa7f90D845da02ef2E3a88A9BbC02",
     "chain": "hyperevm",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xed7701a8649d202E52CC3Fdf2ba07AEE745a5f95",
     "chain": "linea_sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x986c00a290D1767651723c7cF9e5bD7bD745f6f9",
     "chain": "linea",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
     "chain": "monad_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
     "chain": "monad",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xa78951b6bADC9F4740f6f456E9144705D5C5E4B2",
     "chain": "optimism",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xEAef40A4d9b04B511e11DdDc1c16037Da49E3e35",
     "chain": "optimism_sepolia",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x5c470034117339f4426cc1A005543002D333ce75",
     "chain": "soneium_minato_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xC0F566304A44d27c40d4F81D629520Ac4eD1850E",
     "chain": "soneium",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x0402833A00e734821f74fA4bbdeD2F1759540519",
     "chain": "sonic_evm_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x2b9Bb0042dB2F30650d73BB83CBAE584807d2FE4",
     "chain": "fantom_sonic_mainnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x14b9932cc9AC8Ee03301665a8644A753f46D8552",
     "chain": "ethereum",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
     "chain": "injective_inevm",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x4821932D0CDd71225A6d914706A621e0389D7061",
     "chain": "injective_evm",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
     "chain": "cronos",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
     "chain": "mezo",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x933aDeC2C7624b11E4B2b80ACE15BF9a71a31315",
     "chain": "mezo_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xf77705A55aA859A80f60b8d8C4A03D7f69D2D7Ba",
     "chain": "cronos_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
     "chain": "polygon",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x0708325268dF9F66270F1401206434524814508b",
     "chain": "polygon_amoy",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
     "chain": "robinhood",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
     "chain": "robinhood_testnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
     "chain": "bsc",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
     "chain": "flow_mainnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x9DF02366A266D79DA5E978aDBEe8B8502117ee1a",
     "chain": "etherlink",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   },
   {
     "address": "0x16392B49EA47D4A21bb17F69aA9E7aD570284838",
     "chain": "sei_evm_mainnet",
-    "type": "EvmPriceFeedContract",
-    "deploymentType": "pro-compatible-production"
+    "deploymentType": "pro-compatible-production",
+    "type": "EvmPriceFeedContract"
   }
 ]
