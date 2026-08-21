@@ -35,18 +35,23 @@ print('Topology: %d pushers, %d validators' % (NUM_PUSHERS, NUM_VALIDATORS))
 # Create namespace
 namespace_create('lazer-pusher-dev')
 
-# Build the container image (context is apps/pyth-lazer-pusher/)
+# Build the container image (context is the repo root, so the build sees the
+# workspace Cargo.lock and can build with --locked)
 docker_build(
     REGISTRY + '/pyth-lazer-pusher',
-    '../..',
+    '../../../..',
     dockerfile='Dockerfile.dev',
     only=[
-        'pusher-utils',
-        'pusher-base',
-        'websocket-delivery',
-        'bulk-trade-pusher',
-        'mock',
-        'bulk-trade-cli',
+        'Cargo.toml',
+        'Cargo.lock',
+        'apps/argus',
+        'apps/fortuna',
+        'apps/hermes/client/rust',
+        'apps/pyth-lazer-pusher',
+        'apps/quorum',
+        'lazer/contracts/cardano/cli/rust',
+        'pythnet/pythnet_sdk',
+        'target_chains/starknet/tools/test_vaas',
     ],
 )
 

@@ -5,7 +5,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 # Every TLS-touching dependency is pinned to rustls, so no OpenSSL headers are
 # needed at build time (unlike binance-recorder, whose SDK pulls native-tls).
-RUN cargo build --release
+RUN cargo build --locked --release
 
 FROM debian:bookworm-slim
 

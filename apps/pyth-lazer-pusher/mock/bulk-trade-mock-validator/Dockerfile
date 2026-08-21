@@ -1,8 +1,8 @@
 # Bulk Trade Mock Validator - Production Build
-# Build from repo root: docker build -f mock/bulk-trade-mock-validator/Dockerfile .
+# Build from repo root: docker build -f apps/pyth-lazer-pusher/mock/bulk-trade-mock-validator/Dockerfile .
 
 FROM rust:1.91.1 AS chef
-RUN cargo install cargo-chef@0.1.73
+RUN cargo install cargo-chef@0.1.73 --locked
 WORKDIR /src
 
 FROM chef AS planner

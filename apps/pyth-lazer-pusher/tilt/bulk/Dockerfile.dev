@@ -1,27 +1,29 @@
 # Development Dockerfile - builds ALL binaries for local dev with Tilt
 # For production, use per-crate Dockerfiles (e.g., bulk-trade-pusher/Dockerfile)
 #
-# Build context should be apps/pyth-lazer-pusher/
+# Build context should be the repo root
 
 FROM rust:1.88 AS builder
 
 WORKDIR /src
 
-# Copy source
-COPY pusher-utils pusher-utils
-COPY pusher-base pusher-base
-COPY websocket-delivery websocket-delivery
-COPY bulk-trade-pusher bulk-trade-pusher
-COPY mock mock
-COPY bulk-trade-cli bulk-trade-cli
-
-# Create workspace Cargo.toml on the fly (no Cargo.lock in context)
-RUN printf '[workspace]\nresolver = "2"\nmembers = ["pusher-utils", "pusher-base", "websocket-delivery", "bulk-trade-pusher", "bulk-trade-cli", "mock/bulk-trade-mock-validator"]\n\n[workspace.lints.rust]\nunsafe_code = "deny"\n\n[workspace.lints.clippy]\nunwrap_used = "warn"\nexpect_used = "warn"\npanic = "warn"\nindexing_slicing = "warn"\n' > Cargo.toml
+# `cargo build --locked` refuses to rewrite Cargo.lock, and cargo prunes entries
+# for absent workspace members, so every member listed in the root Cargo.toml has
+# to be in the context even though only the lazer pusher crates are built.
+COPY Cargo.toml Cargo.lock ./
+COPY apps/argus apps/argus
+COPY apps/fortuna apps/fortuna
+COPY apps/hermes/client/rust apps/hermes/client/rust
+COPY apps/pyth-lazer-pusher apps/pyth-lazer-pusher
+COPY apps/quorum apps/quorum
+COPY lazer/contracts/cardano/cli/rust lazer/contracts/cardano/cli/rust
+COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
+COPY target_chains/starknet/tools/test_vaas target_chains/starknet/tools/test_vaas
 
 # Build all binaries
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
-    cargo build && \
+    cargo build --locked -p bulk-pusher -p bulk-trade-mock-validator -p bulk-trade-cli && \
     cp target/debug/bulk-pusher /bulk-pusher && \
     cp target/debug/bulk-trade-mock-validator /bulk-trade-mock-validator && \
     cp target/debug/bulk-trade-cli /bulk-trade-cli
