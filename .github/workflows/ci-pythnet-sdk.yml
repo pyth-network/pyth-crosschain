@@ -20,8 +20,8 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy -p pythnet-sdk --all-targets -- --deny warnings
+        run: cargo clippy --locked -p pythnet-sdk --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
-        run: cargo test -p pythnet-sdk
+        run: cargo test --locked -p pythnet-sdk
         if: success() || failure()

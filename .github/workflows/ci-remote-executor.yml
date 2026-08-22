@@ -27,8 +27,10 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --all-targets -- --deny warnings
+        run: cargo clippy --locked --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
+        # No --locked: cargo-test-sbf rejects it as an option and routes
+        # anything after `--` to the test binary rather than to cargo.
         run: cargo test-sbf
         if: success() || failure()
