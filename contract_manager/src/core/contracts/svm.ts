@@ -1,3 +1,6 @@
+import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
+import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana/index.js";
+import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
 import { Wallet } from "@coral-xyz/anchor";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
@@ -12,22 +15,30 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  sendAndConfirmTransaction,
+  Transaction,
 } from "@solana/web3.js";
 import BN from "bn.js";
 import bs58 from "bs58";
 
-import type { KeyValueConfig } from "../base";
-import { Storable } from "../base";
+import type { KeyValueConfig, PriceFeed, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract } from "../base";
 import type { Chain } from "../chains";
 import { SvmChain } from "../chains";
+import { WormholeContract } from "./wormhole";
+
+// The shard of push oracle price feed accounts this reads and writes. Shard 0 is the one the
+// hermes-backed pushers keep up to date.
+const PUSH_ORACLE_SHARD_ID = 0;
 
 function getPrograms(
   chain: SvmChain,
   programIds: { receiverProgramId?: PublicKey; wormholeProgramId?: PublicKey },
+  wallet: Wallet = new Wallet(Keypair.generate()),
 ): PythSolanaReceiver {
   return new PythSolanaReceiver({
     connection: chain.getConnection(),
-    wallet: new Wallet(Keypair.generate()),
+    wallet,
     ...programIds,
   });
 }
@@ -61,7 +72,7 @@ export type SvmReceiverConfig = {
   minimumSignatures: number;
 };
 
-export class SvmPriceFeedContract extends Storable {
+export class SvmPriceFeedContract extends PriceFeedContract {
   static type = "SvmPriceFeedContract";
 
   constructor(
@@ -178,9 +189,95 @@ export class SvmPriceFeedContract extends Storable {
       .instruction();
   }
 
+  async getDataSources(): Promise<DataSource[]> {
+    return (await this.getConfig()).validDataSources;
+  }
+
+  async getBaseUpdateFee(): Promise<{ amount: string; denom?: string }> {
+    const { singleUpdateFeeInLamports } = await this.getConfig();
+    return { amount: singleUpdateFeeInLamports.toString(), denom: "lamports" };
+  }
+
+  async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
+    const account = await this.getReceiver().fetchPriceFeedAccount(
+      PUSH_ORACLE_SHARD_ID,
+      feedId,
+    );
+    if (!account) {
+      return undefined;
+    }
+    const message = account.priceMessage;
+    const expo = message.exponent.toString();
+    const publishTime = message.publishTime.toString();
+    return {
+      emaPrice: {
+        conf: message.emaConf.toString(),
+        expo,
+        price: message.emaPrice.toString(),
+        publishTime,
+      },
+      price: {
+        conf: message.conf.toString(),
+        expo,
+        price: message.price.toString(),
+        publishTime,
+      },
+    };
+  }
+
+  async executeUpdatePriceFeed(
+    senderPrivateKey: PrivateKey,
+    vaas: Buffer[],
+  ): Promise<TxResult> {
+    const receiver = this.getReceiver(
+      new Wallet(this.chain.getKeypair(senderPrivateKey)),
+    );
+    const builder = receiver.newTransactionBuilder({
+      closeUpdateAccounts: true,
+    });
+    await builder.addUpdatePriceFeed(
+      vaas.map((vaa) => vaa.toString("base64")),
+      PUSH_ORACLE_SHARD_ID,
+    );
+    const signatures = await receiver.provider.sendAll(
+      await builder.buildVersionedTransactions({}),
+    );
+    const id = signatures.at(-1);
+    if (id === undefined) {
+      throw new Error(`${this.getId()}: no price update to post`);
+    }
+    return { id, info: signatures };
+  }
+
+  // The receiver has no staleness threshold: how old an update may be is the consumer's call.
+  getValidTimePeriod(): Promise<number> {
+    throw new Error("Unsupported");
+  }
+
+  // The receiver's governance is a `governance_authority` key on its config rather than a VAA
+  // emitter, so none of the VAA-driven governance interface applies to it.
+  getGovernanceDataSource(): Promise<DataSource> {
+    throw new Error("Unsupported");
+  }
+
+  getLastExecutedGovernanceSequence(): Promise<number> {
+    throw new Error("Unsupported");
+  }
+
+  executeGovernanceInstruction(): Promise<TxResult> {
+    throw new Error("Unsupported");
+  }
+
+  private getReceiver(wallet?: Wallet): PythSolanaReceiver {
+    return getPrograms(
+      this.chain,
+      { receiverProgramId: this.getProgramId() },
+      wallet,
+    );
+  }
+
   private getProgram() {
-    return getPrograms(this.chain, { receiverProgramId: this.getProgramId() })
-      .receiver;
+    return this.getReceiver().receiver;
   }
 }
 
@@ -197,7 +294,7 @@ export type SvmGuardianSet = {
   expirationTime: number;
 };
 
-export class SvmWormholeContract extends Storable {
+export class SvmWormholeContract extends WormholeContract {
   static type = "SvmWormholeContract";
 
   constructor(
@@ -291,6 +388,90 @@ export class SvmWormholeContract extends Storable {
     return guardianSetIndex;
   }
 
+  // The chain id is a compile-time constant of the program rather than a field of its config, so
+  // there is nothing on chain to read it back from.
+  getChainId(): Promise<number> {
+    throw new Error("Unsupported");
+  }
+
+  async getGuardianSet(): Promise<string[]> {
+    const index = await this.getCurrentGuardianSetIndex();
+    const account = await this.chain
+      .getConnection()
+      .getAccountInfo(this.getGuardianSetAddress(index));
+    if (!account) {
+      throw new Error(
+        `Core bridge ${this.getId()} is on guardian set ${index}, which has already been closed`,
+      );
+    }
+    return decodeGuardianSet(this.getProgram(), account.data).keys;
+  }
+
+  async upgradeGuardianSets(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer,
+  ): Promise<TxResult> {
+    const connection = this.chain.getConnection();
+    const payer = this.chain.getKeypair(senderPrivateKey);
+    const programId = this.getProgramId();
+    const parsedVaa = parseVaa(vaa);
+    const postedVaa = derivePostedVaaKey(programId, parsedVaa.hash);
+    if (!(await connection.getAccountInfo(postedVaa))) {
+      await postVaaSolana(
+        connection,
+        signTransactionFactory(payer),
+        programId,
+        payer.publicKey,
+        vaa,
+      );
+    }
+
+    const currentIndex = await this.getCurrentGuardianSetIndex();
+    const sequence = Buffer.alloc(8);
+    sequence.writeBigUInt64BE(parsedVaa.sequence);
+    const emitterChain = Buffer.alloc(2);
+    emitterChain.writeUInt16BE(parsedVaa.emitterChain);
+    const claim = PublicKey.findProgramAddressSync(
+      [parsedVaa.emitterAddress, emitterChain, sequence],
+      programId,
+    )[0];
+
+    const id = await sendAndConfirmTransaction(
+      connection,
+      new Transaction().add({
+        data: Buffer.of(LEGACY_INSTRUCTION_GUARDIAN_SET_UPDATE),
+        keys: [
+          { isSigner: true, isWritable: true, pubkey: payer.publicKey },
+          {
+            isSigner: false,
+            isWritable: true,
+            pubkey: this.getConfigAddress(),
+          },
+          { isSigner: false, isWritable: false, pubkey: postedVaa },
+          { isSigner: false, isWritable: true, pubkey: claim },
+          {
+            isSigner: false,
+            isWritable: true,
+            pubkey: this.getGuardianSetAddress(currentIndex),
+          },
+          {
+            isSigner: false,
+            isWritable: true,
+            pubkey: this.getGuardianSetAddress(currentIndex + 1),
+          },
+          {
+            isSigner: false,
+            isWritable: false,
+            pubkey: SystemProgram.programId,
+          },
+        ],
+        programId,
+      }),
+      [payer],
+    );
+    return { id, info: { guardianSetIndex: currentIndex + 1 } };
+  }
+
   async getGuardianSets(): Promise<SvmGuardianSet[]> {
     const currentIndex = await this.getCurrentGuardianSetIndex();
     const indexes = Array.from({ length: currentIndex + 1 }, (_, i) => i);
@@ -375,6 +556,7 @@ export class SvmWormholeContract extends Storable {
 // Not read from the IDL: the published one is of the pre-migration program, whose enum stops at
 // `PostMessageUnreliable`. Removed variants keep placeholders, so these indices never shift.
 const LEGACY_INSTRUCTION_INITIALIZE = 0;
+const LEGACY_INSTRUCTION_GUARDIAN_SET_UPDATE = 6;
 const LEGACY_INSTRUCTION_CLOSE_GUARDIAN_SET = 10;
 
 // Guardian sets written by the original wormhole program carry no anchor discriminator, and

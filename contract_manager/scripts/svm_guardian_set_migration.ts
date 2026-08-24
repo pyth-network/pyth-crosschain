@@ -31,11 +31,11 @@ import { PublicKey } from "@solana/web3.js";
 import type { DeploymentType } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { SvmChain } from "../src/core/chains";
-import type {
+import {
+  getUpgradeAuthority,
   SvmPriceFeedContract,
   SvmWormholeContract,
 } from "../src/core/contracts";
-import { getUpgradeAuthority } from "../src/core/contracts";
 import type { Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -142,20 +142,30 @@ export function resolveMigrationTargets(
     const chain = DefaultStore.getChainOrThrow(entry.chain, SvmChain);
     return {
       chain,
-      receiver: findContract(DefaultStore.svm_price_feed_contracts, chain),
+      receiver: findContract(
+        DefaultStore.contracts,
+        SvmPriceFeedContract,
+        chain,
+      ),
       signer: chain.isRemote ? mapKey(vaultAuthority) : vaultAuthority,
       upgradeBuffer: new PublicKey(entry.upgradeBuffer),
-      wormhole: findContract(DefaultStore.svm_wormhole_contracts, chain),
+      wormhole: findContract(
+        DefaultStore.wormhole_contracts,
+        SvmWormholeContract,
+        chain,
+      ),
     };
   });
 }
 
-function findContract<T extends { getChain(): SvmChain; getId(): string }>(
-  contracts: Record<string, T>,
+function findContract<T extends SvmPriceFeedContract | SvmWormholeContract>(
+  contracts: Record<string, unknown>,
+  type: abstract new (...args: never[]) => T,
   chain: SvmChain,
 ): T {
   const matches = Object.values(contracts).filter(
-    (contract) => contract.getChain().getId() === chain.getId(),
+    (contract): contract is T =>
+      contract instanceof type && contract.getChain().getId() === chain.getId(),
   );
   const [match] = matches;
   if (!match || matches.length > 1) {
