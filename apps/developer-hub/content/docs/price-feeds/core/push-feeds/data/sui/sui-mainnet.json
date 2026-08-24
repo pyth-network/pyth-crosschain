@@ -270,7 +270,7 @@
       "time_difference": 10,
       "price_deviation": 0.5,
       "confidence_ratio": 100,
-      "pro_compatible_status": "coming_soon"
+      "pro_compatible_status": "available"
     },
     {
       "alias": "XAGM/USD.RR",
