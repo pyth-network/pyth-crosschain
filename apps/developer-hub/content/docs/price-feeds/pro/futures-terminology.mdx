@@ -1,10 +1,10 @@
 ---
 title: Futures Terminology
-description: Understanding futures contract ticker symbols and expiration dates on Pyth Pro
+description: Understanding futures feed ticker symbols and expiration dates on Pyth Pro
 slug: /price-feeds/pro/futures-terminology
 ---
 
-Pyth Pro provides price feeds for futures contracts across multiple asset classes including commodities and more. This guide explains how to interpret futures ticker symbols.
+Pyth Pro provides price feeds for futures feeds across multiple asset classes including commodities and more. This guide explains how to interpret futures ticker symbols.
 
 ## Ticker Symbol Format
 
@@ -21,7 +21,7 @@ For example: `WTIJ6` breaks down as:
 
 ## Month Codes
 
-Futures contracts use single-letter codes to represent expiration months:
+Futures feeds use single-letter codes to represent expiration months:
 
 | Code | Month     |
 | ---- | --------- |
@@ -51,7 +51,7 @@ The year is represented by the **last digit** of the year:
 
 ### Crude Oil (WTI)
 
-| Symbol | Contract | Expiration |
+| Symbol | feed | Expiration |
 | ------ | -------- | ---------- |
 | WTIJ6  | WTI April 2026 | Apr 21, 2026 |
 | WTIK6  | WTI May 2026 | May 19, 2026 |
@@ -59,7 +59,7 @@ The year is represented by the **last digit** of the year:
 
 ### Brent Crude Oil
 
-| Symbol  | Contract | Expiration |
+| Symbol  | feed | Expiration |
 | ------- | -------- | ---------- |
 | BRENTK6 | Brent May 2026 | Mar 31, 2026 |
 | BRENTM6 | Brent June 2026 | Apr 30, 2026 |
@@ -67,7 +67,7 @@ The year is represented by the **last digit** of the year:
 
 ### Copper
 
-| Symbol | Contract | Expiration |
+| Symbol | feed | Expiration |
 | ------ | -------- | ---------- |
 | CCH6   | Copper March 2026 | Mar 27, 2026 |
 | CCK6   | Copper May 2026 | May 27, 2026 |
@@ -75,7 +75,7 @@ The year is represented by the **last digit** of the year:
 
 ### Natural Gas
 
-| Symbol | Contract | Expiration |
+| Symbol | feed | Expiration |
 | ------ | -------- | ---------- |
 | NGDJ6  | HH Natural Gas April 2026 | Apr 28, 2026 |
 | NGDK6  | HH Natural Gas May 2026 | May 27, 2026 |
@@ -83,14 +83,14 @@ The year is represented by the **last digit** of the year:
 
 ### LS Gasoil
 
-| Symbol | Contract | Expiration |
+| Symbol | feed | Expiration |
 | ------ | -------- | ---------- |
 | GOJ6   | LS Gasoil April 2026 | Apr 10, 2026 |
 | GOK6   | LS Gasoil May 2026 | May 12, 2026 |
 
 ### Corn
 
-| Symbol | Contract | Expiration |
+| Symbol | feed | Expiration |
 | ------ | -------- | ---------- |
 | COH6   | Corn March 2026 | Mar 13, 2026 |
 | COK6   | Corn May 2026 | May 14, 2026 |
@@ -131,7 +131,7 @@ On Pyth, futures symbols include the asset class prefix. The table below lists a
 
 ## Chain Metadata
 
-Every dated contract belongs to a **chain**: the family of contracts on the same underlying that differ only by expiration. The symbols API exposes three chain-level fields on each contract, with identical values across the whole chain. See [Symbology & Reference Data](/price-feeds/pro/symbology-reference#futures) for the full field definitions.
+Every dated feed belongs to a **chain**: the family of feeds on the same underlying that differ only by expiration. The symbols API exposes three chain-level fields on each feed, with identical values across the whole chain. See [Symbology & Reference Data](/price-feeds/pro/symbology-reference#futures) for the full field definitions.
 
 For the WTI chain (`WTIV6`, `WTIX6`, `WTIZ6`, ...):
 
@@ -171,19 +171,19 @@ For the WTI chain (`WTIV6`, `WTIX6`, `WTIZ6`, ...):
 
 `symbol_chain_id` is the bare symbol root (`WTI`), not a fully-qualified Pyth symbol. `expiration_pattern` is the chain's full annual expiration cycle, written as month abbreviations; `availability_pattern` is the subset Pyth prices, written as the [month codes](#month-codes) above.
 
-Values are per-chain. WTI expires monthly and Pyth prices every month, so both patterns cover all twelve. Copper (`CC`) also expires monthly, but its `availability_pattern` is `["H", "K", "N", "U", "Z"]` — only the March, May, July, September, and December contracts are published.
+Values are per-chain. WTI expires monthly and Pyth prices every month, so both patterns cover all twelve. Copper (`CC`) also expires monthly, but its `availability_pattern` is `["H", "K", "N", "U", "Z"]` — only the March, May, July, September, and December feeds are published.
 
 ## Expiration and Rollover
 
-Futures contracts expire on specific dates. When a contract approaches expiration:
+Futures feeds expire on specific dates. When a feed approaches expiration:
 
-1. **Liquidity shifts** to the next contract month
-2. **Price feeds transition** to the new front-month contract
+1. **Liquidity shifts** to the next feed month
+2. **Price feeds transition** to the new front-month feed
 3. **Rollover dates** vary by commodity — check the [Symbology and Reference Data API](https://pyth.dourolabs.app/v1/symbols) for exact expiration dates, or see [Symbology & Reference Data](/price-feeds/pro/symbology-reference) for the field definitions
 
-Which contract months exist at all is given by the chain's `expiration_pattern`, and which of those Pyth publishes by its `availability_pattern` — see [Chain Metadata](#chain-metadata) above.
+Which feed months exist at all is given by the chain's `expiration_pattern`, and which of those Pyth publishes by its `availability_pattern` — see [Chain Metadata](#chain-metadata) above.
 
-**Expiration Handling:** Ensure your application handles contract rollovers gracefully. Monitor for feed transitions as contracts approach expiration.
+**Expiration Handling:** Ensure your application handles feed rollovers gracefully. Monitor for feed transitions as feeds approach expiration.
 
 ## Additional Resources
 
