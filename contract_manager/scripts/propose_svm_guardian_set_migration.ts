@@ -15,6 +15,7 @@
  *     --config-path ./migration.json --ops-key-path ~/.config/solana/id.json --dry-run
  */
 
+import type { ProposedAction } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -88,8 +89,7 @@ async function main() {
 
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   const targets = resolveMigrationTargets(config, argv.chain, vaultAuthority);
-  const localInstructions = [];
-  const remotePayloads = [];
+  const actions: ProposedAction[] = [];
   for (const target of targets) {
     const chainId = target.chain.getId();
     console.log(`\n=== ${chainId} (governed by ${target.signer.toBase58()})`);
@@ -109,15 +109,15 @@ async function main() {
     await checkAuthorities(target);
     await checkUpgradeBuffer(target, state);
 
-    const instructions = await buildMigrationInstructions(target, state);
-    if (target.chain.isRemote) {
-      remotePayloads.push(
-        ...instructions.map((instruction) =>
-          target.chain.generateExecutePostedVaaPayload(instruction),
-        ),
+    // The vault signs for a chain it lives on directly; for any other it emits a wormhole
+    // message that the chain's remote executor replays under the same authority.
+    const { chain } = target;
+    for (const instruction of await buildMigrationInstructions(target, state)) {
+      actions.push(
+        chain.isRemote
+          ? { payload: chain.generateExecutePostedVaaPayload(instruction) }
+          : { instruction },
       );
-    } else {
-      localInstructions.push(...instructions);
     }
   }
 
@@ -128,18 +128,8 @@ async function main() {
 
   vault.connect(wallet, registry);
 
-  // Chains the vault lives on and chains it reaches over wormhole need different kinds of
-  // multisig instruction, so they cannot share a proposal.
-  if (localInstructions.length > 0) {
-    const proposals = await vault.proposeInstructions(localInstructions);
-    for (const proposal of proposals) {
-      console.log(`Local proposal address: ${proposal.address.toBase58()}`);
-    }
-  }
-  if (remotePayloads.length > 0) {
-    const proposal = await vault.proposeWormholeMessage(remotePayloads);
-    console.log(`Remote proposal address: ${proposal.address.toBase58()}`);
-  }
+  const proposal = await vault.proposeActions(actions);
+  console.log(`\nProposal address: ${proposal.address.toBase58()}`);
 }
 
 await main();
