@@ -21,14 +21,6 @@ import { Storable } from "../base";
 import type { Chain } from "../chains";
 import { SvmChain } from "../chains";
 
-/**
- * Anchor clients for the receiver and the core bridge, built by the receiver SDK.
- *
- * Their IDLs are in the pre-0.30 format, which the anchor this package depends on can no longer
- * instantiate, and `PythSolanaReceiver` already owns `Program`s built with the anchor version
- * those IDLs match. The wallet it needs is never used: every instruction built here is left
- * unsigned for the multisig, and everything else is a read.
- */
 function getPrograms(
   chain: SvmChain,
   programIds: { receiverProgramId?: PublicKey; wormholeProgramId?: PublicKey },
@@ -40,10 +32,6 @@ function getPrograms(
   });
 }
 
-/**
- * The key the BPF upgradeable loader lets upgrade `programId`, or `undefined` if the program has
- * been made immutable.
- */
 export async function getUpgradeAuthority(
   chain: SvmChain,
   programId: PublicKey,
@@ -56,43 +44,26 @@ export async function getUpgradeAuthority(
       `${chain.getId()}: ${programId.toBase58()} has no program data account — is it deployed with the upgradeable loader?`,
     );
   }
-  // The loader's own accounts have no IDL: `UpgradeableLoaderState::ProgramData` is a 4-byte
-  // discriminant, a deployment slot, then the authority as an `Option<Pubkey>`.
+  // `UpgradeableLoaderState::ProgramData`: a 4-byte discriminant, a deployment slot, then the
+  // authority as an `Option<Pubkey>`.
   const optionOffset = 4 + 8;
   return account.data.readUInt8(optionOffset) === 0
     ? undefined
     : new PublicKey(account.data.subarray(optionOffset + 1, optionOffset + 33));
 }
 
-/** Contents of the receiver's singleton `Config` account. */
 export type SvmReceiverConfig = {
-  /** The key allowed to run the receiver's governance instructions. */
   governanceAuthority: PublicKey;
   targetGovernanceAuthority: PublicKey | undefined;
-  /** Core bridge the receiver verifies price update VAAs against. */
   wormhole: PublicKey;
   validDataSources: DataSource[];
   singleUpdateFeeInLamports: bigint;
   minimumSignatures: number;
 };
 
-/**
- * The Pyth price receiver (`pyth-solana-receiver`) on an SVM chain.
- *
- * Unlike the EVM / Sui / Aptos price feed contracts, this program is not driven
- * by Pyth governance VAAs: its `Config` names a `governance_authority` key and
- * every governance instruction is a plain Anchor instruction gated on that key
- * signing. On mainnet SVM chains that key is a Squads vault authority — the
- * vault's own authority PDA locally, or the vault's remote executor PDA on a
- * remote chain.
- */
 export class SvmPriceFeedContract extends Storable {
   static type = "SvmPriceFeedContract";
 
-  /**
-   * @param chain - the SVM chain this program is deployed on
-   * @param address - base58 program id of the `pyth-solana-receiver` deployment
-   */
   constructor(
     public readonly chain: SvmChain,
     public readonly address: string,
@@ -137,7 +108,6 @@ export class SvmPriceFeedContract extends Storable {
     return new PublicKey(this.address);
   }
 
-  /** Address of the singleton `Config` PDA (`b"config"`). */
   getConfigAddress(): PublicKey {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
@@ -162,8 +132,6 @@ export class SvmPriceFeedContract extends Storable {
       singleUpdateFeeInLamports: BN;
       minimumSignatures: number;
     }>("Config", account.data);
-    // The IDL's `DataSource` is `{ chain, emitter }`; the rest of contract_manager speaks
-    // `xc_admin_common`'s `{ emitterChain, emitterAddress }`.
     return {
       governanceAuthority: config.governanceAuthority,
       minimumSignatures: config.minimumSignatures,
@@ -179,10 +147,6 @@ export class SvmPriceFeedContract extends Storable {
     };
   }
 
-  /**
-   * Build the `set_data_sources` instruction that replaces the whole list of
-   * emitters the receiver accepts price updates from.
-   */
   generateSetDataSourcesInstruction(
     governanceAuthority: PublicKey,
     dataSources: DataSource[],
@@ -201,7 +165,6 @@ export class SvmPriceFeedContract extends Storable {
       .instruction();
   }
 
-  /** Build the `set_fee` instruction that sets the per-update fee in lamports. */
   generateSetFeeInstruction(
     governanceAuthority: PublicKey,
     singleUpdateFeeInLamports: bigint,
@@ -221,42 +184,22 @@ export class SvmPriceFeedContract extends Storable {
   }
 }
 
-/** Contents of the core bridge's singleton `Config` account. */
 export type SvmBridgeConfig = {
-  /** Index of the guardian set the bridge currently verifies VAAs against. */
   guardianSetIndex: number;
-  /** How long a guardian set stays valid after a newer one has replaced it. */
   guardianSetTtlSeconds: number;
-  /** What the bridge charges to post a message. */
   feeLamports: bigint;
 };
 
-/** Contents of a core bridge `GuardianSet` account. */
 export type SvmGuardianSet = {
   index: number;
-  /** Guardian addresses as 40-character hex strings, without a `0x` prefix. */
   keys: string[];
   creationTime: number;
-  /** Unix seconds after which this set's VAAs stop being accepted; 0 means never. */
   expirationTime: number;
 };
 
-/**
- * The Wormhole core bridge on an SVM chain.
- *
- * This is deliberately not a {@link WormholeContract}: the SVM bridge has no
- * on-chain chain id to report, and its guardian sets are advanced by posting
- * governance VAAs rather than by the `upgradeGuardianSets` call that interface
- * models. Only the reads and instruction builders the guardian set migration
- * needs live here.
- */
 export class SvmWormholeContract extends Storable {
   static type = "SvmWormholeContract";
 
-  /**
-   * @param chain - the SVM chain this program is deployed on
-   * @param address - base58 program id of the core bridge deployment
-   */
   constructor(
     public readonly chain: SvmChain,
     public readonly address: string,
@@ -301,7 +244,6 @@ export class SvmWormholeContract extends Storable {
     return new PublicKey(this.address);
   }
 
-  /** Address of the bridge's singleton `Config` PDA (`b"Bridge"`). */
   getConfigAddress(): PublicKey {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("Bridge")],
@@ -309,7 +251,6 @@ export class SvmWormholeContract extends Storable {
     )[0];
   }
 
-  /** Address of the `GuardianSet` PDA for `index` (`b"GuardianSet"` + big-endian index). */
   getGuardianSetAddress(index: number): PublicKey {
     const indexBytes = Buffer.alloc(4);
     indexBytes.writeUInt32BE(index);
@@ -319,7 +260,6 @@ export class SvmWormholeContract extends Storable {
     )[0];
   }
 
-  /** Address of the fee collector the bridge charges `post_message` against. */
   private getFeeCollectorAddress(): PublicKey {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("fee_collector")],
@@ -336,8 +276,8 @@ export class SvmWormholeContract extends Storable {
         `Core bridge ${this.getId()} has no config account — is the program initialized?`,
       );
     }
-    // The bridge config is a legacy account with no anchor discriminator, so the IDL knows it as
-    // a plain type rather than as one of the program's accounts.
+    // A legacy account with no anchor discriminator, so the IDL carries it as a type rather than
+    // as one of the program's accounts.
     const config = this.getProgram().coder.types.decode("Config", account.data);
     return {
       feeLamports: BigInt(config.feeLamports.toString()),
@@ -351,11 +291,6 @@ export class SvmWormholeContract extends Storable {
     return guardianSetIndex;
   }
 
-  /**
-   * Read every guardian set account the bridge still has, from index 0 up to and
-   * including the current one. Sets are only ever created in order, but any of
-   * them may already have been closed, so gaps are expected on a re-run.
-   */
   async getGuardianSets(): Promise<SvmGuardianSet[]> {
     const currentIndex = await this.getCurrentGuardianSetIndex();
     const indexes = Array.from({ length: currentIndex + 1 }, (_, i) => i);
@@ -375,18 +310,10 @@ export class SvmWormholeContract extends Storable {
       .wormhole;
   }
 
-  /**
-   * The key the BPF upgradeable loader lets upgrade this program, or `undefined`
-   * if the program has been made immutable.
-   */
   getUpgradeAuthority(): Promise<PublicKey | undefined> {
     return getUpgradeAuthority(this.chain, this.getProgramId());
   }
 
-  /**
-   * Build the loader instruction that upgrades this program to the ELF staged in
-   * `buffer`, refunding the buffer's rent to `spill`.
-   */
   generateUpgradeInstruction(
     buffer: PublicKey,
     upgradeAuthority: PublicKey,
@@ -400,20 +327,12 @@ export class SvmWormholeContract extends Storable {
     );
   }
 
-  /**
-   * Build the permissionless `close_guardian_set` instruction, which deletes the
-   * guardian set at `index` and refunds its rent to `recipient`.
-   *
-   * The instruction only exists in the migrated build, and the program refuses
-   * to close a set that holds none of the guardians it knows to be Wormhole's.
-   */
   generateCloseGuardianSetInstruction(
     recipient: PublicKey,
     index: number,
   ): TransactionInstruction {
     return {
-      // Legacy instructions are dispatched on a single-byte borsh enum selector
-      // rather than an Anchor discriminator, and `EmptyArgs` adds nothing.
+      // Legacy instructions dispatch on a one-byte enum selector, not an anchor discriminator.
       data: Buffer.of(LEGACY_INSTRUCTION_CLOSE_GUARDIAN_SET),
       keys: [
         { isSigner: false, isWritable: true, pubkey: recipient },
@@ -427,16 +346,8 @@ export class SvmWormholeContract extends Storable {
     };
   }
 
-  /**
-   * Build the permissionless `initialize` instruction, which rewrites the bridge
-   * config and recreates guardian set 0 holding the Pyth multisig.
-   *
-   * The migrated build ignores `InitializeArgs` entirely — it always installs the
-   * Pyth multisig at a fixed TTL and fee — but the args still have to
-   * deserialize, so zeros go on the wire.
-   */
   generateInitializeInstruction(payer: PublicKey): TransactionInstruction {
-    const args = Buffer.alloc(4 + 8 + 4); // guardian_set_ttl_seconds, fee_lamports, initial_guardians
+    const args = Buffer.alloc(4 + 8 + 4); // ttl, fee, initial_guardians: ignored by the migrated build, still deserialized
     return {
       data: Buffer.concat([Buffer.of(LEGACY_INSTRUCTION_INITIALIZE), args]),
       keys: [
@@ -461,23 +372,13 @@ export class SvmWormholeContract extends Storable {
   }
 }
 
-/**
- * Positions of the two legacy selectors this module emits within the core
- * bridge's `LegacyInstruction` enum. They are not read out of the IDL because the
- * published one is of the pre-migration program, whose enum stops at
- * `PostMessageUnreliable`; `CloseGuardianSet` only exists in the migrated build.
- * The enum keeps placeholder variants for every instruction that has been removed
- * so these values never shift.
- */
+// Not read from the IDL: the published one is of the pre-migration program, whose enum stops at
+// `PostMessageUnreliable`. Removed variants keep placeholders, so these indices never shift.
 const LEGACY_INSTRUCTION_INITIALIZE = 0;
 const LEGACY_INSTRUCTION_CLOSE_GUARDIAN_SET = 10;
 
-/**
- * Guardian sets are stored as an `AccountVariant`: one written by the original
- * Wormhole program carries no anchor discriminator, while one written by an anchor
- * instruction does, and the bridge accepts both. `decodeUnchecked` always assumes
- * the latter, so a legacy account is given a stand-in for it to skip over.
- */
+// Guardian sets written by the original wormhole program carry no anchor discriminator, and
+// `decodeUnchecked` always skips one, so a legacy account gets a stand-in.
 function decodeGuardianSet(
   program: PythSolanaReceiver["wormhole"],
   data: Buffer,

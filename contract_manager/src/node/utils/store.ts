@@ -78,11 +78,8 @@ export class Store {
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
-  /**
-   * SVM price receivers and core bridges. They are kept apart from `contracts` /
-   * `wormhole_contracts` because neither implements the VAA-driven governance
-   * interface those registries are typed on.
-   */
+  // Kept apart from `contracts` / `wormhole_contracts`: neither implements the VAA-driven
+  // governance interface those registries are typed on.
   public svm_price_feed_contracts: Record<string, SvmPriceFeedContract> = {};
   public svm_wormhole_contracts: Record<string, SvmWormholeContract> = {};
   public tokens: Record<string, Token> = {};

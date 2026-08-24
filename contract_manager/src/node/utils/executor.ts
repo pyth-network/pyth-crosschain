@@ -133,13 +133,6 @@ function findSvmWormholeContract(chain: SvmChain): SvmWormholeContract {
   return contract;
 }
 
-/**
- * Relay an `ExecutePostedVaa` message onto an SVM chain: post the VAA to that chain's core bridge
- * so the guardian signatures are verified on-chain, then have the remote executor replay the
- * instructions it carries, signed by the executor PDA of the emitting vault.
- *
- * Both halves are idempotent, so a partially applied relay can simply be re-run.
- */
 async function executeThroughRemoteExecutor(
   chain: SvmChain,
   senderPrivateKey: PrivateKey,
@@ -159,8 +152,8 @@ async function executeThroughRemoteExecutor(
   const program = getRemoteExecutorProgram(connection);
   const claimRecordAccount = await connection.getAccountInfo(claimRecord);
   if (claimRecordAccount) {
-    // The anchor this IDL is built with camel-cases the `program.account` namespace at runtime
-    // but not at the type level, so the coder is the only way to reach a PascalCase account.
+    // The anchor this IDL is built with camel-cases `program.account` at runtime but not at the
+    // type level, so the coder is the only way to reach a PascalCase account.
     const { sequence } = program.coder.accounts.decode<{ sequence: BN }>(
       "ClaimRecord",
       claimRecordAccount.data,
@@ -188,9 +181,7 @@ async function executeThroughRemoteExecutor(
     console.log(`Posted VAA on ${chain.getId()} at ${postedVaa}`);
   }
 
-  // The executor CPIs into each instruction the payload carries, so every account those
-  // instructions touch has to ride along as a remaining account — starting with the executor PDA
-  // itself, which signs them.
+  // Every account the CPI'd instructions touch has to ride along, led by the signing PDA.
   const remainingAccounts: AccountMeta[] = [
     { isSigner: false, isWritable: true, pubkey: executorKey },
   ];

@@ -5,14 +5,6 @@
 /**
  * Builds the authority-gated half of the SVM Wormhole guardian set migration and proposes it to
  * the multisig. Run `execute_svm_guardian_set_migration.ts` once the multisig approves.
- *
- * Before proposing anything it prints the whole of the on-chain state the migration will act on,
- * and relays a price update from the Hermes that is live today — the baseline the execute
- * script's post-migration relay is read against.
- *
- * Usage:
- *   pnpm exec tsx scripts/propose_svm_guardian_set_migration.ts \
- *     --config-path ./migration.json --ops-key-path ~/.config/solana/id.json --dry-run
  */
 
 import type { ProposedAction } from "@pythnetwork/xc-admin-common";
@@ -34,10 +26,7 @@ import {
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
-/**
- * The Hermes serving the network each deployment type's chains are on, and its SOL/USD feed —
- * the two go together, since a feed id from one instance does not exist on the other.
- */
+// Hermes instance and feed id go together: a feed id from one does not exist on the other.
 const HERMES = {
   "pro-compatible-production": {
     solUsdFeedId:
@@ -95,8 +84,7 @@ async function main() {
     console.log(`\n=== ${chainId} (governed by ${target.signer.toBase58()})`);
     console.log(await describeChainState(target));
 
-    // A chain that cannot relay a price before the migration gives the execute script's
-    // post-migration relay nothing to be read against, so this is a hard gate.
+    // A hard gate: without a pre-migration baseline the execute script's relay proves nothing.
     console.log(`pre-flight price relay from ${hermes.url}`);
     console.log(
       `  ${await relayPriceUpdate(target, wallet, {
@@ -109,8 +97,6 @@ async function main() {
     await checkAuthorities(target);
     await checkUpgradeBuffer(target, state);
 
-    // The vault signs for a chain it lives on directly; for any other it emits a wormhole
-    // message that the chain's remote executor replays under the same authority.
     const { chain } = target;
     for (const instruction of await buildMigrationInstructions(target, state)) {
       actions.push(
