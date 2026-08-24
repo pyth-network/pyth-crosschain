@@ -4260,6 +4260,7 @@ dependencies = [
  "byteorder",
  "cfg-if",
  "common-test-utils",
+ "hex",
  "program-simulator",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
