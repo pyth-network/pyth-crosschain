@@ -265,38 +265,35 @@ export class MultisigProposal {
     const signatures = await this.squad.connection.getSignaturesForAddress(
       this.address,
     );
-    return await fetchSubmittedWormholeMessages(
-      signatures
-        .filter((signature) => signature.err === null)
-        .map((signature) => signature.signature)
-        .reverse(),
-      this.cluster,
-      // Read the transactions back off the node that listed them.
-      () => this.squad.connection.rpcEndpoint,
-    );
+    const messages: SubmittedWormholeMessage[] = [];
+    for (const { signature } of signatures
+      .filter((signature) => signature.err === null)
+      .reverse()) {
+      const message = await fetchSubmittedWormholeMessage(
+        signature,
+        this.cluster,
+      );
+      if (message) messages.push(message);
+    }
+    return messages;
   }
 }
 
-async function fetchSubmittedWormholeMessages(
-  signatures: string[],
+// The proposal's history also holds the transactions that created, activated and approved it, so
+// a transaction that emitted no wormhole message is expected rather than an error.
+async function fetchSubmittedWormholeMessage(
+  signature: string,
   cluster: PythCluster,
-  registry?: SolanaRpcRegistry,
-): Promise<SubmittedWormholeMessage[]> {
-  const msgs: SubmittedWormholeMessage[] = [];
-  for (const signature of signatures) {
-    try {
-      msgs.push(
-        await SubmittedWormholeMessage.fromTransactionSignature(
-          signature,
-          cluster,
-          registry,
-        ),
-      );
-    } catch (error: unknown) {
-      if (!(error instanceof InvalidTransactionError)) throw error;
-    }
+): Promise<SubmittedWormholeMessage | undefined> {
+  try {
+    return await SubmittedWormholeMessage.fromTransactionSignature(
+      signature,
+      cluster,
+    );
+  } catch (error: unknown) {
+    if (error instanceof InvalidTransactionError) return undefined;
+    throw error;
   }
-  return msgs;
 }
 
 /**
