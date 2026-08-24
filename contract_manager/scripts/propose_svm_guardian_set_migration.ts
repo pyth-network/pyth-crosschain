@@ -66,12 +66,12 @@ async function main() {
   const hermes = HERMES[argv["deployment-type"]];
 
   const vault = getVaultOrThrow(argv.vault);
-  const vaultAuthority = await vault.getEmitter(registry);
+  const vaultAuthority = vault.getEmitter(registry);
   console.log(
     `Proposing to vault ${vault.getId()}, whose authority is ${vaultAuthority.toBase58()}`,
   );
 
-  const wallet = await loadHotWallet(argv["ops-key-path"]);
+  const wallet = loadHotWallet(argv["ops-key-path"]);
   const targets = resolveMigrationTargets(config, argv.chain, vaultAuthority);
   const actions: ProposedAction[] = [];
   for (const target of targets) {

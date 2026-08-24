@@ -40,6 +40,7 @@ import {
 } from "./svm_guardian_set_migration";
 
 const VAA_WAIT_SECONDS = 300;
+const SOL_USD_FEED_ID = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -56,13 +57,6 @@ const parser = yargs(hideBin(process.argv))
     "hermes-url": {
       default: "https://pyth.dourolabs.app/hermes",
       desc: "Hermes instance to pull the price update for the final check from",
-      type: "string",
-    },
-    "price-feed-id": {
-      // SOL/USD.
-      default:
-        "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
-      desc: "Price feed to relay for the final check",
       type: "string",
     },
     proposal: {
@@ -83,10 +77,10 @@ async function main() {
   const registry = rpcUrl ? () => rpcUrl : undefined;
 
   const vault = getVaultOrThrow(argv.vault);
-  const vaultAuthority = await vault.getEmitter(registry);
+  const vaultAuthority = vault.getEmitter(registry);
   const targets = resolveMigrationTargets(config, argv.chain, vaultAuthority);
 
-  const wallet = await loadHotWallet(argv["ops-key-path"]);
+  const wallet = loadHotWallet(argv["ops-key-path"]);
   vault.connect(wallet, registry);
   // The raw key, so the relayed steps can sign on whichever chain they target rather than on the
   // vault's cluster.
@@ -129,7 +123,7 @@ async function main() {
     console.log(`post-migration price relay from ${argv["hermes-url"]}`);
     console.log(
       `  ${await relayPriceUpdate(target, wallet, {
-        feedId: argv["price-feed-id"],
+        feedId: SOL_USD_FEED_ID,
         token: argv["hermes-token"],
         url: argv["hermes-url"],
       })}`,
