@@ -10,6 +10,7 @@ import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import { getPythClusterApiUrl } from "@pythnetwork/client";
 import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+import type { ProposedAction } from "@pythnetwork/xc-admin-common";
 import {
   executeProposal,
   MultisigVault,
@@ -19,7 +20,6 @@ import {
 import type {
   ParsedInstruction,
   PartiallyDecodedInstruction,
-  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   Connection,
@@ -268,6 +268,11 @@ export class MultisigProposal {
   async fetchEmittedWormholeMessages(): Promise<SubmittedWormholeMessage[]> {
     const signatures = await this.squad.connection.getSignaturesForAddress(
       this.address,
+      undefined,
+      // Squads' own connection defaults to `finalized`, and this is normally called moments
+      // after `execute()` — at which point the transactions it produced are only confirmed, so
+      // asking for finalized would silently miss the messages they emitted.
+      "confirmed",
     );
     return await fetchSubmittedWormholeMessages(
       signatures
@@ -275,6 +280,9 @@ export class MultisigProposal {
         .map((signature) => signature.signature)
         .reverse(),
       this.cluster,
+      // Read the transactions back off the node that listed them, so an `--rpc-url` override
+      // does not end up listing signatures on one node and parsing them on another.
+      () => this.squad.connection.rpcEndpoint,
     );
   }
 }
@@ -286,6 +294,7 @@ export class MultisigProposal {
 async function fetchSubmittedWormholeMessages(
   signatures: string[],
   cluster: PythCluster,
+  registry?: SolanaRpcRegistry,
 ): Promise<SubmittedWormholeMessage[]> {
   const msgs: SubmittedWormholeMessage[] = [];
   for (const signature of signatures) {
@@ -294,6 +303,7 @@ async function fetchSubmittedWormholeMessages(
         await SubmittedWormholeMessage.fromTransactionSignature(
           signature,
           cluster,
+          registry,
         ),
       );
     } catch (error: unknown) {
@@ -438,18 +448,16 @@ export class Vault extends Storable {
   }
 
   /**
-   * Proposes running `instructions` on the vault's own cluster, signed by the vault authority.
-   * Requires a wallet to be connected to the vault.
+   * Proposes `actions` as a single proposal: instructions the vault authority runs on the vault's
+   * own cluster, and payloads it emits as wormhole messages for chains it does not live on, in
+   * the order given. Requires a wallet to be connected to the vault.
    *
-   * Instructions targeting another chain cannot go through here — they have to be wrapped in a
-   * wormhole message with {@link proposeWormholeMessage} so the remote executor can replay them.
-   *
-   * @param instructions - the instructions the vault authority should sign
+   * @param actions - the instructions and payloads to propose
    */
-  public async proposeInstructions(
-    instructions: TransactionInstruction[],
+  public async proposeActions(
+    actions: ProposedAction[],
     priorityFeeConfig: PriorityFeeConfig = {},
-  ): Promise<MultisigProposal[]> {
+  ): Promise<MultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
       squad.wallet as Wallet,
@@ -457,14 +465,12 @@ export class Vault extends Storable {
       squad,
       this.key,
     );
-    const txAccounts = await multisigVault.proposeInstructions(
-      instructions,
-      this.cluster,
+    const txAccount = await multisigVault.proposeActions(
+      actions,
+      squad.wallet.publicKey,
       priorityFeeConfig,
     );
-    return txAccounts.map(
-      (txAccount) => new MultisigProposal(txAccount, squad, this.cluster),
-    );
+    return new MultisigProposal(txAccount, squad, this.cluster);
   }
 }
 

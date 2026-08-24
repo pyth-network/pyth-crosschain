@@ -48,6 +48,14 @@ type SquadInstruction = {
 };
 
 /**
+ * One entry in a proposal: either an instruction the vault authority runs on the vault's own
+ * cluster, or a payload it emits as a wormhole message for another chain to act on.
+ */
+export type ProposedAction =
+  | { instruction: TransactionInstruction }
+  | { payload: Buffer };
+
+/**
  * A multisig vault can sign arbitrary instructions with various vault-controlled PDAs, if the multisig approves.
  * This of course allows the vault to interact with programs on the same blockchain, but a vault also has two
  * other significant capabilities:
@@ -276,6 +284,84 @@ export class MultisigVault {
       priorityFeeConfig,
     );
     await this.sendAllTransactions(txToSend);
+    return proposalAddress;
+  }
+
+  /**
+   * Propose `actions` as a single proposal, mixing instructions the vault authority runs on this
+   * cluster with payloads it emits as wormhole messages, in the order they are given.
+   *
+   * The two kinds differ only in the authority Squads signs each instruction with, so they can
+   * share a proposal: a local instruction is signed by the vault authority, while a wormhole
+   * message needs the per-index message PDA as well.
+   *
+   * @param actions the instructions and payloads to propose
+   * @param messagePayer key used as the payer for the wormhole message instructions
+   * @returns the newly created proposal's public key
+   */
+  public async proposeActions(
+    actions: ProposedAction[],
+    messagePayer: PublicKey,
+    priorityFeeConfig: PriorityFeeConfig = {},
+  ): Promise<PublicKey> {
+    if (actions.length > MAX_INSTRUCTIONS_PER_PROPOSAL) {
+      throw new Error(
+        `Too many actions in proposal, ${actions.length} > ${MAX_INSTRUCTIONS_PER_PROPOSAL}`,
+      );
+    }
+    const msAccount = await this.getMultisigAccount();
+    const [proposalIx, proposalAddress] = await this.createProposalIx(
+      msAccount.transactionIndex + 1,
+    );
+    const ixToSend: TransactionInstruction[] = [proposalIx];
+
+    for (const [i, action] of actions.entries()) {
+      const instructionIndex = i + 1;
+      if ("payload" in action) {
+        const wormholeAddress = this.wormholeAddress();
+        if (!wormholeAddress) {
+          throw new Error("Need wormhole address");
+        }
+        const squadIx = await getPostMessageInstruction(
+          this.squad,
+          this.vault,
+          proposalAddress,
+          instructionIndex,
+          wormholeAddress,
+          action.payload,
+          messagePayer,
+        );
+        ixToSend.push(
+          await this.squad.buildAddInstruction(
+            this.vault,
+            proposalAddress,
+            squadIx.instruction,
+            instructionIndex,
+            squadIx.authorityIndex,
+            squadIx.authorityBump,
+            squadIx.authorityType,
+          ),
+        );
+      } else {
+        ixToSend.push(
+          await this.squad.buildAddInstruction(
+            this.vault,
+            proposalAddress,
+            action.instruction,
+            instructionIndex,
+          ),
+        );
+      }
+    }
+    ixToSend.push(await this.activateProposalIx(proposalAddress));
+    ixToSend.push(await this.approveProposalIx(proposalAddress));
+
+    await this.sendAllTransactions(
+      TransactionBuilder.batchIntoLegacyTransactions(
+        ixToSend,
+        priorityFeeConfig,
+      ),
+    );
     return proposalAddress;
   }
 

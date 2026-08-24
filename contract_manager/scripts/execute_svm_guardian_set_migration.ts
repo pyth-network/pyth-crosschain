@@ -5,19 +5,19 @@
 /**
  * Carries out the SVM Wormhole guardian set migration that
  * `propose_svm_guardian_set_migration.ts` proposed, once the multisig has approved it: executes
- * the proposals, relays the resulting governance messages to the chains the vault does not live
+ * the proposal, relays any governance message it emitted to the chains the vault does not live
  * on, runs the permissionless steps the upgraded core bridge unlocks, and checks that price
  * updates from the new Hermes still make it all the way through.
  *
  * Every step checks the on-chain state it is about to produce and skips itself if that state is
  * already there, so a run that fails part way through can simply be repeated — including the
- * proposals, whose governance messages are read back off the proposal account rather than off
- * what this particular run executed.
+ * proposal, whose governance messages are read back off its own account rather than off what
+ * this particular run executed.
  *
  * Usage:
  *   pnpm exec tsx scripts/execute_svm_guardian_set_migration.ts \
  *     --config-path ./migration.json --ops-key-path ~/.config/solana/id.json \
- *     --proposal <address> --proposal <address>
+ *     --proposal <address>
  */
 
 import {
@@ -32,7 +32,6 @@ import { hideBin } from "yargs/helpers";
 import type { PrivateKey } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { executeVaa } from "../src/node/utils/executor";
-import type { SubmittedWormholeMessage } from "../src/node/utils/governance";
 import { loadHotWallet, MultisigProposal } from "../src/node/utils/governance";
 import type {
   SvmMigrationTarget,
@@ -55,7 +54,7 @@ const VAA_WAIT_SECONDS = 300;
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Executes the SVM Wormhole guardian set migration once the multisig has approved it.\n" +
-      "Usage: $0 --config-path <path> --ops-key-path <path> --proposal <address>..",
+      "Usage: $0 --config-path <path> --ops-key-path <path> --proposal <address>",
   )
   .options({
     ...MIGRATION_OPTIONS,
@@ -78,9 +77,8 @@ const parser = yargs(hideBin(process.argv))
     },
     proposal: {
       demandOption: true,
-      desc: "Addresses of the proposals to execute. One that an earlier run already executed still has its governance messages relayed",
-      string: true,
-      type: "array",
+      desc: "Address of the proposal to execute. One that an earlier run already executed still has its governance messages relayed",
+      type: "string",
     },
   });
 
@@ -106,19 +104,19 @@ async function main() {
     Buffer.from(wallet.payer.secretKey.subarray(0, 32)).toString("hex"),
   );
 
-  const messages: SubmittedWormholeMessage[] = [];
-  for (const address of argv.proposal) {
-    const proposal = new MultisigProposal(
-      new PublicKey(address),
-      vault.getSquadOrThrow(),
-      vault.cluster,
-    );
-    console.log(`Executing proposal ${address}, ${await proposal.getState()}`);
-    await proposal.execute();
-    // Read off the proposal rather than off what this run executed, so a proposal an earlier
-    // run already took through still has its messages relayed.
-    messages.push(...(await proposal.fetchEmittedWormholeMessages()));
-  }
+  const proposal = new MultisigProposal(
+    new PublicKey(argv.proposal),
+    vault.getSquadOrThrow(),
+    vault.cluster,
+  );
+  console.log(
+    `Executing proposal ${argv.proposal}, ${await proposal.getState()}`,
+  );
+  await proposal.execute();
+  // Read off the proposal rather than off what this run executed, so a proposal an earlier run
+  // already took through still has its messages relayed. A migration that touches no remote
+  // chain emits none, and this is simply empty.
+  const messages = await proposal.fetchEmittedWormholeMessages();
 
   for (const message of messages) {
     console.log(`Relaying governance message ${message.sequenceNumber}`);
