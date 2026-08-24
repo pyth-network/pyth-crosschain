@@ -38,49 +38,6 @@ use anchor_lang::prelude::*;
 pub mod wormhole_core_bridge_solana {
     use super::*;
 
-    /// Processor for initializing a new draft [PostedMessageV1](crate::state::PostedMessageV1)
-    /// account for writing. The emitter authority is established at this point and the payload size
-    /// is inferred from the size of the created account. This instruction handler also allows an
-    /// integrator to publish Wormhole messages using his program's ID as the emitter address
-    /// (by passing `Some(crate::ID)` to the [cpi_program_id](InitMessageV1Args::cpi_program_id)
-    /// argument). **Be aware that the emitter authority's seeds must only be \[b"emitter"\] in this
-    /// case.**
-    ///
-    /// This instruction should be followed up with `write_message_v1` and `finalize_message_v1` to
-    /// write and indicate that the message is ready for publishing respectively (to prepare it for
-    /// publishing via the
-    /// [post message instruction](crate::legacy::instruction::LegacyInstruction::PostMessage)).
-    ///
-    /// NOTE: If you wish to publish a small message (one where the data does not overflow the
-    /// Solana transaction size), it is recommended that you use an [sdk](crate::sdk::cpi) method to
-    /// either prepare your message or post a message as a program ID emitter.
-    pub fn init_message_v1(ctx: Context<InitMessageV1>, args: InitMessageV1Args) -> Result<()> {
-        processor::init_message_v1(ctx, args)
-    }
-
-    /// Processor used to write to a draft [PostedMessageV1](crate::state::PostedMessageV1) account.
-    /// This instruction requires an authority (the emitter authority) to interact with the message
-    /// account.
-    pub fn write_message_v1(ctx: Context<WriteMessageV1>, args: WriteMessageV1Args) -> Result<()> {
-        processor::write_message_v1(ctx, args)
-    }
-
-    /// Processor used to finalize a draft [PostedMessageV1](crate::state::PostedMessageV1) account.
-    /// Once finalized, this message account cannot be written to again. A finalized message is the
-    /// only state the legacy post message instruction can accept before publishing. This
-    /// instruction requires an authority (the emitter authority) to interact with the message
-    /// account.
-    pub fn finalize_message_v1(ctx: Context<FinalizeMessageV1>) -> Result<()> {
-        processor::finalize_message_v1(ctx)
-    }
-
-    /// Processor used to process a draft [PostedMessageV1](crate::state::PostedMessageV1) account.
-    /// This instruction requires an authority (the emitter authority) to interact with the message
-    /// account.
-    pub fn close_message_v1(ctx: Context<CloseMessageV1>) -> Result<()> {
-        processor::close_message_v1(ctx)
-    }
-
     /// Processor used to intialize a created account as [EncodedVaa](crate::state::EncodedVaa). An
     /// authority (the write authority) is established with this instruction.
     pub fn init_encoded_vaa(ctx: Context<InitEncodedVaa>) -> Result<()> {
