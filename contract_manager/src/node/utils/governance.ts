@@ -264,10 +264,6 @@ export class MultisigProposal {
   async fetchEmittedWormholeMessages(): Promise<SubmittedWormholeMessage[]> {
     const signatures = await this.squad.connection.getSignaturesForAddress(
       this.address,
-      undefined,
-      // Squads' connection defaults to `finalized`, which would miss the messages of an
-      // `execute()` that just returned.
-      "confirmed",
     );
     return await fetchSubmittedWormholeMessages(
       signatures
@@ -317,6 +313,17 @@ function getSquadsMesh() {
   );
 }
 
+// `SquadsMesh.endpoint` builds a `Connection` with web3.js' `finalized` default, which is far
+// behind what the proposals it reads were just written at.
+function connectSquadsMesh(
+  endpoint: string,
+  wallet: Wallet,
+): SquadsMeshInstance {
+  return getSquadsMesh().endpoint(endpoint, wallet, {
+    commitmentOrConfig: "confirmed",
+  });
+}
+
 export class Vault extends Storable {
   static type = "vault";
   key: PublicKey;
@@ -364,8 +371,7 @@ export class Vault extends Storable {
     wallet: Wallet,
     registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ): void {
-    const mesh = getSquadsMesh();
-    this.squad = mesh.endpoint(registry(this.cluster), wallet);
+    this.squad = connectSquadsMesh(registry(this.cluster), wallet);
   }
 
   getSquadOrThrow(): SquadsMeshInstance {
@@ -378,8 +384,7 @@ export class Vault extends Storable {
    * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   public getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
-    const mesh = getSquadsMesh();
-    const squad = mesh.endpoint(
+    const squad = connectSquadsMesh(
       registry(this.cluster),
       new Wallet(Keypair.generate()), // dummy wallet
     );
