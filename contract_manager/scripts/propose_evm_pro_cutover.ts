@@ -21,6 +21,7 @@
  * Usage: $0 --chain ethereum --ops-key-path <path> [--dry-run]
  */
 
+import { getPythClusterApiUrl } from "@pythnetwork/client";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   decodeGovernancePayload,
@@ -35,12 +36,14 @@ import { hideBin } from "yargs/helpers";
 
 import { getDefaultDeploymentConfig, toDeploymentType } from "../src/core/base";
 import type { EvmChain } from "../src/core/chains";
+import type { SolanaRpcRegistry } from "../src/node/utils/governance";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 import { CHAIN_SELECTION_OPTIONS, getSelectedChains } from "./common";
 import type { CutoverPreflight, ProDeploymentType } from "./pro_cutover";
 import {
   CUTOVER_CACHE_FILE,
+  describeChainSelection,
   isProDeploymentType,
   preflightChains,
   readCachedImplementation,
@@ -82,6 +85,11 @@ const parser = yargs(hideBin(process.argv))
     "proposal-address": {
       demandOption: false,
       desc: "Resume adding instructions to an existing proposal, for when a previous run died partway. Only safe if the selected chains produce the same payloads in the same order",
+      type: "string",
+    },
+    "solana-rpc": {
+      demandOption: false,
+      desc: "Solana RPC to propose through. Defaults to the public cluster endpoint, which rate limits a proposal of this size hard enough to abort it partway",
       type: "string",
     },
     vault: {
@@ -302,12 +310,13 @@ async function planChain(
 async function verifyVaultEmitter(
   vaultId: string,
   deploymentType: ProDeploymentType,
+  registry: SolanaRpcRegistry,
 ): Promise<void> {
   const vault = DefaultStore.vaults[vaultId];
   if (vault === undefined) throw new Error(`Unknown vault ${vaultId}`);
 
   const { governanceDataSource } = getDefaultDeploymentConfig(deploymentType);
-  const emitter = await vault.getEmitter();
+  const emitter = await vault.getEmitter(registry);
   const actual = emitter.toBuffer().toString("hex");
   if (actual !== strip(governanceDataSource.emitterAddress)) {
     throw new Error(
@@ -331,12 +340,20 @@ async function main() {
     throw new Error("--ops-key-path is required unless --dry-run is set");
   }
 
-  const vaultId = argv.vault ?? VAULT_BY_DEPLOYMENT_TYPE[deploymentType];
-  await verifyVaultEmitter(vaultId, deploymentType);
+  // A proposal of this size is a few hundred RPC calls in a tight loop, which the public cluster
+  // endpoint answers with 429s until the run dies. `--solana-rpc` points it at an endpoint that
+  // will take the load; without it the default is unchanged.
+  const registry: SolanaRpcRegistry =
+    argv.solanaRpc === undefined
+      ? getPythClusterApiUrl
+      : () => argv.solanaRpc as string;
 
-  const selectedChains = getSelectedChains(argv);
+  const vaultId = argv.vault ?? VAULT_BY_DEPLOYMENT_TYPE[deploymentType];
+  await verifyVaultEmitter(vaultId, deploymentType, registry);
+
+  const selectedChains = getSelectedChains(argv, { allowMixedNetworks: true });
   console.log(
-    `\nPreflighting ${selectedChains.length} chain(s) against ${deploymentType}...`,
+    `\nPreflighting ${describeChainSelection(selectedChains)} against ${deploymentType}...`,
   );
   const results = await preflightChains(selectedChains, deploymentType);
 
@@ -398,7 +415,7 @@ async function main() {
   if (vault === undefined) throw new Error(`Unknown vault ${vaultId}`);
   const wallet = await loadHotWallet(argv.opsKeyPath);
   console.log(`\nProposing from ${wallet.publicKey.toBase58()}...`);
-  await vault.connect(wallet);
+  await vault.connect(wallet, registry);
   const proposal = await vault.proposeWormholeMessage(
     payloads,
     argv.proposalAddress === undefined

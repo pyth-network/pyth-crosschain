@@ -44,6 +44,7 @@ import type {
 import {
   CUTOVER_CACHE_FILE,
   checkProWormholeGuardianSet,
+  describeChainSelection,
   IMPLEMENTATION_ARTIFACT,
   isProDeploymentType,
   preflightChains,
@@ -220,7 +221,7 @@ async function main() {
     throw new Error("--private-key is required unless --dry-run is set");
   }
 
-  const selectedChains = getSelectedChains(argv);
+  const selectedChains = getSelectedChains(argv, { allowMixedNetworks: true });
 
   // Before anything else, so a stale or missing build fails on the first line rather than after
   // half a sweep. 24067 bytes is the dual-verify-removed implementation (PR #3973).
@@ -236,7 +237,7 @@ async function main() {
   }
 
   console.log(
-    `\nPreflighting ${selectedChains.length} chain(s) against ${deploymentType}...`,
+    `\nPreflighting ${describeChainSelection(selectedChains)} against ${deploymentType}...`,
   );
   const results = await preflightChains(selectedChains, deploymentType);
   printPlan(results);

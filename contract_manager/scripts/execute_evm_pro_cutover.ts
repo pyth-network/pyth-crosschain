@@ -51,6 +51,7 @@ import {
 } from "./common";
 import type { ProDeploymentType } from "./pro_cutover";
 import {
+  describeChainSelection,
   findLegacyPriceFeedContracts,
   isProDeploymentType,
   MULTICALL3_ADDRESS,
@@ -641,7 +642,8 @@ async function main() {
   console.log(`\nGrouping ${vaas.length} VAA(s) by target chain`);
   const triples = groupTriples(vaas);
 
-  const selectedChains = getSelectedChains(argv);
+  const selectedChains = getSelectedChains(argv, { allowMixedNetworks: true });
+  console.log(`Executing on ${describeChainSelection(selectedChains)}`);
   const failures: { proxy: string; error: string }[] = [];
   for (const chain of selectedChains) {
     const triple = triples.get(chain.wormholeChainName);

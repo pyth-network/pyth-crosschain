@@ -17,7 +17,12 @@ import { hideBin } from "yargs/helpers";
 import { toDeploymentType } from "../src/core/base";
 import { CHAIN_SELECTION_OPTIONS, getSelectedChains } from "./common";
 import type { ChainStatus, CutoverPreflight } from "./pro_cutover";
-import { isProDeploymentType, preflightChains, statusOf } from "./pro_cutover";
+import {
+  describeChainSelection,
+  isProDeploymentType,
+  preflightChains,
+  statusOf,
+} from "./pro_cutover";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("preflight_evm_pro_cutover.ts")
@@ -84,9 +89,9 @@ async function main() {
     );
   }
 
-  const selectedChains = getSelectedChains(argv);
+  const selectedChains = getSelectedChains(argv, { allowMixedNetworks: true });
   console.log(
-    `Checking ${selectedChains.length} chain(s) against ${deploymentType}...`,
+    `Checking ${describeChainSelection(selectedChains)} against ${deploymentType}...`,
   );
 
   const results = await preflightChains(selectedChains, deploymentType);

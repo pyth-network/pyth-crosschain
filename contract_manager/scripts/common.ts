@@ -204,11 +204,30 @@ export function makeCacheFunction(
   return runIfNotCached;
 }
 
-export function getSelectedChains(argv: {
-  chain: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["chain"]>;
-  testnet: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["testnet"]>;
-  allChains: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["all-chains"]>;
-}) {
+/**
+ * Resolves the chains a run acts on from `--all-chains`/`--testnet`/`--chain`.
+ *
+ * Mixing mainnet and testnet in one selection is rejected by default: for a script whose target
+ * network is otherwise implicit, a mainnet chain in what the operator thinks is a testnet batch
+ * spends real gas or sends real governance. `allowMixedNetworks` lifts that for callers where the
+ * network genuinely is not what scopes the run — the Pro cutover picks its vault by deployment
+ * type, and its legacy proxies share one governance emitter across both networks, so a mixed
+ * batch is the correct unit of work there.
+ * @param {object} argv The parsed chain selection flags.
+ * @param {object} options Selection overrides.
+ * @param {boolean} options.allowMixedNetworks Permit a selection spanning mainnet and testnet.
+ * @returns The selected chains.
+ */
+export function getSelectedChains(
+  argv: {
+    chain: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["chain"]>;
+    testnet: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["testnet"]>;
+    allChains: InferredOptionType<
+      (typeof COMMON_UPGRADE_OPTIONS)["all-chains"]
+    >;
+  },
+  options: { allowMixedNetworks?: boolean } = {},
+) {
   const selectedChains: EvmChain[] = [];
   if (argv.allChains && argv.chain)
     throw new Error("Cannot use both --all-chains and --chain");
@@ -222,15 +241,21 @@ export function getSelectedChains(argv: {
     )
       selectedChains.push(chain);
   }
-  if (argv.chain && selectedChains.length !== argv.chain.length)
-    throw new Error(
-      `Some chains were not found ${selectedChains
-        .map((chain) => chain.getId())
-        .toString()}`,
-    );
-  for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
-      throw new Error("All chains must be either mainnet or testnet");
+  if (argv.chain && selectedChains.length !== argv.chain.length) {
+    // Name what is missing rather than what was found. The usual cause is a shell that passed the
+    // whole list as one argument, and "some chains were not found" plus the empty found-set gives
+    // no hint of that; the unmatched value does.
+    const found = new Set(selectedChains.map((chain) => chain.getId()));
+    const missing = argv.chain
+      .map((chain) => String(chain))
+      .filter((id) => !found.has(id));
+    throw new Error(`Some chains were not found: ${missing.join(", ")}`);
+  }
+  if (options.allowMixedNetworks !== true) {
+    for (const chain of selectedChains) {
+      if (chain.isMainnet() != selectedChains[0]?.isMainnet())
+        throw new Error("All chains must be either mainnet or testnet");
+    }
   }
   return selectedChains;
 }

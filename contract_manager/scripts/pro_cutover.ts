@@ -607,6 +607,20 @@ export const VAULT_BY_DEPLOYMENT_TYPE: Record<ProDeploymentType, string> = {
 };
 
 /**
+ * Describes a chain selection as a count plus its mainnet/testnet split.
+ *
+ * The cutover phases accept a selection spanning both networks, so the split is printed rather
+ * than left implicit: an operator who meant to run a testnet batch should see a non-zero mainnet
+ * count before any gas is spent or any proposal is signed.
+ * @param {EvmChain[]} chains The selected chains.
+ * @returns A one-line description of the selection.
+ */
+export function describeChainSelection(chains: EvmChain[]): string {
+  const mainnet = chains.filter((chain) => chain.isMainnet()).length;
+  return `${chains.length} chain(s): ${mainnet} mainnet, ${chains.length - mainnet} testnet`;
+}
+
+/**
  * Multicall3, deployed at the same address on most EVM chains.
  *
  * The cutover needs it to put `SetDataSources` and `SetWormholeAddress` in one transaction. A

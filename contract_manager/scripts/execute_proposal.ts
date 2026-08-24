@@ -25,6 +25,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toDeploymentType } from "../src/core/base";
+import type { SolanaRpcRegistry } from "../src/node/utils/governance";
 import {
   loadHotWallet,
   SubmittedWormholeMessage,
@@ -65,6 +66,11 @@ const parser = yargs(hideBin(process.argv))
       desc: "Address of the proposal to execute",
       type: "string",
     },
+    "solana-rpc": {
+      demandOption: false,
+      desc: "Solana RPC to use. Defaults to the public cluster endpoint, which rate limits a large proposal hard enough to abort it partway",
+      type: "string",
+    },
     vault: {
       demandOption: false,
       desc: "Override the vault id. Defaults to the vault for the deployment type",
@@ -97,8 +103,9 @@ async function recoverSequences(
   proposalAddress: PublicKey,
   emitter: PublicKey,
   cluster: PythCluster,
+  registry: SolanaRpcRegistry,
 ): Promise<number[]> {
-  const connection = new Connection(getPythClusterApiUrl(cluster), "confirmed");
+  const connection = new Connection(registry(cluster), "confirmed");
   const history = await connection.getSignaturesForAddress(proposalAddress, {
     limit: 100,
   });
@@ -111,6 +118,7 @@ async function recoverSequences(
       message = await SubmittedWormholeMessage.fromTransactionSignature(
         entry.signature,
         cluster,
+        registry,
       );
     } catch {
       // Approvals, the proposal's own creation, anything that posted no wormhole message.
@@ -168,6 +176,12 @@ async function main() {
     throw new Error("--ops-key-path is required unless --dry-run is set.");
   }
 
+  // The public cluster endpoint 429s under the read volume a large proposal needs.
+  const registry: SolanaRpcRegistry =
+    argv.solanaRpc === undefined
+      ? getPythClusterApiUrl
+      : () => argv.solanaRpc as string;
+
   const deploymentType = toDeploymentType(argv.deploymentType);
   if (argv.vault === undefined && !isProDeploymentType(deploymentType)) {
     throw new Error(
@@ -187,7 +201,7 @@ async function main() {
     argv.opsKeyPath === undefined
       ? new Wallet(Keypair.generate())
       : await loadHotWallet(argv.opsKeyPath);
-  vault.connect(wallet);
+  vault.connect(wallet, registry);
   const squad = vault.getSquadOrThrow();
 
   const proposalAddress = new PublicKey(argv.proposal);
@@ -206,7 +220,7 @@ async function main() {
 
   console.log(`Proposal  ${proposalAddress.toBase58()}`);
   console.log(`Vault     ${vault.getId()}`);
-  console.log(`Emitter   ${(await vault.getEmitter()).toBase58()}`);
+  console.log(`Emitter   ${(await vault.getEmitter(registry)).toBase58()}`);
   console.log(`State     ${await proposal.getState()}`);
   console.log(`Approvals ${approvedBy.length}/${threshold}`);
   for (const key of approvedBy) console.log(`  ${key}`);
@@ -237,8 +251,9 @@ async function main() {
     console.log("\nAlready executed. Recovering the sequences it emitted...");
     const sequences = await recoverSequences(
       proposalAddress,
-      await vault.getEmitter(),
+      await vault.getEmitter(registry),
       vault.cluster,
+      registry,
     );
     if (sequences.length === 0) {
       throw new Error(
