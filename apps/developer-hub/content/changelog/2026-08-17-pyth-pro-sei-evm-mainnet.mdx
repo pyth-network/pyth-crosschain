@@ -1,0 +1,25 @@
+---
+title: Sei joins the Pyth Pro-compatible contract upgrade
+date: 2026-08-17
+product: pyth-pro
+type: feature
+area: contracts
+---
+
+Sei Mainnet (EVM) is now covered by the Pyth Pro-compatible contract upgrade.
+Apps on Sei can point their integrations at the upgraded Pyth contract and
+consume the same Pyth Pro-backed price updates already available on other
+upgraded EVM chains.
+
+**Why it matters:** the upgraded contract is the single integration surface
+for Pyth on EVM going forward, and adding Sei keeps Sei apps aligned with the
+same feed catalog and update semantics as the rest of the upgraded network.
+Legacy Sei consumers keep working — the previous Pyth contract address is
+unchanged.
+
+**What to do:** if you are starting a new integration on Sei, use the upgraded
+(Pro-compatible) address from the EVM contract addresses page. If you are
+migrating an existing Sei app, follow the standard EVM migration steps.
+
+- [EVM contract addresses (upgraded and current)](/price-feeds/core/contract-addresses/evm)
+- [Migrate an app to Pyth](/price-feeds/core/migrate-an-app-to-pyth)

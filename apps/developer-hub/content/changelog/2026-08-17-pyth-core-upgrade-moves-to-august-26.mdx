@@ -1,0 +1,24 @@
+---
+title: Pyth Core upgrade moves to August 26, 2026 at 16:00 UTC
+date: 2026-08-17
+product: pyth-core
+type: deprecation
+area: network
+---
+
+The Pyth Core upgrade cutover is now scheduled for **August 26, 2026 at
+16:00 UTC**, moved back from the previously announced August 18 date.
+Everything keyed to the cutover moves with it: from that moment every Hermes
+request requires a Pyth API Key, and the Benchmarks `/v1/shims/tradingview/*`
+endpoints are retired in favor of the Pyth Pro History API.
+
+**Why it matters:** integrations that were racing the August 18 deadline have
+an extra week to prepare. The requirements themselves are unchanged — only the
+date moved.
+
+**What to do:** if you have not prepared yet, use the extra time: get a Pyth
+API Key and walk through the preparation guide before August 26. If you have
+already migrated, no action is required.
+
+- [Prepare for the upgrade](/price-feeds/core/upgrade/preparing)
+- [Pyth Core upgrade overview](/price-feeds/core/upgrade)

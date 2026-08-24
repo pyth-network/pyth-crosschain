@@ -1,0 +1,23 @@
+---
+title: IHUB/FOGO is now live on Fogo Mainnet push feeds
+date: 2026-08-18
+product: pyth-core
+type: feature
+area: market-data
+---
+
+A sponsored push feed for `IHUB/FOGO` is now listed on Fogo Mainnet. The feed
+updates on-chain at a 0.5% price-deviation threshold or a 60-second heartbeat,
+whichever comes first, so apps on Fogo can read the price directly on-chain
+without scheduling their own updates.
+
+**Why it matters:** Fogo apps that need IHUB pricing can consume a
+continuously refreshed on-chain feed instead of pulling and posting updates
+themselves.
+
+**What to do:** find the `IHUB/FOGO` account address on the Fogo push-feeds
+page and read it like any other sponsored feed. Existing integrations are
+unchanged.
+
+- [Push feeds on Fogo](/price-feeds/core/push-feeds/fogo)
+- [Push feeds overview](/price-feeds/core/push-feeds)

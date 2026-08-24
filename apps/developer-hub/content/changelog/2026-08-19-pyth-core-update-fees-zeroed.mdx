@@ -1,0 +1,23 @@
+---
+title: Pyth Core update fees are now zero on mainnet EVM chains
+date: 2026-08-19
+product: pyth-core
+type: feature
+area: contracts
+---
+
+Following the passed governance proposal OP-PIP-128, the Pyth Core update fee
+is set to **0** across all mainnet EVM deployments as part of the Pyth Core
+sunset. Passing `0` as `msg.value` to `updatePriceFeeds` is sufficient on
+every mainnet EVM network.
+
+**Why it matters:** posting price updates on EVM no longer costs a per-update
+protocol fee, which simplifies fee handling and removes a small recurring cost
+from every update transaction.
+
+**What to do:** no action is required. Integrations that query `getUpdateFee`
+on-chain keep working and now receive 0 — on-chain remains the authoritative
+source for the fee on any given network.
+
+- [Current fees](/price-feeds/core/current-fees)
+- [OP-PIP-128: Pyth Core Sunset — Fee Zeroing & Balance Repatriation](https://forum.pyth.network/t/passed-op-pip-128-pyth-core-sunset-fee-zeroing-balance-repatriation/2662)
