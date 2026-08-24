@@ -18,14 +18,16 @@
  */
 
 import { Wallet } from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import type { PythCluster } from "@pythnetwork/client";
+import { getPythClusterApiUrl } from "@pythnetwork/client";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toDeploymentType } from "../src/core/base";
-import type { SubmittedWormholeMessage } from "../src/node/utils/governance";
 import {
   loadHotWallet,
+  SubmittedWormholeMessage,
   WormholeMultisigProposal,
 } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
@@ -77,6 +79,60 @@ const parser = yargs(hideBin(process.argv))
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Recovers the sequence numbers a proposal emitted, from the transactions that executed it.
+ *
+ * The sequence number is assigned by the wormhole program at execution time and is not derivable
+ * from the proposal, so a proposal executed elsewhere — the multisig UI, an earlier run — leaves no
+ * record of it anywhere this tool can compute. What it does leave is transactions against the
+ * proposal account, and each one logs the sequence of the message it posted.
+ * @param {PublicKey} proposalAddress The proposal to look up.
+ * @param {PublicKey} emitter The vault's emitter, so messages from anything else are ignored.
+ * @param {PythCluster} cluster The cluster the proposal lives on.
+ * @returns The sequence numbers it emitted, ascending.
+ */
+async function recoverSequences(
+  proposalAddress: PublicKey,
+  emitter: PublicKey,
+  cluster: PythCluster,
+): Promise<number[]> {
+  const connection = new Connection(getPythClusterApiUrl(cluster), "confirmed");
+  const history = await connection.getSignaturesForAddress(proposalAddress, {
+    limit: 100,
+  });
+  const sequences = new Set<number>();
+  // Oldest first, so the sequences come out in the order they were emitted.
+  for (const entry of [...history].reverse()) {
+    if (entry.err !== null) continue;
+    let message: SubmittedWormholeMessage;
+    try {
+      message = await SubmittedWormholeMessage.fromTransactionSignature(
+        entry.signature,
+        cluster,
+      );
+    } catch {
+      // Approvals, the proposal's own creation, anything that posted no wormhole message.
+      continue;
+    }
+    if (!message.emitter.equals(emitter)) continue;
+    if (Number.isNaN(message.sequenceNumber)) continue;
+    sequences.add(message.sequenceNumber);
+  }
+  return [...sequences].sort((a, b) => a - b);
+}
+
+/**
+ * Prints the emitted sequences and the flags the execute phase takes.
+ * @param {number[]} sequences The sequence numbers, ascending.
+ */
+function printSequences(sequences: number[]): void {
+  console.log(`\nEmitted ${sequences.length} wormhole message(s):`);
+  for (const sequence of sequences) console.log(`  sequence ${sequence}`);
+  console.log(
+    `\n--from-sequence ${sequences[0]} --to-sequence ${sequences.at(-1)}`,
+  );
 }
 
 /**
@@ -174,6 +230,26 @@ async function main() {
   }
 
   const state = await proposal.getState();
+
+  // Already executed, here or elsewhere: recover what it emitted rather than making the sequence
+  // range something to hunt for by hand. Read-only, so a dry run takes this path too.
+  if (state === "executed") {
+    console.log("\nAlready executed. Recovering the sequences it emitted...");
+    const sequences = await recoverSequences(
+      proposalAddress,
+      await vault.getEmitter(),
+      vault.cluster,
+    );
+    if (sequences.length === 0) {
+      throw new Error(
+        "This proposal has executed but posted no wormhole message from this vault's emitter, " +
+          "or its transactions have fallen out of the RPC's history.",
+      );
+    }
+    printSequences(sequences);
+    return;
+  }
+
   if (argv.dryRun) {
     console.log(
       `\n--dry-run set, nothing approved or executed. State ${state}.`,
@@ -181,12 +257,6 @@ async function main() {
     return;
   }
 
-  if (state === "executed") {
-    throw new Error(
-      "This proposal has already executed. Its sequence numbers are on wormholescan under the " +
-        "vault's emitter, newest first.",
-    );
-  }
   if (state !== "executeReady") {
     // Re-read rather than reusing the count printed above, which an --approve run has just changed.
     const approvals = (await squad.getTransaction(proposalAddress)).approved
@@ -199,17 +269,9 @@ async function main() {
 
   console.log("\nExecuting...");
   const messages = await proposal.execute();
-  const sequences = messages
-    .map((message) => message.sequenceNumber)
-    .sort((a, b) => a - b);
-
-  console.log(`\nEmitted ${messages.length} wormhole message(s):`);
-  for (const sequence of sequences) console.log(`  sequence ${sequence}`);
-
   if (argv.waitSeconds > 0) await waitForVaas(messages, argv.waitSeconds);
-
-  console.log(
-    `\n--from-sequence ${sequences[0]} --to-sequence ${sequences.at(-1)}`,
+  printSequences(
+    messages.map((message) => message.sequenceNumber).sort((a, b) => a - b),
   );
 }
 
