@@ -1,0 +1,162 @@
+name: Sync contract store to pyth-lazer
+
+# Mirrors contract_manager/src/store/** into pyth-lazer's
+# packages/contract-data/src/store/ on every merge to main that touches it,
+# opening one auto-merging PR per merge (PFG-1598).
+#
+# Load-bearing properties:
+#
+# * Absolute state, not deltas: each PR carries the full directory contents,
+#   never a diff, so whichever PR lands last is correct. Auto-merge does not
+#   guarantee landing order, so a later step closes any older sync PR still
+#   open when a newer one is created, keeping at most one sync PR open.
+# * Deletions propagate: the target directory is deleted and re-copied
+#   wholesale, so a chain removed upstream disappears downstream.
+# * Cross-repo auth uses the PYTH_PUSHER GitHub App (PFG-1599), minting a
+#   token scoped to pyth-lazer only. App tokens trigger workflows in the
+#   target repo, so pyth-lazer's CI runs on each sync PR; a GITHUB_TOKEN
+#   from this repo would not.
+# * Each sync commit carries a Source-Sha trailer naming the pyth-crosschain
+#   commit it mirrors, which is what makes "commits since the last sync"
+#   computable without extra state.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "contract_manager/src/store/**"
+  # Manual trigger exists for first-run verification (PFG-1599) and recovery.
+  workflow_dispatch:
+
+concurrency:
+  # Serialise runs and never cancel one in progress. The queue aligns PR
+  # creation order with upstream merge order; it cannot align PR landing
+  # order, which is what the superseded-PR cleanup below is for.
+  group: sync-contract-store
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Mirror store and open PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pyth-crosschain
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          path: source
+          fetch-depth: 0
+
+      - name: Mint pyth-lazer token
+        id: app_token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # pin@v2.1.4
+        with:
+          app-id: ${{ vars.PYTH_PUSHER_APP_ID }}
+          private-key: ${{ secrets.PYTH_PUSHER_PRIVATE_KEY }}
+          owner: pyth-network
+          repositories: pyth-lazer
+
+      - name: Check out pyth-lazer
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: pyth-network/pyth-lazer
+          ref: main
+          path: target
+          fetch-depth: 0
+          token: ${{ steps.app_token.outputs.token }}
+
+      - name: Mirror the store
+        # Delete-then-copy: a file-by-file overwrite would leave deleted
+        # deployments lingering in the docs forever.
+        run: |
+          rm -rf target/packages/contract-data/src/store
+          cp -R source/contract_manager/src/store target/packages/contract-data/src/
+
+      - name: Compute upstream commits since last sync
+        id: commits
+        working-directory: target
+        env:
+          TRIGGER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # --grep skips trailer-less commits (manual edits, or a merge that
+          # dropped the trailer) and finds the last real sync commit. The
+          # trailer survives single-commit squash merges, which preserve the
+          # commit message (observed on pyth-lazer#3272).
+          last_synced=$(git log -1 --grep='Source-Sha:' --format=%B -- packages/contract-data/src/store | sed -n 's/^Source-Sha: //p' || true)
+          # The seed mirror (pyth-network/pyth-lazer#3272) predates the
+          # Source-Sha trailer convention, so the first sync after this
+          # workflow lands falls back to the commit the seed was copied from.
+          last_synced=${last_synced:-f7df0ce74299cf8a4d59ab7d1c01ebad4872940c}
+          echo "last_synced=$last_synced" >> "$GITHUB_OUTPUT"
+          echo "short=${TRIGGER_SHA:0:8}" >> "$GITHUB_OUTPUT"
+          cd ../source
+          {
+            echo "list<<EOF"
+            git log --format='* %h %s' "$last_synced..$TRIGGER_SHA" -- contract_manager/src/store || git log -1 --format='* %h %s' "$TRIGGER_SHA"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create sync PR
+        id: cpr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # pin@v8.1.1
+        with:
+          path: target
+          token: ${{ steps.app_token.outputs.token }}
+          branch: contract-data-sync/${{ github.sha }}
+          delete-branch: true
+          commit-message: |
+            chore(contract-data): sync contract store from pyth-crosschain@${{ steps.commits.outputs.short }}
+
+            Source-Sha: ${{ github.sha }}
+          title: "chore(contract-data): sync contract store from pyth-crosschain@${{ steps.commits.outputs.short }}"
+          body: |
+            ## What this is
+
+            Automated mirror of `contract_manager/src/store/**` from
+            [pyth-crosschain](https://github.com/pyth-network/pyth-crosschain)
+            into `packages/contract-data/src/store/`. Machine-generated. Do not
+            edit by hand. Byte-identical to upstream at `${{ github.sha }}`.
+
+            ## Upstream commits since the last sync
+
+            ${{ steps.commits.outputs.list }}
+
+            ## What to expect
+
+            - pyth-lazer CI runs on this PR because it is authored by the
+              PYTH_PUSHER GitHub App rather than GITHUB_TOKEN. Schema drift
+              fails the `contract-data` test suite.
+            - The Bot Proxy Gatekeeper exempts this PR since every changed
+              file lives under `packages/contract-data/src/store/`.
+            - Branch rules still require **one human approval**. Auto-merge is
+              armed and lands the PR after that approval.
+
+      - name: Close superseded sync PRs
+        # Auto-merge lands each PR independently of creation order, so an
+        # older sync PR merging after a newer one would revert the store to
+        # stale content. Runs are serialised, so the PR just created always
+        # carries state at least as new as anything still open; closing the
+        # rest keeps at most one sync PR open. A no-op run (no new PR) must
+        # not close the freshest pending one, hence the guard.
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          NEW_PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          gh pr list --repo pyth-network/pyth-lazer --state open --limit 50 --json number,headRefName \
+            | jq -r --argjson new "$NEW_PR" '.[] | select(.headRefName | startswith("contract-data-sync/")) | select(.number != $new) | .number' \
+            | while read -r pr; do
+                gh pr close --repo pyth-network/pyth-lazer --delete-branch \
+                  --comment "Superseded by #${NEW_PR}, which carries newer absolute state." "$pr" || true
+              done
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+        run: gh pr merge --auto --squash "$PR_URL"
