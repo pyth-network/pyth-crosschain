@@ -33,13 +33,6 @@ export function mapKey(key: PublicKey): PublicKey {
   )[0];
 }
 
-/**
- * An anchor client for the remote executor, reading and writing through the IDL the deployed
- * program publishes.
- *
- * The wallet is a throwaway: the program's only instruction names its payer explicitly, and every
- * caller signs the transaction itself.
- */
 export function getRemoteExecutorProgram(
   connection: Connection,
 ): Program<RemoteExecutor> {
