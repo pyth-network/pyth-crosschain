@@ -129,6 +129,50 @@ On Pyth, futures symbols include the asset class prefix. The table below lists a
 | Hang Seng | HKH | `Equity.HK.HKHH6/HKD` |
 | FTSE China A50 Index | FCD | `Equity.US.FCDH6/USD` |
 
+## Chain Metadata
+
+Every dated contract belongs to a **chain**: the family of contracts on the same underlying that differ only by expiration. The symbols API exposes three chain-level fields on each contract, with identical values across the whole chain. See [Symbology & Reference Data](/price-feeds/pro/symbology-reference#futures) for the full field definitions.
+
+For the WTI chain (`WTIV6`, `WTIX6`, `WTIZ6`, ...):
+
+```json
+{
+  "symbol_chain_id": "WTI",
+  "expiration_pattern": [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec"
+  ],
+  "availability_pattern": [
+    "F",
+    "G",
+    "H",
+    "J",
+    "K",
+    "M",
+    "N",
+    "Q",
+    "U",
+    "V",
+    "X",
+    "Z"
+  ]
+}
+```
+
+`symbol_chain_id` is the bare symbol root (`WTI`), not a fully-qualified Pyth symbol. `expiration_pattern` is the chain's full annual expiration cycle, written as month abbreviations; `availability_pattern` is the subset Pyth prices, written as the [month codes](#month-codes) above.
+
+Values are per-chain. WTI expires monthly and Pyth prices every month, so both patterns cover all twelve. Copper (`CC`) also expires monthly, but its `availability_pattern` is `["H", "K", "N", "U", "Z"]` — only the March, May, July, September, and December contracts are published.
+
 ## Expiration and Rollover
 
 Futures contracts expire on specific dates. When a contract approaches expiration:
@@ -136,6 +180,8 @@ Futures contracts expire on specific dates. When a contract approaches expiratio
 1. **Liquidity shifts** to the next contract month
 2. **Price feeds transition** to the new front-month contract
 3. **Rollover dates** vary by commodity — check the [Symbology and Reference Data API](https://pyth.dourolabs.app/v1/symbols) for exact expiration dates, or see [Symbology & Reference Data](/price-feeds/pro/symbology-reference) for the field definitions
+
+Which contract months exist at all is given by the chain's `expiration_pattern`, and which of those Pyth publishes by its `availability_pattern` — see [Chain Metadata](#chain-metadata) above.
 
 **Expiration Handling:** Ensure your application handles contract rollovers gracefully. Monitor for feed transitions as contracts approach expiration.
 
