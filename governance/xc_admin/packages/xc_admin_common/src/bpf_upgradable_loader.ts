@@ -14,8 +14,8 @@ export const BPF_UPGRADABLE_LOADER = new PublicKey(
 );
 
 // Header lengths of `UpgradeableLoaderState::Buffer` and `::ProgramData`; the ELF follows.
-export const BUFFER_METADATA_SIZE = 37;
-export const PROGRAMDATA_METADATA_SIZE = 45;
+export const BUFFER_METADATA_SIZE = 4 + 1 + 32;
+export const PROGRAMDATA_METADATA_SIZE = 4 + 8 + 1 + 32;
 
 export function getProgramDataAddress(programId: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
