@@ -1,0 +1,87 @@
+/**
+ * Types for `./idl.json`, which is the IDL the deployed program publishes — refresh both together
+ * with `anchor idl fetch exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq`.
+ *
+ * That IDL predates anchor 0.30, so only an anchor of that era can build a `Program` from it;
+ * `@pythnetwork/xc-admin-common` is on one and exports the client.
+ */
+export type RemoteExecutor = {
+  accounts: [
+    {
+      docs: ["This struct records"];
+      name: "ClaimRecord";
+      type: {
+        fields: [
+          {
+            name: "sequence";
+            type: "u64";
+          },
+        ];
+        kind: "struct";
+      };
+    },
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "EmitterChainNotSolana";
+    },
+    {
+      code: 6001;
+      name: "NonIncreasingSequence";
+    },
+    {
+      code: 6002;
+      name: "GovernanceHeaderInvalidMagicNumber";
+    },
+    {
+      code: 6003;
+      name: "GovernanceHeaderInvalidModule";
+    },
+    {
+      code: 6004;
+      name: "GovernanceHeaderInvalidAction";
+    },
+    {
+      code: 6005;
+      name: "GovernanceHeaderInvalidReceiverChain";
+    },
+    {
+      code: 6006;
+      name: "PostedVaaHeaderWrongMagicNumber";
+    },
+  ];
+  instructions: [
+    {
+      accounts: [
+        {
+          isMut: true;
+          isSigner: true;
+          name: "payer";
+        },
+        {
+          isMut: false;
+          isSigner: false;
+          name: "postedVaa";
+        },
+        {
+          docs: [
+            "The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet",
+          ];
+          isMut: true;
+          isSigner: false;
+          name: "claimRecord";
+        },
+        {
+          isMut: false;
+          isSigner: false;
+          name: "systemProgram";
+        },
+      ];
+      args: [];
+      name: "executePostedVaa";
+    },
+  ];
+  name: "remote_executor";
+  version: "0.1.0";
+};

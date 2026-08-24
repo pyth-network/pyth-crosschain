@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: progress output of the CLI scripts that call this */
 
-import { createHash } from "node:crypto";
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana/index.js";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
@@ -10,6 +9,7 @@ import {
   decodeGovernancePayload,
   EvmExecute,
   ExecutePostedVaa,
+  getRemoteExecutorProgram,
   mapKey,
   REMOTE_EXECUTOR_ADDRESS,
 } from "@pythnetwork/xc-admin-common";
@@ -17,10 +17,10 @@ import type { AccountMeta } from "@solana/web3.js";
 import {
   ComputeBudgetProgram,
   PublicKey,
-  SystemProgram,
   sendAndConfirmTransaction,
   Transaction,
 } from "@solana/web3.js";
+import BN from "bn.js";
 import type { PrivateKey, TxResult } from "../../core/base.js";
 import { EvmChain, SvmChain } from "../../core/chains.js";
 import { EvmExecutorContract } from "../../core/contracts/evm.js";
@@ -156,11 +156,16 @@ async function executeThroughRemoteExecutor(
     REMOTE_EXECUTOR_ADDRESS,
   )[0];
 
+  const program = getRemoteExecutorProgram(connection);
   const claimRecordAccount = await connection.getAccountInfo(claimRecord);
   if (claimRecordAccount) {
-    // ClaimRecord is an 8-byte anchor discriminator followed by the last executed sequence.
-    const executedSequence = claimRecordAccount.data.readBigUInt64LE(8);
-    if (executedSequence >= parsedVaa.sequence) {
+    // The anchor this IDL is built with camel-cases the `program.account` namespace at runtime
+    // but not at the type level, so the coder is the only way to reach a PascalCase account.
+    const { sequence } = program.coder.accounts.decode<{ sequence: BN }>(
+      "ClaimRecord",
+      claimRecordAccount.data,
+    );
+    if (sequence.gte(new BN(parsedVaa.sequence.toString()))) {
       console.log(
         `Skipping on chain ${chain.getId()} as sequence ${parsedVaa.sequence} was already executed`,
       );
@@ -198,20 +203,13 @@ async function executeThroughRemoteExecutor(
 
   const transaction = new Transaction()
     .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }))
-    .add({
-      data: createHash("sha256")
-        .update("global:execute_posted_vaa")
-        .digest()
-        .subarray(0, 8),
-      keys: [
-        { isSigner: true, isWritable: true, pubkey: payer.publicKey },
-        { isSigner: false, isWritable: false, pubkey: postedVaa },
-        { isSigner: false, isWritable: true, pubkey: claimRecord },
-        { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
-        ...remainingAccounts,
-      ],
-      programId: REMOTE_EXECUTOR_ADDRESS,
-    });
+    .add(
+      await program.methods
+        .executePostedVaa()
+        .accounts({ claimRecord, payer: payer.publicKey, postedVaa })
+        .remainingAccounts(remainingAccounts)
+        .instruction(),
+    );
   const signature = await sendAndConfirmTransaction(connection, transaction, [
     payer,
   ]);
