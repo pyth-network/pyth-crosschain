@@ -28,6 +28,7 @@ import type {
   SvmMigrationTargetState,
 } from "./svm_guardian_set_migration";
 import {
+  describeChainState,
   getVaultOrThrow,
   isCoreBridgeMigrated,
   isReceiverMigrated,
@@ -119,7 +120,13 @@ async function main() {
   }
   for (const target of targets) {
     console.log(
-      `${target.chain.getId()}: ${await relayPriceUpdate(target, wallet, {
+      `\n=== ${target.chain.getId()} (governed by ${target.signer.toBase58()})`,
+    );
+    console.log(await describeChainState(target));
+
+    console.log(`post-migration price relay from ${argv["hermes-url"]}`);
+    console.log(
+      `  ${await relayPriceUpdate(target, wallet, {
         feedId: argv["price-feed-id"],
         token: argv["hermes-token"],
         url: argv["hermes-url"],
