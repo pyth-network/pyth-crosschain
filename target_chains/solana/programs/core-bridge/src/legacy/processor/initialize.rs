@@ -45,10 +45,8 @@ const _PYTH_INITIAL_MULTISIG_SET_PROD: [[u8; 20]; 5] = [
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "beta")] {
-        /// The guardian set `initialize` installs at index 0.
         pub const PYTH_INITIAL_MULTISIG_SET: &[[u8; 20]] = &_PYTH_INITIAL_MULTISIG_SET_STAGING;
     } else {
-        /// The guardian set `initialize` installs at index 0.
         pub const PYTH_INITIAL_MULTISIG_SET: &[[u8; 20]] = &_PYTH_INITIAL_MULTISIG_SET_PROD;
     }
 }
