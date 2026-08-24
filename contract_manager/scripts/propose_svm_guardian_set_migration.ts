@@ -51,12 +51,7 @@ const parser = yargs(hideBin(process.argv))
       default: false,
       desc: "Print the state of every chain and run every check, but do not submit the proposal. The pre-flight price relay still sends a transaction",
       type: "boolean",
-    },
-    "hermes-token": {
-      default: process.env.PYTH_API_KEY,
-      desc: "Bearer token for the Hermes instance, if it needs one",
-      type: "string",
-    },
+    }
   });
 
 async function main() {
@@ -89,7 +84,7 @@ async function main() {
     console.log(
       `  ${await relayPriceUpdate(target, wallet, {
         feedId: hermes.solUsdFeedId,
-        token: argv["hermes-token"],
+        token: undefined,
         url: hermes.url,
       })}`,
     );
