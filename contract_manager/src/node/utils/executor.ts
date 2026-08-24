@@ -24,7 +24,10 @@ import BN from "bn.js";
 import type { PrivateKey, TxResult } from "../../core/base.js";
 import { EvmChain, SvmChain } from "../../core/chains.js";
 import { EvmExecutorContract } from "../../core/contracts/evm.js";
-import type { SvmWormholeContract } from "../../core/contracts/svm.js";
+import {
+  SvmPriceFeedContract,
+  SvmWormholeContract,
+} from "../../core/contracts/svm.js";
 import { DefaultStore } from "./store.js";
 
 // TODO: A better place for this would be `base.ts`. That will require
@@ -111,6 +114,8 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
     }
   } else {
     for (const contract of Object.values(DefaultStore.contracts)) {
+      // The SVM receiver is governed by an authority key, not by VAAs.
+      if (contract instanceof SvmPriceFeedContract) continue;
       if (
         action.targetChainId === "unset" ||
         contract.getChain().wormholeChainName === action.targetChainId
@@ -121,8 +126,10 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
 }
 
 function findSvmWormholeContract(chain: SvmChain): SvmWormholeContract {
-  const contracts = Object.values(DefaultStore.svm_wormhole_contracts).filter(
-    (contract) => contract.getChain().getId() === chain.getId(),
+  const contracts = Object.values(DefaultStore.wormhole_contracts).filter(
+    (contract): contract is SvmWormholeContract =>
+      contract instanceof SvmWormholeContract &&
+      contract.getChain().getId() === chain.getId(),
   );
   const [contract] = contracts;
   if (!contract || contracts.length > 1) {
