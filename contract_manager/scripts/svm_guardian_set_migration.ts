@@ -187,16 +187,16 @@ function findContract<T extends { getChain(): SvmChain; getId(): string }>(
  *
  * The buffer's rent is refunded to `signer`, which is also the account that paid for it.
  */
-export function buildMigrationInstructions(
+export async function buildMigrationInstructions(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
-): TransactionInstruction[] {
+): Promise<TransactionInstruction[]> {
   return [
-    target.receiver.generateSetDataSourcesInstruction(
+    await target.receiver.generateSetDataSourcesInstruction(
       target.signer,
       state.dataSources,
     ),
-    target.receiver.generateSetFeeInstruction(
+    await target.receiver.generateSetFeeInstruction(
       target.signer,
       state.singleUpdateFeeInLamports,
     ),

@@ -109,7 +109,7 @@ async function main() {
     await checkAuthorities(target);
     await checkUpgradeBuffer(target, state);
 
-    const instructions = buildMigrationInstructions(target, state);
+    const instructions = await buildMigrationInstructions(target, state);
     if (target.chain.isRemote) {
       remotePayloads.push(
         ...instructions.map((instruction) =>
