@@ -18,7 +18,7 @@ const EXECUTOR_KEY_SEED: string = "EXECUTOR_KEY";
  * Address of the remote executor (same on all networks)
  */
 export const REMOTE_EXECUTOR_ADDRESS: PublicKey = new PublicKey(
-  "exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq",
+  "vUG8nkTxPSDzoHdafdw59GxKYgs78p36XekK392sHs1",
 );
 
 /**

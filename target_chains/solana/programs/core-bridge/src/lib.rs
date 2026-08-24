@@ -10,7 +10,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "pro-compatible")] {
         declare_id!("HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL");
     } else {
-        declare_id!("HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ");
+        declare_id!("9PPNHzciAx1YY8uXUB95kZecZvdKi8akWjRkje4ro81");
     }
 }
 
