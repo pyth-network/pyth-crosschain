@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
-
+import { Wallet } from "@coral-xyz/anchor";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   getProgramDataAddress,
@@ -7,11 +7,14 @@ import {
 } from "@pythnetwork/xc-admin-common";
 import type { AccountInfo, TransactionInstruction } from "@solana/web3.js";
 import {
+  Keypair,
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from "@solana/web3.js";
+import BN from "bn.js";
+import bs58 from "bs58";
 
 import type { KeyValueConfig } from "../base";
 import { Storable } from "../base";
@@ -19,69 +22,22 @@ import type { Chain } from "../chains";
 import { SvmChain } from "../chains";
 
 /**
- * Sequential reader for the borsh encodings the on-chain accounts use. Anchor's
- * `Program` client would do this for us, but the published receiver and core
- * bridge IDLs are in the pre-0.30 format that this package's Anchor can no
- * longer instantiate, and the core bridge's legacy accounts have no IDL at all.
+ * Anchor clients for the receiver and the core bridge, built by the receiver SDK.
+ *
+ * Their IDLs are in the pre-0.30 format, which the anchor this package depends on can no longer
+ * instantiate, and `PythSolanaReceiver` already owns `Program`s built with the anchor version
+ * those IDLs match. The wallet it needs is never used: every instruction built here is left
+ * unsigned for the multisig, and everything else is a read.
  */
-class BorshReader {
-  private offset = 0;
-
-  constructor(private readonly data: Buffer) {}
-
-  skip(bytes: number): void {
-    this.offset += bytes;
-  }
-
-  u8(): number {
-    const value = this.data.readUInt8(this.offset);
-    this.offset += 1;
-    return value;
-  }
-
-  u16(): number {
-    const value = this.data.readUInt16LE(this.offset);
-    this.offset += 2;
-    return value;
-  }
-
-  u32(): number {
-    const value = this.data.readUInt32LE(this.offset);
-    this.offset += 4;
-    return value;
-  }
-
-  u64(): bigint {
-    const value = this.data.readBigUInt64LE(this.offset);
-    this.offset += 8;
-    return value;
-  }
-
-  bytes(length: number): Buffer {
-    const value = this.data.subarray(this.offset, this.offset + length);
-    this.offset += length;
-    return value;
-  }
-
-  pubkey(): PublicKey {
-    return new PublicKey(this.bytes(32));
-  }
-
-  option<T>(read: () => T): T | undefined {
-    return this.u8() === 0 ? undefined : read();
-  }
-
-  vec<T>(read: () => T): T[] {
-    return Array.from({ length: this.u32() }, read);
-  }
-}
-
-/** The first 8 bytes of `sha256("<namespace>:<name>")`, as Anchor derives them. */
-function discriminator(namespace: string, name: string): Buffer {
-  return createHash("sha256")
-    .update(`${namespace}:${name}`)
-    .digest()
-    .subarray(0, 8);
+function getPrograms(
+  chain: SvmChain,
+  programIds: { receiverProgramId?: PublicKey; wormholeProgramId?: PublicKey },
+): PythSolanaReceiver {
+  return new PythSolanaReceiver({
+    connection: chain.getConnection(),
+    wallet: new Wallet(Keypair.generate()),
+    ...programIds,
+  });
 }
 
 /**
@@ -100,9 +56,12 @@ export async function getUpgradeAuthority(
       `${chain.getId()}: ${programId.toBase58()} has no program data account — is it deployed with the upgradeable loader?`,
     );
   }
-  const reader = new BorshReader(account.data);
-  reader.skip(4 + 8); // UpgradeableLoaderState::ProgramData discriminant, deployment slot
-  return reader.option(() => reader.pubkey());
+  // The loader's own accounts have no IDL: `UpgradeableLoaderState::ProgramData` is a 4-byte
+  // discriminant, a deployment slot, then the authority as an `Option<Pubkey>`.
+  const optionOffset = 4 + 8;
+  return account.data.readUInt8(optionOffset) === 0
+    ? undefined
+    : new PublicKey(account.data.subarray(optionOffset + 1, optionOffset + 33));
 }
 
 /** Contents of the receiver's singleton `Config` account. */
@@ -195,28 +154,28 @@ export class SvmPriceFeedContract extends Storable {
         `Receiver ${this.getId()} has no config account — is the program initialized?`,
       );
     }
-    const reader = new BorshReader(account.data);
-    reader.skip(discriminator("account", "Config").length);
-    // Each field has to be read into its own binding rather than straight into the
-    // returned object: borsh has no field names, so the reads have to happen in
-    // declaration order, and the formatter sorts object keys alphabetically.
-    const governanceAuthority = reader.pubkey();
-    const targetGovernanceAuthority = reader.option(() => reader.pubkey());
-    const wormhole = reader.pubkey();
-    const validDataSources = reader.vec(() => {
-      const emitterChain = reader.u16();
-      const emitterAddress = reader.bytes(32).toString("hex");
-      return { emitterAddress, emitterChain };
-    });
-    const singleUpdateFeeInLamports = reader.u64();
-    const minimumSignatures = reader.u8();
+    const config = this.getProgram().coder.accounts.decode<{
+      governanceAuthority: PublicKey;
+      targetGovernanceAuthority: PublicKey | null;
+      wormhole: PublicKey;
+      validDataSources: { chain: number; emitter: PublicKey }[];
+      singleUpdateFeeInLamports: BN;
+      minimumSignatures: number;
+    }>("Config", account.data);
+    // The IDL's `DataSource` is `{ chain, emitter }`; the rest of contract_manager speaks
+    // `xc_admin_common`'s `{ emitterChain, emitterAddress }`.
     return {
-      governanceAuthority,
-      minimumSignatures,
-      singleUpdateFeeInLamports,
-      targetGovernanceAuthority,
-      validDataSources,
-      wormhole,
+      governanceAuthority: config.governanceAuthority,
+      minimumSignatures: config.minimumSignatures,
+      singleUpdateFeeInLamports: BigInt(
+        config.singleUpdateFeeInLamports.toString(),
+      ),
+      targetGovernanceAuthority: config.targetGovernanceAuthority ?? undefined,
+      validDataSources: config.validDataSources.map((source) => ({
+        emitterAddress: source.emitter.toBuffer().toString("hex"),
+        emitterChain: source.chain,
+      })),
+      wormhole: config.wormhole,
     };
   }
 
@@ -227,48 +186,38 @@ export class SvmPriceFeedContract extends Storable {
   generateSetDataSourcesInstruction(
     governanceAuthority: PublicKey,
     dataSources: DataSource[],
-  ): TransactionInstruction {
-    const args = Buffer.alloc(4 + dataSources.length * 34);
-    args.writeUInt32LE(dataSources.length, 0);
-    for (const [index, dataSource] of dataSources.entries()) {
-      const offset = 4 + index * 34;
-      args.writeUInt16LE(dataSource.emitterChain, offset);
-      Buffer.from(dataSource.emitterAddress, "hex").copy(args, offset + 2);
-    }
-    return this.governanceInstruction(
-      "set_data_sources",
-      governanceAuthority,
-      args,
-    );
+  ): Promise<TransactionInstruction> {
+    return this.getProgram()
+      .methods.setDataSources(
+        dataSources.map((dataSource) => ({
+          chain: dataSource.emitterChain,
+          emitter: new PublicKey(Buffer.from(dataSource.emitterAddress, "hex")),
+        })),
+      )
+      .accounts({
+        config: this.getConfigAddress(),
+        payer: governanceAuthority,
+      })
+      .instruction();
   }
 
   /** Build the `set_fee` instruction that sets the per-update fee in lamports. */
   generateSetFeeInstruction(
     governanceAuthority: PublicKey,
     singleUpdateFeeInLamports: bigint,
-  ): TransactionInstruction {
-    const args = Buffer.alloc(8);
-    args.writeBigUInt64LE(singleUpdateFeeInLamports);
-    return this.governanceInstruction("set_fee", governanceAuthority, args);
+  ): Promise<TransactionInstruction> {
+    return this.getProgram()
+      .methods.setFee(new BN(singleUpdateFeeInLamports.toString()))
+      .accounts({
+        config: this.getConfigAddress(),
+        payer: governanceAuthority,
+      })
+      .instruction();
   }
 
-  /**
-   * Every receiver governance instruction takes the same `Governance` account
-   * context: the authority signing, and the config it mutates.
-   */
-  private governanceInstruction(
-    name: string,
-    governanceAuthority: PublicKey,
-    args: Buffer,
-  ): TransactionInstruction {
-    return {
-      data: Buffer.concat([discriminator("global", name), args]),
-      keys: [
-        { isSigner: true, isWritable: false, pubkey: governanceAuthority },
-        { isSigner: false, isWritable: true, pubkey: this.getConfigAddress() },
-      ],
-      programId: this.getProgramId(),
-    };
+  private getProgram() {
+    return getPrograms(this.chain, { receiverProgramId: this.getProgramId() })
+      .receiver;
   }
 }
 
@@ -387,14 +336,14 @@ export class SvmWormholeContract extends Storable {
         `Core bridge ${this.getId()} has no config account — is the program initialized?`,
       );
     }
-    // The bridge config is a legacy account: no discriminator, and a gap where the
-    // old implementation tracked the fees it had been paid.
-    const reader = new BorshReader(account.data);
-    const guardianSetIndex = reader.u32();
-    reader.skip(8);
-    const guardianSetTtlSeconds = reader.u32();
-    const feeLamports = reader.u64();
-    return { feeLamports, guardianSetIndex, guardianSetTtlSeconds };
+    // The bridge config is a legacy account with no anchor discriminator, so the IDL knows it as
+    // a plain type rather than as one of the program's accounts.
+    const config = this.getProgram().coder.types.decode("Config", account.data);
+    return {
+      feeLamports: BigInt(config.feeLamports.toString()),
+      guardianSetIndex: config.guardianSetIndex,
+      guardianSetTtlSeconds: config.guardianSetTtl.seconds,
+    };
   }
 
   async getCurrentGuardianSetIndex(): Promise<number> {
@@ -415,9 +364,15 @@ export class SvmWormholeContract extends Storable {
       .getMultipleAccountsInfo(
         indexes.map((index) => this.getGuardianSetAddress(index)),
       );
+    const program = this.getProgram();
     return accounts
       .filter((account): account is AccountInfo<Buffer> => account !== null)
-      .map((account) => decodeGuardianSet(account.data));
+      .map((account) => decodeGuardianSet(program, account.data));
+  }
+
+  private getProgram() {
+    return getPrograms(this.chain, { wormholeProgramId: this.getProgramId() })
+      .wormhole;
   }
 
   /**
@@ -508,28 +463,43 @@ export class SvmWormholeContract extends Storable {
 
 /**
  * Positions of the two legacy selectors this module emits within the core
- * bridge's `LegacyInstruction` enum. The enum keeps placeholder variants for
- * every instruction that has been removed so these values never shift.
+ * bridge's `LegacyInstruction` enum. They are not read out of the IDL because the
+ * published one is of the pre-migration program, whose enum stops at
+ * `PostMessageUnreliable`; `CloseGuardianSet` only exists in the migrated build.
+ * The enum keeps placeholder variants for every instruction that has been removed
+ * so these values never shift.
  */
 const LEGACY_INSTRUCTION_INITIALIZE = 0;
 const LEGACY_INSTRUCTION_CLOSE_GUARDIAN_SET = 10;
 
 /**
- * Guardian sets created by the original Wormhole program carry no discriminator,
- * while ones written by an Anchor instruction do. The bridge itself accepts both
- * (`AccountVariant`), so both have to be read here.
+ * Guardian sets are stored as an `AccountVariant`: one written by the original
+ * Wormhole program carries no anchor discriminator, while one written by an anchor
+ * instruction does, and the bridge accepts both. `decodeUnchecked` always assumes
+ * the latter, so a legacy account is given a stand-in for it to skip over.
  */
-function decodeGuardianSet(data: Buffer): SvmGuardianSet {
-  const anchorDiscriminator = discriminator("account", "GuardianSet");
-  const reader = new BorshReader(data);
-  if (
-    data.subarray(0, anchorDiscriminator.length).equals(anchorDiscriminator)
-  ) {
-    reader.skip(anchorDiscriminator.length);
-  }
-  const index = reader.u32();
-  const keys = reader.vec(() => reader.bytes(20).toString("hex"));
-  const creationTime = reader.u32();
-  const expirationTime = reader.u32();
-  return { creationTime, expirationTime, index, keys };
+function decodeGuardianSet(
+  program: PythSolanaReceiver["wormhole"],
+  data: Buffer,
+): SvmGuardianSet {
+  const discriminator = Buffer.from(
+    bs58.decode(program.coder.accounts.memcmp("guardianSet").bytes as string),
+  );
+  const set = program.coder.accounts.decodeUnchecked<{
+    index: number;
+    keys: number[][];
+    creationTime: { value: number };
+    expirationTime: { value: number };
+  }>(
+    "guardianSet",
+    data.subarray(0, discriminator.length).equals(discriminator)
+      ? data
+      : Buffer.concat([Buffer.alloc(discriminator.length), data]),
+  );
+  return {
+    creationTime: set.creationTime.value,
+    expirationTime: set.expirationTime.value,
+    index: set.index,
+    keys: set.keys.map((key) => Buffer.from(key).toString("hex")),
+  };
 }
