@@ -7,7 +7,9 @@ name: Sync contract store to pyth-lazer
 # Load-bearing properties:
 #
 # * Absolute state, not deltas: each PR carries the full directory contents,
-#   so out-of-order arrival is harmless. Whichever PR lands last is correct.
+#   never a diff, so whichever PR lands last is correct. Auto-merge does not
+#   guarantee landing order, so a later step closes any older sync PR still
+#   open when a newer one is created, keeping at most one sync PR open.
 # * Deletions propagate: the target directory is deleted and re-copied
 #   wholesale, so a chain removed upstream disappears downstream.
 # * Cross-repo auth uses the PYTH_PUSHER GitHub App (PFG-1599), minting a
@@ -28,9 +30,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Serialise runs and never cancel one in progress. Each PR carries absolute
-  # state, so the serial queue keeps the PR sequence aligned with the merge
-  # sequence and the last PR to land is always correct.
+  # Serialise runs and never cancel one in progress. The queue aligns PR
+  # creation order with upstream merge order; it cannot align PR landing
+  # order, which is what the superseded-PR cleanup below is for.
   group: sync-contract-store
   cancel-in-progress: false
 
@@ -80,7 +82,11 @@ jobs:
           TRIGGER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          last_synced=$(git log -1 --format=%B -- packages/contract-data/src/store | sed -n 's/^Source-Sha: //p' || true)
+          # --grep skips trailer-less commits (manual edits, or a merge that
+          # dropped the trailer) and finds the last real sync commit. The
+          # trailer survives single-commit squash merges, which preserve the
+          # commit message (observed on pyth-lazer#3272).
+          last_synced=$(git log -1 --grep='Source-Sha:' --format=%B -- packages/contract-data/src/store | sed -n 's/^Source-Sha: //p' || true)
           # The seed mirror (pyth-network/pyth-lazer#3272) predates the
           # Source-Sha trailer convention, so the first sync after this
           # workflow lands falls back to the commit the seed was copied from.
@@ -128,6 +134,25 @@ jobs:
               file lives under `packages/contract-data/src/store/`.
             - Branch rules still require **one human approval**. Auto-merge is
               armed and lands the PR after that approval.
+
+      - name: Close superseded sync PRs
+        # Auto-merge lands each PR independently of creation order, so an
+        # older sync PR merging after a newer one would revert the store to
+        # stale content. Runs are serialised, so the PR just created always
+        # carries state at least as new as anything still open; closing the
+        # rest keeps at most one sync PR open. A no-op run (no new PR) must
+        # not close the freshest pending one, hence the guard.
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          NEW_PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          gh pr list --repo pyth-network/pyth-lazer --state open --limit 50 --json number,headRefName \
+            | jq -r --argjson new "$NEW_PR" '.[] | select(.headRefName | startswith("contract-data-sync/")) | select(.number != $new) | .number' \
+            | while read -r pr; do
+                gh pr close --repo pyth-network/pyth-lazer --delete-branch \
+                  --comment "Superseded by #${NEW_PR}, which carries newer absolute state." "$pr" || true
+              done
 
       - name: Enable auto-merge
         if: steps.cpr.outputs.pull-request-number != ''
