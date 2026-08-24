@@ -58,7 +58,7 @@ struct SvmChain {
     legacy_guardian_set: bool,
 }
 
-const PYTH_SVM_WORMHOLE_RECEIVER: &str = "9PPNHzciAx1YY8uXUB95kZecZvdKi8akWjRkje4ro81";
+const PYTH_SVM_WORMHOLE_RECEIVER: &str = "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ";
 const PYTHNET_WORMHOLE_RECEIVER: &str = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU";
 
 const SVM_CHAINS: &[SvmChain] = &[

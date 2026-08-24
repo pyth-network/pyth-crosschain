@@ -16,7 +16,7 @@ pub mod state;
 mod tests;
 
 //Anchor requires the program to declare its own id
-declare_id!("vUG8nkTxPSDzoHdafdw59GxKYgs78p36XekK392sHs1");
+declare_id!("exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq");
 
 #[program]
 pub mod remote_executor {

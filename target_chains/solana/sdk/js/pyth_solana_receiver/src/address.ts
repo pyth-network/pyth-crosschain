@@ -8,18 +8,18 @@ import { Buffer as IsomorphicBuffer } from "buffer";
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_RECEIVER_PROGRAM_ID = new PublicKey(
-  "KfTiCAcmgpuWQhtXMBigWYVt7Szsx8UhKcNsWLPjWp1",
+  "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
 );
 /**
  * The default Wormhole program ID.
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_WORMHOLE_PROGRAM_ID = new PublicKey(
-  "9PPNHzciAx1YY8uXUB95kZecZvdKi8akWjRkje4ro81",
+  "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
 );
 
 export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
-  "stR5niJcxeFhYSRo1iyxNgnAcqrcJsqZ3WkB2TW2PW1",
+  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
 );
 
 export const PRO_COMPATIBLE_RECEIVER_PROGRAM_ID = new PublicKey(
