@@ -1,10 +1,3 @@
-/**
- * Types for `./idl.json`, which is the IDL the deployed program publishes — refresh both together
- * with `anchor idl fetch exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq`.
- *
- * That IDL predates anchor 0.30, so only an anchor of that era can build a `Program` from it;
- * `@pythnetwork/xc-admin-common` is on one and exports the client.
- */
 export type RemoteExecutor = {
   accounts: [
     {
