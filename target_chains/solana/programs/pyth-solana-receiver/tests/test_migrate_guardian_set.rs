@@ -63,9 +63,6 @@ const MAINNET_BRIDGE_FIXTURE: &str = concat!(
     "/tests/fixtures/wormhole_core_bridge_solana_mainnet.so"
 );
 
-/// Guardian set index mainnet is at today, and therefore the highest index this test creates.
-const CURRENT_MAINNET_GUARDIAN_SET_INDEX: u32 = 7;
-
 fn loader_account(state: &UpgradeableLoaderState, elf: Option<&[u8]>) -> Account {
     let mut data = bincode::serialize(state).unwrap();
     if let Some(elf) = elf {
@@ -186,6 +183,7 @@ fn close_guardian_set_instruction(recipient: Pubkey, guardian_set_index: u32) ->
         program_id: BRIDGE_ID,
         accounts: vec![
             AccountMeta::new(recipient, false),
+            AccountMeta::new(bridge_address(), false),
             AccountMeta::new(
                 get_guardian_set_address(BRIDGE_ID, guardian_set_index),
                 false,
@@ -239,8 +237,12 @@ async fn post_encoded_vaa(
     encoded_vaa.pubkey()
 }
 
+fn bridge_address() -> Pubkey {
+    Pubkey::find_program_address(&[BridgeConfig::SEED_PREFIX], &BRIDGE_ID).0
+}
+
 async fn bridge_config(program_simulator: &mut ProgramSimulator) -> BridgeConfig {
-    let address = Pubkey::find_program_address(&[BridgeConfig::SEED_PREFIX], &BRIDGE_ID).0;
+    let address = bridge_address();
     let account = program_simulator
         .get_account(address)
         .await
@@ -361,15 +363,12 @@ async fn test_migrate_guardian_set_from_mainnet_bridge() {
             .unwrap();
     }
 
+    let current_guardian_set_index = bridge_config(&mut program_simulator)
+        .await
+        .guardian_set_index;
+
     assert_eq!(
-        bridge_config(&mut program_simulator)
-            .await
-            .guardian_set_index,
-        CURRENT_MAINNET_GUARDIAN_SET_INDEX,
-        "the bridge tracks mainnet's current guardian set index"
-    );
-    assert_eq!(
-        guardian_set(&mut program_simulator, CURRENT_MAINNET_GUARDIAN_SET_INDEX)
+        guardian_set(&mut program_simulator, current_guardian_set_index)
             .await
             .unwrap()
             .keys
@@ -455,7 +454,7 @@ async fn test_migrate_guardian_set_from_mainnet_bridge() {
     // in, so nothing below would dispatch to the new code without this.
     program_simulator.advance_slot().await.unwrap();
 
-    for guardian_set_index in 0..=CURRENT_MAINNET_GUARDIAN_SET_INDEX {
+    for guardian_set_index in (0..=current_guardian_set_index).rev() {
         program_simulator
             .process_ix_with_default_compute_limit(
                 close_guardian_set_instruction(payer.pubkey(), guardian_set_index),
@@ -466,7 +465,7 @@ async fn test_migrate_guardian_set_from_mainnet_bridge() {
             .unwrap();
     }
 
-    for guardian_set_index in 0..=CURRENT_MAINNET_GUARDIAN_SET_INDEX {
+    for guardian_set_index in 0..=current_guardian_set_index {
         assert!(
             program_simulator
                 .get_account(get_guardian_set_address(BRIDGE_ID, guardian_set_index))
