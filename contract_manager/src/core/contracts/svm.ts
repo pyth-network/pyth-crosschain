@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noConsole: progress output of the CLI scripts that call this */
+
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana/index.js";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
@@ -5,11 +7,22 @@ import { Wallet } from "@coral-xyz/anchor";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
+  CLAIM_RECORD_SEED,
+  decodeGovernancePayload,
+  ExecutePostedVaa,
   getProgramDataAddress,
+  getRemoteExecutorProgram,
   getUpgradeInstruction,
+  mapKey,
+  REMOTE_EXECUTOR_ADDRESS,
 } from "@pythnetwork/xc-admin-common";
-import type { AccountInfo, TransactionInstruction } from "@solana/web3.js";
+import type {
+  AccountInfo,
+  AccountMeta,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
@@ -254,18 +267,102 @@ export class SvmPriceFeedContract extends PriceFeedContract {
     throw new Error("Unsupported");
   }
 
-  // The receiver's governance is a `governance_authority` key on its config rather than a VAA
-  // emitter, so none of the VAA-driven governance interface applies to it.
+  // The governance source is the vault behind the receiver's `governance_authority`, and that
+  // authority is a one-way hash of the vault's emitter, so it cannot be read back from chain.
   getGovernanceDataSource(): Promise<DataSource> {
     throw new Error("Unsupported");
   }
 
+  // Held by the remote executor's claim record, which is keyed by the emitter the sequence
+  // belongs to rather than by the receiver.
   getLastExecutedGovernanceSequence(): Promise<number> {
     throw new Error("Unsupported");
   }
 
-  executeGovernanceInstruction(): Promise<TxResult> {
-    throw new Error("Unsupported");
+  // The receiver is not governed by VAAs directly: the vault emits an `ExecutePostedVaa` message,
+  // and the remote executor on this chain replays the instructions it carries, signing them with
+  // the PDA the receiver's config names as its governance authority.
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer,
+  ): Promise<TxResult> {
+    const action = decodeGovernancePayload(parseVaa(vaa).payload);
+    if (!(action instanceof ExecutePostedVaa)) {
+      throw new Error(
+        `${this.getId()} only accepts ExecutePostedVaa governance messages`,
+      );
+    }
+
+    const parsedVaa = parseVaa(vaa);
+    const connection = this.chain.getConnection();
+    const payer = this.chain.getKeypair(senderPrivateKey);
+    const emitter = new PublicKey(parsedVaa.emitterAddress);
+    const executorKey = mapKey(emitter);
+    const claimRecord = PublicKey.findProgramAddressSync(
+      [Buffer.from(CLAIM_RECORD_SEED), emitter.toBuffer()],
+      REMOTE_EXECUTOR_ADDRESS,
+    )[0];
+
+    const program = getRemoteExecutorProgram(connection);
+    const claimRecordAccount = await connection.getAccountInfo(claimRecord);
+    if (claimRecordAccount) {
+      // The anchor this IDL is built with camel-cases `program.account` at runtime but not at the
+      // type level, so the coder is the only way to reach a PascalCase account.
+      const { sequence } = program.coder.accounts.decode<{ sequence: BN }>(
+        "ClaimRecord",
+        claimRecordAccount.data,
+      );
+      if (sequence.gte(new BN(parsedVaa.sequence.toString()))) {
+        console.log(
+          `Skipping on ${this.getId()} as sequence ${parsedVaa.sequence} was already executed`,
+        );
+        return { id: "", info: { executedSequence: sequence.toNumber() } };
+      }
+    }
+
+    // The executor requires the posted VAA to be owned by the core bridge the receiver itself
+    // verifies against.
+    const { wormhole } = await this.getConfig();
+    const postedVaa = derivePostedVaaKey(wormhole, parsedVaa.hash);
+    if (await connection.getAccountInfo(postedVaa)) {
+      console.log(`VAA is already posted on ${this.getId()} at ${postedVaa}`);
+    } else {
+      await postVaaSolana(
+        connection,
+        signTransactionFactory(payer),
+        wormhole,
+        payer.publicKey,
+        vaa,
+      );
+      console.log(`Posted VAA on ${this.getId()} at ${postedVaa}`);
+    }
+
+    // Every account the CPI'd instructions touch has to ride along, led by the signing PDA.
+    const remainingAccounts: AccountMeta[] = [
+      { isSigner: false, isWritable: true, pubkey: executorKey },
+    ];
+    for (const instruction of action.instructions) {
+      remainingAccounts.push(
+        { isSigner: false, isWritable: false, pubkey: instruction.programId },
+        ...instruction.keys.filter((key) => !key.pubkey.equals(executorKey)),
+      );
+    }
+
+    const id = await sendAndConfirmTransaction(
+      connection,
+      new Transaction()
+        .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }))
+        .add(
+          await program.methods
+            .executePostedVaa()
+            .accounts({ claimRecord, payer: payer.publicKey, postedVaa })
+            .remainingAccounts(remainingAccounts)
+            .instruction(),
+        ),
+      [payer],
+    );
+    console.log(`Executed on ${this.getId()} with txHash: ${id}`);
+    return { id, info: { postedVaa: postedVaa.toBase58() } };
   }
 
   private getReceiver(wallet?: Wallet): PythSolanaReceiver {
