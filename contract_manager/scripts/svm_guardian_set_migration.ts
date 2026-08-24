@@ -1,12 +1,10 @@
 /**
- * Shared plumbing for the two halves of the SVM Wormhole guardian set migration: the script that
- * proposes it to the multisig, and the script that executes it once the multisig approves.
+ * Shared plumbing for the propose and execute halves of the SVM Wormhole guardian set migration.
  *
- * The migration repoints every SVM price receiver at the Pyth Pro emitter and hands the core
- * bridge's guardian set over to the Pyth Pro multisig. Per chain that is three authority-gated
- * actions — `set_data_sources`, `set_fee`, and a program upgrade — followed by two permissionless
- * ones that only exist in the upgraded program: `close_guardian_set` for every set that is left,
- * and `initialize` to install the multisig at guardian set 0.
+ * Per chain the migration is three authority-gated actions — `set_data_sources`, `set_fee` and a
+ * core bridge upgrade — then two permissionless ones that only exist in the upgraded program:
+ * `close_guardian_set` for every set that is left, and `initialize` to install the Pyth multisig
+ * at guardian set 0.
  */
 
 import { createHash } from "node:crypto";
@@ -41,37 +39,28 @@ import { getUpgradeAuthority } from "../src/core/contracts";
 import type { Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
-/** One entry per SVM chain the migration should cover. */
 export type SvmMigrationConfig = {
-  /** Path to the migrated core bridge ELF that every chain is upgraded to. */
   coreBridgeArtifact: string;
   chains: {
     chain: string;
-    /** Buffer account the migrated ELF has been written to on that chain. */
     upgradeBuffer: string;
   }[];
 };
 
-/** A chain to migrate, with everything the migration needs resolved against the store. */
 export type SvmMigrationTarget = {
   chain: SvmChain;
   receiver: SvmPriceFeedContract;
   wormhole: SvmWormholeContract;
-  /**
-   * The key the vault governs this chain with: its own authority PDA where the vault lives, and
-   * the remote executor's stand-in for that PDA everywhere else.
-   */
+  // The vault's own authority PDA where the vault lives, the remote executor's stand-in for it
+  // everywhere else.
   signer: PublicKey;
   upgradeBuffer: PublicKey;
 };
 
-/** The state every chain is being migrated to. */
 export type SvmMigrationTargetState = {
   dataSources: DataSource[];
   singleUpdateFeeInLamports: bigint;
-  /** Guardians the upgraded program installs at guardian set 0. */
   guardianSet: string[];
-  /** The migrated core bridge ELF, as staged in each chain's upgrade buffer. */
   coreBridgeElf: Buffer;
 };
 
@@ -134,10 +123,6 @@ export function readMigrationTargetState(
   };
 }
 
-/**
- * Resolves the chains named in the config against the store, working out which key governs each
- * of them on behalf of `vaultAuthority`.
- */
 export function resolveMigrationTargets(
   config: SvmMigrationConfig,
   chainFilter: readonly string[] | undefined,
@@ -181,12 +166,6 @@ function findContract<T extends { getChain(): SvmChain; getId(): string }>(
   return match;
 }
 
-/**
- * The three authority-gated instructions of the migration, in the order they have to run: repoint
- * the receiver at the Pyth Pro emitter, drop its update fee, and upgrade the core bridge.
- *
- * The buffer's rent is refunded to `signer`, which is also the account that paid for it.
- */
 export async function buildMigrationInstructions(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
@@ -208,11 +187,6 @@ export async function buildMigrationInstructions(
   ];
 }
 
-/**
- * The whole of the on-chain state the migration acts on, as a block of text for the operator to
- * read before approving anything: who can upgrade each of the programs involved, what the
- * receiver currently accepts price updates from, and what the core bridge's guardian sets are.
- */
 export async function describeChainState(
   target: SvmMigrationTarget,
 ): Promise<string> {
@@ -276,10 +250,7 @@ export async function describeChainState(
   return lines.join("\n");
 }
 
-/**
- * Nothing in the dump is worth failing a run over, so a program that turns out not to be deployed
- * on this chain — or an RPC that will not answer for it — is reported in place of the key.
- */
+// Nothing in the state dump is worth failing a run over.
 async function describeUpgradeAuthority(
   chain: SvmChain,
   programId: PublicKey,
@@ -300,17 +271,12 @@ function describeTimestamp(unixSeconds: number): string {
   return `${unixSeconds} (${new Date(unixSeconds * 1000).toISOString()})`;
 }
 
-/** How stale a relayed price update may be for the relay to count as a success. */
 const MAX_PRICE_AGE_SECONDS = 120;
 
 /**
  * Relays one price update from `hermes` through `target`'s receiver and reads the resulting
- * `PriceUpdateV2` back, returning a one-line description of it.
- *
- * This is the only check that exercises everything the migration touches at once — the guardians'
- * signatures, the core bridge's quorum, and the receiver's data source — so it is worth running
- * both before the migration, against the Hermes and emitter that are live today, and after it,
- * against the Pyth Pro ones.
+ * `PriceUpdateV2` back. The only check that exercises the guardians' signatures, the core bridge's
+ * quorum and the receiver's data source at once.
  */
 export async function relayPriceUpdate(
   target: SvmMigrationTarget,
@@ -373,10 +339,8 @@ export async function relayPriceUpdate(
   return `relayed ${feedId} published at ${publishTime} (${age}s ago), verification ${Object.keys(update.verificationLevel).join()}`;
 }
 
-/**
- * Checks that the vault can actually carry out the migration on `target`, so that a chain whose
- * authorities have not been handed over yet fails here rather than as an unexecutable proposal.
- */
+// A chain whose authorities have not been handed over yet should fail here rather than as an
+// unexecutable proposal.
 export async function checkAuthorities(
   target: SvmMigrationTarget,
 ): Promise<void> {
@@ -396,10 +360,7 @@ export async function checkAuthorities(
   }
 }
 
-/**
- * Checks that the upgrade buffer really holds the migrated core bridge, so that the proposal
- * commits to an ELF that has been read rather than to an address that has been trusted.
- */
+// Commits the proposal to an ELF that has been read rather than to an address that is trusted.
 export async function checkUpgradeBuffer(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
@@ -431,12 +392,9 @@ export async function checkUpgradeBuffer(
   );
 }
 
-/**
- * Whether `target` is already running the migrated core bridge. This is what makes it safe to
- * close the guardian sets: `close_guardian_set` and the new `initialize` only exist in the
- * migrated program, and on a remote chain the governance message that installs it can only be
- * relayed while the Wormhole guardian sets are still there to verify it.
- */
+// Gates closing the guardian sets: `close_guardian_set` and the new `initialize` only exist in
+// the migrated program, and on a remote chain the message installing it can only be relayed while
+// the Wormhole guardian sets are still there to verify it.
 export async function isCoreBridgeMigrated(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
@@ -457,7 +415,6 @@ export async function isCoreBridgeMigrated(
     .equals(state.coreBridgeElf);
 }
 
-/** Whether the receiver on `target` already accepts exactly the Pyth Pro data sources, for free. */
 export async function isReceiverMigrated(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
@@ -476,10 +433,8 @@ export async function isReceiverMigrated(
   );
 }
 
-/**
- * An account holding a program ELF is allocated at least as large as the ELF and zero-padded, so
- * comparing the leading bytes and requiring the rest to be zero identifies it exactly.
- */
+// A program ELF is allocated at least as large as the ELF and zero-padded, so the leading bytes
+// plus an all-zero tail identify it exactly.
 function checkElf(label: string, actual: Buffer, expected: Buffer): void {
   const head = actual.subarray(0, expected.length);
   if (

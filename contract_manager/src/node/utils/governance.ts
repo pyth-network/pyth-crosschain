@@ -243,8 +243,7 @@ export class MultisigProposal {
 
   /**
    * Executes the instructions of the proposal that have not run yet, one transaction each, and
-   * returns their signatures. The proposal must be already approved. Executing a proposal that
-   * has already run through does nothing and returns no signatures.
+   * returns their signatures. The proposal must be already approved.
    */
   async execute(): Promise<string[]> {
     const proposal = await this.squad.getTransaction(this.address);
@@ -258,20 +257,16 @@ export class MultisigProposal {
   }
 
   /**
-   * Every wormhole message this proposal has emitted, oldest first, read back off the
-   * transactions that have touched its account.
-   *
-   * This is deliberately not `execute()`'s return value: that only covers the instructions the
-   * current run executed, so a proposal an earlier run already took through would look as though
-   * it had emitted nothing at all.
+   * Every wormhole message this proposal has emitted, oldest first. Read off the proposal's own
+   * transaction history rather than from `execute()`, whose return value covers only the
+   * instructions the current run executed.
    */
   async fetchEmittedWormholeMessages(): Promise<SubmittedWormholeMessage[]> {
     const signatures = await this.squad.connection.getSignaturesForAddress(
       this.address,
       undefined,
-      // Squads' own connection defaults to `finalized`, and this is normally called moments
-      // after `execute()` — at which point the transactions it produced are only confirmed, so
-      // asking for finalized would silently miss the messages they emitted.
+      // Squads' connection defaults to `finalized`, which would miss the messages of an
+      // `execute()` that just returned.
       "confirmed",
     );
     return await fetchSubmittedWormholeMessages(
@@ -280,17 +275,12 @@ export class MultisigProposal {
         .map((signature) => signature.signature)
         .reverse(),
       this.cluster,
-      // Read the transactions back off the node that listed them, so an `--rpc-url` override
-      // does not end up listing signatures on one node and parsing them on another.
+      // Read the transactions back off the node that listed them.
       () => this.squad.connection.rpcEndpoint,
     );
   }
 }
 
-/**
- * Picks out the wormhole messages emitted by the given transactions, ignoring the ones that did
- * not emit any.
- */
 async function fetchSubmittedWormholeMessages(
   signatures: string[],
   cluster: PythCluster,
@@ -448,10 +438,8 @@ export class Vault extends Storable {
   }
 
   /**
-   * Proposes `actions` as a single proposal: instructions the vault authority runs on the vault's
-   * own cluster, and payloads it emits as wormhole messages for chains it does not live on, in
-   * the order given. Requires a wallet to be connected to the vault.
-   *
+   * Proposes `actions` as a single proposal, in the order given. Requires a wallet to be
+   * connected to the vault.
    * @param actions - the instructions and payloads to propose
    */
   public async proposeActions(

@@ -47,10 +47,7 @@ type SquadInstruction = {
   authorityType?: string;
 };
 
-/**
- * One entry in a proposal: either an instruction the vault authority runs on the vault's own
- * cluster, or a payload it emits as a wormhole message for another chain to act on.
- */
+/** An instruction the vault authority runs, or a payload it emits as a wormhole message. */
 export type ProposedAction =
   | { instruction: TransactionInstruction }
   | { payload: Buffer };
@@ -288,13 +285,7 @@ export class MultisigVault {
   }
 
   /**
-   * Propose `actions` as a single proposal, mixing instructions the vault authority runs on this
-   * cluster with payloads it emits as wormhole messages, in the order they are given.
-   *
-   * The two kinds differ only in the authority Squads signs each instruction with, so they can
-   * share a proposal: a local instruction is signed by the vault authority, while a wormhole
-   * message needs the per-index message PDA as well.
-   *
+   * Propose `actions` as a single proposal, in the order they are given
    * @param actions the instructions and payloads to propose
    * @param messagePayer key used as the payer for the wormhole message instructions
    * @returns the newly created proposal's public key

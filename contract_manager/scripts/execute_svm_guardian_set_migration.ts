@@ -4,20 +4,10 @@
 
 /**
  * Carries out the SVM Wormhole guardian set migration that
- * `propose_svm_guardian_set_migration.ts` proposed, once the multisig has approved it: executes
- * the proposal, relays any governance message it emitted to the chains the vault does not live
- * on, runs the permissionless steps the upgraded core bridge unlocks, and checks that price
- * updates from the new Hermes still make it all the way through.
+ * `propose_svm_guardian_set_migration.ts` proposed, once the multisig has approved it.
  *
  * Every step checks the on-chain state it is about to produce and skips itself if that state is
- * already there, so a run that fails part way through can simply be repeated — including the
- * proposal, whose governance messages are read back off its own account rather than off what
- * this particular run executed.
- *
- * Usage:
- *   pnpm exec tsx scripts/execute_svm_guardian_set_migration.ts \
- *     --config-path ./migration.json --ops-key-path ~/.config/solana/id.json \
- *     --proposal <address>
+ * already there, so a run that fails part way through can simply be repeated.
  */
 
 import {
@@ -48,7 +38,6 @@ import {
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
-/** How long to wait for the guardians to sign a governance message the vault just emitted. */
 const VAA_WAIT_SECONDS = 300;
 
 const parser = yargs(hideBin(process.argv))
@@ -98,8 +87,8 @@ async function main() {
 
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   vault.connect(wallet, registry);
-  // `executeVaa` and the permissionless steps take the raw key so they can sign on whichever
-  // chain they are relaying to, rather than on the vault's cluster.
+  // The raw key, so the relayed steps can sign on whichever chain they target rather than on the
+  // vault's cluster.
   const senderPrivateKey = toPrivateKey(
     Buffer.from(wallet.payer.secretKey.subarray(0, 32)).toString("hex"),
   );
@@ -114,8 +103,7 @@ async function main() {
   );
   await proposal.execute();
   // Read off the proposal rather than off what this run executed, so a proposal an earlier run
-  // already took through still has its messages relayed. A migration that touches no remote
-  // chain emits none, and this is simply empty.
+  // already took through still has its messages relayed.
   const messages = await proposal.fetchEmittedWormholeMessages();
 
   for (const message of messages) {
@@ -140,14 +128,8 @@ async function main() {
   }
 }
 
-/**
- * Runs the permissionless half of the migration on one chain: close every guardian set that is
- * left, and re-run `initialize` so the upgraded program installs the Pyth multisig at index 0.
- *
- * Both go in one transaction. Between the upgrade and the close, the receiver trusts the Pyth Pro
- * emitter while the Wormhole guardians still control the bridge, so the window wants to be as
- * short as it can be.
- */
+// Both instructions go in one transaction: until the close lands, the receiver trusts the Pyth
+// Pro emitter while the Wormhole guardians still control the bridge.
 async function closeGuardianSets(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
@@ -159,8 +141,8 @@ async function closeGuardianSets(
       `${chainId}: the receiver does not accept the Pyth Pro data sources yet; the governance message has not been executed there`,
     );
   }
-  // Closing the guardian sets before this is true would strand the migration: on a chain the
-  // vault reaches over wormhole, the governance message is verified against those very sets.
+  // On a chain the vault reaches over wormhole, the governance message is verified against the
+  // very sets being closed.
   if (!(await isCoreBridgeMigrated(target, state))) {
     throw new Error(
       `${chainId}: the core bridge is still running the pre-migration build; it has to be upgraded before any guardian set is closed`,
