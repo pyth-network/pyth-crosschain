@@ -42,7 +42,7 @@ use {
     },
     solana_sdk_ids::bpf_loader_upgradeable,
     wormhole_core_bridge_solana::{
-        legacy::{instruction::LegacyInstruction, PYTH_INITIAL_MULTISIG_SET},
+        legacy::{instruction::LegacyInstruction, _PYTH_INITIAL_MULTISIG_SET_PROD},
         sdk::{WriteEncodedVaaArgs, VAA_START},
         state::{Config as BridgeConfig, GuardianSet},
         ID as BRIDGE_ID,
@@ -496,7 +496,7 @@ async fn test_migrate_guardian_set_from_mainnet_bridge() {
 
     let migrated_guardian_set = guardian_set(&mut program_simulator, 0).await.unwrap();
     assert_eq!(
-        migrated_guardian_set.keys, PYTH_INITIAL_MULTISIG_SET,
+        migrated_guardian_set.keys, _PYTH_INITIAL_MULTISIG_SET_PROD,
         "guardian set 0 is the Pyth multisig, not the guardians passed to initialize"
     );
     assert_eq!(migrated_guardian_set.index, 0);

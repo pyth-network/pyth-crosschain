@@ -45,8 +45,10 @@ fn get_verify_encoded_vaa_instruction(write_authority: Pubkey, draft_vaa: Pubkey
 
 #[tokio::test]
 async fn test_post_update_with_wormhole() {
-    let (vaa, merkle_price_updates) =
-        deserialize_accumulator_update_data(hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap()).unwrap();
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(
+        hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap(),
+    )
+    .unwrap();
     let feed_1 =
         from_slice::<byteorder::BE, Message>(merkle_price_updates[0].message.as_ref()).unwrap();
 
@@ -278,8 +280,10 @@ async fn test_post_update_with_wormhole() {
 
 #[tokio::test]
 async fn test_wormhole_insufficient_signatures() {
-    let (vaa, _) =
-        deserialize_accumulator_update_data(hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap()).unwrap();
+    let (vaa, _) = deserialize_accumulator_update_data(
+        hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap(),
+    )
+    .unwrap();
 
     // Trim the VAA to 2 signatures
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
