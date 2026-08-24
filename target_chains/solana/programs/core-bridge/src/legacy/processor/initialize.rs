@@ -211,4 +211,17 @@ mod tests {
         ]);
         assert_eq!(_PYTH_INITIAL_MULTISIG_SET_PROD, expected);
     }
+
+    #[test]
+    fn test_pyth_multisig_sets_disjoint_from_legacy_guardians() {
+        for guardian in _PYTH_INITIAL_MULTISIG_SET_STAGING
+            .iter()
+            .chain(_PYTH_INITIAL_MULTISIG_SET_PROD.iter())
+        {
+            assert!(
+                !crate::state::LEGACY_GUARDIANS.contains(guardian),
+                "multisig key {guardian:02x?} overlaps with LEGACY_GUARDIANS"
+            );
+        }
+    }
 }

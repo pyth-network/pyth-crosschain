@@ -9671,9 +9671,12 @@ dependencies = [
  "cfg-if",
  "hex",
  "ruint",
+ "serde_wormhole",
  "solana-program",
  "wormhole-io",
  "wormhole-raw-vaas",
+ "wormhole-solana",
+ "wormhole-vaas-serde",
 ]
 
 [[package]]

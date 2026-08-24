@@ -34,3 +34,6 @@ cfg-if.workspace = true
 
 [dev-dependencies]
 base64 = "0.22"
+serde_wormhole.workspace = true
+wormhole-vaas-serde.workspace = true
+wormhole-solana.workspace = true
