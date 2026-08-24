@@ -20,8 +20,8 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy -p quorum --all-targets -- --deny warnings
+        run: cargo clippy --locked -p quorum --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
-        run: cargo test -p quorum
+        run: cargo test --locked -p quorum
         if: success() || failure()

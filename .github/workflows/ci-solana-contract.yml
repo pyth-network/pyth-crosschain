@@ -41,19 +41,19 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --all-targets --all-features -- --deny warnings
+        run: cargo clippy --locked --all-targets --all-features -- --deny warnings
         if: success() || failure()
       - name: Build
         run: |
-          cargo build-sbf --manifest-path programs/pyth-solana-receiver/Cargo.toml ${{ matrix.features }}
-          cargo build-sbf --manifest-path programs/pyth-push-oracle/Cargo.toml ${{ matrix.features }}
-          cargo build-sbf --manifest-path programs/core-bridge/Cargo.toml ${{ matrix.features }}
+          cargo build-sbf --manifest-path programs/pyth-solana-receiver/Cargo.toml ${{ matrix.features }} -- --locked
+          cargo build-sbf --manifest-path programs/pyth-push-oracle/Cargo.toml ${{ matrix.features }} -- --locked
+          cargo build-sbf --manifest-path programs/core-bridge/Cargo.toml ${{ matrix.features }} -- --locked
         if: success() || failure()
       - name: Run tests
         run: cargo-test-sbf ${{ matrix.features }}
         if: success() || failure()
       - name: Run sdk tests
         run: |
-          cargo test --package pyth-solana-receiver-sdk ${{ matrix.features }}
-          cargo test --package pyth-solana-receiver-cli
+          cargo test --locked --package pyth-solana-receiver-sdk ${{ matrix.features }}
+          cargo test --locked --package pyth-solana-receiver-cli
         if: success() || failure()

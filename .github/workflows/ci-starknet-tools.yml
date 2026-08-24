@@ -28,12 +28,12 @@ jobs:
       - name: Check formatting
         run: cargo fmt -- --check
       - name: Run clippy
-        run: cargo clippy -p test_vaas --all-targets -- --deny warnings
+        run: cargo clippy --locked -p test_vaas --all-targets -- --deny warnings
       - name: Run generate_keypair binary
-        run: cargo run --bin generate_keypair
+        run: cargo run --locked --bin generate_keypair
       - name: Check test data
         run: |
-          . ~/.config/.starkli/env && cargo run --bin generate_test_data > ../../contracts/data.cairo
+          . ~/.config/.starkli/env && cargo run --locked --bin generate_test_data > ../../contracts/data.cairo
           cd ../../contracts && RUSTFLAGS="" scarb fmt data.cairo
           if ! diff ./tests/data.cairo data.cairo; then
             >&2 echo "Re-run generate_test_data to update data.cairo"
