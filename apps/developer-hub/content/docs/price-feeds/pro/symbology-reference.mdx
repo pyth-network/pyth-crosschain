@@ -166,7 +166,7 @@ Every feed is returned as a single JSON object with the same top-level shape. Th
 }
 ```
 
-Dated-future feeds are point-in-time: after `expiration_time` the contract's `state` becomes `inactive`, and later contracts in the same chain are listed separately. `symbol_chain_id` (`CA`) is what ties them together. Query the API for the current set.
+Dated-future feeds are point-in-time: after `expiration_time` the feed's `state` becomes `inactive`, and later feeds in the same chain are listed separately. `symbol_chain_id` (`CA`) is what ties them together. Query the API for the current set.
 
 </Tab>
 <Tab value="Funding rate">
@@ -295,11 +295,11 @@ Pick an example or paste a `schedule` string to decode it into market hours:
 
 ### Futures
 
-`expiration_time` describes an individual dated contract. The other three fields describe the **chain** that contract belongs to — the family of contracts measuring the same underlying at different expirations — and carry the same values on every contract in the chain.
+`expiration_time` describes an individual dated feed. The other three fields describe the **chain** that feed belongs to — the family of feeds measuring the same underlying at different expirations — and carry the same values on every feed in the chain.
 
 | Field                  | Type        | Description                                                                                     |
 | ---------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
-| `expiration_time`      | `string?`   | Expiration timestamp (RFC 3339) for a dated futures contract, e.g. `2026-12-15T13:30:00-05:00`. |
+| `expiration_time`      | `string?`   | Expiration timestamp (RFC 3339) for a dated futures feed, e.g. `2026-12-15T13:30:00-05:00`. |
 | `symbol_chain_id`      | `string?`   | Root symbol for the chain of all the futures that measure the same underlying with different expiration times, e.g. `CA` for the cocoa chain that `CAZ6` belongs to. Note this is the bare root, not a fully-qualified `symbol`. `null` for feeds that are not part of a futures chain. |
 | `expiration_pattern`   | `string[]?` | The total set of expirations per a single year applicable to the chain, as lowercase three-letter month abbreviations, e.g. `["mar", "may", "jul", "sep", "dec"]`. |
 | `availability_pattern` | `string[]?` | The subset of expirations per single year already priced or expected to be priced by Pyth, as [month codes](/price-feeds/pro/futures-terminology#month-codes), e.g. `["H", "K", "N", "U", "Z"]`. |
@@ -307,7 +307,7 @@ Pick an example or paste a `schedule` string to decode it into market hours:
 <Callout type="warn" title="The two patterns use different encodings">
   `expiration_pattern` lists **month abbreviations** (`mar`), `availability_pattern` lists **month codes** (`H`). Normalize before comparing them. The two often differ in length as well as encoding: copper (`CC`) expires in all twelve months but Pyth prices only `["H", "K", "N", "U", "Z"]`.
 
-  Chains with no fixed annual cycle — such as the LME 3-month contracts (`Metal.AL3M/USD`) — report `["none"]` for both.
+  Chains with no fixed annual cycle — such as the LME 3-month feeds (`Metal.AL3M/USD`) — report `["none"]` for both.
 </Callout>
 
 ### Corporate actions
