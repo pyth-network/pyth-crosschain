@@ -107,7 +107,7 @@ async function main() {
   // already took through still has its messages relayed.
   const messages = await proposal.fetchEmittedWormholeMessages();
 
-  if (targets.some(target => target.chain.isRemote)) {
+  if (targets.some((target) => target.chain.isRemote)) {
     for (const message of messages) {
       console.log(`Relaying governance message ${message.sequenceNumber}`);
       await executeVaa(
@@ -165,7 +165,9 @@ async function closeGuardianSets(
       set.keys.length === state.guardianSet.length &&
       set.keys.every((key, index) => key === state.guardianSet[index]),
   );
-  const toClose = guardianSets.filter((set) => set !== migrated);
+  const toClose = guardianSets
+    .filter((set) => set !== migrated)
+    .sort((a, b) => b.index - a.index);
   if (migrated && toClose.length === 0) {
     console.log(`${chainId}: guardian set already migrated`);
     return;

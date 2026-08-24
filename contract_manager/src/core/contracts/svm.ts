@@ -614,6 +614,7 @@ export class SvmWormholeContract extends WormholeContract {
       data: Buffer.of(LEGACY_INSTRUCTION_CLOSE_GUARDIAN_SET),
       keys: [
         { isSigner: false, isWritable: true, pubkey: recipient },
+        { isSigner: false, isWritable: true, pubkey: this.getConfigAddress() },
         {
           isSigner: false,
           isWritable: true,
