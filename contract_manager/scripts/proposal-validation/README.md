@@ -32,7 +32,15 @@ python3 check_evm_bytecode.py actions.json \
 
 # 5. map what is deployed today back to a git revision
 ./build_at_commit.sh pyth-evm-contract-v1.4.6 pyth-evm-contract-v1.4.3 <commit> ...
+
+# 6. SVM side: guardian sets on the Solana and Fogo core bridges
+python3 check_svm_guardians.py
 ```
+
+`decode_proposal.py` unpacks `ExecutePostedVaa` payloads too, so proposals that
+drive a second SVM chain through the remote executor (Fogo) show their inner
+instructions — including which program a `BPFLoaderUpgradeable::Upgrade`
+targets and from which buffer.
 
 Each script exits non-zero on any discrepancy, so they can be chained with `&&`.
 
