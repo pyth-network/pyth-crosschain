@@ -5,6 +5,52 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 
+const _PYTH_INITIAL_MULTISIG_SET_STAGING: [[u8; 20]; 3] = [
+    [
+        0xdc, 0xd3, 0x7a, 0x16, 0xf4, 0x2a, 0x7d, 0xdd, 0x37, 0x70, 0x46, 0xc3, 0xd6, 0x07, 0xe7,
+        0x22, 0x7c, 0x1e, 0xf4, 0x59,
+    ],
+    [
+        0x10, 0x98, 0xb2, 0x2a, 0x55, 0x20, 0x25, 0x94, 0x34, 0x10, 0x52, 0x60, 0x52, 0x28, 0xe3,
+        0xd8, 0x96, 0x13, 0x2f, 0x6a,
+    ],
+    [
+        0xff, 0x3b, 0x3a, 0xb7, 0xe0, 0x73, 0x14, 0x35, 0x9b, 0xd2, 0x46, 0x9c, 0x2b, 0x15, 0x91,
+        0x47, 0x8e, 0x39, 0x81, 0x24,
+    ],
+];
+
+pub const _PYTH_INITIAL_MULTISIG_SET_PROD: [[u8; 20]; 5] = [
+    [
+        0x41, 0x53, 0x4b, 0xb1, 0x76, 0xe4, 0x61, 0xa3, 0xfb, 0x30, 0x47, 0x94, 0x00, 0xf2, 0x10,
+        0x54, 0x9e, 0xcc, 0xe6, 0x38,
+    ],
+    [
+        0x65, 0x02, 0x98, 0x7b, 0x62, 0xf2, 0x1c, 0xab, 0x7e, 0xb5, 0xcc, 0xd8, 0xf0, 0x17, 0x30,
+        0x84, 0xb6, 0x0d, 0x5b, 0x41,
+    ],
+    [
+        0x44, 0xa3, 0xe8, 0xf6, 0xa3, 0x82, 0x41, 0x2c, 0xf6, 0xbb, 0x90, 0xa3, 0xf8, 0x10, 0x6e,
+        0x68, 0x97, 0x74, 0x76, 0xc9,
+    ],
+    [
+        0xd9, 0xd7, 0xd4, 0x52, 0x95, 0x77, 0x86, 0x43, 0x52, 0xc9, 0xa6, 0x53, 0x9a, 0x48, 0x23,
+        0x8f, 0xcd, 0x44, 0x70, 0x52,
+    ],
+    [
+        0x16, 0x63, 0xa5, 0xa8, 0x22, 0x33, 0x6e, 0xce, 0x48, 0x55, 0x9b, 0x1d, 0xfb, 0x1e, 0x93,
+        0xa0, 0x17, 0xa7, 0xda, 0xc3,
+    ],
+];
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "beta")] {
+        const PYTH_INITIAL_MULTISIG_SET: [[u8; 20]; 3] = _PYTH_INITIAL_MULTISIG_SET_STAGING;
+    } else {
+        const PYTH_INITIAL_MULTISIG_SET: [[u8; 20]; 5] = _PYTH_INITIAL_MULTISIG_SET_PROD;
+    }
+}
+
 #[derive(Accounts)]
 #[instruction(args: InitializeArgs)]
 pub struct Initialize<'info> {
@@ -12,7 +58,7 @@ pub struct Initialize<'info> {
     /// redeeming governance VAAs, where the guardian set attesting for a governance decree must be
     /// the one encoded in this account.
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         space = Config::INIT_SPACE,
         seeds = [Config::SEED_PREFIX],
@@ -30,7 +76,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = payer,
-        space = GuardianSet::compute_size(args.initial_guardians.len()),
+        space = GuardianSet::compute_size(PYTH_INITIAL_MULTISIG_SET.len()),
         seeds = [
             GuardianSet::SEED_PREFIX,
             u32::to_be_bytes(0).as_ref()
@@ -85,18 +131,10 @@ impl<'info> crate::legacy::utils::ProcessLegacyInstruction<'info, InitializeArgs
 /// the Core Bridge is already deployed on Solana's mainnet-beta and devnet, so would never need to
 /// initialize again. And for local validator testing (in most cases) the program is simply loaded
 /// in the validator and cannot be upgraded.
-fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
-    let InitializeArgs {
-        guardian_set_ttl_seconds,
-        fee_lamports,
-        initial_guardians,
-    } = args;
-
-    // We need at least one guardian for the initial guardian set.
-    require!(
-        !initial_guardians.is_empty(),
-        CoreBridgeError::ZeroGuardians
-    );
+fn initialize(ctx: Context<Initialize>, _args: InitializeArgs) -> Result<()> {
+    let guardian_set_ttl_seconds = 86400;
+    let fee_lamports = 0;
+    let initial_guardians = PYTH_INITIAL_MULTISIG_SET;
 
     // Check initial guardians.
     let mut keys = Vec::with_capacity(initial_guardians.len());
@@ -135,4 +173,55 @@ fn initialize(ctx: Context<Initialize>, args: InitializeArgs) -> Result<()> {
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+
+    fn decode_keys<const N: usize>(encoded: [&str; N]) -> [[u8; 20]; N] {
+        encoded.map(|key| {
+            STANDARD
+                .decode(key)
+                .expect("invalid base64")
+                .try_into()
+                .expect("guardian key must be 20 bytes")
+        })
+    }
+
+    #[test]
+    fn test_pyth_initial_multisig_set_staging() {
+        let expected = decode_keys([
+            "3NN6FvQqfd03cEbD1gfnInwe9Fk=",
+            "EJiyKlUgJZQ0EFJgUijj2JYTL2o=",
+            "/zs6t+BzFDWb0kacKxWRR445gSQ=",
+        ]);
+        assert_eq!(_PYTH_INITIAL_MULTISIG_SET_STAGING, expected);
+    }
+
+    #[test]
+    fn test_pyth_initial_multisig_set_prod() {
+        let expected = decode_keys([
+            "QVNLsXbkYaP7MEeUAPIQVJ7M5jg=",
+            "ZQKYe2LyHKt+tczY8BcwhLYNW0E=",
+            "RKPo9qOCQSz2u5Cj+BBuaJd0dsk=",
+            "2dfUUpV3hkNSyaZTmkgjj81EcFI=",
+            "FmOlqCIzbs5IVZsd+x6ToBen2sM=",
+        ]);
+        assert_eq!(_PYTH_INITIAL_MULTISIG_SET_PROD, expected);
+    }
+
+    #[test]
+    fn test_pyth_multisig_sets_disjoint_from_legacy_guardians() {
+        for guardian in _PYTH_INITIAL_MULTISIG_SET_STAGING
+            .iter()
+            .chain(_PYTH_INITIAL_MULTISIG_SET_PROD.iter())
+        {
+            assert!(
+                !crate::state::LEGACY_GUARDIANS.contains(guardian),
+                "multisig key {guardian:02x?} overlaps with LEGACY_GUARDIANS"
+            );
+        }
+    }
 }

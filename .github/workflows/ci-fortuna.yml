@@ -21,8 +21,8 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy -p fortuna --all-targets -- --deny warnings
+        run: cargo clippy --locked -p fortuna --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run tests
-        run: cargo test -p fortuna -- --test-threads=1
+        run: cargo test --locked -p fortuna -- --test-threads=1
         if: success() || failure()

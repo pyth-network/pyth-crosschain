@@ -20,12 +20,6 @@ impl crate::legacy::utils::LegacyAccount for PostedMessageV1Unreliable {
     }
 }
 
-impl PostedMessageV1Unreliable {
-    pub(crate) fn compute_size(payload_len: usize) -> usize {
-        PostedMessageV1Data::compute_size(payload_len)
-    }
-}
-
 impl From<PostedMessageV1Data> for PostedMessageV1Unreliable {
     fn from(value: PostedMessageV1Data) -> Self {
         Self { data: value }

@@ -14,9 +14,11 @@ import {
   getProposalInstructions,
   MultisigParser,
   SetDataSources,
+  SetFee,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
+  WithdrawFee,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
 import type { AccountMeta } from "@solana/web3.js";
@@ -56,6 +58,23 @@ function getSquadsMesh() {
   return (
     (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
     SquadsMeshClass
+  );
+}
+
+function evmChainsFor(targetChainId: string, cluster: PythCluster): EvmChain[] {
+  return Object.values(DefaultStore.chains).filter(
+    (chain): chain is EvmChain =>
+      chain instanceof EvmChain &&
+      chain.isMainnet() === (cluster === "mainnet-beta") &&
+      chain.wormholeChainName === targetChainId,
+  );
+}
+
+function pythContractsOn(chain: EvmChain): EvmPriceFeedContract[] {
+  return Object.values(DefaultStore.contracts).filter(
+    (contract): contract is EvmPriceFeedContract =>
+      contract instanceof EvmPriceFeedContract &&
+      contract.getChain().getId() === chain.getId(),
   );
 }
 
@@ -190,6 +209,69 @@ async function main() {
               `${chain.getId()} Code Id:${codeId} digest:${createHash("sha256")
                 .update(code)
                 .digest("hex")}`,
+            );
+          }
+        }
+      }
+      if (instruction.governanceAction instanceof SetFee) {
+        const { targetChainId, newFeeValue, newFeeExpo } =
+          instruction.governanceAction;
+        const newFee = instruction.governanceAction.getNewFeeAmount();
+
+        console.log(`\nVerifying SetFee on ${targetChainId}`);
+        console.log(
+          `  new fee: ${
+            newFee ?? `<expo ${newFeeExpo} exceeds ${SetFee.MAX_EXPO}>`
+          } (${newFeeValue} * 10^${newFeeExpo})`,
+        );
+        for (const chain of evmChainsFor(targetChainId, cluster)) {
+          for (const contract of pythContractsOn(chain)) {
+            const currentFee = await contract.getBaseUpdateFee();
+            console.log(
+              `${chain.getId()}  Address:${contract.address} current fee:${currentFee.amount}`,
+            );
+          }
+        }
+      }
+      if (instruction.governanceAction instanceof WithdrawFee) {
+        const { targetChainId, expo } = instruction.governanceAction;
+        const recipient = `0x${instruction.governanceAction.targetAddress.toString("hex")}`;
+        const requested = instruction.governanceAction.getTotalAmount();
+
+        console.log(`\nVerifying WithdrawFee on ${targetChainId}`);
+        console.log(`  recipient: ${recipient}`);
+        console.log(
+          `  amount:    ${
+            requested ?? `<expo ${expo} exceeds ${WithdrawFee.MAX_EXPO}>`
+          }`,
+        );
+        for (const chain of evmChainsFor(targetChainId, cluster)) {
+          const web3 = chain.getWeb3();
+          const hasCode = (await web3.eth.getCode(recipient)) !== "0x";
+          const recipientBalance = BigInt(await web3.eth.getBalance(recipient));
+          if (hasCode || recipientBalance > 0n) {
+            console.log(
+              `${chain.getId()}  recipient exists — code:${hasCode ? "yes" : "no"} balance:${recipientBalance}`,
+            );
+          } else {
+            console.log(
+              `${chain.getId()}  RECIPIENT DOES NOT EXIST — ${recipient} has no code and no balance on this chain`,
+            );
+          }
+          // A chain can host several Pyth deployments, only one of which
+          // executes this instruction, so the withdrawal only definitely
+          // reverts when none of them holds the requested amount.
+          let funded = false;
+          for (const contract of pythContractsOn(chain)) {
+            const balance = (await contract.getTotalFee()).amount;
+            funded ||= requested !== undefined && requested <= balance;
+            console.log(
+              `${chain.getId()}  Address:${contract.address} balance:${balance}`,
+            );
+          }
+          if (requested !== undefined && !funded) {
+            console.log(
+              `${chain.getId()}  INSUFFICIENT BALANCE — no Pyth contract on ${chain.getId()} holds ${requested}, withdrawFee reverts`,
             );
           }
         }

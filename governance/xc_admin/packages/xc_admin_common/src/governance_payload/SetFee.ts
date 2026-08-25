@@ -45,6 +45,21 @@ export class SetFee extends PythGovernanceActionImpl {
       newFeeValue: this.newFeeValue,
     });
   }
+
+  /**
+   * Maximum exponent for which getNewFeeAmount computes a value. Anything
+   * larger would overflow uint256 on-chain (the contract's checked math
+   * reverts), and evaluating 10n ** expo for huge decoded exponents can hang
+   * or throw in the caller.
+   */
+  static MAX_EXPO = 60n;
+
+  /** New fee in wei (newFeeValue * 10^newFeeExpo), or undefined if newFeeExpo exceeds MAX_EXPO. */
+  getNewFeeAmount(): bigint | undefined {
+    return this.newFeeExpo <= SetFee.MAX_EXPO
+      ? this.newFeeValue * 10n ** this.newFeeExpo
+      : undefined;
+  }
 }
 
 /** Set the fee in the specified token on the target chain to newFeeValue * 10^newFeeExpo.
