@@ -54,7 +54,7 @@ export type SvmMigrationTarget = {
   // The vault's own authority PDA where the vault lives, the remote executor's stand-in for it
   // everywhere else.
   signer: PublicKey;
-  upgradeBuffer: PublicKey;
+  upgradeBuffer: PublicKey | undefined;
 };
 
 export type SvmMigrationTargetState = {
@@ -180,6 +180,9 @@ export async function buildMigrationInstructions(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
 ): Promise<TransactionInstruction[]> {
+  if (!target.upgradeBuffer) {
+    throw new Error("this script requires an upgrade buffer");
+  }
   return [
     await target.receiver.generateSetDataSourcesInstruction(
       target.signer,
@@ -375,6 +378,9 @@ export async function checkUpgradeBuffer(
   target: SvmMigrationTarget,
   state: SvmMigrationTargetState,
 ): Promise<void> {
+  if (!target.upgradeBuffer) {
+    throw new Error("this script requires an upgrade buffer");
+  }
   const account = await target.chain
     .getConnection()
     .getAccountInfo(target.upgradeBuffer);
