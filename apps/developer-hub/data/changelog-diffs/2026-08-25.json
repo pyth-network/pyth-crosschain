@@ -1,0 +1,152 @@
+{
+  "date": "2026-08-25",
+  "label": "Tuesday",
+  "summary": {
+    "added": 6,
+    "went_live": 8,
+    "removed": 0
+  },
+  "hero": "6 new feeds announced, 8 went live.",
+  "events": [
+    {
+      "id": "Crypto.GLDX/USD",
+      "lazerId": 3640,
+      "asset": "Gold Xstock",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "e7d1138d0083368634087268c64b7bea0b4101a6365f83915cba9e76a8364b96"
+    },
+    {
+      "id": "Crypto.Index.PPLUS/USD",
+      "lazerId": 3639,
+      "asset": "Ember Pplus",
+      "assetType": "crypto-index",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "7fcd339044cb097e22ad99ca8619b176a559ac8a4b3e5324a6d62033933cee61"
+    },
+    {
+      "id": "Crypto.Index.HIGH/USD",
+      "lazerId": 3638,
+      "asset": "Ember High",
+      "assetType": "crypto-index",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "b40a0c456f90d362098ac489b05313af4eba29f449577c6cb92864756b4a1b35"
+    },
+    {
+      "id": "Crypto.Index.TRADE/USD",
+      "lazerId": 3637,
+      "asset": "Ember Trade",
+      "assetType": "crypto-index",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "b20d7783b1802aa579f571a2c09226b66fa1105fee9b31cfc85974e122aabc3c"
+    },
+    {
+      "id": "Equity.HK.6869/HKD",
+      "lazerId": 3634,
+      "asset": "Yangtze Optical Fibre And Cable Jsc Ltd",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "dd5cc306141ad9ed6f6d5f96ad6fd4a38323e34767a1842c230eec093f38d3a6"
+    },
+    {
+      "id": "Commodities.HNX6/USD",
+      "lazerId": 3523,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 28 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "2f28c1dcf045be15f77ff6e91122d8695ae34e3babc730fc0d83f089a7ba08a6"
+    },
+    {
+      "id": "Commodities.HNV6/USD",
+      "lazerId": 3522,
+      "asset": "Pyth Price In Usd For Henry Ld1 Natural Gas 28 September 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "0c490b972a30f7da46275a254ea159f09335a52612c771c8a0e1849eef5c2f66"
+    },
+    {
+      "id": "Crypto.FRXUSD/USD",
+      "lazerId": 430,
+      "asset": "Frax Us Dollar",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "7c53208632935ba5122c3cf65a0f4b3e72ba4955b49ad6ba0acf3d9ba405aef3"
+    },
+    {
+      "id": "Equity.HK.6181/HKD",
+      "lazerId": 3649,
+      "asset": "Laopu Gold Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "a67560d758f54cd146d54117c7b87bed95b24c3b47213cf754323e0533de8e6d"
+    },
+    {
+      "id": "Equity.HK.1357/HKD",
+      "lazerId": 3648,
+      "asset": "Meitu Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "3020eec4190f4b3a6f3ca705b5b7724ea7caf0b51e4d31f2f4bea4bc4f3a3fb4"
+    },
+    {
+      "id": "Equity.HK.0020/HKD",
+      "lazerId": 3647,
+      "asset": "Sensetime Group Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "a331ec61fa3a5f1b9bcb2e69ae2e304a61f1f5a8078566f7a0e4b42b8167603a"
+    },
+    {
+      "id": "Equity.HK.3896/HKD",
+      "lazerId": 3646,
+      "asset": "Kingsoft Cloud Holdings Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "ddcf06704f04f2e5d34a1549decbf8b6979493e1bdf65ddc6eb5532004238373"
+    },
+    {
+      "id": "Equity.HK.1347/HKD",
+      "lazerId": 3645,
+      "asset": "Hua Hong Grace Semiconductor Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "HKD",
+      "hermesId": "9f7b61e7f7121698c8744b5b909789d9246afc6b6b58950d6ccbad4ba1b7827f"
+    },
+    {
+      "id": "Metal.LE3M/USD",
+      "lazerId": 3644,
+      "asset": "Pyth Price In Usd For Lead 3-Month",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-25",
+      "quote": "USD",
+      "hermesId": "777b9fa77dfb15b2f3fbf63c2e7230535d01cad7dd3dcb19a607d93c72957f74"
+    }
+  ]
+}
