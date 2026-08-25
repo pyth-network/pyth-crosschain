@@ -11,23 +11,28 @@
  * proposal (43L1ZBTFvSnWexjPKMZ5foNwy57Hh2p42jfrVyKvhrKR).
  *
  * Withdrawal amounts are queried live (getAccruedPythFees) at generation time.
- * Accrued fees only grow, so the queried amount is a guaranteed lower bound at
- * execution time and the withdrawal can never revert. Ordering within the
- * proposal is therefore not safety-critical; fees-first is kept for
- * readability. Withdraw targets must be deployed contracts (PC Safes); the
- * script refuses entries whose target has no code on that chain.
+ * Accrued fees decrease only when a governance withdrawFee executes, so
+ * barring a competing withdrawal proposal the queried amount remains a lower
+ * bound at execution time and the withdrawal will not revert. Ordering within
+ * the proposal is not safety-critical; fees-first is kept for readability.
+ * Withdraw targets must be deployed contracts (PC Safes); the script refuses
+ * entries whose target has no code on that chain.
  *
  * Default is a dry run that prints all payloads. Pass --submit together with
  * --ops-key-path to create the proposal on the mainnet-beta vault.
  *
  * Usage:
  *   pnpm tsx scripts/generate_entropy_fee_and_withdraw_proposal.ts \
- *     --config-path scripts/generate_entropy_fee_and_withdraw_config_q3_2026.json \
- *     [--submit --ops-key-path <path>]
+ *     --config-path <config.json> [--submit --ops-key-path <path>]
+ *
+ * Config shape (SetFeeEntry / WithdrawEntry below):
+ *   { "setFee":   [{ "chainName": "blast", "newFeeInWei": "10000000000000" }],
+ *     "withdraw": [{ "chainName": "blast", "targetAddress": "0x..." }] }
  */
 import fs from "node:fs";
 import path from "node:path";
 
+import { PublicKey } from "@solana/web3.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -50,6 +55,15 @@ const parser = yargs(hideBin(process.argv))
     },
     "ops-key-path": {
       desc: "Path to the ops key file (required with --submit)",
+      type: "string",
+    },
+    "priority-fee-microlamports": {
+      default: 50_000,
+      desc: "Compute unit price for the Solana transactions",
+      type: "number",
+    },
+    proposal: {
+      desc: "Resume an existing draft proposal from an earlier partial run with the same config (appends missing instructions, then activates)",
       type: "string",
     },
     "rpc-url": {
@@ -99,7 +113,7 @@ async function main() {
     const currentFee = BigInt(currentFeeHex);
     payloads.push(await contract.generateSetPythFeePayload(entry.newFeeInWei));
     summary.push(
-      `setPythFee   ${entry.chainName}: ${currentFee} -> ${entry.newFeeInWei} wei` +
+      `${payloads.length}. setPythFee   ${entry.chainName}: ${currentFee} -> ${entry.newFeeInWei} wei` +
         (currentFee === BigInt(entry.newFeeInWei) ? " (UNCHANGED?)" : ""),
     );
   }
@@ -129,7 +143,7 @@ async function main() {
       );
     const accrued = BigInt(await contract.getAccruedPythFees());
     if (accrued === 0n) {
-      summary.push(`withdrawFee  ${entry.chainName} SKIPPED (accrued 0)`);
+      summary.push(`--  withdrawFee  ${entry.chainName} SKIPPED (accrued 0)`);
       continue;
     }
     payloads.push(
@@ -139,12 +153,15 @@ async function main() {
       ),
     );
     summary.push(
-      `withdrawFee  ${entry.chainName} ${accrued} wei -> ${entry.targetAddress}`,
+      `${payloads.length}. withdrawFee  ${entry.chainName} ${accrued} wei -> ${entry.targetAddress}`,
     );
   }
 
+  // Summary lines are numbered by payload index at push time so the numbers
+  // always match the instruction positions in the proposal (skipped entries
+  // get no number).
   console.log(`\n=== ${payloads.length} payloads ===`);
-  for (const [i, line] of summary.entries()) console.log(`${i + 1}. ${line}`);
+  for (const line of summary) console.log(line);
   console.log("\n=== payload hex ===");
   for (const p of payloads) console.log(p.toString("hex"));
 
@@ -163,7 +180,11 @@ async function main() {
     keypair,
     argv["rpc-url"] ? () => argv["rpc-url"] as string : undefined,
   );
-  const proposal = await vault.proposeWormholeMessage(payloads);
+  const proposal = await vault.proposeWormholeMessage(
+    payloads,
+    argv.proposal ? new PublicKey(argv.proposal) : undefined,
+    { computeUnitPriceMicroLamports: argv["priority-fee-microlamports"] },
+  );
   console.log("Proposal address:", proposal.address.toBase58());
 }
 
