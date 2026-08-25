@@ -3,15 +3,23 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { BN } from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import type { MultisigInstruction } from "@pythnetwork/xc-admin-common";
 import {
+  AnchorMultisigInstruction,
+  BpfUpgradableLoaderInstruction,
   CosmosUpgradeContract,
   EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
+  ExecutePostedVaa,
+  getProgramName,
   getProposalInstructions,
+  MultisigInstructionProgram,
   MultisigParser,
   SetFee,
   UpdateTrustedSigner256Bit,
@@ -21,7 +29,7 @@ import {
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
 import type { AccountMeta } from "@solana/web3.js";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import SquadsMeshClass from "@sqds/mesh";
 import Web3 from "web3";
 import yargs from "yargs";
@@ -32,6 +40,7 @@ import {
   EvmChain,
   IotaChain,
   SuiChain,
+  SvmChain,
 } from "../src/core/chains";
 import { IotaLazerContract, SuiLazerContract } from "../src/core/contracts";
 import {
@@ -53,13 +62,236 @@ function getSquadsMesh() {
   );
 }
 
-function evmChainsFor(targetChainId: string, cluster: PythCluster): EvmChain[] {
-  return Object.values(DefaultStore.chains).filter(
+// wormholeChainName is unique per deployment, so it identifies the target chain on
+// its own. Filtering on the multisig's cluster instead would drop the testnet chains
+// that mainnet-beta proposals legitimately target.
+function evmChainsFor(targetChainId: string): EvmChain[] {
+  const chains = Object.values(DefaultStore.chains).filter(
     (chain): chain is EvmChain =>
-      chain instanceof EvmChain &&
-      chain.isMainnet() === (cluster === "mainnet-beta") &&
-      chain.wormholeChainName === targetChainId,
+      chain instanceof EvmChain && chain.wormholeChainName === targetChainId,
   );
+  if (chains.length === 0) {
+    console.log(`  NO CHAIN IN STORE FOR ${targetChainId} — not checked`);
+  }
+  return chains;
+}
+
+function svmChainFor(
+  targetChainId: string,
+  cluster: PythCluster,
+): SvmChain | undefined {
+  const chains = Object.values(DefaultStore.chains).filter(
+    (chain): chain is SvmChain =>
+      chain instanceof SvmChain && chain.wormholeChainName === targetChainId,
+  );
+  // Solana mainnet and devnet share the "solana" wormhole chain name, so fall back
+  // to the multisig's cluster to pick between them.
+  return (
+    chains.find(
+      (chain) => chain.isMainnet() === (cluster === "mainnet-beta"),
+    ) ?? chains[0]
+  );
+}
+
+// UpgradeableLoaderState::Buffer is a 4-byte enum tag followed by an
+// Option<Pubkey> authority; the ELF starts right after it.
+const BPF_BUFFER_HEADER_SIZE = 37;
+// UpgradeableLoaderState::ProgramData is a 4-byte enum tag, a u64 deploy slot and
+// then an Option<Pubkey> authority.
+const BPF_PROGRAM_DATA_AUTHORITY_OFFSET = 12;
+const BPF_PROGRAM_DATA_HEADER_SIZE = 45;
+
+type ReceiverDataSource = { chain: number; emitter: PublicKey };
+type ReceiverConfig = {
+  validDataSources: ReceiverDataSource[];
+  singleUpdateFeeInLamports: BN;
+};
+
+function sha256(data: Buffer): string {
+  return createHash("sha256").update(data).digest("hex");
+}
+
+function accountAddress(
+  instruction: MultisigInstruction,
+  name: string,
+): PublicKey {
+  const account = instruction.accounts.named[name];
+  if (account === undefined) {
+    throw new Error(`${instruction.name} has no ${name} account`);
+  }
+  return account.pubkey;
+}
+
+async function fetchReceiverConfig(
+  connection: Connection,
+  config: PublicKey,
+): Promise<ReceiverConfig | undefined> {
+  const account = await connection.getAccountInfo(config);
+  if (account === null) {
+    return undefined;
+  }
+  const { receiver } = new PythSolanaReceiver({
+    connection,
+    wallet: new Wallet(Keypair.generate()), // dummy wallet
+  });
+  return receiver.coder.accounts.decode<ReceiverConfig>("Config", account.data);
+}
+
+async function checkReceiverInstruction(
+  instruction: AnchorMultisigInstruction,
+  connection: Connection,
+  chainLabel: string,
+): Promise<void> {
+  const config = accountAddress(instruction, "config");
+  console.log(
+    `\nVerifying Pyth Solana Receiver ${instruction.name} on ${chainLabel}`,
+  );
+
+  if (instruction.name === "setDataSources") {
+    for (const source of instruction.args
+      .validDataSources as ReceiverDataSource[]) {
+      console.log(
+        `  new data source: chain ${source.chain} emitter ${source.emitter.toBase58()}`,
+      );
+    }
+  } else {
+    console.log(
+      `  new fee: ${String(instruction.args.singleUpdateFeeInLamports)} lamports`,
+    );
+  }
+
+  const current = await fetchReceiverConfig(connection, config);
+  if (current === undefined) {
+    console.log(
+      `${chainLabel}  CONFIG DOES NOT EXIST — ${config.toBase58()} holds no account, the instruction will fail`,
+    );
+    return;
+  }
+  if (instruction.name === "setDataSources") {
+    for (const source of current.validDataSources) {
+      console.log(
+        `${chainLabel}  Config:${config.toBase58()} current data source: chain ${source.chain} emitter ${source.emitter.toBase58()}`,
+      );
+    }
+  } else {
+    console.log(
+      `${chainLabel}  Config:${config.toBase58()} current fee:${current.singleUpdateFeeInLamports.toString()} lamports`,
+    );
+  }
+}
+
+async function checkProgramUpgrade(
+  instruction: BpfUpgradableLoaderInstruction,
+  connection: Connection,
+  chainLabel: string,
+): Promise<void> {
+  const program = accountAddress(instruction, "program");
+  const programData = accountAddress(instruction, "programData");
+  const buffer = accountAddress(instruction, "buffer");
+  const spill = accountAddress(instruction, "spill");
+  const upgradeAuthority = accountAddress(instruction, "upgradeAuthority");
+
+  console.log(`\nVerifying program Upgrade on ${chainLabel}`);
+  console.log(`  program:          ${program.toBase58()}`);
+  console.log(`  programData:      ${programData.toBase58()}`);
+  console.log(`  buffer:           ${buffer.toBase58()}`);
+  console.log(`  spill:            ${spill.toBase58()}`);
+  console.log(`  upgradeAuthority: ${upgradeAuthority.toBase58()}`);
+
+  const bufferAccount = await connection.getAccountInfo(buffer);
+  if (bufferAccount === null) {
+    console.log(
+      `${chainLabel}  BUFFER DOES NOT EXIST — ${buffer.toBase58()} holds no account, the upgrade will fail`,
+    );
+  } else {
+    const elf = bufferAccount.data.subarray(BPF_BUFFER_HEADER_SIZE);
+    console.log(
+      `${chainLabel}  new ELF length:${elf.length} sha256:${sha256(elf)}`,
+    );
+  }
+
+  const programDataAccount = await connection.getAccountInfo(programData);
+  if (programDataAccount === null) {
+    console.log(
+      `${chainLabel}  PROGRAM DATA DOES NOT EXIST — ${programData.toBase58()} holds no account, the upgrade will fail`,
+    );
+    return;
+  }
+  const deployed = programDataAccount.data.subarray(
+    BPF_PROGRAM_DATA_HEADER_SIZE,
+  );
+  console.log(
+    `${chainLabel}  deployed ELF length:${deployed.length} sha256:${sha256(deployed)}`,
+  );
+
+  const hasAuthority =
+    programDataAccount.data[BPF_PROGRAM_DATA_AUTHORITY_OFFSET] !== 0;
+  if (!hasAuthority) {
+    console.log(
+      `${chainLabel}  PROGRAM IS IMMUTABLE — ${programData.toBase58()} has no upgrade authority, the upgrade will fail`,
+    );
+    return;
+  }
+  const currentAuthority = new PublicKey(
+    programDataAccount.data.subarray(
+      BPF_PROGRAM_DATA_AUTHORITY_OFFSET + 1,
+      BPF_PROGRAM_DATA_HEADER_SIZE,
+    ),
+  );
+  if (currentAuthority.equals(upgradeAuthority)) {
+    console.log(
+      `${chainLabel}  upgrade authority matches:${currentAuthority.toBase58()}`,
+    );
+  } else {
+    console.log(
+      `${chainLabel}  UPGRADE AUTHORITY MISMATCH — ${programData.toBase58()} is controlled by ${currentAuthority.toBase58()} but the instruction signs as ${upgradeAuthority.toBase58()}, the upgrade will fail`,
+    );
+  }
+}
+
+async function checkSvmInstruction(
+  instruction: MultisigInstruction,
+  connection: Connection,
+  chainLabel: string,
+): Promise<void> {
+  if (
+    instruction instanceof AnchorMultisigInstruction &&
+    instruction.program === MultisigInstructionProgram.SolanaReceiver &&
+    (instruction.name === "setDataSources" || instruction.name === "setFee")
+  ) {
+    await checkReceiverInstruction(instruction, connection, chainLabel);
+  } else if (
+    instruction instanceof BpfUpgradableLoaderInstruction &&
+    instruction.name === "Upgrade"
+  ) {
+    await checkProgramUpgrade(instruction, connection, chainLabel);
+  } else {
+    console.log(
+      `\n${chainLabel}  NOT CHECKED — ${getProgramName(instruction.program)} ${instruction.name}`,
+    );
+  }
+}
+
+async function checkExecutePostedVaa(
+  action: ExecutePostedVaa,
+  multisigParser: MultisigParser,
+  cluster: PythCluster,
+): Promise<void> {
+  console.log(`\nVerifying ExecutePostedVaa on ${action.targetChainId}`);
+  const chain = svmChainFor(action.targetChainId, cluster);
+  if (chain === undefined) {
+    console.log(
+      `  NO SVM CHAIN IN STORE FOR ${action.targetChainId} — ${action.instructions.length} inner instruction(s) not checked`,
+    );
+    return;
+  }
+  for (const inner of action.instructions) {
+    await checkSvmInstruction(
+      multisigParser.parseInstruction(inner),
+      chain.getConnection(),
+      chain.getId(),
+    );
+  }
 }
 
 function pythContractsOn(chain: EvmChain): EvmPriceFeedContract[] {
@@ -109,9 +341,23 @@ async function main() {
       programId: instruction.programId,
     });
   });
+  const clusterConnection = new Connection(getPythClusterApiUrl(cluster));
 
   for (const instruction of parsedInstructions) {
+    if (
+      instruction instanceof AnchorMultisigInstruction ||
+      instruction instanceof BpfUpgradableLoaderInstruction
+    ) {
+      await checkSvmInstruction(instruction, clusterConnection, cluster);
+    }
     if (instruction instanceof WormholeMultisigInstruction) {
+      if (instruction.governanceAction instanceof ExecutePostedVaa) {
+        await checkExecutePostedVaa(
+          instruction.governanceAction,
+          multisigParser,
+          cluster,
+        );
+      }
       if (instruction.governanceAction instanceof EvmSetWormholeAddress) {
         console.log(
           `Verifying EVM set wormhole address on ${instruction.governanceAction.targetChainId}`,
@@ -148,22 +394,13 @@ async function main() {
         }
       }
       if (instruction.governanceAction instanceof EvmUpgradeContract) {
-        console.log(
-          `Verifying EVM Upgrade Contract on ${instruction.governanceAction.targetChainId}`,
-        );
-        for (const chain of Object.values(DefaultStore.chains)) {
-          if (
-            chain instanceof EvmChain &&
-            chain.isMainnet() === (cluster === "mainnet-beta") &&
-            chain.wormholeChainName ===
-              instruction.governanceAction.targetChainId
-          ) {
-            const address = instruction.governanceAction.address;
-            const contract = new EvmPriceFeedContract(chain, address);
-            const code = await contract.getCodeDigestWithoutAddress();
-            // this should be the same keccak256 of the deployedCode property generated by truffle
-            console.log(`${chain.getId()}  Address:${address} digest:${code}`);
-          }
+        const { address, targetChainId } = instruction.governanceAction;
+        console.log(`Verifying EVM Upgrade Contract on ${targetChainId}`);
+        for (const chain of evmChainsFor(targetChainId)) {
+          const contract = new EvmPriceFeedContract(chain, address);
+          const code = await contract.getCodeDigestWithoutAddress();
+          // this should be the same keccak256 of the deployedCode property generated by truffle
+          console.log(`${chain.getId()}  Address:${address} digest:${code}`);
         }
       }
       if (instruction.governanceAction instanceof CosmosUpgradeContract) {
@@ -198,7 +435,7 @@ async function main() {
             newFee ?? `<expo ${newFeeExpo} exceeds ${SetFee.MAX_EXPO}>`
           } (${newFeeValue} * 10^${newFeeExpo})`,
         );
-        for (const chain of evmChainsFor(targetChainId, cluster)) {
+        for (const chain of evmChainsFor(targetChainId)) {
           for (const contract of pythContractsOn(chain)) {
             const currentFee = await contract.getBaseUpdateFee();
             console.log(
@@ -219,7 +456,7 @@ async function main() {
             requested ?? `<expo ${expo} exceeds ${WithdrawFee.MAX_EXPO}>`
           }`,
         );
-        for (const chain of evmChainsFor(targetChainId, cluster)) {
+        for (const chain of evmChainsFor(targetChainId)) {
           const web3 = chain.getWeb3();
           const hasCode = (await web3.eth.getCode(recipient)) !== "0x";
           const recipientBalance = BigInt(await web3.eth.getBalance(recipient));

@@ -13,5 +13,54 @@
     "rpcUrl": "https://api.devnet.solana.com",
     "type": "SvmChain",
     "wormholeChainName": "solana"
+  },
+  {
+    "id": "fogo_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://mainnet.fogo.io",
+    "type": "SvmChain",
+    "wormholeChainName": "fogo_mainnet"
+  },
+  {
+    "id": "fogo_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://testnet.fogo.io",
+    "type": "SvmChain",
+    "wormholeChainName": "fogo_testnet"
+  },
+  {
+    "id": "eclipse_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://mainnetbeta-rpc.eclipse.xyz",
+    "type": "SvmChain",
+    "wormholeChainName": "eclipse_mainnet"
+  },
+  {
+    "id": "eclipse_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://testnet.dev2.eclipsenetwork.xyz",
+    "type": "SvmChain",
+    "wormholeChainName": "eclipse_testnet"
+  },
+  {
+    "id": "sonic_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://api.mainnet-alpha.sonic.game",
+    "type": "SvmChain",
+    "wormholeChainName": "sonic_mainnet"
+  },
+  {
+    "id": "sonic_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://api.testnet.sonic.game",
+    "type": "SvmChain",
+    "wormholeChainName": "sonic_testnet"
+  },
+  {
+    "id": "sonic_devnet",
+    "mainnet": false,
+    "rpcUrl": "https://api.testnet.sonic.game",
+    "type": "SvmChain",
+    "wormholeChainName": "sonic_devnet"
   }
 ]
