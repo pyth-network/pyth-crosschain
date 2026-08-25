@@ -21,6 +21,7 @@ MESH_PROGRAM = "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
 WORMHOLE_PROGRAM = "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth"
 DEFAULT_RPC = "https://api.mainnet-beta.solana.com"
 
+MODULE_EXECUTOR = 0
 MODULES = {0: "Executor", 1: "Target", 2: "EvmExecutor", 3: "Lazer", 4: "StellarExecutor"}
 TARGET_ACTIONS = {
     0: "UpgradeContract", 1: "AuthorizeGovernanceDataSourceTransfer",
@@ -179,6 +180,60 @@ def wormhole_post_message_payload(data_hex):
     return b[9 : 9 + n]
 
 
+KNOWN_PROGRAMS = {
+    "BPFLoaderUpgradeab1e11111111111111111111111": "BPF Upgradeable Loader",
+    "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ": "Pyth Solana receiver",
+    "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ": "Wormhole receiver (migrating)",
+    "HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL": "Wormhole receiver (pro-compatible)",
+    "SysvarRent111111111111111111111111111111111": "Sysvar: rent",
+    "SysvarC1ock11111111111111111111111111111111": "Sysvar: clock",
+    "11111111111111111111111111111111": "System program",
+}
+
+# BPF Upgradeable Loader instruction discriminants (u32 LE)
+LOADER_IX = {0: "InitializeBuffer", 1: "Write", 2: "DeployWithMaxDataLen",
+             3: "Upgrade", 4: "SetAuthority", 5: "Close"}
+
+# Account roles for BPFLoaderUpgradeable::Upgrade, in order.
+UPGRADE_ROLES = ["programdata", "program", "buffer", "spill", "rent sysvar",
+                 "clock sysvar", "authority"]
+
+
+def parse_execute_posted_vaa(body_hex):
+    """Decode an ExecutePostedVaa payload into the instructions it will run.
+
+    Layout: u32 count, then for each instruction: program_id (32),
+    u32 account count, [pubkey(32) is_signer(1) is_writable(1)]*, u32 data len, data.
+    """
+    b = bytes.fromhex(body_hex)
+    o = 0
+    count = struct.unpack_from("<I", b, o)[0]; o += 4
+    out = []
+    for _ in range(count):
+        program = b58encode(b[o:o + 32]); o += 32
+        n = struct.unpack_from("<I", b, o)[0]; o += 4
+        accounts = []
+        for _ in range(n):
+            accounts.append({
+                "pubkey": b58encode(b[o:o + 32]),
+                "is_signer": bool(b[o + 32]),
+                "is_writable": bool(b[o + 33]),
+            })
+            o += 34
+        dlen = struct.unpack_from("<I", b, o)[0]; o += 4
+        data = b[o:o + dlen]; o += dlen
+        ix = {"program_id": program, "program": KNOWN_PROGRAMS.get(program),
+              "accounts": accounts, "data": data.hex()}
+        if program == "BPFLoaderUpgradeab1e11111111111111111111111" and dlen >= 4:
+            disc = struct.unpack_from("<I", data, 0)[0]
+            ix["loader_instruction"] = LOADER_IX.get(disc, disc)
+            if LOADER_IX.get(disc) == "Upgrade":
+                for role, acct in zip(UPGRADE_ROLES, accounts):
+                    acct["role"] = role
+        out.append(ix)
+    return out
+
+
 def parse_governance_payload(payload, chain_ids):
     if payload is None or len(payload) < 8 or payload[:4] != b"PTGM":
         return None
@@ -186,13 +241,20 @@ def parse_governance_payload(payload, chain_ids):
     chain_id = struct.unpack_from(">H", payload, 6)[0]
     name = MODULES.get(module, module)
     act = TARGET_ACTIONS.get(action, action) if module == 1 else action
-    return {
+    out = {
         "module": name,
         "action": act,
         "chain_id": chain_id,
         "chain": chain_ids.get(chain_id, f"UNKNOWN({chain_id})"),
         "body": payload[8:].hex(),
     }
+    if module == MODULE_EXECUTOR and action == 0:
+        out["action"] = "ExecutePostedVaa"
+        try:
+            out["inner_instructions"] = parse_execute_posted_vaa(out["body"])
+        except Exception as exc:  # noqa: BLE001
+            out["inner_decode_error"] = str(exc)
+    return out
 
 
 def main():
