@@ -1,0 +1,19 @@
+{
+  "_comment": "Backup endpoints for chains whose EvmChains.json rpcUrl rejects scripted access (403) or is unreliable. Tried in order after the store URL.",
+  "arbitrum":               ["https://arbitrum-one-rpc.publicnode.com", "https://arbitrum.llamarpc.com"],
+  "arbitrum_sepolia":       ["https://arbitrum-sepolia-rpc.publicnode.com"],
+  "base":                   ["https://base-rpc.publicnode.com", "https://mainnet.base.org"],
+  "base_sepolia":           ["https://base-sepolia-rpc.publicnode.com"],
+  "bsc":                    ["https://bsc-rpc.publicnode.com", "https://binance.llamarpc.com"],
+  "cronos":                 ["https://cronos-evm-rpc.publicnode.com", "https://evm.cronos.org"],
+  "cronos_testnet":         ["https://evm-t3.cronos.org"],
+  "ethereum":               ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"],
+  "linea":                  ["https://linea-rpc.publicnode.com", "https://rpc.linea.build"],
+  "mezo_testnet":           ["https://rpc.test.mezo.org"],
+  "polygon":                ["https://polygon-bor-rpc.publicnode.com"],
+  "polygon_amoy":           ["https://polygon-amoy-bor-rpc.publicnode.com"],
+  "sei_evm_mainnet":        ["https://evm-rpc.sei-apis.com"],
+  "sepolia":                ["https://ethereum-sepolia-rpc.publicnode.com"],
+  "soneium":                ["https://rpc.soneium.org"],
+  "soneium_minato_testnet": ["https://rpc.minato.soneium.org"]
+}
