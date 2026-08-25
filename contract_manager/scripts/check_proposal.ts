@@ -358,8 +358,9 @@ async function main() {
               }
               if (contract instanceof EvmEntropyContract) {
                 const accrued = BigInt(await contract.getAccruedPythFees());
-                // Accrued fees only grow, so the proposal amount must be <= the
-                // current accrued balance or the withdrawal would revert.
+                // Accrued fees decrease only via a governance withdrawFee, so
+                // the proposal amount must be <= the current accrued balance or
+                // the withdrawal would revert.
                 if (amount > accrued) {
                   console.log(
                     `${chain.getId()}    WARNING: amount ${amount} exceeds current accrued fees ${accrued} — execution would revert`,
