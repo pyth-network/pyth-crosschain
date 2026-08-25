@@ -173,6 +173,37 @@ def eth_get_code_any(urls, address):
     return None, None, err
 
 
+def eth_get_storage(url, address, slot, tries=3, timeout=40):
+    """Returns (value_hex, error_string)."""
+    body = json.dumps(
+        {"jsonrpc": "2.0", "id": 1, "method": "eth_getStorageAt",
+         "params": [address, slot, "latest"]}
+    ).encode()
+    last = None
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(url, body, UA)
+            res = json.load(urllib.request.urlopen(req, timeout=timeout))
+            if "error" in res:
+                last = res["error"].get("message", "rpc error")
+                continue
+            return res["result"], None
+        except Exception as exc:  # noqa: BLE001
+            last = f"{type(exc).__name__}: {exc}"
+            if "429" in last or "503" in last:
+                time.sleep(1.5 * (attempt + 1))
+    return None, last
+
+
+def eth_get_storage_any(urls, address, slot):
+    err = None
+    for url in urls:
+        res, err = eth_get_storage(url, address, slot)
+        if err is None:
+            return res, url, None
+    return None, None, err
+
+
 def http_get(url, headers=None, timeout=40):
     hdrs = dict(UA)
     hdrs.pop("content-type", None)

@@ -24,6 +24,14 @@ python3 check_guardian_sets.py actions.json --out report.json
 
 # 3. prove a real Pyth Pro VAA actually verifies on all of them
 PYTH_API_KEY=... python3 replay_vaa.py report.json --samples 14
+
+# 4. check the proposed implementations reproduce from source
+(cd ../../../target_chains/ethereum/contracts && forge build --skip test --skip script)
+python3 check_evm_bytecode.py actions.json \
+    --artifact ../../../target_chains/ethereum/contracts/out/PythUpgradable.sol/PythUpgradable.json
+
+# 5. map what is deployed today back to a git revision
+./build_at_commit.sh pyth-evm-contract-v1.4.6 pyth-evm-contract-v1.4.3 <commit> ...
 ```
 
 Each script exits non-zero on any discrepancy, so they can be chained with `&&`.
@@ -76,6 +84,45 @@ It also recovers the signers locally (pure-Python keccak256 + secp256k1
 recovery, verification-only) and checks each recovered address sits at its
 expected guardian index. Because quorum is 3-of-5, a single sample only shows 3
 routers; use `--samples 14` or so to observe all 5.
+
+## Reproducing an EVM build
+
+`forge build` needs the Solidity dependencies present. `pnpm install` is the
+supported route; if it is unavailable, npm cannot be used directly on the
+package (it rejects the workspace's `catalog:` protocol), so install
+out-of-tree and copy in:
+
+```sh
+cd target_chains/ethereum/contracts
+mkdir -p /tmp/ozdeps && (cd /tmp/ozdeps && npm init -y >/dev/null &&
+  npm i @openzeppelin/contracts@4.8.1 @openzeppelin/contracts-upgradeable@4.8.1 \
+        @nomad-xyz/excessively-safe-call@0.0.1-rc.1)
+mkdir -p node_modules/@pythnetwork
+cp -r /tmp/ozdeps/node_modules/@openzeppelin /tmp/ozdeps/node_modules/@nomad-xyz node_modules/
+ln -sfn ../../../sdk/solidity         node_modules/@pythnetwork/pyth-sdk-solidity
+ln -sfn ../../../entropy_sdk/solidity node_modules/@pythnetwork/entropy-sdk-solidity
+ln -sfn ../../../pulse_sdk/solidity   node_modules/@pythnetwork/pulse-sdk-solidity
+git clone --depth 1 -b v1.7.6 https://github.com/foundry-rs/forge-std.git lib/forge-std
+git clone --depth 1 https://github.com/dapphub/ds-test.git lib/forge-std/lib/ds-test
+forge build --skip test --skip script
+```
+
+Versions come from `package.json` (both OpenZeppelin packages are pinned `=4.8.1`)
+and `foundry.toml` (solc 0.8.29, `evm_version = paris`, optimizer on, 200 runs).
+
+## Solana
+
+The Solana programs have their own reproducible build, pinned in
+`target_chains/solana/Dockerfile`. A local `cargo-build-sbf` will **not** be
+byte-identical — the toolchain bakes std source paths into panic messages — so
+use the image:
+
+```sh
+cd target_chains/solana
+docker build -t pyth-solana-build .
+docker run --rm -v "$PWD/artifacts:/artifacts" pyth-solana-build
+sha256sum artifacts/*.so
+```
 
 ## `rpc_fallbacks.json`
 
