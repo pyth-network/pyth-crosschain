@@ -132,6 +132,25 @@ docker run --rm -v "$PWD/artifacts:/artifacts" pyth-solana-build
 sha256sum artifacts/*.so
 ```
 
+## Rehearsing the SVM guardian-set migration
+
+The repo ships an end-to-end rehearsal of the migration against the real
+pre-migration mainnet binary. It is the SVM analogue of `replay_vaa.py`: it
+finishes by verifying a production Pyth Pro router VAA through the migrated
+bridge and posting it into the receiver.
+
+```sh
+cd target_chains/solana
+cargo-build-sbf --manifest-path programs/core-bridge/Cargo.toml
+cargo-build-sbf --manifest-path programs/pyth-solana-receiver/Cargo.toml
+cargo-build-sbf --manifest-path programs/pyth-push-oracle/Cargo.toml   # also required
+export BPF_OUT_DIR="$PWD/target/deploy"
+cargo test -p pyth-solana-receiver --test test_migrate_guardian_set
+```
+
+All three programs must be built or `solana-program-test` fails with
+"Program file data not available".
+
 ## `rpc_fallbacks.json`
 
 Some `rpcUrl` values in `src/store/chains/EvmChains.json` reject scripted
