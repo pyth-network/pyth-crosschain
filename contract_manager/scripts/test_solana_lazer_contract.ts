@@ -52,7 +52,7 @@ function loadKeypair(path: string): Keypair {
 
 /** A devnet SvmChain pointed at the supplied RPC URL. */
 function devnetChain(rpcUrl: string): SvmChain {
-  return new SvmChain("solana_devnet", false, "solana", "SOL", rpcUrl);
+  return new SvmChain("solana_devnet", false, "solana", "SOL", false, rpcUrl);
 }
 
 function txUrl(sig: string): string {

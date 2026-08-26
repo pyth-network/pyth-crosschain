@@ -1,0 +1,9 @@
+{
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "name": "remote_executor",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0"
+}

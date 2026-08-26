@@ -8,5 +8,6 @@ export * from "./iota";
 export * from "./solana";
 export * from "./stellar";
 export * from "./sui";
+export * from "./svm";
 export * from "./ton";
 export * from "./wormhole";

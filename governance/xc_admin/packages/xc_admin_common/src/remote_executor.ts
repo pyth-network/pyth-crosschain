@@ -1,4 +1,9 @@
+import type { Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import type { Connection } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
+import type { RemoteExecutor } from "remote_executor/idl";
+import remoteExecutorIdl from "remote_executor/idl.json";
 
 /**
  * Seed for the claim PDA of the remote executor
@@ -27,4 +32,14 @@ export function mapKey(key: PublicKey): PublicKey {
     [Buffer.from(EXECUTOR_KEY_SEED), key.toBytes()],
     REMOTE_EXECUTOR_ADDRESS,
   )[0];
+}
+
+export function getRemoteExecutorProgram(
+  connection: Connection,
+): Program<RemoteExecutor> {
+  return new Program(
+    remoteExecutorIdl as RemoteExecutor,
+    REMOTE_EXECUTOR_ADDRESS,
+    new AnchorProvider(connection, {} as Wallet, {}),
+  );
 }
