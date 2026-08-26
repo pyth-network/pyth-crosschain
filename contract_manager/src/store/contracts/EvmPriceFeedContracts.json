@@ -742,7 +742,8 @@
   {
     "address": "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
     "chain": "abstract",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
