@@ -1,0 +1,42 @@
+{
+  "date": "2026-08-26",
+  "label": "Wednesday",
+  "summary": {
+    "added": 0,
+    "went_live": 3,
+    "removed": 0
+  },
+  "hero": "3 went live.",
+  "events": [
+    {
+      "id": "Equity.US.RAM/USD",
+      "lazerId": 3643,
+      "asset": "Roundhill T-Rex 2X Long Dram Daily Target Etf",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-26",
+      "quote": "USD",
+      "hermesId": "a1c8e6bd0fcd3a19a87ce81ad405496d598cac14f1292792b3b560ae6ef42827"
+    },
+    {
+      "id": "Equity.US.DJT/USD",
+      "lazerId": 3642,
+      "asset": "Trump Media & Technology Group Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-26",
+      "quote": "USD",
+      "hermesId": "cabf6dfb723b12ac8a67e919379d177903580f8d3ae2fad3897198dc07a5a861"
+    },
+    {
+      "id": "Metal.NL3M/USD",
+      "lazerId": 3220,
+      "asset": "Pyth Price In Usd For Nickel 3-Month",
+      "assetType": "metal",
+      "changeType": "went_live",
+      "date": "2026-08-26",
+      "quote": "USD",
+      "hermesId": "9b7b94a8ccbde25ce0059535fd6f9afe77b5121ea20b0c64ccbad5b34be449b8"
+    }
+  ]
+}
