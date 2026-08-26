@@ -22,8 +22,8 @@ export const MigrationBanner = () => {
         className="hover:underline"
         href="/price-feeds/core/upgrade/preparing"
       >
-        Pyth Core upgrade August 26, 2026 at 16:00 UTC. Every Core user will
-        need an API Key. Learn more →
+        Pyth Core upgrade completed successfully on August 26, 2026. Hermes now
+        requires an API Key. Get yours →
       </Link>
     </Banner>
   );
