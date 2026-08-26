@@ -1123,7 +1123,7 @@
     "id": "soneium",
     "mainnet": true,
     "networkId": 1868,
-    "rpcUrl": "https://soneium.drpc.org",
+    "rpcUrl": "https://rpc.soneium.org",
     "type": "EvmChain"
   },
   {

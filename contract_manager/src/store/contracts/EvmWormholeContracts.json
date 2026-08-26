@@ -1317,5 +1317,17 @@
     "chain": "sei_evm_mainnet",
     "deploymentType": "pro-compatible-production",
     "type": "EvmWormholeContract"
+  },
+  {
+    "address": "0x817299B9323e593C1a33f5d1D30E5D0ff6B8D0af",
+    "chain": "sepolia",
+    "deploymentType": "beta",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "address": "0xE47903Cff6edC07a25fce577ffD8f4CaD8FAcac6",
+    "chain": "sepolia",
+    "deploymentType": "pro-compatible-staging",
+    "type": "EvmWormholeContract"
   }
 ]
