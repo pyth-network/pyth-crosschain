@@ -26,9 +26,9 @@ import {
   REMOTE_EXECUTOR_ADDRESS,
 } from "@pythnetwork/xc-admin-common";
 import type { TransactionInstruction } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
 
-import type { DeploymentType } from "../src/core/base";
+import type { DeploymentType, PrivateKey } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { SvmChain } from "../src/core/chains";
 import {
@@ -43,7 +43,7 @@ export type SvmMigrationConfig = {
   coreBridgeArtifact: string;
   chains: {
     chain: string;
-    upgradeBuffer: string;
+    upgradeBuffer?: string;
   }[];
 };
 
@@ -148,7 +148,7 @@ export function resolveMigrationTargets(
         chain,
       ),
       signer: chain.isRemote ? mapKey(vaultAuthority) : vaultAuthority,
-      upgradeBuffer: new PublicKey(entry.upgradeBuffer),
+      upgradeBuffer: entry.upgradeBuffer ? new PublicKey(entry.upgradeBuffer) : undefined,
       wormhole: findContract(
         DefaultStore.wormhole_contracts,
         SvmWormholeContract,
@@ -465,4 +465,70 @@ function checkElf(label: string, actual: Buffer, expected: Buffer): void {
 
 function sha256(data: Buffer): string {
   return createHash("sha256").update(data).digest("hex");
+}
+
+// Both instructions go in one transaction: until the close lands, the receiver trusts the Pyth
+// Pro emitter while the Wormhole guardians still control the bridge.
+export async function closeGuardianSets(
+  target: SvmMigrationTarget,
+  state: SvmMigrationTargetState,
+  senderPrivateKey: PrivateKey,
+) {
+  const chainId = target.chain.getId();
+  if (!(await isReceiverMigrated(target, state))) {
+    throw new Error(
+      `${chainId}: the receiver does not accept the Pyth Pro data sources yet; the governance message has not been executed there`,
+    );
+  }
+  // On a chain the vault reaches over wormhole, the governance message is verified against the
+  // very sets being closed.
+  if (!(await isCoreBridgeMigrated(target, state))) {
+    throw new Error(
+      `${chainId}: the core bridge is still running the pre-migration build; it has to be upgraded before any guardian set is closed`,
+    );
+  }
+
+  const guardianSets = await target.wormhole.getGuardianSets();
+  const migrated = guardianSets.find(
+    (set) =>
+      set.index === 0 &&
+      set.keys.length === state.guardianSet.length &&
+      set.keys.every((key, index) => key === state.guardianSet[index]),
+  );
+  const toClose = guardianSets
+    .filter((set) => set !== migrated)
+    .sort((a, b) => b.index - a.index);
+  if (migrated && toClose.length === 0) {
+    console.log(`${chainId}: guardian set already migrated`);
+    return;
+  }
+
+  const payer = target.chain.getKeypair(senderPrivateKey);
+  const transaction = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+  );
+  for (const set of toClose) {
+    transaction.add(
+      target.wormhole.generateCloseGuardianSetInstruction(
+        payer.publicKey,
+        set.index,
+      ),
+    );
+  }
+  if (!migrated) {
+    transaction.add(
+      target.wormhole.generateInitializeInstruction(payer.publicKey),
+    );
+  }
+
+  const signature = await sendAndConfirmTransaction(
+    target.chain.getConnection(),
+    transaction,
+    [payer],
+  );
+  console.log(
+    `${chainId}: closed guardian sets ${toClose
+      .map((set) => set.index)
+      .join(", ")}${migrated ? "" : " and re-initialized"} in ${signature}`,
+  );
 }

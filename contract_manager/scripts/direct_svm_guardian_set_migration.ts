@@ -10,7 +10,6 @@ import {
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import type { PrivateKey } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { loadHotWallet } from "../src/node/utils/governance";
 import type {
@@ -18,10 +17,8 @@ import type {
   SvmMigrationTargetState,
 } from "./svm_guardian_set_migration";
 import {
+  closeGuardianSets,
   describeChainState,
-  getVaultOrThrow,
-  isCoreBridgeMigrated,
-  isReceiverMigrated,
   loadMigrationConfig,
   MIGRATION_OPTIONS,
   readMigrationTargetState,
@@ -48,11 +45,6 @@ const parser = yargs(hideBin(process.argv))
       default: "https://pyth.dourolabs.app/hermes",
       desc: "Hermes instance to pull the price update for the final check from",
       type: "string",
-    },
-    "dry-run": {
-      default: false,
-      desc: "Do not execute the transactions, just simulate them",
-      type: "boolean",
     }
   });
 
@@ -63,8 +55,6 @@ async function main() {
     config,
     toDeploymentType(argv["deployment-type"]),
   );
-  const dryRun = argv["dry-run"];
-
 
   const wallet = loadHotWallet(argv["ops-key-path"]);
   const targets = resolveMigrationTargets(config, argv.chain, wallet.publicKey);
@@ -76,8 +66,8 @@ async function main() {
   );
 
   for (const target of targets) {
-    await setDataSourcesAndFee(target, state, wallet, dryRun);
-    await closeGuardianSets(target, state, senderPrivateKey, dryRun);
+    await setDataSourcesAndFee(target, state, wallet);
+    await closeGuardianSets(target, state, senderPrivateKey);
   }
   for (const target of targets) {
     console.log(
@@ -96,7 +86,7 @@ async function main() {
   }
 }
 
-async function setDataSourcesAndFee(target: SvmMigrationTarget, state: SvmMigrationTargetState, wallet: Wallet, dryRun: boolean) {
+async function setDataSourcesAndFee(target: SvmMigrationTarget, state: SvmMigrationTargetState, wallet: Wallet) {
   const instructions = [
     await target.receiver.generateSetDataSourcesInstruction(wallet.publicKey, state.dataSources),
     await target.receiver.generateSetFeeInstruction(wallet.publicKey, state.singleUpdateFeeInLamports)
@@ -109,103 +99,14 @@ async function setDataSourcesAndFee(target: SvmMigrationTarget, state: SvmMigrat
     transaction.add(instruction);
   }
 
-  if (dryRun) {
-    const simulationResult =  await target.chain.getConnection().simulateTransaction(transaction, [wallet.payer]);
-    if (simulationResult.value.err) {
-      throw new Error(`${target.chain.getId()}: set data sources and fee simulation failed: ${JSON.stringify(simulationResult.value.err)}`);
-    }
-    else {
-      console.log(`${target.chain.getId()}: set data sources and fee simulated`);
-    }
-  } else {
-  // const signature = await sendAndConfirmTransaction(
-  //   target.chain.getConnection(),
-  //   transaction,
-  //   [wallet.payer],
-  // );
-  // console.log(
-  //   `${target.chain.getId()}: set data sources and fee in ${signature}`,
-  // );
-}
-}
-
-// Both instructions go in one transaction: until the close lands, the receiver trusts the Pyth
-// Pro emitter while the Wormhole guardians still control the bridge.
-async function closeGuardianSets(
-  target: SvmMigrationTarget,
-  state: SvmMigrationTargetState,
-  senderPrivateKey: PrivateKey,
-  dryRun: boolean,
-) {
-  const chainId = target.chain.getId();
-  if (!(await isReceiverMigrated(target, state)) && !dryRun) {
-    throw new Error(
-      `${chainId}: the receiver does not accept the Pyth Pro data sources yet; the governance message has not been executed there`,
-    );
-  }
-  // On a chain the vault reaches over wormhole, the governance message is verified against the
-  // very sets being closed.
-  if (!(await isCoreBridgeMigrated(target, state))) {
-    throw new Error(
-      `${chainId}: the core bridge is still running the pre-migration build; it has to be upgraded before any guardian set is closed`,
-    );
-  }
-
-  const guardianSets = await target.wormhole.getGuardianSets();
-  const migrated = guardianSets.find(
-    (set) =>
-      set.index === 0 &&
-      set.keys.length === state.guardianSet.length &&
-      set.keys.every((key, index) => key === state.guardianSet[index]),
-  );
-  const toClose = guardianSets
-    .filter((set) => set !== migrated)
-    .sort((a, b) => b.index - a.index);
-  if (migrated && toClose.length === 0) {
-    console.log(`${chainId}: guardian set already migrated`);
-    return;
-  }
-
-  const payer = target.chain.getKeypair(senderPrivateKey);
-  const transaction = new Transaction().add(
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
-  );
-  for (const set of toClose) {
-    transaction.add(
-      target.wormhole.generateCloseGuardianSetInstruction(
-        payer.publicKey,
-        set.index,
-      ),
-    );
-  }
-  if (!migrated) {
-    transaction.add(
-      target.wormhole.generateInitializeInstruction(payer.publicKey),
-    );
-  }
-
-  if (dryRun) {
-    const simulationResult = await target.chain.getConnection().simulateTransaction(transaction, [payer]);
-    if (simulationResult.value.err) {
-      throw new Error(`${chainId}: closed guardian sets simulation failed: ${JSON.stringify(simulationResult.value.err)}`);
-    }
-    else {
-      console.log(`${chainId}: closed guardian sets ${toClose
-        .map((set) => set.index)
-        .join(", ")}${migrated ? "" : " and re-initialized"} simulated`);
-    }
-  } else {
   const signature = await sendAndConfirmTransaction(
     target.chain.getConnection(),
     transaction,
-    [payer],
+    [wallet.payer],
   );
   console.log(
-    `${chainId}: closed guardian sets ${toClose
-      .map((set) => set.index)
-      .join(", ")}${migrated ? "" : " and re-initialized"} in ${signature}`,
+    `${target.chain.getId()}: set data sources and fee in ${signature}`,
   );
-}
 }
 
 await main();
