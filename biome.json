@@ -28,6 +28,7 @@
       "!node_modules/**/*",
       "!*.tsbuildinfo",
       "!governance/xc_admin/packages/xc_admin_common/src/chains.ts",
+      "!apps/hermes/client/js/schema.json",
       "!apps/developer-hub/data/changelog-diffs/**"
     ]
   },
