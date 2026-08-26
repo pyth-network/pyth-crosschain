@@ -1,6 +1,7 @@
-import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import type { Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Connection } from "@solana/web3.js";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import type { RemoteExecutor } from "remote_executor/idl";
 import remoteExecutorIdl from "remote_executor/idl.json";
 
@@ -39,6 +40,6 @@ export function getRemoteExecutorProgram(
   return new Program(
     remoteExecutorIdl as RemoteExecutor,
     REMOTE_EXECUTOR_ADDRESS,
-    new AnchorProvider(connection, new Wallet(Keypair.generate()), {}),
+    new AnchorProvider(connection, {} as Wallet, {}),
   );
 }

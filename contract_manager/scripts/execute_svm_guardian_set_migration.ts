@@ -10,9 +10,7 @@
  * already there, so a run that fails part way through can simply be repeated.
  */
 
-import {
-  PublicKey,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -31,7 +29,8 @@ import {
 } from "./svm_guardian_set_migration";
 
 const VAA_WAIT_SECONDS = 300;
-const SOL_USD_FEED_ID = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+const SOL_USD_FEED_ID =
+  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -106,9 +105,7 @@ async function main() {
     await closeGuardianSets(target, state, senderPrivateKey);
   }
   for (const target of targets) {
-    console.log(
-      `\n=== ${target.chain.getId()}`,
-    );
+    console.log(`\n=== ${target.chain.getId()}`);
     console.log(await describeChainState(target));
 
     console.log(`post-migration price relay from ${argv["hermes-url"]}`);

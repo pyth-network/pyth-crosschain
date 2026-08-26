@@ -118,7 +118,9 @@ export function makeSvmMigrationTargetForProposing(
 ): SvmMigrationTargetForProposing[] {
   return targets.map((target) => {
     if (target.upgradeBuffer === undefined) {
-      throw new Error(`The target ${target.chain.getId()} has no upgrade buffer`);
+      throw new Error(
+        `The target ${target.chain.getId()} has no upgrade buffer`,
+      );
     }
     return {
       ...target,

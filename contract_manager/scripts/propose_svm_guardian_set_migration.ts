@@ -21,9 +21,9 @@ import {
   getVaultOrThrow,
   loadMigrationConfig,
   MIGRATION_OPTIONS,
+  makeSvmMigrationTargetForProposing,
   readMigrationTargetState,
   relayPriceUpdate,
-  makeSvmMigrationTargetForProposing,
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
@@ -57,8 +57,7 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const config =
-    loadMigrationConfig(argv["config-path"])
+  const config = loadMigrationConfig(argv["config-path"]);
 
   const state = readMigrationTargetState(
     config,
@@ -75,7 +74,10 @@ async function main() {
   );
 
   const wallet = loadHotWallet(argv["ops-key-path"]);
-  const targets = makeSvmMigrationTargetForProposing(resolveMigrationTargets(config, argv.chain), vaultAuthority);
+  const targets = makeSvmMigrationTargetForProposing(
+    resolveMigrationTargets(config, argv.chain),
+    vaultAuthority,
+  );
   const actions: ProposedAction[] = [];
   for (const target of targets) {
     const chainId = target.chain.getId();

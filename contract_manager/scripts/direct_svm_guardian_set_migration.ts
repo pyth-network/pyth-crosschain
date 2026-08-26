@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/style/noProcessEnv: CLI script, the token is an ambient secret */
 /** biome-ignore-all lint/nursery/noUndeclaredEnvVars: not run as a turbo task */
 
+import type { Wallet } from "@coral-xyz/anchor";
 import {
   ComputeBudgetProgram,
   sendAndConfirmTransaction,
@@ -9,7 +10,6 @@ import {
 } from "@solana/web3.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { loadHotWallet } from "../src/node/utils/governance";
 import type {
@@ -25,9 +25,9 @@ import {
   relayPriceUpdate,
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
-import type { Wallet } from "@coral-xyz/anchor";
 
-const SOL_USD_FEED_ID = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
+const SOL_USD_FEED_ID =
+  "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -45,7 +45,7 @@ const parser = yargs(hideBin(process.argv))
       default: "https://pyth.dourolabs.app/hermes",
       desc: "Hermes instance to pull the price update for the final check from",
       type: "string",
-    }
+    },
   });
 
 async function main() {
@@ -70,9 +70,7 @@ async function main() {
     await closeGuardianSets(target, state, senderPrivateKey);
   }
   for (const target of targets) {
-    console.log(
-      `\n=== ${target.chain.getId()}`,
-    );
+    console.log(`\n=== ${target.chain.getId()}`);
     console.log(await describeChainState(target));
 
     console.log(`post-migration price relay from ${argv["hermes-url"]}`);
@@ -86,11 +84,21 @@ async function main() {
   }
 }
 
-async function setDataSourcesAndFee(target: SvmMigrationTarget, state: SvmMigrationTargetState, wallet: Wallet) {
+async function setDataSourcesAndFee(
+  target: SvmMigrationTarget,
+  state: SvmMigrationTargetState,
+  wallet: Wallet,
+) {
   const instructions = [
-    await target.receiver.generateSetDataSourcesInstruction(wallet.publicKey, state.dataSources),
-    await target.receiver.generateSetFeeInstruction(wallet.publicKey, state.singleUpdateFeeInLamports)
-  ]
+    await target.receiver.generateSetDataSourcesInstruction(
+      wallet.publicKey,
+      state.dataSources,
+    ),
+    await target.receiver.generateSetFeeInstruction(
+      wallet.publicKey,
+      state.singleUpdateFeeInLamports,
+    ),
+  ];
 
   const transaction = new Transaction().add(
     ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
