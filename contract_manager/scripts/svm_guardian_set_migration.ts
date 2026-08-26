@@ -26,7 +26,12 @@ import {
   REMOTE_EXECUTOR_ADDRESS,
 } from "@pythnetwork/xc-admin-common";
 import type { TransactionInstruction } from "@solana/web3.js";
-import { ComputeBudgetProgram, PublicKey, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+} from "@solana/web3.js";
 
 import type { DeploymentType, PrivateKey } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
@@ -55,6 +60,10 @@ export type SvmMigrationTarget = {
   // everywhere else.
   signer: PublicKey;
   upgradeBuffer: PublicKey | undefined;
+};
+
+export type SvmMigrationTargetForProposing = SvmMigrationTarget & {
+  upgradeBuffer: PublicKey;
 };
 
 export type SvmMigrationTargetState = {
@@ -99,6 +108,19 @@ export const MIGRATION_OPTIONS = {
 
 export function loadMigrationConfig(configPath: string): SvmMigrationConfig {
   return JSON.parse(readFileSync(configPath, "utf8")) as SvmMigrationConfig;
+}
+
+// Proposing commits to a core bridge upgrade, so it cannot accept a chain without a buffer to
+// upgrade from; the execute and direct scripts never touch the buffers.
+export function requireUpgradeBuffers(
+  targets: SvmMigrationTarget[],
+): SvmMigrationTargetForProposing[] {
+  return targets.map((target) => {
+    if (target.upgradeBuffer === undefined) {
+      throw new Error(`The target ${target.chain.getId()} has no upgrade buffer`);
+    }
+    return target as SvmMigrationTargetForProposing;
+  });
 }
 
 export function getVaultOrThrow(vaultId: string): Vault {
@@ -148,7 +170,10 @@ export function resolveMigrationTargets(
         chain,
       ),
       signer: chain.isRemote ? mapKey(vaultAuthority) : vaultAuthority,
-      upgradeBuffer: entry.upgradeBuffer ? new PublicKey(entry.upgradeBuffer) : undefined,
+      upgradeBuffer:
+        entry.upgradeBuffer === undefined
+          ? undefined
+          : new PublicKey(entry.upgradeBuffer),
       wormhole: findContract(
         DefaultStore.wormhole_contracts,
         SvmWormholeContract,
@@ -177,12 +202,9 @@ function findContract<T extends SvmPriceFeedContract | SvmWormholeContract>(
 }
 
 export async function buildMigrationInstructions(
-  target: SvmMigrationTarget,
+  target: SvmMigrationTargetForProposing,
   state: SvmMigrationTargetState,
 ): Promise<TransactionInstruction[]> {
-  if (!target.upgradeBuffer) {
-    throw new Error("this script requires an upgrade buffer");
-  }
   return [
     await target.receiver.generateSetDataSourcesInstruction(
       target.signer,
@@ -375,12 +397,9 @@ export async function checkAuthorities(
 
 // Commits the proposal to an ELF that has been read rather than to an address that is trusted.
 export async function checkUpgradeBuffer(
-  target: SvmMigrationTarget,
+  target: SvmMigrationTargetForProposing,
   state: SvmMigrationTargetState,
 ): Promise<void> {
-  if (!target.upgradeBuffer) {
-    throw new Error("this script requires an upgrade buffer");
-  }
   const account = await target.chain
     .getConnection()
     .getAccountInfo(target.upgradeBuffer);

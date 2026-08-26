@@ -23,6 +23,7 @@ import {
   MIGRATION_OPTIONS,
   readMigrationTargetState,
   relayPriceUpdate,
+  requireUpgradeBuffers,
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
@@ -51,12 +52,14 @@ const parser = yargs(hideBin(process.argv))
       default: false,
       desc: "Print the state of every chain and run every check, but do not submit the proposal. The pre-flight price relay still sends a transaction",
       type: "boolean",
-    }
+    },
   });
 
 async function main() {
   const argv = await parser.argv;
-  const config = loadMigrationConfig(argv["config-path"]);
+  const config =
+    loadMigrationConfig(argv["config-path"])
+
   const state = readMigrationTargetState(
     config,
     toDeploymentType(argv["deployment-type"]),
@@ -72,7 +75,7 @@ async function main() {
   );
 
   const wallet = loadHotWallet(argv["ops-key-path"]);
-  const targets = resolveMigrationTargets(config, argv.chain, vaultAuthority);
+  const targets = requireUpgradeBuffers(resolveMigrationTargets(config, argv.chain, vaultAuthority));
   const actions: ProposedAction[] = [];
   for (const target of targets) {
     const chainId = target.chain.getId();
