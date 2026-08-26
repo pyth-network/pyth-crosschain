@@ -107,7 +107,7 @@ async function main() {
   }
   for (const target of targets) {
     console.log(
-      `\n=== ${target.chain.getId()} (governed by ${target.signer.toBase58()})`,
+      `\n=== ${target.chain.getId()}`,
     );
     console.log(await describeChainState(target));
 

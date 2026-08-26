@@ -23,7 +23,7 @@ import {
   MIGRATION_OPTIONS,
   readMigrationTargetState,
   relayPriceUpdate,
-  requireUpgradeBuffers,
+  makeSvmMigrationTargetForProposing,
   resolveMigrationTargets,
 } from "./svm_guardian_set_migration";
 
@@ -75,7 +75,7 @@ async function main() {
   );
 
   const wallet = loadHotWallet(argv["ops-key-path"]);
-  const targets = requireUpgradeBuffers(resolveMigrationTargets(config, argv.chain, vaultAuthority));
+  const targets = makeSvmMigrationTargetForProposing(resolveMigrationTargets(config, argv.chain), vaultAuthority);
   const actions: ProposedAction[] = [];
   for (const target of targets) {
     const chainId = target.chain.getId();

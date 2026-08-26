@@ -56,14 +56,14 @@ export type SvmMigrationTarget = {
   chain: SvmChain;
   receiver: SvmPriceFeedContract;
   wormhole: SvmWormholeContract;
-  // The vault's own authority PDA where the vault lives, the remote executor's stand-in for it
-  // everywhere else.
-  signer: PublicKey;
   upgradeBuffer: PublicKey | undefined;
 };
 
 export type SvmMigrationTargetForProposing = SvmMigrationTarget & {
   upgradeBuffer: PublicKey;
+  // The vault's own authority PDA where the vault lives, the remote executor's stand-in for it
+  // everywhere else.
+  signer: PublicKey;
 };
 
 export type SvmMigrationTargetState = {
@@ -112,14 +112,18 @@ export function loadMigrationConfig(configPath: string): SvmMigrationConfig {
 
 // Proposing commits to a core bridge upgrade, so it cannot accept a chain without a buffer to
 // upgrade from; the execute and direct scripts never touch the buffers.
-export function requireUpgradeBuffers(
+export function makeSvmMigrationTargetForProposing(
   targets: SvmMigrationTarget[],
+  vaultAuthority: PublicKey,
 ): SvmMigrationTargetForProposing[] {
   return targets.map((target) => {
     if (target.upgradeBuffer === undefined) {
       throw new Error(`The target ${target.chain.getId()} has no upgrade buffer`);
     }
-    return target as SvmMigrationTargetForProposing;
+    return {
+      ...target,
+      signer: target.chain.isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+    } as SvmMigrationTargetForProposing;
   });
 }
 
@@ -148,7 +152,6 @@ export function readMigrationTargetState(
 export function resolveMigrationTargets(
   config: SvmMigrationConfig,
   chainFilter: readonly string[] | undefined,
-  vaultAuthority: PublicKey,
 ): SvmMigrationTarget[] {
   const entries = chainFilter
     ? config.chains.filter((entry) => chainFilter.includes(entry.chain))
@@ -169,7 +172,6 @@ export function resolveMigrationTargets(
         SvmPriceFeedContract,
         chain,
       ),
-      signer: chain.isRemote ? mapKey(vaultAuthority) : vaultAuthority,
       upgradeBuffer:
         entry.upgradeBuffer === undefined
           ? undefined
@@ -377,7 +379,7 @@ export async function relayPriceUpdate(
 // A chain whose authorities have not been handed over yet should fail here rather than as an
 // unexecutable proposal.
 export async function checkAuthorities(
-  target: SvmMigrationTarget,
+  target: SvmMigrationTargetForProposing,
 ): Promise<void> {
   const { governanceAuthority } = await target.receiver.getConfig();
   if (!governanceAuthority.equals(target.signer)) {
