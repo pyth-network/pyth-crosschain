@@ -37,14 +37,6 @@ export default {
   pageExtensions: ["ts", "tsx", "mdx"],
   reactStrictMode: true,
 
-  rewrites: () => [
-    {
-      destination:
-        "https://web-api.pyth.network/publishers_ranking?cluster=pythnet",
-      source: "/api/publishers-ranking",
-    },
-  ],
-
   turbopack: {
     resolveExtensions: [
       ".ts",

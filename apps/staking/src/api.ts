@@ -13,16 +13,8 @@ import {
   PositionState,
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
-import { z } from "zod";
 
-const publishersRankingSchema = z
-  .object({
-    numSymbols: z.number(),
-    publisher: z.string(),
-    rank: z.number(),
-    timestamp: z.string(),
-  })
-  .array();
+import { PUBLISHER_RANKINGS } from "./publisher-rankings";
 
 type Data = {
   total: bigint;
@@ -245,21 +237,18 @@ const loadPublisherData = async (
   pythnetClient: PythnetClient,
   hermesClient: HermesClient,
 ) => {
-  const [poolData, publisherRankings, publisherCaps, publisherNumberOfSymbols] =
-    await Promise.all([
+  const [poolData, publisherCaps, publisherNumberOfSymbols] = await Promise.all(
+    [
       client.getPoolDataAccount(),
-      getPublisherRankings(),
       hermesClient.getLatestPublisherCaps({
         parsed: true,
       }),
       pythnetClient.getPublisherNumberOfSymbols(),
-    ]);
+    ],
+  );
 
   return extractPublisherData(poolData).map((publisher) => {
     const publisherPubkeyString = publisher.pubkey.toBase58();
-    const publisherRanking = publisherRankings.find(
-      (ranking) => ranking.publisher === publisherPubkeyString,
-    );
     const numberOfSymbols = publisherNumberOfSymbols[publisherPubkeyString];
     const apyHistory = publisher.apyHistory.map(({ epoch, apy, selfApy }) => ({
       apy,
@@ -276,18 +265,12 @@ const loadPublisherData = async (
       poolUtilization: publisher.totalDelegation,
       poolUtilizationDelta: publisher.totalDelegationDelta,
       publicKey: publisher.pubkey,
-      qualityRanking: publisherRanking?.rank ?? 0,
+      qualityRanking: PUBLISHER_RANKINGS[publisherPubkeyString] ?? 0,
       selfStake: publisher.selfDelegation,
       selfStakeDelta: publisher.selfDelegationDelta,
       stakeAccount: publisher.stakeAccount ?? undefined,
     };
   });
-};
-
-const getPublisherRankings = async () => {
-  const response = await fetch("/api/publishers-ranking");
-  const responseAsJson: unknown = await response.json();
-  return publishersRankingSchema.parseAsync(responseAsJson);
 };
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
