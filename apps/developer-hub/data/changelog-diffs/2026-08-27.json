@@ -1,0 +1,292 @@
+{
+  "date": "2026-08-27",
+  "label": "Thursday",
+  "summary": {
+    "added": 27,
+    "went_live": 0,
+    "removed": 1
+  },
+  "hero": "27 new feeds announced, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Equity.US.WBS/USD",
+      "lazerId": 3609,
+      "asset": "Webster Finl Corp Com",
+      "assetType": "equity",
+      "changeType": "removed",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "f4d46762b0554b13a6a819888e9e5e2aad468f794902d916d54628fba2c39e31"
+    },
+    {
+      "id": "Metal.OGZ7/USD",
+      "lazerId": 3681,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 26 November 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "4c6acbeaf08a79c2a61ff345566ba10f6de71c85cf4ae9520dc2b609f5804cf8"
+    },
+    {
+      "id": "Metal.OGV7/USD",
+      "lazerId": 3680,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 28 September 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "a54fef382efacb51f4a795fd786057d1a3fe03cc062a25b33164474e3175e175"
+    },
+    {
+      "id": "Metal.OGQ7/USD",
+      "lazerId": 3679,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 28 July 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "19318b029dba221ddc7ae6b5950e1c0ee07a523b67bfc59364dd8eb4e8a3b9e4"
+    },
+    {
+      "id": "Metal.OGM7/USD",
+      "lazerId": 3678,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 26 May 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "f98bd0c70b3c60da9fcc87dff29cb7d305b0b62fe9c53c5fab93c0a62dfe07a0"
+    },
+    {
+      "id": "Metal.OGJ7/USD",
+      "lazerId": 3677,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 29 March 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "29d3354208257a3f283e0d0e0428aeaed3491d7fcde2a32ece179e072089bfe2"
+    },
+    {
+      "id": "Metal.OGG7/USD",
+      "lazerId": 3676,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold Futures 27 January 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "239d3548cb2f466a366886753eeee76efa6c16a9a08f03b08f3f813327bbd7de"
+    },
+    {
+      "id": "Metal.PTV7/USD",
+      "lazerId": 3675,
+      "asset": "Pyth Price In Usd For Platinum 27 October 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "c34deb1afa76f942f239628f2724ee35099e3016d4ead0daee58926ccea2f9d2"
+    },
+    {
+      "id": "Metal.PTN7/USD",
+      "lazerId": 3674,
+      "asset": "Pyth Price In Usd For Platinum 28 July 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "6d124fc31a804d6566efdbb8afae26ce72e41eccc0841fd101e104578c54df8a"
+    },
+    {
+      "id": "Metal.PTJ7/USD",
+      "lazerId": 3673,
+      "asset": "Pyth Price In Usd For Platinum 28 April 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "6ab4a456b81a6fdb21fe7afc991705dd4b3c0794721b0b0232f1e64968155535"
+    },
+    {
+      "id": "Metal.PTF7/USD",
+      "lazerId": 3672,
+      "asset": "Pyth Price In Usd For Platinum 27 January 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "b58b6418af28b09360c1389cf143a58324765b48ac8a2491726f2e3f554d369d"
+    },
+    {
+      "id": "Metal.PDZ7/USD",
+      "lazerId": 3671,
+      "asset": "Pyth Price In Usd For Palladium 29 December 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "345301bdfdd5f5a3c3ec14f37449be16395940ca337e3e9ae39484ec36f6d72b"
+    },
+    {
+      "id": "Metal.PDU7/USD",
+      "lazerId": 3670,
+      "asset": "Pyth Price In Usd For Palladium 28 September 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "2c1ddeddc5d783c54494899b45fc6155bc1ae9cfea2afc434bebfc4bca6c96eb"
+    },
+    {
+      "id": "Metal.PDM7/USD",
+      "lazerId": 3669,
+      "asset": "Pyth Price In Usd For Palladium 28 June 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "7165d47068f37752e130369d4b5e45284a1358b6cd30c6bc2205b60aad53a607"
+    },
+    {
+      "id": "Metal.PDH7/USD",
+      "lazerId": 3668,
+      "asset": "Pyth Price In Usd For Palladium 29 March 2027",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "9f21bd3ceee8fa7ba68437876efa4b1a5652343e571696031f62460511372791"
+    },
+    {
+      "id": "Metal.PDZ6/USD",
+      "lazerId": 3667,
+      "asset": "Pyth Price In Usd For Palladium 29 December 2026",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "ae8dab7e34e9e0f96cd68998c866cb613bf33f79d3a09fc79d6fd7211588250c"
+    },
+    {
+      "id": "Equity.Index.SKHY/USD",
+      "lazerId": 3662,
+      "asset": "Pyth Price In Usd For Skhy 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "b196587ca694ea231cd8710321f4f62ed08794c6a096759d5c63616730042ae0"
+    },
+    {
+      "id": "Equity.Index.NBIS/USD",
+      "lazerId": 3660,
+      "asset": "Pyth Price In Usd For Nbis 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "c8d8050cde18920d0274f296a7589620c67a9898a73c93d0a91fddde6f3cdf6b"
+    },
+    {
+      "id": "Equity.Index.SOXS/USD",
+      "lazerId": 3659,
+      "asset": "Pyth Price In Usd For Soxs 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "071f452ec5a5f4fa8ea8e585222c2f65890724374a2af16aec0bc70b4cd1c669"
+    },
+    {
+      "id": "Equity.Index.SOXL/USD",
+      "lazerId": 3658,
+      "asset": "Pyth Price In Usd For Soxl 24",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "5b4183fbbab47c0508c39db436e6b0a0376e50650e79c9f836677a04d65d592f"
+    },
+    {
+      "id": "Equity.US.RXRX/USD",
+      "lazerId": 3657,
+      "asset": "Recursion Pharmaceuticals Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "303e2b3c5ca84d33cad4b179ff2ee5a53cc2070b72655b0db4170ec19d799f82"
+    },
+    {
+      "id": "Equity.US.SDGR/USD",
+      "lazerId": 3656,
+      "asset": "Schrodinger Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "9e69591b1cef27a70f68b08a4c81ff136869dc6f3ac58f73097732f7556d72fc"
+    },
+    {
+      "id": "Equity.US.CAI/USD",
+      "lazerId": 3655,
+      "asset": "Caris Life Sciences Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "4de569a337968a84a8447e579aad7c4eef9be8106dfd8e807756bb19724c0650"
+    },
+    {
+      "id": "Commodities.CCZ7/USD",
+      "lazerId": 3654,
+      "asset": "Pyth Price In Usd For High Grade Copper Futures 29 December 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "bb263820e098b77a436a3ce07b5c18651f9462bccd1c78f8b4399cadec635a83"
+    },
+    {
+      "id": "Commodities.CCU7/USD",
+      "lazerId": 3653,
+      "asset": "Pyth Price In Usd For High Grade Copper Futures 28 September 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "f841fd26446d76875a9d3736f4af459f6590205c0f852b29182662b84c17f5cb"
+    },
+    {
+      "id": "Commodities.CCN7/USD",
+      "lazerId": 3652,
+      "asset": "Pyth Price In Usd For High Grade Copper Futures 28 July 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "b36de406c5840b59ed52efb9f6ead4658e97bf63da83db093953275b4458566d"
+    },
+    {
+      "id": "Commodities.CCK7/USD",
+      "lazerId": 3651,
+      "asset": "Pyth Price In Usd For High Grade Copper Futures 26 May 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "e8cd3a6983d7cdf9ec7283c4bae778c704c70bbb9c09417abbaf3946121cfea5"
+    },
+    {
+      "id": "Commodities.CCH7/USD",
+      "lazerId": 3650,
+      "asset": "Pyth Price In Usd For High Grade Copper Futures 29 March 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-27",
+      "quote": "USD",
+      "hermesId": "6b9cdbc3d0f3271e49fb03ef543966e59950732008be9318183954409d542d3a"
+    }
+  ]
+}
