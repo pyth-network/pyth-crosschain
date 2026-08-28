@@ -1,4 +1,4 @@
-import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import { lookup } from "@pythnetwork/known-publishers";
 import type {
   PythnetClient,
@@ -14,13 +14,14 @@ import {
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
+import { PUBLISHER_RANKINGS } from "./frozen/publisher-rankings";
+import { PUBLISHER_CAPS, type PublisherCaps } from "./frozen/publisher-caps";
 
 const publishersRankingSchema = z
   .object({
     numSymbols: z.number(),
     publisher: z.string(),
     rank: z.number(),
-    timestamp: z.string(),
   })
   .array();
 
@@ -243,15 +244,13 @@ const loadBaseInfo = async (
 const loadPublisherData = async (
   client: PythStakingClient,
   pythnetClient: PythnetClient,
-  hermesClient: HermesClient,
+  _hermesClient: HermesClient,
 ) => {
   const [poolData, publisherRankings, publisherCaps, publisherNumberOfSymbols] =
     await Promise.all([
       client.getPoolDataAccount(),
       getPublisherRankings(),
-      hermesClient.getLatestPublisherCaps({
-        parsed: true,
-      }),
+      PUBLISHER_CAPS,
       pythnetClient.getPublisherNumberOfSymbols(),
     ]);
 
@@ -285,14 +284,12 @@ const loadPublisherData = async (
 };
 
 const getPublisherRankings = async () => {
-  const response = await fetch("/api/publishers-ranking");
-  const responseAsJson: unknown = await response.json();
-  return publishersRankingSchema.parseAsync(responseAsJson);
+  return PUBLISHER_RANKINGS;
 };
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
   BigInt(
-    publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+    publisherCaps.find(
       ({ publisher: p }) => p === publisher.toBase58(),
     )?.cap ?? 0,
   );
