@@ -9,7 +9,6 @@ export type {
   PriceFeedMetadata,
   PriceIdInput,
   PriceUpdate,
-  PublisherCaps,
   UnixTimestamp,
 } from "@pythnetwork/hermes-client";
 export type { ObjectId, SuiPythClientProvider } from "./client.js";
