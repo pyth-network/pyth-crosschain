@@ -494,9 +494,15 @@ async fn test_post_price_update_from_vaa() {
         .await
         .unwrap();
     assert_eq!(price_update_account.write_authority, poster.pubkey());
+    #[cfg(feature = "pro-compatible")]
     assert_eq!(
         price_update_account.verification_level,
         VerificationLevel::Full
+    );
+    #[cfg(not(feature = "pro-compatible"))]
+    assert_eq!(
+        price_update_account.verification_level,
+        VerificationLevel::Partial { num_signatures: 12 }
     );
 
     assert_eq!(
