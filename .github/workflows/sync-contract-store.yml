@@ -12,6 +12,8 @@ name: Sync contract store to pyth-lazer
 #   open when a newer one is created, keeping at most one sync PR open.
 # * Deletions propagate: the target directory is deleted and re-copied
 #   wholesale, so a chain removed upstream disappears downstream.
+# * Trigger loss is survivable: the daily schedule re-derives the mirror from
+#   scratch, so a dropped push event delays a sync but cannot lose one.
 # * Cross-repo auth uses the PYTH_PUSHER GitHub App (PFG-1599), minting a
 #   token scoped to pyth-lazer only. App tokens trigger workflows in the
 #   target repo, so pyth-lazer's CI runs on each sync PR; a GITHUB_TOKEN
@@ -26,6 +28,14 @@ on:
       - main
     paths:
       - "contract_manager/src/store/**"
+  # Reconciliation pass. Push delivery is not guaranteed: a GitHub Actions
+  # incident on 2026-08-26 dropped this workflow's trigger for f7c532db
+  # outright, leaving no run record and therefore nothing to alert on, and
+  # the mirror silently diverged. Because each run carries absolute state,
+  # this is a no-op when the store already matches and self-heals when it
+  # does not, bounding drift at one day instead of forever.
+  schedule:
+    - cron: "0 6 * * *"
   # Manual trigger exists for first-run verification (PFG-1599) and recovery.
   workflow_dispatch:
 
