@@ -13,17 +13,8 @@ import {
   PositionState,
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
-import { z } from "zod";
 import { PUBLISHER_RANKINGS } from "./frozen/publisher-rankings";
 import { PUBLISHER_CAPS, type PublisherCaps } from "./frozen/publisher-caps";
-
-const publishersRankingSchema = z
-  .object({
-    numSymbols: z.number(),
-    publisher: z.string(),
-    rank: z.number(),
-  })
-  .array();
 
 type Data = {
   total: bigint;
