@@ -36,9 +36,6 @@ catalogs:
     '@bonfida/spl-name-service':
       specifier: ^3.0.10
       version: 3.0.10
-    '@clickhouse/client':
-      specifier: ^1.15.0
-      version: 1.15.0
     '@coral-xyz/anchor':
       specifier: ^0.30.1
       version: 0.30.1
@@ -138,9 +135,6 @@ catalogs:
     '@types/node':
       specifier: ^22.14.0
       version: 22.14.0
-    '@types/papaparse':
-      specifier: ^5.5.1
-      version: 5.5.1
     '@types/prompts':
       specifier: 2.4.9
       version: 2.4.9
@@ -168,9 +162,6 @@ catalogs:
     app-root-path:
       specifier: ^3.1.0
       version: 3.1.0
-    async-cache-dedupe:
-      specifier: ^3.0.0
-      version: 3.0.0
     autoprefixer:
       specifier: ^10.4.21
       version: 10.4.21
@@ -189,9 +180,6 @@ catalogs:
     chalk:
       specifier: ^5.6.2
       version: 5.6.2
-    change-case:
-      specifier: ^5.4.4
-      version: 5.4.4
     clsx:
       specifier: ^2.1.1
       version: 2.1.1
@@ -207,9 +195,6 @@ catalogs:
     css-loader:
       specifier: ^7.1.2
       version: 7.1.2
-    csv-stringify:
-      specifier: ^6.6.0
-      version: 6.6.0
     date-fns:
       specifier: ^4.1.0
       version: 4.1.0
@@ -246,9 +231,6 @@ catalogs:
     glob:
       specifier: ^13.0.0
       version: 13.0.0
-    ioredis:
-      specifier: ^5.7.0
-      version: 5.7.0
     ip-range-check:
       specifier: ^0.2.0
       version: 0.2.0
@@ -258,9 +240,6 @@ catalogs:
     katex:
       specifier: ^0.16.22
       version: 0.16.22
-    lightweight-charts:
-      specifier: ^5.0.5
-      version: 5.0.5
     match-sorter:
       specifier: ^8.1.0
       version: 8.1.0
@@ -282,9 +261,6 @@ catalogs:
     nuqs:
       specifier: ^2.8.8
       version: 2.8.8
-    papaparse:
-      specifier: ^5.5.3
-      version: 5.5.3
     pino:
       specifier: ^9.6.0
       version: 9.6.0
@@ -351,9 +327,6 @@ catalogs:
     stylelint-config-standard-scss:
       specifier: ^14.0.0
       version: 14.0.0
-    superjson:
-      specifier: ^2.2.2
-      version: 2.2.2
     swr:
       specifier: ^2.3.3
       version: 2.3.3
@@ -402,9 +375,6 @@ catalogs:
     zod:
       specifier: ^3.24.2
       version: 3.25.76
-    zod-search-params:
-      specifier: ^0.1.6
-      version: 0.1.6
     zod-validation-error:
       specifier: ^3.4.0
       version: 3.4.0
@@ -571,7 +541,7 @@ importers:
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@next/third-parties':
         specifier: 'catalog:'
-        version: 16.1.1(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
+        version: 16.1.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -595,7 +565,7 @@ importers:
         version: 25.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@vercel/analytics':
         specifier: 'catalog:'
-        version: 1.6.1(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
+        version: 1.6.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
       buffer:
         specifier: 'catalog:'
         version: 6.0.3
@@ -604,19 +574,19 @@ importers:
         version: 2.1.1
       fumadocs-core:
         specifier: 'catalog:'
-        version: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+        version: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
       fumadocs-mdx:
         specifier: 'catalog:'
-        version: 14.2.5(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.6.1)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
+        version: 14.2.5(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.6.1)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
       fumadocs-openapi:
         specifier: 'catalog:'
-        version: 10.2.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 10.2.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       fumadocs-typescript:
         specifier: 'catalog:'
-        version: 5.0.1(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(react@19.2.1)(typescript@5.9.3)
+        version: 5.0.1(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(react@19.2.1)(typescript@5.9.3)
       fumadocs-ui:
         specifier: 'catalog:'
-        version: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
+        version: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.19.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))
@@ -628,7 +598,7 @@ importers:
         version: 8.1.0
       next:
         specifier: 'catalog:'
-        version: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+        version: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -749,7 +719,7 @@ importers:
         version: 2.1.1
       next:
         specifier: 'catalog:'
-        version: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+        version: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react:
         specifier: 'catalog:'
         version: 19.2.1
@@ -888,184 +858,6 @@ importers:
       yargs:
         specifier: ^17.4.1
         version: 17.7.2
-
-  apps/insights:
-    dependencies:
-      '@clickhouse/client':
-        specifier: 'catalog:'
-        version: 1.15.0
-      '@phosphor-icons/react':
-        specifier: 'catalog:'
-        version: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@pythnetwork/client':
-        specifier: 'catalog:'
-        version: 2.22.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@pythnetwork/component-library':
-        specifier: workspace:*
-        version: link:../../packages/component-library
-      '@pythnetwork/hermes-client':
-        specifier: workspace:*
-        version: link:../hermes/client/js
-      '@pythnetwork/known-publishers':
-        specifier: workspace:*
-        version: link:../../packages/known-publishers
-      '@pythnetwork/react-hooks':
-        specifier: 'workspace:'
-        version: link:../../packages/react-hooks
-      '@pythnetwork/shared-lib':
-        specifier: workspace:*
-        version: link:../../packages/shared-lib
-      '@react-hookz/web':
-        specifier: 'catalog:'
-        version: 25.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@solana/web3.js':
-        specifier: 'catalog:'
-        version: 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      async-cache-dedupe:
-        specifier: 'catalog:'
-        version: 3.0.0
-      bs58:
-        specifier: 'catalog:'
-        version: 6.0.0
-      change-case:
-        specifier: 'catalog:'
-        version: 5.4.4
-      clsx:
-        specifier: 'catalog:'
-        version: 2.1.1
-      color:
-        specifier: 'catalog:'
-        version: 5.0.3
-      csv-stringify:
-        specifier: 'catalog:'
-        version: 6.6.0
-      date-fns:
-        specifier: 'catalog:'
-        version: 4.1.0
-      dayjs:
-        specifier: 'catalog:'
-        version: 1.11.19
-      dnum:
-        specifier: 'catalog:'
-        version: 2.14.0
-      fs-extra:
-        specifier: 'catalog:'
-        version: 11.3.3
-      glob:
-        specifier: 'catalog:'
-        version: 13.0.0
-      ioredis:
-        specifier: 'catalog:'
-        version: 5.7.0
-      lightweight-charts:
-        specifier: 'catalog:'
-        version: 5.0.5
-      match-sorter:
-        specifier: 'catalog:'
-        version: 8.1.0
-      motion:
-        specifier: 'catalog:'
-        version: 12.9.2(@emotion/is-prop-valid@1.3.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      next:
-        specifier: 'catalog:'
-        version: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      papaparse:
-        specifier: 'catalog:'
-        version: 5.5.3
-      react:
-        specifier: 'catalog:'
-        version: 19.2.1
-      react-aria:
-        specifier: 'catalog:'
-        version: 3.42.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      react-aria-components:
-        specifier: 'catalog:'
-        version: 1.11.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.2.1(react@19.2.1)
-      recharts:
-        specifier: 'catalog:'
-        version: 2.15.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      sockette:
-        specifier: 'catalog:'
-        version: 2.0.6
-      superjson:
-        specifier: 'catalog:'
-        version: 2.2.2
-      swr:
-        specifier: 'catalog:'
-        version: 2.3.3(react@19.2.1)
-      tsx:
-        specifier: 'catalog:'
-        version: 4.20.6
-      zod:
-        specifier: 'catalog:'
-        version: 3.25.76
-      zod-search-params:
-        specifier: 'catalog:'
-        version: 0.1.6(zod@3.25.76)
-      zod-validation-error:
-        specifier: 'catalog:'
-        version: 3.4.0(zod@3.25.76)
-    devDependencies:
-      '@cprussin/tsconfig':
-        specifier: 'catalog:'
-        version: 4.0.2(typescript@5.9.3)
-      '@pythnetwork/jest-config':
-        specifier: 'workspace:'
-        version: link:../../packages/jest-config
-      '@pythnetwork/staking-sdk':
-        specifier: workspace:*
-        version: link:../../governance/pyth_staking_sdk
-      '@svgr/webpack':
-        specifier: 'catalog:'
-        version: 8.1.0(typescript@5.9.3)
-      '@types/fs-extra':
-        specifier: 'catalog:'
-        version: 11.0.4
-      '@types/jest':
-        specifier: 'catalog:'
-        version: 29.5.14
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.14.0
-      '@types/papaparse':
-        specifier: 'catalog:'
-        version: 5.5.1
-      '@types/react':
-        specifier: 'catalog:'
-        version: 19.2.7
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 19.2.3(@types/react@19.2.7)
-      autoprefixer:
-        specifier: 'catalog:'
-        version: 10.4.21(postcss@8.5.6)
-      babel-plugin-react-compiler:
-        specifier: 'catalog:'
-        version: 19.1.0-rc.1
-      jest:
-        specifier: 'catalog:'
-        version: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))
-      postcss:
-        specifier: 'catalog:'
-        version: 8.5.6
-      sass:
-        specifier: 'catalog:'
-        version: 1.86.1
-      stylelint:
-        specifier: 'catalog:'
-        version: 16.17.0(typescript@5.9.3)
-      stylelint-config-standard-scss:
-        specifier: 'catalog:'
-        version: 14.0.0(postcss@8.5.6)(stylelint@16.17.0(typescript@5.9.3))
-      vercel:
-        specifier: 'catalog:'
-        version: 50.32.4(encoding@0.1.13)(rollup@4.52.5)(typescript@5.9.3)
 
   apps/mcp:
     dependencies:
@@ -1386,7 +1178,7 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.8
-        version: 0.9.24(@types/react@19.2.7)(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -2748,7 +2540,7 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.22
-        version: 0.9.24(@types/react@19.2.7)(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@6.0.3)
+        version: 0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@6.0.3)
       '@matterlabs/hardhat-zksync':
         specifier: ^1.1.0
         version: 1.5.0(b82f8ac8d6cf3793f6014ec8d7f65865)
@@ -3036,7 +2828,7 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.12
-        version: 0.9.24(@types/react@19.2.7)(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: ^2.22.1
         version: 2.22.1(typescript@5.9.3)
@@ -3067,7 +2859,7 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.12
-        version: 0.9.24(@types/react@19.2.7)(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        version: 0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@iota/iota-sdk':
         specifier: ^1.11.0
         version: 1.11.0(typescript@5.9.3)
@@ -4873,14 +4665,6 @@ packages:
 
   '@classic-terra/terra.proto@1.1.0':
     resolution: {integrity: sha512-bYhQG5LUaGF0KPRY9hYT/HEcd1QExZPQd6zLV/rQkCe/eDxfwFRLzZHpaaAdfWoAAZjsRWqJbUCqCg7gXBbJpw==}
-
-  '@clickhouse/client-common@1.15.0':
-    resolution: {integrity: sha512-/1BXaNNsBzH2w5ALWiH6M9zS+cJwlM9uMnMj9e8ETwvDjJzO+nIYlyxzp8Prc+9pEDZ5iAilZ4F8c0YVCzzNaA==}
-    deprecated: 'Deprecated: import from @clickhouse/client or @clickhouse/client-web instead.'
-
-  '@clickhouse/client@1.15.0':
-    resolution: {integrity: sha512-QmW+p4c/r0oa3X6Un6lcBs4GZtJEQUdvf//x8GeqM5ru6m4oIUg3WwvermP3HE31kpEGoFOQfKbMN5ooR5gvNw==}
-    engines: {node: '>=16'}
 
   '@coinbase/wallet-sdk@3.9.3':
     resolution: {integrity: sha512-N/A2DRIf0Y3PHc1XAMvbBUu4zisna6qAdqABMZwBMNEfWrXpAwx16pZGkYCLGE+Rvv1edbcB2LYDRnACNcmCiw==}
@@ -12326,9 +12110,6 @@ packages:
   '@types/node@22.7.5':
     resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
 
-  '@types/papaparse@5.5.1':
-    resolution: {integrity: sha512-esEO+VISsLIyE+JZBmb89NzsYYbpwV8lmv2rPo6oX5y9KhBaIP7hhHgjuTut54qjdKVMufTEcrh5fUl9+58huw==}
-
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
@@ -13363,9 +13144,6 @@ packages:
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
-  async-cache-dedupe@3.0.0:
-    resolution: {integrity: sha512-nSACMuOREc0RPthgTmXFJCH3lNcbnhZwlRA/2oochf91/Cwkz+Q4DAX9DMYD+y0bZl2B3ydHsMqjaujmKqr4uw==}
-
   async-eventemitter@0.2.4:
     resolution: {integrity: sha512-pd20BwL7Yt1zwDFy+8MX8F1+WCT8aQeKj0kQnTrH9WaeRETlRamVhD0JtRPmrV4GfOJ2F9CvdQkZeZhnh2TuHw==}
 
@@ -14067,9 +13845,6 @@ packages:
   change-case@4.1.2:
     resolution: {integrity: sha512-bSxY2ws9OtviILG1EiY5K7NNxkqg/JnRnFxLtKQ96JaviiIxi7djMrSd0ECT9AC+lttClmYwKw53BWpOMblo7A==}
 
-  change-case@5.4.4:
-    resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
-
   char-regex@1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
     engines: {node: '>=10'}
@@ -14506,10 +14281,6 @@ packages:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
 
-  copy-anything@3.0.5:
-    resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
-    engines: {node: '>=12.13'}
-
   copy-to-clipboard@3.3.3:
     resolution: {integrity: sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA==}
 
@@ -14741,9 +14512,6 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
-
-  csv-stringify@6.6.0:
-    resolution: {integrity: sha512-YW32lKOmIBgbxtu3g5SaiqWNwa/9ISQt2EcgOq0+RAIFufFp9is6tqNnKahqE5kuKvrnYAzs28r+s6pXJR8Vcw==}
 
   d3-array@3.2.4:
     resolution: {integrity: sha512-tdQAmyA18i4J7wprpYq8ClcxZy3SC31QMeByyCFyRt7BVHdREQZ5lpzoe5mFEYZUWe+oq8HBvk9JjpibyEV4Jg==}
@@ -15777,8 +15545,8 @@ packages:
     resolution: {integrity: sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==}
     deprecated: This library has been deprecated and usage is discouraged.
 
-  ethereumjs-abi@https://codeload.github.com/ethereumjs/ethereumjs-abi/tar.gz/ee3994657fa7a427238e6ba92a84d0b529bbcde0:
-    resolution: {tarball: https://codeload.github.com/ethereumjs/ethereumjs-abi/tar.gz/ee3994657fa7a427238e6ba92a84d0b529bbcde0}
+  ethereumjs-abi@git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
+    resolution: {commit: ee3994657fa7a427238e6ba92a84d0b529bbcde0, repo: git@github.com:ethereumjs/ethereumjs-abi.git, type: git}
     version: 0.6.8
 
   ethereumjs-account@2.0.5:
@@ -15977,9 +15745,6 @@ packages:
         optional: true
       wagmi:
         optional: true
-
-  fancy-canvas@2.1.0:
-    resolution: {integrity: sha512-nifxXJ95JNLFR2NgRV4/MxVP45G9909wJTEKz5fg/TZS20JJZA6hfgRVh/bC9bwl2zBtBNcYPjiBE4njQHVBwQ==}
 
   fast-base64-decode@1.0.0:
     resolution: {integrity: sha512-qwaScUgUGBYeDNRnbc/KyllVU88Jk1pRHPStuF/lO7B0/RTRLj7U0lkdTAutlBblY08rwZDff6tNU9cjv6j//Q==}
@@ -17401,10 +17166,6 @@ packages:
   is-url@1.2.4:
     resolution: {integrity: sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==}
 
-  is-what@4.1.16:
-    resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
-    engines: {node: '>=12.13'}
-
   is-wsl@2.2.0:
     resolution: {integrity: sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww==}
     engines: {node: '>=8'}
@@ -18075,9 +17836,6 @@ packages:
   lightningcss@1.29.2:
     resolution: {integrity: sha512-6b6gd/RUXKaw5keVdSEtqFVdzWnU5jMxTUjA2bVcMNPLwSQ08Sv/UodBVtETLCn7k4S1Ibxwh7k68IwLZPgKaA==}
     engines: {node: '>= 12.0.0'}
-
-  lightweight-charts@5.0.5:
-    resolution: {integrity: sha512-o6/EDBLgvijwPatPosGmeS6JPsqBN3JJ8Wi6j+Zo5E1rmMOsiv3jG8/wBHFN/aqqE6eFMeKWFtGfVjB2HJtvtQ==}
 
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
@@ -18817,9 +18575,6 @@ packages:
   mnemonist@0.38.5:
     resolution: {integrity: sha512-bZTFT5rrPKtPJxj8KSV0WkPyNxl72vQepqqVUAW2ARUpUSF2qXMB6jZj7hW5/k7C1rtpzqbD/IIbJwLXUjCHeg==}
 
-  mnemonist@0.40.3:
-    resolution: {integrity: sha512-Vjyr90sJ23CKKH/qPAgUKicw/v6pRoamxIEDFOF8uSgFME7DqPRpHgRTejWVjkdGg5dXj0/NyxZHZ9bcjH+2uQ==}
-
   mocha@10.8.2:
     resolution: {integrity: sha512-VZlYo/WE8t1tstuRmqgeyBgCbJc/lEdopaa+axcKzTBJ+UIdlAB9XnmvTCAH4pwR4ElNInaedhEBmZD8iCSVEg==}
     engines: {node: '>= 14.0.0'}
@@ -19544,9 +19299,6 @@ packages:
 
   pako@2.1.0:
     resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
-
-  papaparse@5.5.3:
-    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
 
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
@@ -21588,10 +21340,6 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
-  superjson@2.2.2:
-    resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
-    engines: {node: '>=16'}
-
   superstruct@0.14.2:
     resolution: {integrity: sha512-nPewA6m9mR3d6k7WkZ8N8zpTWfenFH3q9pA2PkuiZxINr9DKB2+40wEQf0ixn8VaGuJ78AB6iWOtStI+/4FKZQ==}
 
@@ -23619,8 +23367,8 @@ packages:
     peerDependencies:
       ethers: ^6.7.1
 
-  zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
-    resolution: {tarball: https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11}
+  zksync-telemetry@git+https://git@github.com:matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
+    resolution: {commit: 2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11, repo: git@github.com:matter-labs/zksync-telemetry-js.git, type: git}
     version: 1.0.0
 
   zksync-web3@0.13.4:
@@ -23628,12 +23376,6 @@ packages:
     deprecated: This package has been deprecated in favor of zksync-ethers@5.0.0
     peerDependencies:
       ethers: ^5.7.0
-
-  zod-search-params@0.1.6:
-    resolution: {integrity: sha512-C111INCebaDzOvVEubYNF4tvXX9iCSLJwEPznv0EmW7ttb5mItdEF0YESWn/YvFVIZ5/FffpowmsYktFkM9Ydg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.20.0
 
   zod-to-json-schema@3.25.1:
     resolution: {integrity: sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA==}
@@ -26179,7 +25921,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@certusone/wormhole-sdk@0.9.24(@types/react@19.2.7)(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@6.0.3)':
+  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@6.0.3)':
     dependencies:
       '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
       '@certusone/wormhole-sdk-wasm': 0.0.1
@@ -26201,7 +25943,7 @@ snapshots:
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
       '@injectivelabs/networks': 1.10.12
-      '@injectivelabs/sdk-ts': 1.10.72(@types/react@19.2.7)(bufferutil@4.0.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3)
+      '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3)
       '@injectivelabs/utils': 1.10.12
     transitivePeerDependencies:
       - '@types/react'
@@ -26218,7 +25960,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@certusone/wormhole-sdk@0.9.24(@types/react@19.2.7)(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
       '@certusone/wormhole-sdk-wasm': 0.0.1
@@ -26263,12 +26005,6 @@ snapshots:
       google-protobuf: 3.21.4
       long: 4.0.0
       protobufjs: 6.11.4
-
-  '@clickhouse/client-common@1.15.0': {}
-
-  '@clickhouse/client@1.15.0':
-    dependencies:
-      '@clickhouse/client-common': 1.15.0
 
   '@coinbase/wallet-sdk@3.9.3':
     dependencies:
@@ -28752,9 +28488,9 @@ snapshots:
 
   '@fuels/vm-asm@0.62.0': {}
 
-  '@fumadocs/ui@16.4.7(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)':
+  '@fumadocs/ui@16.4.7(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)':
     dependencies:
-      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
       next-themes: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       postcss-selector-parser: 7.1.1
       react: 19.2.1
@@ -28762,7 +28498,7 @@ snapshots:
       tailwind-merge: 3.4.0
     optionalDependencies:
       '@types/react': 19.2.7
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       tailwindcss: 4.1.6
 
   '@fumari/json-schema-to-typescript@2.0.0(prettier@3.5.3)':
@@ -29170,56 +28906,6 @@ snapshots:
       protobufjs: 7.4.0
       rxjs: 7.8.2
 
-  '@injectivelabs/sdk-ts@1.10.72(@types/react@19.2.7)(bufferutil@4.0.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3)':
-    dependencies:
-      '@apollo/client': 3.13.5(@types/react@19.2.7)(graphql@16.14.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/proto-signing': 0.30.1
-      '@cosmjs/stargate': 0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-      '@ethersproject/bytes': 5.8.0
-      '@injectivelabs/core-proto-ts': 0.0.14
-      '@injectivelabs/exceptions': 1.14.47
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
-      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
-      '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
-      '@injectivelabs/mito-proto-ts': 1.0.9
-      '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/test-utils': 1.14.41
-      '@injectivelabs/token-metadata': 1.10.42
-      '@injectivelabs/ts-types': 1.14.47
-      '@injectivelabs/utils': 1.14.48
-      '@metamask/eth-sig-util': 4.0.1
-      axios: 0.27.2
-      bech32: 2.0.0
-      bip39: 3.1.0
-      cosmjs-types: 0.7.2
-      eth-crypto: 2.7.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-      ethereumjs-util: 7.1.5
-      ethers: 5.8.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-      google-protobuf: 3.21.4
-      graphql: 16.14.2
-      http-status-codes: 2.3.0
-      js-sha3: 0.8.0
-      jscrypto: 1.0.3
-      keccak256: 1.0.6
-      link-module-alias: 1.2.0
-      rxjs: 7.8.2
-      secp256k1: 4.0.4
-      shx: 0.3.4
-      snakecase-keys: 5.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - debug
-      - graphql-ws
-      - react
-      - react-dom
-      - subscriptions-transport-ws
-      - supports-color
-      - utf-8-validate
-    optional: true
-
   '@injectivelabs/sdk-ts@1.10.72(@types/react@19.2.7)(bufferutil@4.0.9)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@5.0.10)':
     dependencies:
       '@apollo/client': 3.13.5(@types/react@19.2.7)(graphql@16.14.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -29247,6 +28933,56 @@ snapshots:
       eth-crypto: 2.7.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       ethereumjs-util: 7.1.5
       ethers: 5.8.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      google-protobuf: 3.21.4
+      graphql: 16.14.2
+      http-status-codes: 2.3.0
+      js-sha3: 0.8.0
+      jscrypto: 1.0.3
+      keccak256: 1.0.6
+      link-module-alias: 1.2.0
+      rxjs: 7.8.2
+      secp256k1: 4.0.4
+      shx: 0.3.4
+      snakecase-keys: 5.5.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - debug
+      - graphql-ws
+      - react
+      - react-dom
+      - subscriptions-transport-ws
+      - supports-color
+      - utf-8-validate
+    optional: true
+
+  '@injectivelabs/sdk-ts@1.10.72(bufferutil@4.0.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3)':
+    dependencies:
+      '@apollo/client': 3.13.5(@types/react@19.2.7)(graphql@16.14.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@cosmjs/amino': 0.30.1
+      '@cosmjs/proto-signing': 0.30.1
+      '@cosmjs/stargate': 0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+      '@ethersproject/bytes': 5.8.0
+      '@injectivelabs/core-proto-ts': 0.0.14
+      '@injectivelabs/exceptions': 1.14.47
+      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
+      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
+      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
+      '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
+      '@injectivelabs/mito-proto-ts': 1.0.9
+      '@injectivelabs/networks': 1.14.47
+      '@injectivelabs/test-utils': 1.14.41
+      '@injectivelabs/token-metadata': 1.10.42
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
+      '@metamask/eth-sig-util': 4.0.1
+      axios: 0.27.2
+      bech32: 2.0.0
+      bip39: 3.1.0
+      cosmjs-types: 0.7.2
+      eth-crypto: 2.7.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+      ethereumjs-util: 7.1.5
+      ethers: 5.8.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
       google-protobuf: 3.21.4
       graphql: 16.14.2
       http-status-codes: 2.3.0
@@ -29535,7 +29271,8 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.15
 
-  '@ioredis/commands@1.3.0': {}
+  '@ioredis/commands@1.3.0':
+    optional: true
 
   '@iota/bcs@1.5.0':
     dependencies:
@@ -30362,7 +30099,7 @@ snapshots:
 
   '@matterlabs/hardhat-zksync-telemetry@1.1.1(debug@4.4.3)(hardhat@2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@6.0.3))':
     dependencies:
-      '@matterlabs/zksync-telemetry-js': zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.3)
+      '@matterlabs/zksync-telemetry-js': zksync-telemetry@git+https://git@github.com:matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.3)
       hardhat: 2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - debug
@@ -30370,7 +30107,7 @@ snapshots:
 
   '@matterlabs/hardhat-zksync-telemetry@1.1.1(hardhat@2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@6.0.3))':
     dependencies:
-      '@matterlabs/zksync-telemetry-js': zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11
+      '@matterlabs/zksync-telemetry-js': zksync-telemetry@git+https://git@github.com:matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11
       hardhat: 2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - debug
@@ -31040,12 +30777,6 @@ snapshots:
   '@next/third-parties@16.1.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)':
     dependencies:
       next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
-      react: 19.2.1
-      third-party-capital: 1.0.20
-
-  '@next/third-parties@16.1.1(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)':
-    dependencies:
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react: 19.2.1
       third-party-capital: 1.0.20
 
@@ -35458,14 +35189,6 @@ snapshots:
       - fastestsmallesttextencoderdecoder
       - typescript
 
-  '@solana/spl-token-metadata@0.1.6(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(typescript@5.9.3)':
-    dependencies:
-      '@solana/codecs': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - fastestsmallesttextencoderdecoder
-      - typescript
-
   '@solana/spl-token@0.3.11(@solana/web3.js@1.98.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))(bufferutil@4.0.7)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@6.0.3)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -35498,7 +35221,7 @@ snapshots:
     dependencies:
       '@solana/buffer-layout': 4.0.1
       '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(typescript@5.9.3)
+      '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       buffer: 6.0.3
     transitivePeerDependencies:
@@ -38025,10 +37748,6 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/papaparse@5.5.1':
-    dependencies:
-      '@types/node': 20.17.30
-
   '@types/parse-json@4.0.2': {}
 
   '@types/pbkdf2@3.1.2':
@@ -38161,9 +37880,9 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vercel/analytics@1.6.1(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)':
+  '@vercel/analytics@1.6.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)':
     optionalDependencies:
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react: 19.2.1
 
   '@vercel/backends@0.0.45(encoding@0.1.13)(rollup@4.52.5)(typescript@5.9.3)':
@@ -38891,7 +38610,7 @@ snapshots:
       '@walletconnect/safe-json': 1.0.2
       '@walletconnect/time': 1.0.2
       '@walletconnect/types': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
-      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@walletconnect/window-getters': 1.0.1
       es-toolkit: 1.33.0
       events: 3.3.0
@@ -38936,7 +38655,7 @@ snapshots:
       '@walletconnect/sign-client': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@walletconnect/types': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
       '@walletconnect/universal-provider': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(encoding@0.1.13)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       events: 3.3.0
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -39180,7 +38899,7 @@ snapshots:
       '@walletconnect/logger': 2.1.2
       '@walletconnect/time': 1.0.2
       '@walletconnect/types': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
-      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       events: 3.3.0
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -39253,7 +38972,7 @@ snapshots:
       '@walletconnect/logger': 2.1.2
       '@walletconnect/sign-client': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@walletconnect/types': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
-      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@walletconnect/utils': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       es-toolkit: 1.33.0
       events: 3.3.0
     transitivePeerDependencies:
@@ -39345,50 +39064,6 @@ snapshots:
       query-string: 7.1.3
       uint8arrays: 3.1.0
       viem: 2.23.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.2)
-    transitivePeerDependencies:
-      - '@azure/app-configuration'
-      - '@azure/cosmos'
-      - '@azure/data-tables'
-      - '@azure/identity'
-      - '@azure/keyvault-secrets'
-      - '@azure/storage-blob'
-      - '@capacitor/preferences'
-      - '@deno/kv'
-      - '@netlify/blobs'
-      - '@planetscale/database'
-      - '@react-native-async-storage/async-storage'
-      - '@upstash/redis'
-      - '@vercel/blob'
-      - '@vercel/functions'
-      - '@vercel/kv'
-      - aws4fetch
-      - bufferutil
-      - db0
-      - ioredis
-      - typescript
-      - uploadthing
-      - utf-8-validate
-      - zod
-
-  '@walletconnect/utils@2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(bufferutil@4.0.9)(ioredis@5.7.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
-    dependencies:
-      '@noble/ciphers': 1.2.1
-      '@noble/curves': 1.8.1
-      '@noble/hashes': 1.7.1
-      '@walletconnect/jsonrpc-utils': 1.0.8
-      '@walletconnect/keyvaluestorage': 1.1.1(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
-      '@walletconnect/relay-api': 1.0.11
-      '@walletconnect/relay-auth': 1.1.0
-      '@walletconnect/safe-json': 1.0.2
-      '@walletconnect/time': 1.0.2
-      '@walletconnect/types': 2.19.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@vercel/blob@2.3.0)(@vercel/functions@2.0.0(@aws-sdk/credential-provider-web-identity@3.777.0))(ioredis@5.7.0)
-      '@walletconnect/window-getters': 1.0.1
-      '@walletconnect/window-metadata': 1.0.1
-      bs58: 6.0.0
-      detect-browser: 5.3.0
-      query-string: 7.1.3
-      uint8arrays: 3.1.0
-      viem: 2.23.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -40121,11 +39796,6 @@ snapshots:
       - uploadthing
       - yaml
     optional: true
-
-  async-cache-dedupe@3.0.0:
-    dependencies:
-      mnemonist: 0.40.3
-      safe-stable-stringify: 2.5.0
 
   async-eventemitter@0.2.4:
     dependencies:
@@ -41036,8 +40706,6 @@ snapshots:
       snake-case: 3.0.4
       tslib: 2.8.1
 
-  change-case@5.4.4: {}
-
   char-regex@1.0.2: {}
 
   character-entities-html4@2.1.0: {}
@@ -41253,7 +40921,8 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.2: {}
+  cluster-key-slot@1.1.2:
+    optional: true
 
   co@4.6.0: {}
 
@@ -41459,10 +41128,6 @@ snapshots:
   cookie@0.7.1: {}
 
   cookie@1.1.1: {}
-
-  copy-anything@3.0.5:
-    dependencies:
-      is-what: 4.1.16
 
   copy-to-clipboard@3.3.3:
     dependencies:
@@ -41824,8 +41489,6 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  csv-stringify@6.6.0: {}
-
   d3-array@3.2.4:
     dependencies:
       internmap: 2.0.3
@@ -42028,7 +41691,8 @@ snapshots:
 
   delegates@1.0.0: {}
 
-  denque@2.1.0: {}
+  denque@2.1.0:
+    optional: true
 
   depd@1.1.2: {}
 
@@ -43019,7 +42683,7 @@ snapshots:
 
   eth-sig-util@1.4.2:
     dependencies:
-      ethereumjs-abi: https://codeload.github.com/ethereumjs/ethereumjs-abi/tar.gz/ee3994657fa7a427238e6ba92a84d0b529bbcde0
+      ethereumjs-abi: git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0
       ethereumjs-util: 5.2.1
 
   ethereum-bloom-filters@1.2.0:
@@ -43076,7 +42740,7 @@ snapshots:
       bn.js: 4.12.1
       ethereumjs-util: 6.2.1
 
-  ethereumjs-abi@https://codeload.github.com/ethereumjs/ethereumjs-abi/tar.gz/ee3994657fa7a427238e6ba92a84d0b529bbcde0:
+  ethereumjs-abi@git+https://git@github.com:ethereumjs/ethereumjs-abi.git#ee3994657fa7a427238e6ba92a84d0b529bbcde0:
     dependencies:
       bn.js: 4.12.1
       ethereumjs-util: 6.2.1
@@ -43578,8 +43242,6 @@ snapshots:
       react-dom: 19.2.1(react@19.2.1)
       viem: 2.42.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       wagmi: 2.14.16(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@19.2.7)(bufferutil@4.0.9)(react@19.2.1)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.71.5)(@tanstack/react-query@5.71.5(react@19.2.1))(@types/react@19.2.7)(@vercel/blob@2.3.0)(bufferutil@4.0.9)(encoding@0.1.13)(immer@9.0.21)(ioredis@5.7.0)(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.42.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76)
-
-  fancy-canvas@2.1.0: {}
 
   fast-base64-decode@1.0.0: {}
 
@@ -44167,7 +43829,7 @@ snapshots:
       - supports-color
       - vitest
 
-  fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76):
+  fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76):
     dependencies:
       '@formatjs/intl-localematcher': 0.7.5
       '@orama/orama': 3.1.18
@@ -44191,21 +43853,21 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.7
       lucide-react: 0.562.0(react@19.2.1)
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-mdx@14.2.5(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.6.1)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)):
+  fumadocs-mdx@14.2.5(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)(vite@6.4.1(@types/node@22.14.0)(jiti@2.6.1)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@standard-schema/spec': 1.1.0
       chokidar: 5.0.0
       esbuild: 0.27.2
       estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
       js-yaml: 4.1.1
       mdast-util-to-markdown: 2.1.2
       picocolors: 1.1.1
@@ -44220,13 +43882,13 @@ snapshots:
       zod: 4.3.5
     optionalDependencies:
       '@types/react': 19.2.7
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react: 19.2.1
       vite: 6.4.1(@types/node@22.14.0)(jiti@2.6.1)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-openapi@10.2.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  fumadocs-openapi@10.2.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       '@fumari/json-schema-to-typescript': 2.0.0(prettier@3.5.3)
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -44237,8 +43899,8 @@ snapshots:
       '@scalar/openapi-parser': 0.23.9
       ajv: 8.17.1
       class-variance-authority: 0.7.1
-      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
-      fumadocs-ui: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
+      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+      fumadocs-ui: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
       github-slugger: 2.0.0
       hast-util-to-jsx-runtime: 2.3.6
       js-yaml: 4.1.1
@@ -44260,10 +43922,10 @@ snapshots:
       - prettier
       - supports-color
 
-  fumadocs-typescript@5.0.1(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(react@19.2.1)(typescript@5.9.3):
+  fumadocs-typescript@5.0.1(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6))(react@19.2.1)(typescript@5.9.3):
     dependencies:
       estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
       hast-util-to-estree: 3.1.3
       hast-util-to-jsx-runtime: 2.3.6
       react: 19.2.1
@@ -44275,13 +43937,13 @@ snapshots:
       unist-util-visit: 5.0.0
     optionalDependencies:
       '@types/react': 19.2.7
-      fumadocs-ui: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
+      fumadocs-ui: 16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6):
+  fumadocs-ui@16.4.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6):
     dependencies:
-      '@fumadocs/ui': 16.4.7(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
+      '@fumadocs/ui': 16.4.7(@types/react@19.2.7)(fumadocs-core@16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(tailwindcss@4.1.6)
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -44293,7 +43955,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.7)(react@19.2.1)
       '@radix-ui/react-tabs': 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       class-variance-authority: 0.7.1
-      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
+      fumadocs-core: 16.4.7(@types/react@19.2.7)(lucide-react@0.562.0(react@19.2.1))(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(zod@3.25.76)
       lucide-react: 0.562.0(react@19.2.1)
       next-themes: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react: 19.2.1
@@ -44302,7 +43964,7 @@ snapshots:
       scroll-into-view-if-needed: 3.1.0
     optionalDependencies:
       '@types/react': 19.2.7
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       tailwindcss: 4.1.6
     transitivePeerDependencies:
       - '@types/react-dom'
@@ -45238,6 +44900,7 @@ snapshots:
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   ip-address@10.1.0: {}
 
@@ -45406,8 +45069,6 @@ snapshots:
   is-unicode-supported@2.1.0: {}
 
   is-url@1.2.4: {}
-
-  is-what@4.1.16: {}
 
   is-wsl@2.2.0:
     dependencies:
@@ -46800,10 +46461,6 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.29.2
       lightningcss-win32-x64-msvc: 1.29.2
 
-  lightweight-charts@5.0.5:
-    dependencies:
-      fancy-canvas: 2.1.0
-
   lilconfig@3.1.3: {}
 
   lines-and-columns@1.2.4: {}
@@ -46867,13 +46524,15 @@ snapshots:
 
   lodash.debounce@4.0.8: {}
 
-  lodash.defaults@4.2.0: {}
+  lodash.defaults@4.2.0:
+    optional: true
 
   lodash.get@4.4.2: {}
 
   lodash.includes@4.3.0: {}
 
-  lodash.isarguments@3.1.0: {}
+  lodash.isarguments@3.1.0:
+    optional: true
 
   lodash.isboolean@3.0.3: {}
 
@@ -47862,10 +47521,6 @@ snapshots:
     dependencies:
       obliterator: 2.0.5
 
-  mnemonist@0.40.3:
-    dependencies:
-      obliterator: 2.0.5
-
   mocha@10.8.2:
     dependencies:
       ansi-colors: 4.1.3
@@ -48231,7 +47886,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  next@16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1):
+  next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1):
     dependencies:
       '@next/env': 16.1.1
       '@swc/helpers': 0.5.15
@@ -48251,12 +47906,12 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 16.1.1
       '@next/swc-win32-x64-msvc': 16.1.1
       '@opentelemetry/api': 1.9.0
-      babel-plugin-react-compiler: 19.1.0-rc.1
       sass: 1.86.1
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+    optional: true
 
   nise@6.1.1:
     dependencies:
@@ -48433,7 +48088,7 @@ snapshots:
       '@standard-schema/spec': 1.0.0
       react: 19.2.1
     optionalDependencies:
-      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      next: 16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
 
   nwsapi@2.2.20: {}
 
@@ -48806,8 +48461,6 @@ snapshots:
   pako@1.0.11: {}
 
   pako@2.1.0: {}
-
-  papaparse@5.5.3: {}
 
   param-case@3.0.4:
     dependencies:
@@ -50156,11 +49809,13 @@ snapshots:
     dependencies:
       esprima: 4.0.1
 
-  redis-errors@1.2.0: {}
+  redis-errors@1.2.0:
+    optional: true
 
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
+    optional: true
 
   regenerate-unicode-properties@10.2.2:
     dependencies:
@@ -51299,7 +50954,8 @@ snapshots:
     dependencies:
       type-fest: 0.7.1
 
-  standard-as-callback@2.1.0: {}
+  standard-as-callback@2.1.0:
+    optional: true
 
   starknet@6.24.1(encoding@0.1.13):
     dependencies:
@@ -51622,10 +51278,6 @@ snapshots:
       mz: 2.7.0
       pirates: 4.0.7
       ts-interface-checker: 0.1.13
-
-  superjson@2.2.2:
-    dependencies:
-      copy-anything: 3.0.5
 
   superstruct@0.14.2: {}
 
@@ -54711,7 +54363,7 @@ snapshots:
     dependencies:
       ethers: 6.13.5(bufferutil@4.0.7)(utf-8-validate@6.0.3)
 
-  zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
+  zksync-telemetry@git+https://git@github.com:matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11:
     dependencies:
       '@sentry/node': 8.55.0
       env-paths: 2.2.1
@@ -54722,7 +54374,7 @@ snapshots:
       - debug
       - supports-color
 
-  zksync-telemetry@https://codeload.github.com/matter-labs/zksync-telemetry-js/tar.gz/2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.3):
+  zksync-telemetry@git+https://git@github.com:matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11(debug@4.4.3):
     dependencies:
       '@sentry/node': 8.55.0
       env-paths: 2.2.1
@@ -54736,10 +54388,6 @@ snapshots:
   zksync-web3@0.13.4(ethers@5.8.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)):
     dependencies:
       ethers: 5.8.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
-
-  zod-search-params@0.1.6(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
 
   zod-to-json-schema@3.25.1(zod@3.25.76):
     dependencies:
