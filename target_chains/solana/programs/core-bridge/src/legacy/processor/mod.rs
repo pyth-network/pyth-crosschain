@@ -46,7 +46,8 @@ pub fn process_legacy_instruction<'info>(
         | LegacyInstruction::_RemovedTransferFees
         | LegacyInstruction::_RemovedUpgradeContract
         | LegacyInstruction::_RemovedPostMessageUnreliable
-        | LegacyInstruction::_RemovedUpdateGuardianSetTtl => {
+        | LegacyInstruction::_RemovedUpdateGuardianSetTtl
+        | LegacyInstruction::_RemovedCloseGuardianSet => {
             err!(crate::error::CoreBridgeError::InstructionRemoved)
         }
     }

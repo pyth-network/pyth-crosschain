@@ -42,6 +42,10 @@ pub enum LegacyInstruction {
     /// kept as a placeholder so the remaining variants keep their original serialized
     /// discriminants.
     _RemovedUpdateGuardianSetTtl,
+    /// Removed instruction (formerly the `CloseGuardianSet` governance instruction). This variant is
+    /// kept as a placeholder so the remaining variants keep their original serialized
+    /// discriminants.
+    _RemovedCloseGuardianSet,
 }
 
 /// Arguments used to initialize the Core Bridge program.
