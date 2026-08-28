@@ -214,6 +214,16 @@ export const EntropyDeployments = {
     name: "HyperEVM",
     rpc: "https://rpc.hyperliquid.xyz/evm",
   },
+  ink: {
+    address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    chainId: 57_073,
+    explorerAccountTemplate: "https://explorer.inkonchain.com/address/$ADDRESS",
+    explorerTxTemplate: "https://explorer.inkonchain.com/tx/$ADDRESS",
+    icon: "https://icons.llamao.fi/icons/chains/rsz_ink.jpg?w=20&h=20",
+    isTestnet: false,
+    name: "Ink",
+    rpc: "https://rpc-gel.inkonchain.com",
+  },
   "kaia-kairos-testnet": {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     chainId: 1001,
