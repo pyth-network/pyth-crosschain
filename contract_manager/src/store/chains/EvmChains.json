@@ -1144,7 +1144,7 @@
     "id": "kraken_ink_mainnet",
     "mainnet": true,
     "networkId": 57073,
-    "rpcUrl": "https://ink-public.nodies.app",
+    "rpcUrl": "https://rpc-gel.inkonchain.com",
     "type": "EvmChain"
   },
   {
