@@ -21,7 +21,6 @@ cpi = ["no-entrypoint"]
 custom-heap = []
 custom-panic = []
 pro-compatible = []
-beta = []
 
 [dependencies]
 wormhole-io.workspace = true
@@ -31,6 +30,3 @@ solana-program.workspace = true
 hex.workspace = true
 ruint.workspace = true
 cfg-if.workspace = true
-
-[dev-dependencies]
-base64 = "0.22"

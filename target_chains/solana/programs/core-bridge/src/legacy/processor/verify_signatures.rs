@@ -186,13 +186,6 @@ fn verify_signatures(ctx: Context<VerifySignatures>, args: VerifySignaturesArgs)
         });
     }
 
-    // This may not match if the signature set was initialized with a legacy guardian set instead of a Pyth multisig guardian set.
-    require_eq!(
-        signature_set.sig_verify_successes.len(),
-        guardian_set.keys.len(),
-        CoreBridgeError::SignatureSetGuardianCountMismatch
-    );
-
     // Attempt to write `true` to represent verified guardian eth pubkey.
     for (i, &signer_index) in guardian_indices.iter().enumerate() {
         require!(

@@ -1,6 +1,3 @@
-mod close_guardian_set;
-pub use close_guardian_set::*;
-
 mod governance;
 pub use governance::*;
 
@@ -43,9 +40,6 @@ pub fn process_legacy_instruction<'info>(
         }
         LegacyInstruction::VerifySignatures => {
             VerifySignatures::process_instruction(program_id, account_infos, ix_data)
-        }
-        LegacyInstruction::CloseGuardianSet => {
-            CloseGuardianSet::process_instruction(program_id, account_infos, ix_data)
         }
         LegacyInstruction::_RemovedPostMessage
         | LegacyInstruction::_RemovedSetMessageFee
