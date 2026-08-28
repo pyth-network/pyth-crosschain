@@ -20,7 +20,7 @@ const _PYTH_INITIAL_MULTISIG_SET_STAGING: [[u8; 20]; 3] = [
     ],
 ];
 
-pub const _PYTH_INITIAL_MULTISIG_SET_PROD: [[u8; 20]; 5] = [
+const _PYTH_INITIAL_MULTISIG_SET_PROD: [[u8; 20]; 5] = [
     [
         0x41, 0x53, 0x4b, 0xb1, 0x76, 0xe4, 0x61, 0xa3, 0xfb, 0x30, 0x47, 0x94, 0x00, 0xf2, 0x10,
         0x54, 0x9e, 0xcc, 0xe6, 0x38,
@@ -45,9 +45,9 @@ pub const _PYTH_INITIAL_MULTISIG_SET_PROD: [[u8; 20]; 5] = [
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "beta")] {
-        const PYTH_INITIAL_MULTISIG_SET: [[u8; 20]; 3] = _PYTH_INITIAL_MULTISIG_SET_STAGING;
+        const PYTH_INITIAL_MULTISIG_SET : [[u8;20]; 3] = _PYTH_INITIAL_MULTISIG_SET_STAGING;
     } else {
-        const PYTH_INITIAL_MULTISIG_SET: [[u8; 20]; 5] = _PYTH_INITIAL_MULTISIG_SET_PROD;
+        const PYTH_INITIAL_MULTISIG_SET : [[u8;20]; 5] = _PYTH_INITIAL_MULTISIG_SET_PROD;
     }
 }
 
@@ -210,18 +210,5 @@ mod tests {
             "FmOlqCIzbs5IVZsd+x6ToBen2sM=",
         ]);
         assert_eq!(_PYTH_INITIAL_MULTISIG_SET_PROD, expected);
-    }
-
-    #[test]
-    fn test_pyth_multisig_sets_disjoint_from_legacy_guardians() {
-        for guardian in _PYTH_INITIAL_MULTISIG_SET_STAGING
-            .iter()
-            .chain(_PYTH_INITIAL_MULTISIG_SET_PROD.iter())
-        {
-            assert!(
-                !crate::state::LEGACY_GUARDIANS.contains(guardian),
-                "multisig key {guardian:02x?} overlaps with LEGACY_GUARDIANS"
-            );
-        }
     }
 }

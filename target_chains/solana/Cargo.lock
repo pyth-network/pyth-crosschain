@@ -4257,7 +4257,6 @@ name = "pyth-solana-receiver"
 version = "0.2.1"
 dependencies = [
  "anchor-lang",
- "bincode",
  "byteorder",
  "cfg-if",
  "common-test-utils",
@@ -4267,11 +4266,9 @@ dependencies = [
  "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
- "solana-loader-v3-interface",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
- "solana-sdk-ids",
  "tokio",
  "wormhole-core-bridge-solana",
  "wormhole-raw-vaas",
@@ -9671,12 +9668,9 @@ dependencies = [
  "cfg-if",
  "hex",
  "ruint",
- "serde_wormhole",
  "solana-program",
  "wormhole-io",
  "wormhole-raw-vaas",
- "wormhole-solana",
- "wormhole-vaas-serde",
 ]
 
 [[package]]

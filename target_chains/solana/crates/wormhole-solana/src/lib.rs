@@ -9,8 +9,6 @@
 mod accounts;
 mod message;
 
-pub mod mainnet_guardian_sets;
-
 // Re-export the entire instruction module as a namespace for functions that create wormhole
 // instructions for CPI.
 pub mod instructions;
