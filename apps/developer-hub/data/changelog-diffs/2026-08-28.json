@@ -1,0 +1,172 @@
+{
+  "date": "2026-08-28",
+  "label": "Friday",
+  "summary": {
+    "added": 13,
+    "went_live": 2,
+    "removed": 1
+  },
+  "hero": "13 new feeds announced, 2 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.NGDU6/USD",
+      "lazerId": 3027,
+      "asset": "Pyth Price In Usd For Hh Natural Gas 27 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "8805823f20690f7b1b138d912a1e6988dca4ed166c813118f8d05cbf00d61dce"
+    },
+    {
+      "id": "Commodities.NGDZ6/USD",
+      "lazerId": 3249,
+      "asset": "Pyth Price In Usd For Hh Natural Gas 25 November 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "f71c3a7352b5519c208e21c60644c0a3e3d1b561f7ac135afc0aad897eaf9e63"
+    },
+    {
+      "id": "Commodities.NGDX6/USD",
+      "lazerId": 3248,
+      "asset": "Pyth Price In Usd For Hh Natural Gas 28 October 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "2a775bff6cc1fa9eb4ad0c5587f2e66e579d4135c9488c728a46e6a1627f1a53"
+    },
+    {
+      "id": "Commodities.BRENTZ7/USD",
+      "lazerId": 3693,
+      "asset": "Pyth Price In Usd For Brent 29 October 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "31aae41726955f98b5e74f715a48081018f159b1be96594a5afbc706043df125"
+    },
+    {
+      "id": "Commodities.BRENTX7/USD",
+      "lazerId": 3692,
+      "asset": "Pyth Price In Usd For Brent 30 September 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "8f085b8e4b6f47bac610691ea01be9583d604065fc1a5e5405af9da092fb73a6"
+    },
+    {
+      "id": "Commodities.BRENTV7/USD",
+      "lazerId": 3691,
+      "asset": "Pyth Price In Usd For Brent 31 August 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "cfc911655d6ec35bd4808a88e979ec462dbbcf0b02cc6fcf19221a14ee74f6b4"
+    },
+    {
+      "id": "Commodities.BRENTU7/USD",
+      "lazerId": 3690,
+      "asset": "Pyth Price In Usd For Brent 30 July 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "e436823d261bc9d52086ba9c5bb93a7745736cdfb4d5b34c912ba3496f7a91f3"
+    },
+    {
+      "id": "Commodities.BRENTQ7/USD",
+      "lazerId": 3689,
+      "asset": "Pyth Price In Usd For Brent 30 June 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "4b6a44c44e294296639be908663b8f8a47388df7b4be4f1afee4ddff2dfede8e"
+    },
+    {
+      "id": "Commodities.BRENTN7/USD",
+      "lazerId": 3688,
+      "asset": "Pyth Price In Usd For Brent 28 May 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "f986fba7bf8ec6fc686488bce091f27eb206b0b09a4c6a59f7dd896eb361afb3"
+    },
+    {
+      "id": "Commodities.BRENTM7/USD",
+      "lazerId": 3687,
+      "asset": "Pyth Price In Usd For Brent 30 April 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "cbef0ee862fe6b5da9f35fb4d26a9c162b96ff3068df110d032b844cd40ea926"
+    },
+    {
+      "id": "Commodities.BRENTK7/USD",
+      "lazerId": 3686,
+      "asset": "Pyth Price In Usd For Brent 31 March 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "3e566b685fc3c4421f260151e608678b17cb2f7902cb5d2e2e1674d3b4b3d3bd"
+    },
+    {
+      "id": "Commodities.BRENTJ7/USD",
+      "lazerId": 3685,
+      "asset": "Pyth Price In Usd For Brent 26 February 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "59eb09af22936cd8a26ca9048d901e1f36e665c4d62fbd5d181256ebd1de0aee"
+    },
+    {
+      "id": "Commodities.BRENTH7/USD",
+      "lazerId": 3684,
+      "asset": "Pyth Price In Usd For Brent 29 January 2027",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "143e8b0f478d740fc455c6ef6721cb5abe67b42b011896f904d482873c87227c"
+    },
+    {
+      "id": "Commodities.BRENTG7/USD",
+      "lazerId": 3683,
+      "asset": "Pyth Price In Usd For Brent 30 December 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "cf0b1c7e46960e7f6a383e8b2068890e3ccae880990d80f89ddb196c713f1c5a"
+    },
+    {
+      "id": "Commodities.BRENTF7/USD",
+      "lazerId": 3682,
+      "asset": "Pyth Price In Usd For Brent 30 November 2026",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "USD",
+      "hermesId": "7697856f5376db96c22bd821098f0464de0a705bdca0b9c41f1b4e9050446a13"
+    },
+    {
+      "id": "Equity.HK.0625/HKD",
+      "lazerId": 3661,
+      "asset": "Shein Global Holdings",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-08-28",
+      "quote": "HKD",
+      "hermesId": "ef48a5d3ec9e8cd26feb8262e35272e3713433cdaa1671b979cc0a810332c1ee"
+    }
+  ]
+}
