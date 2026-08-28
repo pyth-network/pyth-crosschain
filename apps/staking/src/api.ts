@@ -13,8 +13,9 @@ import {
   PositionState,
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
+import type { PublisherCaps } from "./frozen/publisher-caps";
+import { PUBLISHER_CAPS } from "./frozen/publisher-caps";
 import { PUBLISHER_RANKINGS } from "./frozen/publisher-rankings";
-import { PUBLISHER_CAPS, type PublisherCaps } from "./frozen/publisher-caps";
 
 type Data = {
   total: bigint;
@@ -280,9 +281,8 @@ const getPublisherRankings = async () => {
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
   BigInt(
-    publisherCaps.find(
-      ({ publisher: p }) => p === publisher.toBase58(),
-    )?.cap ?? 0,
+    publisherCaps.find(({ publisher: p }) => p === publisher.toBase58())?.cap ??
+      0,
   );
 
 export const createStakeAccountAndDeposit = async (
