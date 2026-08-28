@@ -89,7 +89,7 @@
     "clean": "rm -rf ./dist",
     "example": "node lib/examples/HermesClient.js",
     "prepublishOnly": "pnpm run build",
-    "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
+    "pull:schema": "curl -o schema.json -z schema.json https://pyth.dourolabs.app/docs/hermes/openapi.json",
     "version": "pnpm run format && git add -A src"
   },
   "type": "module",
