@@ -4,7 +4,7 @@ use crate::{
         instruction::EmptyArgs,
         utils::{AccountVariant, LegacyAnchorized},
     },
-    state::{Config, GuardianSet},
+    state::{Config, GuardianSet, LEGACY_GUARDIANS},
     types::Timestamp,
     utils::{self, vaa::VaaAccount},
 };
@@ -138,6 +138,15 @@ fn guardian_set_update(ctx: Context<GuardianSetUpdate>, _args: EmptyArgs) -> Res
         .collect();
     // We need at least one guardian for the initial guardian set.
     require!(!keys.is_empty(), CoreBridgeError::ZeroGuardians);
+
+    // We disallow guardian pubkeys that are in the legacy guardians list.
+    // This check is actually unnecessary because the guardian set updates that introduce these guardians can't be replayed (because they already have been "claimed").
+    for guardian in keys.iter() {
+        require!(
+            !LEGACY_GUARDIANS.contains(guardian),
+            CoreBridgeError::LegacyGuardian
+        );
+    }
 
     for (i, guardian) in keys.iter().take(keys.len() - 1).enumerate() {
         // We disallow guardian pubkeys that have zero address.

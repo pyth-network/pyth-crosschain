@@ -30,3 +30,8 @@ solana-program.workspace = true
 hex.workspace = true
 ruint.workspace = true
 cfg-if.workspace = true
+
+[dev-dependencies]
+serde_wormhole.workspace = true
+wormhole-vaas-serde.workspace = true
+wormhole-solana.workspace = true

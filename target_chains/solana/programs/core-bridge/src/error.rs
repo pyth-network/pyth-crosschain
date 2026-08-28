@@ -100,6 +100,9 @@ pub enum CoreBridgeError {
     #[msg("InvalidGuardianSetIndex")]
     InvalidGuardianSetIndex = 0x600,
 
+    #[msg("LegacyGuardian")]
+    LegacyGuardian = 0x602,
+
     #[msg("GuardianSetMismatch")]
     GuardianSetMismatch = 0x700,
 
