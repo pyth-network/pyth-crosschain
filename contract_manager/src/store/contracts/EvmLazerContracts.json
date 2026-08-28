@@ -188,5 +188,10 @@
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "sei_evm_mainnet",
     "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "ethereum",
+    "type": "EvmLazerContract"
   }
 ]

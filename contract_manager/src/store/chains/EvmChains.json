@@ -182,7 +182,7 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 1,
-    "rpcUrl": "https://eth1.lava.build",
+    "rpcUrl": "https://ethereum-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
