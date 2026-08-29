@@ -922,6 +922,195 @@ async fn test_accumulator_updates() {
 }
 
 #[tokio::test]
+async fn test_set_wormhole() {
+    let (worker, contract, _) = initialize_chain().await;
+
+    // Trust the default accumulator data source so price updates are accepted.
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Any),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetDataSources {
+                data_sources: vec![Source {
+                    emitter: DEFAULT_DATA_SOURCE.address.0,
+                    chain: Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                }],
+            },
+        }
+        .serialize()
+        .unwrap(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
+        1,
+    );
+    let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "vaa": vaa }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Deploy a second, independent Wormhole stub and point the receiver at it via SetWormhole.
+    let new_wormhole = worker
+        .dev_deploy(
+            &std::fs::read("wormhole_stub.wasm").expect("Failed to find wormhole_stub.wasm"),
+        )
+        .await
+        .expect("Failed to deploy second wormhole_stub.wasm");
+    let _ = new_wormhole
+        .call("new")
+        .args_json(json!({}))
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .transact_async()
+        .await
+        .expect("Failed to initialize new Wormhole")
+        .await
+        .unwrap();
+
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetWormhole {
+                new_wormhole: new_wormhole.id().as_str().parse().unwrap(),
+            },
+        }
+        .serialize()
+        .unwrap(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
+        2,
+    );
+    let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "vaa": vaa }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // A price update now verifies against the new Wormhole address and lands in storage.
+    let feed = create_dummy_price_feed_message(100);
+    let message = hex::encode(create_accumulator_message(
+        &[&feed],
+        &[&feed],
+        false,
+        false,
+        None,
+    ));
+    assert!(contract
+        .call("update_price_feeds")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "data": message }))
+        .transact_async()
+        .await
+        .expect("Failed to submit update")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    let mut identifier = [0; 32];
+    identifier[0] = 100;
+    assert_eq!(
+        Some(Price {
+            price: 100.into(),
+            conf: 100.into(),
+            expo: 100,
+            publish_time: 100,
+        }),
+        serde_json::from_slice::<Option<Price>>(
+            &contract
+                .view("get_price_unsafe")
+                .args_json(json!({ "price_identifier": PriceIdentifier(identifier) }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+    );
+
+    // Point the receiver at an address with no Wormhole contract. The cross-contract verify call
+    // now fails, so subsequent updates are rejected — proving the swap actually takes effect.
+    let vaa = create_vaa_from_payload(
+        &GovernanceInstruction {
+            target: Chain::from(WormholeChain::Near),
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetWormhole {
+                new_wormhole: "does-not-exist.near".parse().unwrap(),
+            },
+        }
+        .serialize()
+        .unwrap(),
+        DEFAULT_GOVERNANCE_SOURCE.address,
+        DEFAULT_GOVERNANCE_SOURCE.chain,
+        3,
+    );
+    let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "vaa": vaa }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message = hex::encode(create_accumulator_message(
+        &[&feed_2],
+        &[&feed_2],
+        false,
+        false,
+        None,
+    ));
+    let _ = contract
+        .call("update_price_feeds")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "data": message }))
+        .transact_async()
+        .await
+        .expect("Failed to submit update")
+        .await
+        .unwrap();
+
+    // The new feed must not have landed because verification against the dead address fails.
+    let mut identifier = [0; 32];
+    identifier[0] = 200;
+    assert_eq!(
+        None,
+        serde_json::from_slice::<Option<Price>>(
+            &contract
+                .view("get_price_unsafe")
+                .args_json(json!({ "price_identifier": PriceIdentifier(identifier) }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+    );
+}
+
+#[tokio::test]
 async fn test_sdk_compat() {
     let price = pyth_sdk::Price {
         price: i64::MAX,
