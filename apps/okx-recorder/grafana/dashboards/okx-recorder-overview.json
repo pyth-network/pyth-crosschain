@@ -1,20 +1,28 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
   "links": [],
   "panels": [
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
           "mappings": [
             {
               "options": {
-                "0": { "text": "Not Ready" },
-                "1": { "text": "Ready" }
+                "0": {
+                  "text": "Not Ready"
+                },
+                "1": {
+                  "text": "Ready"
+                }
               },
               "type": "value"
             }
@@ -22,14 +30,25 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
         "colorMode": "background",
@@ -37,37 +56,69 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "textMode": "auto"
       },
-      "targets": [{ "expr": "okx_recorder_ready", "refId": "A" }],
+      "targets": [
+        {
+          "expr": "okx_recorder_ready",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
+        }
+      ],
       "title": "Recorder Ready",
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
           "mappings": [
             {
-              "options": { "0": { "text": "Down" }, "1": { "text": "Up" } },
+              "options": {
+                "0": {
+                  "text": "Down"
+                },
+                "1": {
+                  "text": "Up"
+                }
+              },
               "type": "value"
             }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
       "id": 2,
       "options": {
         "colorMode": "background",
@@ -75,20 +126,44 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "textMode": "auto"
       },
-      "targets": [{ "expr": "okx_recorder_clickhouse_up", "refId": "A" }],
+      "targets": [
+        {
+          "expr": "okx_recorder_clickhouse_up",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
+        }
+      ],
       "title": "ClickHouse Reachable",
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "rowsps" }, "overrides": [] },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rowsps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
@@ -96,164 +171,590 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "textMode": "auto"
       },
       "targets": [
-        { "expr": "rate(okx_recorder_insert_rows_total[1m])", "refId": "A" }
+        {
+          "expr": "rate(okx_recorder_insert_rows_total[1m])",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
+        }
       ],
       "title": "Insert Throughput",
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
       "id": 4,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, rate(okx_recorder_insert_latency_seconds_bucket[5m]))",
           "legendFormat": "p50",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, rate(okx_recorder_insert_latency_seconds_bucket[5m]))",
           "legendFormat": "p95",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         },
         {
           "expr": "histogram_quantile(0.99, rate(okx_recorder_insert_latency_seconds_bucket[5m]))",
           "legendFormat": "p99",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "Insert Latency Quantiles",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
       "id": 5,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
           "expr": "sum(rate(okx_recorder_queue_drops_total[5m]))",
           "legendFormat": "queue drops",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         },
         {
           "expr": "sum(rate(okx_recorder_insert_attempts_total{status=\"error\"}[5m]))",
           "legendFormat": "insert errors",
-          "refId": "B"
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         },
         {
           "expr": "sum(rate(okx_recorder_stream_reconnects_total[5m]))",
           "legendFormat": "stream reconnects",
-          "refId": "C"
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "Errors, Drops & Reconnects",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
-        "defaults": { "max": 1, "unit": "percentunit" },
+        "defaults": {
+          "max": 1,
+          "unit": "percentunit"
+        },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 12
+      },
       "id": 6,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
           "expr": "okx_recorder_queue_fill_ratio",
           "legendFormat": "fill ratio",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "Queue Fill Ratio",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
       "id": 7,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
           "expr": "okx_recorder_queue_depth",
           "legendFormat": "depth",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "Queue Depth",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
       "id": 8,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
           "expr": "sum by (status) (rate(okx_recorder_insert_attempts_total[1m]))",
           "legendFormat": "{{status}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "Insert Attempts/sec by Status",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
       "id": 9,
       "options": {
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi" }
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
           "expr": "time() - okx_recorder_tob_last_seen_unix_seconds",
           "legendFormat": "{{inst_id}}",
-          "refId": "A"
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          }
         }
       ],
       "title": "ToB Last-Seen Age (seconds since last update)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "type": "timeseries",
+      "id": 10,
+      "title": "Trades Last-Seen Age (seconds since last print)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "time() - okx_recorder_trades_last_seen_unix_seconds",
+          "refId": "A",
+          "legendFormat": "{{inst_id}}"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "type": "timeseries",
+      "id": 11,
+      "title": "Funding Last Event Age (seconds since settlement)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "time() - okx_recorder_funding_last_event_unix_seconds",
+          "refId": "A",
+          "legendFormat": "{{inst_id}}"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "type": "timeseries",
+      "id": 12,
+      "title": "Funding Poll Attempts/sec by Status",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 36
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (status) (rate(okx_recorder_funding_poll_attempts_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "type": "timeseries",
+      "id": 13,
+      "title": "Funding Insert Throughput (rows/sec)",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 36
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(okx_recorder_funding_insert_rows_total[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "type": "timeseries",
+      "id": 14,
+      "title": "Keepalive Pings & Pong Timeouts (5m)",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 36
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(okx_recorder_keepalive_pings_total[5m]))",
+          "refId": "A",
+          "legendFormat": "pings"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(increase(okx_recorder_pong_timeouts_total[5m]))",
+          "refId": "B",
+          "legendFormat": "pong timeouts"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "logs",
+      "title": "Service Logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "ads9ouz3jh4hsa"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "ads9ouz3jh4hsa"
+          },
+          "expr": "{namespace=\"okx-recorder\"}",
+          "refId": "A"
+        }
+      ]
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
-  "tags": ["okx", "recorder", "rust"],
-  "templating": { "list": [] },
-  "time": { "from": "now-30m", "to": "now" },
+  "tags": [
+    "okx",
+    "recorder",
+    "rust"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "refresh": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "OKX Recorder Overview",
   "uid": "okx-recorder-overview",
-  "version": 1
+  "version": 0
 }
