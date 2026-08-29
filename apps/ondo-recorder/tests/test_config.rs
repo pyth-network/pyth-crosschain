@@ -238,6 +238,58 @@ clickhouse:
     let _ = fs::remove_file(config_file);
 }
 
+/// `AppConfig` is `Debug`, so any `tracing::info!(?config)` or `dbg!(config)`
+/// renders every field. The two secrets must not be among them.
+///
+/// Sibling recorders redact the same way — see hyperliquid-recorder, which does
+/// log the whole config at startup, and binance-recorder (#3861).
+#[test]
+fn test_debug_output_redacts_secrets() {
+    let _lock = ENV_LOCK.lock().expect("env lock poisoned");
+    clear_env_vars([
+        "ONDO_RECORDER__ONDO__API_KEY",
+        "ONDO_RECORDER__CLICKHOUSE__URL",
+        "ONDO_RECORDER__CLICKHOUSE__PASSWORD",
+    ]);
+
+    let config_file = temp_yaml_path("ondo-config-redaction");
+    let yaml = r#"
+ondo:
+  api_key: "super-secret-api-key"
+tokens:
+  - symbol: "NVDAon"
+    chain_id: "ethereum-1"
+clickhouse:
+  url: "http://127.0.0.1:8123"
+  user: "recorder"
+  password: "super-secret-password"
+"#;
+    fs::write(&config_file, yaml).expect("write yaml config");
+    let config = AppConfig::from_sources(Some(&config_file)).expect("config should parse");
+
+    // The values really are loaded — otherwise the assertions below pass vacuously.
+    assert_eq!(config.api_key, "super-secret-api-key");
+    assert_eq!(config.clickhouse.password, "super-secret-password");
+
+    let rendered = format!("{config:?}");
+    assert!(
+        !rendered.contains("super-secret-api-key"),
+        "api_key leaked into Debug output: {rendered}"
+    );
+    assert!(
+        !rendered.contains("super-secret-password"),
+        "ClickHouse password leaked into Debug output: {rendered}"
+    );
+
+    // Non-secret fields stay visible, so the redaction is targeted.
+    assert!(
+        rendered.contains("recorder"),
+        "ClickHouse username should still be shown: {rendered}"
+    );
+
+    let _ = fs::remove_file(config_file);
+}
+
 fn clear_env_vars<'a>(keys: impl IntoIterator<Item = &'a str>) {
     for key in keys {
         std::env::remove_var(key);

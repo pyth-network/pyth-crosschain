@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use config::{Environment, File};
+use derivative::Derivative;
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
 
@@ -14,11 +15,13 @@ pub enum ConfigError {
     Invalid(String),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[derive(Clone, Derivative, Eq, PartialEq, Deserialize)]
+#[derivative(Debug)]
 pub struct ClickHouseTarget {
     pub host: String,
     pub port: u16,
     pub username: String,
+    #[derivative(Debug = "ignore")]
     pub password: String,
     pub secure: bool,
     pub database: String,
@@ -32,9 +35,11 @@ pub struct TokenConfig {
     pub sizes: Vec<u32>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Derivative)]
+#[derivative(Debug)]
 pub struct AppConfig {
     pub api_url: String,
+    #[derivative(Debug = "ignore")]
     pub api_key: String,
     pub duration: String,
     pub tokens: Vec<TokenConfig>,
