@@ -20,7 +20,7 @@ $ yarn add @pythnetwork/pyth-iota-js
 ## Quickstart
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
+See [Pull Integration on Iota](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/iota) for more information about this approach.
 Typically, to use Pyth prices on chain,
 they must be fetched from an off-chain Hermes instance. The `IotaPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
@@ -67,7 +67,7 @@ const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // s
 // It is either injected from browser or instantiated in backend via some private key
 const wallet: SignerWithProvider = getWallet();
 // Get the state ids of the Pyth and Wormhole contracts from
-// https://docs.pyth.network/documentation/pythnet-price-feeds/sui
+// https://docs.pyth.network/price-feeds/core/contract-addresses/sui
 const wormholeStateId = " 0xFILL_ME";
 const pythStateId = "0xFILL_ME";
 
@@ -152,4 +152,4 @@ setTimeout(() => {
 
 ## Hermes endpoints
 
-You can find the list of Hermes public endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
+You can find the list of Hermes public endpoints [here](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes#public-endpoints).

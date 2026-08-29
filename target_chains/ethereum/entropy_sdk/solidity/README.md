@@ -33,7 +33,7 @@ Then add the following line to your `remappings.txt` file:
 ## Setup
 
 To use the SDK, you need the address of an Entropy contract on your blockchain and a randomness provider.
-You can find current deployments on this [page](https://docs.pyth.network/documentation/entropy/evm).
+You can find current deployments on this [page](https://docs.pyth.network/entropy/contract-addresses).
 
 Choose one of the networks and instantiate an `IEntropy` contract in your solidity contract:
 
