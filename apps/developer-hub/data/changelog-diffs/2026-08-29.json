@@ -1,0 +1,132 @@
+{
+  "date": "2026-08-29",
+  "label": "Saturday",
+  "summary": {
+    "added": 0,
+    "went_live": 9,
+    "removed": 3
+  },
+  "hero": "9 went live, 3 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.BLDV6/USD",
+      "lazerId": 3158,
+      "asset": "Pyth Price In Usd For Brent Last Day Financial Future 28 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "f8620d6b85c68f92dcd447dc5200d9bc0d22d2577219db188762b55770daab9a"
+    },
+    {
+      "id": "Commodities.TGEU6/EUR",
+      "lazerId": 3091,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 27 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-29",
+      "quote": "EUR",
+      "hermesId": "f7e3e0907ac5471a4af23ca5a7662db2506fb97c6164b03273c4c77d2cf25aab"
+    },
+    {
+      "id": "Commodities.BRENTV6/USD",
+      "lazerId": 3044,
+      "asset": "Pyth Price In Usd For Brent 28 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "6e3607735df0f027dc63890cc48055cccf1551003cc7a7c934cabe04485d1193"
+    },
+    {
+      "id": "Metal.PDZ6/USD",
+      "lazerId": 3667,
+      "asset": "Pyth Price In Usd For Palladium 29 December 2026",
+      "assetType": "metal",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "ae8dab7e34e9e0f96cd68998c866cb613bf33f79d3a09fc79d6fd7211588250c"
+    },
+    {
+      "id": "Equity.Index.SKHY/USD",
+      "lazerId": 3662,
+      "asset": "Pyth Price In Usd For Skhy 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "b196587ca694ea231cd8710321f4f62ed08794c6a096759d5c63616730042ae0"
+    },
+    {
+      "id": "Equity.Index.NBIS/USD",
+      "lazerId": 3660,
+      "asset": "Pyth Price In Usd For Nbis 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "c8d8050cde18920d0274f296a7589620c67a9898a73c93d0a91fddde6f3cdf6b"
+    },
+    {
+      "id": "Equity.Index.SOXS/USD",
+      "lazerId": 3659,
+      "asset": "Pyth Price In Usd For Soxs 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "071f452ec5a5f4fa8ea8e585222c2f65890724374a2af16aec0bc70b4cd1c669"
+    },
+    {
+      "id": "Equity.Index.SOXL/USD",
+      "lazerId": 3658,
+      "asset": "Pyth Price In Usd For Soxl 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "5b4183fbbab47c0508c39db436e6b0a0376e50650e79c9f836677a04d65d592f"
+    },
+    {
+      "id": "Equity.Index.EWY/USD",
+      "lazerId": 3267,
+      "asset": "Pyth Price In Usd For Ewy 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "2a7acae7e6da804f5857d10040693e42fb345203a974fff725caa1f0b1998357"
+    },
+    {
+      "id": "Equity.Index.SNDK/USD",
+      "lazerId": 3264,
+      "asset": "Pyth Price In Usd For Sndk 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "USD",
+      "hermesId": "9a972ccd0df577006dda1679dc39e00f370e330c318f21bdcb34e83fa5a70002"
+    },
+    {
+      "id": "Commodities.TGEZ6/EUR",
+      "lazerId": 3094,
+      "asset": "Pyth Price In Eur For Dutch Ttf Gas 27 November 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "EUR",
+      "hermesId": "936fdb9044d917ab8af5f1f7c1eaf100cc3b24348b4487786753c56a97174be9"
+    },
+    {
+      "id": "FX.USD/CNY",
+      "lazerId": 2593,
+      "asset": "Us Dollar",
+      "assetType": "fx",
+      "changeType": "went_live",
+      "date": "2026-08-29",
+      "quote": "CNY",
+      "hermesId": "4a134870158ad1ea98bc4e4eb8e4ca824a32e69d4f3da380377c09936ba23954"
+    }
+  ]
+}
