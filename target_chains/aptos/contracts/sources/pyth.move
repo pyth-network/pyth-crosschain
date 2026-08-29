@@ -128,7 +128,7 @@ module pyth::pyth {
 // Update the cached prices
 //
 // Pyth uses an uses an on-demand update model, where consumers need to update the
-/// cached prices before using them. Please read more about this at https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand.
+/// cached prices before using them. Please read more about this at https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos.
 
     /// Update the cached price feeds with the data in the given VAAs. This is a
     /// convenience wrapper around update_price_feeds(), which allows you to update the price feeds
@@ -143,7 +143,7 @@ module pyth::pyth {
     /// to perform this update can be queried with get_update_fee(&vaas). The signer must have sufficient
     /// account balance to pay this fee, otherwise the transaction will abort.
     ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos#update-fee
     public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
         let total_updates = 0;
         // Update the price feed from each VAA
@@ -161,12 +161,12 @@ module pyth::pyth {
     ///
     /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js package
     /// should be used to fetch these VAAs from the Price Service. More information about this
-    /// process can be found at https://docs.pyth.network/documentation/pythnet-price-feeds.
+    /// process can be found at https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos.
     ///
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
     ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos#update-fee
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
         let total_updates = 0;
         // Update the price feed from each VAA
@@ -409,11 +409,11 @@ module pyth::pyth {
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the stale price threshold.
     ///
-    /// Please refer to the documentation at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for
+    /// Please refer to the documentation at https://docs.pyth.network/price-feeds/core/best-practices for
     /// how to how this price safely.
     ///
     /// Important: Pyth uses an on-demand update model, where consumers need to update the
-    /// cached prices before using them. Please read more about this at https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand.
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos.
     /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
     /// beforehand, as the cached prices may be older than the stale price threshold.
     ///
@@ -489,7 +489,7 @@ module pyth::pyth {
     /// price identifier, if that price is no older than the stale price threshold.
     ///
     /// Important: Pyth uses an on-demand update model, where consumers need to update the
-    /// cached prices before using them. Please read more about this at https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand.
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos.
     /// get_ema_price() is likely to abort unless you call update_price_feeds() to update the cached price
     /// beforehand, as the cached prices may be older than the stale price threshold.
     public fun get_ema_price(price_identifier: PriceIdentifier): Price {
@@ -520,7 +520,7 @@ module pyth::pyth {
 
     /// Get the number of AptosCoin's required to perform the given price updates.
     ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos#update-fee
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
         let i = 0;
         let total_updates = 0;
