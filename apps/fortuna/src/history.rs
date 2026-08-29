@@ -25,9 +25,12 @@ const DEFAULT_DATABASE_URL: &str = "sqlite:fortuna.db?mode=rwc";
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 #[serde(tag = "state", rename_all = "kebab-case")]
 pub enum RequestEntryState {
+    /// Request is pending and waiting to be fulfilled
     Pending,
+    /// Request was successfully completed
     Completed {
         /// The block number of the reveal transaction.
+        #[schema(example = 19000005)]
         reveal_block_number: u64,
         /// The transaction hash of the reveal transaction.
         #[schema(example = "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32", value_type = String)]
@@ -42,25 +45,29 @@ pub enum RequestEntryState {
         #[serde(with = "crate::serde::u256")]
         gas_used: U256,
         /// The combined random number generated from the user and provider contributions.
-        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
+        #[schema(example = "1c26ffa1f8430dc91cb755a98bf37ce82ac0e2cfd961e10111935917694609d5")]
         #[serde_as(as = "serde_with::hex::Hex")]
         combined_random_number: [u8; 32],
         /// Whether the callback to the caller failed.
+        #[schema(example = false)]
         callback_failed: bool,
         /// Return value from the callback. If the callback failed, this field contains
         /// the error code and any additional returned data. Note that "" often indicates an out-of-gas error.
         /// If the callback returns more than 256 bytes, only the first 256 bytes of the callback return value are included.
         /// NOTE: This field is the raw bytes returned from the callback, not hex-decoded. The client should decode it as needed.
-        #[schema(example = "0x4e487b710000000000000000000000000000000000000000000000000000000000000011", value_type = String)]
+        #[schema(example = "0x", value_type = String)]
         callback_return_value: Bytes,
         /// How much gas the callback used.
-        #[schema(example = "567890", value_type = String)]
+        #[schema(example = 100000, value_type = u32)]
         #[serde(with = "crate::serde::u32")]
         callback_gas_used: u32,
     },
+    /// Request failed to be fulfilled
     Failed {
+        /// The reason for the failure.
+        #[schema(example = "Transaction reverted")]
         reason: String,
-        /// The provider contribution to the random number.
+        /// The provider contribution to the random number (if available).
         #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
         #[serde_as(as = "Option<serde_with::hex::Hex>")]
         provider_random_number: Option<[u8; 32]>,
@@ -74,22 +81,29 @@ pub struct RequestStatus {
     #[schema(example = "ethereum", value_type = String)]
     pub chain_id: ChainId,
     /// The network ID of the request. This is the response of eth_chainId rpc call.
-    #[schema(example = "1", value_type = u64)]
+    #[schema(example = 1, value_type = u64)]
     pub network_id: NetworkId,
+    /// The address of the entropy provider.
     #[schema(example = "0x6cc14824ea2918f5de5c2f75a9da968ad4bd6344", value_type = String)]
     pub provider: Address,
+    /// The sequence number of the request.
+    #[schema(example = 12345)]
     pub sequence: u64,
+    /// The timestamp when the request was created.
     #[schema(example = "2023-10-01T00:00:00Z", value_type = String)]
     pub created_at: DateTime<chrono::Utc>,
+    /// The timestamp when the request was last updated.
     #[schema(example = "2023-10-01T00:00:05Z", value_type = String)]
     pub last_updated_at: DateTime<chrono::Utc>,
+    /// The block number when the request was made.
+    #[schema(example = 19000000)]
     pub request_block_number: u64,
     /// The transaction hash of the request transaction.
     #[schema(example = "0x5a3a984f41bb5443f5efa6070ed59ccb25edd8dbe6ce7f9294cf5caa64ed00ae", value_type = String)]
     pub request_tx_hash: TxHash,
     /// Gas limit for the callback in the smallest unit of the chain.
     /// For example, if the native currency is ETH, this will be in wei.
-    #[schema(example = "500000", value_type = String)]
+    #[schema(example = 500000, value_type = u32)]
     pub gas_limit: u32,
     /// The user contribution to the random number.
     #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
@@ -98,6 +112,7 @@ pub struct RequestStatus {
     /// This is the address that initiated the request.
     #[schema(example = "0x78357316239040e19fc823372cc179ca75e64b81", value_type = String)]
     pub sender: Address,
+    /// The current state of the request.
     pub state: RequestEntryState,
 }
 
