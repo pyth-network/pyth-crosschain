@@ -274,3 +274,141 @@ pub fn trim_vaa_signatures(vaa: Vaa<&RawMessage>, n: u8) -> Vaa<&RawMessage> {
     vaa_copy.signatures.sort_by(|a, b| a.index.cmp(&b.index));
     vaa_copy
 }
+
+/// Like [`create_vaa_from_payload`], but signs with an explicit guardian set rather than the 19
+/// dummy mainnet guardians. The first `num_signatures` guardians sign (deterministically, sorted by
+/// index), and `guardian_set_index` is stamped into the VAA header. Used to exercise the Pyth Pro
+/// router set (5 keys, 3-of-5 quorum) against the vendored NEAR Wormhole core bridge.
+pub fn create_vaa_from_payload_with_signers(
+    payload: &[u8],
+    emitter_address: Address,
+    emitter_chain: Chain,
+    sequence: u64,
+    guardians: &[SecretKey],
+    num_signatures: usize,
+    guardian_set_index: u32,
+) -> Vaa<Box<RawMessage>> {
+    let body: Body<Box<RawMessage>> = Body {
+        emitter_chain,
+        emitter_address,
+        sequence,
+        payload: <Box<RawMessage>>::from(payload.to_vec()),
+        ..Default::default()
+    };
+
+    let digest = libsecp256k1Message::parse_slice(&body.digest().unwrap().secp256k_hash).unwrap();
+
+    let mut signatures: Vec<wormhole_sdk::vaa::Signature> = guardians
+        .iter()
+        .take(num_signatures)
+        .enumerate()
+        .map(|(i, guardian)| {
+            let (signature, recovery_id) = libsecp256k1::sign(&digest, guardian);
+            let mut bytes = [0u8; 65];
+            bytes[..64].copy_from_slice(&signature.serialize());
+            bytes[64] = recovery_id.serialize();
+            wormhole_sdk::vaa::Signature {
+                index: i as u8,
+                signature: bytes,
+            }
+        })
+        .collect();
+    signatures.sort_by(|a, b| a.index.cmp(&b.index));
+
+    let header = Header {
+        version: 1,
+        guardian_set_index,
+        signatures,
+    };
+
+    (header, body).into()
+}
+
+/// Like [`create_accumulator_message_from_updates`], but signs the wrapping Wormhole VAA with an
+/// explicit guardian set (see [`create_vaa_from_payload_with_signers`]).
+#[allow(clippy::too_many_arguments)]
+pub fn create_accumulator_message_from_updates_with_signers(
+    price_updates: Vec<MerklePriceUpdate>,
+    tree: MerkleTree<Keccak160>,
+    corrupt_wormhole_message: bool,
+    emitter_address: Address,
+    emitter_chain: Chain,
+    guardians: &[SecretKey],
+    num_signatures: usize,
+    guardian_set_index: u32,
+) -> Vec<u8> {
+    let mut root_hash = [0u8; 20];
+    root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
+    let wormhole_message = WormholeMessage::new(WormholePayload::Merkle(WormholeMerkleRoot {
+        slot: 0,
+        ring_size: 0,
+        root: root_hash,
+    }));
+
+    let mut vaa_payload = to_vec::<_, BigEndian>(&wormhole_message).unwrap();
+    if corrupt_wormhole_message {
+        vaa_payload[0] = 0;
+    }
+
+    let vaa = create_vaa_from_payload_with_signers(
+        &vaa_payload,
+        emitter_address,
+        emitter_chain,
+        DEFAULT_SEQUENCE,
+        guardians,
+        num_signatures,
+        guardian_set_index,
+    );
+
+    let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
+        vaa: PrefixedVec::from(serde_wormhole::to_vec(&vaa).unwrap()),
+        updates: price_updates,
+    });
+
+    to_vec::<_, BigEndian>(&accumulator_update_data).unwrap()
+}
+
+/// Like [`create_accumulator_message`], but signs the wrapping Wormhole VAA with an explicit
+/// guardian set (see [`create_vaa_from_payload_with_signers`]).
+#[allow(clippy::too_many_arguments)]
+pub fn create_accumulator_message_with_signers(
+    all_feeds: &[&Message],
+    updates: &[&Message],
+    corrupt_wormhole_message: bool,
+    data_source_override: Option<DataSource>,
+    guardians: &[SecretKey],
+    num_signatures: usize,
+    guardian_set_index: u32,
+) -> Vec<u8> {
+    let all_feeds_bytes: Vec<_> = all_feeds
+        .iter()
+        .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+        .collect();
+    let updates_bytes: Vec<_> = updates
+        .iter()
+        .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+        .collect();
+
+    let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
+    let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
+    let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+    for update in updates_bytes {
+        let proof = tree.prove(&update).unwrap();
+        price_updates.push(MerklePriceUpdate {
+            message: PrefixedVec::from(update),
+            proof,
+        });
+    }
+
+    let data_source = data_source_override.unwrap_or(DEFAULT_DATA_SOURCE);
+    create_accumulator_message_from_updates_with_signers(
+        price_updates,
+        tree,
+        corrupt_wormhole_message,
+        data_source.address,
+        data_source.chain,
+        guardians,
+        num_signatures,
+        guardian_set_index,
+    )
+}
