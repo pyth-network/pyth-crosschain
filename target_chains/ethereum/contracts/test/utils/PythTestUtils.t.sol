@@ -581,7 +581,7 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
 
         // Test 4: Basic Tests with positive exponents
         assertCrossRateEquals(100, 2, 100, 2, -5, 100000); // 100 * 10^2 / 100 * 10^2 = 10000 / 10000 = 1 == 100000 * 10^-5
-        // We will loose preistion as the the target exponent is 5 making the price 0.00001
+        // We will loose preistion as the target exponent is 5 making the price 0.00001
         assertCrossRateEquals(100, 8, 100, 8, 5, 0);
 
         // Test 5: Different Exponent Tests
