@@ -238,11 +238,11 @@ clickhouse:
     let _ = fs::remove_file(config_file);
 }
 
-/// `AppConfig` is `Debug`, so any `tracing::info!(?config)` or `dbg!(config)`
-/// renders every field. The two secrets must not be among them.
-///
-/// Sibling recorders redact the same way — see hyperliquid-recorder, which does
-/// log the whole config at startup, and binance-recorder (#3861).
+/// `AppConfig` derives `Debug`, so any `tracing::info!(?config)` or
+/// `dbg!(config)` renders every field it holds. Two of those fields are
+/// credentials — `api_key` is sent as the `x-api-key` header on every Ondo API
+/// request, and `clickhouse.password` authenticates the database writer — so
+/// neither may appear in that output.
 #[test]
 fn test_debug_output_redacts_secrets() {
     let _lock = ENV_LOCK.lock().expect("env lock poisoned");
