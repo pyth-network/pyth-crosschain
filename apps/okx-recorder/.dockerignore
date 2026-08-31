@@ -1,4 +1,0 @@
-target/
-.vendor/
-config.yml
-.env
