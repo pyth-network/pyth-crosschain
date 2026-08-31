@@ -13,6 +13,21 @@ const port = Number(process.env.PORT) || 8080;
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
 const DRAIN_TIMEOUT_MS = 10_000;
 
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Accept, Authorization, Mcp-Session-Id",
+  "Access-Control-Expose-Headers": "Mcp-Session-Id",
+  "Access-Control-Max-Age": "86400",
+};
+
+function setCorsHeaders(res: import("node:http").ServerResponse): void {
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    res.setHeader(key, value);
+  }
+}
+
 const httpServer = createHttpServer(async (req, res) => {
   const method = req.method ?? "UNKNOWN";
   const url = req.url ?? "/";
@@ -39,8 +54,18 @@ const httpServer = createHttpServer(async (req, res) => {
       return;
     }
 
+    // CORS preflight for MCP endpoint
+    if (method === "OPTIONS" && url === "/mcp") {
+      setCorsHeaders(res);
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
     // MCP endpoint — only POST is supported in stateless mode
     if (url === "/mcp") {
+      setCorsHeaders(res);
+
       if (method !== "POST") {
         res.writeHead(405, { Allow: "POST" });
         res.end("Method Not Allowed");
