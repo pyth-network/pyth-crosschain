@@ -1,0 +1,172 @@
+{
+  "date": "2026-09-01",
+  "label": "Tuesday",
+  "summary": {
+    "added": 4,
+    "went_live": 11,
+    "removed": 1
+  },
+  "hero": "4 new feeds announced, 11 went live, 1 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "Commodities.LCQ6/USc",
+      "lazerId": 3213,
+      "asset": "Pyth Price In Us Cents For Live Cattle 31 August 2026",
+      "assetType": "commodity",
+      "changeType": "removed",
+      "date": "2026-09-01",
+      "quote": "USc",
+      "hermesId": "99668a9e0f978d486c5b06456362c4090927310b1cf6926e11528e27e958118f"
+    },
+    {
+      "id": "Commodities.BRENTF7/USD",
+      "lazerId": 3682,
+      "asset": "Pyth Price In Usd For Brent 30 November 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "7697856f5376db96c22bd821098f0464de0a705bdca0b9c41f1b4e9050446a13"
+    },
+    {
+      "id": "Equity.Index.SAMSUNG/USD",
+      "lazerId": 3663,
+      "asset": "Pyth Price In Usd For Samsung 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "3d98d6fcce0d5e828870bb93b2b1725060a581cb9bef790847337a6c8933c7a4"
+    },
+    {
+      "id": "Equity.HK.0625/HKD",
+      "lazerId": 3661,
+      "asset": "Shein Global Holdings",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "HKD",
+      "hermesId": "ef48a5d3ec9e8cd26feb8262e35272e3713433cdaa1671b979cc0a810332c1ee"
+    },
+    {
+      "id": "Equity.US.NMZ6/USD",
+      "lazerId": 3334,
+      "asset": "Pyth Price In Usd For Nasdaq E-Mini Index Futures 18 December 2026",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "bfe6e0f8a861bb8316bc2e321dd7808eda3ee4e19740f5e08ce6569fbeb4b65d"
+    },
+    {
+      "id": "Equity.US.EMZ6/USD",
+      "lazerId": 3333,
+      "asset": "Pyth Price In Usd For S&P 500 Index E-Mini Futures 18 December 2026",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "4d197f0afb40c3715558117728dedbea61cacc5f51dcaa41275cd3a27a109080"
+    },
+    {
+      "id": "Equity.Index.META/USD",
+      "lazerId": 3262,
+      "asset": "Pyth Price In Usd For Meta 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "2cc0c022f7f37920485a5947f3cea8633783b6cb7fff6d94ee52f48687b7783d"
+    },
+    {
+      "id": "Equity.Index.ORCL/USD",
+      "lazerId": 3195,
+      "asset": "Pyth Price In Usd For Orcl 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "98aacad2adc9ffa8949da73015a5b623b0c062bd7f07b6f4dfda244b9b672c39"
+    },
+    {
+      "id": "Equity.Index.PLTR/USD",
+      "lazerId": 3193,
+      "asset": "Pyth Price In Usd For Pltr 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "52c7c6b70032b7151c8d0febf684f14318e1e13315976e171267639955400bb9"
+    },
+    {
+      "id": "Equity.Index.AMZN/USD",
+      "lazerId": 3192,
+      "asset": "Pyth Price In Usd For Amzn 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "329635cf9e705e01ed2d842fafbb6c426d7e5630e75847740d89957222fd68b8"
+    },
+    {
+      "id": "Equity.Index.COIN/USD",
+      "lazerId": 3190,
+      "asset": "Pyth Price In Usd For Coin 24",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "49387483ff50427bf0ff5928082b0cf16331421067c59f4c582a07aa117db1ac"
+    },
+    {
+      "id": "Commodities.GOX6/USD",
+      "lazerId": 3061,
+      "asset": "Pyth Price In Usd For Ls Gasoil 12 November 2026",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "7af1a84b1933530090c83f1500e2f53317cf50fd22c0d4e647f439e3c65de631"
+    },
+    {
+      "id": "Crypto.CARDS/USD",
+      "lazerId": 3697,
+      "asset": "Collector Crypto",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "97436548c6ccfaad89a3de65e09fc7b58c7527c0e7816cf428d8a157145f6da7"
+    },
+    {
+      "id": "Crypto.AI/NVDA",
+      "lazerId": 3696,
+      "asset": "Artificial Inu",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-01",
+      "quote": "NVDA",
+      "hermesId": "c387c6f534644d4d49206e5e6f6fbe12040d54018f4e98e1fbee453f5b1239ab"
+    },
+    {
+      "id": "Equity.US.USDE/USD",
+      "lazerId": 3695,
+      "asset": "Stablecoinx Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "7dd4fa058bf946c7e6974e5098543afb170d29d1413a0245395e1d14bd08c0a7"
+    },
+    {
+      "id": "Equity.US.DNN/USD",
+      "lazerId": 3694,
+      "asset": "Denison Mines Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-01",
+      "quote": "USD",
+      "hermesId": "b4a8298d774980d697165333606303c12c46c0bcec62bb0df3fda11162bb2194"
+    }
+  ]
+}
