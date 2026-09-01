@@ -1440,5 +1440,12 @@
     "networkId": 46630,
     "rpcUrl": "https://rpc.testnet.chain.robinhood.com",
     "type": "EvmChain"
+  },
+  {
+    "id": "arc",
+    "mainnet": true,
+    "networkId": 5042,
+    "rpcUrl": "https://rpc.mainnet.arc.io",
+    "type": "EvmChain"
   }
 ]
