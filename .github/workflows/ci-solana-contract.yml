@@ -29,7 +29,7 @@ jobs:
       run:
         working-directory: target_chains/solana
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           cache-workspaces: "target_chains/solana -> target"
       - uses: actions-rust-lang/setup-rust-toolchain@v1

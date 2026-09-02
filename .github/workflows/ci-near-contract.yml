@@ -21,7 +21,7 @@ jobs:
       run:
         working-directory: target_chains/near/receiver
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache-workspaces: "target_chains/near/receiver -> target"
@@ -34,7 +34,7 @@ jobs:
       run:
         working-directory: target_chains/near/receiver
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           cache-workspaces: "target_chains/near/receiver -> target"
