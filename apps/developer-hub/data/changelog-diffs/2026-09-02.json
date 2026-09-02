@@ -1,0 +1,122 @@
+{
+  "date": "2026-09-02",
+  "label": "Wednesday",
+  "summary": {
+    "added": 8,
+    "went_live": 3,
+    "removed": 0
+  },
+  "hero": "8 new feeds announced, 3 went live.",
+  "events": [
+    {
+      "id": "Crypto.CARDS/USD",
+      "lazerId": 3697,
+      "asset": "Collector Crypto",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-09-02",
+      "quote": "USD",
+      "hermesId": "97436548c6ccfaad89a3de65e09fc7b58c7527c0e7816cf428d8a157145f6da7"
+    },
+    {
+      "id": "Crypto.AI/NVDA",
+      "lazerId": 3696,
+      "asset": "Artificial Inu",
+      "assetType": "crypto",
+      "changeType": "went_live",
+      "date": "2026-09-02",
+      "quote": "NVDA",
+      "hermesId": "c387c6f534644d4d49206e5e6f6fbe12040d54018f4e98e1fbee453f5b1239ab"
+    },
+    {
+      "id": "Equity.US.SIMO/USD",
+      "lazerId": 3641,
+      "asset": "Silicon Motion Technology Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-02",
+      "quote": "USD",
+      "hermesId": "54c51d3e772f079c37c8bb030878da5e1d55eb2c67be7e36435b03beda542c3f"
+    },
+    {
+      "id": "Commodities.Index.TGAS1M/USD",
+      "lazerId": 3705,
+      "asset": "Pyth Price In Usd For Constant 1M Dutch Ttf Gas 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "USD",
+      "hermesId": "55e85ff86bd61d78f44135dd67f77623db3c855be98daf6603213632fc5b3126"
+    },
+    {
+      "id": "Equity.TW.2454/TWD",
+      "lazerId": 3704,
+      "asset": "Mediatek Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "TWD",
+      "hermesId": "b4e4616f7586a7bed20e3999367365456f5661c9b01a135e67028420c6792d5e"
+    },
+    {
+      "id": "Equity.TW.3231/TWD",
+      "lazerId": 3703,
+      "asset": "Wistron Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "TWD",
+      "hermesId": "54217c8f0b91451a4ff7fb64070e381dd57c10e71c75985bf7c688a1dd9c41af"
+    },
+    {
+      "id": "Equity.TW.2382/TWD",
+      "lazerId": 3702,
+      "asset": "Quanta Computer Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "TWD",
+      "hermesId": "f5ab402dabee056aa234b5f2d3f41a408d40bbd5598752d6bfec8ab0894b2b16"
+    },
+    {
+      "id": "Equity.TW.2317/TWD",
+      "lazerId": 3701,
+      "asset": "Hon Hai Precision Industry Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "TWD",
+      "hermesId": "761cb661061f39e43caa666d96859428d6fe60cd3714d368b732ece617f37484"
+    },
+    {
+      "id": "Equity.TW.2330/TWD",
+      "lazerId": 3700,
+      "asset": "Taiwan Semiconductor Manufacturing Co Ltd",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "TWD",
+      "hermesId": "69d34a935047ac10cccb1dbdd1999d73a0f723d6c7eccfe21401a55b6d176d8c"
+    },
+    {
+      "id": "Equity.US.GTLB/USD",
+      "lazerId": 3699,
+      "asset": "Gitlab Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "USD",
+      "hermesId": "f8d023d26b597738c7d97b5fa0e9141334766e76fb9e4374c1610a4b2978ab35"
+    },
+    {
+      "id": "Equity.US.PATH/USD",
+      "lazerId": 3698,
+      "asset": "Uipath Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-02",
+      "quote": "USD",
+      "hermesId": "a6cc135b4522cf23690b4788399d1cba1f1554d388aac06911cb3b5083fdd658"
+    }
+  ]
+}
