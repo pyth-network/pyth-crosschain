@@ -1,4 +1,4 @@
-import type { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import { lookup } from "@pythnetwork/known-publishers";
 import type {
   PythnetClient,
@@ -13,8 +13,6 @@ import {
   PositionState,
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
-import type { PublisherCaps } from "./frozen/publisher-caps";
-import { PUBLISHER_CAPS } from "./frozen/publisher-caps";
 import { PUBLISHER_RANKINGS } from "./frozen/publisher-rankings";
 
 type Data = {
@@ -236,13 +234,15 @@ const loadBaseInfo = async (
 const loadPublisherData = async (
   client: PythStakingClient,
   pythnetClient: PythnetClient,
-  _hermesClient: HermesClient,
+  hermesClient: HermesClient,
 ) => {
   const [poolData, publisherRankings, publisherCaps, publisherNumberOfSymbols] =
     await Promise.all([
       client.getPoolDataAccount(),
       getPublisherRankings(),
-      PUBLISHER_CAPS,
+      hermesClient.getLatestPublisherCaps({
+        parsed: true,
+      }),
       pythnetClient.getPublisherNumberOfSymbols(),
     ]);
 
@@ -281,8 +281,9 @@ const getPublisherRankings = async () => {
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
   BigInt(
-    publisherCaps.find(({ publisher: p }) => p === publisher.toBase58())?.cap ??
-      0,
+    publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+      ({ publisher: p }) => p === publisher.toBase58(),
+    )?.cap ?? 0,
   );
 
 export const createStakeAccountAndDeposit = async (
