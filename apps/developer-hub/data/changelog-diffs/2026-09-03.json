@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-03",
+  "label": "Thursday",
+  "summary": {
+    "added": 0,
+    "went_live": 2,
+    "removed": 0
+  },
+  "hero": "2 went live.",
+  "events": [
+    {
+      "id": "Equity.US.GTLB/USD",
+      "lazerId": 3699,
+      "asset": "Gitlab Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-03",
+      "quote": "USD",
+      "hermesId": "f8d023d26b597738c7d97b5fa0e9141334766e76fb9e4374c1610a4b2978ab35"
+    },
+    {
+      "id": "Equity.US.PATH/USD",
+      "lazerId": 3698,
+      "asset": "Uipath Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-03",
+      "quote": "USD",
+      "hermesId": "a6cc135b4522cf23690b4788399d1cba1f1554d388aac06911cb3b5083fdd658"
+    }
+  ]
+}
