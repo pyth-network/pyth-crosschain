@@ -1,0 +1,242 @@
+{
+  "date": "2026-09-04",
+  "label": "Friday",
+  "summary": {
+    "added": 2,
+    "went_live": 0,
+    "removed": 21
+  },
+  "hero": "2 new feeds announced, 21 deactivated or deprecated.",
+  "events": [
+    {
+      "id": "KLP.KXRCC_25DEC31_T5/USD",
+      "lazerId": 2684,
+      "asset": "Fed To Cut Rates 5 Times?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "463b6a88d818766208327dd714c5b83317e9f3632b5bd166462496fe5a369f55"
+    },
+    {
+      "id": "KLP.KXRCC_25DEC31_T4/USD",
+      "lazerId": 2683,
+      "asset": "Fed To Cut Rates 4 Times?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "80a1a1b00c2c189834771a5dbb71fc34640005856ca643cb98116fa159a66509"
+    },
+    {
+      "id": "KLP.KXRCC_25DEC31_T3/USD",
+      "lazerId": 2682,
+      "asset": "Fed To Cut Rates 3 Times?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "3b2bb9f802e70fd47db4fa43e1ef7a886b76c29ca3e3ebb02354d9766b1f1a36"
+    },
+    {
+      "id": "KLP.KXRCC_25DEC31_T2/USD",
+      "lazerId": 2681,
+      "asset": "Fed To Cut Rates 2 Times?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "5734ca72f6d79ef8d799a4093171383107dfbaea06a1faf770d1eb08d966c372"
+    },
+    {
+      "id": "KLP.KXRCC_25DEC31_T1/USD",
+      "lazerId": 2680,
+      "asset": "Fed To Cut Rates 1 Time?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "d2bf929c917584ffc577ebea783e3d80a1fb5c4bf32902edc110992b4d405052"
+    },
+    {
+      "id": "KLP.KXMLB_25_TOR/USD",
+      "lazerId": 2679,
+      "asset": "Toronto To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "f891efb4dc867edb7bf45bb7abe0996c15dea380dcc5ede0dd2cfdf83a6fca98"
+    },
+    {
+      "id": "KLP.KXMLB_25_SEA/USD",
+      "lazerId": 2678,
+      "asset": "Seattle To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "c7ee1bd0269f55047d6a7a267fe05456c31dddecbb4bbede2487a1b694ab5784"
+    },
+    {
+      "id": "KLP.KXMLB_25_PHI/USD",
+      "lazerId": 2677,
+      "asset": "Philadelphia To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "f5d620f3f223a5ddd40f7f9f43f9906e79d6dd2722317e4e72a7f2df140d6e64"
+    },
+    {
+      "id": "KLP.KXMLB_25_NYY/USD",
+      "lazerId": 2676,
+      "asset": "New York Y To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "8d3542a18f8dd15fa52b56b9a3b30047a9c0f64241515340fc0a9ca524cd80cf"
+    },
+    {
+      "id": "KLP.KXMLB_25_MIL/USD",
+      "lazerId": 2675,
+      "asset": "Milwaukee To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "cee67f1b9661d8ae8a9e3066f19bae1b7afb2411336fa12ca3db0a1223016620"
+    },
+    {
+      "id": "KLP.KXMLB_25_LAD/USD",
+      "lazerId": 2674,
+      "asset": "Los Angeles D To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "b28bdc69b240e96511cf3edecbd3ea10fdf904f8c454c27aab006dbd7b944cfe"
+    },
+    {
+      "id": "KLP.KXMLB_25_DET/USD",
+      "lazerId": 2673,
+      "asset": "Detroit To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "bb83b0e86fda950c7961fe9bb6529c11ce6b35e1f8c01fdc6e8ca6b78b0c19ab"
+    },
+    {
+      "id": "KLP.KXMLB_25_CHC/USD",
+      "lazerId": 2672,
+      "asset": "Chicago C To Win The World Series?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "ba67addbbb748ca328987d7eae964a9bcdfd7d637b2fee41b29c23b2053c80a8"
+    },
+    {
+      "id": "KLP.KXMAYORNYCPARTY_25_R/USD",
+      "lazerId": 2671,
+      "asset": "Republican Party Rep To Win The Nyc Mayor Race In 2025?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "bbd6f8a88064a775b675c5232d58f02412372033e933732c3ff24d030f9b1e8a"
+    },
+    {
+      "id": "KLP.KXMAYORNYCPARTY_25_D/USD",
+      "lazerId": 2670,
+      "asset": "Democratic Party Rep To Win The Nyc Mayor Race In 2025?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "bdf06cfd40c3f8ebd08f37bae8024ed6f024d20910910534a69a3808e2c95ead"
+    },
+    {
+      "id": "KLP.KXMAYORNYCPARTY_25_AC/USD",
+      "lazerId": 2669,
+      "asset": "Andrew Cuomo Party Rep To Win The Nyc Mayor Race In 2025?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "dd2a441046f65707d196b026d7b48fffef53db86681271d26922ee101852a2f4"
+    },
+    {
+      "id": "KLP.KXF1_25_OP/USD",
+      "lazerId": 2668,
+      "asset": "Oscar Piastri To Win The Formula 1 Drivers Championship?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "61232040f4a6cfcc48cf51a915300af821c8c165e6763f8307cb8d3d05fe50c4"
+    },
+    {
+      "id": "KLP.KXF1_25_MV/USD",
+      "lazerId": 2667,
+      "asset": "Max Verstappen To Win The Formula 1 Drivers Championship?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "36f1ee2a72e97e6c69f11dee39c38773bba66190a155f3e26ef663621627e419"
+    },
+    {
+      "id": "KLP.KXF1_25_LN/USD",
+      "lazerId": 2666,
+      "asset": "Lando Norris To Win The Formula 1 Drivers Championship?",
+      "assetType": "kalshi",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "8c0080042a8c8fced259760e193c8d737d177cbb6716f73dc66751beb274cf0f"
+    },
+    {
+      "id": "Rates.EYE-USDC",
+      "lazerId": 2381,
+      "asset": "Euler Yield (Ethereum) Usdc Borrow Rate",
+      "assetType": "rates",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "%",
+      "hermesId": "f0ec3dda560ca5a32761db39a9868cbf9227aac755b961bc27197a9fb41a3ce1"
+    },
+    {
+      "id": "Rates.EPE-USDC",
+      "lazerId": 2380,
+      "asset": "Euler Prime (Ethereum) Usdc Borrow Rate",
+      "assetType": "rates",
+      "changeType": "removed",
+      "date": "2026-09-04",
+      "quote": "%",
+      "hermesId": "bc9ffac3217cd63cf7679db02fc06945a01f4ac6da3c93fdcc3631c2c0d0f985"
+    },
+    {
+      "id": "Equity.TW.3037/TWD",
+      "lazerId": 3706,
+      "asset": "Unimicron Technology Group",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-04",
+      "quote": "TWD",
+      "hermesId": "f816a34d7cdab43f8e79a3a95ea6b24f98f15169a3d29761ccdfaad5809e346d"
+    },
+    {
+      "id": "Equity.US.GPRO/USD",
+      "lazerId": 3664,
+      "asset": "Gopro Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-04",
+      "quote": "USD",
+      "hermesId": "b1c775cfcb8140daacc57f79a63fb1b30b69a1dac14d29d03b713bb88711a928"
+    }
+  ]
+}
