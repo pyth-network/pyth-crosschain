@@ -89,7 +89,7 @@
     "clean": "rm -rf ./dist",
     "example": "node lib/examples/HermesClient.js",
     "prepublishOnly": "pnpm run build",
-    "pull:schema": "curl -o schema.json -z schema.json https://pyth.dourolabs.app/docs/hermes/openapi.json",
+    "pull:schema": "curl -fsS -o schema.json.new https://pyth.dourolabs.app/docs/hermes/openapi.json && test -s schema.json.new && mv schema.json.new schema.json || { rm -f schema.json.new; echo 'warning: could not refresh schema.json from Hermes, building from the committed copy' >&2; }",
     "version": "pnpm run format && git add -A src"
   },
   "type": "module",

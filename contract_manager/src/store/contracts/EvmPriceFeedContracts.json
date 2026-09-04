@@ -7,12 +7,14 @@
   {
     "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
     "chain": "ethereum",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "polygon",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9",
@@ -27,12 +29,14 @@
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "optimism",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
     "chain": "arbitrum",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -52,7 +56,8 @@
   {
     "address": "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594",
     "chain": "bsc",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
@@ -72,7 +77,8 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "linea",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5",
@@ -112,12 +118,14 @@
   {
     "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
     "chain": "base",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
     "chain": "cronos",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
@@ -172,7 +180,8 @@
   {
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
     "chain": "arbitrum_sepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
@@ -282,7 +291,8 @@
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "cronos_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
@@ -302,12 +312,14 @@
   {
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "chain": "sepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
     "chain": "sepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
@@ -332,7 +344,8 @@
   {
     "address": "0x0708325268dF9F66270F1401206434524814508b",
     "chain": "optimism_sepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
@@ -362,7 +375,8 @@
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
     "chain": "base_sepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
@@ -527,7 +541,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "polygon_amoy",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -537,7 +552,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "sei_evm_mainnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
@@ -572,7 +588,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "etherlink",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -637,7 +654,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "soneium_minato_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -647,7 +665,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "flow_mainnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486",
@@ -712,7 +731,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "hyperevm_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -722,7 +742,8 @@
   {
     "address": "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
     "chain": "abstract",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -737,7 +758,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "fantom_sonic_mainnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -747,7 +769,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "soneium",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -762,7 +785,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "berachain_mainnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
@@ -777,7 +801,8 @@
   {
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "chain": "hyperevm",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -792,7 +817,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "berachain_bepolia",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -832,12 +858,14 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "mezo_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "mezo",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
@@ -857,7 +885,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "monad",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -877,12 +906,14 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "sonic_evm_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "injective_evm",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -917,7 +948,8 @@
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "chain": "monad_testnet",
-    "type": "EvmPriceFeedContract"
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   },
   {
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
@@ -1164,6 +1196,12 @@
     "chain": "sei_evm_mainnet",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0x6f98021B5491548fD1691dC6A63fc364B693C77F",
+    "chain": "sepolia",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-staging"
   },
   {
     "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",

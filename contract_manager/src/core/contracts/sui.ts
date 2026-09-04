@@ -8,7 +8,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import { parseVaa } from "@certusone/wormhole-sdk";
-import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 import { bcs } from "@mysten/sui/bcs";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
@@ -40,6 +39,25 @@ function bytesFromMoveField(data: number[] | string): Buffer {
   return typeof data === "string"
     ? Buffer.from(data, "base64")
     : Buffer.from(data);
+}
+
+/** A guardian key is a 20-byte ETH-style address. */
+const GUARDIAN_KEY_LENGTH = 20;
+
+/** Sui caps a single pure argument at 16 KiB; a VAA is far below it, but be explicit. */
+const MAX_PURE_ARGUMENT_SIZE = 16 * 1024;
+
+/**
+ * Read the object id out of a Move field holding a `UID`-bearing struct (a `Table`, a `Bag`).
+ * gRPC flattens it to `{ id: "0x…" }` while JSON-RPC nests it as `{ fields: { id: { id: "0x…" } } }`.
+ */
+function objectIdFromMoveField(value: unknown): ObjectId {
+  const fields = getStructFields(value);
+  const id = fields.id;
+  if (typeof id === "string") return id;
+  const inner = getStructFields(id).id;
+  if (typeof inner === "string") return inner;
+  throw new Error(`Move field carries no object id: ${JSON.stringify(value)}`);
 }
 
 export class SuiPriceFeedContract extends PriceFeedContract {
@@ -478,23 +496,93 @@ export class SuiWormholeContract extends WormholeContract {
     return this.chain;
   }
 
+  /**
+   * The current guardian set's keys, as 0x-prefixed lowercase 20-byte hex, in index order.
+   *
+   * Wormhole's Sui `State` does not hold the keys inline: `guardian_sets` is a
+   * `Table<u32, GuardianSet>`, so the object JSON only carries the table's id and size. The
+   * current set lives in the dynamic field of that table whose `u32` key is
+   * `state.guardian_set_index`, and each `Guardian` wraps a `Bytes20 { data: vector<u8> }`.
+   */
   async getGuardianSet(): Promise<string[]> {
-    const data = await this.getStateFields();
-    const guardian_sets = data.guardian_sets;
-    return guardian_sets;
+    const state = await this.getStateFields();
+    const index = Number(state.guardian_set_index);
+    const tableId = objectIdFromMoveField(state.guardian_sets);
+
+    const provider = this.chain.getProvider();
+    // A `Table` entry is a plain dynamic field keyed by the set index, not a dynamic *object*
+    // field; `getDynamicObjectField` derives a different child id and would not resolve.
+    const { dynamicField } = await provider.core.getDynamicField({
+      name: { bcs: bcs.u32().serialize(index).toBytes(), type: "u32" },
+      parentId: tableId,
+    });
+    const { object } = await provider.core.getObject({
+      include: { json: true },
+      objectId: dynamicField.fieldId,
+    });
+    if (!object.json) {
+      throw new Error(
+        `guardian set ${index} is not present in table ${tableId} of wormhole state ${this.stateId}`,
+      );
+    }
+
+    const guardianSet = getStructFields(getStructFields(object.json).value);
+    if (Number(guardianSet.index) !== index) {
+      throw new Error(
+        `guardian set table entry ${index} reports index ${guardianSet.index}`,
+      );
+    }
+    const guardians = guardianSet.guardians;
+    if (!Array.isArray(guardians)) {
+      throw new Error(
+        `guardian set ${index} has no guardians vector; got ${typeof guardians}`,
+      );
+    }
+    return guardians.map((guardian: unknown, position: number) => {
+      const pubkey = getStructFields(getStructFields(guardian).pubkey);
+      const key = bytesFromMoveField(pubkey.data as number[] | string);
+      if (key.length !== GUARDIAN_KEY_LENGTH) {
+        throw new Error(
+          `guardian ${position} of set ${index} is ${key.length} bytes, expected ${GUARDIAN_KEY_LENGTH}`,
+        );
+      }
+      return `0x${key.toString("hex")}`;
+    });
   }
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
     vaa: Buffer,
   ): Promise<TxResult> {
+    const tx = await this.buildGuardianSetUpgrade(vaa);
+    const keypair = Ed25519Keypair.fromSecretKey(
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
+    );
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
+  }
+
+  /**
+   * Build the guardian-set-upgrade PTB without sending it, so it can be simulated.
+   *
+   * The four calls are Wormhole's governance decree flow: the VAA is parsed and its signatures
+   * checked against the current set, `authorize_governance` mints the ticket that names this
+   * decree, `verify_vaa` turns the VAA plus the ticket into a receipt, and `update_guardian_set`
+   * consumes the receipt to install the new set.
+   */
+  async buildGuardianSetUpgrade(vaa: Buffer): Promise<Transaction> {
     const tx = new Transaction();
     const coreObjectId = this.stateId;
     const corePackageId = await this.client.getWormholePackageId();
     const [verifiedVaa] = tx.moveCall({
       arguments: [
         tx.object(coreObjectId),
-        tx.pure(uint8ArrayToBCS(new Uint8Array(vaa))),
+        tx.pure(
+          bcs
+            .vector(bcs.u8())
+            .serialize(Array.from(vaa), { maxSize: MAX_PURE_ARGUMENT_SIZE })
+            .toBytes(),
+        ),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
       target: `${corePackageId}::vaa::parse_and_verify`,
@@ -522,11 +610,7 @@ export class SuiWormholeContract extends WormholeContract {
       target: `${corePackageId}::update_guardian_set::update_guardian_set`,
     });
 
-    const keypair = Ed25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
-    );
-    const result = await this.executeTransaction(tx, keypair);
-    return { id: result.digest, info: result };
+    return tx;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

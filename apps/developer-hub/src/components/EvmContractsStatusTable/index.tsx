@@ -59,12 +59,14 @@ const buildStatuses = (
 
   for (const contract of evmPriceFeedContracts) {
     if (HIDDEN_CHAIN_IDS.has(contract.chain)) continue;
-    if (
-      "deploymentType" in contract &&
-      contract.deploymentType === "pro-compatible-production"
-    ) {
+    // Legacy deployments are everything that is not a Pro deployment. They carry no
+    // deploymentType historically, and "stable"/"beta" once labelled, so match on the
+    // absence of a Pro type rather than on the absence of the key.
+    const deploymentType =
+      "deploymentType" in contract ? contract.deploymentType : undefined;
+    if (deploymentType === "pro-compatible-production") {
       upgraded.set(contract.chain, contract.address);
-    } else if (!("deploymentType" in contract)) {
+    } else if (!deploymentType?.startsWith("pro-compatible")) {
       current.set(contract.chain, contract.address);
     }
   }

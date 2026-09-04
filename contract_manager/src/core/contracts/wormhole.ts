@@ -1,7 +1,13 @@
 import { sleep } from "../../utils/sleep";
-import type { PrivateKey, TxResult } from "../base";
+import type { PrivateKey, ProDeploymentType, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
+import { getProGuardianSetUpgrades } from "../pro_guardian_sets";
+
+/** How long to wait between reads while confirming a Pro guardian set upgrade landed. */
+const PRO_GUARDIAN_SET_POLL_INTERVAL_MS = 5000;
+/** How many such reads before giving up on an upgrade that was submitted but never took effect. */
+const PRO_GUARDIAN_SET_POLL_ATTEMPTS = 60;
 
 export abstract class WormholeContract extends Storable {
   /**
@@ -65,6 +71,76 @@ export abstract class WormholeContract extends Storable {
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {
         await sleep(5000);
+      }
+    }
+  }
+
+  /**
+   * Replays every Pyth Pro guardian set rotation this receiver has not applied yet.
+   *
+   * A Pro receiver is deployed with the set-0 keys, but the routers sign with the latest set, so
+   * without this a fresh receiver verifies nothing. Idempotent: it starts from the receiver's
+   * current index, skips the rotations already applied, and waits for each one to land before
+   * submitting the next, so it can be re-run after a partial failure.
+   * @param {ProDeploymentType} deploymentType The Pro deployment whose rotations to replay.
+   * @param {PrivateKey} senderPrivateKey The sender private key.
+   * @param {number} gasPriceMultiplier Optional multiplier applied to the fetched gas price (EVM only).
+   * @throws {Error} if the receiver is ahead of the last known rotation, if it sits at an index no
+   * rotation follows on from, or if a submitted upgrade does not land.
+   */
+  async syncProGuardianSets(
+    deploymentType: ProDeploymentType,
+    senderPrivateKey: PrivateKey,
+    gasPriceMultiplier?: number,
+  ): Promise<void> {
+    const upgrades = getProGuardianSetUpgrades(deploymentType);
+    const chainId = this.getChain().getId();
+    const target = upgrades.at(-1)?.guardianSetIndex ?? 0;
+
+    const startIndex = await this.getCurrentGuardianSetIndex();
+    if (startIndex > target) {
+      // A Pro receiver only ever reaches the last index the store knows about, so a higher one
+      // means either the store is missing a rotation or this is not the contract we think it is.
+      throw new Error(
+        `${chainId} wormhole receiver is on guardian set ${startIndex}, beyond the last ` +
+          `${deploymentType} rotation ${target}. Add the missing upgrade VAA to the store, or ` +
+          `check that this is the right contract.`,
+      );
+    }
+
+    for (const upgrade of upgrades) {
+      const currentIndex = await this.getCurrentGuardianSetIndex();
+      if (currentIndex >= upgrade.guardianSetIndex) continue;
+      if (currentIndex + 1 !== upgrade.guardianSetIndex) {
+        throw new Error(
+          `${chainId} wormhole receiver is on guardian set ${currentIndex}, but the next ` +
+            `${deploymentType} rotation installs ${upgrade.guardianSetIndex}; a receiver only ` +
+            `accepts the next set in sequence.`,
+        );
+      }
+      const result = await this.upgradeGuardianSets(
+        senderPrivateKey,
+        upgrade.vaa,
+        gasPriceMultiplier,
+      );
+      // biome-ignore lint/suspicious/noConsole: rotation progress, as in syncMainnetGuardianSets
+      console.log(
+        `Submitted ${deploymentType} guardian set ${upgrade.guardianSetIndex} upgrade on ${chainId} with tx id ${result.id}`,
+      );
+      // Make sure the upgrade is complete before continuing, but do not wait forever: a receiver
+      // that never advances is a failed rotation, not a slow one.
+      let attempts = 0;
+      while (
+        (await this.getCurrentGuardianSetIndex()) < upgrade.guardianSetIndex
+      ) {
+        if (attempts >= PRO_GUARDIAN_SET_POLL_ATTEMPTS) {
+          throw new Error(
+            `${chainId} wormhole receiver did not reach guardian set ` +
+              `${upgrade.guardianSetIndex} within ${(PRO_GUARDIAN_SET_POLL_ATTEMPTS * PRO_GUARDIAN_SET_POLL_INTERVAL_MS) / 1000}s of tx ${result.id}`,
+          );
+        }
+        attempts++;
+        await sleep(PRO_GUARDIAN_SET_POLL_INTERVAL_MS);
       }
     }
   }

@@ -1,5 +1,7 @@
 lib/
 src/zodSchemas.ts
-schema.json
+
+# Scratch file from pull:schema; the real schema.json is tracked.
+schema.json.new
 
 dist/

@@ -18,11 +18,15 @@ import type { Contract } from "web3-eth-contract";
 import type { InferredOptionType } from "yargs";
 
 import type { DeploymentType, PrivateKey } from "../src/core/base";
-import { getDefaultDeploymentConfig } from "../src/core/base";
+import {
+  getDefaultDeploymentConfig,
+  isProDeploymentType,
+} from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import type { EvmEntropyContract } from "../src/core/contracts";
 import {
   EvmExecutorContract,
+  EvmPriceFeedContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
@@ -203,11 +207,30 @@ export function makeCacheFunction(
   return runIfNotCached;
 }
 
-export function getSelectedChains(argv: {
-  chain: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["chain"]>;
-  testnet: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["testnet"]>;
-  allChains: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["all-chains"]>;
-}) {
+/**
+ * Resolves the chains a run acts on from `--all-chains`/`--testnet`/`--chain`.
+ *
+ * Mixing mainnet and testnet in one selection is rejected by default: for a script whose target
+ * network is otherwise implicit, a mainnet chain in what the operator thinks is a testnet batch
+ * spends real gas or sends real governance. `allowMixedNetworks` lifts that for callers where the
+ * network genuinely is not what scopes the run — the Pro cutover picks its vault by deployment
+ * type, and its legacy proxies share one governance emitter across both networks, so a mixed
+ * batch is the correct unit of work there.
+ * @param {object} argv The parsed chain selection flags.
+ * @param {object} options Selection overrides.
+ * @param {boolean} options.allowMixedNetworks Permit a selection spanning mainnet and testnet.
+ * @returns The selected chains.
+ */
+export function getSelectedChains(
+  argv: {
+    chain: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["chain"]>;
+    testnet: InferredOptionType<(typeof COMMON_UPGRADE_OPTIONS)["testnet"]>;
+    allChains: InferredOptionType<
+      (typeof COMMON_UPGRADE_OPTIONS)["all-chains"]
+    >;
+  },
+  options: { allowMixedNetworks?: boolean } = {},
+) {
   const selectedChains: EvmChain[] = [];
   if (argv.allChains && argv.chain)
     throw new Error("Cannot use both --all-chains and --chain");
@@ -221,15 +244,21 @@ export function getSelectedChains(argv: {
     )
       selectedChains.push(chain);
   }
-  if (argv.chain && selectedChains.length !== argv.chain.length)
-    throw new Error(
-      `Some chains were not found ${selectedChains
-        .map((chain) => chain.getId())
-        .toString()}`,
-    );
-  for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
-      throw new Error("All chains must be either mainnet or testnet");
+  if (argv.chain && selectedChains.length !== argv.chain.length) {
+    // Name what is missing rather than what was found. The usual cause is a shell that passed the
+    // whole list as one argument, and "some chains were not found" plus the empty found-set gives
+    // no hint of that; the unmatched value does.
+    const found = new Set(selectedChains.map((chain) => chain.getId()));
+    const missing = argv.chain
+      .map((chain) => String(chain))
+      .filter((id) => !found.has(id));
+    throw new Error(`Some chains were not found: ${missing.join(", ")}`);
+  }
+  if (options.allowMixedNetworks !== true) {
+    for (const chain of selectedChains) {
+      if (chain.isMainnet() != selectedChains[0]?.isMainnet())
+        throw new Error("All chains must be either mainnet or testnet");
+    }
   }
   return selectedChains;
 }
@@ -273,6 +302,33 @@ export function findWormholeContract(
     }
   }
   return;
+}
+
+/**
+ * Finds the price feed contracts for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the price feed contracts for.
+ * @param {DeploymentType} deploymentType The deployment type to find the price feed contracts for.
+ * If deploymentType is "stable" or "beta", it will also find price feed contracts with no deployment
+ * type to preserve backwards compatibility.
+ * @returns Every matching price feed contract on the chain, which can be more than one. EVM
+ * governance payloads carry a target chain but no target address, so several proxies on the same
+ * chain can share a single governance stream. Sepolia, for example, hosts two legacy proxies that
+ * have executed the same governance sequence. Callers that act on a contract must handle all of
+ * them rather than assume a single match.
+ */
+export function findPriceFeedContracts(
+  chain: EvmChain,
+  deploymentType: DeploymentType,
+): EvmPriceFeedContract[] {
+  const isCanonicalPriceFeed =
+    deploymentType === "stable" || deploymentType === "beta";
+  return Object.values(DefaultStore.contracts).filter(
+    (contract): contract is EvmPriceFeedContract =>
+      contract instanceof EvmPriceFeedContract &&
+      contract.getChain().getId() === chain.getId() &&
+      (contract.deploymentType === deploymentType ||
+        (isCanonicalPriceFeed && !contract.deploymentType)),
+  );
 }
 
 /**
@@ -373,6 +429,20 @@ export async function deployWormholeContract(
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
+  // A Pro receiver is set up with the set-0 keys, but the Pro routers sign with the latest set,
+  // so without replaying the rotations this receiver would verify nothing at all.
+  if (isProDeploymentType(config.type)) {
+    // biome-ignore lint/suspicious/noConsole: deploy progress, as elsewhere in this script
+    console.log(`Syncing ${config.type} guardian sets for ${chain.getId()}...`);
+    await wormholeContract.syncProGuardianSets(
+      config.type,
+      config.privateKey,
+      config.gasPriceMultiplier,
+    );
+    // biome-ignore lint/suspicious/noConsole: deploy progress, as elsewhere in this script
+    console.log(`✅ Synced ${config.type} guardian sets for ${chain.getId()}`);
+  }
+
   if (config.saveContract) {
     DefaultStore.wormhole_contracts[wormholeContract.getId()] =
       wormholeContract;
@@ -395,10 +465,20 @@ export async function getOrDeployWormholeContract(
   config: DeployWormholeReceiverContractsConfig,
   cacheFile: string,
 ): Promise<EvmWormholeContract> {
-  return (
-    findWormholeContract(chain, config.type) ??
-    (await deployWormholeContract(chain, config, cacheFile))
-  );
+  const existing = findWormholeContract(chain, config.type);
+  if (existing === undefined) {
+    return deployWormholeContract(chain, config, cacheFile);
+  }
+  // A receiver already in the store can still be behind: it may predate a rotation, or have been
+  // left half-rotated by a failed run. Replaying is a no-op once it is at the latest set.
+  if (isProDeploymentType(config.type)) {
+    await existing.syncProGuardianSets(
+      config.type,
+      config.privateKey,
+      config.gasPriceMultiplier,
+    );
+  }
+  return existing;
 }
 
 export type DefaultAddresses = {

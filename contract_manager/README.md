@@ -32,3 +32,34 @@ You can generate the docs by running `pnpm exec typedoc src/index.ts` from this 
 # Scripts
 
 You can run the scripts by executing `pnpm tsx scripts/<script_name>.ts` from this directory.
+
+# Pyth Pro guardian sets
+
+A Pyth Pro wormhole receiver is deployed with the set-0 keys from
+`getDefaultDeploymentConfig(deploymentType)`, but the Pro routers sign price VAAs with the
+**latest** guardian set. A receiver that has not had every rotation replayed onto it therefore
+verifies nothing.
+
+The signed rotation VAAs live in `src/store/guardian_sets/`, one file per Pro deployment type,
+ordered by the index they install:
+
+- `ProCompatibleStagingGuardianSetVaas.json`
+- `ProCompatibleProductionGuardianSetVaas.json`
+
+`src/core/pro_guardian_sets.ts` loads and validates them, and
+`WormholeContract.syncProGuardianSets(deploymentType, privateKey)` replays the ones a receiver has
+not applied yet. After a rotation, append the new VAA to the file for that deployment type so every
+later deploy picks it up.
+
+The EVM and Solana deploy scripts (`deploy_evm_pro_cutover.ts` /
+`deploy_evm_*_contracts.ts` via `common.ts`, and `deploy_solana_programs.ts`) do this
+automatically. **Sui is deployed by a shell script and has no such hook**, so after deploying a
+Sui Pro receiver run the rotations by hand:
+
+```bash
+pnpm tsx scripts/sync_pro_guardian_set.ts --expect-index <latest> --from-store \
+  --deployment-type pro-compatible-production --chain sui_mainnet --private-key <key>
+```
+
+`--from-store` works for every chain, so the same command with `--dry-run` and no `--chain` filter
+is also how to check that every receiver in the store is on the latest set.
