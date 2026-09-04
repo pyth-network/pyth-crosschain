@@ -32,8 +32,11 @@ import { hideBin } from "yargs/helpers";
 import { IDL as pythPushOracleIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_push_oracle";
 import { IDL as pythSolanaReceiverIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/pyth_solana_receiver";
 import { IDL as wormholeCoreBridgeIdl } from "../../target_chains/solana/sdk/js/pyth_solana_receiver/src/idl/wormhole_core_bridge_solana";
-import { getDefaultDeploymentConfig } from "../src/core/base";
+import type { ProDeploymentType } from "../src/core/base";
+import { getDefaultDeploymentConfig, toPrivateKey } from "../src/core/base";
 import { SvmChain } from "../src/core/chains";
+import { SvmWormholeContract } from "../src/core/contracts/svm";
+import { getExpectedProGuardianSet } from "../src/core/pro_guardian_sets";
 import type { Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -338,14 +341,19 @@ async function uploadIdl(
 
 const GUARDIAN_EXPIRATION_TIME = 86_400;
 
+/**
+ * The Pro deployment these programs belong to. It picks the initial guardian set, the data
+ * sources and the guardian set rotations replayed after initialization, and is deliberately the
+ * same on devnet: the devnet programs mirror the production Pro configuration.
+ */
+const PRO_DEPLOYMENT_TYPE: ProDeploymentType = "pro-compatible-production";
+
 async function initializeWormholeReceiver(
   connection: Connection,
   payer: Keypair,
   programId: PublicKey,
 ): Promise<void> {
-  const deploymentConfig = getDefaultDeploymentConfig(
-    "pro-compatible-production",
-  );
+  const deploymentConfig = getDefaultDeploymentConfig(PRO_DEPLOYMENT_TYPE);
   const bridgeKey = wormholeUtils.deriveWormholeBridgeDataKey(programId);
   const bridgeAccount = await connection.getAccountInfo(bridgeKey, "confirmed");
 
@@ -378,6 +386,51 @@ async function initializeWormholeReceiver(
   console.log(`Wormhole initialized. signature=${signature}`);
 }
 
+/**
+ * Replays every Pro guardian set rotation the receiver has not applied yet.
+ *
+ * `initializeWormholeReceiver` installs set 0, but the Pro routers sign price VAAs with the latest
+ * set, so a receiver left on set 0 verifies nothing. This runs on every deploy, not just the first:
+ * a receiver that was initialized before a rotation, or left half-rotated by a failed run, catches
+ * up here. It is a no-op once the receiver is at the latest set.
+ * @param {SvmChain} chain The chain the receiver is deployed on.
+ * @param {Keypair} payer The keypair that pays for and signs the upgrade transactions.
+ * @param {PublicKey} programId The core bridge program id.
+ * @throws {Error} if the receiver does not end up on the latest rotation.
+ */
+async function syncWormholeGuardianSets(
+  chain: SvmChain,
+  payer: Keypair,
+  programId: PublicKey,
+): Promise<void> {
+  console.log("\n=== Syncing wormhole guardian sets ===");
+  const wormhole = new SvmWormholeContract(chain, programId.toString());
+  const expected = getExpectedProGuardianSet(PRO_DEPLOYMENT_TYPE);
+  const currentIndex = await wormhole.getCurrentGuardianSetIndex();
+  if (currentIndex === expected.index) {
+    console.log(
+      `Already on guardian set ${expected.index}; nothing to replay.`,
+    );
+    return;
+  }
+  console.log(
+    `Guardian set ${currentIndex}, replaying rotations up to ${expected.index}...`,
+  );
+  // SvmChain.getKeypair rebuilds the keypair from the 32-byte seed, which is the first half of
+  // the 64-byte secret key solana-keygen writes.
+  await wormhole.syncProGuardianSets(
+    PRO_DEPLOYMENT_TYPE,
+    toPrivateKey(Buffer.from(payer.secretKey.subarray(0, 32)).toString("hex")),
+  );
+  const endIndex = await wormhole.getCurrentGuardianSetIndex();
+  if (endIndex !== expected.index) {
+    throw new Error(
+      `Wormhole receiver ${programId.toString()} is on guardian set ${endIndex} after syncing, expected ${expected.index}`,
+    );
+  }
+  console.log(`✅ Guardian set ${endIndex} installed`);
+}
+
 async function initializePythReceiver(
   connection: Connection,
   payer: Keypair,
@@ -398,9 +451,7 @@ async function initializePythReceiver(
     return;
   }
 
-  const deploymentConfig = getDefaultDeploymentConfig(
-    "pro-compatible-production",
-  );
+  const deploymentConfig = getDefaultDeploymentConfig(PRO_DEPLOYMENT_TYPE);
 
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
@@ -653,6 +704,11 @@ async function main() {
 
   await initializeWormholeReceiver(
     connection,
+    keypair,
+    PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
+  );
+  await syncWormholeGuardianSets(
+    chain,
     keypair,
     PRO_COMPATIBLE_WORMHOLE_PROGRAM_ID,
   );

@@ -15,6 +15,24 @@ export type DeploymentType =
   | "beta"
   | "pro-compatible-staging"
   | "pro-compatible-production";
+
+/**
+ * The deployment types whose wormhole receiver is a Pyth Pro receiver, i.e. one whose guardian set
+ * is the Pro router signing keys rather than the Wormhole mainnet guardians.
+ */
+export type ProDeploymentType =
+  | "pro-compatible-production"
+  | "pro-compatible-staging";
+
+export function isProDeploymentType(
+  deploymentType: DeploymentType,
+): deploymentType is ProDeploymentType {
+  return (
+    deploymentType === "pro-compatible-production" ||
+    deploymentType === "pro-compatible-staging"
+  );
+}
+
 export type PrivateKey = string & { __type: "PrivateKey" };
 
 function checkIsPrivateKey(key: string): asserts key is PrivateKey {

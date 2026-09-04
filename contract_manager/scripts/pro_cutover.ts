@@ -14,31 +14,28 @@ import { existsSync, readFileSync } from "node:fs";
 
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
-import type { DeploymentType } from "../src/core/base";
-import { getDefaultDeploymentConfig } from "../src/core/base";
+import type { ProDeploymentType } from "../src/core/base";
+import {
+  getDefaultDeploymentConfig,
+  isProDeploymentType,
+} from "../src/core/base";
 import type { EvmChain } from "../src/core/chains";
 import type {
   EvmPriceFeedContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
+import { getExpectedProGuardianSet } from "../src/core/pro_guardian_sets";
 import { findPriceFeedContracts, findWormholeContract } from "./common";
 
 /**
  * The deployment types this cutover targets. The legacy proxies being migrated are `stable` or
  * `beta` (or have no deployment type at all, for entries predating the field).
+ *
+ * Defined in `src/core/base` so contract code can use it too, and re-exported here because the
+ * cutover scripts have always imported it from this module.
  */
-export type ProDeploymentType =
-  | "pro-compatible-production"
-  | "pro-compatible-staging";
-
-export function isProDeploymentType(
-  deploymentType: DeploymentType,
-): deploymentType is ProDeploymentType {
-  return (
-    deploymentType === "pro-compatible-production" ||
-    deploymentType === "pro-compatible-staging"
-  );
-}
+export type { ProDeploymentType };
+export { isProDeploymentType };
 
 /** The on-chain state of a single legacy proxy, as far as the cutover cares about it. */
 export type LegacyProxyState = {
@@ -333,9 +330,13 @@ export async function preflightChain(
 }
 
 /**
- * Checks that a Pro wormhole receiver verifies against the guardian set the deployment config
- * expects. A receiver with any other set points the proxy at a verifier nobody can produce VAAs
- * for, which would take the feed down with no way to govern it back.
+ * Checks that a Pro wormhole receiver verifies against the guardian set the routers currently sign
+ * with. A receiver with any other set points the proxy at a verifier nobody can produce VAAs for,
+ * which would take the feed down with no way to govern it back.
+ *
+ * The expected set is the *latest* Pro rotation, not the set the receiver was deployed with: a
+ * receiver is created on set 0 and then has every upgrade VAA in the store replayed onto it, so a
+ * correctly deployed receiver reads back the last rotation's index and keys.
  * @param {EvmWormholeContract} wormhole The receiver to check.
  * @param {ProDeploymentType} deploymentType The Pro deployment whose router set is expected.
  * @returns A description of the mismatch, or undefined when the set is correct.
@@ -344,20 +345,28 @@ export async function checkProWormholeGuardianSet(
   wormhole: EvmWormholeContract,
   deploymentType: ProDeploymentType,
 ): Promise<string | undefined> {
-  const expected = getDefaultDeploymentConfig(deploymentType);
+  const expected = getExpectedProGuardianSet(deploymentType);
+  let actualIndex: number;
   let actual: string[];
   try {
-    actual = (await wormhole.getGuardianSet()).map(normalizeAddress).sort();
+    actualIndex = await wormhole.getCurrentGuardianSetIndex();
+    actual = (await wormhole.getGuardianSet()).map(normalizeAddress);
   } catch (error) {
     return `Could not read the guardian set of wormhole receiver ${wormhole.address}: ${describeError(error)}`;
   }
-  const wanted = expected.wormholeConfig.initialGuardianSet
-    .map(normalizeAddress)
-    .sort();
+  const wanted = expected.keys.map(normalizeAddress);
+  if (actualIndex !== expected.index) {
+    return (
+      `Wormhole receiver ${wormhole.address} is on guardian set index ${actualIndex}, expected ` +
+      `${expected.index}, the latest ${deploymentType} rotation. Replay the upgrade VAAs from the ` +
+      `store with sync_pro_guardian_set.ts.`
+    );
+  }
+  // Order matters: a guardian's position in the set is what a VAA's signature indices refer to.
   if (actual.join(",") === wanted.join(",")) return;
   return (
     `Wormhole receiver ${wormhole.address} has guardian set [${actual.join(", ")}], ` +
-    `expected the ${deploymentType} router set [${wanted.join(", ")}].`
+    `expected the ${deploymentType} router set at index ${expected.index} [${wanted.join(", ")}].`
   );
 }
 

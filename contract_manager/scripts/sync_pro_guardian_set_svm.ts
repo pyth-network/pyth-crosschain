@@ -2,7 +2,12 @@
 /** biome-ignore-all lint/suspicious/noConsole: CLI script */
 
 /**
- * Rotates the guardian set on the Pyth Pro SVM receivers using one upgrade VAA.
+ * Rotates the guardian set on the Pyth Pro SVM receivers.
+ *
+ * Applies one upgrade VAA (--vaa / --vaa-file), or with --from-store every rotation the store
+ * knows about in `src/store/guardian_sets/`, replayed in order up to --expect-index. --from-store
+ * is what a freshly initialized receiver needs: it is created on set 0 and has to climb the whole
+ * ladder before it can verify anything the routers sign.
  *
  * The SVM receiver is Pyth's fork of the Wormhole core bridge
  * (`target_chains/solana/programs/core-bridge`), whose guardian set is the list of Pro router
@@ -33,7 +38,8 @@
  *   3. `guardian_set_update` (selector 6), which creates the set-(index+1) `GuardianSet` PDA,
  *      bumps `Config.guardian_set_index`, and expires the outgoing set after the config's TTL.
  *
- * Usage: $0 --expect-index 1 --vaa-file upgrade.json --dry-run
+ * Usage: $0 --expect-index 1 --from-store --dry-run
+ *        $0 --expect-index 1 --vaa-file upgrade.json --dry-run
  *        $0 --expect-index 1 --vaa-file upgrade.json --dry-run --cluster fogo_mainnet
  *        $0 --expect-index 1 --vaa-file upgrade.json --simulate --cluster devnet
  *        $0 --expect-index 1 --vaa-file upgrade.json --payer-keypair ~/pro-rotation.json
@@ -60,6 +66,9 @@ import {
 } from "@solana/web3.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import type { ProDeploymentType } from "../src/core/base";
+import { isProDeploymentType, toDeploymentType } from "../src/core/base";
+import { getProGuardianSetUpgrades } from "../src/core/pro_guardian_sets";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SVM_CHAINS_PATH = path.join(
@@ -346,13 +355,58 @@ function loadVaaFile(filePath: string): Buffer {
   return decodeVaaHex(parsed.vaa, filePath);
 }
 
-function loadVaa(vaa: string | undefined, vaaFile: string | undefined): Buffer {
-  if (vaa !== undefined && vaaFile !== undefined) {
-    throw new Error("Pass either --vaa or --vaa-file, not both");
+/** One rotation to apply: the parsed upgrade and the VAA bytes that carry it. */
+type UpgradeStep = {
+  parsed: ParsedVaa;
+  upgrade: GuardianSetUpgrade;
+  vaa: Buffer;
+};
+
+/**
+ * Resolves the rotations to apply, in the order they have to be applied.
+ *
+ * `--from-store` takes every rotation the store knows about up to `--expect-index`, which is what
+ * a receiver still on an older set needs. A single `--vaa` / `--vaa-file` is the one-rotation
+ * case, used while a rotation is being performed and before its VAA is committed to the store.
+ * @throws {Error} if the sources conflict, or the store has no rotation installing `expectIndex`.
+ */
+function loadSteps(options: {
+  deploymentType: ProDeploymentType;
+  expectIndex: number;
+  fromStore: boolean;
+  vaa: string | undefined;
+  vaaFile: string | undefined;
+}): UpgradeStep[] {
+  const { deploymentType, expectIndex, fromStore, vaa, vaaFile } = options;
+  const sources = [vaa, vaaFile, fromStore ? "--from-store" : undefined].filter(
+    (source) => source !== undefined,
+  );
+  if (sources.length > 1) {
+    throw new Error("Pass exactly one of --vaa, --vaa-file or --from-store");
   }
-  if (vaa !== undefined) return decodeVaaHex(vaa, "--vaa");
-  if (vaaFile !== undefined) return loadVaaFile(vaaFile);
-  throw new Error("Pass one of --vaa or --vaa-file");
+
+  if (fromStore) {
+    const upgrades = getProGuardianSetUpgrades(deploymentType);
+    const selected = upgrades.filter(
+      (upgrade) => upgrade.guardianSetIndex <= expectIndex,
+    );
+    if (selected.at(-1)?.guardianSetIndex !== expectIndex) {
+      throw new Error(
+        `the store has no ${deploymentType} rotation installing guardian set ${expectIndex}; ` +
+          `it knows ${upgrades.length} rotation(s), up to index ${upgrades.at(-1)?.guardianSetIndex ?? 0}`,
+      );
+    }
+    return selected.map((upgrade) => ({
+      ...parseGuardianSetUpgradeVaa(upgrade.vaa),
+      vaa: upgrade.vaa,
+    }));
+  }
+
+  let bytes: Buffer;
+  if (vaa !== undefined) bytes = decodeVaaHex(vaa, "--vaa");
+  else if (vaaFile !== undefined) bytes = loadVaaFile(vaaFile);
+  else throw new Error("Pass one of --vaa, --vaa-file or --from-store");
+  return [{ ...parseGuardianSetUpgradeVaa(bytes), vaa: bytes }];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1114,6 +1168,59 @@ async function rotateTarget(
   }
 }
 
+/**
+ * Applies every rotation to one target, in order, and folds the per-step results into one row.
+ *
+ * Each step re-reads the target's `Config`, which is what makes the sequence safe to resume: a
+ * rotation already applied comes back `skipped-already-at-target` and the next one is attempted
+ * against the index actually on chain. The sequence stops at the first step that does not move the
+ * target forward, because nothing after it could be accepted anyway.
+ * @param {Target} target The program on a cluster to rotate.
+ * @param {UpgradeStep[]} steps The rotations to apply, in order.
+ * @param {RotateOptions} options How to submit, or whether to submit at all.
+ * @param {Function} log Where to write progress lines.
+ * @returns One row describing where the target started, where it ended, and every tx it took.
+ */
+async function rotateTargetSteps(
+  target: Target,
+  steps: UpgradeStep[],
+  options: RotateOptions,
+  log: (line: string) => void,
+): Promise<Row> {
+  const applied: Row[] = [];
+  for (const step of steps) {
+    const row = await rotateTarget(
+      target,
+      step.upgrade,
+      step.parsed,
+      options,
+      log,
+    );
+    applied.push(row);
+    if (
+      row.status !== "submitted" &&
+      row.status !== "skipped-already-at-target"
+    ) {
+      break;
+    }
+  }
+
+  const first = applied[0];
+  const last = applied.at(-1);
+  if (first === undefined || last === undefined) {
+    throw new Error("no guardian set upgrade to apply");
+  }
+  if (applied.length === 1) return first;
+  const join = (values: string[]) =>
+    values.filter((value) => value.length > 0).join(" ");
+  return {
+    ...last,
+    postVaaTx: join(applied.map((row) => row.postVaaTx)),
+    startIndex: first.startIndex,
+    txId: join(applied.map((row) => row.txId)),
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1217,10 +1324,11 @@ function compareRows(a: Row, b: Row): number {
 const parser = yargs(hideBin(process.argv))
   .scriptName("sync_pro_guardian_set_svm.ts")
   .usage(
-    "Rotates the guardian set on the Pyth Pro SVM receivers using one upgrade VAA.\n" +
+    "Rotates the guardian set on the Pyth Pro SVM receivers.\n" +
+      "Applies one upgrade VAA, or with --from-store every rotation the store knows about.\n" +
       "Exits 0 only when every target was skipped or submitted-and-verified, so a --dry-run\n" +
       "with work left to do exits 1.\n" +
-      "Usage: $0 --expect-index <n> (--vaa <hex> | --vaa-file <path>) [--dry-run | --simulate | --payer-keypair <path>]",
+      "Usage: $0 --expect-index <n> (--vaa <hex> | --vaa-file <path> | --from-store) [--dry-run | --simulate | --payer-keypair <path>]",
   )
   .options({
     cluster: {
@@ -1231,6 +1339,11 @@ const parser = yargs(hideBin(process.argv))
     "compute-unit-limit": {
       desc: "Explicit compute unit limit for every transaction; omitted by default",
       type: "number",
+    },
+    "deployment-type": {
+      default: "pro-compatible-production",
+      desc: "Which Pro deployment's rotations --from-store reads: pro-compatible-production or pro-compatible-staging",
+      type: "string",
     },
     "devnet-rpc": {
       desc: "RPC URL override for solana_devnet; shorthand for --rpc-url solana_devnet=<url>",
@@ -1243,8 +1356,13 @@ const parser = yargs(hideBin(process.argv))
     },
     "expect-index": {
       demandOption: true,
-      desc: "The guardian set index the VAA must install; the run aborts if the VAA says otherwise",
+      desc: "The guardian set index the last VAA must install; the run aborts if the VAA says otherwise",
       type: "number",
+    },
+    "from-store": {
+      default: false,
+      desc: "Replay every rotation in src/store/guardian_sets/ for this deployment type, in order, up to --expect-index. What a freshly initialized receiver needs",
+      type: "boolean",
     },
     json: {
       default: false,
@@ -1309,14 +1427,28 @@ async function main() {
     throw new Error("Pass either --dry-run or --simulate, not both");
   }
 
-  // Everything up to here and through the --expect-index guard is local: no RPC is made until we
-  // are sure this is the VAA the operator meant to send.
-  const vaa = loadVaa(argv.vaa, argv.vaaFile);
-  const { parsed, upgrade } = parseGuardianSetUpgradeVaa(vaa);
-  describeUpgrade(upgrade, parsed, log);
-  if (argv.expectIndex !== upgrade.newIndex) {
+  const deploymentType = toDeploymentType(argv.deploymentType);
+  if (!isProDeploymentType(deploymentType)) {
     throw new Error(
-      `--expect-index ${argv.expectIndex} does not match the VAA's new guardian set index ${upgrade.newIndex}; refusing to run`,
+      `--deployment-type must be pro-compatible-production or pro-compatible-staging, got ${deploymentType}`,
+    );
+  }
+
+  // Everything up to here and through the --expect-index guard is local: no RPC is made until we
+  // are sure these are the VAAs the operator meant to send.
+  const steps = loadSteps({
+    deploymentType,
+    expectIndex: argv.expectIndex,
+    fromStore: argv.fromStore,
+    vaa: argv.vaa,
+    vaaFile: argv.vaaFile,
+  });
+  for (const step of steps) describeUpgrade(step.upgrade, step.parsed, log);
+  const target = steps.at(-1)?.upgrade;
+  if (target === undefined) throw new Error("no guardian set upgrade to apply");
+  if (argv.expectIndex !== target.newIndex) {
+    throw new Error(
+      `--expect-index ${argv.expectIndex} does not match the VAA's new guardian set index ${target.newIndex}; refusing to run`,
     );
   }
 
@@ -1356,7 +1488,8 @@ async function main() {
   if (argv.dryRun) mode = " (dry run)";
   if (argv.simulate) mode = " (simulate)";
   log(
-    `\nRotating ${targets.length} SVM receiver(s) to guardian set ${upgrade.newIndex}${mode}...`,
+    `\nRotating ${targets.length} SVM receiver(s) to guardian set ${target.newIndex}${mode}` +
+      `${steps.length > 1 ? ` by replaying ${steps.length} rotation(s)` : ""}...`,
   );
   if (payer !== undefined) {
     log(`Payer: ${payer.publicKey.toBase58()}`);
@@ -1373,8 +1506,8 @@ async function main() {
   const rows: Row[] = [];
   // Sequential: the two programs on one cluster share an RPC endpoint, and a rotation is rare
   // enough that being gentle with a rate-limited endpoint beats finishing a second sooner.
-  for (const target of targets) {
-    rows.push(await rotateTarget(target, upgrade, parsed, options, log));
+  for (const svmTarget of targets) {
+    rows.push(await rotateTargetSteps(svmTarget, steps, options, log));
   }
   rows.sort(compareRows);
 
@@ -1390,8 +1523,8 @@ async function main() {
   if (argv.json) {
     console.log(
       JSON.stringify({
-        keys: upgrade.keys,
-        newIndex: upgrade.newIndex,
+        keys: target.keys,
+        newIndex: target.newIndex,
         ok,
         rows,
       }),
@@ -1401,7 +1534,7 @@ async function main() {
   }
   log(
     `Summary: ${rows.length} target(s) — ${count("submitted")} submitted, ` +
-      `${count("skipped-already-at-target")} already at index ${upgrade.newIndex}, ` +
+      `${count("skipped-already-at-target")} already at index ${target.newIndex}, ` +
       `${count("skipped-not-deployed")} not deployed, ` +
       `${count("would-submit")} would submit, ${count("error")} error(s)`,
   );

@@ -18,7 +18,10 @@ import type { Contract } from "web3-eth-contract";
 import type { InferredOptionType } from "yargs";
 
 import type { DeploymentType, PrivateKey } from "../src/core/base";
-import { getDefaultDeploymentConfig } from "../src/core/base";
+import {
+  getDefaultDeploymentConfig,
+  isProDeploymentType,
+} from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import type { EvmEntropyContract } from "../src/core/contracts";
 import {
@@ -426,6 +429,20 @@ export async function deployWormholeContract(
     console.log(`✅ Synced mainnet guardian sets for ${chain.getId()}`);
   }
 
+  // A Pro receiver is set up with the set-0 keys, but the Pro routers sign with the latest set,
+  // so without replaying the rotations this receiver would verify nothing at all.
+  if (isProDeploymentType(config.type)) {
+    // biome-ignore lint/suspicious/noConsole: deploy progress, as elsewhere in this script
+    console.log(`Syncing ${config.type} guardian sets for ${chain.getId()}...`);
+    await wormholeContract.syncProGuardianSets(
+      config.type,
+      config.privateKey,
+      config.gasPriceMultiplier,
+    );
+    // biome-ignore lint/suspicious/noConsole: deploy progress, as elsewhere in this script
+    console.log(`✅ Synced ${config.type} guardian sets for ${chain.getId()}`);
+  }
+
   if (config.saveContract) {
     DefaultStore.wormhole_contracts[wormholeContract.getId()] =
       wormholeContract;
@@ -448,10 +465,20 @@ export async function getOrDeployWormholeContract(
   config: DeployWormholeReceiverContractsConfig,
   cacheFile: string,
 ): Promise<EvmWormholeContract> {
-  return (
-    findWormholeContract(chain, config.type) ??
-    (await deployWormholeContract(chain, config, cacheFile))
-  );
+  const existing = findWormholeContract(chain, config.type);
+  if (existing === undefined) {
+    return deployWormholeContract(chain, config, cacheFile);
+  }
+  // A receiver already in the store can still be behind: it may predate a rotation, or have been
+  // left half-rotated by a failed run. Replaying is a no-op once it is at the latest set.
+  if (isProDeploymentType(config.type)) {
+    await existing.syncProGuardianSets(
+      config.type,
+      config.privateKey,
+      config.gasPriceMultiplier,
+    );
+  }
+  return existing;
 }
 
 export type DefaultAddresses = {

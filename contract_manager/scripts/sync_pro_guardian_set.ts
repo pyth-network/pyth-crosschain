@@ -6,23 +6,32 @@
  * A Pro receiver is a Wormhole-style contract whose guardian set is the list of Pro router
  * signing keys. The routers produce one standard Wormhole guardian-set-upgrade governance VAA
  * (module "Core", action 2) signed by a quorum of the current set; every receiver accepts the
- * same VAA through its normal upgrade path, so this script broadcasts that one VAA everywhere.
+ * same VAA through its normal upgrade path, so this script broadcasts the same VAA everywhere.
  *
- * The VAA is parsed and checked locally before any chain is touched: the new set index it
- * carries must equal --expect-index, which is the guard against submitting a VAA meant for a
+ * Two ways to say which rotation(s) to apply:
+ *   --vaa / --vaa-file  one VAA, for the rotation being performed right now
+ *   --from-store        every rotation the store knows about, from
+ *                       `src/store/guardian_sets/`, replayed in order up to --expect-index
+ *
+ * --from-store is what a freshly deployed receiver needs: it is created on set 0 and has to climb
+ * the whole ladder before it can verify anything the routers sign.
+ *
+ * The VAAs are parsed and checked locally before any chain is touched: the last one's new set
+ * index must equal --expect-index, which is the guard against submitting a VAA meant for a
  * different rotation. Every EVM receiver is then chain-id checked against the store before it is
  * read, because a store entry aimed at the wrong network reads a different contract at the same
  * address and a healthy-looking answer from it means nothing. A receiver is only submitted to when
- * its current index is exactly one below the VAA's new index — an index at or beyond the target is
- * reported, never quietly treated as done — and after submitting, the index and the key list are
- * read back and compared against the VAA.
+ * the next VAA to apply is exactly one above its current index — an index at or beyond the target
+ * is reported, never quietly treated as done — and after submitting, the index and the key list
+ * are read back and compared against the VAA.
  *
  * One chain failing never aborts the run — every contract gets a row and the exit code is 0 only
  * when every row was skipped or submitted-and-verified. Chains that cannot be reached at all, such
  * as a dead chain with no working RPC, are named with --skip-chain: they get a `skipped-excluded`
  * row, no RPC call is made for them, and they do not count against the exit code.
  *
- * Usage: $0 --expect-index 1 --vaa-file upgrade.json --dry-run
+ * Usage: $0 --expect-index 1 --from-store --dry-run
+ *        $0 --expect-index 1 --vaa-file upgrade.json --dry-run
  *        $0 --expect-index 1 --vaa-file upgrade.json --private-key <key>
  *        $0 --expect-index 1 --vaa-file upgrade.json --dry-run --skip-chain injective_inevm
  */
@@ -38,13 +47,18 @@ import { parseVaa } from "@certusone/wormhole-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import type { DeploymentType, PrivateKey } from "../src/core/base";
+import type {
+  DeploymentType,
+  PrivateKey,
+  ProDeploymentType,
+} from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import {
   EvmWormholeContract,
   SuiWormholeContract,
 } from "../src/core/contracts";
 import type { WormholeContract } from "../src/core/contracts/wormhole";
+import { getProGuardianSetUpgrades } from "../src/core/pro_guardian_sets";
 import { DefaultStore } from "../src/node/utils/store";
 import { isProDeploymentType } from "./pro_cutover";
 
@@ -226,6 +240,12 @@ function loadVaaFile(path: string): Buffer {
   return decodeVaaHex(parsed.vaa, path);
 }
 
+/** One rotation to apply: the parsed upgrade and the VAA bytes that carry it. */
+type UpgradeStep = {
+  upgrade: GuardianSetUpgrade;
+  vaa: Buffer;
+};
+
 type RowStatus =
   | "skipped-already-at-target"
   | "skipped-excluded"
@@ -373,11 +393,22 @@ async function submitUpgrade(
 
 async function rotateContract(
   contract: WormholeContract,
-  upgrade: GuardianSetUpgrade,
-  vaa: Buffer,
+  steps: UpgradeStep[],
   options: RotateOptions,
 ): Promise<Row> {
   const identity = identityOf(contract);
+  // Guaranteed non-empty by loadSteps; the target is what the last rotation installs.
+  const target = steps.at(-1)?.upgrade;
+  if (target === undefined) {
+    return {
+      ...identity,
+      endIndex: UNKNOWN,
+      error: "no guardian set upgrade to apply",
+      startIndex: UNKNOWN,
+      status: "error",
+      txId: "",
+    };
+  }
   try {
     await assertRpcServesStoreChain(contract);
     const startIndex = await withTimeout(
@@ -386,23 +417,23 @@ async function rotateContract(
     );
     const startKeys = await readGuardianSet(contract);
 
-    // Past the target is not "done": a Pro receiver only ever reaches the index this rotation
-    // installs, so a higher one means we are reading something that is not this receiver.
-    if (startIndex > upgrade.newIndex) {
+    // Past the target is not "done": a Pro receiver only ever reaches the index the last known
+    // rotation installs, so a higher one means we are reading something that is not this receiver.
+    if (startIndex > target.newIndex) {
       return {
         ...identity,
         endIndex: String(startIndex),
-        error: `index ${startIndex} is beyond target ${upgrade.newIndex}; wrong contract or wrong chain?`,
+        error: `index ${startIndex} is beyond target ${target.newIndex}; wrong contract or wrong chain?`,
         startIndex: String(startIndex),
         status: "error",
         txId: "",
       };
     }
 
-    if (startIndex === upgrade.newIndex) {
-      // Already at the target, so the keys had better be the ones this VAA installs, or something
-      // else rotated this receiver.
-      const drift = diffKeys(startKeys, upgrade.keys);
+    if (startIndex === target.newIndex) {
+      // Already at the target, so the keys had better be the ones the last VAA installs, or
+      // something else rotated this receiver.
+      const drift = diffKeys(startKeys, target.keys);
       if (drift !== undefined) {
         return {
           ...identity,
@@ -422,11 +453,14 @@ async function rotateContract(
       };
     }
 
-    if (startIndex + 1 !== upgrade.newIndex) {
+    // Rotations already applied are skipped; what is left has to continue the ladder from here.
+    const pending = steps.filter((step) => step.upgrade.newIndex > startIndex);
+    const first = pending[0];
+    if (first === undefined || first.upgrade.newIndex !== startIndex + 1) {
       return {
         ...identity,
         endIndex: UNKNOWN,
-        error: `at index ${startIndex}, but the VAA upgrades ${upgrade.newIndex - 1} to ${upgrade.newIndex}; a receiver only accepts the next set in sequence`,
+        error: `at index ${startIndex}, but the next available upgrade installs ${first?.upgrade.newIndex ?? target.newIndex}; a receiver only accepts the next set in sequence`,
         startIndex: String(startIndex),
         status: "error",
         txId: "",
@@ -443,38 +477,42 @@ async function rotateContract(
       };
     }
 
-    const txId = await submitUpgrade(contract, vaa, options);
-    const endIndex = await withTimeout(
-      contract.getCurrentGuardianSetIndex(),
-      GUARDIAN_SET_READ_TIMEOUT_MS,
-    );
-    if (endIndex !== upgrade.newIndex) {
-      return {
-        ...identity,
-        endIndex: String(endIndex),
-        error: `submitted but the guardian set index is ${endIndex}, expected ${upgrade.newIndex}`,
-        startIndex: String(startIndex),
-        status: "error",
-        txId,
-      };
+    const txIds: string[] = [];
+    for (const step of pending) {
+      txIds.push(await submitUpgrade(contract, step.vaa, options));
+      const index = await withTimeout(
+        contract.getCurrentGuardianSetIndex(),
+        GUARDIAN_SET_READ_TIMEOUT_MS,
+      );
+      if (index !== step.upgrade.newIndex) {
+        return {
+          ...identity,
+          endIndex: String(index),
+          error: `submitted but the guardian set index is ${index}, expected ${step.upgrade.newIndex}`,
+          startIndex: String(startIndex),
+          status: "error",
+          txId: txIds.join(" "),
+        };
+      }
     }
-    const drift = diffKeys(await readGuardianSet(contract), upgrade.keys);
+
+    const drift = diffKeys(await readGuardianSet(contract), target.keys);
     if (drift !== undefined) {
       return {
         ...identity,
-        endIndex: String(endIndex),
+        endIndex: String(target.newIndex),
         error: `submitted and index advanced, but the on-chain keys differ: ${drift}`,
         startIndex: String(startIndex),
         status: "error",
-        txId,
+        txId: txIds.join(" "),
       };
     }
     return {
       ...identity,
-      endIndex: String(endIndex),
+      endIndex: String(target.newIndex),
       startIndex: String(startIndex),
       status: "submitted",
-      txId,
+      txId: txIds.join(" "),
     };
   } catch (error) {
     if (options.verbose) console.error(`[${identity.chain}]`, error);
@@ -515,10 +553,11 @@ function compareRows(a: Row, b: Row): number {
 const parser = yargs(hideBin(process.argv))
   .scriptName("sync_pro_guardian_set.ts")
   .usage(
-    "Rotates the guardian set on every Pyth Pro receiver in the store using one upgrade VAA.\n" +
+    "Rotates the guardian set on every Pyth Pro receiver in the store.\n" +
+      "Applies one upgrade VAA, or with --from-store every rotation the store knows about.\n" +
       "Exits 0 only when every receiver was skipped or submitted-and-verified, so a --dry-run\n" +
       "with work left to do exits 1.\n" +
-      "Usage: $0 --expect-index <n> (--vaa <hex> | --vaa-file <path>) [--dry-run | --private-key <key>]",
+      "Usage: $0 --expect-index <n> (--vaa <hex> | --vaa-file <path> | --from-store) [--dry-run | --private-key <key>]",
   )
   .options({
     chain: {
@@ -538,8 +577,13 @@ const parser = yargs(hideBin(process.argv))
     },
     "expect-index": {
       demandOption: true,
-      desc: "The guardian set index the VAA must install; the run aborts if the VAA says otherwise",
+      desc: "The guardian set index the last VAA must install; the run aborts if the VAA says otherwise",
       type: "number",
+    },
+    "from-store": {
+      default: false,
+      desc: "Replay every rotation in src/store/guardian_sets/ for this deployment type, in order, up to --expect-index. What a freshly deployed receiver needs",
+      type: "boolean",
     },
     "gas-price-multiplier": {
       desc: "Multiplier applied to the fetched gas price (EVM receivers only)",
@@ -574,13 +618,51 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-function loadVaa(vaa: string | undefined, vaaFile: string | undefined): Buffer {
-  if (vaa !== undefined && vaaFile !== undefined) {
-    throw new Error("Pass either --vaa or --vaa-file, not both");
+/**
+ * Resolves the rotations to apply, in the order they have to be applied.
+ *
+ * `--from-store` takes every rotation the store knows about up to `--expect-index`, which is what
+ * a receiver still on an older set needs. A single `--vaa` / `--vaa-file` is the one-rotation
+ * case, used while a rotation is being performed and before its VAA is committed to the store.
+ * @throws {Error} if the sources conflict, or the store has no rotation installing `expectIndex`.
+ */
+function loadSteps(options: {
+  deploymentType: ProDeploymentType;
+  expectIndex: number;
+  fromStore: boolean;
+  vaa: string | undefined;
+  vaaFile: string | undefined;
+}): UpgradeStep[] {
+  const { deploymentType, expectIndex, fromStore, vaa, vaaFile } = options;
+  const sources = [vaa, vaaFile, fromStore ? "--from-store" : undefined].filter(
+    (source) => source !== undefined,
+  );
+  if (sources.length > 1) {
+    throw new Error("Pass exactly one of --vaa, --vaa-file or --from-store");
   }
-  if (vaa !== undefined) return decodeVaaHex(vaa, "--vaa");
-  if (vaaFile !== undefined) return loadVaaFile(vaaFile);
-  throw new Error("Pass one of --vaa or --vaa-file");
+
+  if (fromStore) {
+    const upgrades = getProGuardianSetUpgrades(deploymentType);
+    const selected = upgrades.filter(
+      (upgrade) => upgrade.guardianSetIndex <= expectIndex,
+    );
+    if (selected.at(-1)?.guardianSetIndex !== expectIndex) {
+      throw new Error(
+        `the store has no ${deploymentType} rotation installing guardian set ${expectIndex}; ` +
+          `it knows ${upgrades.length} rotation(s), up to index ${upgrades.at(-1)?.guardianSetIndex ?? 0}`,
+      );
+    }
+    return selected.map((upgrade) => ({
+      upgrade: parseGuardianSetUpgradeVaa(upgrade.vaa),
+      vaa: upgrade.vaa,
+    }));
+  }
+
+  let bytes: Buffer;
+  if (vaa !== undefined) bytes = decodeVaaHex(vaa, "--vaa");
+  else if (vaaFile !== undefined) bytes = loadVaaFile(vaaFile);
+  else throw new Error("Pass one of --vaa, --vaa-file or --from-store");
+  return [{ upgrade: parseGuardianSetUpgradeVaa(bytes), vaa: bytes }];
 }
 
 /** Rejects chain ids the store does not know, so a typo cannot silently change what a run covers. */
@@ -625,13 +707,20 @@ async function main() {
   }
 
   // Everything up to here and through the --expect-index guard is local: no chain is touched
-  // until we are sure this is the VAA the operator meant to send.
-  const vaa = loadVaa(argv.vaa, argv.vaaFile);
-  const upgrade = parseGuardianSetUpgradeVaa(vaa);
-  describeUpgrade(upgrade, log);
-  if (argv.expectIndex !== upgrade.newIndex) {
+  // until we are sure these are the VAAs the operator meant to send.
+  const steps = loadSteps({
+    deploymentType,
+    expectIndex: argv.expectIndex,
+    fromStore: argv.fromStore,
+    vaa: argv.vaa,
+    vaaFile: argv.vaaFile,
+  });
+  for (const step of steps) describeUpgrade(step.upgrade, log);
+  const target = steps.at(-1)?.upgrade;
+  if (target === undefined) throw new Error("no guardian set upgrade to apply");
+  if (argv.expectIndex !== target.newIndex) {
     throw new Error(
-      `--expect-index ${argv.expectIndex} does not match the VAA's new guardian set index ${upgrade.newIndex}; refusing to run`,
+      `--expect-index ${argv.expectIndex} does not match the VAA's new guardian set index ${target.newIndex}; refusing to run`,
     );
   }
 
@@ -662,7 +751,8 @@ async function main() {
   const contracts = targeted.filter((contract) => !isExcluded(contract));
 
   log(
-    `\nRotating ${contracts.length} ${deploymentType} receiver(s) to guardian set ${upgrade.newIndex}` +
+    `\nRotating ${contracts.length} ${deploymentType} receiver(s) to guardian set ${target.newIndex}` +
+      `${steps.length > 1 ? ` by replaying ${steps.length} rotation(s)` : ""}` +
       `${argv.dryRun ? " (dry run)" : ""}` +
       `${targeted.length > contracts.length ? `, excluding ${targeted.length - contracts.length}` : ""}...`,
   );
@@ -679,7 +769,7 @@ async function main() {
     ...excludedRows,
     ...(await Promise.all(
       contracts.map((contract) =>
-        rotateContract(contract, upgrade, vaa, {
+        rotateContract(contract, steps, {
           dryRun: argv.dryRun,
           gasPriceMultiplier: argv.gasPriceMultiplier,
           privateKey,
@@ -697,8 +787,8 @@ async function main() {
   if (argv.json) {
     console.log(
       JSON.stringify({
-        keys: upgrade.keys,
-        newIndex: upgrade.newIndex,
+        keys: target.keys,
+        newIndex: target.newIndex,
         ok,
         rows,
       }),
@@ -708,7 +798,7 @@ async function main() {
   }
   log(
     `Summary: ${rows.length} receiver(s) — ${count("submitted")} submitted, ` +
-      `${count("skipped-already-at-target")} already at index ${upgrade.newIndex}, ` +
+      `${count("skipped-already-at-target")} already at index ${target.newIndex}, ` +
       `${count("would-submit")} would submit, ${count("skipped-excluded")} excluded, ` +
       `${count("error")} error(s)`,
   );
