@@ -807,7 +807,7 @@
     "id": "sei_evm_mainnet",
     "mainnet": true,
     "networkId": 1329,
-    "rpcUrl": "https://sei-evm-rpc.stakeme.pro",
+    "rpcUrl": "https://evm-rpc.sei-apis.com",
     "type": "EvmChain"
   },
   {

@@ -8,7 +8,7 @@
     "wormholeChainName": "sui"
   },
   {
-    "endpointType": "json-rpc",
+    "endpointType": "grpc",
     "id": "sui_mainnet",
     "mainnet": true,
     "rpcUrl": "https://fullnode.mainnet.sui.io:443",
