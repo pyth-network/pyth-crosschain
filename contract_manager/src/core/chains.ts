@@ -448,6 +448,11 @@ export class SuiChain extends Chain {
     nativeToken: TokenId | undefined,
     public rpcUrl: string,
     public endpointType: SuiEndpointType = "json-rpc",
+    /**
+     * Scan-time override for the GraphQL endpoint, which is otherwise derived from the
+     * network rather than read from `rpcUrl` (that field is the method-less JSON-RPC host).
+     */
+    public graphqlUrl?: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -1893,6 +1898,47 @@ export class EvmChain extends Chain {
       }
     }
     throw new Error(`Chain with id ${this.networkId} not found in Viem`);
+  }
+
+  /**
+   * Returns the number of the earliest block whose timestamp is at or after `timestamp`,
+   * or the latest block number if the whole chain is older than it.
+   *
+   * EVM nodes have no timestamp index, so this walks backwards from the chain tip in
+   * doubling steps to bracket the answer and then binary searches inside that bracket.
+   * A plain binary search over `[0, latest]` would read blocks from the very start of
+   * the chain, which non-archive nodes routinely refuse to serve.
+   * @param timestamp - unix timestamp in seconds
+   */
+  async getBlockNumberAtTimestamp(timestamp: number): Promise<number> {
+    const web3 = this.getWeb3();
+    const timestampOf = async (blockNumber: number) => {
+      const block = await web3.eth.getBlock(blockNumber);
+      return Number(block.timestamp);
+    };
+
+    const latest = await web3.eth.getBlockNumber();
+    if ((await timestampOf(latest)) < timestamp) return latest;
+
+    // Invariant from here on: timestampOf(high) >= timestamp > timestampOf(low).
+    let high = latest;
+    let low = 0;
+    for (let step = 1; step < latest; step *= 2) {
+      const candidate = latest - step;
+      if ((await timestampOf(candidate)) < timestamp) {
+        low = candidate;
+        break;
+      }
+      high = candidate;
+    }
+    if (low === 0 && (await timestampOf(0)) >= timestamp) return 0;
+
+    while (low + 1 < high) {
+      const middle = Math.floor((low + high) / 2);
+      if ((await timestampOf(middle)) < timestamp) low = middle;
+      else high = middle;
+    }
+    return high;
   }
 
   /**
