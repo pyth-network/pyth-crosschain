@@ -1,23 +1,23 @@
 use {
     anchor_lang::{prelude::system_instruction, InstructionData, ToAccountMetas},
-    common_test_utils::{
-        default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX, PRODUCTION_ACCUMULATOR_UPDATE_DATA,
-    },
+    common_test_utils::{default_receiver_config, DEFAULT_GUARDIAN_SET_INDEX},
     program_simulator::{into_transaction_error, ProgramSimulator},
     pyth_solana_receiver::{
         instruction::{Initialize, PostUpdate},
         sdk::{deserialize_accumulator_update_data, get_guardian_set_address, DEFAULT_TREASURY_ID},
     },
     pyth_solana_receiver_sdk::{
-        config::{Config, DataSource},
+        config::Config,
         pda::get_config_address,
         price_update::{PriceUpdateV2, VerificationLevel},
         PYTH_PUSH_ORACLE_ID,
     },
     pythnet_sdk::{
         messages::Message,
-        test_utils::{dummy_guardians_addresses, trim_vaa_signatures},
-        wire::from_slice,
+        test_utils::{
+            create_accumulator_message, create_dummy_price_feed_message, dummy_guardians_addresses,
+            trim_vaa_signatures,
+        },
     },
     solana_program::instruction::Instruction,
     solana_program_test::ProgramTest,
@@ -27,7 +27,6 @@ use {
         sdk::{WriteEncodedVaaArgs, VAA_START},
         ID as BRIDGE_ID,
     },
-    wormhole_sdk::Chain,
 };
 
 fn get_verify_encoded_vaa_instruction(write_authority: Pubkey, draft_vaa: Pubkey) -> Instruction {
@@ -45,12 +44,12 @@ fn get_verify_encoded_vaa_instruction(write_authority: Pubkey, draft_vaa: Pubkey
 
 #[tokio::test]
 async fn test_post_update_with_wormhole() {
-    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(
-        hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap(),
-    )
-    .unwrap();
-    let feed_1 =
-        from_slice::<byteorder::BE, Message>(merkle_price_updates[0].message.as_ref()).unwrap();
+    // 1. Setup: Create accumulator message with dummy price feeds
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
+    let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
 
     // 2. Program setup: ProgramTest with pyth_solana_receiver, pyth_push_oracle, and wormhole core-bridge
     let mut program_test = ProgramTest::default();
@@ -79,11 +78,7 @@ async fn test_post_update_with_wormhole() {
         .await
         .unwrap();
 
-    let mut initial_config = default_receiver_config(setup_keypair.pubkey());
-    initial_config.valid_data_sources[0] = DataSource {
-        chain: Chain::Pythnet.into(),
-        emitter: Pubkey::from(*b"PythnetPythnetPythnetPythnetPyth"),
-    };
+    let initial_config = default_receiver_config(setup_keypair.pubkey());
 
     program_simulator
         .process_ix_with_default_compute_limit(
@@ -280,15 +275,17 @@ async fn test_post_update_with_wormhole() {
 
 #[tokio::test]
 async fn test_wormhole_insufficient_signatures() {
-    let (vaa, _) = deserialize_accumulator_update_data(
-        hex::decode(PRODUCTION_ACCUMULATOR_UPDATE_DATA).unwrap(),
-    )
-    .unwrap();
+    // 1. Setup: Create accumulator message with dummy price feeds
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+    let message =
+        create_accumulator_message(&[&feed_1, &feed_2], &[&feed_1, &feed_2], false, false, None);
+    let (vaa, _) = deserialize_accumulator_update_data(message).unwrap();
 
-    // Trim the VAA to 2 signatures
+    // Trim the VAA to 9 signatures
     let vaa = serde_wormhole::to_vec(&trim_vaa_signatures(
         serde_wormhole::from_slice(&vaa).unwrap(),
-        2,
+        9,
     ))
     .unwrap();
 

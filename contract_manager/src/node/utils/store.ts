@@ -51,6 +51,8 @@ import {
   SuiLazerContract,
   SuiPriceFeedContract,
   SuiWormholeContract,
+  SvmPriceFeedContract,
+  SvmWormholeContract,
   TonPriceFeedContract,
   TonWormholeContract,
   WormholeContract,
@@ -226,6 +228,8 @@ export class Store {
       [SuiLazerContract.type]: SuiLazerContract,
       [StellarLazerContract.type]: StellarLazerContract,
       [SolanaLazerContract.type]: SolanaLazerContract,
+      [SvmPriceFeedContract.type]: SvmPriceFeedContract,
+      [SvmWormholeContract.type]: SvmWormholeContract,
       [StellarExecutorContract.type]: StellarExecutorContract,
       [CardanoLazerContract.type]: CardanoLazerContract,
     };

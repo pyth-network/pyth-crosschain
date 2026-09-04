@@ -1,0 +1,32 @@
+[
+  {
+    "address": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+    "chain": "solana_mainnet",
+    "type": "SvmPriceFeedContract"
+  },
+  {
+    "address": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+    "chain": "solana_devnet",
+    "type": "SvmPriceFeedContract"
+  },
+  {
+    "address": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+    "chain": "fogo_mainnet",
+    "type": "SvmPriceFeedContract"
+  },
+  {
+    "address": "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
+    "chain": "fogo_testnet",
+    "type": "SvmPriceFeedContract"
+  },
+  {
+    "address": "rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp",
+    "chain": "solana_mainnet",
+    "type": "SvmPriceFeedContract"
+  },
+  {
+    "address": "rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp",
+    "chain": "solana_devnet",
+    "type": "SvmPriceFeedContract"
+  }
+]

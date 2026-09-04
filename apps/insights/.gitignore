@@ -1,4 +1,0 @@
-.env*.local
-
-dist/
-next-env.d.ts

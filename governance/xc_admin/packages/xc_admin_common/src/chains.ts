@@ -137,6 +137,7 @@ export const RECEIVER_CHAINS = {
   // (30) — matching the precedent set by Sui (`iota_sui_*`) and Cardano.
   stellar_mainnet: 60100,
   robinhood: 60101,
+  arc: 60102,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

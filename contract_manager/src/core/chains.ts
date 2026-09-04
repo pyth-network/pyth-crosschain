@@ -47,6 +47,7 @@ import {
   EvmExecute,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
+  ExecutePostedVaa,
   SetDataSources,
   SetFee,
   SetValidPeriod,
@@ -55,6 +56,7 @@ import {
   UpgradeContract256Bit,
   UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
+import type { TransactionInstruction } from "@solana/web3.js";
 import {
   Connection,
   Keypair,
@@ -1771,12 +1773,13 @@ export class SvmChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
+    public isRemote: boolean,
     public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  static fromJson(parsed: ChainConfig): SvmChain {
+  static fromJson(parsed: ChainConfig & { isRemote: boolean }): SvmChain {
     if (parsed.type !== SvmChain.type) throw new Error("Invalid type");
     if (parsed.wormholeChainName === undefined) {
       throw new Error("wormholeChainName is required");
@@ -1789,6 +1792,7 @@ export class SvmChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
+      parsed.isRemote,
       parsed.rpcUrl,
     );
   }
@@ -1796,6 +1800,7 @@ export class SvmChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
+      isRemote: this.isRemote,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: SvmChain.type,
@@ -1811,15 +1816,27 @@ export class SvmChain extends Chain {
     throw new Error("Not implemented");
   }
 
+  generateExecutePostedVaaPayload(instruction: TransactionInstruction): Buffer {
+    if (!this.isRemote) {
+      throw new Error(
+        `${this.id} is not a remote chain; its instructions are proposed to the vault directly`,
+      );
+    }
+    return new ExecutePostedVaa(this.wormholeChainName, [instruction]).encode();
+  }
+
   getConnection(): Connection {
     return new Connection(parseRpcUrl(this.rpcUrl), "confirmed");
   }
 
+  // `PrivateKey` is a 32-byte hex string: the ed25519 seed, not the 64-byte expanded secret key
+  // that solana keypair files hold.
+  getKeypair(privateKey: PrivateKey): Keypair {
+    return Keypair.fromSeed(new Uint8Array(Buffer.from(privateKey, "hex")));
+  }
+
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const keypair = Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(privateKey, "hex")),
-    );
-    return Promise.resolve(keypair.publicKey.toBase58());
+    return Promise.resolve(this.getKeypair(privateKey).publicKey.toBase58());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {

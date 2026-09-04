@@ -182,7 +182,7 @@
     "mainnet": true,
     "nativeToken": "ETH",
     "networkId": 1,
-    "rpcUrl": "https://eth1.lava.build",
+    "rpcUrl": "https://ethereum-rpc.publicnode.com",
     "type": "EvmChain"
   },
   {
@@ -1439,6 +1439,13 @@
     "mainnet": false,
     "networkId": 46630,
     "rpcUrl": "https://rpc.testnet.chain.robinhood.com",
+    "type": "EvmChain"
+  },
+  {
+    "id": "arc",
+    "mainnet": true,
+    "networkId": 5042,
+    "rpcUrl": "https://rpc.mainnet.arc.io",
     "type": "EvmChain"
   }
 ]

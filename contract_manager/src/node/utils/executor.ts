@@ -1,13 +1,16 @@
-/* eslint-disable no-console */
+/** biome-ignore-all lint/suspicious/noConsole: progress output of the CLI scripts that call this */
+
 import { parseVaa } from "@certusone/wormhole-sdk";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
   decodeGovernancePayload,
   EvmExecute,
+  ExecutePostedVaa,
 } from "@pythnetwork/xc-admin-common";
 import type { PrivateKey, TxResult } from "../../core/base.js";
 import { EvmChain } from "../../core/chains.js";
 import { EvmExecutorContract } from "../../core/contracts/evm.js";
+import { SvmPriceFeedContract } from "../../core/contracts/svm.js";
 import { DefaultStore } from "./store.js";
 
 // TODO: A better place for this would be `base.ts`. That will require
@@ -60,7 +63,16 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   const action = decodeGovernancePayload(parsedVaa.payload);
   if (!action) return; //TODO: handle other actions
 
-  if (action instanceof EvmExecute) {
+  if (action instanceof ExecutePostedVaa) {
+    for (const contract of Object.values(DefaultStore.contracts)) {
+      if (
+        contract instanceof SvmPriceFeedContract &&
+        contract.getChain().wormholeChainName === action.targetChainId
+      ) {
+        await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
+      }
+    }
+  } else if (action instanceof EvmExecute) {
     for (const chain of Object.values(DefaultStore.chains)) {
       if (
         chain instanceof EvmChain &&
@@ -80,6 +92,8 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
     }
   } else {
     for (const contract of Object.values(DefaultStore.contracts)) {
+      // The SVM receiver only takes `ExecutePostedVaa`, handled above.
+      if (contract instanceof SvmPriceFeedContract) continue;
       if (
         action.targetChainId === "unset" ||
         contract.getChain().wormholeChainName === action.targetChainId

@@ -4257,21 +4257,17 @@ name = "pyth-solana-receiver"
 version = "0.2.1"
 dependencies = [
  "anchor-lang",
- "bincode",
  "byteorder",
  "cfg-if",
  "common-test-utils",
- "hex",
  "program-simulator",
  "pyth-solana-receiver-sdk",
  "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
- "solana-loader-v3-interface",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
- "solana-sdk-ids",
  "tokio",
  "wormhole-core-bridge-solana",
  "wormhole-raw-vaas",
@@ -9667,7 +9663,6 @@ name = "wormhole-core-bridge-solana"
 version = "0.0.1-alpha.5"
 dependencies = [
  "anchor-lang",
- "base64 0.22.1",
  "cfg-if",
  "hex",
  "ruint",

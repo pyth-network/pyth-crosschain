@@ -220,5 +220,10 @@
     "chain": "taiko_mainnet",
     "deprecated": true,
     "type": "EvmEntropyContract"
+  },
+  {
+    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "chain": "kraken_ink_mainnet",
+    "type": "EvmEntropyContract"
   }
 ]

@@ -215,6 +215,16 @@
         "types": "./dist/cjs/core/contracts/sui.d.ts"
       }
     },
+    "./core/contracts/svm": {
+      "import": {
+        "default": "./dist/esm/core/contracts/svm.mjs",
+        "types": "./dist/esm/core/contracts/svm.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/svm.cjs",
+        "types": "./dist/cjs/core/contracts/svm.d.ts"
+      }
+    },
     "./core/contracts/ton": {
       "import": {
         "default": "./dist/esm/core/contracts/ton.mjs",

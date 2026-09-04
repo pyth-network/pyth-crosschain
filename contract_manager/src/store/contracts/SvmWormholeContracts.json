@@ -1,0 +1,32 @@
+[
+  {
+    "address": "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
+    "chain": "solana_mainnet",
+    "type": "SvmWormholeContract"
+  },
+  {
+    "address": "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
+    "chain": "solana_devnet",
+    "type": "SvmWormholeContract"
+  },
+  {
+    "address": "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
+    "chain": "fogo_mainnet",
+    "type": "SvmWormholeContract"
+  },
+  {
+    "address": "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
+    "chain": "fogo_testnet",
+    "type": "SvmWormholeContract"
+  },
+  {
+    "address": "HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL",
+    "chain": "solana_mainnet",
+    "type": "SvmWormholeContract"
+  },
+  {
+    "address": "HDw2E7P8X1SkCyjvoGsfBGAVUutKcj874bXjHrpVYrVL",
+    "chain": "solana_devnet",
+    "type": "SvmWormholeContract"
+  }
+]

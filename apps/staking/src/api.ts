@@ -13,16 +13,7 @@ import {
   PositionState,
 } from "@pythnetwork/staking-sdk";
 import type { PublicKey } from "@solana/web3.js";
-import { z } from "zod";
-
-const publishersRankingSchema = z
-  .object({
-    numSymbols: z.number(),
-    publisher: z.string(),
-    rank: z.number(),
-    timestamp: z.string(),
-  })
-  .array();
+import { PUBLISHER_RANKINGS } from "./frozen/publisher-rankings";
 
 type Data = {
   total: bigint;
@@ -285,9 +276,7 @@ const loadPublisherData = async (
 };
 
 const getPublisherRankings = async () => {
-  const response = await fetch("/api/publishers-ranking");
-  const responseAsJson: unknown = await response.json();
-  return publishersRankingSchema.parseAsync(responseAsJson);
+  return PUBLISHER_RANKINGS;
 };
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>

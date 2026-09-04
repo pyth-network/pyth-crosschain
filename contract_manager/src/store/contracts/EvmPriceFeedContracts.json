@@ -1202,5 +1202,11 @@
     "chain": "sepolia",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-staging"
+  },
+  {
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "chain": "arc",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]

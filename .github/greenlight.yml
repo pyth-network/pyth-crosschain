@@ -17,13 +17,6 @@ auto_approve_paths:
   - "apps/developer-hub/**"
   # Read-only consumer frontends (consume prices, never produce them)
   - "apps/entropy-explorer/**"
-  - "apps/insights/**"
-  # Off-chain market-data recorders (ingest external data into ClickHouse for
-  # research; not on the price-delivery wire)
-  - "apps/binance-recorder/**"
-  - "apps/hyperliquid-recorder/**"
-  - "apps/okx-recorder/**"
-  - "apps/ondo-recorder/**"
   # Presentational UI packages (not imported by any critical-path tool)
   - "packages/component-library/**"
   - "packages/known-publishers/**"

@@ -1,6 +1,7 @@
 [
   {
     "id": "solana_mainnet",
+    "isRemote": false,
     "mainnet": true,
     "nativeToken": "SOL",
     "rpcUrl": "https://pyth-network.rpcpool.com/$ENV_SOLANA_MAINNET_API_KEY",
@@ -9,9 +10,26 @@
   },
   {
     "id": "solana_devnet",
+    "isRemote": false,
     "mainnet": false,
     "rpcUrl": "https://api.devnet.solana.com",
     "type": "SvmChain",
     "wormholeChainName": "solana"
+  },
+  {
+    "id": "fogo_mainnet",
+    "isRemote": true,
+    "mainnet": true,
+    "rpcUrl": "https://mainnet.fogo.io",
+    "type": "SvmChain",
+    "wormholeChainName": "fogo_mainnet"
+  },
+  {
+    "id": "fogo_testnet",
+    "isRemote": true,
+    "mainnet": false,
+    "rpcUrl": "https://testnet.fogo.io",
+    "type": "SvmChain",
+    "wormholeChainName": "fogo_testnet"
   }
 ]

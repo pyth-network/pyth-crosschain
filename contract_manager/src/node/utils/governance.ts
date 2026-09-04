@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { readFileSync } from "node:fs";
 
 import {
@@ -15,6 +10,7 @@ import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
 import { getPythClusterApiUrl } from "@pythnetwork/client";
 import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+import type { ProposedAction } from "@pythnetwork/xc-admin-common";
 import {
   executeProposal,
   MultisigVault,
@@ -228,7 +224,7 @@ export class WormholeEmitter {
   }
 }
 
-export class WormholeMultisigProposal {
+export class MultisigProposal {
   constructor(
     public address: PublicKey,
     public squad: SquadsMeshInstance,
@@ -246,33 +242,48 @@ export class WormholeMultisigProposal {
   }
 
   /**
-   * Executes the proposal and returns the wormhole messages that were sent
-   * The proposal must be already approved.
+   * Executes the instructions of the proposal that have not run yet, one transaction each, and
+   * returns their signatures. The proposal must be already approved.
    */
-  async execute(): Promise<SubmittedWormholeMessage[]> {
+  async execute(): Promise<string[]> {
     const proposal = await this.squad.getTransaction(this.address);
-    const signatures = await executeProposal(
+    return await executeProposal(
       proposal,
       this.squad,
       this.cluster,
       this.squad.connection.commitment,
       {},
     );
-    const msgs: SubmittedWormholeMessage[] = [];
-    for (const signature of signatures) {
+  }
+
+  /**
+   * Every wormhole message this proposal has emitted, oldest first. Read off the proposal's own
+   * transaction history rather than from `execute()`, whose return value covers only the
+   * instructions the current run executed.
+   */
+  async fetchEmittedWormholeMessages(): Promise<SubmittedWormholeMessage[]> {
+    const signatures = await this.squad.connection.getSignaturesForAddress(
+      this.address,
+    );
+    const messages: SubmittedWormholeMessage[] = [];
+    for (const { signature } of signatures
+      .filter((signature) => signature.err === null)
+      .reverse()) {
       try {
-        msgs.push(
+        messages.push(
           await SubmittedWormholeMessage.fromTransactionSignature(
             signature,
             this.cluster,
+            () => this.squad.connection.rpcEndpoint,
           ),
         );
       } catch (error: unknown) {
+        // The proposal's history also holds the transactions that created, activated and
+        // approved it, none of which emitted a message.
         if (!(error instanceof InvalidTransactionError)) throw error;
       }
     }
-    if (msgs.length > 0) return msgs;
-    throw new Error("No transactions with wormhole messages found");
+    return messages;
   }
 }
 
@@ -288,6 +299,17 @@ function getSquadsMesh() {
     (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
     SquadsMeshClass
   );
+}
+
+// `SquadsMesh.endpoint` builds a `Connection` with web3.js' `finalized` default, which is far
+// behind what the proposals it reads were just written at.
+function connectSquadsMesh(
+  endpoint: string,
+  wallet: Wallet,
+): SquadsMeshInstance {
+  return getSquadsMesh().endpoint(endpoint, wallet, {
+    commitmentOrConfig: "confirmed",
+  });
 }
 
 export class Vault extends Storable {
@@ -337,8 +359,7 @@ export class Vault extends Storable {
     wallet: Wallet,
     registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ): void {
-    const mesh = getSquadsMesh();
-    this.squad = mesh.endpoint(registry(this.cluster), wallet);
+    this.squad = connectSquadsMesh(registry(this.cluster), wallet);
   }
 
   getSquadOrThrow(): SquadsMeshInstance {
@@ -350,10 +371,8 @@ export class Vault extends Storable {
    * Gets the emitter address of the vault
    * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
-  public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
-    const mesh = getSquadsMesh();
-    const squad = mesh.endpoint(
+  public getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
+    const squad = connectSquadsMesh(
       registry(this.cluster),
       new Wallet(Keypair.generate()), // dummy wallet
     );
@@ -368,12 +387,18 @@ export class Vault extends Storable {
    */
   public async getLastSequenceNumber(): Promise<number> {
     const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
-    const emitter = await this.getEmitter();
+    const emitter = this.getEmitter();
     const response = await fetch(
       `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`,
     );
-    const { data } = (await response.json()) as { data: any[] };
-    return data[0].sequence;
+    const { data } = (await response.json()) as {
+      data?: { sequence: number }[];
+    };
+    const [latest] = data ?? [];
+    if (!latest) {
+      throw new Error(`No wormhole messages found for ${emitter.toBase58()}`);
+    }
+    return latest.sequence;
   }
 
   /**
@@ -387,7 +412,7 @@ export class Vault extends Storable {
     payloads: Buffer[],
     proposalAddress?: PublicKey,
     priorityFeeConfig: PriorityFeeConfig = {},
-  ): Promise<WormholeMultisigProposal> {
+  ): Promise<MultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
       squad.wallet as Wallet,
@@ -402,7 +427,31 @@ export class Vault extends Storable {
         proposalAddress,
         priorityFeeConfig,
       );
-    return new WormholeMultisigProposal(txAccount, squad, this.cluster);
+    return new MultisigProposal(txAccount, squad, this.cluster);
+  }
+
+  /**
+   * Proposes `actions` as a single proposal, in the order given. Requires a wallet to be
+   * connected to the vault.
+   * @param actions - the instructions and payloads to propose
+   */
+  public async proposeActions(
+    actions: ProposedAction[],
+    priorityFeeConfig: PriorityFeeConfig = {},
+  ): Promise<MultisigProposal> {
+    const squad = this.getSquadOrThrow();
+    const multisigVault = new MultisigVault(
+      squad.wallet as Wallet,
+      this.cluster,
+      squad,
+      this.key,
+    );
+    const txAccount = await multisigVault.proposeActions(
+      actions,
+      squad.wallet.publicKey,
+      priorityFeeConfig,
+    );
+    return new MultisigProposal(txAccount, squad, this.cluster);
   }
 }
 
@@ -411,8 +460,7 @@ export class Vault extends Storable {
  * This wallet can be used to connect to a vault and submit proposals
  * @param walletPath - - path to the wallet file
  */
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function loadHotWallet(walletPath: string): Promise<Wallet> {
+export function loadHotWallet(walletPath: string): Wallet {
   return new Wallet(
     Keypair.fromSecretKey(
       Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii"))),

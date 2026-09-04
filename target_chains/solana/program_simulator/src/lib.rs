@@ -8,11 +8,8 @@ use {
         program_error::ProgramError,
         pubkey::Pubkey,
     },
-    solana_program_test::{
-        BanksClientError, ProgramTest, ProgramTestBanksClientExt, ProgramTestContext,
-    },
+    solana_program_test::{BanksClient, BanksClientError, ProgramTest, ProgramTestBanksClientExt},
     solana_sdk::{
-        account::Account,
         clock::Clock,
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
@@ -21,7 +18,7 @@ use {
 };
 
 pub struct ProgramSimulator {
-    context: ProgramTestContext,
+    banks_client: BanksClient,
     /// Hash used to submit the last transaction. The hash must be advanced for each new
     /// transaction; otherwise, replayed transactions in different states can return stale
     /// results.
@@ -31,11 +28,11 @@ pub struct ProgramSimulator {
 
 impl ProgramSimulator {
     pub async fn start_from_program_test(program_test: ProgramTest) -> ProgramSimulator {
-        let context = program_test.start_with_context().await;
+        let (banks_client, genesis_keypair, recent_blockhash) = program_test.start().await;
         ProgramSimulator {
-            genesis_keypair: context.payer.insecure_clone(),
-            last_blockhash: context.last_blockhash,
-            context,
+            banks_client,
+            genesis_keypair,
+            last_blockhash: recent_blockhash,
         }
     }
 
@@ -56,7 +53,6 @@ impl ProgramSimulator {
         );
 
         let blockhash = self
-            .context
             .banks_client
             .get_new_latest_blockhash(&self.last_blockhash)
             .await
@@ -66,10 +62,7 @@ impl ProgramSimulator {
         transaction.partial_sign(&[actual_payer], self.last_blockhash);
         transaction.partial_sign(signers, self.last_blockhash);
 
-        self.context
-            .banks_client
-            .process_transaction(transaction)
-            .await
+        self.banks_client.process_transaction(transaction).await
     }
 
     /// Send `lamports` worth of SOL to the pubkey `to`.
@@ -92,7 +85,6 @@ impl ProgramSimulator {
         pubkey: Pubkey,
     ) -> Result<T, BanksClientError> {
         let account = self
-            .context
             .banks_client
             .get_account(pubkey)
             .await
@@ -102,30 +94,13 @@ impl ProgramSimulator {
         Ok(T::deserialize(&mut &account.data[8..])?)
     }
 
-    /// Fetch the raw account at `pubkey`, or `None` if it does not exist.
-    pub async fn get_account(
-        &mut self,
-        pubkey: Pubkey,
-    ) -> Result<Option<Account>, BanksClientError> {
-        self.context.banks_client.get_account(pubkey).await
-    }
-
     pub async fn get_balance(&mut self, pubkey: Pubkey) -> Result<u64, BanksClientError> {
-        let lamports = self.context.banks_client.get_balance(pubkey).await.unwrap();
+        let lamports = self.banks_client.get_balance(pubkey).await.unwrap();
         Ok(lamports)
     }
 
-    /// Advance the bank by one slot. Programs deployed or upgraded in a slot only become
-    /// executable in the slot after it, so an upgrade must be followed by this before the new
-    /// code can be invoked.
-    pub async fn advance_slot(&mut self) -> Result<(), BanksClientError> {
-        let slot = self.get_clock().await?.slot;
-        self.context.warp_to_slot(slot + 1).unwrap();
-        Ok(())
-    }
-
     pub async fn get_clock(&mut self) -> Result<Clock, BanksClientError> {
-        self.context.banks_client.get_sysvar::<Clock>().await
+        self.banks_client.get_sysvar::<Clock>().await
     }
 }
 
