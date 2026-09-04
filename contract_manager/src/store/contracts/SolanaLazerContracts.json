@@ -3,5 +3,15 @@
     "chain": "solana_mainnet",
     "programId": "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
     "type": "SolanaLazerContract"
+  },
+  {
+    "chain": "solana_devnet",
+    "programId": "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
+    "type": "SolanaLazerContract"
+  },
+  {
+    "chain": "fogo_testnet",
+    "programId": "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
+    "type": "SolanaLazerContract"
   }
 ]
