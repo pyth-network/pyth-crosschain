@@ -7,10 +7,15 @@ import type { HexString } from "@pythnetwork/price-service-sdk";
  * @returns Ws(s) protocol endpoint of the same address
  */
 export function makeWebsocketUrl(endpoint: string) {
-  const url = new URL("ws", endpoint);
-  const useHttps = url.protocol === "https:";
+  const url = new URL(endpoint);
 
-  url.protocol = useHttps ? "wss:" : "ws:";
+  // Switch from http/https to ws/wss, if already ws/wss do nothing
+  if (url.protocol === "https:") url.protocol = "wss:";
+  else if (url.protocol === "http:") url.protocol = "ws:";
+
+  // Ensure the pathname ends with a trailing slash and add ws
+  url.pathname = url.pathname.replace(/\/?$/, "/");
+  url.pathname = url.pathname + "ws";
 
   return url.toString();
 }
