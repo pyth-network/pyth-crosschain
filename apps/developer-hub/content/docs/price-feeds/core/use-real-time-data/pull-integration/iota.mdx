@@ -122,7 +122,11 @@ import { IotaPriceServiceConnection, IotaPythClient } from "@pythnetwork/pyth-io
 import { Transaction } from "@iota/iota-sdk/transactions";
 
 // Get the Stable Hermes service URL from https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
-const connection = new IotaPriceServiceConnection("https://hermes-beta.pyth.network");
+const connection = new IotaPriceServiceConnection(
+  "https://hermes-beta.pyth.network",
+  // The endpoint requires a Pyth API key: https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes
+  { accessToken: process.env.PYTH_API_KEY },
+);
 
 const priceIDs = [
   // You can find the IDs of prices at https://docs.pyth.network/price-feeds/price-feeds

@@ -70,7 +70,7 @@ Update the Pyth Oracle contract with new price feed data in two main steps:
 
 You can obtain an off-chain price feed using Pyth's [Hermes API](https://hermes-beta.pyth.network/docs/).
 
-To use these endpoints, you will need to provide a Price Feed ID and ensure you are targeting the correct network. See [Getting Started](#getting-started) for more information.
+To use these endpoints, you will need to provide a Price Feed ID and ensure you are targeting the correct network. See [Getting Started](#getting-started) for more information. All Hermes endpoints require authentication with a [Pyth API key](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes), passed as a Bearer token.
 
 Here is a node.js example of fetching the latest price feed using `/v2/updates/price/latest` endpoint:
 
@@ -93,6 +93,7 @@ async function getHermesPriceData(priceId, network) {
     // Fetch the price data from the Hermes API
     const response = await axios.get(
       `${url}/v2/updates/price/latest?ids[]=${priceId}`,
+      { headers: { Authorization: `Bearer ${process.env.PYTH_API_KEY}` } },
     );
 
     return response.data.binary.data[0];
