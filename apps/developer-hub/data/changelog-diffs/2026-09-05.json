@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-05",
+  "label": "Saturday",
+  "summary": {
+    "added": 0,
+    "went_live": 5,
+    "removed": 0
+  },
+  "hero": "5 went live.",
+  "events": [
+    {
+      "id": "Commodities.Index.TGAS1M/USD",
+      "lazerId": 3705,
+      "asset": "Pyth Price In Usd For Constant 1M Dutch Ttf Gas 23",
+      "assetType": "commodity",
+      "changeType": "went_live",
+      "date": "2026-09-05",
+      "quote": "USD",
+      "hermesId": "55e85ff86bd61d78f44135dd67f77623db3c855be98daf6603213632fc5b3126"
+    },
+    {
+      "id": "Equity.US.USDE/USD",
+      "lazerId": 3695,
+      "asset": "Stablecoinx Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-05",
+      "quote": "USD",
+      "hermesId": "7dd4fa058bf946c7e6974e5098543afb170d29d1413a0245395e1d14bd08c0a7"
+    },
+    {
+      "id": "Equity.US.RXRX/USD",
+      "lazerId": 3657,
+      "asset": "Recursion Pharmaceuticals Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-05",
+      "quote": "USD",
+      "hermesId": "303e2b3c5ca84d33cad4b179ff2ee5a53cc2070b72655b0db4170ec19d799f82"
+    },
+    {
+      "id": "Equity.US.SDGR/USD",
+      "lazerId": 3656,
+      "asset": "Schrodinger Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-05",
+      "quote": "USD",
+      "hermesId": "9e69591b1cef27a70f68b08a4c81ff136869dc6f3ac58f73097732f7556d72fc"
+    },
+    {
+      "id": "Equity.US.CAI/USD",
+      "lazerId": 3655,
+      "asset": "Caris Life Sciences Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-05",
+      "quote": "USD",
+      "hermesId": "4de569a337968a84a8447e579aad7c4eef9be8106dfd8e807756bb19724c0650"
+    }
+  ]
+}
