@@ -1,7 +1,0 @@
-{
-  "root": true,
-  "title": "Express Relay",
-  "description": "Wound down — see OP-PIP-124",
-  "icon": "Gavel",
-  "pages": ["index"]
-}

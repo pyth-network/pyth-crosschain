@@ -1,9 +1,0 @@
-{
-  "title": "Preparing for the Pyth Core upgrade",
-  "defaultOpen": true,
-  "pages": [
-    "[for EVM chains](/price-feeds/core/upgrade/preparing/evm)",
-    "[for SVM chains](/price-feeds/core/upgrade/preparing/solana)",
-    "[for Sui](/price-feeds/core/upgrade/preparing/sui)"
-  ]
-}

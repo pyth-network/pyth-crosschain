@@ -1,9 +1,0 @@
-{
-  "root": true,
-  "title": "API Reference",
-  "icon": "Code",
-  "pages": [
-    "entropy",
-    "pyth-core"
-  ]
-}

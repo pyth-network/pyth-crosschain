@@ -14,7 +14,6 @@ auto_approve_paths:
   - "scripts/**"
   # Documentation sites
   - "apps/api-reference/**"
-  - "apps/developer-hub/**"
   # Read-only consumer frontends (consume prices, never produce them)
   - "apps/entropy-explorer/**"
   # Presentational UI packages (not imported by any critical-path tool)
