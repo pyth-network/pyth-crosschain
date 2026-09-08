@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-08",
+  "label": "Tuesday",
+  "summary": {
+    "added": 0,
+    "went_live": 1,
+    "removed": 0
+  },
+  "hero": "1 went live.",
+  "events": [
+    {
+      "id": "Equity.US.GPRO/USD",
+      "lazerId": 3664,
+      "asset": "Gopro Inc",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-08",
+      "quote": "USD",
+      "hermesId": "b1c775cfcb8140daacc57f79a63fb1b30b69a1dac14d29d03b713bb88711a928"
+    }
+  ]
+}
