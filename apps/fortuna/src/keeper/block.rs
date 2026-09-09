@@ -56,11 +56,12 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
             .await
         {
             Ok(latest_confirmed_block) => {
-                tracing::info!(
-                    "Fetched latest safe block {}",
-                    latest_confirmed_block - chain_state.reveal_delay_blocks
-                );
-                return latest_confirmed_block - chain_state.reveal_delay_blocks;
+                // Clamping at 0 fails safe: it means "reveal nothing yet", whereas an underflow
+                // would wrap to ~2^64 and make the keeper scan an unbounded block range.
+                let latest_safe_block =
+                    latest_confirmed_block.saturating_sub(chain_state.reveal_delay_blocks);
+                tracing::info!("Fetched latest safe block {}", latest_safe_block);
+                return latest_safe_block;
             }
             Err(e) => {
                 tracing::error!("Error while getting block number. error: {:?}", e);
@@ -319,4 +320,53 @@ pub async fn process_backlog(
             .await;
     }
     tracing::info!("Backlog processed");
+}
+
+#[cfg(test)]
+mod test {
+    use {
+        super::*,
+        crate::{
+            chain::reader::{mock::MockEntropyReader, BlockStatus},
+            state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
+        },
+        ethers::types::Address,
+    };
+
+    fn mock_chain_state(
+        latest_confirmed_block: BlockNumber,
+        reveal_delay_blocks: BlockNumber,
+    ) -> BlockchainState {
+        let hash_chain_state = Arc::new(HashChainState::from_chain_at_offset(
+            0,
+            PebbleHashChain::new([0u8; 32], 10, 1),
+        ));
+        BlockchainState {
+            id: "ethereum".into(),
+            network_id: 1,
+            state: Arc::new(MonitoredHashChainState::new(
+                hash_chain_state,
+                Default::default(),
+                "ethereum".into(),
+                Address::zero(),
+            )),
+            contract: Arc::new(MockEntropyReader::with_requests(
+                latest_confirmed_block,
+                &[],
+            )),
+            provider_address: Address::zero(),
+            reveal_delay_blocks,
+            confirmed_block_status: BlockStatus::Latest,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_latest_safe_block_subtracts_reveal_delay() {
+        assert_eq!(get_latest_safe_block(&mock_chain_state(10, 3)).await, 7);
+    }
+
+    #[tokio::test]
+    async fn test_get_latest_safe_block_clamps_to_zero() {
+        assert_eq!(get_latest_safe_block(&mock_chain_state(5, 10)).await, 0);
+    }
 }
