@@ -1,0 +1,139 @@
+diff --git a/lib/cjs/index.js b/lib/cjs/index.js
+index 935a279..d88503a 100644
+--- a/lib/cjs/index.js
++++ b/lib/cjs/index.js
+@@ -82,6 +82,18 @@ var web_1 = __importDefault(require("./adapters/web"));
+ var iframe_1 = __importDefault(require("./adapters/iframe"));
+ var utils_1 = require("./utils");
+ var version_1 = require("./version");
++var isTrustedProviderUrl = function (provider) {
++    if (typeof provider !== 'string') {
++        return false;
++    }
++    try {
++        var url = new URL(provider);
++        return url.protocol === 'https:' && (url.hostname === 'solflare.com' || url.hostname.endsWith('.solflare.com'));
++    }
++    catch (e) {
++        return false;
++    }
++};
+ var Solflare = /** @class */ (function (_super) {
+     __extends(Solflare, _super);
+     function Solflare(config) {
+@@ -99,7 +111,8 @@ var Solflare = /** @class */ (function (_super) {
+             switch (event.type) {
+                 case 'connect_native_web': {
+                     _this._collapseIframe();
+-                    _this._adapterInstance = new web_1.default(_this._iframe, _this._network, ((_a = event.data) === null || _a === void 0 ? void 0 : _a.provider) || _this._provider || 'https://solflare.com/provider');
++                    var provider = isTrustedProviderUrl((_a = event.data) === null || _a === void 0 ? void 0 : _a.provider) ? event.data.provider : (_this._provider || 'https://solflare.com/provider');
++                    _this._adapterInstance = new web_1.default(_this._iframe, _this._network, provider);
+                     _this._adapterInstance.on('connect', _this._webConnected);
+                     _this._adapterInstance.on('disconnect', _this._webDisconnected);
+                     _this._adapterInstance.connect();
+@@ -169,8 +182,11 @@ var Solflare = /** @class */ (function (_super) {
+             }
+         };
+         _this._handleMessage = function (event) {
+-            var _a;
+-            if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.channel) !== 'solflareIframeToWalletAdapter') {
++            var _a, _b;
++            if (!((_a = _this._iframe) === null || _a === void 0 ? void 0 : _a.contentWindow) || event.source !== _this._iframe.contentWindow) {
++                return;
++            }
++            if (((_b = event.data) === null || _b === void 0 ? void 0 : _b.channel) !== 'solflareIframeToWalletAdapter') {
+                 return;
+             }
+             var data = event.data.data || {};
+diff --git a/lib/esm/index.js b/lib/esm/index.js
+index 4a26c1f..e732ea6 100644
+--- a/lib/esm/index.js
++++ b/lib/esm/index.js
+@@ -77,6 +77,18 @@ import WebAdapter from './adapters/web';
+ import IframeAdapter from './adapters/iframe';
+ import { isLegacyTransactionInstance } from './utils';
+ import { VERSION } from './version';
++var isTrustedProviderUrl = function (provider) {
++    if (typeof provider !== 'string') {
++        return false;
++    }
++    try {
++        var url = new URL(provider);
++        return url.protocol === 'https:' && (url.hostname === 'solflare.com' || url.hostname.endsWith('.solflare.com'));
++    }
++    catch (e) {
++        return false;
++    }
++};
+ var Solflare = /** @class */ (function (_super) {
+     __extends(Solflare, _super);
+     function Solflare(config) {
+@@ -94,7 +106,8 @@ var Solflare = /** @class */ (function (_super) {
+             switch (event.type) {
+                 case 'connect_native_web': {
+                     _this._collapseIframe();
+-                    _this._adapterInstance = new WebAdapter(_this._iframe, _this._network, ((_a = event.data) === null || _a === void 0 ? void 0 : _a.provider) || _this._provider || 'https://solflare.com/provider');
++                    var provider = isTrustedProviderUrl((_a = event.data) === null || _a === void 0 ? void 0 : _a.provider) ? event.data.provider : (_this._provider || 'https://solflare.com/provider');
++                    _this._adapterInstance = new WebAdapter(_this._iframe, _this._network, provider);
+                     _this._adapterInstance.on('connect', _this._webConnected);
+                     _this._adapterInstance.on('disconnect', _this._webDisconnected);
+                     _this._adapterInstance.connect();
+@@ -164,8 +177,11 @@ var Solflare = /** @class */ (function (_super) {
+             }
+         };
+         _this._handleMessage = function (event) {
+-            var _a;
+-            if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.channel) !== 'solflareIframeToWalletAdapter') {
++            var _a, _b;
++            if (!((_a = _this._iframe) === null || _a === void 0 ? void 0 : _a.contentWindow) || event.source !== _this._iframe.contentWindow) {
++                return;
++            }
++            if (((_b = event.data) === null || _b === void 0 ? void 0 : _b.channel) !== 'solflareIframeToWalletAdapter') {
+                 return;
+             }
+             var data = event.data.data || {};
+diff --git a/src/index.ts b/src/index.ts
+index 8334f23..5715e4a 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -14,6 +14,18 @@ import IframeAdapter from './adapters/iframe';
+ import { isLegacyTransactionInstance } from './utils';
+ import { VERSION } from './version';
+ 
++const isTrustedProviderUrl = (provider: unknown): provider is string => {
++  if (typeof provider !== 'string') {
++    return false;
++  }
++  try {
++    const { protocol, hostname } = new URL(provider);
++    return protocol === 'https:' && (hostname === 'solflare.com' || hostname.endsWith('.solflare.com'));
++  } catch {
++    return false;
++  }
++};
++
+ export default class Solflare extends EventEmitter {
+   private _network: Cluster = 'mainnet-beta';
+   private _provider: string | null = null;
+@@ -171,7 +183,9 @@ export default class Solflare extends EventEmitter {
+       case 'connect_native_web': {
+         this._collapseIframe();
+ 
+-        this._adapterInstance = new WebAdapter(this._iframe!, this._network, event.data?.provider || this._provider || 'https://solflare.com/provider');
++        const provider = isTrustedProviderUrl(event.data?.provider) ? event.data.provider : (this._provider || 'https://solflare.com/provider');
++
++        this._adapterInstance = new WebAdapter(this._iframe!, this._network, provider);
+ 
+         this._adapterInstance.on('connect', this._webConnected);
+         this._adapterInstance.on('disconnect', this._webDisconnected);
+@@ -253,6 +267,10 @@ export default class Solflare extends EventEmitter {
+   }
+ 
+   private _handleMessage = (event: MessageEvent) => {
++    if (!this._iframe?.contentWindow || event.source !== this._iframe.contentWindow) {
++      return;
++    }
++
+     if (event.data?.channel !== 'solflareIframeToWalletAdapter') {
+       return;
+     }
