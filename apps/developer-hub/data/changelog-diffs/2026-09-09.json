@@ -1,0 +1,212 @@
+{
+  "date": "2026-09-09",
+  "label": "Wednesday",
+  "summary": {
+    "added": 19,
+    "went_live": 1,
+    "removed": 0
+  },
+  "hero": "19 new feeds announced, 1 went live.",
+  "events": [
+    {
+      "id": "Equity.US.DNN/USD",
+      "lazerId": 3694,
+      "asset": "Denison Mines Corp",
+      "assetType": "equity",
+      "changeType": "went_live",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "b4a8298d774980d697165333606303c12c46c0bcec62bb0df3fda11162bb2194"
+    },
+    {
+      "id": "Crypto.FOLD/USD",
+      "lazerId": 3724,
+      "asset": "The Interfold",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "701ddece248b092b9f2a9d0575a60ecee03ef6bb8fcbe1239236fbf5675b62e2"
+    },
+    {
+      "id": "Crypto.STONK/USD",
+      "lazerId": 3723,
+      "asset": "Stonk",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "f68272be1240150c36b54dce26a9b75f62f507a94f49f43533a5050c77e07049"
+    },
+    {
+      "id": "Crypto.AMC/USD",
+      "lazerId": 3722,
+      "asset": "A Meme Coin",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "725db18f84ea0d1c894e7223d603bae50541abca3922e198293073136b450b15"
+    },
+    {
+      "id": "Crypto.BONER/USD",
+      "lazerId": 3721,
+      "asset": "Boner Coin",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "347e73e92ea0ced52f2395a1391927b3e77c9c86ad19c6b80dd244717ad0f1e9"
+    },
+    {
+      "id": "Crypto.PONS/USD",
+      "lazerId": 3720,
+      "asset": "Pons",
+      "assetType": "crypto",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "497c0f949e79f41add837ff64096680f48fe031977686531c3d5c1f603399492"
+    },
+    {
+      "id": "Crypto.EHYUSD/HYUSD.RR",
+      "lazerId": 3719,
+      "asset": "Earn Hylo Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "HYUSD",
+      "hermesId": "9f9cb3d9dc4e844b5402630818cede78e981e44402ab21f2fe64b7ec9b92fdce"
+    },
+    {
+      "id": "Crypto.HYUSD/USD.RR",
+      "lazerId": 3718,
+      "asset": "Hylo Us Dollar",
+      "assetType": "crypto-redemption-rate",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "4a599c2e208f18a05f125d6530d39cd3bf653a9c870d5b9b6d450feba3ea5a41"
+    },
+    {
+      "id": "Equity.US.BULL/USD",
+      "lazerId": 3716,
+      "asset": "Webull Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "9a709d2252404752a2da6669f077b183ff3fe498e00fd2566f0cbc25f6020bc5"
+    },
+    {
+      "id": "Equity.US.CLOV/USD",
+      "lazerId": 3715,
+      "asset": "Clover Health Investments Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "604e6beab5541336b1668470fd5745fb40a797e45f3c543a45c731247c5d8ccf"
+    },
+    {
+      "id": "Equity.US.KSS/USD",
+      "lazerId": 3714,
+      "asset": "Kohl\u2019S Corp",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "199de6a3182e636305a268156c9e0fb58b845a1a9c40a2673f6262d621bd5ada"
+    },
+    {
+      "id": "Equity.US.RCAT/USD",
+      "lazerId": 3713,
+      "asset": "Red Cat Holdings Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "bd4cb54e777668772c77d2824b44262580ed6efa000f612405a13b3c515584bb"
+    },
+    {
+      "id": "Metal.Index.1OZGOLD/USD",
+      "lazerId": 3712,
+      "asset": "Pyth Price In Usd For 1-Ounce Gold 24",
+      "assetType": "metal",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "7fd2c87083dd8fd5af2486a43f40b8e444acd77fda4e96263a53421cd079c387"
+    },
+    {
+      "id": "Commodities.Index.LWTI1M/USD",
+      "lazerId": 3711,
+      "asset": "Pyth Price In Usd For Constant 1M London Wti 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "8e60d9d1d1697919b665acb4851d93fed770b67c89588b8e7aa2073dfeb68ee5"
+    },
+    {
+      "id": "Commodities.Index.HLGAS1M/USD",
+      "lazerId": 3710,
+      "asset": "Pyth Price In Usd For Constant 1M Henry Ld1 Natural Gas 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "cab22d0e95038b6d2cbd6de9c9f918dd2a085c9847a1c0aa98465da875237c11"
+    },
+    {
+      "id": "Commodities.Index.HHGAS1M/USD",
+      "lazerId": 3709,
+      "asset": "Pyth Price In Usd For Constant 1M Hh Natural Gas 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "3d8ec049064b20008f62b36ac247a751a1c57d8f082132e64d42cd74668db7c1"
+    },
+    {
+      "id": "Commodities.Index.BRENT1M/USD",
+      "lazerId": 3708,
+      "asset": "Pyth Price In Usd For Constant 1M Brent 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "d70cd7dd1d66508e2cc19ebb48327ce824ea075064a068a8711d40c489f33bb9"
+    },
+    {
+      "id": "Commodities.Index.WTI1M/USD",
+      "lazerId": 3707,
+      "asset": "Pyth Price In Usd For Constant 1M Wti 23",
+      "assetType": "commodity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "f2464139c45f26097e0173b03207c4a490dbd8bf1b72dfbf064eeb832c7c2933"
+    },
+    {
+      "id": "Equity.US.AGPU/USD",
+      "lazerId": 3666,
+      "asset": "Axe Compute Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "6d6d85ff1a4d1e62b71a1769832b487d2300512a7f5b3971e98fc415016f2953"
+    },
+    {
+      "id": "Equity.US.CYPH/USD",
+      "lazerId": 3665,
+      "asset": "Cypherpunk Technologies Inc",
+      "assetType": "equity",
+      "changeType": "added",
+      "date": "2026-09-09",
+      "quote": "USD",
+      "hermesId": "a90a08193b3fed118acb31ec62f6a929862057df06a50259fd0c4643bc81ef62"
+    }
+  ]
+}
