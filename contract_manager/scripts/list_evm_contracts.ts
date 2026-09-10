@@ -38,6 +38,7 @@ async function main() {
       }
     }
   }
+  console.log(`Fetched ${entries.length} EVM price feed contract versions.`);
   console.table(entries);
 }
 
