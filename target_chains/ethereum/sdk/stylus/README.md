@@ -2,7 +2,7 @@
 
 This package provides utilities for consuming prices from the [Pyth Network](https://pyth.network/) Oracle in Rust with Stylus. It also includes the [Pyth Interface ABI](./abis/IPyth.json), which can be used in your libraries to interact with the Pyth contract.
 
-It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices) when consuming data from Pyth.
+It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/price-feeds/core/best-practices) when consuming data from Pyth.
 
 ## Features
 

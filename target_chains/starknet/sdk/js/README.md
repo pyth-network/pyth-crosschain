@@ -31,7 +31,7 @@ $ yarn add starknet @pythnetwork/price-service-client
 ```
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
+See [Pull Integration on Starknet](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/starknet) for more information about this approach.
 To use Pyth prices on chain,
 they must be fetched from a Hermes instance. The `PriceServiceConnection` class from Pyth's `price-service-client` library can be used to interact with Hermes,
 providing a way to fetch these prices directly in your code.
@@ -111,4 +111,4 @@ await provider.waitForTransaction(tx.transaction_hash);
 console.log("transaction confirmed:", tx.transaction_hash);
 ```
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
+We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/price-feeds/core/best-practices).

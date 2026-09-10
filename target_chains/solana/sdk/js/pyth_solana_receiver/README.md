@@ -20,9 +20,9 @@ You can install the package using your favorite typescript version manager
 This SDK is designed to be used in combination with a source of Pyth pricing data.
 There are two different sources of pricing data that users can choose from.
 
-- [Hermes](https://docs.pyth.network/price-feeds/pythnet-price-feeds/hermes) is a webservice that provides HTTP and websocket endpoints for retrieving real-time Pyth prices.
+- [Hermes](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes#public-endpoints) is a webservice that provides HTTP and websocket endpoints for retrieving real-time Pyth prices.
   The example code below uses the public Hermes instance hosted by the Pyth Data Association at `https://hermes.pyth.network/`.
-  Hermes is also available from several infrastructure providers [listed here](https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes).
+  Hermes is also available from several infrastructure providers [listed here](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes).
   The [Price Service Client](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js) can be used to access Hermes prices in a convenient way.
 - [Benchmarks](https://docs.pyth.network/benchmarks) is a webservice that provides HTTP endpoints for accessing historical Pyth prices.
   This service can be used for applications that require prices from specific times in the past.
