@@ -5,7 +5,7 @@ import "./PythStructs.sol";
 import "./IPythEvents.sol";
 
 /// @title Consume prices from the Pyth Network (https://pyth.network/).
-/// @dev Please refer to the guidance at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for how to consume prices safely.
+/// @dev Please refer to the guidance at https://docs.pyth.network/price-feeds/core/best-practices for how to consume prices safely.
 /// @author Pyth Data Association
 interface IPyth is IPythEvents {
     /// @notice Returns the price of a price feed without any sanity checks.
