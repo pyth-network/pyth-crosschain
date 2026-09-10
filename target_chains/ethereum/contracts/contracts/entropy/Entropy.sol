@@ -595,6 +595,12 @@ abstract contract Entropy is IEntropy, EntropyState {
                 )
             );
             uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
+            // The callback is arbitrary external code and may have reentered this contract.
+            // A new request that collides on the same short key evicts this request from the
+            // requests array into requestsOverflow, which leaves the `req` pointer captured
+            // above aliasing whichever request now occupies the array slot. Re-resolve the
+            // request by identity before reading or writing it again.
+            req = findRequest(provider, sequenceNumber);
             // Reset status to not started here in case the transaction reverts.
             req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
@@ -608,7 +614,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 emit EntropyEventsV2.Revealed(
                     provider,
                     req.requester,
-                    req.sequenceNumber,
+                    sequenceNumber,
                     randomNumber,
                     userContribution,
                     providerContribution,
