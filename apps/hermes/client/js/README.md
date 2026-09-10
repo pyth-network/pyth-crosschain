@@ -93,4 +93,4 @@ pnpm turbo --filter @pythnetwork/hermes-client example -- \
 Pyth offers a free public endpoint at [https://hermes.pyth.network](https://hermes.pyth.network). However, it is
 recommended to obtain a private endpoint from one of the Hermes RPC providers for more reliability. You can find more
 information about Hermes RPC providers
-[here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoint).
+[here](https://docs.pyth.network/price-feeds/how-pyth-works/hermes#public-endpoint).
