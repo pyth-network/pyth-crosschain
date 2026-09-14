@@ -350,6 +350,9 @@ overrides:
   '@solana/web3.js@1.77.4>rpc-websockets': 7.11.0
 
 patchedDependencies:
+  '@solflare-wallet/sdk@1.4.2':
+    hash: 2a9792e63f5e0361f40dc385c539859a0e653ce5160cb2b1c460107eb2d01da5
+    path: patches/@solflare-wallet__sdk@1.4.2.patch
   '@ton/blueprint':
     hash: 87640a947e37634630debe8c6d3959cc24098499df6ba20cefbaec73c56e81fe
     path: patches/@ton__blueprint.patch
@@ -33957,7 +33960,7 @@ snapshots:
       '@solana/wallet-standard-chains': 1.1.1
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@solflare-wallet/metamask-sdk': 1.0.3(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@solflare-wallet/sdk': 1.4.2(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
+      '@solflare-wallet/sdk': 1.4.2(patch_hash=2a9792e63f5e0361f40dc385c539859a0e653ce5160cb2b1c460107eb2d01da5)(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
       '@wallet-standard/wallet': 1.1.0
 
   '@solana/wallet-adapter-solong@0.9.19(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
@@ -34510,7 +34513,7 @@ snapshots:
       eventemitter3: 5.0.1
       uuid: 9.0.1
 
-  '@solflare-wallet/sdk@1.4.2(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
+  '@solflare-wallet/sdk@1.4.2(patch_hash=2a9792e63f5e0361f40dc385c539859a0e653ce5160cb2b1c460107eb2d01da5)(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bs58: 5.0.0
