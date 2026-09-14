@@ -73,7 +73,13 @@ export class SubmittedWormholeMessage {
   ): Promise<SubmittedWormholeMessage> {
     const connection = new Connection(registry(cluster), "confirmed");
 
-    const txDetails = await connection.getParsedTransaction(signature);
+    // `getParsedTransaction` defaults to legacy-only and fails with RPC error
+    // -32015 on any versioned transaction, so the supported version has to be
+    // stated explicitly. 0 is the highest version `@solana/web3.js` 1.x can
+    // represent; reading a v1 transaction needs `@solana/kit` instead.
+    const txDetails = await connection.getParsedTransaction(signature, {
+      maxSupportedTransactionVersion: 0,
+    });
     const sequenceLogPrefix = "Sequence: ";
     const txLog = txDetails?.meta?.logMessages?.find((s) =>
       s.includes(sequenceLogPrefix),
