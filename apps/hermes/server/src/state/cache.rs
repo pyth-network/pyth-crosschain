@@ -352,7 +352,7 @@ mod test {
             received_at: publish_time,
             proof_set: ProofSet {
                 wormhole_merkle_proof: WormholeMerkleMessageProof {
-                    vaa: vec![],
+                    vaa: std::sync::Arc::new(vec![]),
                     proof: MerklePath::<Keccak160>::new(vec![]),
                 },
             },
