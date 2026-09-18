@@ -1,0 +1,21 @@
+---
+title: Pyth Pro adds Euronext FX top-of-book coverage
+date: 2026-08-03
+product: pyth-pro
+type: feature
+area: market-data
+---
+
+Pyth Pro now publishes Euronext FX (FastMatch) top-of-book prices through a
+FIX 4.2 publisher connected to the venue's BBO stream. Mid prices are derived
+from the venue bid and ask.
+
+Production configuration covers the full planned 93-pair list, including
+EUR/HKD, EUR/RUB, EUR/THB, USD/CNY, and USD/RUB. The venue can reject
+subscriptions for pairs it does not currently offer; those rejections are
+logged as warnings, and the pairs can begin streaming if the venue enables
+them later. In live UAT, 86 of 88 venue-available pairs initially published.
+
+The feed follows the venue-aware schedule: Sunday 17:30 through Friday 17:00
+America/New_York, with a daily 17:00-17:30 maintenance break. Treat those
+scheduled windows as expected downtime rather than feed failures.
