@@ -217,6 +217,7 @@ packageManagerStrict: true
 packageManagerStrictVersion: true
 
 patchedDependencies:
+  "@solflare-wallet/sdk@1.4.2": patches/@solflare-wallet__sdk@1.4.2.patch
   "@ton/blueprint": patches/@ton__blueprint.patch
   eccrypto@1.1.6: patches/eccrypto@1.1.6.patch
 
