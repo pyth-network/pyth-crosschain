@@ -1943,6 +1943,167 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         assertTrue(callbackGasUsed < (expectedCallbackGasUsage * 110) / 100);
         assertEq(extraArgs, bytes(""));
     }
+
+    // Compute the index into the requests array that Entropy uses for a given request.
+    function requestShortKey(
+        address provider,
+        uint64 sequenceNumber
+    ) internal view returns (uint8) {
+        return
+            uint8(
+                keccak256(abi.encodePacked(provider, sequenceNumber))[0] &
+                    random.NUM_REQUESTS_MASK()
+            );
+    }
+
+    // Set up a callback consumer whose callback reenters Entropy and makes the victim create a
+    // request that displaces the in-flight request from its slot in the requests array.
+    function setUpCallbackReentrancy(
+        uint32 gasLimit
+    )
+        internal
+        returns (
+            EntropyReentrantConsumer attacker,
+            EntropyPollingConsumer victim,
+            uint64 attackerSequenceNumber
+        )
+    {
+        vm.prank(provider1);
+        random.setDefaultGasLimit(gasLimit);
+
+        victim = new EntropyPollingConsumer(address(random), provider1);
+        attacker = new EntropyReentrantConsumer(address(random), victim);
+        vm.deal(address(victim), 1 ether);
+
+        // Burn sequence numbers until the attacker's request and the victim's request (created
+        // one sequence number later, from inside the attacker's callback) collide on the same
+        // slot of the requests array.
+        attackerSequenceNumber = random
+            .getProviderInfoV2(provider1)
+            .sequenceNumber;
+        while (
+            requestShortKey(provider1, attackerSequenceNumber) !=
+            requestShortKey(provider1, attackerSequenceNumber + 1)
+        ) {
+            request(user1, provider1, 42, false);
+            attackerSequenceNumber = random
+                .getProviderInfoV2(provider1)
+                .sequenceNumber;
+        }
+
+        uint128 fee = random.getFeeV2(provider1, gasLimit);
+        vm.deal(address(this), fee);
+        assertEq(
+            attacker.requestEntropy{value: fee}(bytes32(uint256(42)), gasLimit),
+            attackerSequenceNumber
+        );
+    }
+
+    // A callback that reenters Entropy can displace the in-flight request from its slot in the
+    // requests array. The rest of the reveal must not write through the storage pointer it
+    // captured before the callback, which by then aliases a different request.
+    function testCallbackReentrancyDoesNotCorruptDisplacedRequest() public {
+        (
+            ,
+            EntropyPollingConsumer victim,
+            uint64 attackerSequenceNumber
+        ) = setUpCallbackReentrancy(1000000);
+        uint64 victimSequenceNumber = attackerSequenceNumber + 1;
+
+        random.revealWithCallback(
+            provider1,
+            attackerSequenceNumber,
+            bytes32(uint256(42)),
+            provider1Proofs[attackerSequenceNumber]
+        );
+
+        // The victim's request was created during the callback and must be untouched by the
+        // remainder of the reveal.
+        assertEq(victim.sequenceNumber(), victimSequenceNumber);
+        EntropyStructsV2.Request memory victimRequest = random.getRequestV2(
+            provider1,
+            victimSequenceNumber
+        );
+        assertEq(victimRequest.sequenceNumber, victimSequenceNumber);
+        assertEq(victimRequest.requester, address(victim));
+        assertEq(
+            victimRequest.callbackStatus,
+            EntropyStatusConstants.CALLBACK_NOT_NECESSARY
+        );
+
+        // The attacker's own request is cleared as usual.
+        assertEq(
+            random
+                .getRequestV2(provider1, attackerSequenceNumber)
+                .sequenceNumber,
+            0
+        );
+
+        // The victim, which does not implement _entropyCallback, can still reveal.
+        assertEq(
+            victim.revealRequest(
+                victim.USER_CONTRIBUTION(),
+                provider1Proofs[victimSequenceNumber]
+            ),
+            random.combineRandomValues(
+                victim.USER_CONTRIBUTION(),
+                provider1Proofs[victimSequenceNumber],
+                0
+            )
+        );
+        assertEq(
+            random.getRequestV2(provider1, victimSequenceNumber).sequenceNumber,
+            0
+        );
+    }
+
+    // The success-path reveal events must describe the request being revealed, not whichever
+    // request the callback moved into its slot.
+    function testCallbackReentrancyEmitsEventsForRevealedRequest() public {
+        (
+            ,
+            EntropyPollingConsumer victim,
+            uint64 attackerSequenceNumber
+        ) = setUpCallbackReentrancy(1000000);
+        EntropyStructsV2.Request memory attackerRequest = random.getRequestV2(
+            provider1,
+            attackerSequenceNumber
+        );
+        bytes32 randomNumber = random.combineRandomValues(
+            bytes32(uint256(42)),
+            provider1Proofs[attackerSequenceNumber],
+            0
+        );
+
+        vm.expectEmit(true, true, true, true, address(random));
+        emit RevealedWithCallback(
+            EntropyStructConverter.toV1Request(attackerRequest),
+            bytes32(uint256(42)),
+            provider1Proofs[attackerSequenceNumber],
+            randomNumber
+        );
+        vm.expectEmit(true, true, true, false, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            attackerRequest.requester,
+            attackerSequenceNumber,
+            randomNumber,
+            bytes32(uint256(42)),
+            provider1Proofs[attackerSequenceNumber],
+            false,
+            bytes(""),
+            0,
+            bytes("")
+        );
+        random.revealWithCallback(
+            provider1,
+            attackerSequenceNumber,
+            bytes32(uint256(42)),
+            provider1Proofs[attackerSequenceNumber]
+        );
+
+        assertEq(victim.sequenceNumber(), attackerSequenceNumber + 1);
+    }
 }
 
 contract EntropyConsumer is IEntropyConsumer {
@@ -2021,5 +2182,74 @@ contract EntropyConsumer is IEntropyConsumer {
         if (reverts) {
             revert("Callback failed");
         }
+    }
+}
+
+// A consumer that polls for its random number instead of receiving a callback. It deliberately
+// does not implement IEntropyConsumer.
+contract EntropyPollingConsumer {
+    bytes32 public constant USER_CONTRIBUTION = bytes32(uint256(0xdead));
+
+    address public entropy;
+    address public provider;
+    uint64 public sequenceNumber;
+
+    constructor(address _entropy, address _provider) {
+        entropy = _entropy;
+        provider = _provider;
+    }
+
+    function makeRequest() public {
+        sequenceNumber = IEntropy(entropy).request{
+            value: IEntropy(entropy).getFee(provider)
+        }(
+            provider,
+            IEntropy(entropy).constructUserCommitment(USER_CONTRIBUTION),
+            false
+        );
+    }
+
+    function revealRequest(
+        bytes32 userContribution,
+        bytes32 providerContribution
+    ) public returns (bytes32) {
+        return
+            IEntropy(entropy).reveal(
+                provider,
+                sequenceNumber,
+                userContribution,
+                providerContribution
+            );
+    }
+}
+
+// A callback consumer that reenters Entropy from its callback, making a second consumer create a
+// request while the outer reveal is still in progress.
+contract EntropyReentrantConsumer is IEntropyConsumer {
+    address public entropy;
+    EntropyPollingConsumer public victim;
+
+    constructor(address _entropy, EntropyPollingConsumer _victim) {
+        entropy = _entropy;
+        victim = _victim;
+    }
+
+    function requestEntropy(
+        bytes32 userContribution,
+        uint32 gasLimit
+    ) public payable returns (uint64 sequenceNumber) {
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
+            IEntropy(entropy).getDefaultProvider(),
+            userContribution,
+            gasLimit
+        );
+    }
+
+    function getEntropy() internal view override returns (address) {
+        return entropy;
+    }
+
+    function entropyCallback(uint64, address, bytes32) internal override {
+        victim.makeRequest();
     }
 }
