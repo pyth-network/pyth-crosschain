@@ -1,0 +1,24 @@
+name: Check Docker Workflow Paths
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/**
+      - "**/Dockerfile"
+      - "**/Dockerfile.*"
+      - scripts/check-docker-workflow-paths.py
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .tool-versions
+      - name: Install PyYAML
+        run: pip install pyyaml
+      - name: Check that docker-*.yml paths filters cover their build inputs
+        run: python3 scripts/check-docker-workflow-paths.py
