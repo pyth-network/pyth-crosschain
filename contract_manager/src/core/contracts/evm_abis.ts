@@ -109,6 +109,19 @@ export const EXTENDED_ENTROPY_ABI = [
 export const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
+    name: "getValidTimePeriod",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "wormhole",
     outputs: [
       {
