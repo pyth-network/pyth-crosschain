@@ -254,9 +254,7 @@ const loadPublisherData = async (
   });
 };
 
-const getPublisherRankings = async () => {
-  return PUBLISHER_RANKINGS;
-};
+const getPublisherRankings = () => PUBLISHER_RANKINGS;
 
 const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
   BigInt(
@@ -265,12 +263,10 @@ const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
     )?.cap ?? 0,
   );
 
-export const createStakeAccountAndDeposit = async (
+export const createStakeAccountAndDeposit = (
   client: PythStakingClient,
   amount: bigint,
-): Promise<PublicKey> => {
-  return client.createStakeAccountAndDeposit(amount);
-};
+): Promise<PublicKey> => client.createStakeAccountAndDeposit(amount);
 
 export const deposit = async (
   client: PythStakingClient,
@@ -374,18 +370,17 @@ export const unstakeAllIntegrityStaking = async (
   ]);
 };
 
-export const reassignPublisherAccount = async (
+export const reassignPublisherAccount = (
   client: PythStakingClient,
   stakeAccount: PublicKey,
   targetAccount: PublicKey,
   publisherKey: PublicKey,
-): Promise<void> => {
-  return client.reassignPublisherStakeAccount(
+): Promise<void> =>
+  client.reassignPublisherStakeAccount(
     publisherKey,
     stakeAccount,
     targetAccount,
   );
-};
 
 export const optPublisherOut = async (
   client: PythStakingClient,
