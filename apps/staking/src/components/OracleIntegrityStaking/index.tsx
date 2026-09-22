@@ -286,7 +286,6 @@ const SelfStaking = ({
                 <PublisherTableHeader>Pool</PublisherTableHeader>
                 <PublisherTableHeader>Estimated next APY</PublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
-                <PublisherTableHeader>Number of feeds</PublisherTableHeader>
                 <PublisherTableHeader>Quality ranking</PublisherTableHeader>
               </tr>
             </thead>
@@ -714,8 +713,6 @@ const PublisherList = ({
               SortOption.ApyAscending,
               SortOption.SelfStakeDescending,
               SortOption.SelfStakeAscending,
-              SortOption.NumberOfFeedsDescending,
-              SortOption.NumberOfFeedsAscending,
               SortOption.QualityRankingDescending,
               SortOption.QualityRankingAscending,
             ]}
@@ -780,14 +777,6 @@ const PublisherList = ({
                   Estimated next APY
                 </SortablePublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
-                <SortablePublisherTableHeader
-                  asc={SortOption.NumberOfFeedsAscending}
-                  desc={SortOption.NumberOfFeedsDescending}
-                  setSort={updateSort}
-                  sort={sort}
-                >
-                  Number of feeds
-                </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.QualityRankingAscending}
                   desc={SortOption.QualityRankingDescending}
@@ -945,17 +934,6 @@ const compare = (
         () => compareApy(a, b, yieldRate, ascending),
         () => compareSelfStake(a, b, ascending),
         () => comparePoolCapacity(a, b, ascending),
-        () => compareName(collator, a, b, ascending),
-      ]);
-    }
-    case SortOption.NumberOfFeedsAscending:
-    case SortOption.NumberOfFeedsDescending: {
-      const ascending = sort === SortOption.NumberOfFeedsAscending;
-      return compareInOrder([
-        () => (ascending ? -1 : 1) * Number(b.numFeeds - a.numFeeds),
-        () => compareSelfStake(a, b, ascending),
-        () => comparePoolCapacity(a, b, ascending),
-        () => compareApy(a, b, yieldRate, ascending),
         () => compareName(collator, a, b, ascending),
       ]);
     }
@@ -1156,7 +1134,6 @@ type PublisherProps = {
     poolCapacity: bigint;
     poolUtilization: bigint;
     poolUtilizationDelta: bigint;
-    numFeeds: number;
     qualityRanking: number;
     delegationFee: bigint;
     apyHistory: { date: Date; apy: number; selfApy: number }[];
@@ -1286,10 +1263,6 @@ const Publisher = ({
             <dd>{estimatedNextApy}%</dd>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <dt className="font-semibold">Number of feeds:</dt>
-            <dd>{publisher.numFeeds}</dd>
-          </div>
-          <div className="flex flex-row items-center gap-2">
             <dt className="font-semibold">Quality ranking:</dt>
             <dd>
               {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
@@ -1351,15 +1324,12 @@ const Publisher = ({
           </div>
         </PublisherTableCell>
         <PublisherTableCell className="text-center">
-          {publisher.numFeeds}
-        </PublisherTableCell>
-        <PublisherTableCell className="text-center">
           {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
         </PublisherTableCell>
       </tr>
       {(warmup !== undefined || staked !== undefined) && (
         <tr>
-          <td className="border-separate border-spacing-8" colSpan={7}>
+          <td className="border-separate border-spacing-8" colSpan={6}>
             <YourPositionsTable
               cancelWarmup={cancelWarmup}
               currentEpoch={currentEpoch}
@@ -1627,8 +1597,6 @@ enum SortOption {
   ApyAscending,
   SelfStakeDescending,
   SelfStakeAscending,
-  NumberOfFeedsDescending,
-  NumberOfFeedsAscending,
   QualityRankingDescending,
   QualityRankingAscending,
 }
@@ -1658,12 +1626,6 @@ const getSortName = (sortOption: SortOption) => {
     }
     case SortOption.SelfStakeAscending: {
       return "Lowest publisher's stake";
-    }
-    case SortOption.NumberOfFeedsDescending: {
-      return "Most feeds";
-    }
-    case SortOption.NumberOfFeedsAscending: {
-      return "Least feeds";
     }
     case SortOption.QualityRankingDescending: {
       return "Best quality ranking";
