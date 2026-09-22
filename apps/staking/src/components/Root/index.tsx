@@ -9,7 +9,6 @@ import {
   IS_PRODUCTION_SERVER,
   MAINNET_RPC,
   OIS_PAUSED,
-  PYTHNET_RPC,
   SIMULATION_PAYER_ADDRESS,
   WALLETCONNECT_PROJECT_ID,
 } from "../../config/server";
@@ -85,7 +84,6 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
           >
             <ApiProvider
               hermesUrl={HERMES_URL}
-              pythnetRpcUrl={PYTHNET_RPC}
               simulationPayerAddress={SIMULATION_PAYER_ADDRESS}
             >
               <ToastProvider>

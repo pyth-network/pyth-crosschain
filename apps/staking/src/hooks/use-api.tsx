@@ -2,10 +2,10 @@
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 import type { PythStakingWallet } from "@pythnetwork/staking-sdk";
-import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
+import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
@@ -49,7 +49,6 @@ const State = {
     wallet: PythStakingWallet,
     isMainnet: boolean,
     client: PythStakingClient,
-    pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
@@ -61,7 +60,7 @@ const State = {
       const account = await api.createStakeAccountAndDeposit(client, amount);
       return onCreateAccount(account);
     },
-    loadData: () => api.loadData(client, pythnetClient, hermesClient),
+    loadData: () => api.loadData(client, hermesClient),
     type: StateType.LoadedNoStakeAccount as const,
     wallet,
   }),
@@ -70,7 +69,6 @@ const State = {
     wallet: PythStakingWallet,
     isMainnet: boolean,
     client: PythStakingClient,
-    pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     account: PublicKey,
     simulationPayer: PublicKey,
@@ -108,13 +106,7 @@ const State = {
       deposit: bindApi(api.deposit),
 
       loadData: () =>
-        api.loadData(
-          client,
-          pythnetClient,
-          hermesClient,
-          account,
-          simulationPayer,
-        ),
+        api.loadData(client, hermesClient, account, simulationPayer),
       optPublisherOut: bindApi(api.optPublisherOut),
       reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
       selectAccount,
@@ -151,36 +143,26 @@ type ApiProviderProps = Omit<
   ComponentProps<typeof ApiContext.Provider>,
   "value"
 > & {
-  pythnetRpcUrl: string;
   hermesUrl: string;
   simulationPayerAddress: string;
 };
 
 export const ApiProvider = ({
   hermesUrl,
-  pythnetRpcUrl,
   simulationPayerAddress,
   ...props
 }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl, pythnetRpcUrl, simulationPayerAddress);
+  const state = useApiContext(hermesUrl, simulationPayerAddress);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (
-  hermesUrl: string,
-  pythnetRpcUrl: string,
-  simulationPayerAddress: string,
-) => {
+const useApiContext = (hermesUrl: string, simulationPayerAddress: string) => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const { isMainnet } = useNetwork();
   const { mutate } = useSWRConfig();
   const hermesClient = useMemo(() => new HermesClient(hermesUrl), [hermesUrl]);
-  const pythnetClient = useMemo(
-    () => new PythnetClient(new Connection(pythnetRpcUrl)),
-    [pythnetRpcUrl],
-  );
   const simulationPayer = useMemo(
     () => new PublicKey(simulationPayerAddress),
     [simulationPayerAddress],
@@ -270,7 +252,6 @@ const useApiContext = (
                 pythStakingClient.wallet,
                 isMainnet,
                 pythStakingClient,
-                pythnetClient,
                 hermesClient,
                 selectedAccount ?? firstAccount,
                 simulationPayer,
@@ -285,7 +266,6 @@ const useApiContext = (
                 pythStakingClient.wallet,
                 isMainnet,
                 pythStakingClient,
-                pythnetClient,
                 hermesClient,
                 async (newAccount) => {
                   await stakeAccounts.mutate([newAccount]);
@@ -304,7 +284,6 @@ const useApiContext = (
     wallet.disconnecting,
     wallet.connected,
     pythStakingClient,
-    pythnetClient,
     stakeAccounts,
     hermesClient,
     lastStakeAccountMainnet,
