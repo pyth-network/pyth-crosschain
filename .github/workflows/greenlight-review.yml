@@ -1,0 +1,69 @@
+# Copy this file into your repository as
+# `.github/workflows/greenlight-review.yml`, unchanged.
+#
+# It is the dispatch target: greenlight sends a `workflow_dispatch` to
+# `greenlight-review.yml` on the PR's base branch, and `workflow_dispatch`
+# cannot trigger a `workflow_call`-only reusable workflow. So this thin
+# caller lives in your repo and every piece of logic lives in the
+# reusable workflow it calls — you upgrade by moving the ref below, not
+# by editing this file.
+#
+# Setup: README.md in dourolabs/greenlight-actions.
+# Do the App re-authorization step there first — it is the usual reason
+# a freshly-installed caller never runs.
+
+name: greenlight AI review
+
+on:
+  workflow_dispatch:
+    inputs:
+      head_sha:
+        description: The sha under review.
+        required: true
+        type: string
+      pr_number:
+        description: PR number, decimal string.
+        required: true
+        type: string
+      base_ref:
+        description: The PR base branch.
+        required: true
+        type: string
+      review_name:
+        description: The key from the repo config's `reviews` map.
+        required: true
+        type: string
+      prompt_path:
+        description: Repo-relative path to the prompt file.
+        required: true
+        type: string
+      check_name:
+        description: The check-run name to post against `head_sha`.
+        required: true
+        type: string
+
+jobs:
+  review:
+    # Load-bearing, and the whole file is useless without it. A job that
+    # calls a reusable workflow *caps* what every job inside that workflow
+    # may request, so this block has to be the union of what the impl's
+    # jobs ask for: `contents: read` for its `review` job, `checks: write`
+    # for its `report` job. Declare less — or nothing, which takes the
+    # repository's read-only default — and GitHub refuses to build the job
+    # graph: `startup_failure`, zero jobs, no log, nothing to read.
+    #
+    # This is a ceiling, not a grant. Each job inside the impl still gets
+    # only what its own `permissions:` block declares, so the agent's job
+    # keeps its read-only token and cannot post a check run.
+    permissions:
+      contents: read
+      checks: write
+    uses: dourolabs/greenlight-actions/.github/workflows/greenlight-review-impl.yml@v1
+    with:
+      head_sha: ${{ inputs.head_sha }}
+      pr_number: ${{ inputs.pr_number }}
+      base_ref: ${{ inputs.base_ref }}
+      review_name: ${{ inputs.review_name }}
+      prompt_path: ${{ inputs.prompt_path }}
+      check_name: ${{ inputs.check_name }}
+    secrets: inherit
