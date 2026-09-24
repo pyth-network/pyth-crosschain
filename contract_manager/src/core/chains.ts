@@ -2508,6 +2508,19 @@ export class NearChain extends Chain {
   }
 }
 
+/** Inclusion bid on Stellar mainnet, in stroops (0.1 XLM). */
+const STELLAR_MAINNET_INCLUSION_FEE = "1000000";
+
+/** How long a submitted Stellar transaction stays eligible for inclusion, in seconds. */
+export const STELLAR_TX_VALIDITY_SECONDS = 30;
+
+/**
+ * One-second poll attempts to wait for a submitted Stellar transaction. Set past
+ * {@link STELLAR_TX_VALIDITY_SECONDS} so that a still-unknown transaction is
+ * known to have expired rather than merely being slow to index.
+ */
+const STELLAR_TX_POLL_ATTEMPTS = 40;
+
 export class StellarChain extends Chain {
   static override type = "StellarChain";
 
@@ -2562,6 +2575,54 @@ export class StellarChain extends Chain {
     return new stellarRpc.Server(this.rpcUrl, {
       allowHttp: this.rpcUrl.startsWith("http://"),
     });
+  }
+
+  /**
+   * The inclusion bid to build transactions on this chain with, in stroops.
+   *
+   * `prepareTransaction` adds the Soroban resource fee on top of this but never
+   * raises the bid itself, and mainnet ledgers routinely run near capacity, so a
+   * `BASE_FEE` bid gets outbid and the transaction expires without ever reaching
+   * a ledger. Surge pricing charges the market-clearing rate rather than the
+   * bid, so bidding high costs nothing extra on an uncongested ledger.
+   */
+  getInclusionFee(): string {
+    return this.isMainnet() ? STELLAR_MAINNET_INCLUSION_FEE : BASE_FEE;
+  }
+
+  /**
+   * Wait for a submitted transaction to land, distinguishing the two ways it can
+   * fail to: one still unknown to the RPC past its validity window was dropped
+   * before reaching a ledger, so nothing executed and it is safe to resubmit,
+   * whereas any other non-success status did execute and failed.
+   *
+   * @param hash - hash returned by `sendTransaction`
+   * @param description - what the transaction does, for error messages
+   */
+  async waitForTransaction(
+    hash: string,
+    description: string,
+  ): Promise<stellarRpc.Api.GetSuccessfulTransactionResponse> {
+    const result = await this.getProvider().pollTransaction(hash, {
+      attempts: STELLAR_TX_POLL_ATTEMPTS,
+    });
+
+    if (result.status === stellarRpc.Api.GetTransactionStatus.NOT_FOUND) {
+      throw new Error(
+        `${description} transaction ${hash} was still unknown to the RPC ` +
+          `${STELLAR_TX_POLL_ATTEMPTS}s after submission, past its ` +
+          `${STELLAR_TX_VALIDITY_SECONDS}s validity window: it was dropped before ` +
+          `reaching a ledger, so nothing executed and no fee was charged. This ` +
+          `usually means the ledger was full and the inclusion bid of ` +
+          `${this.getInclusionFee()} stroops was outbid; it is safe to resubmit.`,
+      );
+    }
+
+    if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {
+      throw new Error(`${description} transaction ${hash} failed`);
+    }
+
+    return result;
   }
 
   /**
@@ -2620,11 +2681,11 @@ export class StellarChain extends Chain {
     const account = await server.getAccount(keypair.publicKey());
 
     const tx = new StellarTransactionBuilder(account, {
-      fee: BASE_FEE,
+      fee: this.getInclusionFee(),
       networkPassphrase: this.networkPassphrase,
     })
       .addOperation(StellarOperation.uploadContractWasm({ wasm }))
-      .setTimeout(30)
+      .setTimeout(STELLAR_TX_VALIDITY_SECONDS)
       .build();
 
     const prepared = await server.prepareTransaction(tx);
@@ -2636,10 +2697,7 @@ export class StellarChain extends Chain {
         `Failed to upload WASM: ${JSON.stringify(sent.errorResult)}`,
       );
     }
-    const result = await server.pollTransaction(sent.hash);
-    if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {
-      throw new Error(`WASM upload transaction ${sent.hash} failed`);
-    }
+    await this.waitForTransaction(sent.hash, "WASM upload");
 
     return createHash("sha256").update(wasm).digest("hex");
   }
