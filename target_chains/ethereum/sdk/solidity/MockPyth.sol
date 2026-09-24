@@ -92,8 +92,8 @@ contract MockPyth is AbstractPyth {
         uint64 minAllowedPublishTime,
         uint64 maxAllowedPublishTime,
         bool checkUniqueness,
-        bool checkUpdateDataIsMinimal,
-        bool storeUpdatesIfFresh
+        bool /* checkUpdateDataIsMinimal */,
+        bool /* storeUpdatesIfFresh */
     )
         public
         payable
