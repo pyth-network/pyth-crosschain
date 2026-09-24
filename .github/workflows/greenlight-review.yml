@@ -1,0 +1,47 @@
+# Copy this file into your repository as
+# `.github/workflows/greenlight-review.yml`, unchanged.
+
+name: greenlight AI review
+
+on:
+  workflow_dispatch:
+    inputs:
+      head_sha:
+        description: The sha under review.
+        required: true
+        type: string
+      pr_number:
+        description: PR number, decimal string.
+        required: true
+        type: string
+      base_ref:
+        description: The PR base branch.
+        required: true
+        type: string
+      review_name:
+        description: The key from the repo config's `reviews` map.
+        required: true
+        type: string
+      prompt_path:
+        description: Repo-relative path to the prompt file.
+        required: true
+        type: string
+      check_name:
+        description: The check-run name to post against `head_sha`.
+        required: true
+        type: string
+
+jobs:
+  review:
+    permissions:
+      contents: read
+      checks: write
+    uses: dourolabs/greenlight-actions/.github/workflows/greenlight-review-impl.yml@v1
+    with:
+      head_sha: ${{ inputs.head_sha }}
+      pr_number: ${{ inputs.pr_number }}
+      base_ref: ${{ inputs.base_ref }}
+      review_name: ${{ inputs.review_name }}
+      prompt_path: ${{ inputs.prompt_path }}
+      check_name: ${{ inputs.check_name }}
+    secrets: inherit
