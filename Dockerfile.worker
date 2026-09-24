@@ -1,0 +1,55 @@
+FROM node:24.12.0-bullseye
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG RUST_TOOLCHAIN=1.88.0
+ARG PNPM_VERSION=10.28.0
+ARG SOLANA_VERSION=stable
+ARG ANCHOR_VERSION=0.28.0
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    clang \
+    cmake \
+    curl \
+    git \
+    jq \
+    libclang-dev \
+    libpq-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libudev-dev \
+    libusb-1.0-0-dev \
+    llvm \
+    lld \
+    openssh-client \
+    pkg-config \
+    python3 \
+    python3-pip \
+    unzip \
+    zip \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:/usr/local/rustup/bin:/root/.avm/bin:/root/.foundry/bin:/root/.local/share/solana/install/active_release/bin:$PATH
+
+RUN curl -sSfL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain ${RUST_TOOLCHAIN} \
+  && rustup component add rustfmt clippy \
+  && rustup target add wasm32-unknown-unknown wasm32-wasip1
+
+RUN corepack enable \
+  && corepack prepare pnpm@${PNPM_VERSION} --activate
+
+RUN curl -sSfL https://foundry.paradigm.xyz | bash \
+  && /root/.foundry/bin/foundryup
+
+RUN curl -sSfL https://release.solana.com/${SOLANA_VERSION}/install | bash
+
+RUN cargo install --git https://github.com/coral-xyz/anchor avm --locked \
+  && avm install ${ANCHOR_VERSION} \
+  && avm use ${ANCHOR_VERSION}
+
+WORKDIR /workspace
