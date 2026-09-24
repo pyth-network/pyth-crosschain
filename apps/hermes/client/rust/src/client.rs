@@ -193,10 +193,12 @@ impl HermesClient {
                         warn!("Sender channel is full, responses will be delayed");
                         if sender.send(r).await.is_err() {
                             error!("Sender channel is closed, stopping client");
+                            break;
                         }
                     }
                     Err(TrySendError::Closed(_)) => {
                         error!("Sender channel is closed, stopping client");
+                        break;
                     }
                 }
             }
