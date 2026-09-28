@@ -245,6 +245,16 @@
         "types": "./dist/cjs/core/contracts/wormhole.d.ts"
       }
     },
+    "./core/pro_guardian_sets": {
+      "import": {
+        "default": "./dist/esm/core/pro_guardian_sets.mjs",
+        "types": "./dist/esm/core/pro_guardian_sets.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/pro_guardian_sets.cjs",
+        "types": "./dist/cjs/core/pro_guardian_sets.d.ts"
+      }
+    },
     "./core/token": {
       "import": {
         "default": "./dist/esm/core/token.mjs",
