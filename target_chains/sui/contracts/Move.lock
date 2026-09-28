@@ -2,7 +2,33 @@
 # This file should be checked in.
 
 [move]
-version = 4
+version = 3
+manifest_digest = "9614F344B99AF0A7B81F448DB5DCEFDDC24CD5DD3149D9B6D7D6EE4B07C13D74"
+deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
+dependencies = [
+  { id = "Iota", name = "Iota" },
+  { id = "IotaSystem", name = "IotaSystem" },
+  { id = "MoveStdlib", name = "MoveStdlib" },
+  { id = "Stardust", name = "Stardust" },
+  { id = "wormhole", name = "wormhole" },
+]
+
+[[move.package]]
+id = "Iota"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "efc8e49575112ad01a8d8a3b7973f86cc1c716a4", subdir = "crates/iota-framework/packages/iota-framework" }
+
+dependencies = [
+  { id = "MoveStdlib", name = "MoveStdlib" },
+]
+
+[[move.package]]
+id = "IotaSystem"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "efc8e49575112ad01a8d8a3b7973f86cc1c716a4", subdir = "crates/iota-framework/packages/iota-system" }
+
+dependencies = [
+  { id = "Iota", name = "Iota" },
+  { id = "MoveStdlib", name = "MoveStdlib" },
+]
 
 [pinned.mainnet.MoveStdlib]
 source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/move-stdlib", rev = "367fd808279bed26f7c64fc63160062a2ee29ab7" }
@@ -10,17 +36,41 @@ use_environment = "mainnet"
 manifest_digest = "C4FE4C91DE74CBF223B2E380AE40F592177D21870DC2D7EB6227D2D694E05363"
 deps = {}
 
+[[move.package]]
+id = "MoveStdlib"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "efc8e49575112ad01a8d8a3b7973f86cc1c716a4", subdir = "crates/iota-framework/packages/move-stdlib" }
+
 [pinned.mainnet.Sui]
 source = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "367fd808279bed26f7c64fc63160062a2ee29ab7" }
 use_environment = "mainnet"
 manifest_digest = "CD547CB1ACCE0880C835DAED2D8FFCB91D56C833AE5240D3AA5B918398263195"
 deps = { MoveStdlib = "MoveStdlib" }
 
+[[move.package]]
+id = "Stardust"
+source = { git = "https://github.com/iotaledger/iota.git", rev = "efc8e49575112ad01a8d8a3b7973f86cc1c716a4", subdir = "crates/iota-framework/packages/stardust" }
+
+dependencies = [
+  { id = "Iota", name = "Iota" },
+  { id = "MoveStdlib", name = "MoveStdlib" },
+]
+
 [pinned.mainnet.pyth]
 source = { root = true }
 use_environment = "mainnet"
 manifest_digest = "6B38AB3F364FFA0081F4BA68D40A1F6BA0C3BB4118D02D0451C62C08F757BF3D"
 deps = { std = "MoveStdlib", sui = "Sui", wormhole = "wormhole" }
+
+[[move.package]]
+id = "wormhole"
+source = { git = "https://github.com/wormhole-foundation/wormhole.git", rev = "c5a2eabe0a48654fcb1d3c98537915c2fb671c80", subdir = "sui/wormhole" }
+
+dependencies = [
+  { id = "Iota", name = "Iota" },
+  { id = "IotaSystem", name = "IotaSystem" },
+  { id = "MoveStdlib", name = "MoveStdlib" },
+  { id = "Stardust", name = "Stardust" },
+]
 
 [pinned.mainnet.wormhole]
 source = { git = "https://github.com/wormhole-foundation/wormhole.git", subdir = "sui/wormhole", rev = "c5a2eabe0a48654fcb1d3c98537915c2fb671c80" }
