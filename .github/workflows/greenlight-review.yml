@@ -44,4 +44,6 @@ jobs:
       review_name: ${{ inputs.review_name }}
       prompt_path: ${{ inputs.prompt_path }}
       check_name: ${{ inputs.check_name }}
-    secrets: inherit
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
