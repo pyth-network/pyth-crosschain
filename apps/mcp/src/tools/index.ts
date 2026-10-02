@@ -8,6 +8,7 @@ import { registerConvertDateToTimestamp } from "./convert-date-to-timestamp.js";
 import { registerGetCandlestickData } from "./get-candlestick-data.js";
 import { registerGetHistoricalPrice } from "./get-historical-price.js";
 import { registerGetLatestPrice } from "./get-latest-price.js";
+import { registerGetPriceRange } from "./get-price-range.js";
 import { registerGetSymbols } from "./get-symbols.js";
 
 export function registerAllTools(
@@ -42,4 +43,5 @@ export function registerAllTools(
     logger,
     sessionContext,
   );
+  registerGetPriceRange(server, config, historyClient, logger, sessionContext);
 }
