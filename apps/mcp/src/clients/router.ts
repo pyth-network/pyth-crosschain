@@ -1,18 +1,12 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import type { Channel } from "../constants.js";
-import { CHANNELS } from "../constants.js";
+import type { Channel, PriceFeedProperty } from "../constants.js";
+import { CHANNELS, PRICE_FEED_PROPERTIES } from "../constants.js";
 import { HttpError, httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { LatestPriceParsedFeed } from "./types.js";
 
-type PriceFeedProperty =
-  | "price"
-  | "bestBidPrice"
-  | "bestAskPrice"
-  | "exponent"
-  | "publisherCount"
-  | "confidence";
-
+// marketSession matters for equities (prices outside regular hours) and
+// feedUpdateTimestamp shows how fresh each feed is.
 const DEFAULT_PROPERTIES: PriceFeedProperty[] = [
   "price",
   "bestBidPrice",
@@ -20,9 +14,11 @@ const DEFAULT_PROPERTIES: PriceFeedProperty[] = [
   "exponent",
   "publisherCount",
   "confidence",
+  "marketSession",
+  "feedUpdateTimestamp",
 ];
 const CHANNEL_SET: ReadonlySet<string> = new Set(CHANNELS);
-const DEFAULT_PROPERTY_SET: ReadonlySet<string> = new Set(DEFAULT_PROPERTIES);
+const PROPERTY_SET: ReadonlySet<string> = new Set(PRICE_FEED_PROPERTIES);
 
 export type UpstreamResult<T> = {
   data: T;
@@ -125,7 +121,7 @@ function normalizeChannel(channel: string): Channel {
 }
 
 function isPriceFeedProperty(value: string): value is PriceFeedProperty {
-  return DEFAULT_PROPERTY_SET.has(value);
+  return PROPERTY_SET.has(value);
 }
 
 function normalizeProperties(properties?: string[]): PriceFeedProperty[] {
@@ -166,6 +162,18 @@ function normalizeFeeds(parsed: ParsedPayload): LatestPriceParsedFeed[] {
     if (raw.exponent != null) feed.exponent = raw.exponent as number;
     if (raw.publisherCount != null)
       feed.publisher_count = raw.publisherCount as number;
+    if (raw.emaPrice != null) feed.ema_price = Number(raw.emaPrice);
+    if (raw.emaConfidence != null)
+      feed.ema_confidence = Number(raw.emaConfidence);
+    if (raw.marketSession != null)
+      feed.market_session = String(raw.marketSession);
+    if (raw.feedUpdateTimestamp != null)
+      feed.feed_update_timestamp = Number(raw.feedUpdateTimestamp);
+    if (raw.fundingRate != null) feed.funding_rate = Number(raw.fundingRate);
+    if (raw.fundingTimestamp != null)
+      feed.funding_timestamp = Number(raw.fundingTimestamp);
+    if (raw.fundingRateInterval != null)
+      feed.funding_rate_interval = Number(raw.fundingRateInterval);
     return feed;
   });
 }

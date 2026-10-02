@@ -3,7 +3,7 @@ import type { Logger } from "pino";
 import { z } from "zod";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
-import { CHANNELS } from "../constants.js";
+import { CHANNELS, PRICE_FEED_PROPERTIES } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
@@ -37,10 +37,10 @@ const GetLatestPriceInput = {
     .optional()
     .describe("Numeric feed IDs from get_symbols"),
   properties: z
-    .array(z.string())
+    .array(z.enum(PRICE_FEED_PROPERTIES))
     .optional()
     .describe(
-      "Properties to return. Default: price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount",
+      `Properties to return: ${PRICE_FEED_PROPERTIES.join(", ")}. Default: price, bestBidPrice, bestAskPrice, exponent, publisherCount, confidence, marketSession, feedUpdateTimestamp. Use fundingRate, fundingTimestamp and fundingRateInterval for funding-rate feeds; emaPrice and emaConfidence for the exponential moving average.`,
     ),
   symbols: z
     .array(z.string())

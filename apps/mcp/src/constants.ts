@@ -8,6 +8,25 @@ export const CHANNELS = [
 
 export type Channel = (typeof CHANNELS)[number];
 
+// Router API PriceFeedProperty enum.
+export const PRICE_FEED_PROPERTIES = [
+  "price",
+  "bestBidPrice",
+  "bestAskPrice",
+  "exponent",
+  "publisherCount",
+  "confidence",
+  "fundingRate",
+  "fundingTimestamp",
+  "fundingRateInterval",
+  "marketSession",
+  "emaPrice",
+  "emaConfidence",
+  "feedUpdateTimestamp",
+] as const;
+
+export type PriceFeedProperty = (typeof PRICE_FEED_PROPERTIES)[number];
+
 // The History API's AssetTypeFilter list, plus crypto-index and
 // crypto-redemption-rate, which appear in /v1/symbols data but are rejected as
 // a server-side filter (we filter client-side). Replace with the /assets API
