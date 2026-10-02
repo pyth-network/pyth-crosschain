@@ -1,6 +1,7 @@
 // biome-ignore-all lint/style/noProcessEnv: config.ts is the designated env var loading point
 // biome-ignore-all lint/nursery/noUndeclaredEnvVars: MCP server uses its own env vars, not cached by turbo
 import { z } from "zod";
+import { CHANNELS } from "./constants.js";
 
 const ConfigSchema = z.object({
   // The user's own Pyth Pro API key. Only honored in stdio mode, where the
@@ -9,7 +10,7 @@ const ConfigSchema = z.object({
     (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
     z.string().trim().optional(),
   ),
-  channel: z.string().default("fixed_rate@200ms"),
+  channel: z.enum(CHANNELS).default("fixed_rate@200ms"),
   historyUrl: z
     .string()
     .url()

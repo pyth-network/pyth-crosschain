@@ -59,4 +59,14 @@ describe("loadConfig", () => {
   it("leaves accessToken undefined by default", () => {
     expect(loadConfig().accessToken).toBeUndefined();
   });
+
+  it("accepts fixed_rate@1000ms", () => {
+    process.env.PYTH_CHANNEL = "fixed_rate@1000ms";
+    expect(loadConfig().channel).toBe("fixed_rate@1000ms");
+  });
+
+  it("rejects a channel the API does not support", () => {
+    process.env.PYTH_CHANNEL = "fixed_rate@123ms";
+    expect(() => loadConfig()).toThrow();
+  });
 });

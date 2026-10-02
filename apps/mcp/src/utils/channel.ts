@@ -1,6 +1,7 @@
 import type { Config } from "../config.js";
+import type { Channel } from "../constants.js";
 
-const DEFAULT_CHANNEL = "fixed_rate@200ms";
+const DEFAULT_CHANNEL: Channel = "fixed_rate@200ms";
 
 /**
  * Resolve channel with 3-step priority:
@@ -9,8 +10,8 @@ const DEFAULT_CHANNEL = "fixed_rate@200ms";
  * 3. Hardcoded default
  */
 export function resolveChannel(
-  perToolChannel: string | undefined,
+  perToolChannel: Channel | undefined,
   config: Config,
-): string {
+): Channel {
   return perToolChannel ?? config.channel ?? DEFAULT_CHANNEL;
 }
