@@ -295,4 +295,82 @@ describe("get_candlestick_data tool", () => {
     expect(text).toContain("pyth-indices");
     expect(text).not.toContain("invalid or expired");
   });
+
+  it("resolves a bare pair to the full symbol before calling upstream", async () => {
+    let upstreamSymbol: string | null = null;
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () =>
+        HttpResponse.json([
+          {
+            ...mockFeeds[0],
+            instrument_type: "spot",
+            state: "stable",
+            symbol: "Crypto.ETH/USD",
+          },
+          {
+            ...mockFeeds[0],
+            instrument_type: "rate",
+            pyth_lazer_id: 2,
+            state: "stable",
+            symbol: "FundingRate.Hyperliquid.ETH/USD",
+          },
+        ]),
+      ),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+        upstreamSymbol = new URL(request.url).searchParams.get("symbol");
+        return HttpResponse.json({
+          c: [1],
+          h: [1],
+          l: [1],
+          o: [1],
+          s: "ok",
+          t: [1_708_300_800],
+          v: [0],
+        });
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "ETH/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(upstreamSymbol).toBe("Crypto.ETH/USD");
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.resolved_symbols).toEqual({ "ETH/USD": "Crypto.ETH/USD" });
+  });
+
+  it("returns a not-found error for an unknown symbol without calling history", async () => {
+    let historyCalled = false;
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, () => {
+        historyCalled = true;
+        return HttpResponse.json({});
+      }),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "NOPE/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+    expect(result.isError).toBe(true);
+    expect(historyCalled).toBe(false);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Feed not found: NOPE/USD");
+  });
 });

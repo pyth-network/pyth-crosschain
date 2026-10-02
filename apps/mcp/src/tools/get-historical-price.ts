@@ -16,6 +16,10 @@ import {
   logToolCall,
 } from "../utils/logger.js";
 import {
+  resolvedSymbolsField,
+  resolveSymbols,
+} from "../utils/resolve-symbols.js";
+import {
   alignTimestampToChannel,
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
@@ -49,7 +53,7 @@ const GetHistoricalPriceInput = {
     .max(50)
     .optional()
     .describe(
-      "Full symbol names from get_symbols including asset type prefix (e.g. ['Crypto.BTC/USD', 'Equity.US.AAPL/USD'])",
+      "Symbols from get_symbols (e.g. ['Crypto.BTC/USD', 'Equity.US.AAPL/USD']) or bare pairs like 'BTC/USD'",
     ),
   timestamp: z.coerce
     .number()
@@ -129,6 +133,7 @@ export function registerGetHistoricalPrice(
 
       let ids: number[] = [];
       let priceEndpointCalled = false;
+      let resolvedSymbols: Record<string, string> = {};
 
       try {
         // Resolve symbols to IDs
@@ -140,19 +145,18 @@ export function registerGetHistoricalPrice(
           const { data: allFeeds, upstreamLatencyMs } =
             await historyClient.getSymbols(token);
           symbolLookupUpstreamMs = upstreamLatencyMs;
-          for (const symbol of effectiveSymbols ?? []) {
-            const feed = allFeeds.find((f) => f.symbol === symbol);
-            if (!feed) {
-              logToolCall(logger, {
-                ...baseMetrics,
-                errorType: "not_found",
-                latencyMs: Date.now() - start,
-                status: "error",
-              });
-              return toolError(ErrorMessages.FEED_NOT_FOUND(symbol));
-            }
-            ids.push(feed.pyth_lazer_id);
+          const resolution = resolveSymbols(effectiveSymbols ?? [], allFeeds);
+          if (resolution.errors.length > 0) {
+            logToolCall(logger, {
+              ...baseMetrics,
+              errorType: "not_found",
+              latencyMs: Date.now() - start,
+              status: "error",
+            });
+            return toolError(resolution.errors.join("\n"));
           }
+          resolvedSymbols = resolution.resolved;
+          ids.push(...resolution.feeds.map((f) => f.pyth_lazer_id));
         }
 
         // Deduplicate
@@ -199,6 +203,7 @@ export function registerGetHistoricalPrice(
             direction,
             hint: hintByDirection[direction],
             prices: [],
+            ...resolvedSymbolsField(resolvedSymbols),
             requested_timestamp_iso: requestedISO,
             requested_timestamp_unix: requestedSeconds,
             valid_range: {
@@ -224,6 +229,7 @@ export function registerGetHistoricalPrice(
 
         const responseText = JSON.stringify({
           prices: enriched,
+          ...resolvedSymbolsField(resolvedSymbols),
           ...getServerTime(),
         });
         logToolCall(logger, {

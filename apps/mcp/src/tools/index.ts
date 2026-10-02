@@ -34,5 +34,12 @@ export function registerAllTools(
     logger,
     sessionContext,
   );
-  registerGetLatestPrice(server, config, routerClient, logger, sessionContext);
+  registerGetLatestPrice(
+    server,
+    config,
+    historyClient,
+    routerClient,
+    logger,
+    sessionContext,
+  );
 }

@@ -14,6 +14,10 @@ import {
   logToolCall,
 } from "../utils/logger.js";
 import {
+  resolvedSymbolsField,
+  resolveSymbols,
+} from "../utils/resolve-symbols.js";
+import {
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
   getServerTime,
@@ -51,7 +55,7 @@ const GetCandlestickDataInput = {
     .string()
     .min(1)
     .describe(
-      "Full symbol from get_symbols including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD')",
+      "Symbol from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or a bare pair like 'BTC/USD'",
     ),
   to: z.coerce.number().int().positive().describe("End time (Unix seconds)"),
 };
@@ -73,7 +77,7 @@ export function registerGetCandlestickData(
         readOnlyHint: true,
       },
       description:
-        "Fetch OHLC candlestick data for a symbol. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Fetch OHLC candlestick data for a symbol. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the single live spot feed (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },
@@ -115,15 +119,32 @@ export function registerGetCandlestickData(
       const channel = resolveChannel(params.channel, config);
 
       try {
-        const { data, upstreamLatencyMs } =
+        // Accept bare pairs like BTC/USD; the History API needs the full symbol.
+        const catalog = await historyClient.getSymbols(token);
+        const resolution = resolveSymbols([params.symbol], catalog.data);
+        const feed = resolution.feeds[0];
+        if (resolution.errors.length > 0 || !feed) {
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: "not_found",
+            latencyMs: Date.now() - start,
+            status: "error",
+          });
+          return toolError(resolution.errors.join("\n"));
+        }
+        const symbol = feed.symbol;
+        const resolvedSymbols = resolvedSymbolsField(resolution.resolved);
+
+        const { data, upstreamLatencyMs: historyUpstreamMs } =
           await historyClient.getCandlestickData(
             channel,
-            params.symbol,
+            symbol,
             params.resolution,
             params.from,
             params.to,
             token,
           );
+        const upstreamLatencyMs = catalog.upstreamLatencyMs + historyUpstreamMs;
 
         if (data.s === "no_data") {
           const fromISO = unixSecondsToISO(params.from);
@@ -137,7 +158,7 @@ export function registerGetCandlestickData(
             upstreamLatencyMs,
           });
           return toolError(
-            `No candlestick data for ${params.symbol} from ${fromISO} to ${toISO}. ` +
+            `No candlestick data for ${symbol} from ${fromISO} to ${toISO}. ` +
               `Data available from ${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}. ` +
               (params.from < DATA_AVAILABLE_FROM_UNIX
                 ? `Your 'from' (${fromISO}) is before data availability. Try from=${DATA_AVAILABLE_FROM_UNIX} (${DATA_AVAILABLE_FROM_ISO}).`
@@ -167,6 +188,7 @@ export function registerGetCandlestickData(
             hint: `No candlestick data for this symbol/time range. Data available from ${DATA_AVAILABLE_FROM_ISO} onward.`,
             requested_from_iso: unixSecondsToISO(params.from),
             requested_to_iso: unixSecondsToISO(params.to),
+            ...resolvedSymbols,
             s: "ok",
             valid_range: {
               from_iso: DATA_AVAILABLE_FROM_ISO,
@@ -214,9 +236,10 @@ export function registerGetCandlestickData(
               returned: MAX_CANDLES,
               total_available: totalCandles,
               truncated: true,
+              ...resolvedSymbols,
               ...getServerTime(),
             }
-          : { ...result, ...getServerTime() };
+          : { ...result, ...resolvedSymbols, ...getServerTime() };
 
         const responseText = JSON.stringify(response);
         logToolCall(logger, {
