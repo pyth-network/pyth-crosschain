@@ -254,6 +254,23 @@ describe("Integration: MCP server round-trip", () => {
     expect(feeds).toHaveLength(2);
   });
 
+  it("excludes inactive feeds from pyth://feeds", async () => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () =>
+        HttpResponse.json([
+          ...mockFeeds,
+          { ...mockFeeds[0], pyth_lazer_id: 999, state: "inactive" },
+        ]),
+      ),
+    );
+    const result = await client.readResource({ uri: "pyth://feeds" });
+    const feeds = JSON.parse(result.contents[0].text as string);
+    expect(feeds).toHaveLength(mockFeeds.length);
+    expect(
+      feeds.some((f: { pyth_lazer_id: number }) => f.pyth_lazer_id === 999),
+    ).toBe(false);
+  });
+
   it("reads pyth://feeds/metal resource", async () => {
     const result = await client.readResource({ uri: "pyth://feeds/metal" });
     const feeds = JSON.parse(result.contents[0].text as string);

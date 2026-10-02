@@ -188,6 +188,16 @@ describe("get_symbols tool", () => {
     expect(data.feeds[0].name).toBe("Apple Inc.");
   });
 
+  it("accepts the new asset types", async () => {
+    for (const assetType of ["interest-rate", "crypto-index", "kalshi"]) {
+      const result = await client.callTool({
+        arguments: { asset_type: assetType },
+        name: "get_symbols",
+      });
+      expect(result.isError).toBeFalsy();
+    }
+  });
+
   it("combines asset_type and query filters", async () => {
     const result = await client.callTool({
       arguments: { asset_type: "equity", query: "apple" },
@@ -403,5 +413,63 @@ describe("get_symbols entitlement", () => {
     });
     expect(result.isError).toBe(true);
     expect(text).toContain("invalid or expired");
+  });
+});
+
+describe("get_symbols inactive feeds", () => {
+  const feeds = [
+    { pyth_lazer_id: 1, state: "stable", symbol: "Crypto.BTC/USD" },
+    { pyth_lazer_id: 2, state: "inactive", symbol: "Crypto.OLD/USD" },
+    { pyth_lazer_id: 3, state: "coming_soon", symbol: "Crypto.NEW/USD" },
+  ].map((f) => ({
+    asset_type: "crypto",
+    description: f.symbol,
+    exponent: -8,
+    hermes_id: null,
+    min_channel: "fixed_rate@200ms",
+    name: f.symbol,
+    quote_currency: "USD",
+    ...f,
+  }));
+
+  let client: Client;
+
+  beforeAll(async () => {
+    const config = { ...loadConfig(), accessToken: undefined };
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    registerAllTools(
+      mcpServer,
+      config,
+      new HistoryClient(config, logger),
+      new RouterClient(config, logger),
+      logger,
+      createSessionContext(),
+    );
+    client = await createTestClient(mcpServer);
+  });
+
+  beforeEach(() => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () => HttpResponse.json(feeds)),
+    );
+  });
+
+  async function ids(args: Record<string, unknown>) {
+    const result = await client.callTool({
+      arguments: args,
+      name: "get_symbols",
+    });
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    return data.feeds.map((f: { pyth_lazer_id: number }) => f.pyth_lazer_id);
+  }
+
+  it("hides inactive feeds by default but keeps coming_soon", async () => {
+    expect(await ids({})).toEqual([1, 3]);
+  });
+
+  it("shows inactive feeds with include_inactive", async () => {
+    expect(await ids({ include_inactive: true })).toEqual([1, 2, 3]);
   });
 });
