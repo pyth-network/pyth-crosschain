@@ -2,14 +2,49 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
+import type { Feed } from "../clients/types.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { toolError } from "../utils/errors.js";
-import { logToolCall } from "../utils/logger.js";
+import { resolveAccessToken } from "../utils/auth.js";
+import { authErrorFor, toolError } from "../utils/errors.js";
+import {
+  computeTokenHash,
+  getApiKeyLast4,
+  logToolCall,
+} from "../utils/logger.js";
 import { getServerTime } from "../utils/timestamp.js";
 
+const NOT_LIVE_STATES: ReadonlySet<string> = new Set([
+  "coming_soon",
+  "inactive",
+]);
+
+const PUBLIC_ONLY_NOTE =
+  "Showing public feeds only. Pass `access_token` (or start the server with PYTH_PRO_ACCESS_TOKEN) to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
+
+/**
+ * Why a feed is not in the key's entitled_only list. That list also leaves
+ * out feeds that are not live yet, so "not entitled" must not be read as
+ * "your plan lacks this feed" unless the feed is gated.
+ */
+function notEntitledReason(feed: Feed): string {
+  if (NOT_LIVE_STATES.has(feed.state)) return `not_live (${feed.state})`;
+  if (feed.groups && feed.groups.length > 0) {
+    return `requires one of entitlement groups: ${feed.groups.join(", ")}`;
+  }
+  return `not available to this key (state: ${feed.state})`;
+}
+
 const GetSymbolsInput = {
+  access_token: z
+    .string()
+    .trim()
+    .min(1, "access_token must not be empty")
+    .optional()
+    .describe(
+      "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag. Not needed when the server was started with PYTH_PRO_ACCESS_TOKEN.",
+    ),
   asset_type: z
     .enum(ASSET_TYPES)
     .optional()
@@ -37,7 +72,7 @@ const GetSymbolsInput = {
 
 export function registerGetSymbols(
   server: McpServer,
-  _config: Config,
+  config: Config,
   historyClient: HistoryClient,
   logger: Logger,
   sessionContext: SessionContext,
@@ -52,7 +87,7 @@ export function registerGetSymbols(
         readOnlyHint: true,
       },
       description:
-        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (crypto, equity, fx, metal, rates, commodity, funding-rate) or search by name/symbol. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, and exponent.",
+        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (crypto, equity, fx, metal, rates, commodity, funding-rate) or search by name/symbol. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, state, groups and exponent. With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is not live yet or retired (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
       inputSchema: GetSymbolsInput,
       title: "List Pyth Price Feeds",
     },
@@ -60,19 +95,28 @@ export function registerGetSymbols(
       sessionContext.toolCallCount++;
       const start = Date.now();
 
+      const token = resolveAccessToken(params.access_token, config);
+
       const baseMetrics = {
-        apiKeyLast4: null as null,
+        apiKeyLast4: getApiKeyLast4(token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: null as null,
+        tokenHash: computeTokenHash(token),
         tool: "get_symbols" as const,
       };
 
       try {
-        const { data: feeds, upstreamLatencyMs } =
-          await historyClient.getSymbols();
+        const [catalog, entitled] = await Promise.all([
+          historyClient.getSymbols(token),
+          token ? historyClient.getEntitledFeedIds(token) : undefined,
+        ]);
+        const feeds = catalog.data;
+        const upstreamLatencyMs = Math.max(
+          catalog.upstreamLatencyMs,
+          entitled?.upstreamLatencyMs ?? 0,
+        );
 
         let filtered = params.asset_type
           ? feeds.filter((f) => f.asset_type === params.asset_type)
@@ -90,7 +134,9 @@ export function registerGetSymbols(
         const totalAvailable = filtered.length;
         const offset = params.offset;
         const limit = params.limit;
-        const page = filtered.slice(offset, offset + limit);
+        const page = filtered
+          .slice(offset, offset + limit)
+          .map((f) => withEntitlement(f, entitled?.data));
         const hasMore = offset + limit < totalAvailable;
 
         const result = {
@@ -98,6 +144,7 @@ export function registerGetSymbols(
           feeds: page,
           has_more: hasMore,
           next_offset: hasMore ? offset + limit : null,
+          ...(token ? {} : { note: PUBLIC_ONLY_NOTE }),
           offset,
           total_available: totalAvailable,
           ...getServerTime(),
@@ -117,15 +164,31 @@ export function registerGetSymbols(
           content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
-        logger.warn({ err }, "get_symbols upstream error");
+        const authError = authErrorFor(err);
+        if (!authError) logger.warn({ err }, "get_symbols upstream error");
         logToolCall(logger, {
           ...baseMetrics,
-          errorType: "upstream",
+          errorType: authError?.errorType ?? "upstream",
           latencyMs: Date.now() - start,
           status: "error",
         });
-        return toolError("Failed to fetch symbols. Please try again.");
+        return toolError(
+          authError?.message ?? "Failed to fetch symbols. Please try again.",
+        );
       }
     },
   );
+}
+
+function withEntitlement(
+  feed: Feed,
+  entitledIds: ReadonlySet<number> | undefined,
+): Feed & { entitled?: boolean; not_entitled_reason?: string } {
+  if (!entitledIds) return feed;
+  if (entitledIds.has(feed.pyth_lazer_id)) return { ...feed, entitled: true };
+  return {
+    ...feed,
+    entitled: false,
+    not_entitled_reason: notEntitledReason(feed),
+  };
 }

@@ -152,7 +152,7 @@ describe("Integration: MCP server round-trip", () => {
       logger,
       createSessionContext(),
     );
-    registerAllResources(mcpServer, historyClient);
+    registerAllResources(mcpServer, historyClient, config);
 
     client = await createTestClient(mcpServer);
   });

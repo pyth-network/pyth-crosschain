@@ -2,10 +2,15 @@ import type { Logger } from "pino";
 import type { Config } from "../config.js";
 import { httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { UpstreamResult } from "./router.js";
-import { symbolsCache, symbolsCacheKey } from "./symbols-store.js";
+import {
+  entitledIdsCache,
+  symbolsCache,
+  symbolsCacheKey,
+} from "./symbols-store.js";
 import type { Feed, HistoricalPriceResponse, OHLCResponse } from "./types.js";
 import {
   FeedArraySchema,
+  FeedIdArraySchema,
   HistoricalPriceArraySchema,
   OHLCResponseSchema,
 } from "./types.js";
@@ -47,8 +52,37 @@ export class HistoryClient {
     };
   }
 
-  private fetchSymbols(token?: string): Promise<Feed[]> {
+  /**
+   * IDs of the feeds this token can query right now
+   * (`/v1/symbols?entitled_only=true`), cached per token.
+   */
+  async getEntitledFeedIds(
+    token: string,
+  ): Promise<UpstreamResult<ReadonlySet<number>>> {
+    const key = symbolsCacheKey(this.baseUrl, token, "entitled");
+    const fetchStart = Date.now();
+    const { hit, value } = await entitledIdsCache.getOrLoad(key, async () => {
+      const feeds = await this.fetchSymbolsJson(token, true);
+      return new Set(
+        FeedIdArraySchema.parse(feeds).map((f) => f.pyth_lazer_id),
+      );
+    });
+    return {
+      data: value,
+      upstreamLatencyMs: hit ? 0 : Date.now() - fetchStart,
+    };
+  }
+
+  private async fetchSymbols(token?: string): Promise<Feed[]> {
+    return FeedArraySchema.parse(await this.fetchSymbolsJson(token, false));
+  }
+
+  private fetchSymbolsJson(
+    token: string | undefined,
+    entitledOnly: boolean,
+  ): Promise<unknown> {
     const url = new URL("/v1/symbols", this.baseUrl);
+    if (entitledOnly) url.searchParams.set("entitled_only", "true");
     return withSingleRetry(async () => {
       this.logger.debug(
         { authenticated: token !== undefined, url: url.toString() },
@@ -64,7 +98,7 @@ export class HistoryClient {
           `History API /v1/symbols returned ${res.status}`,
         );
       }
-      return FeedArraySchema.parse(await res.json());
+      return res.json() as Promise<unknown>;
     });
   }
 

@@ -1,12 +1,17 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { HistoryClient } from "../clients/history.js";
+import type { Config } from "../config.js";
 import { ASSET_TYPES } from "../constants.js";
 
 export function registerAllResources(
   server: McpServer,
   historyClient: HistoryClient,
+  config: Config,
 ): void {
+  // Resources take no arguments, so they can only use the stdio env key.
+  const token = config.accessToken;
+
   // Static resource: full feed catalog
   server.registerResource(
     "feeds",
@@ -17,7 +22,7 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri) => {
-      const { data: feeds } = await historyClient.getSymbols();
+      const { data: feeds } = await historyClient.getSymbols(token);
       return {
         contents: [
           {
@@ -47,7 +52,7 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri, { asset_type }) => {
-      const { data: allFeeds } = await historyClient.getSymbols();
+      const { data: allFeeds } = await historyClient.getSymbols(token);
       const feeds = allFeeds.filter((f) => f.asset_type === asset_type);
       return {
         contents: [
