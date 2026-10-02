@@ -8,6 +8,7 @@ import { ASSET_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { authErrorFor, toolError } from "../utils/errors.js";
+import { isActive } from "../utils/feeds.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -48,8 +49,12 @@ const GetSymbolsInput = {
   asset_type: z
     .enum(ASSET_TYPES)
     .optional()
+    .describe(`Filter by asset type: ${ASSET_TYPES.join(", ")}`),
+  include_inactive: z
+    .boolean()
+    .default(false)
     .describe(
-      "Filter by asset type: crypto, fx, equity, metal, rates, commodity, funding-rate",
+      "Include retired feeds (state 'inactive'). Default false: inactive feeds are hidden.",
     ),
   limit: z.coerce
     .number()
@@ -87,7 +92,7 @@ export function registerGetSymbols(
         readOnlyHint: true,
       },
       description:
-        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (crypto, equity, fx, metal, rates, commodity, funding-rate) or search by name/symbol. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, state, groups and exponent. With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is not live yet or retired (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
+        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Retired (inactive) feeds are hidden unless include_inactive is true. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, state, groups and exponent. With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is not live yet or retired (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
       inputSchema: GetSymbolsInput,
       title: "List Pyth Price Feeds",
     },
@@ -118,9 +123,10 @@ export function registerGetSymbols(
           entitled?.upstreamLatencyMs ?? 0,
         );
 
-        let filtered = params.asset_type
-          ? feeds.filter((f) => f.asset_type === params.asset_type)
-          : feeds;
+        let filtered = params.include_inactive ? feeds : feeds.filter(isActive);
+        if (params.asset_type) {
+          filtered = filtered.filter((f) => f.asset_type === params.asset_type);
+        }
         const q = params.query?.trim().toLowerCase();
         if (q) {
           filtered = filtered.filter(

@@ -3,6 +3,7 @@ import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { HistoryClient } from "../clients/history.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES } from "../constants.js";
+import { isActive } from "../utils/feeds.js";
 
 export function registerAllResources(
   server: McpServer,
@@ -18,11 +19,12 @@ export function registerAllResources(
     "pyth://feeds",
     {
       description:
-        "Full catalog of all Pyth Pro price feeds across all asset classes.",
+        "Catalog of Pyth Pro price feeds across all asset classes (retired 'inactive' feeds excluded).",
       mimeType: "application/json",
     },
     async (uri) => {
-      const { data: feeds } = await historyClient.getSymbols(token);
+      const { data: allFeeds } = await historyClient.getSymbols(token);
+      const feeds = allFeeds.filter(isActive);
       return {
         contents: [
           {
@@ -48,12 +50,14 @@ export function registerAllResources(
     }),
     {
       description:
-        "Pyth Pro price feeds filtered by asset type (crypto, fx, equity, metal, rates, commodity, funding-rate).",
+        "Pyth Pro price feeds filtered by asset type (retired 'inactive' feeds excluded).",
       mimeType: "application/json",
     },
     async (uri, { asset_type }) => {
       const { data: allFeeds } = await historyClient.getSymbols(token);
-      const feeds = allFeeds.filter((f) => f.asset_type === asset_type);
+      const feeds = allFeeds.filter(
+        (f) => isActive(f) && f.asset_type === asset_type,
+      );
       return {
         contents: [
           {
