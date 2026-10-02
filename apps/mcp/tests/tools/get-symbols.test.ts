@@ -473,3 +473,89 @@ describe("get_symbols inactive feeds", () => {
     expect(await ids({ include_inactive: true })).toEqual([1, 2, 3]);
   });
 });
+
+describe("get_symbols instrument and futures-chain filters", () => {
+  const feeds = [
+    { instrument_type: "spot", pyth_lazer_id: 1, symbol: "Crypto.BTC/USD" },
+    {
+      expiration_time: "2026-11-18T08:00:00",
+      instrument_type: "future",
+      market_sessions: {
+        post_market: null,
+        regular: { min_pub: 1, schedule: "America/Chicago;O", state: "stable" },
+      },
+      pyth_lazer_id: 2,
+      symbol: "Futures.VXX6/USD",
+      symbol_chain_id: "VX",
+    },
+    {
+      instrument_type: "future",
+      pyth_lazer_id: 3,
+      symbol: "Futures.BRENTF7/USD",
+      symbol_chain_id: "BRENT",
+    },
+  ].map((f) => ({
+    asset_type: "commodity",
+    description: f.symbol,
+    exponent: -8,
+    hermes_id: null,
+    min_channel: "fixed_rate@200ms",
+    name: f.symbol,
+    quote_currency: null,
+    state: "stable",
+    ...f,
+  }));
+
+  let client: Client;
+
+  beforeAll(async () => {
+    const config = { ...loadConfig(), accessToken: undefined };
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    registerAllTools(
+      mcpServer,
+      config,
+      new HistoryClient(config, logger),
+      new RouterClient(config, logger),
+      logger,
+      createSessionContext(),
+    );
+    client = await createTestClient(mcpServer);
+  });
+
+  beforeEach(() => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () => HttpResponse.json(feeds)),
+    );
+  });
+
+  async function call(args: Record<string, unknown>) {
+    const result = await client.callTool({
+      arguments: args,
+      name: "get_symbols",
+    });
+    return JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+  }
+
+  it("filters by instrument_type", async () => {
+    const data = await call({ instrument_type: "future" });
+    expect(
+      data.feeds.map((f: { pyth_lazer_id: number }) => f.pyth_lazer_id),
+    ).toEqual([2, 3]);
+  });
+
+  it("filters by symbol_chain_id exactly", async () => {
+    expect((await call({ symbol_chain_id: "VX" })).total_available).toBe(1);
+    expect((await call({ symbol_chain_id: "vx" })).total_available).toBe(0);
+  });
+
+  it("keeps market session state, null sessions and futures fields", async () => {
+    const data = await call({ symbol_chain_id: "VX" });
+    const feed = data.feeds[0];
+    expect(feed.market_sessions.regular.state).toBe("stable");
+    expect(feed.market_sessions.post_market).toBeNull();
+    expect(feed.expiration_time).toBe("2026-11-18T08:00:00");
+    expect(feed.quote_currency).toBeNull();
+  });
+});

@@ -2,26 +2,36 @@ import { z } from "zod";
 
 // --- Zod Schemas (single source of truth) ---
 
-const MarketSessionSchema = z.object({
-  min_pub: z.number().nullable(),
-  schedule: z.string(),
-});
+const MarketSessionSchema = z
+  .object({
+    min_pub: z.number().nullable(),
+    schedule: z.string(),
+  })
+  .passthrough();
 
 export const FeedSchema = z
   .object({
     asset_type: z.string(),
+    corporate_actions: z.array(z.unknown()).nullable().optional(),
     description: z.string(),
+    // Futures expiry, in the regular session's time zone.
+    expiration_time: z.string().nullable().optional(),
     exponent: z.number(),
     // Entitlement groups gating this feed; empty for ungated feeds.
     groups: z.array(z.string()).optional(),
     hermes_id: z.string().nullable(),
-    market_sessions: z.record(z.string(), MarketSessionSchema).optional(),
+    instrument_type: z.string().optional(),
+    market_sessions: z
+      .record(z.string(), MarketSessionSchema.nullable())
+      .optional(),
     min_channel: z.string(),
     name: z.string(),
     pyth_lazer_id: z.number(),
-    quote_currency: z.string(),
+    quote_currency: z.string().nullable(),
     state: z.string(),
     symbol: z.string(),
+    // Futures chain this contract belongs to, e.g. "VX".
+    symbol_chain_id: z.string().nullable().optional(),
   })
   .passthrough();
 
