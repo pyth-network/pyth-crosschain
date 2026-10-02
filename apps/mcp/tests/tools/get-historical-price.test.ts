@@ -452,19 +452,72 @@ describe("get_historical_price tool", () => {
     expect(text).not.toContain("invalid or expired");
   });
 
-  it("does not mislabel a 403 from the public getSymbols lookup as a token error", async () => {
-    // The symbol->id lookup hits the public /v1/symbols. If it 403s, that is an
-    // upstream failure, NOT an auth problem — the token was never sent there.
+  it("sends the caller's token to the symbol lookup", async () => {
+    let symbolsAuth: string | null = null;
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        symbolsAuth = request.headers.get("Authorization");
+        return HttpResponse.json(mockFeeds);
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "pro-token-123",
+        symbols: ["BTC/USD"],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(symbolsAuth).toBe("Bearer pro-token-123");
+  });
+
+  it("resolves a symbol that only appears in the authenticated catalog", async () => {
+    const proOnly = {
+      ...mockFeeds[0],
+      pyth_lazer_id: 5000,
+      symbol: "KLP.KXF1/USD",
+    };
+    let requestedIds: string[] = [];
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) =>
+        HttpResponse.json(
+          request.headers.get("Authorization")
+            ? [...mockFeeds, proOnly]
+            : mockFeeds,
+        ),
+      ),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, ({ request }) => {
+        requestedIds = new URL(request.url).searchParams.getAll("ids");
+        return HttpResponse.json([]);
+      }),
+    );
+
+    await client.callTool({
+      arguments: {
+        access_token: "pro-token-123",
+        symbols: ["KLP.KXF1/USD"],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(requestedIds).toEqual(["5000"]);
+  });
+
+  it("maps a 401 from the symbol lookup to the invalid-token message", async () => {
     msw.use(
       http.get(
         `${HISTORY_URL}/v1/symbols`,
-        () => new HttpResponse(null, { status: 403 }),
+        () => new HttpResponse(null, { status: 401 }),
       ),
     );
 
     const result = await client.callTool({
       arguments: {
-        access_token: "some-token",
+        access_token: "bad-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },
@@ -474,8 +527,6 @@ describe("get_historical_price tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("Failed to fetch historical price");
-    expect(text).not.toContain("invalid or expired");
-    expect(text).not.toContain("requires your Pyth Pro access token");
+    expect(text).toContain("invalid or expired");
   });
 });

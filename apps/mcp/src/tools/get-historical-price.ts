@@ -138,8 +138,10 @@ export function registerGetHistoricalPrice(
         ids = params.price_feed_ids ? [...params.price_feed_ids] : [];
         let symbolLookupUpstreamMs = 0;
         if ((effectiveSymbols?.length ?? 0) > 0) {
+          // Look up with the caller's token: some feeds only appear in the
+          // catalog for authenticated callers.
           const { data: allFeeds, upstreamLatencyMs } =
-            await historyClient.getSymbols();
+            await historyClient.getSymbols(token);
           symbolLookupUpstreamMs = upstreamLatencyMs;
           for (const symbol of effectiveSymbols ?? []) {
             const feed = allFeeds.find((f) => f.symbol === symbol);
@@ -240,10 +242,9 @@ export function registerGetHistoricalPrice(
           content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
-        // Only the token-gated /price call can be an auth failure — the internal
-        // getSymbols() lookup hits the public /v1/symbols, so guard on
-        // priceEndpointCalled (mirrors the 400/404 branch below).
-        const authError = priceEndpointCalled ? authErrorFor(err) : undefined;
+        // Both the symbol lookup and the /price call send the token, so an
+        // auth failure from either one is reported as such.
+        const authError = authErrorFor(err);
         if (authError) {
           logToolCall(logger, {
             ...baseMetrics,
