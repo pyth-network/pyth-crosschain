@@ -18,6 +18,16 @@ export const ASSET_TYPES = [
   "kalshi",
 ] as const;
 
+// The History API's InstrumentType enum, plus "perp" seen in live data.
+export const INSTRUMENT_TYPES = [
+  "spot",
+  "future",
+  "perp",
+  "rate",
+  "index",
+  "nav",
+] as const;
+
 export const RESOLUTIONS = [
   "1",
   "5",
