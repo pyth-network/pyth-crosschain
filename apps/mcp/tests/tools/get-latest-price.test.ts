@@ -402,4 +402,79 @@ describe("get_latest_price tool", () => {
       expect(sentChannel).toBeUndefined();
     });
   });
+
+  describe("symbol resolution", () => {
+    async function callWithSymbols(symbols: string[]) {
+      let body: Record<string, unknown> | undefined;
+      msw.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () =>
+          HttpResponse.json([
+            {
+              ...mockFeeds[0],
+              instrument_type: "spot",
+              state: "stable",
+              symbol: "Crypto.BTC/USD",
+            },
+            {
+              ...mockFeeds[0],
+              instrument_type: "rate",
+              pyth_lazer_id: 77,
+              state: "stable",
+              symbol: "FundingRate.Hyperliquid.BTC/USD",
+            },
+          ]),
+        ),
+        http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", symbols },
+        name: "get_latest_price",
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      return { body, result, text };
+    }
+
+    it("resolves a bare pair and sends feed IDs to the Router", async () => {
+      const { body, result, text } = await callWithSymbols(["BTC/USD"]);
+      expect(result.isError).toBeFalsy();
+      expect(body?.priceFeedIds).toEqual([1]);
+      expect(body?.symbols).toBeUndefined();
+      expect(JSON.parse(text).resolved_symbols).toEqual({
+        "BTC/USD": "Crypto.BTC/USD",
+      });
+    });
+
+    it("omits resolved_symbols when full symbols are passed", async () => {
+      const { text } = await callWithSymbols(["Crypto.BTC/USD"]);
+      expect(JSON.parse(text).resolved_symbols).toBeUndefined();
+    });
+
+    it("returns an error without calling the Router for unknown symbols", async () => {
+      const { body, result, text } = await callWithSymbols(["NOPE/USD"]);
+      expect(result.isError).toBe(true);
+      expect(body).toBeUndefined();
+      expect(text).toContain("Feed not found: NOPE/USD");
+    });
+  });
 });
