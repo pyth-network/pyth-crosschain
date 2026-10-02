@@ -165,7 +165,8 @@ describe("Integration: MCP server round-trip", () => {
     expect(names).toContain("get_candlestick_data");
     expect(names).toContain("get_historical_price");
     expect(names).toContain("get_latest_price");
-    expect(names).toHaveLength(5);
+    expect(names).toContain("get_price_range");
+    expect(names).toHaveLength(6);
   });
 
   it("all tools have readOnlyHint annotation", async () => {

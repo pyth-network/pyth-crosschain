@@ -7,12 +7,18 @@ import {
   symbolsCache,
   symbolsCacheKey,
 } from "./symbols-store.js";
-import type { Feed, HistoricalPriceResponse, OHLCResponse } from "./types.js";
+import type {
+  Feed,
+  HistoricalPriceResponse,
+  OHLCResponse,
+  PriceList,
+} from "./types.js";
 import {
   FeedArraySchema,
   FeedIdArraySchema,
   HistoricalPriceArraySchema,
   OHLCResponseSchema,
+  PriceListSchema,
 } from "./types.js";
 
 /**
@@ -161,6 +167,48 @@ export class HistoryClient {
         );
       }
       return HistoricalPriceArraySchema.parse(await res.json());
+    });
+    const upstreamLatencyMs = Date.now() - fetchStart;
+    return { data, upstreamLatencyMs };
+  }
+
+  /**
+   * Every price update for the given feeds within [startUs, endUs]
+   * (inclusive, at most 60 s apart), one page at a time. Pass the previous
+   * page's `next` as `after` to continue.
+   */
+  async getPriceRange(
+    channel: string,
+    ids: number[],
+    startUs: number,
+    endUs: number,
+    options: { after?: string; limit?: number; token?: string } = {},
+  ): Promise<UpstreamResult<PriceList>> {
+    const url = new URL(`/v1/${channel}/price/range`, this.baseUrl);
+    for (const id of ids) {
+      url.searchParams.append("ids", String(id));
+    }
+    url.searchParams.set("start_timestamp", String(startUs));
+    url.searchParams.set("end_timestamp", String(endUs));
+    if (options.limit !== undefined) {
+      url.searchParams.set("limit", String(options.limit));
+    }
+    if (options.after) url.searchParams.set("after", options.after);
+
+    const fetchStart = Date.now();
+    const data = await withSingleRetry(async () => {
+      this.logger.debug({ url: url.toString() }, "GET price range");
+      const res = await fetch(url, {
+        headers: authHeaders(options.token),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      if (!res.ok) {
+        throw await httpErrorFromResponse(
+          res,
+          `History API /${channel}/price/range returned ${res.status}`,
+        );
+      }
+      return PriceListSchema.parse(await res.json());
     });
     const upstreamLatencyMs = Date.now() - fetchStart;
     return { data, upstreamLatencyMs };

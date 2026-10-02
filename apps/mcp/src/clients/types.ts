@@ -79,6 +79,12 @@ export const HistoricalPriceArraySchema = z.array(
   HistoricalPriceResponseSchema,
 );
 
+/** `/{channel}/price/range` page: `{ data: [...], next: cursor | null }`. */
+export const PriceListSchema = z.object({
+  data: HistoricalPriceArraySchema,
+  next: z.string().nullable().optional(),
+});
+
 /** Normalized feed shape used internally (snake_case, numeric values) */
 export const LatestPriceParsedFeedSchema = z
   .object({
@@ -107,4 +113,5 @@ export type OHLCResponse = z.infer<typeof OHLCResponseSchema>;
 export type HistoricalPriceResponse = z.infer<
   typeof HistoricalPriceResponseSchema
 >;
+export type PriceList = z.infer<typeof PriceListSchema>;
 export type LatestPriceParsedFeed = z.infer<typeof LatestPriceParsedFeedSchema>;
