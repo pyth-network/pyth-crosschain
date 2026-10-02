@@ -12,6 +12,8 @@ export const FeedSchema = z
     asset_type: z.string(),
     description: z.string(),
     exponent: z.number(),
+    // Entitlement groups gating this feed; empty for ungated feeds.
+    groups: z.array(z.string()).optional(),
     hermes_id: z.string().nullable(),
     market_sessions: z.record(z.string(), MarketSessionSchema).optional(),
     min_channel: z.string(),
@@ -24,6 +26,11 @@ export const FeedSchema = z
   .passthrough();
 
 export const FeedArraySchema = z.array(FeedSchema);
+
+/** Minimal shape for the entitled_only list, where only IDs are needed. */
+export const FeedIdArraySchema = z.array(
+  z.object({ pyth_lazer_id: z.number() }).passthrough(),
+);
 
 export const OHLCResponseSchema = z.object({
   c: z.array(z.number()),

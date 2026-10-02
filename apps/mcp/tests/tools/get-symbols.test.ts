@@ -226,3 +226,182 @@ describe("get_symbols tool", () => {
     expect(data.next_offset).toBe(5);
   });
 });
+
+describe("get_symbols entitlement", () => {
+  const entitlementFeeds = [
+    {
+      asset_type: "crypto",
+      description: "Bitcoin / US Dollar",
+      exponent: -8,
+      groups: [],
+      hermes_id: null,
+      min_channel: "real_time",
+      name: "BTCUSD",
+      pyth_lazer_id: 1,
+      quote_currency: "USD",
+      state: "stable",
+      symbol: "Crypto.BTC/USD",
+    },
+    {
+      asset_type: "commodity",
+      description: "Pyth Oil Index",
+      exponent: -8,
+      groups: ["pyth-indices"],
+      hermes_id: null,
+      min_channel: "fixed_rate@200ms",
+      name: "PYTHOIL",
+      pyth_lazer_id: 3063,
+      quote_currency: "USD",
+      state: "stable",
+      symbol: "Commodities.Index.PYTHOIL/USD",
+    },
+    {
+      asset_type: "equity",
+      description: "Upcoming listing",
+      exponent: -5,
+      groups: [],
+      hermes_id: null,
+      min_channel: "fixed_rate@200ms",
+      name: "NEWCO",
+      pyth_lazer_id: 4000,
+      quote_currency: "USD",
+      state: "coming_soon",
+      symbol: "Equity.US.NEWCO/USD",
+    },
+    {
+      asset_type: "crypto",
+      description: "Beta feed",
+      exponent: -8,
+      groups: [],
+      hermes_id: null,
+      min_channel: "fixed_rate@200ms",
+      name: "BETA",
+      pyth_lazer_id: 4001,
+      quote_currency: "USD",
+      state: "beta",
+      symbol: "Crypto.BETA/USD",
+    },
+  ];
+  // Visible only with a token.
+  const proOnlyFeed = {
+    ...entitlementFeeds[0],
+    description: "Kalshi market",
+    name: "KXF1",
+    pyth_lazer_id: 5000,
+    symbol: "KLP.KXF1_25_LN/USD",
+  };
+
+  let requests: Array<{ auth: string | null; entitledOnly: boolean }>;
+
+  beforeEach(() => {
+    requests = [];
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        const url = new URL(request.url);
+        const auth = request.headers.get("Authorization");
+        const entitledOnly = url.searchParams.get("entitled_only") === "true";
+        requests.push({ auth, entitledOnly });
+        if (entitledOnly) {
+          if (!auth) return new HttpResponse(null, { status: 401 });
+          if (auth === "Bearer bad-token") {
+            return new HttpResponse(null, { status: 401 });
+          }
+          return HttpResponse.json([entitlementFeeds[0], proOnlyFeed]);
+        }
+        if (auth === "Bearer bad-token") {
+          return new HttpResponse(null, { status: 401 });
+        }
+        return HttpResponse.json(
+          auth ? [...entitlementFeeds, proOnlyFeed] : entitlementFeeds,
+        );
+      }),
+    );
+  });
+
+  async function callGetSymbols(
+    args: Record<string, unknown>,
+    accessToken?: string,
+  ) {
+    const config = { ...loadConfig(), accessToken };
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    registerAllTools(
+      mcpServer,
+      config,
+      new HistoryClient(config, logger),
+      new RouterClient(config, logger),
+      logger,
+      createSessionContext(),
+    );
+    const client = await createTestClient(mcpServer);
+    const result = await client.callTool({
+      arguments: args,
+      name: "get_symbols",
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    return { result, text };
+  }
+
+  type FeedOut = {
+    pyth_lazer_id: number;
+    entitled?: boolean;
+    not_entitled_reason?: string;
+  };
+  const byId = (feeds: FeedOut[], id: number) =>
+    feeds.find((f) => f.pyth_lazer_id === id);
+
+  it("without a token returns public feeds, no entitled flag, and a note", async () => {
+    const { text } = await callGetSymbols({});
+    const data = JSON.parse(text);
+    expect(data.total_available).toBe(4);
+    expect(data.feeds.every((f: FeedOut) => f.entitled === undefined)).toBe(
+      true,
+    );
+    expect(data.note).toContain("access_token");
+    expect(requests).toEqual([{ auth: null, entitledOnly: false }]);
+  });
+
+  it("with a token returns Pro-only feeds and flags each feed", async () => {
+    const { text } = await callGetSymbols({ access_token: "pro-token" });
+    const data = JSON.parse(text);
+    expect(data.note).toBeUndefined();
+    expect(data.total_available).toBe(5);
+    const feeds = data.feeds as FeedOut[];
+    expect(byId(feeds, 1)).toMatchObject({ entitled: true });
+    expect(byId(feeds, 1)?.not_entitled_reason).toBeUndefined();
+    expect(byId(feeds, 5000)).toMatchObject({ entitled: true });
+    expect(byId(feeds, 3063)).toMatchObject({
+      entitled: false,
+      not_entitled_reason: "requires one of entitlement groups: pyth-indices",
+    });
+    expect(byId(feeds, 4000)).toMatchObject({
+      entitled: false,
+      not_entitled_reason: "not_live (coming_soon)",
+    });
+    expect(byId(feeds, 4001)).toMatchObject({
+      entitled: false,
+      not_entitled_reason: "not available to this key (state: beta)",
+    });
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        { auth: "Bearer pro-token", entitledOnly: false },
+        { auth: "Bearer pro-token", entitledOnly: true },
+      ]),
+    );
+  });
+
+  it("uses PYTH_PRO_ACCESS_TOKEN when no access_token is passed", async () => {
+    const { text } = await callGetSymbols({}, "env-token");
+    const data = JSON.parse(text);
+    expect(byId(data.feeds, 1)).toMatchObject({ entitled: true });
+    expect(requests.every((r) => r.auth === "Bearer env-token")).toBe(true);
+  });
+
+  it("maps a 401 to the invalid-token message", async () => {
+    const { result, text } = await callGetSymbols({
+      access_token: "bad-token",
+    });
+    expect(result.isError).toBe(true);
+    expect(text).toContain("invalid or expired");
+  });
+});

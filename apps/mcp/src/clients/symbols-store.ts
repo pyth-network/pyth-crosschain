@@ -77,7 +77,11 @@ export function symbolsCacheKey(
 
 export const symbolsCache = new TtlCache<Feed[]>(TTL_MS, MAX_ENTRIES);
 
+// Only feed IDs are kept for the entitled_only list, so entries are small.
+export const entitledIdsCache = new TtlCache<ReadonlySet<number>>(TTL_MS, 100);
+
 /** Drop all cached catalogs (used by tests). */
 export function clearSymbolsCache(): void {
   symbolsCache.clear();
+  entitledIdsCache.clear();
 }
