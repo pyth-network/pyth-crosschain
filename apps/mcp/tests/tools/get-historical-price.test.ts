@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
+import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
@@ -65,7 +66,10 @@ const msw = setupServer(
 const logger = pino({ level: "silent" });
 
 beforeAll(() => msw.listen({ onUnhandledRequest: "error" }));
-afterEach(() => msw.resetHandlers());
+afterEach(() => {
+  msw.resetHandlers();
+  clearSymbolsCache();
+});
 afterAll(() => msw.close());
 
 function createSessionContext(): SessionContext {

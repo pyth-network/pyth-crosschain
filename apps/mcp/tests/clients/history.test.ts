@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
+import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
 
@@ -78,7 +79,10 @@ const config = {
 };
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  clearSymbolsCache();
+});
 afterAll(() => server.close());
 
 describe("HistoryClient", () => {
@@ -99,6 +103,52 @@ describe("HistoryClient", () => {
         ),
       );
       await expect(client.getSymbols()).rejects.toThrow("400");
+    });
+
+    it("serves repeat calls from the cache", async () => {
+      let calls = 0;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => {
+          calls++;
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      await client.getSymbols();
+      const second = await client.getSymbols();
+      expect(calls).toBe(1);
+      expect(second.data).toHaveLength(2);
+      expect(second.upstreamLatencyMs).toBe(0);
+    });
+
+    it("caches per token and sends the token as a Bearer header", async () => {
+      const seen: Array<string | null> = [];
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+          seen.push(request.headers.get("Authorization"));
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      await client.getSymbols();
+      await client.getSymbols("token-a");
+      await client.getSymbols("token-a");
+      await client.getSymbols("token-b");
+      expect(seen).toEqual([null, "Bearer token-a", "Bearer token-b"]);
+    });
+
+    it("does not cache failures", async () => {
+      let calls = 0;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => {
+          calls++;
+          return calls === 1
+            ? HttpResponse.json({ error: "bad" }, { status: 400 })
+            : HttpResponse.json(mockFeeds);
+        }),
+      );
+      await expect(client.getSymbols()).rejects.toThrow("400");
+      const { data } = await client.getSymbols();
+      expect(data).toHaveLength(2);
+      expect(calls).toBe(2);
     });
   });
 

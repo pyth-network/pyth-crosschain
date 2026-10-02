@@ -2,6 +2,7 @@ import type { Logger } from "pino";
 import type { Config } from "../config.js";
 import { httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { UpstreamResult } from "./router.js";
+import { symbolsCache, symbolsCacheKey } from "./symbols-store.js";
 import type { Feed, HistoricalPriceResponse, OHLCResponse } from "./types.js";
 import {
   FeedArraySchema,
@@ -10,9 +11,8 @@ import {
 } from "./types.js";
 
 /**
- * Bearer auth header for the token-gated History endpoints (`/{channel}/price`
- * and `/{channel}/history`). Returns undefined when no token is set so
- * unauthenticated callers are unchanged.
+ * Bearer auth header for History endpoints. Returns undefined when no token
+ * is set so unauthenticated callers are unchanged.
  */
 function authHeaders(token?: string): Record<string, string> | undefined {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
@@ -30,18 +30,32 @@ export class HistoryClient {
     this.timeoutMs = config.requestTimeoutMs;
   }
 
-  async getSymbols(
-    query?: string,
-    assetType?: string,
-  ): Promise<UpstreamResult<Feed[]>> {
-    const url = new URL("/v1/symbols", this.baseUrl);
-    if (query) url.searchParams.set("query", query);
-    if (assetType) url.searchParams.set("asset_type", assetType);
-
+  /**
+   * Fetch the symbol catalog, cached per token for a few minutes. With a
+   * token the API also returns feeds that are hidden from anonymous callers.
+   * Filtering (query, asset type, ...) is done by callers on the full list.
+   */
+  async getSymbols(token?: string): Promise<UpstreamResult<Feed[]>> {
+    const key = symbolsCacheKey(this.baseUrl, token, "all");
     const fetchStart = Date.now();
-    const data = await withSingleRetry(async () => {
-      this.logger.debug({ url: url.toString() }, "GET symbols");
+    const { hit, value } = await symbolsCache.getOrLoad(key, () =>
+      this.fetchSymbols(token),
+    );
+    return {
+      data: value,
+      upstreamLatencyMs: hit ? 0 : Date.now() - fetchStart,
+    };
+  }
+
+  private fetchSymbols(token?: string): Promise<Feed[]> {
+    const url = new URL("/v1/symbols", this.baseUrl);
+    return withSingleRetry(async () => {
+      this.logger.debug(
+        { authenticated: token !== undefined, url: url.toString() },
+        "GET symbols",
+      );
       const res = await fetch(url, {
+        headers: authHeaders(token),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
@@ -52,8 +66,6 @@ export class HistoryClient {
       }
       return FeedArraySchema.parse(await res.json());
     });
-    const upstreamLatencyMs = Date.now() - fetchStart;
-    return { data, upstreamLatencyMs };
   }
 
   async getCandlestickData(
