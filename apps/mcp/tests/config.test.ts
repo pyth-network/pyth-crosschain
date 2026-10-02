@@ -45,4 +45,18 @@ describe("loadConfig", () => {
     process.env.PYTH_ROUTER_URL = "not-a-url";
     expect(() => loadConfig()).toThrow();
   });
+
+  it("reads the user's API key from PYTH_PRO_ACCESS_TOKEN", () => {
+    process.env.PYTH_PRO_ACCESS_TOKEN = "  user-key  ";
+    expect(loadConfig().accessToken).toBe("user-key");
+  });
+
+  it("treats a blank PYTH_PRO_ACCESS_TOKEN as unset", () => {
+    process.env.PYTH_PRO_ACCESS_TOKEN = "   ";
+    expect(loadConfig().accessToken).toBeUndefined();
+  });
+
+  it("leaves accessToken undefined by default", () => {
+    expect(loadConfig().accessToken).toBeUndefined();
+  });
 });

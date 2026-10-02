@@ -106,6 +106,7 @@ describe("get_historical_price tool", () => {
   it("returns enriched prices via symbol lookup", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },
@@ -134,6 +135,7 @@ describe("get_historical_price tool", () => {
   it("returns enriched prices via feed IDs", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: 1_708_300_800,
       },
@@ -151,6 +153,7 @@ describe("get_historical_price tool", () => {
   it("returns error for unknown symbol", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["UNKNOWN/USD"],
         timestamp: 1_708_300_800,
       },
@@ -174,6 +177,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
@@ -219,6 +223,7 @@ describe("get_historical_price tool", () => {
 
     const result = await testClient.callTool({
       arguments: {
+        access_token: "test-token",
         // Duplicates: [1,1,2,2,1] should dedup to [1,2] = count 2
         price_feed_ids: [1, 1, 2, 2, 1],
         timestamp: 1_708_300_800,
@@ -252,6 +257,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: futureTimestamp,
       },
@@ -281,6 +287,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [1],
         timestamp: pastTimestamp,
       },
@@ -307,6 +314,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         price_feed_ids: [999_999],
         timestamp: 1_708_300_800,
       },
@@ -331,6 +339,7 @@ describe("get_historical_price tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },
@@ -366,12 +375,13 @@ describe("get_historical_price tool", () => {
     expect(authHeader).toBe("Bearer pro-token-123");
   });
 
-  it("maps upstream 401 without a token to the missing-token message", async () => {
+  it("returns the missing-token message without calling upstream when no token is available", async () => {
+    let upstreamCalled = false;
     msw.use(
-      http.get(
-        `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
-        () => new HttpResponse(null, { status: 401 }),
-      ),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, () => {
+        upstreamCalled = true;
+        return new HttpResponse(null, { status: 401 });
+      }),
     );
 
     const result = await client.callTool({
@@ -382,7 +392,8 @@ describe("get_historical_price tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("requires a Pyth Pro access token");
+    expect(text).toContain("requires your Pyth Pro access token");
+    expect(upstreamCalled).toBe(false);
   });
 
   it("maps upstream 403 with a token to the invalid-token message", async () => {
@@ -432,6 +443,6 @@ describe("get_historical_price tool", () => {
       .text;
     expect(text).toContain("Failed to fetch historical price");
     expect(text).not.toContain("invalid or expired");
-    expect(text).not.toContain("requires a Pyth Pro access token");
+    expect(text).not.toContain("requires your Pyth Pro access token");
   });
 });

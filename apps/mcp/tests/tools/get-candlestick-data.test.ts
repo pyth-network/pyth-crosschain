@@ -86,6 +86,7 @@ describe("get_candlestick_data tool", () => {
   it("returns OHLC data for valid request", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "D",
         symbol: "BTC/USD",
@@ -121,6 +122,7 @@ describe("get_candlestick_data tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "D",
         symbol: "BTC/USD",
@@ -157,6 +159,7 @@ describe("get_candlestick_data tool", () => {
 
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "1",
         symbol: "BTC/USD",
@@ -207,12 +210,13 @@ describe("get_candlestick_data tool", () => {
     expect(authHeader).toBe("Bearer pro-token-123");
   });
 
-  it("maps upstream 401 without a token to the missing-token message", async () => {
+  it("returns the missing-token message without calling upstream when no token is available", async () => {
+    let upstreamCalled = false;
     msw.use(
-      http.get(
-        `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
-        () => new HttpResponse(null, { status: 401 }),
-      ),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, () => {
+        upstreamCalled = true;
+        return new HttpResponse(null, { status: 401 });
+      }),
     );
 
     const result = await client.callTool({
@@ -228,7 +232,8 @@ describe("get_candlestick_data tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("requires a Pyth Pro access token");
+    expect(text).toContain("requires your Pyth Pro access token");
+    expect(upstreamCalled).toBe(false);
   });
 
   it("maps upstream 403 with a token to the invalid-token message", async () => {

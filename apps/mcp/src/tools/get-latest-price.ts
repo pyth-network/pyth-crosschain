@@ -5,6 +5,7 @@ import { HttpError } from "../clients/retry.js";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
 import type { SessionContext } from "../server.js";
+import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
@@ -20,7 +21,10 @@ const GetLatestPriceInput = {
     .string()
     .trim()
     .min(1, "access_token must not be empty")
-    .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
+    .optional()
+    .describe(
+      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+    ),
   channel: z
     .string()
     .regex(
@@ -68,13 +72,14 @@ export function registerGetLatestPrice(
         readOnlyHint: true,
       },
       description:
-        "Get the most recent real-time price for one or more feeds. Requires an `access_token` parameter (get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token). Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
+        "Get the most recent real-time price for one or more feeds. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetLatestPriceInput,
       title: "Get Latest Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
+      const token = resolveAccessToken(params.access_token, config);
 
       // The Router API rejects requests with both symbols and priceFeedIds.
       // When both are provided, prefer price_feed_ids and ignore symbols.
@@ -84,15 +89,25 @@ export function registerGetLatestPrice(
         (effectiveSymbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0);
 
       const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(params.access_token),
+        apiKeyLast4: getApiKeyLast4(token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
         numFeedsRequested: effectiveCount,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(params.access_token),
+        tokenHash: computeTokenHash(token),
         tool: "get_latest_price" as const,
       };
+
+      if (!token) {
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "missing_token",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
+        return toolError(ErrorMessages.MISSING_TOKEN);
+      }
 
       if (effectiveCount === 0) {
         logToolCall(logger, {
@@ -123,7 +138,7 @@ export function registerGetLatestPrice(
       try {
         const { data: feeds, upstreamLatencyMs } =
           await routerClient.getLatestPrice(
-            params.access_token,
+            token,
             effectiveSymbols,
             params.price_feed_ids,
             params.properties,
