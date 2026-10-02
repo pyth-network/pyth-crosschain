@@ -14,5 +14,5 @@ export const ErrorMessages = {
   INVALID_TOKEN:
     "Your Pyth Pro access token is invalid or expired. Check your `access_token` value.",
   MISSING_TOKEN:
-    "This tool requires a Pyth Pro access token. Provide an `access_token` parameter. Get a token at https://pyth.network/pricing",
+    "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter, or (local stdio setups only) set PYTH_PRO_ACCESS_TOKEN in the MCP server's environment. Get a token at https://pyth.network/pricing",
 } as const;

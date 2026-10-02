@@ -194,6 +194,7 @@ describe("Integration: MCP server round-trip", () => {
   it("get_candlestick_data returns OHLC", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         from: 1_708_300_800,
         resolution: "D",
         symbol: "BTC/USD",
@@ -211,6 +212,7 @@ describe("Integration: MCP server round-trip", () => {
   it("get_historical_price resolves symbols to IDs", async () => {
     const result = await client.callTool({
       arguments: {
+        access_token: "test-token",
         symbols: ["BTC/USD"],
         timestamp: 1_708_300_800,
       },

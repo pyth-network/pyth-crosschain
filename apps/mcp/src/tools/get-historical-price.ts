@@ -5,6 +5,7 @@ import type { HistoryClient } from "../clients/history.js";
 import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import type { SessionContext } from "../server.js";
+import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
@@ -29,7 +30,7 @@ const GetHistoricalPriceInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Pyth Pro access token used to authenticate the request. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   channel: z
     .string()
@@ -78,28 +79,39 @@ export function registerGetHistoricalPrice(
         readOnlyHint: true,
       },
       description:
-        "Get price data for specific feeds at a historical timestamp. Pass your Pyth Pro `access_token` to authenticate the request. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Get price data for specific feeds at a historical timestamp. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetHistoricalPriceInput,
       title: "Get Historical Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
+      const token = resolveAccessToken(params.access_token, config);
 
       // When both are provided, prefer price_feed_ids and ignore symbols.
       const effectiveSymbols =
         (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
 
       const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(params.access_token),
+        apiKeyLast4: getApiKeyLast4(token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
         numFeedsRequested: 0,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(params.access_token),
+        tokenHash: computeTokenHash(token),
         tool: "get_historical_price" as const,
       };
+
+      if (!token) {
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "missing_token",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
+        return toolError(ErrorMessages.MISSING_TOKEN);
+      }
 
       if (
         !(params.price_feed_ids?.length ?? 0) &&
@@ -160,7 +172,7 @@ export function registerGetHistoricalPrice(
             channel,
             ids,
             timestampUs,
-            params.access_token,
+            token,
           );
 
         const totalUpstreamMs = symbolLookupUpstreamMs + priceUpstreamMs;
@@ -242,11 +254,7 @@ export function registerGetHistoricalPrice(
             latencyMs: Date.now() - start,
             status: "error",
           });
-          return toolError(
-            params.access_token
-              ? ErrorMessages.INVALID_TOKEN
-              : ErrorMessages.MISSING_TOKEN,
-          );
+          return toolError(ErrorMessages.INVALID_TOKEN);
         }
 
         if (
