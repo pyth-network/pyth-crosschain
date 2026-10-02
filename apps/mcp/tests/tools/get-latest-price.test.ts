@@ -354,4 +354,52 @@ describe("get_latest_price tool", () => {
       expect(text).not.toContain("invalid or expired");
     });
   });
+
+  describe("channel validation", () => {
+    async function callWithChannel(channel: string) {
+      let sentChannel: unknown;
+      msw.use(
+        http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+          sentChannel = ((await request.json()) as { channel: unknown })
+            .channel;
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", channel, price_feed_ids: [1] },
+        name: "get_latest_price",
+      });
+      return { result, sentChannel };
+    }
+
+    it("accepts fixed_rate@1000ms", async () => {
+      const { result, sentChannel } =
+        await callWithChannel("fixed_rate@1000ms");
+      expect(result.isError).toBeFalsy();
+      expect(sentChannel).toBe("fixed_rate@1000ms");
+    });
+
+    it("rejects a channel the API does not support", async () => {
+      const { result, sentChannel } = await callWithChannel("fixed_rate@123ms");
+      expect(result.isError).toBe(true);
+      expect(sentChannel).toBeUndefined();
+    });
+  });
 });

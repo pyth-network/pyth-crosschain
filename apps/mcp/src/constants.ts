@@ -1,3 +1,13 @@
+// Channels the Router and History APIs accept (ChannelSchemaRepr).
+export const CHANNELS = [
+  "real_time",
+  "fixed_rate@50ms",
+  "fixed_rate@200ms",
+  "fixed_rate@1000ms",
+] as const;
+
+export type Channel = (typeof CHANNELS)[number];
+
 // The History API's AssetTypeFilter list, plus crypto-index and
 // crypto-redemption-rate, which appear in /v1/symbols data but are rejected as
 // a server-side filter (we filter client-side). Replace with the /assets API

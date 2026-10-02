@@ -1,9 +1,10 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
+import type { Channel } from "../constants.js";
+import { CHANNELS } from "../constants.js";
 import { HttpError, httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { LatestPriceParsedFeed } from "./types.js";
 
-type Channel = "real_time" | `fixed_rate@${number}ms`;
 type PriceFeedProperty =
   | "price"
   | "bestBidPrice"
@@ -20,7 +21,7 @@ const DEFAULT_PROPERTIES: PriceFeedProperty[] = [
   "publisherCount",
   "confidence",
 ];
-const CHANNEL_PATTERN = /^(real_time|fixed_rate@\d+ms)$/;
+const CHANNEL_SET: ReadonlySet<string> = new Set(CHANNELS);
 const DEFAULT_PROPERTY_SET: ReadonlySet<string> = new Set(DEFAULT_PROPERTIES);
 
 export type UpstreamResult<T> = {
@@ -115,7 +116,7 @@ async function parseLatestPriceBody(res: Response): Promise<ParsedPayload> {
 }
 
 function isChannel(value: string): value is Channel {
-  return CHANNEL_PATTERN.test(value);
+  return CHANNEL_SET.has(value);
 }
 
 function normalizeChannel(channel: string): Channel {

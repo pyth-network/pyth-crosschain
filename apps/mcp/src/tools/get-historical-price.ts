@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
 import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
+import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
@@ -33,14 +34,10 @@ const GetHistoricalPriceInput = {
       "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   channel: z
-    .string()
-    .regex(
-      /^(real_time|fixed_rate@\d+ms)$/,
-      "Invalid channel format. Valid: real_time, fixed_rate@50ms, fixed_rate@200ms, fixed_rate@1000ms",
-    )
+    .enum(CHANNELS)
     .optional()
     .describe(
-      "Override default channel (e.g. fixed_rate@200ms, real_time, fixed_rate@50ms, fixed_rate@1000ms)",
+      `Override the default channel (update rate): ${CHANNELS.join(", ")}`,
     ),
   price_feed_ids: z
     .array(z.coerce.number().int().positive())
