@@ -1,9 +1,16 @@
-import type { Channel, PriceFeedProperty } from "@pythnetwork/pyth-lazer-sdk";
-import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import { HttpError, withSingleRetry } from "./retry.js";
+import { HttpError, parseRetryAfter, withSingleRetry } from "./retry.js";
 import type { LatestPriceParsedFeed } from "./types.js";
+
+type Channel = "real_time" | `fixed_rate@${number}ms`;
+type PriceFeedProperty =
+  | "price"
+  | "bestBidPrice"
+  | "bestAskPrice"
+  | "exponent"
+  | "publisherCount"
+  | "confidence";
 
 const DEFAULT_PROPERTIES: PriceFeedProperty[] = [
   "price",
@@ -19,6 +26,11 @@ const DEFAULT_PROPERTY_SET: ReadonlySet<string> = new Set(DEFAULT_PROPERTIES);
 export type UpstreamResult<T> = {
   data: T;
   upstreamLatencyMs: number;
+};
+
+type ParsedPayload = {
+  timestampUs: string | number;
+  priceFeeds: Record<string, unknown>[];
 };
 
 export class RouterClient {
@@ -42,109 +54,65 @@ export class RouterClient {
     properties?: string[],
     channel?: string,
   ): Promise<UpstreamResult<LatestPriceParsedFeed[]>> {
-    // Lightweight — no WebSocket pool, just stores config values
-    const client = await PythLazerClient.create({
-      priceServiceUrl: this.priceServiceUrl,
-      token,
-    });
-
+    const url = new URL("/v1/latest_price", this.priceServiceUrl);
     const effectiveChannel = channel ?? this.defaultChannel;
-    this.logger.debug(
-      { channel: effectiveChannel, priceFeedIds, symbols },
-      "SDK getLatestPrice",
-    );
+    // Signed/binary payloads are never returned to callers, so request none.
+    const body = JSON.stringify({
+      channel: normalizeChannel(effectiveChannel),
+      formats: [],
+      parsed: true,
+      priceFeedIds: (priceFeedIds?.length ?? 0) > 0 ? priceFeedIds : undefined,
+      properties: normalizeProperties(properties),
+      symbols: (symbols?.length ?? 0) > 0 ? symbols : undefined,
+    });
 
     const fetchStart = Date.now();
-    const response = await withSingleRetry(async () => {
-      try {
-        const normalizedChannel = normalizeChannel(effectiveChannel);
-        const normalizedProperties = normalizeProperties(properties);
-        return await withTimeout(
-          client.getLatestPrice({
-            channel: normalizedChannel,
-            formats: ["leUnsigned"],
-            priceFeedIds:
-              (priceFeedIds?.length ?? 0) > 0 ? priceFeedIds : undefined,
-            properties: normalizedProperties,
-            symbols: (symbols?.length ?? 0) > 0 ? symbols : undefined,
-          }),
-          this.timeoutMs,
+    const parsed = await withSingleRetry(async () => {
+      this.logger.debug(
+        { channel: effectiveChannel, priceFeedIds, symbols },
+        "POST latest_price",
+      );
+      const res = await fetch(url, {
+        body,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      if (!res.ok) {
+        throw new HttpError(
+          res.status,
+          `Router API /v1/latest_price returned ${res.status}`,
+          parseRetryAfter(res),
         );
-      } catch (err) {
-        throw toHttpError(err);
       }
+      return parseLatestPriceBody(res);
     });
 
-    if (!response.parsed) {
-      throw new HttpError(502, "SDK returned no parsed data");
-    }
-
     const upstreamLatencyMs = Date.now() - fetchStart;
-    return { data: normalizeFeeds(response.parsed), upstreamLatencyMs };
+    return { data: normalizeFeeds(parsed), upstreamLatencyMs };
   }
 }
 
 // --- helpers (private to module) ---
 
-/**
- * Race a promise against a timeout. On timeout, reject locally.
- *
- * Note: The SDK does not support AbortSignal, so the underlying fetch
- * continues in the background after a timeout. This is an accepted
- * limitation — the local rejection unblocks the caller and retry logic.
- * Follow-up: add AbortSignal support to the Pyth Lazer SDK.
- */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new DOMException("Request timed out", "TimeoutError")),
-      ms,
+async function parseLatestPriceBody(res: Response): Promise<ParsedPayload> {
+  let json: unknown;
+  try {
+    json = await res.json();
+  } catch (err) {
+    throw new HttpError(
+      502,
+      `Router API returned malformed JSON: ${err instanceof Error ? err.message : String(err)}`,
     );
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
-
-/**
- * Convert SDK errors to types our retry/error handling understands.
- *
- * SDK wraps ALL thrown errors as: "Failed to fetch latest price: <inner>"
- * where <inner> is either:
- *   - "HTTP error! status: 403 - Unauthorized" (HTTP errors)
- *   - "fetch failed" / "network ..." (network errors — retryable)
- *   - anything else (JSON parse errors, etc. — not retryable)
- */
-function toHttpError(err: unknown): Error {
-  if (err instanceof DOMException) return err; // timeout — handled by isRetryable
-  if (err instanceof HttpError) return err; // already converted
-  if (err instanceof Error) {
-    const status = extractHttpStatusFromMessage(err.message);
-    if (status != null) return new HttpError(status, err.message);
-    // Network-level failure — re-wrap as TypeError so isRetryable matches
-    if (/fetch failed|network|ECONNREFUSED|ENOTFOUND/i.test(err.message)) {
-      return new TypeError(err.message);
-    }
   }
-  // Unknown/unparseable error — fail closed as 502
-  return new HttpError(502, err instanceof Error ? err.message : String(err));
-}
-
-export function extractHttpStatusFromMessage(
-  message: string,
-): number | undefined {
-  const statusPatterns = [
-    /status[:=]\s*(\d{3})/i,
-    /http(?:\s+error)?\D+(\d{3})/i,
-    /\b([45]\d{2})\b/,
-  ];
-
-  for (const pattern of statusPatterns) {
-    const match = message.match(pattern);
-    if (!match) continue;
-    const parsed = Number(match[1]);
-    if (parsed >= 400 && parsed <= 599) return parsed;
+  const parsed = (json as { parsed?: ParsedPayload | null } | null)?.parsed;
+  if (!parsed || !Array.isArray(parsed.priceFeeds)) {
+    throw new HttpError(502, "Router API returned no parsed data");
   }
-  return undefined;
+  return parsed;
 }
 
 function isChannel(value: string): value is Channel {
@@ -169,10 +137,7 @@ function normalizeProperties(properties?: string[]): PriceFeedProperty[] {
 }
 
 /** Convert camelCase API response to snake_case internal format with numeric values */
-function normalizeFeeds(parsed: {
-  timestampUs: string | number;
-  priceFeeds: Record<string, unknown>[];
-}): LatestPriceParsedFeed[] {
+function normalizeFeeds(parsed: ParsedPayload): LatestPriceParsedFeed[] {
   const timestampUs =
     typeof parsed.timestampUs === "string"
       ? Number(parsed.timestampUs)
