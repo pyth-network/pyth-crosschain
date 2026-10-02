@@ -2,10 +2,7 @@ import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
 import { HttpError } from "../../src/clients/retry.js";
-import {
-  extractHttpStatusFromMessage,
-  RouterClient,
-} from "../../src/clients/router.js";
+import { RouterClient } from "../../src/clients/router.js";
 
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
 
@@ -28,10 +25,12 @@ const mockLatestPrice = {
 };
 
 let lastRequestBody: Record<string, unknown> = {};
+let lastAuthHeader: string | null = null;
 
 const handlers = [
   http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
     const authHeader = request.headers.get("Authorization");
+    lastAuthHeader = authHeader;
     if (!authHeader?.startsWith("Bearer ")) {
       return HttpResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -80,6 +79,7 @@ describe("RouterClient", () => {
       "Crypto.BTC/USD",
     ]);
     expect(feeds).toHaveLength(1);
+    expect(lastAuthHeader).toBe("Bearer my-secret-token");
   });
 
   it("sends properties, formats, and camelCase priceFeedIds", async () => {
@@ -92,7 +92,8 @@ describe("RouterClient", () => {
       "publisherCount",
       "confidence",
     ]);
-    expect(lastRequestBody.formats).toEqual(["leUnsigned"]);
+    expect(lastRequestBody.formats).toEqual([]);
+    expect(lastRequestBody.parsed).toBe(true);
     expect(lastRequestBody.priceFeedIds).toEqual([1, 2]);
     expect(lastRequestBody).not.toHaveProperty("price_feed_ids");
   });
@@ -197,22 +198,4 @@ describe("RouterClient", () => {
     expect(err).toBeInstanceOf(DOMException);
     expect((err as DOMException).name).toBe("TimeoutError");
   }, 15_000);
-});
-
-describe("extractHttpStatusFromMessage", () => {
-  it("extracts status from different HTTP error message formats", () => {
-    expect(
-      extractHttpStatusFromMessage("HTTP error! status: 403 - Unauthorized"),
-    ).toBe(403);
-    expect(extractHttpStatusFromMessage("http error status=429")).toBe(429);
-    expect(extractHttpStatusFromMessage("HTTP 503 Service Unavailable")).toBe(
-      503,
-    );
-  });
-
-  it("returns undefined when no status code exists", () => {
-    expect(
-      extractHttpStatusFromMessage("Failed to fetch latest price: malformed"),
-    ).toBeUndefined();
-  });
 });
