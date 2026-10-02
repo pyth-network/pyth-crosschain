@@ -1,14 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
-import { HttpError } from "../clients/retry.js";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
 import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import { ErrorMessages, toolError } from "../utils/errors.js";
+import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -163,19 +162,16 @@ export function registerGetLatestPrice(
           content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
-        const errorType =
-          err instanceof HttpError && err.status === 403 ? "auth" : "upstream";
+        const authError = authErrorFor(err);
 
         logToolCall(logger, {
           ...baseMetrics,
-          errorType,
+          errorType: authError?.errorType ?? "upstream",
           latencyMs: Date.now() - start,
           status: "error",
         });
 
-        if (err instanceof HttpError && err.status === 403) {
-          return toolError(ErrorMessages.INVALID_TOKEN);
-        }
+        if (authError) return toolError(authError.message);
 
         logger.warn({ err }, "get_latest_price upstream error");
         return toolError("Failed to fetch latest price. Please try again.");

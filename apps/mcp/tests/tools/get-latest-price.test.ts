@@ -298,4 +298,56 @@ describe("get_latest_price tool", () => {
       expect(text).toContain("PYTH_PRO_ACCESS_TOKEN");
     });
   });
+
+  describe("upstream auth errors", () => {
+    async function callWithUpstream(status: number, body: string | null) {
+      msw.use(
+        http.post(
+          `${ROUTER_URL}/v1/latest_price`,
+          () => new HttpResponse(body, { status }),
+        ),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "some-token", price_feed_ids: [3063] },
+        name: "get_latest_price",
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      return { result, text };
+    }
+
+    it("maps 401 to the invalid-token message", async () => {
+      const { result, text } = await callWithUpstream(401, null);
+      expect(result.isError).toBe(true);
+      expect(text).toContain("invalid or expired");
+    });
+
+    it("maps 403 to the not-entitled message with the upstream reason", async () => {
+      const { result, text } = await callWithUpstream(
+        403,
+        'Not entitled: feed 3063 (it requires access to one of the following groups: ["pyth-indices"])',
+      );
+      expect(result.isError).toBe(true);
+      expect(text).toContain("not entitled");
+      expect(text).toContain("pyth-indices");
+      expect(text).not.toContain("invalid or expired");
+    });
+  });
 });

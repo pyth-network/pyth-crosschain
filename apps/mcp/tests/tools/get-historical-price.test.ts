@@ -396,11 +396,11 @@ describe("get_historical_price tool", () => {
     expect(upstreamCalled).toBe(false);
   });
 
-  it("maps upstream 403 with a token to the invalid-token message", async () => {
+  it("maps upstream 401 to the invalid-token message", async () => {
     msw.use(
       http.get(
         `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
-        () => new HttpResponse(null, { status: 403 }),
+        () => new HttpResponse(null, { status: 401 }),
       ),
     );
 
@@ -417,6 +417,35 @@ describe("get_historical_price tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
     expect(text).toContain("invalid or expired");
+  });
+
+  it("maps upstream 403 to the not-entitled message with the upstream reason", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
+        () =>
+          new HttpResponse(
+            'Not entitled: feed 3063 (no grant accepts this gated feed; it requires access to one of the following groups: ["pyth-indices"])',
+            { status: 403 },
+          ),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "valid-token",
+        price_feed_ids: [1],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("not entitled");
+    expect(text).toContain("pyth-indices");
+    expect(text).not.toContain("invalid or expired");
   });
 
   it("does not mislabel a 403 from the public getSymbols lookup as a token error", async () => {

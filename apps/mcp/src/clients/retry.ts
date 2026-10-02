@@ -3,15 +3,29 @@ const JITTER_MAX_MS = 200;
 const MAX_RETRY_DELAY_MS = 30_000;
 const NETWORK_ERROR_PATTERN = /fetch|network|ECONNREFUSED|ENOTFOUND/i;
 
+const MAX_DETAIL_CHARS = 500;
+
 export class HttpError extends Error {
   constructor(
     public readonly status: number,
     message: string,
     public readonly retryAfter?: number,
+    /** Upstream response body text, e.g. the reason for a 403. */
+    public readonly detail?: string,
   ) {
     super(message);
     this.name = "HttpError";
   }
+}
+
+/** Build an HttpError from a non-OK response, keeping the upstream body text. */
+export async function httpErrorFromResponse(
+  res: Response,
+  message: string,
+): Promise<HttpError> {
+  const body = await res.text().catch(() => "");
+  const detail = body.trim().slice(0, MAX_DETAIL_CHARS) || undefined;
+  return new HttpError(res.status, message, parseRetryAfter(res), detail);
 }
 
 function isRetryable(err: unknown): boolean {

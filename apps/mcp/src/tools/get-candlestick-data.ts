@@ -2,13 +2,12 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
-import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
-import { ErrorMessages, toolError } from "../utils/errors.js";
+import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -236,17 +235,15 @@ export function registerGetCandlestickData(
           content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
-        if (
-          err instanceof HttpError &&
-          (err.status === 401 || err.status === 403)
-        ) {
+        const authError = authErrorFor(err);
+        if (authError) {
           logToolCall(logger, {
             ...baseMetrics,
-            errorType: "auth",
+            errorType: authError.errorType,
             latencyMs: Date.now() - start,
             status: "error",
           });
-          return toolError(ErrorMessages.INVALID_TOKEN);
+          return toolError(authError.message);
         }
 
         logger.warn({ err }, "get_candlestick_data upstream error");
