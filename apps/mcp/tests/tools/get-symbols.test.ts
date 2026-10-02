@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
+import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import { loadConfig } from "../../src/config.js";
 import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
@@ -55,25 +56,24 @@ mockFeeds.push(
 const msw = setupServer(
   http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
     const url = new URL(request.url);
-    // query filtering is now client-side; assert it's never sent upstream
-    if (url.searchParams.has("query")) {
-      return new HttpResponse("query param must not be sent upstream", {
+    // All filtering is client-side over the cached catalog; assert no filter
+    // params are ever sent upstream.
+    if ([...url.searchParams.keys()].length > 0) {
+      return new HttpResponse("filter params must not be sent upstream", {
         status: 400,
       });
     }
-    const assetType = url.searchParams.get("asset_type");
-    let filtered = mockFeeds;
-    if (assetType) {
-      filtered = filtered.filter((f) => f.asset_type === assetType);
-    }
-    return HttpResponse.json(filtered);
+    return HttpResponse.json(mockFeeds);
   }),
 );
 
 const logger = pino({ level: "silent" });
 
 beforeAll(() => msw.listen({ onUnhandledRequest: "error" }));
-afterEach(() => msw.resetHandlers());
+afterEach(() => {
+  msw.resetHandlers();
+  clearSymbolsCache();
+});
 afterAll(() => msw.close());
 
 function createSessionContext(): SessionContext {
@@ -188,7 +188,7 @@ describe("get_symbols tool", () => {
     expect(data.feeds[0].name).toBe("Apple Inc.");
   });
 
-  it("combines server-side asset_type with client-side query", async () => {
+  it("combines asset_type and query filters", async () => {
     const result = await client.callTool({
       arguments: { asset_type: "equity", query: "apple" },
       name: "get_symbols",

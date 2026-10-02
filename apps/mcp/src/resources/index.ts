@@ -47,10 +47,8 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri, { asset_type }) => {
-      const { data: feeds } = await historyClient.getSymbols(
-        undefined,
-        asset_type as string,
-      );
+      const { data: allFeeds } = await historyClient.getSymbols();
+      const feeds = allFeeds.filter((f) => f.asset_type === asset_type);
       return {
         contents: [
           {

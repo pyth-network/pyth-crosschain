@@ -72,12 +72,14 @@ export function registerGetSymbols(
 
       try {
         const { data: feeds, upstreamLatencyMs } =
-          await historyClient.getSymbols(undefined, params.asset_type);
+          await historyClient.getSymbols();
 
-        let filtered = feeds;
+        let filtered = params.asset_type
+          ? feeds.filter((f) => f.asset_type === params.asset_type)
+          : feeds;
         const q = params.query?.trim().toLowerCase();
         if (q) {
-          filtered = feeds.filter(
+          filtered = filtered.filter(
             (f) =>
               f.name.toLowerCase().includes(q) ||
               f.symbol.toLowerCase().includes(q) ||

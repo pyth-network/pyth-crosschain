@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
+import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import { registerAllResources } from "../../src/resources/index.js";
 import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
@@ -71,16 +72,7 @@ const mockFeeds = [
 ];
 
 const msw = setupServer(
-  http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
-    const url = new URL(request.url);
-    const assetType = url.searchParams.get("asset_type");
-    if (assetType) {
-      return HttpResponse.json(
-        mockFeeds.filter((f) => f.asset_type === assetType),
-      );
-    }
-    return HttpResponse.json(mockFeeds);
-  }),
+  http.get(`${HISTORY_URL}/v1/symbols`, () => HttpResponse.json(mockFeeds)),
   http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, () =>
     HttpResponse.json({
       c: [51_500],
@@ -127,7 +119,10 @@ const msw = setupServer(
 const logger = pino({ level: "silent" });
 
 beforeAll(() => msw.listen({ onUnhandledRequest: "error" }));
-afterEach(() => msw.resetHandlers());
+afterEach(() => {
+  msw.resetHandlers();
+  clearSymbolsCache();
+});
 afterAll(() => msw.close());
 
 describe("Integration: MCP server round-trip", () => {
