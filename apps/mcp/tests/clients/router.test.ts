@@ -91,11 +91,73 @@ describe("RouterClient", () => {
       "exponent",
       "publisherCount",
       "confidence",
+      "marketSession",
+      "feedUpdateTimestamp",
     ]);
     expect(lastRequestBody.formats).toEqual([]);
     expect(lastRequestBody.parsed).toBe(true);
     expect(lastRequestBody.priceFeedIds).toEqual([1, 2]);
     expect(lastRequestBody).not.toHaveProperty("price_feed_ids");
+  });
+
+  it("maps the newer properties to snake_case numbers", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        HttpResponse.json({
+          parsed: {
+            priceFeeds: [
+              {
+                emaConfidence: 2972,
+                emaPrice: "33349628",
+                exponent: -5,
+                feedUpdateTimestamp: 1_790_973_919_800_000,
+                fundingRate: 12_140_000,
+                fundingRateInterval: 28_800_000_000,
+                fundingTimestamp: 1_790_956_800_000_000,
+                marketSession: "postMarket",
+                priceFeedId: 922,
+              },
+            ],
+            timestampUs: "1790973919800000",
+          },
+        }),
+      ),
+    );
+    const { data } = await client.getLatestPrice(
+      "t",
+      undefined,
+      [922],
+      [
+        "emaPrice",
+        "emaConfidence",
+        "marketSession",
+        "feedUpdateTimestamp",
+        "fundingRate",
+        "fundingTimestamp",
+        "fundingRateInterval",
+        "exponent",
+      ],
+    );
+    expect(data[0]).toEqual({
+      ema_confidence: 2972,
+      ema_price: 33_349_628,
+      exponent: -5,
+      feed_update_timestamp: 1_790_973_919_800_000,
+      funding_rate: 12_140_000,
+      funding_rate_interval: 28_800_000_000,
+      funding_timestamp: 1_790_956_800_000_000,
+      market_session: "postMarket",
+      price_feed_id: 922,
+      timestamp_us: 1_790_973_919_800_000,
+    });
+  });
+
+  it("rejects an unknown property", async () => {
+    const err = await client
+      .getLatestPrice("t", undefined, [1], ["notAProperty"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(400);
   });
 
   it("throws on 403 (invalid token)", async () => {
