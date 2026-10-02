@@ -1,6 +1,6 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import { HttpError, parseRetryAfter, withSingleRetry } from "./retry.js";
+import { HttpError, httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { LatestPriceParsedFeed } from "./types.js";
 
 type Channel = "real_time" | `fixed_rate@${number}ms`;
@@ -82,10 +82,9 @@ export class RouterClient {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
-        throw new HttpError(
-          res.status,
+        throw await httpErrorFromResponse(
+          res,
           `Router API /v1/latest_price returned ${res.status}`,
-          parseRetryAfter(res),
         );
       }
       return parseLatestPriceBody(res);

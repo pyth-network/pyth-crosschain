@@ -236,11 +236,11 @@ describe("get_candlestick_data tool", () => {
     expect(upstreamCalled).toBe(false);
   });
 
-  it("maps upstream 403 with a token to the invalid-token message", async () => {
+  it("maps upstream 401 to the invalid-token message", async () => {
     msw.use(
       http.get(
         `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
-        () => new HttpResponse(null, { status: 403 }),
+        () => new HttpResponse(null, { status: 401 }),
       ),
     );
 
@@ -259,5 +259,36 @@ describe("get_candlestick_data tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
     expect(text).toContain("invalid or expired");
+  });
+
+  it("maps upstream 403 to the not-entitled message with the upstream reason", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+        () =>
+          new HttpResponse(
+            'Not entitled: feed 3063 (no grant accepts this gated feed; it requires access to one of the following groups: ["pyth-indices"])',
+            { status: 403 },
+          ),
+      ),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "valid-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("not entitled");
+    expect(text).toContain("pyth-indices");
+    expect(text).not.toContain("invalid or expired");
   });
 });

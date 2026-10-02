@@ -1,6 +1,6 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import { HttpError, parseRetryAfter, withSingleRetry } from "./retry.js";
+import { httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { UpstreamResult } from "./router.js";
 import type { Feed, HistoricalPriceResponse, OHLCResponse } from "./types.js";
 import {
@@ -45,10 +45,9 @@ export class HistoryClient {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
-        throw new HttpError(
-          res.status,
+        throw await httpErrorFromResponse(
+          res,
           `History API /v1/symbols returned ${res.status}`,
-          parseRetryAfter(res),
         );
       }
       return FeedArraySchema.parse(await res.json());
@@ -79,10 +78,9 @@ export class HistoryClient {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
-        throw new HttpError(
-          res.status,
+        throw await httpErrorFromResponse(
+          res,
           `History API /${channel}/history returned ${res.status}`,
-          parseRetryAfter(res),
         );
       }
       return OHLCResponseSchema.parse(await res.json());
@@ -111,10 +109,9 @@ export class HistoryClient {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
       if (!res.ok) {
-        throw new HttpError(
-          res.status,
+        throw await httpErrorFromResponse(
+          res,
           `History API /${channel}/price returned ${res.status}`,
-          parseRetryAfter(res),
         );
       }
       return HistoricalPriceArraySchema.parse(await res.json());

@@ -8,7 +8,7 @@ import type { SessionContext } from "../server.js";
 import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import { ErrorMessages, toolError } from "../utils/errors.js";
+import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -243,18 +243,15 @@ export function registerGetHistoricalPrice(
         // Only the token-gated /price call can be an auth failure — the internal
         // getSymbols() lookup hits the public /v1/symbols, so guard on
         // priceEndpointCalled (mirrors the 400/404 branch below).
-        if (
-          priceEndpointCalled &&
-          err instanceof HttpError &&
-          (err.status === 401 || err.status === 403)
-        ) {
+        const authError = priceEndpointCalled ? authErrorFor(err) : undefined;
+        if (authError) {
           logToolCall(logger, {
             ...baseMetrics,
-            errorType: "auth",
+            errorType: authError.errorType,
             latencyMs: Date.now() - start,
             status: "error",
           });
-          return toolError(ErrorMessages.INVALID_TOKEN);
+          return toolError(authError.message);
         }
 
         if (
