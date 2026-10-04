@@ -1,0 +1,297 @@
+{
+  "upgrade": [
+    {
+      "chainName": "abstract",
+      "newImplementation": "0x428706bFc85ba6f42Ce0FBB9DD9C4C9B3Fb00071"
+    },
+    {
+      "chainName": "apechain_mainnet",
+      "newImplementation": "0x91fD6D8f87661611cA722aec1347005045ae7F02"
+    },
+    {
+      "chainName": "arbitrum",
+      "newImplementation": "0x46f2b3a37F0F87c1a61dbbc959E999db6aed8FA5"
+    },
+    {
+      "chainName": "avalanche",
+      "newImplementation": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
+    },
+    {
+      "chainName": "base",
+      "newImplementation": "0x9A0E28e112b61164D4B28eCeD46758BDA71E62FD"
+    },
+    {
+      "chainName": "berachain_mainnet",
+      "newImplementation": "0x6842ce33288177bB0Dea21dEDDDcB12C7Bda817C"
+    },
+    {
+      "chainName": "blast",
+      "newImplementation": "0xe09059e9dc1361688aFc302840CddE1d9ce38d86"
+    },
+    {
+      "chainName": "bsc",
+      "newImplementation": "0x825c0390f379C631f3Cf11A82a37D20BddF93c07"
+    },
+    {
+      "chainName": "celo",
+      "newImplementation": "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb"
+    },
+    {
+      "chainName": "coredao",
+      "newImplementation": "0x0708325268dF9F66270F1401206434524814508b"
+    },
+    {
+      "chainName": "cronos",
+      "newImplementation": "0x825c0390f379C631f3Cf11A82a37D20BddF93c07"
+    },
+    {
+      "chainName": "ethereum",
+      "newImplementation": "0x8e58897125Ce7817A0F5F7AD8ec0Be488D0Ca7d1"
+    },
+    {
+      "chainName": "flow_mainnet",
+      "newImplementation": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb"
+    },
+    {
+      "chainName": "gnosis",
+      "newImplementation": "0x825c0390f379C631f3Cf11A82a37D20BddF93c07"
+    },
+    {
+      "chainName": "hemi_mainnet",
+      "newImplementation": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+    },
+    {
+      "chainName": "hyperevm",
+      "newImplementation": "0x411c586feCE3ABE2548d6cAED3C920AD9069ff00"
+    },
+    {
+      "chainName": "kraken_ink_mainnet",
+      "newImplementation": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
+    },
+    {
+      "chainName": "linea",
+      "newImplementation": "0x9fcDCAb0A147e799Fa866594B2c4c20F4eF29F37"
+    },
+    {
+      "chainName": "mantle",
+      "newImplementation": "0x24654078A8E043e8985D962a5100CDfA2026f92C"
+    },
+    {
+      "chainName": "optimism",
+      "newImplementation": "0xD35E56C06320B1ED549a8F85d316FEc854FF4b71"
+    },
+    {
+      "chainName": "opbnb",
+      "newImplementation": "0x8D254a21b3C86D32F7179855531CE99164721933"
+    },
+    {
+      "chainName": "polygon",
+      "newImplementation": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF"
+    },
+    {
+      "chainName": "scroll",
+      "newImplementation": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
+    },
+    {
+      "chainName": "sei_evm_mainnet",
+      "newImplementation": "0x986c00a290D1767651723c7cF9e5bD7bD745f6f9"
+    },
+    {
+      "chainName": "soneium",
+      "newImplementation": "0x1ba1bf00A525a8e492b88aF52Bfa8C1e151694dC"
+    },
+    {
+      "chainName": "fantom_sonic_mainnet",
+      "newImplementation": "0x91fD6D8f87661611cA722aec1347005045ae7F02"
+    },
+    {
+      "chainName": "unichain",
+      "newImplementation": "0x99fA5f405b795cA03F2AE47Cd48FEd22029892a2"
+    },
+    {
+      "chainName": "worldchain",
+      "newImplementation": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509"
+    },
+    {
+      "chainName": "zksync",
+      "newImplementation": "0x470d1c91b1b1d9295815A2357FB0D20E7350ab71"
+    }
+  ],
+  "withdraw": [
+    {
+      "chainName": "zero_gravity",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "abstract",
+      "pythContract": "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
+      "targetAddress": "0x146a7a66c008E15E543b78aa3DeB39eaecD8fBcd"
+    },
+    {
+      "chainName": "apechain_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xaC400398aD744836a30Fb833Ea6A1b2Cb21505D9"
+    },
+    {
+      "chainName": "arbitrum",
+      "pythContract": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "avalanche",
+      "pythContract": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "base",
+      "pythContract": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "berachain_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "blast",
+      "pythContract": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "bsc",
+      "pythContract": "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "celo",
+      "pythContract": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "coredao",
+      "pythContract": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      "targetAddress": "0x146a7a66c008E15E543b78aa3DeB39eaecD8fBcd"
+    },
+    {
+      "chainName": "cronos",
+      "pythContract": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
+      "targetAddress": "0xaC400398aD744836a30Fb833Ea6A1b2Cb21505D9"
+    },
+    {
+      "chainName": "ethereum",
+      "pythContract": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "gnosis",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "hemi_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "hyperevm",
+      "pythContract": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "injective_evm",
+      "pythContract": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+      "targetAddress": "0x0694D676980856658e727341D7c9Ef87b490ae7D"
+    },
+    {
+      "chainName": "kraken_ink_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "linea",
+      "pythContract": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "mantle",
+      "pythContract": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "megaeth",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "mezo",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0x85Ab7030e8130775eA2C5F70CafBc8e8c55f2666"
+    },
+    {
+      "chainName": "monad",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "opbnb",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "optimism",
+      "pythContract": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "plasma",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "polygon",
+      "pythContract": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "robinhood",
+      "pythContract": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "scroll",
+      "pythContract": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "sei_evm_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "soneium",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0x36e9f482712ADDcddE83b3326116D46bc578e918"
+    },
+    {
+      "chainName": "fantom_sonic_mainnet",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "unichain",
+      "pythContract": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "worldchain",
+      "pythContract": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    },
+    {
+      "chainName": "zksync",
+      "pythContract": "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
+      "targetAddress": "0xD879B2c9e70CA8e4bED04223D95f45F87F33B935"
+    }
+  ]
+}
