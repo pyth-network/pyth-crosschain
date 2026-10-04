@@ -6,4 +6,4 @@ This directory contains the Pyth contract for Sui and utilities to deploy and us
 - `contracts` folder contains the Pyth contract source code in Move.
 - `sdk` folder contains the Pyth javascript SDK for Sui that should be used by dApp developers.
 
-For more information regarding Pyth integration on Sui please refer to our [docs](https://docs.pyth.network/documentation/pythnet-price-feeds/sui).
+For more information regarding Pyth integration on Sui please refer to our [docs](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/sui).

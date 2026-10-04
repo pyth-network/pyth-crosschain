@@ -79,9 +79,9 @@ updates.
 
 NOTE: It is recommended to use stable hermes endpoints. If you are running the price pusher for **Aptos Testnet**, **Sui Testnet**, or **Near Testnet**, we recommend you use beta hermes endpoints.
 
-Pyth hosts [public endpoints](https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes) for Hermes; however, it is recommended to get a private endpoint from one of the
+Pyth hosts [public endpoints](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes#public-endpoints) for Hermes; however, it is recommended to get a private endpoint from one of the
 Hermes RPC providers for more reliability. Please refer to [this
-document](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes) for more information.
+document](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes) for more information.
 
 To run the price pusher, please run the following commands, replacing the command line arguments as necessary:
 
