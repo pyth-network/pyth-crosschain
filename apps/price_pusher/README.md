@@ -129,6 +129,11 @@ pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
     [--pushing-frequency 10] \
     [--polling-frequency 5]
 
+# `--grpc-endpoint` accepts a fallback set. Pass the flag multiple times or
+# supply a comma-separated list (`--grpc-endpoint a,b`). The pusher cycles
+# round-robin through endpoints when a gRPC call fails — useful for cosmos
+# nodes whose availability can be flaky.
+
 # For Aptos
 pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 \
