@@ -10,24 +10,9 @@ import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import {
-  authErrorFor,
-  ErrorMessages,
-  rejectionErrorFor,
-  toolError,
-} from "../utils/errors.js";
-import {
-  computeTokenHash,
-  getApiKeyLast4,
-  logToolCall,
-} from "../utils/logger.js";
 import { missingFeedsField } from "../utils/missing-feeds.js";
-import {
-  resolvedSymbolsField,
-  resolveSymbols,
-  tryGetCatalog,
-} from "../utils/resolve-symbols.js";
-import { getServerTime } from "../utils/timestamp.js";
+import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
+import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const GetLatestPriceInput = {
   access_token: accessTokenSchema(
@@ -81,165 +66,70 @@ export function registerGetLatestPrice(
       inputSchema: GetLatestPriceInput,
       title: "Get Latest Price",
     },
-    async (params, extra) => {
-      sessionContext.toolCallCount++;
-      const start = Date.now();
-      const token = params.access_token;
+    (params, extra) =>
+      runPriceTool(
+        {
+          failureMessage: "Failed to fetch latest price. Please try again.",
+          logger,
+          rejectionHint:
+            "Check the feed IDs, their state and min_channel with get_symbols.",
+          sessionContext,
+          tool: "get_latest_price",
+        },
+        params.access_token,
+        extra,
+        async (ctx) => {
+          const inputs = await resolveFeedInputs({
+            catalog: "optional-router",
+            historyClient,
+            logger,
+            priceFeedIds: params.price_feed_ids,
+            symbols: params.symbols,
+            token: ctx.token,
+          });
+          if (!inputs.ok) return ctx.fail(inputs.errorType, inputs.message);
+          const { ids, resolvedSymbols, unresolvedSymbols } = inputs;
+          ctx.setFeedsRequested(unresolvedSymbols?.length ?? ids.length);
 
-      // The Router API rejects requests with both symbols and priceFeedIds.
-      // When both are provided, prefer price_feed_ids and ignore symbols.
-      const effectiveSymbols =
-        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
-      const effectiveCount =
-        (effectiveSymbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0);
-
-      const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(token),
-        clientName: sessionContext.clientName,
-        clientVersion: sessionContext.clientVersion,
-        numFeedsRequested: effectiveCount,
-        requestId: extra.requestId,
-        sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(token),
-        tool: "get_latest_price" as const,
-      };
-
-      if (!token) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "missing_token",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(ErrorMessages.MISSING_TOKEN);
-      }
-
-      if (effectiveCount === 0) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "validation",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(
-          "At least one of 'symbols' or 'price_feed_ids' is required",
-        );
-      }
-
-      if (effectiveCount > 100) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "validation",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(
-          "Combined total of symbols and price_feed_ids must not exceed 100",
-        );
-      }
-
-      const channel = resolveChannel(params.channel, config);
-
-      // Set when the catalog is unavailable and symbols go to the Router as is.
-      let unresolvedSymbols: string[] | undefined;
-
-      try {
-        // Resolve symbols (including bare pairs like BTC/USD) to feed IDs
-        // against the caller's catalog; the Router only accepts full symbols.
-        // If the catalog is unavailable, send the symbols to the Router as
-        // given so full symbols keep working.
-        let ids = params.price_feed_ids ?? [];
-        let resolvedSymbols: Record<string, string> = {};
-        let symbolLookupUpstreamMs = 0;
-        const catalog =
-          (effectiveSymbols?.length ?? 0) > 0
-            ? await tryGetCatalog(historyClient, token, logger, {
-                priceFromRouter: true,
-              })
-            : undefined;
-        if ((effectiveSymbols?.length ?? 0) > 0 && !catalog) {
-          unresolvedSymbols = effectiveSymbols;
-        }
-        if (catalog) {
-          symbolLookupUpstreamMs = catalog.upstreamLatencyMs;
-          const resolution = resolveSymbols(
-            effectiveSymbols ?? [],
-            catalog.data,
-          );
-          if (resolution.errors.length > 0) {
-            logToolCall(logger, {
-              ...baseMetrics,
-              errorType: "not_found",
-              latencyMs: Date.now() - start,
-              status: "error",
-            });
-            return toolError(resolution.errors.join("\n"));
+          let latest: Awaited<ReturnType<RouterClient["getLatestPrice"]>>;
+          try {
+            latest = await routerClient.getLatestPrice(
+              ctx.token,
+              unresolvedSymbols,
+              ids,
+              params.properties,
+              resolveChannel(params.channel, config),
+            );
+          } catch (err) {
+            // Without the catalog, a bare pair reaches the Router as is and
+            // is rejected; say why instead of echoing the Router.
+            if (
+              unresolvedSymbols &&
+              err instanceof HttpError &&
+              err.status === 400
+            ) {
+              return ctx.fail(
+                "validation",
+                `The feed catalog is unavailable, so symbols could not be resolved, and Pyth Pro rejected ${unresolvedSymbols.join(", ")}. Pass full symbols from get_symbols (e.g. Crypto.BTC/USD) or price_feed_ids.`,
+              );
+            }
+            throw err;
           }
-          resolvedSymbols = resolution.resolved;
-          ids = [...new Set(resolution.feeds.map((f) => f.pyth_lazer_id))];
-        }
 
-        const { data: feeds, upstreamLatencyMs: priceUpstreamMs } =
-          await routerClient.getLatestPrice(
-            token,
-            unresolvedSymbols,
-            ids,
-            params.properties,
-            channel,
+          const prices = latest.data.map((f) => addDisplayPrices(f));
+          return ctx.succeed(
+            {
+              prices,
+              ...(unresolvedSymbols ? {} : missingFeedsField(ids, latest.data)),
+              ...resolvedSymbolsField(resolvedSymbols),
+            },
+            {
+              numFeedsReturned: prices.length,
+              upstreamLatencyMs:
+                inputs.upstreamLatencyMs + latest.upstreamLatencyMs,
+            },
           );
-        const upstreamLatencyMs = symbolLookupUpstreamMs + priceUpstreamMs;
-
-        const enriched = feeds.map((f) => addDisplayPrices(f));
-        const responseText = JSON.stringify({
-          prices: enriched,
-          ...(unresolvedSymbols ? {} : missingFeedsField(ids, feeds)),
-          ...resolvedSymbolsField(resolvedSymbols),
-          ...getServerTime(),
-        });
-
-        logToolCall(logger, {
-          ...baseMetrics,
-          latencyMs: Date.now() - start,
-          numFeedsReturned: enriched.length,
-          responseSizeBytes: Buffer.byteLength(responseText),
-          status: "success",
-          upstreamLatencyMs,
-        });
-        return {
-          content: [{ text: responseText, type: "text" as const }],
-        };
-      } catch (err) {
-        const authError = authErrorFor(err);
-        const rejectionType = rejectionErrorFor(err, "")?.errorType;
-
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: authError?.errorType ?? rejectionType ?? "upstream",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-
-        if (authError) return toolError(authError.message);
-
-        if (
-          unresolvedSymbols &&
-          err instanceof HttpError &&
-          err.status === 400
-        ) {
-          return toolError(
-            `The feed catalog is unavailable, so symbols could not be resolved, and Pyth Pro rejected ${unresolvedSymbols.join(", ")}. Pass full symbols from get_symbols (e.g. Crypto.BTC/USD) or price_feed_ids.`,
-          );
-        }
-
-        const rejection = rejectionErrorFor(
-          err,
-          "Check the feed IDs, their state and min_channel with get_symbols.",
-        );
-        if (rejection) return toolError(rejection.message);
-
-        logger.warn({ err }, "get_latest_price upstream error");
-        return toolError("Failed to fetch latest price. Please try again.");
-      }
-    },
+        },
+      ),
   );
 }

@@ -8,25 +8,9 @@ import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import {
-  authErrorFor,
-  ErrorMessages,
-  rejectionErrorFor,
-  toolError,
-} from "../utils/errors.js";
-import {
-  computeTokenHash,
-  getApiKeyLast4,
-  logToolCall,
-} from "../utils/logger.js";
-import {
-  resolvedSymbolsField,
-  resolveSymbols,
-} from "../utils/resolve-symbols.js";
-import {
-  getServerTime,
-  normalizeTimestampToMicroseconds,
-} from "../utils/timestamp.js";
+import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
+import { normalizeTimestampToMicroseconds } from "../utils/timestamp.js";
+import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 /** The History API rejects windows longer than this. */
 const MAX_WINDOW_US = 60_000_000;
@@ -107,166 +91,89 @@ export function registerGetPriceRange(
       inputSchema: GetPriceRangeInput,
       title: "Get Price Range",
     },
-    async (params, extra) => {
-      sessionContext.toolCallCount++;
-      const start = Date.now();
-      const token = params.access_token;
-
-      // When both are provided, prefer price_feed_ids and ignore symbols.
-      const effectiveSymbols =
-        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
-
-      const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(token),
-        clientName: sessionContext.clientName,
-        clientVersion: sessionContext.clientVersion,
-        numFeedsRequested: 0,
-        requestId: extra.requestId,
-        sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(token),
-        tool: "get_price_range" as const,
-      };
-
-      const validationError = (message: string) => {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "validation",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(message);
-      };
-
-      if (!token) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "missing_token",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(ErrorMessages.MISSING_TOKEN);
-      }
-
-      if (
-        !(params.price_feed_ids?.length ?? 0) &&
-        !(effectiveSymbols?.length ?? 0)
-      ) {
-        return validationError(
-          "At least one of 'price_feed_ids' or 'symbols' is required",
-        );
-      }
-
-      const startUs = normalizeTimestampToMicroseconds(params.start);
-      const endUs = normalizeTimestampToMicroseconds(params.end);
-      // Both ends are inclusive, so start == end asks for one instant.
-      if (endUs < startUs) {
-        return validationError("'end' must not be before 'start'");
-      }
-      if (endUs - startUs > MAX_WINDOW_US) {
-        return validationError(
-          `The window is ${((endUs - startUs) / 1_000_000).toFixed(1)} seconds; get_price_range allows at most 60. Narrow it, or use get_candlestick_data for longer periods.`,
-        );
-      }
-
-      const channel = resolveChannel(params.channel, config);
-
-      try {
-        let ids = params.price_feed_ids ? [...params.price_feed_ids] : [];
-        let resolvedSymbols: Record<string, string> = {};
-        let symbolLookupUpstreamMs = 0;
-        if ((effectiveSymbols?.length ?? 0) > 0) {
-          const catalog = await historyClient.getSymbols(token);
-          symbolLookupUpstreamMs = catalog.upstreamLatencyMs;
-          const resolution = resolveSymbols(
-            effectiveSymbols ?? [],
-            catalog.data,
-          );
-          if (resolution.errors.length > 0) {
-            logToolCall(logger, {
-              ...baseMetrics,
-              errorType: "not_found",
-              latencyMs: Date.now() - start,
-              status: "error",
-            });
-            return toolError(resolution.errors.join("\n"));
+    (params, extra) =>
+      runPriceTool(
+        {
+          failureMessage: "Failed to fetch the price range. Please try again.",
+          logger,
+          rejectionHint:
+            "Check the feed IDs with get_symbols, the channel, and the paging cursor.",
+          sessionContext,
+          tool: "get_price_range",
+        },
+        params.access_token,
+        extra,
+        async (ctx) => {
+          if (
+            !(params.price_feed_ids?.length ?? 0) &&
+            !(params.symbols?.length ?? 0)
+          ) {
+            return ctx.fail(
+              "validation",
+              "At least one of 'price_feed_ids' or 'symbols' is required",
+            );
           }
-          resolvedSymbols = resolution.resolved;
-          ids = resolution.feeds.map((f) => f.pyth_lazer_id);
-        }
-        ids = [...new Set(ids)];
-        baseMetrics.numFeedsRequested = ids.length;
 
-        const { data: page, upstreamLatencyMs: rangeUpstreamMs } =
-          await historyClient.getPriceRange(channel, ids, startUs, endUs, {
-            after: params.after,
-            limit: params.limit,
-            token,
+          // Checked before any upstream call, including the catalog.
+          const startUs = normalizeTimestampToMicroseconds(params.start);
+          const endUs = normalizeTimestampToMicroseconds(params.end);
+          // Both ends are inclusive, so start == end asks for one instant.
+          if (endUs < startUs) {
+            return ctx.fail("validation", "'end' must not be before 'start'");
+          }
+          if (endUs - startUs > MAX_WINDOW_US) {
+            return ctx.fail(
+              "validation",
+              `The window is ${((endUs - startUs) / 1_000_000).toFixed(1)} seconds; get_price_range allows at most 60. Narrow it, or use get_candlestick_data for longer periods.`,
+            );
+          }
+
+          // The range endpoint needs IDs, so the catalog is required for
+          // symbol input.
+          const inputs = await resolveFeedInputs({
+            catalog: "required",
+            historyClient,
+            logger,
+            priceFeedIds: params.price_feed_ids,
+            symbols: params.symbols,
+            token: ctx.token,
           });
+          if (!inputs.ok) return ctx.fail(inputs.errorType, inputs.message);
+          ctx.setFeedsRequested(inputs.ids.length);
 
-        const prices = page.data.map((p) => addDisplayPrices(p));
-        const nextCursor = page.next ?? null;
-        const responseText = JSON.stringify({
-          channel,
-          count: prices.length,
-          has_more: nextCursor !== null,
-          next_cursor: nextCursor,
-          prices,
-          ...resolvedSymbolsField(resolvedSymbols),
-          window: {
-            end_iso: new Date(endUs / 1000).toISOString(),
-            end_us: endUs,
-            start_iso: new Date(startUs / 1000).toISOString(),
-            start_us: startUs,
-          },
-          ...getServerTime(),
-        });
+          const channel = resolveChannel(params.channel, config);
+          const range = await historyClient.getPriceRange(
+            channel,
+            inputs.ids,
+            startUs,
+            endUs,
+            { after: params.after, limit: params.limit, token: ctx.token },
+          );
 
-        logToolCall(logger, {
-          ...baseMetrics,
-          latencyMs: Date.now() - start,
-          numFeedsReturned: prices.length,
-          responseSizeBytes: Buffer.byteLength(responseText),
-          status: "success",
-          upstreamLatencyMs: symbolLookupUpstreamMs + rangeUpstreamMs,
-        });
-        return {
-          content: [{ text: responseText, type: "text" as const }],
-        };
-      } catch (err) {
-        const authError = authErrorFor(err);
-        if (authError) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: authError.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(authError.message);
-        }
-
-        const rejection = rejectionErrorFor(
-          err,
-          "Check the feed IDs with get_symbols, the channel, and the paging cursor.",
-        );
-        if (rejection) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: rejection.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(rejection.message);
-        }
-
-        logger.warn({ err }, "get_price_range upstream error");
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "upstream",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError("Failed to fetch the price range. Please try again.");
-      }
-    },
+          const prices = range.data.data.map((p) => addDisplayPrices(p));
+          const nextCursor = range.data.next ?? null;
+          return ctx.succeed(
+            {
+              channel,
+              count: prices.length,
+              has_more: nextCursor !== null,
+              next_cursor: nextCursor,
+              prices,
+              ...resolvedSymbolsField(inputs.resolvedSymbols),
+              window: {
+                end_iso: new Date(endUs / 1000).toISOString(),
+                end_us: endUs,
+                start_iso: new Date(startUs / 1000).toISOString(),
+                start_us: startUs,
+              },
+            },
+            {
+              numFeedsReturned: prices.length,
+              upstreamLatencyMs:
+                inputs.upstreamLatencyMs + range.upstreamLatencyMs,
+            },
+          );
+        },
+      ),
   );
 }
