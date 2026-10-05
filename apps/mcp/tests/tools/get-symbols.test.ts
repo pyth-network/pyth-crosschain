@@ -584,12 +584,34 @@ describe("get_symbols instrument and futures-chain filters", () => {
     expect((await call({ symbol_chain_id: "vx" })).total_available).toBe(0);
   });
 
-  it("keeps market session state, null sessions and futures fields", async () => {
-    const data = await call({ symbol_chain_id: "VX" });
+  it("keeps market session state, null sessions and futures fields with verbose", async () => {
+    const data = await call({ symbol_chain_id: "VX", verbose: true });
     const feed = data.feeds[0];
     expect(feed.market_sessions.regular.state).toBe("stable");
     expect(feed.market_sessions.post_market).toBeNull();
     expect(feed.expiration_time).toBe("2026-11-18T08:00:00");
     expect(feed.quote_currency).toBeNull();
+  });
+
+  it("returns compact feeds by default, keeping futures fields", async () => {
+    const data = await call({ symbol_chain_id: "VX" });
+    const feed = data.feeds[0];
+    expect(feed.market_sessions).toBeUndefined();
+    expect(feed.expiration_time).toBe("2026-11-18T08:00:00");
+    expect(feed.symbol_chain_id).toBe("VX");
+    expect(Object.keys(feed).sort()).toEqual([
+      "asset_type",
+      "description",
+      "expiration_time",
+      "exponent",
+      "instrument_type",
+      "min_channel",
+      "name",
+      "pyth_lazer_id",
+      "quote_currency",
+      "state",
+      "symbol",
+      "symbol_chain_id",
+    ]);
   });
 });

@@ -82,6 +82,12 @@ const GetSymbolsInput = {
     .describe(
       "Filter futures by chain ID, exact and case-sensitive (e.g. 'VX' for all VIX futures contracts)",
     ),
+  verbose: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Return every catalog field (trading schedules, market_sessions, corporate_actions, hermes_id, ...). Default false: compact feeds, about 4x smaller.",
+    ),
 };
 
 export function registerGetSymbols(
@@ -101,7 +107,7 @@ export function registerGetSymbols(
         readOnlyHint: true,
       },
       description:
-        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, instrument_type, state, exponent, groups (entitlement groups that gate the feed), market_sessions (trading-hours schedules), expiration_time (futures) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is in beta, not live yet, or retired, so no key can query it (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
+        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns compact feed metadata: symbol, name, description, pyth_lazer_id, asset_type, instrument_type, state, exponent, min_channel (fastest channel the feed supports), quote_currency, and where set groups (entitlement groups that gate the feed), expiration_time and symbol_chain_id (futures). Pass verbose: true for every catalog field, e.g. market_sessions (trading-hours schedules) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is in beta, not live yet, or retired, so no key can query it (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
       inputSchema: GetSymbolsInput,
       title: "List Pyth Price Feeds",
     },
@@ -183,9 +189,10 @@ export function registerGetSymbols(
         const totalAvailable = filtered.length;
         const offset = params.offset;
         const limit = params.limit;
-        const page = filtered
-          .slice(offset, offset + limit)
-          .map((f) => withEntitlement(f, entitled?.data));
+        const page = filtered.slice(offset, offset + limit).map((f) => ({
+          ...(params.verbose ? f : compactFeed(f)),
+          ...entitlementFields(f, entitled?.data),
+        }));
         const hasMore = offset + limit < totalAvailable;
 
         const result = {
@@ -229,15 +236,35 @@ export function registerGetSymbols(
   );
 }
 
-function withEntitlement(
+function entitlementFields(
   feed: Feed,
   entitledIds: ReadonlySet<number> | undefined,
-): Feed & { entitled?: boolean; not_entitled_reason?: string } {
-  if (!entitledIds) return feed;
-  if (entitledIds.has(feed.pyth_lazer_id)) return { ...feed, entitled: true };
+): { entitled?: boolean; not_entitled_reason?: string } {
+  if (!entitledIds) return {};
+  if (entitledIds.has(feed.pyth_lazer_id)) return { entitled: true };
+  return { entitled: false, not_entitled_reason: notEntitledReason(feed) };
+}
+
+/**
+ * The fields needed to pick a feed and query it. The full catalog entry is
+ * about 1.4 KB, mostly trading schedules repeated in three forms; this keeps
+ * a 50-feed page small enough for an LLM's context. `verbose` returns all.
+ */
+function compactFeed(feed: Feed) {
   return {
-    ...feed,
-    entitled: false,
-    not_entitled_reason: notEntitledReason(feed),
+    asset_type: feed.asset_type,
+    description: feed.description,
+    exponent: feed.exponent,
+    instrument_type: feed.instrument_type,
+    min_channel: feed.min_channel,
+    name: feed.name,
+    pyth_lazer_id: feed.pyth_lazer_id,
+    quote_currency: feed.quote_currency,
+    state: feed.state,
+    symbol: feed.symbol,
+    // Only where they carry information (futures, gated feeds).
+    ...(feed.expiration_time ? { expiration_time: feed.expiration_time } : {}),
+    ...((feed.groups?.length ?? 0) > 0 ? { groups: feed.groups } : {}),
+    ...(feed.symbol_chain_id ? { symbol_chain_id: feed.symbol_chain_id } : {}),
   };
 }

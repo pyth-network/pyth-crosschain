@@ -64,11 +64,12 @@ Requested feeds that return no price are listed in `missing_feed_ids` (e.g. feed
 | `symbol_chain_id` | string | No | All contracts of one futures chain, e.g. `VX` |
 | `include_inactive` | boolean | No | Default false: retired feeds are hidden |
 | `access_token` | string | No | Adds Pro-only feeds and the `entitled` flag |
+| `verbose` | boolean | No | Default false. True adds every catalog field (trading schedules, `market_sessions`, `corporate_actions`, ...) |
 | `limit` | number | No | 1-200, default 50 |
 | `offset` | number | No | Pagination offset, default 0 |
 
 Response: `{ count, feeds[], has_more, next_offset, offset, total_available }`.
-Feed fields: `symbol`, `name`, `description`, `asset_type`, `instrument_type`, `pyth_lazer_id`, `exponent`, `quote_currency`, `min_channel`, `state`, `market_sessions`, plus `entitled` and `not_entitled_reason` when a token is passed. Only `state: "stable"` feeds can be queried.
+Feed fields: `symbol`, `name`, `description`, `asset_type`, `instrument_type`, `pyth_lazer_id`, `exponent`, `quote_currency`, `min_channel`, `state`; `groups`, `expiration_time` and `symbol_chain_id` where set; plus `entitled` and `not_entitled_reason` when a token is passed. Only `state: "stable"` feeds can be queried.
 
 ### get_latest_price
 
