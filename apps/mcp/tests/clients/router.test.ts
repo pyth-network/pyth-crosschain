@@ -260,4 +260,33 @@ describe("RouterClient", () => {
     expect(err).toBeInstanceOf(DOMException);
     expect((err as DOMException).name).toBe("TimeoutError");
   }, 15_000);
+
+  it("retries when the body read times out after the headers arrive", async () => {
+    let calls = 0;
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () => {
+        calls++;
+        if (calls === 1) {
+          // Part of the body, then the request's timeout fires. msw does not
+          // tie the mocked body to the fetch signal, so fail it directly.
+          const stalled = new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode('{"parsed":'));
+              controller.error(
+                new DOMException("The operation timed out.", "TimeoutError"),
+              );
+            },
+          });
+          return new HttpResponse(stalled, {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return HttpResponse.json(mockLatestPrice);
+      }),
+    );
+
+    const result = await client.getLatestPrice("test-token", undefined, [1]);
+    expect(calls).toBe(2);
+    expect(result.data).toHaveLength(1);
+  });
 });

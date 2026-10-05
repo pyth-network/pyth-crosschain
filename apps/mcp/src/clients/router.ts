@@ -99,6 +99,10 @@ async function parseLatestPriceBody(res: Response): Promise<ParsedPayload> {
   try {
     json = await res.json();
   } catch (err) {
+    // A timeout or network failure while reading the body must stay
+    // retryable; only a body that is not JSON is a malformed response.
+    // Checked by name: in some runtimes the error comes from another realm.
+    if ((err as { name?: unknown } | null)?.name !== "SyntaxError") throw err;
     throw new HttpError(
       502,
       `Router API returned malformed JSON: ${err instanceof Error ? err.message : String(err)}`,

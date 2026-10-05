@@ -6,6 +6,7 @@ import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
+import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
@@ -28,14 +29,9 @@ import {
 } from "../utils/timestamp.js";
 
 const GetHistoricalPriceInput = {
-  access_token: z
-    .string()
-    .trim()
-    .min(1, "access_token must not be empty")
-    .optional()
-    .describe(
-      "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
-    ),
+  access_token: accessTokenSchema(
+    "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+  ),
   channel: z
     .enum(CHANNELS)
     .optional()
