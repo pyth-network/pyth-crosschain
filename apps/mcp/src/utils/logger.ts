@@ -4,8 +4,7 @@ import { pino } from "pino";
 import type { Config } from "../config.js";
 import { recordToolCallMetrics } from "../metrics.js";
 
-// fetch quotes a rejected header value in full, e.g.
-// `Headers.append: "Bearer <token>\n" is an invalid header value.`
+// fetch quotes a rejected header value, token included, in its error.
 // The quoted form goes first, since the token may contain a line break.
 function redactBearer(text: string): string {
   return text

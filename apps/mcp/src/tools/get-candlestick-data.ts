@@ -85,8 +85,6 @@ export function registerGetCandlestickData(
         {
           failureMessage: "Failed to fetch candlestick data. Please try again.",
           logger,
-          // e.g. 404 "symbol not found." when the channel is faster than the
-          // feed's min_channel; retrying does not help.
           rejectionHint:
             "Check the symbol, its state and min_channel with get_symbols, and the resolution and time range.",
           sessionContext,
@@ -99,8 +97,7 @@ export function registerGetCandlestickData(
             return ctx.fail("validation", "'from' must be before 'to'");
           }
 
-          // Accept bare pairs like BTC/USD; the History API needs the full
-          // symbol. If the catalog is unavailable, use the symbol as given.
+          // History needs the full symbol; without the catalog, use it as given.
           const inputs = await resolveFeedInputs({
             catalog: "optional",
             historyClient,
@@ -170,8 +167,7 @@ export function registerGetCandlestickData(
             );
           }
 
-          // The History API (TradingView format) returns OHLC values already
-          // in display units, so no addDisplayPrices() here.
+          // OHLC values are already in display units.
           if (totalCandles <= MAX_CANDLES) {
             return ctx.succeed(
               { ...data, ...resolvedSymbols },

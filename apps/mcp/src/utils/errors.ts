@@ -21,13 +21,7 @@ export const ErrorMessages = {
     `Pyth Pro denied access (403)${detail ? `: ${detail}` : ""}. Your access token is valid, but your plan is not entitled to this feed. Pick a feed your plan covers, or contact Pyth to add the entitlement.`,
 } as const;
 
-/**
- * Map an upstream auth failure to a tool error message: 401 means the token
- * is invalid or expired, 403 means the token is valid but not entitled to a
- * requested feed. The Router also answers 403 "Unknown feed: N" for an ID
- * that does not exist, which is reported as not found instead. Returns
- * undefined for any other error.
- */
+/** 401 -> invalid token; 403 -> not entitled, or not found for "Unknown feed". */
 export function authErrorFor(
   err: unknown,
 ):
@@ -52,12 +46,7 @@ export function authErrorFor(
   return undefined;
 }
 
-/**
- * Map an upstream 400/404 to a tool error that carries Pyth's own reason
- * (e.g. "Price feed id 112 is not available for channel real_time"). These
- * do not go away on retry, so the message must not say "try again".
- * Returns undefined for any other error.
- */
+/** 400/404 -> Pyth's own reason; these don't go away on retry. */
 export function rejectionErrorFor(
   err: unknown,
   hint: string,

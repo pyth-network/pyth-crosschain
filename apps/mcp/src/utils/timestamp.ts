@@ -27,8 +27,7 @@ export function getServerTime(): {
  */
 export function normalizeTimestampToMicroseconds(ts: number): number {
   const digits = Math.floor(Math.log10(Math.abs(ts))) + 1;
-  // Floored: the APIs take whole microseconds, and fractional input
-  // (e.g. 1717000000000.1234 ms) would otherwise be sent as is.
+  // Floored: the APIs take whole microseconds.
   if (digits <= 10) return Math.floor(ts * 1_000_000); // seconds
   if (digits <= 13) return Math.floor(ts * 1000); // milliseconds
   return Math.floor(ts); // microseconds

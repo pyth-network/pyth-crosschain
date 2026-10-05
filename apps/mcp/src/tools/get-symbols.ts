@@ -29,11 +29,7 @@ const NOTHING_ENTITLED_NOTE =
 const PUBLIC_ONLY_NOTE =
   "Showing public feeds only. Pass `access_token` (or configure the key in your MCP client) to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
 
-/**
- * Why a feed is not in the key's entitled_only list. That list also leaves
- * out feeds that are not live yet, so "not entitled" must not be read as
- * "your plan lacks this feed" unless the feed is gated.
- */
+/** Why a feed is not entitled: not live, gated by a group, or unavailable. */
 function notEntitledReason(feed: Feed): string {
   if (NOT_LIVE_STATES.has(feed.state)) return `not_live (${feed.state})`;
   if (feed.groups && feed.groups.length > 0) {
@@ -135,8 +131,6 @@ export function registerGetSymbols(
         tool: "get_symbols" as const,
       };
 
-      // A malformed key in the client configuration is reported rather than
-      // silently treated as "no key".
       if (auth.error) {
         logToolCall(logger, {
           ...baseMetrics,
@@ -159,8 +153,7 @@ export function registerGetSymbols(
         ]);
         const feeds = catalog.data;
 
-        // The entitlement list only adds flags, so its failure must not take
-        // the listing down; an invalid token, though, is reported as such.
+        // Flags are optional; only an invalid token fails the listing.
         let entitled:
           | Awaited<ReturnType<HistoryClient["getEntitledFeedIds"]>>
           | undefined;
@@ -172,9 +165,7 @@ export function registerGetSymbols(
           note = ENTITLEMENTS_UNAVAILABLE_NOTE;
         } else if (entitledResult?.ok) {
           entitled = entitledResult.value;
-          // The symbols API answers 200 for an unknown token: the public
-          // list, and an empty entitled list. An empty list is the only
-          // sign the token may be wrong.
+          // The symbols API accepts unknown tokens; an empty list is the only sign.
           if (entitled.data.size === 0) note = NOTHING_ENTITLED_NOTE;
         }
         const upstreamLatencyMs = Math.max(
@@ -265,11 +256,7 @@ function entitlementFields(
   return { entitled: false, not_entitled_reason: notEntitledReason(feed) };
 }
 
-/**
- * The fields needed to pick a feed and query it. The full catalog entry is
- * about 1.4 KB, mostly trading schedules repeated in three forms; this keeps
- * a 50-feed page small enough for an LLM's context. `verbose` returns all.
- */
+/** Fields needed to pick and query a feed; `verbose` returns everything. */
 function compactFeed(feed: Feed) {
   return {
     asset_type: feed.asset_type,

@@ -45,32 +45,20 @@ export type PriceToolOptions = {
   tool: string;
   logger: Logger;
   sessionContext: SessionContext;
-  /**
-   * Appended to Pyth's reason when it rejects the request (400/404). A
-   * function is called at error time, so it can name resolved feeds.
-   */
+  /** Appended to Pyth's 400/404 reason; a function runs at error time. */
   rejectionHint: string | (() => string);
   /** Returned for any other upstream failure. */
   failureMessage: string;
 };
 
-/**
- * Thrown by `resolveFeedInputs` when a catalog the tool cannot do without
- * fails for a reason other than auth. Reported as `failureMessage`, not as
- * Pyth rejecting the price request.
- */
+/** A required catalog failed (not auth); reported as `failureMessage`. */
 class CatalogUnavailableError extends Error {
   constructor(cause: unknown) {
     super("symbol catalog unavailable", { cause });
   }
 }
 
-/**
- * The shared shell of every price tool: call counting, timing, metrics, the
- * missing-token check, and one mapping of upstream errors (401/403 auth,
- * 400/404 with Pyth's reason, anything else as `failureMessage`), so the
- * tools cannot drift apart. `run` holds only what is specific to the tool.
- */
+/** Shared shell of the price tools: metrics, token check, error mapping. */
 export async function runPriceTool(
   options: PriceToolOptions,
   /** `access_token` from the call; falls back to the client-configured key. */
@@ -176,15 +164,9 @@ export type FeedInputs =
   | { ok: false; errorType: "not_found" | "validation"; message: string };
 
 /**
- * Turn `price_feed_ids` or `symbols` into what the tool sends upstream.
- * IDs win when both are given. Symbols (including bare pairs like BTC/USD)
- * are resolved against the caller's catalog.
- *
- * `catalog` says how much the tool depends on it:
- * - "required": it needs IDs, so an unavailable catalog is a failure.
- * - "optional": full symbols still work without it, so they pass through.
- * - "optional-router": as optional, and a History 403 also passes through,
- *   since the price comes from the Router.
+ * `price_feed_ids` (preferred) or `symbols` -> feed IDs. Without the catalog,
+ * "required" fails, "optional" passes symbols through, and "optional-router"
+ * also passes through a History 403.
  */
 export async function resolveFeedInputs(options: {
   historyClient: HistoryClient;

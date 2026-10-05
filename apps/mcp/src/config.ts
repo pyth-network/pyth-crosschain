@@ -33,12 +33,7 @@ export function loadConfig(): Config {
   });
 }
 
-/**
- * The user's own key from the environment their MCP client gives a local
- * stdio server. Only the stdio entry point (index.ts) calls this; the HTTP
- * server (http.ts) never does, so a key set on a hosted deployment is
- * ignored and the server never answers with a key of its own.
- */
+/** The user's own key for a local stdio server. http.ts never calls this. */
 export function loadStdioAccessToken(): string | undefined {
   return process.env.PYTH_PRO_ACCESS_TOKEN;
 }

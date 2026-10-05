@@ -27,8 +27,6 @@ const DISPLAY_FIELDS = [
   ["confidence", "display_confidence"],
   ["ema_price", "display_ema_price"],
   ["ema_confidence", "display_ema_confidence"],
-  // Verified live: FundingRate.Binance.BTC/USDT has exponent -12 and
-  // fundingRate 12140000, i.e. 1.214e-5 per funding interval.
   ["funding_rate", "display_funding_rate"],
 ] as const satisfies ReadonlyArray<
   readonly [keyof PriceFields, keyof DisplayFields]

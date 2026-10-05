@@ -17,16 +17,8 @@ export type SymbolResolution = {
 };
 
 /**
- * Resolve user-supplied symbols to feeds. Accepts full symbols
- * ("Crypto.BTC/USD"), any casing, and bare pairs ("BTC/USD"):
- *
- * 1. Exact symbol match.
- * 2. Case-insensitive symbol match.
- * 3. Bare pair: feeds whose symbol ends with "." + input. Inactive feeds are
- *    dropped; stable feeds are preferred over beta, and beta over
- *    coming_soon (only stable feeds can be queried); then spot feeds over
- *    other instruments. Resolves only when exactly one candidate is left;
- *    otherwise the error lists the candidates so the caller can pick one.
+ * Exact, then case-insensitive, then bare pair (BTC/USD). Bare pairs drop
+ * inactive feeds and prefer stable > beta > coming_soon, then spot.
  */
 export function resolveSymbols(
   inputs: readonly string[],
@@ -103,14 +95,8 @@ export function resolvedSymbolsField(resolved: Record<string, string>): {
 }
 
 /**
- * Load the catalog for symbol resolution without making it a hard
- * dependency: if History is unavailable, return undefined so callers can
- * pass the symbols through unchanged (full symbols still work).
- *
- * A 401 is rethrown, since the same token would fail the price request too.
- * A 403 is rethrown only when the price also comes from History; with
- * `priceFromRouter`, the Router may still accept the key, so the symbols are
- * passed through instead.
+ * The catalog, or undefined if History is unavailable. Rethrows 401, and
+ * 403 unless `priceFromRouter`.
  */
 export async function tryGetCatalog(
   historyClient: HistoryClient,

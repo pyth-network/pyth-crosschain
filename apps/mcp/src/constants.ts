@@ -27,10 +27,7 @@ export const PRICE_FEED_PROPERTIES = [
 
 export type PriceFeedProperty = (typeof PRICE_FEED_PROPERTIES)[number];
 
-// The History API's AssetTypeFilter list, plus crypto-index and
-// crypto-redemption-rate, which appear in /v1/symbols data but are rejected as
-// a server-side filter (we filter client-side). Replace with the /assets API
-// once it exists (see TODO.md).
+// History's AssetTypeFilter plus types seen in live data (see TODO.md).
 export const ASSET_TYPES = [
   "crypto",
   "crypto-index",
