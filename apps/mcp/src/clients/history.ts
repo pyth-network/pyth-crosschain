@@ -30,6 +30,14 @@ function authHeaders(token?: string): Record<string, string> | undefined {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 }
 
+export type HistoryClientOptions = {
+  /**
+   * Called before downloading a catalog for a key that is not cached yet;
+   * throws (401) to stop the download. See verifyKeyWithRouter.
+   */
+  verifyKey?: (token: string) => Promise<void>;
+};
+
 export class HistoryClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
@@ -37,6 +45,7 @@ export class HistoryClient {
   constructor(
     config: Config,
     private readonly logger: Logger,
+    private readonly options: HistoryClientOptions = {},
   ) {
     this.baseUrl = config.historyUrl;
     this.timeoutMs = config.requestTimeoutMs;
@@ -50,9 +59,10 @@ export class HistoryClient {
   async getSymbols(token?: string): Promise<UpstreamResult<Feed[]>> {
     const key = symbolsCacheKey(this.baseUrl, token, "all");
     const fetchStart = Date.now();
-    const { hit, value } = await symbolsCache.getOrLoad(key, () =>
-      this.fetchSymbols(token),
-    );
+    const { hit, value } = await symbolsCache.getOrLoad(key, async () => {
+      if (token) await this.options.verifyKey?.(token);
+      return this.fetchSymbols(token);
+    });
     return {
       data: value,
       upstreamLatencyMs: hit ? 0 : Date.now() - fetchStart,
@@ -69,6 +79,7 @@ export class HistoryClient {
     const key = symbolsCacheKey(this.baseUrl, token, "entitled");
     const fetchStart = Date.now();
     const { hit, value } = await entitledIdsCache.getOrLoad(key, async () => {
+      await this.options.verifyKey?.(token);
       const feeds = await this.fetchSymbolsJson(token, true);
       return new Set(
         FeedIdArraySchema.parse(feeds).map((f) => f.pyth_lazer_id),

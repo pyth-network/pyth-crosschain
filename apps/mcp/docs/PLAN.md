@@ -108,7 +108,7 @@ assert(result.content[0].text.includes("BTC/USD"));
 ```
 
 ### Pattern 9: Resource Caching
-- `pyth://feeds` and `pyth://feeds/{asset_type}` — the `/v1/symbols` catalog is cached in memory for 5 minutes per token (public catalog pinned, outages remembered for 30 s)
+- `pyth://feeds` and `pyth://feeds/{asset_type}` — the `/v1/symbols` catalog is cached in memory for 5 minutes per token (public catalog pinned, outages remembered for 30 s). Before downloading a catalog for a new key, the server checks the key with a one-feed Router request: the symbols API answers made-up keys with 200 and the full public catalog, the Router with 401. Confirmed keys are cached for 5 minutes, rejected keys for 1 minute; if the Router is down the download goes ahead.
 - `pyth://tradingview/config` — cache for 1 hour (configuration is static)
 - OpenAPI specs — cache indefinitely (versioned content)
 

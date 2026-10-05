@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { HistoryClient } from "./clients/history.js";
-import { RouterClient } from "./clients/router.js";
+import { RouterClient, verifyKeyWithRouter } from "./clients/router.js";
 import type { Config } from "./config.js";
 import { registerAllResources } from "./resources/index.js";
 import { registerAllTools } from "./tools/index.js";
@@ -44,8 +44,12 @@ export function createServer(
   server: McpServer;
   sessionContext: SessionContext;
 } {
-  const historyClient = new HistoryClient(config, logger);
   const routerClient = new RouterClient(config, logger);
+  // Fake keys are stopped by the Router before any catalog download.
+  const historyClient = new HistoryClient(config, logger, {
+    verifyKey: (token) =>
+      verifyKeyWithRouter(routerClient, config.routerUrl, token, logger),
+  });
 
   const sessionContext: SessionContext = {
     clientAccessToken,

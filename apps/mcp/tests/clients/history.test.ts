@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
+import { HttpError } from "../../src/clients/retry.js";
 import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
@@ -184,6 +185,48 @@ describe("HistoryClient", () => {
       );
       const { data } = await client.getSymbols();
       expect(data).toHaveLength(1);
+    });
+  });
+
+  describe("key check before a catalog download", () => {
+    function withVerifier(verdict: (token: string) => Promise<void>) {
+      const checked: string[] = [];
+      const verifying = new HistoryClient(config, logger, {
+        verifyKey: (token) => {
+          checked.push(token);
+          return verdict(token);
+        },
+      });
+      let downloads = 0;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => {
+          downloads++;
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      return { checked, downloads: () => downloads, verifying };
+    }
+
+    it("never downloads a catalog for a key the Router rejects", async () => {
+      const t = withVerifier(() =>
+        Promise.reject(new HttpError(401, "invalid API key")),
+      );
+      await expect(t.verifying.getSymbols("fake")).rejects.toMatchObject({
+        status: 401,
+      });
+      await expect(
+        t.verifying.getEntitledFeedIds("fake"),
+      ).rejects.toMatchObject({ status: 401 });
+      expect(t.downloads()).toBe(0);
+    });
+
+    it("checks a key only on a cache miss, and never for anonymous calls", async () => {
+      const t = withVerifier(() => Promise.resolve());
+      await t.verifying.getSymbols("good");
+      await t.verifying.getSymbols("good");
+      await t.verifying.getSymbols();
+      expect(t.checked).toEqual(["good"]);
+      expect(t.downloads()).toBe(2);
     });
   });
 
