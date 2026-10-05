@@ -10,12 +10,18 @@ import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
+import {
+  authErrorFor,
+  ErrorMessages,
+  rejectionErrorFor,
+  toolError,
+} from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
   logToolCall,
 } from "../utils/logger.js";
+import { missingFeedsField } from "../utils/missing-feeds.js";
 import {
   resolvedSymbolsField,
   resolveSymbols,
@@ -147,7 +153,9 @@ export function registerGetLatestPrice(
         let symbolLookupUpstreamMs = 0;
         const catalog =
           (effectiveSymbols?.length ?? 0) > 0
-            ? await tryGetCatalog(historyClient, token, logger)
+            ? await tryGetCatalog(historyClient, token, logger, {
+                priceFromRouter: true,
+              })
             : undefined;
         if ((effectiveSymbols?.length ?? 0) > 0 && !catalog) {
           unresolvedSymbols = effectiveSymbols;
@@ -184,6 +192,7 @@ export function registerGetLatestPrice(
         const enriched = feeds.map((f) => addDisplayPrices(f));
         const responseText = JSON.stringify({
           prices: enriched,
+          ...(unresolvedSymbols ? {} : missingFeedsField(ids, feeds)),
           ...resolvedSymbolsField(resolvedSymbols),
           ...getServerTime(),
         });
@@ -201,10 +210,11 @@ export function registerGetLatestPrice(
         };
       } catch (err) {
         const authError = authErrorFor(err);
+        const rejectionType = rejectionErrorFor(err, "")?.errorType;
 
         logToolCall(logger, {
           ...baseMetrics,
-          errorType: authError?.errorType ?? "upstream",
+          errorType: authError?.errorType ?? rejectionType ?? "upstream",
           latencyMs: Date.now() - start,
           status: "error",
         });
@@ -220,6 +230,12 @@ export function registerGetLatestPrice(
             `The feed catalog is unavailable, so symbols could not be resolved, and Pyth Pro rejected ${unresolvedSymbols.join(", ")}. Pass full symbols from get_symbols (e.g. Crypto.BTC/USD) or price_feed_ids.`,
           );
         }
+
+        const rejection = rejectionErrorFor(
+          err,
+          "Check the feed IDs, their state and min_channel with get_symbols.",
+        );
+        if (rejection) return toolError(rejection.message);
 
         logger.warn({ err }, "get_latest_price upstream error");
         return toolError("Failed to fetch latest price. Please try again.");

@@ -108,7 +108,7 @@ assert(result.content[0].text.includes("BTC/USD"));
 ```
 
 ### Pattern 9: Resource Caching
-- `pyth://feeds` and `pyth://feeds/{asset_type}` — cache for 1 day (feed catalog rarely changes)
+- `pyth://feeds` and `pyth://feeds/{asset_type}` — the `/v1/symbols` catalog is cached in memory for 5 minutes per token (public catalog pinned, outages remembered for 30 s)
 - `pyth://tradingview/config` — cache for 1 hour (configuration is static)
 - OpenAPI specs — cache indefinitely (versioned content)
 
@@ -304,8 +304,8 @@ process.on("SIGINT", cleanup);
 
 | URI | Description | Source |
 |-----|-------------|--------|
-| `pyth://feeds` | Full feed catalog (all asset types) | `GET /symbols` (History API), cached 1 day |
-| `pyth://feeds/{asset_type}` | Feeds filtered by asset type (template) | `GET /symbols?asset_type={asset_type}`, cached 1 day |
+| `pyth://feeds` | Full feed catalog (all asset types) | `GET /symbols` (History API), cached 5 minutes |
+| `pyth://feeds/{asset_type}` | Feeds filtered by asset type (template) | `GET /symbols`, filtered client-side, cached 5 minutes |
 | `pyth://tradingview/config` | TradingView-compatible configuration (supported resolutions, capabilities) | `GET /{channel}/config` (History API) |
 
 ---
@@ -611,7 +611,7 @@ Automatically fetch and update key data types (Channel, AssetType, MarketSession
 
 ## v2 — Shared Trial Token (Summary) — DROPPED
 
-> Dropped in 2026-10: every user brings their own key, and the HTTP server refuses to start with a server-side key. Kept for history.
+> Dropped in 2026-10: every user brings their own key, passed per call as `access_token`; the server ignores any key in its environment. Kept for history.
 
 - Server holds a `PYTH_PRO_SERVER_TOKEN` (env var, never exposed to clients)
 - When user has no `PYTH_PRO_ACCESS_TOKEN`, server uses its own token for Router API calls

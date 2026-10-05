@@ -19,7 +19,7 @@ export const FeedSchema = z
     exponent: z.number(),
     // Entitlement groups gating this feed; empty for ungated feeds.
     groups: z.array(z.string()).optional(),
-    hermes_id: z.string().nullable(),
+    hermes_id: z.string().nullish(),
     instrument_type: z.string().optional(),
     market_sessions: z
       .record(z.string(), MarketSessionSchema.nullable())
@@ -27,15 +27,13 @@ export const FeedSchema = z
     min_channel: z.string(),
     name: z.string(),
     pyth_lazer_id: z.number(),
-    quote_currency: z.string().nullable(),
+    quote_currency: z.string().nullish(),
     state: z.string(),
     symbol: z.string(),
     // Futures chain this contract belongs to, e.g. "VX".
     symbol_chain_id: z.string().nullable().optional(),
   })
   .passthrough();
-
-export const FeedArraySchema = z.array(FeedSchema);
 
 /** Minimal shape for the entitled_only list, where only IDs are needed. */
 export const FeedIdArraySchema = z.array(
@@ -68,7 +66,8 @@ export const HistoricalPriceResponseSchema = z
     funding_rate_interval: z.number().nullable().optional(),
     funding_timestamp: z.number().nullable().optional(),
     market_session: z.string().nullable().optional(),
-    price: z.number(),
+    // Null when no publisher contributed at that time (publisher_count 0).
+    price: z.number().nullable().optional(),
     price_feed_id: z.number(),
     publish_time: z.number(),
     publisher_count: z.number().nullable().optional(),

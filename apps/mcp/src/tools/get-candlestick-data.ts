@@ -7,7 +7,12 @@ import { CHANNELS, RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
-import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
+import {
+  authErrorFor,
+  ErrorMessages,
+  rejectionErrorFor,
+  toolError,
+} from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -265,6 +270,22 @@ export function registerGetCandlestickData(
             status: "error",
           });
           return toolError(authError.message);
+        }
+
+        // e.g. 404 "symbol not found." when the channel is faster than the
+        // feed's min_channel; retrying does not help.
+        const rejection = rejectionErrorFor(
+          err,
+          "Check the symbol, its state and min_channel with get_symbols, and the resolution and time range.",
+        );
+        if (rejection) {
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: rejection.errorType,
+            latencyMs: Date.now() - start,
+            status: "error",
+          });
+          return toolError(rejection.message);
         }
 
         logger.warn({ err }, "get_candlestick_data upstream error");

@@ -154,6 +154,81 @@ describe("get_historical_price tool", () => {
     expect(data.prices[0].display_price).toBeDefined();
   });
 
+  it("keeps the other rows when one feed has price: null", async () => {
+    // Verified live: feeds with no publisher return price null; this used to
+    // fail the whole response, BTC row included.
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, () =>
+        HttpResponse.json([
+          mockHistoricalPrice[0],
+          {
+            ...mockHistoricalPrice[0],
+            price: null,
+            price_feed_id: 99_025,
+            publisher_count: 0,
+          },
+        ]),
+      ),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        price_feed_ids: [1, 99_025],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+    expect(result.isError).toBeFalsy();
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.prices[0].display_price).toBeDefined();
+    expect(data.prices[1].price).toBeNull();
+    expect(data.prices[1].display_price).toBeUndefined();
+    expect(data.missing_feed_ids).toBeUndefined();
+  });
+
+  it("names requested feeds that came back without a row", async () => {
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        price_feed_ids: [1, 555],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.missing_feed_ids).toEqual([555]);
+  });
+
+  it("shows Pyth's reason for a 400 (e.g. a channel the feed does not support)", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/price`,
+        () =>
+          new HttpResponse(
+            "Price feed id 112 is not available for channel fixed_rate@200ms",
+            { status: 400 },
+          ),
+      ),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        price_feed_ids: [112],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("is not available for channel");
+    expect(text).toContain("IDs: 112");
+  });
+
   it("returns error for unknown symbol", async () => {
     const result = await client.callTool({
       arguments: {
@@ -329,7 +404,8 @@ describe("get_historical_price tool", () => {
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
     expect(text).toContain("999999");
-    expect(text).toContain("Verify feed IDs with get_symbols");
+    expect(text).toContain("Pyth Pro rejected the request (404)");
+    expect(text).toContain("Check the feed IDs");
     // ISO echo should be present
     expect(text).toMatch(/\d{4}-\d{2}-\d{2}T/);
   });

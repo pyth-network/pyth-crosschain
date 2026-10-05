@@ -2,14 +2,18 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
-import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
+import {
+  authErrorFor,
+  ErrorMessages,
+  rejectionErrorFor,
+  toolError,
+} from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -154,8 +158,9 @@ export function registerGetPriceRange(
 
       const startUs = normalizeTimestampToMicroseconds(params.start);
       const endUs = normalizeTimestampToMicroseconds(params.end);
-      if (endUs <= startUs) {
-        return validationError("'end' must be after 'start'");
+      // Both ends are inclusive, so start == end asks for one instant.
+      if (endUs < startUs) {
+        return validationError("'end' must not be before 'start'");
       }
       if (endUs - startUs > MAX_WINDOW_US) {
         return validationError(
@@ -239,19 +244,18 @@ export function registerGetPriceRange(
           return toolError(authError.message);
         }
 
-        if (
-          err instanceof HttpError &&
-          (err.status === 400 || err.status === 404)
-        ) {
+        const rejection = rejectionErrorFor(
+          err,
+          "Check the feed IDs with get_symbols, the channel, and the paging cursor.",
+        );
+        if (rejection) {
           logToolCall(logger, {
             ...baseMetrics,
-            errorType: err.status === 404 ? "not_found" : "validation",
+            errorType: rejection.errorType,
             latencyMs: Date.now() - start,
             status: "error",
           });
-          return toolError(
-            `Pyth Pro rejected the request (${err.status})${err.detail ? `: ${err.detail}` : ""}. Check the feed IDs with get_symbols, the channel, and the paging cursor.`,
-          );
+          return toolError(rejection.message);
         }
 
         logger.warn({ err }, "get_price_range upstream error");

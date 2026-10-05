@@ -1,5 +1,9 @@
 import { HttpError, httpErrorFromResponse } from "../../src/clients/retry.js";
-import { authErrorFor, toolError } from "../../src/utils/errors.js";
+import {
+  authErrorFor,
+  rejectionErrorFor,
+  toolError,
+} from "../../src/utils/errors.js";
 
 describe("toolError", () => {
   it("creates MCP tool error format", () => {
@@ -33,6 +37,48 @@ describe("authErrorFor", () => {
   it("returns undefined for other errors", () => {
     expect(authErrorFor(new HttpError(500, "boom"))).toBeUndefined();
     expect(authErrorFor(new Error("boom"))).toBeUndefined();
+  });
+
+  it("reports the Router's 403 'Unknown feed' as not found, not as an entitlement problem", () => {
+    // Verified live: the Router answers 403 "Unknown feed: 4000000".
+    const mapped = authErrorFor(
+      new HttpError(403, "forbidden", undefined, "Unknown feed: 4000000"),
+    );
+    expect(mapped?.errorType).toBe("not_found");
+    expect(mapped?.message).toContain("Unknown feed: 4000000");
+    expect(mapped?.message).not.toContain("not entitled");
+  });
+});
+
+describe("rejectionErrorFor", () => {
+  it("carries Pyth's reason for a 400 and never says to try again", () => {
+    const mapped = rejectionErrorFor(
+      new HttpError(
+        400,
+        "bad",
+        undefined,
+        "Price feed id 112 is not available for channel real_time",
+      ),
+      "Check min_channel.",
+    );
+    expect(mapped?.errorType).toBe("validation");
+    expect(mapped?.message).toBe(
+      "Pyth Pro rejected the request (400): Price feed id 112 is not available for channel real_time. Check min_channel.",
+    );
+    expect(mapped?.message).not.toMatch(/try again/i);
+  });
+
+  it("maps a 404 to not_found, with or without a body", () => {
+    expect(rejectionErrorFor(new HttpError(404, "nf"), "Hint.")).toEqual({
+      errorType: "not_found",
+      message: "Pyth Pro rejected the request (404). Hint.",
+    });
+  });
+
+  it("ignores other statuses and non-HTTP errors", () => {
+    expect(rejectionErrorFor(new HttpError(500, "x"), "")).toBeUndefined();
+    expect(rejectionErrorFor(new HttpError(403, "x"), "")).toBeUndefined();
+    expect(rejectionErrorFor(new Error("x"), "")).toBeUndefined();
   });
 });
 

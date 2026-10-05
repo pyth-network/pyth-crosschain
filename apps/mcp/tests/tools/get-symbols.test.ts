@@ -387,7 +387,7 @@ describe("get_symbols entitlement", () => {
     });
     expect(byId(feeds, 4001)).toMatchObject({
       entitled: false,
-      not_entitled_reason: "not available to this key (state: beta)",
+      not_entitled_reason: "not_live (beta)",
     });
     expect(requests).toEqual(
       expect.arrayContaining([
@@ -403,6 +403,50 @@ describe("get_symbols entitlement", () => {
     });
     expect(result.isError).toBe(true);
     expect(text).toContain("invalid or expired");
+  });
+
+  it.each([
+    ["a 500", 500],
+    ["a 403", 403],
+  ])("still lists feeds when the entitled list fails with %s", async (_label, status) => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("entitled_only") === "true") {
+          return new HttpResponse("boom", { status });
+        }
+        return undefined;
+      }),
+    );
+    const { result, text } = await callGetSymbols({
+      access_token: "pro-token",
+    });
+    expect(result.isError).toBeFalsy();
+    const data = JSON.parse(text);
+    expect(data.total_available).toBe(5);
+    expect(
+      (data.feeds as FeedOut[]).every((f) => f.entitled === undefined),
+    ).toBe(true);
+    expect(data.note).toContain("Could not load which feeds");
+  });
+
+  it("warns when a token is entitled to nothing (the API accepts unknown tokens)", async () => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("entitled_only") === "true") {
+          return HttpResponse.json([]);
+        }
+        return HttpResponse.json(entitlementFeeds);
+      }),
+    );
+    const { result, text } = await callGetSymbols({
+      access_token: "made-up-token",
+    });
+    expect(result.isError).toBeFalsy();
+    const data = JSON.parse(text);
+    expect(data.note).toContain("not entitled to any feed");
+    expect(data.note).toContain("invalid or expired");
   });
 });
 

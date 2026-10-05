@@ -240,7 +240,16 @@ describe("get_price_range tool", () => {
       start: START_S + 5,
     });
     expect(result.isError).toBe(true);
-    expect(text).toContain("'end' must be after 'start'");
+    expect(text).toContain("'end' must not be before 'start'");
+  });
+
+  it("allows start == end (one instant; both ends are inclusive)", async () => {
+    const { result } = await call({
+      end: START_S,
+      price_feed_ids: [1],
+      start: START_S,
+    });
+    expect(result.isError).toBeFalsy();
   });
 
   it("requires feeds", async () => {
