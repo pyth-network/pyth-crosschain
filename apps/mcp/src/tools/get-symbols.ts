@@ -41,7 +41,7 @@ function notEntitledReason(feed: Feed): string {
 
 const GetSymbolsInput = {
   access_token: accessTokenSchema(
-    "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
+    "Optional. The user's own Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
   ),
   asset_type: z
     .enum(ASSET_TYPES)
@@ -107,7 +107,7 @@ export function registerGetSymbols(
         readOnlyHint: true,
       },
       description:
-        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns compact feed metadata: symbol, name, description, pyth_lazer_id, asset_type, instrument_type, state, exponent, min_channel (fastest channel the feed supports), quote_currency, and where set groups (entitlement groups that gate the feed), expiration_time and symbol_chain_id (futures). Pass verbose: true for every catalog field, e.g. market_sessions (trading-hours schedules) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is in beta, not live yet, or retired, so no key can query it (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
+        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, get_price_range or get_candlestick_data (those also accept bare pairs like BTC/USD). Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns compact feed metadata: symbol, name, description, pyth_lazer_id, asset_type, instrument_type, state, exponent, min_channel (fastest channel the feed supports), quote_currency, and where set groups (entitlement groups that gate the feed), expiration_time and symbol_chain_id (futures). Pass verbose: true for every catalog field, e.g. market_sessions (trading-hours schedules) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is in beta, not live yet, or retired, so no key can query it (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
       inputSchema: GetSymbolsInput,
       title: "List Pyth Price Feeds",
     },

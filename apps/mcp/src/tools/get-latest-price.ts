@@ -12,23 +12,28 @@ import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { missingFeedsField } from "../utils/missing-feeds.js";
 import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
+import {
+  ACCESS_TOKEN_PARAM,
+  CHANNEL_PARAM,
+  DISPLAY_FIELDS,
+  FEED_IDS_PARAM,
+  IDS_WIN,
+  MISSING_FEEDS,
+  PRICE_TOOL_CHOICE,
+  SYMBOL_INPUTS,
+  SYMBOLS_PARAM,
+  TOKEN_REQUIRED,
+} from "./descriptions.js";
 import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const GetLatestPriceInput = {
-  access_token: accessTokenSchema(
-    "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
-  ),
-  channel: z
-    .enum(CHANNELS)
-    .optional()
-    .describe(
-      `Override the default channel (update rate): ${CHANNELS.join(", ")}`,
-    ),
+  access_token: accessTokenSchema(ACCESS_TOKEN_PARAM),
+  channel: z.enum(CHANNELS).optional().describe(CHANNEL_PARAM),
   price_feed_ids: z
     .array(z.coerce.number().int().positive())
     .max(100)
     .optional()
-    .describe("Numeric feed IDs from get_symbols"),
+    .describe(`${FEED_IDS_PARAM}. Max 100.`),
   properties: z
     .array(z.enum(PRICE_FEED_PROPERTIES))
     .optional()
@@ -39,9 +44,7 @@ const GetLatestPriceInput = {
     .array(z.string())
     .max(100)
     .optional()
-    .describe(
-      "Symbols from get_symbols (e.g. ['Crypto.BTC/USD', 'Equity.US.AAPL/USD']) or bare pairs like 'BTC/USD'",
-    ),
+    .describe(`${SYMBOLS_PARAM}. Max 100.`),
 };
 
 export function registerGetLatestPrice(
@@ -61,8 +64,15 @@ export function registerGetLatestPrice(
         openWorldHint: true,
         readOnlyHint: true,
       },
-      description:
-        "Get the most recent real-time price for one or more feeds. Requires the user's own Pyth Pro access token as `access_token`. Use get_symbols first to find symbols or feed IDs. Symbols can be full names from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or bare pairs like 'BTC/USD'. A bare pair resolves to the live spot feed when there is one, otherwise to the only remaining match (inactive feeds excluded, live preferred over coming_soon), and `resolved_symbols` in the response shows what each input resolved to. Ambiguous inputs return an error listing the candidates. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.",
+      description: [
+        "Get the most recent real-time price for one or more feeds.",
+        TOKEN_REQUIRED,
+        SYMBOL_INPUTS,
+        IDS_WIN,
+        MISSING_FEEDS,
+        DISPLAY_FIELDS,
+        PRICE_TOOL_CHOICE,
+      ].join(" "),
       inputSchema: GetLatestPriceInput,
       title: "Get Latest Price",
     },
