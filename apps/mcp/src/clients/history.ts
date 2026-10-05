@@ -22,19 +22,13 @@ import {
   PriceListSchema,
 } from "./types.js";
 
-/**
- * Bearer auth header for History endpoints. Returns undefined when no token
- * is set so unauthenticated callers are unchanged.
- */
+/** Bearer auth header, or none without a token. */
 function authHeaders(token?: string): Record<string, string> | undefined {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 }
 
 export type HistoryClientOptions = {
-  /**
-   * Called before downloading a catalog for a key that is not cached yet;
-   * throws (401) to stop the download. See verifyKeyWithRouter.
-   */
+  /** Throws (401) to stop a catalog download for a rejected key. */
   verifyKey?: (token: string) => Promise<void>;
 };
 
@@ -51,11 +45,7 @@ export class HistoryClient {
     this.timeoutMs = config.requestTimeoutMs;
   }
 
-  /**
-   * Fetch the symbol catalog, cached per token for a few minutes. With a
-   * token the API also returns feeds that are hidden from anonymous callers.
-   * Filtering (query, asset type, ...) is done by callers on the full list.
-   */
+  /** The symbol catalog for this token, cached; callers filter it. */
   async getSymbols(token?: string): Promise<UpstreamResult<Feed[]>> {
     const key = symbolsCacheKey(this.baseUrl, token, "all");
     const fetchStart = Date.now();
@@ -69,10 +59,7 @@ export class HistoryClient {
     };
   }
 
-  /**
-   * IDs of the feeds this token can query right now
-   * (`/v1/symbols?entitled_only=true`), cached per token.
-   */
+  /** IDs of the feeds this token can query now (`entitled_only`), cached. */
   async getEntitledFeedIds(
     token: string,
   ): Promise<UpstreamResult<ReadonlySet<number>>> {
@@ -91,10 +78,7 @@ export class HistoryClient {
     };
   }
 
-  /**
-   * Validate the catalog one feed at a time: a single feed that drifts from
-   * the schema is dropped (and logged) instead of failing the whole list.
-   */
+  /** Validated feed by feed: a drifted feed is dropped and logged. */
   private async fetchSymbols(token?: string): Promise<Feed[]> {
     const rows = z
       .array(z.unknown())
@@ -204,11 +188,7 @@ export class HistoryClient {
     return { data, upstreamLatencyMs };
   }
 
-  /**
-   * Every price update for the given feeds within [startUs, endUs]
-   * (inclusive, at most 60 s apart), one page at a time. Pass the previous
-   * page's `next` as `after` to continue.
-   */
+  /** One page of updates in [startUs, endUs]; pass `next` as `after`. */
   async getPriceRange(
     channel: string,
     ids: number[],

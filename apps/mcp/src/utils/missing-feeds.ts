@@ -1,9 +1,4 @@
-/**
- * Pyth answers a multi-feed request with rows only for the feeds it has data
- * for; the others are left out without an error (verified live: a
- * coming_soon feed next to BTC returns only BTC). Name them, so the caller
- * does not read the gap as "no such price".
- */
+/** Requested feeds Pyth silently left out of the response. */
 export function missingFeedsField(
   requestedIds: readonly number[],
   returned: readonly { price_feed_id: number }[],

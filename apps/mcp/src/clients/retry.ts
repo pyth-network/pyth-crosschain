@@ -4,8 +4,7 @@ const MAX_RETRY_DELAY_MS = 30_000;
 const NETWORK_ERROR_PATTERN = /fetch|network|ECONNREFUSED|ENOTFOUND/i;
 
 const MAX_DETAIL_CHARS = 500;
-// Read at most this much of an error body; enough for MAX_DETAIL_CHARS of
-// multi-byte text without buffering an arbitrarily large response.
+// Enough for MAX_DETAIL_CHARS of multi-byte text.
 const MAX_DETAIL_BYTES = 2048;
 
 export class HttpError extends Error {

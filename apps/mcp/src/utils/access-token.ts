@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// Tokens are a single run of printable ASCII. Rejecting anything else up
-// front matters: a token with a line break inside (a wrapped paste) makes
-// fetch throw an "invalid header value" error that quotes the whole token.
+// Printable ASCII only: fetch's invalid-header error quotes the whole token.
 const TOKEN_PATTERN = /^[\x21-\x7E]+$/;
 
 export const TOKEN_FORMAT_MESSAGE =
@@ -18,12 +16,7 @@ export function accessTokenSchema(description: string) {
     .describe(description);
 }
 
-/**
- * The user's own key, configured once in their MCP client instead of being
- * passed on every call: the `Authorization: Bearer` header of their HTTP
- * request, or PYTH_PRO_ACCESS_TOKEN in the environment their client gives a
- * local stdio server. Never a key of the server's own. Never log it.
- */
+/** The user's own key from their MCP client config (header or env). Never log. */
 export type ClientAccessToken =
   | { kind: "token"; token: string; source: ClientTokenSource }
   | { kind: "invalid"; message: string };
@@ -64,11 +57,7 @@ export function clientTokenFromHeader(
   return { kind: "token", source: "http_header", token: match[1] };
 }
 
-/**
- * The key a tool call uses: `access_token` on the call wins, then the key
- * from the client configuration. `error` is set when only a malformed
- * client key is available.
- */
+/** `access_token` on the call wins, then the client-configured key. */
 export function resolveAccessToken(
   perCall: string | undefined,
   client: ClientAccessToken | undefined,

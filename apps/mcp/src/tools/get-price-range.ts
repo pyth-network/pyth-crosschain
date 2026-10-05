@@ -138,8 +138,7 @@ export function registerGetPriceRange(
             );
           }
 
-          // The range endpoint needs IDs, so the catalog is required for
-          // symbol input.
+          // The endpoint takes IDs, so symbol input needs the catalog.
           const inputs = await resolveFeedInputs({
             catalog: "required",
             historyClient,

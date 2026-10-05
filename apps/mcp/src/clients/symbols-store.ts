@@ -2,17 +2,9 @@ import { createHash } from "node:crypto";
 import { HttpError } from "./retry.js";
 import type { Feed } from "./types.js";
 
-/**
- * Short-lived cache for /v1/symbols responses. The authenticated catalog is
- * several MB, and get_symbols / symbol resolution would otherwise refetch it
- * on every call.
- *
- * Module-level on purpose: HTTP mode builds a new server (and HistoryClient)
- * per request, so a per-instance cache would never hit.
- */
+/** Module-level /v1/symbols cache: HTTP mode builds a server per request. */
 const TTL_MS = 5 * 60_000;
-// A failed load (History down or timing out) is remembered briefly so that
-// each new call does not wait out the timeout and retry again.
+// Outages are remembered briefly so calls don't each wait out the timeout.
 const FAILURE_TTL_MS = 30_000;
 // Each entry holds a full parsed catalog, so keep the count small.
 const MAX_ENTRIES = 10;
@@ -40,11 +32,7 @@ export class TtlCache<T> {
     private readonly options: TtlCacheOptions = {},
   ) {}
 
-  /**
-   * Return the cached value for `key`, or load it. Concurrent callers for the
-   * same key share one in-flight load. Only successful loads are stored, so
-   * a failing load never evicts a good entry.
-   */
+  /** Shares in-flight loads; stores only successful ones. */
   async getOrLoad(
     key: string,
     load: () => Promise<T>,
@@ -122,18 +110,14 @@ export function symbolsCacheKey(
   return `${baseUrl}|${who}|${variant}`;
 }
 
-/**
- * Remember upstream outages (5xx, timeouts, network errors), not answers
- * about the token itself: a 4xx is cheap to repeat and may change.
- */
+/** Outages only: a 4xx is cheap to repeat and may change. */
 function isOutage(error: unknown): boolean {
   return !(error instanceof HttpError && error.status < 500);
 }
 
 const cacheOptions: TtlCacheOptions = {
   failureTtlMs: FAILURE_TTL_MS,
-  // The public catalog serves every caller without a token. Never let a
-  // stream of per-token loads (e.g. made-up tokens) evict it.
+  // Per-token loads never evict the public catalog.
   isPinned: (key) => key.split("|")[1] === ANONYMOUS,
   shouldRememberFailure: isOutage,
 };
@@ -150,11 +134,7 @@ export const entitledIdsCache = new TtlCache<ReadonlySet<number>>(TTL_MS, 100, {
   shouldRememberFailure: isOutage,
 });
 
-/**
- * Keys the Router has confirmed (true), cached so each key is checked once
- * per TTL. A rejected key (401) is remembered for a minute, so repeated
- * calls with a made-up key cost nothing upstream.
- */
+/** Router key checks: valid keys for the TTL, rejected (401) for a minute. */
 export const keyCheckCache = new TtlCache<true>(TTL_MS, 1000, {
   failureTtlMs: 60_000,
   shouldRememberFailure: (error) =>

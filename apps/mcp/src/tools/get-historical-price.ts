@@ -99,9 +99,7 @@ export function registerGetHistoricalPrice(
         params.access_token,
         extra,
         async (ctx) => {
-          // Look up with the caller's token: some feeds only appear in the
-          // catalog for authenticated callers. The price endpoint needs IDs,
-          // so the catalog is required for symbol input.
+          // The endpoint takes IDs, so symbol input needs the catalog.
           const inputs = await resolveFeedInputs({
             catalog: "required",
             historyClient,

@@ -1,10 +1,6 @@
 import { ACCESS_TOKEN_URL, CHANNELS } from "../constants.js";
 
-/**
- * Description fragments shared by the price tools. An LLM picks tools and
- * fills arguments from these, so one wording per concept keeps the tools
- * from contradicting each other.
- */
+/** Shared description fragments: one wording per concept across tools. */
 
 export const TOKEN_REQUIRED =
   "Requires the user's own Pyth Pro access token. If the user configured it in their MCP client, omit `access_token`; otherwise pass it as `access_token`, and if the tool reports it missing, ask the user for it.";

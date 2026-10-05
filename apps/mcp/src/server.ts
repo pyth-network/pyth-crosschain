@@ -19,10 +19,7 @@ export { version };
  * Shared session context passed to tool handlers for metrics attribution.
  */
 export type SessionContext = {
-  /**
-   * The user's own key from their MCP client configuration (HTTP header or
-   * stdio env), used when a call has no `access_token`. Secret: never log.
-   */
+  /** The user's key from their client config, for calls without one. Never log. */
   clientAccessToken?: ClientAccessToken;
   clientName?: string;
   clientVersion?: string;
@@ -45,7 +42,6 @@ export function createServer(
   sessionContext: SessionContext;
 } {
   const routerClient = new RouterClient(config, logger);
-  // Fake keys are stopped by the Router before any catalog download.
   const historyClient = new HistoryClient(config, logger, {
     verifyKey: (token) =>
       verifyKeyWithRouter(routerClient, config.routerUrl, token, logger),

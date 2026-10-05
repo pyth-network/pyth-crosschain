@@ -7,8 +7,7 @@ import { createLogger, logSessionStart } from "./utils/logger.js";
 
 const config = loadConfig();
 const logger = createLogger(config);
-// A local stdio server runs on the user's machine, so a key in the
-// environment their client gives it is the user's own.
+// Runs on the user's machine, so this env key is the user's own.
 const { server, sessionContext } = createServer(
   config,
   logger,

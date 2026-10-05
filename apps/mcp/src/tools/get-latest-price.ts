@@ -111,8 +111,7 @@ export function registerGetLatestPrice(
               resolveChannel(params.channel, config),
             );
           } catch (err) {
-            // Without the catalog, a bare pair reaches the Router as is and
-            // is rejected; say why instead of echoing the Router.
+            // Without the catalog, a bare pair reaches the Router and is rejected.
             if (
               unresolvedSymbols &&
               err instanceof HttpError &&
