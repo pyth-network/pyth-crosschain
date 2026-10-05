@@ -4,19 +4,10 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { loadConfig } from "./config.js";
 import { recordHttpRequest, registry } from "./metrics.js";
 import { createServer } from "./server.js";
-import { assertNoServerKey } from "./utils/auth.js";
 import { createLogger } from "./utils/logger.js";
 
 const config = loadConfig();
 const logger = createLogger(config);
-
-try {
-  assertNoServerKey(config);
-} catch (err) {
-  logger.fatal({ err }, "refusing to start");
-  await new Promise<void>((resolve) => logger.flush(() => resolve()));
-  process.exit(1);
-}
 const port = Number(process.env.PORT) || 8080;
 
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB

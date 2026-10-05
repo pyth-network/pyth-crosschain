@@ -66,8 +66,7 @@ https://mcp.pyth.network/mcp
 Every user brings their own Pyth Pro access token. It is required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. `get_symbols` works without one, but with a token it also lists feeds visible only to Pro keys and marks each feed `entitled: true/false` (whether your token can query it right now). `convert_date_to_timestamp` never needs one.
 
 - Get a token at [pyth.network/pricing](https://pyth.network/pricing)
-- **Hosted server:** pass the token as the `access_token` tool parameter. Your AI assistant will ask for it when needed. The hosted server never holds a key of its own.
-- **Local stdio server:** set `PYTH_PRO_ACCESS_TOKEN` in the server's environment (see [Local stdio config](#local-stdio-config)) so you don't have to paste the token into every call. A per-call `access_token` still takes precedence.
+- Pass the token as the `access_token` tool parameter; your AI assistant will ask for it when needed. This applies to the hosted and local servers alike: the server never reads a key from its own environment.
 - A 401 means the token is invalid or expired. A 403 means the token is valid but your plan is not entitled to that feed; the error names the entitlement group required.
 
 ## Example Queries
@@ -109,10 +108,7 @@ To connect a client to a local build via stdio:
   "mcpServers": {
     "pyth-mcp": {
       "command": "node",
-      "args": ["<path-to-repo>/apps/mcp/dist/index.js"],
-      "env": {
-        "PYTH_PRO_ACCESS_TOKEN": "<your-token>"
-      }
+      "args": ["<path-to-repo>/apps/mcp/dist/index.js"]
     }
   }
 }
@@ -122,7 +118,6 @@ To connect a client to a local build via stdio:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PYTH_PRO_ACCESS_TOKEN` | — | Your own Pyth Pro access token, used when a tool call has no `access_token`. **Stdio only:** the HTTP server refuses to start if it is set, so a hosted server can never share one key with every caller. |
 | `PYTH_CHANNEL` | `fixed_rate@200ms` | Default price channel: `real_time`, `fixed_rate@50ms`, `fixed_rate@200ms` or `fixed_rate@1000ms` |
 | `PYTH_LOG_LEVEL` | `info` | Log level (debug/info/warn/error) |
 | `PYTH_REQUEST_TIMEOUT_MS` | `10000` | HTTP request timeout |

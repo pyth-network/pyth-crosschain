@@ -60,7 +60,7 @@ export function createServer(
     logger,
     sessionContext,
   );
-  registerAllResources(server, historyClient, config);
+  registerAllResources(server, historyClient);
 
   return { server, sessionContext };
 }

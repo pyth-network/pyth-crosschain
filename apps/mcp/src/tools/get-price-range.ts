@@ -6,7 +6,6 @@ import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
@@ -37,7 +36,7 @@ const GetPriceRangeInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+      "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   after: z
     .string()
@@ -104,14 +103,14 @@ export function registerGetPriceRange(
         readOnlyHint: true,
       },
       description:
-        "Get every price update for one or more feeds within a short historical window (at most 60 seconds), e.g. to see exactly how a price moved around an event. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. For a single point in time use get_historical_price; for longer periods use get_candlestick_data. Rows are ordered by time; a fixed_rate@200ms channel yields 5 rows per feed per second. When `has_more` is true, call again with `after` set to `next_cursor`. Prices are integers with an exponent; display_* fields apply it for you.",
+        "Get every price update for one or more feeds within a short historical window (at most 60 seconds), e.g. to see exactly how a price moved around an event. Requires the user's own Pyth Pro access token as `access_token`. For a single point in time use get_historical_price; for longer periods use get_candlestick_data. Rows are ordered by time; a fixed_rate@200ms channel yields 5 rows per feed per second. When `has_more` is true, call again with `after` set to `next_cursor`. Prices are integers with an exponent; display_* fields apply it for you.",
       inputSchema: GetPriceRangeInput,
       title: "Get Price Range",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const token = resolveAccessToken(params.access_token, config);
+      const token = params.access_token;
 
       // When both are provided, prefer price_feed_ids and ignore symbols.
       const effectiveSymbols =

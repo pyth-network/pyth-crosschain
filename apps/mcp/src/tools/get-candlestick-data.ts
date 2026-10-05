@@ -5,7 +5,6 @@ import type { HistoryClient } from "../clients/history.js";
 import type { Config } from "../config.js";
 import { CHANNELS, RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
 import {
@@ -34,7 +33,7 @@ const GetCandlestickDataInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+      "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   channel: z
     .enum(CHANNELS)
@@ -78,14 +77,14 @@ export function registerGetCandlestickData(
         readOnlyHint: true,
       },
       description:
-        "Fetch OHLC candlestick data for a symbol. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the live spot feed when there is one, otherwise to the only remaining match (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Fetch OHLC candlestick data for a symbol. Requires the user's own Pyth Pro access token as `access_token`. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the live spot feed when there is one, otherwise to the only remaining match (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const token = resolveAccessToken(params.access_token, config);
+      const token = params.access_token;
 
       const baseMetrics = {
         apiKeyLast4: getApiKeyLast4(token),
