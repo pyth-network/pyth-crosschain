@@ -1,5 +1,6 @@
 import type { Logger } from "pino";
 import type { HistoryClient } from "../clients/history.js";
+import { HttpError } from "../clients/retry.js";
 import type { UpstreamResult } from "../clients/router.js";
 import type { Feed } from "../clients/types.js";
 import { authErrorFor } from "./errors.js";
@@ -22,7 +23,8 @@ export type SymbolResolution = {
  * 1. Exact symbol match.
  * 2. Case-insensitive symbol match.
  * 3. Bare pair: feeds whose symbol ends with "." + input. Inactive feeds are
- *    dropped, live feeds are preferred over coming_soon, then spot feeds over
+ *    dropped; stable feeds are preferred over beta, and beta over
+ *    coming_soon (only stable feeds can be queried); then spot feeds over
  *    other instruments. Resolves only when exactly one candidate is left;
  *    otherwise the error lists the candidates so the caller can pick one.
  */
@@ -64,6 +66,7 @@ function resolveOne(input: string, catalog: readonly Feed[]): Feed | string {
     f.symbol.toLowerCase().endsWith(suffix),
   );
   let candidates = matches.filter((f) => f.state !== "inactive");
+  candidates = preferSubset(candidates, (f) => f.state === "stable");
   candidates = preferSubset(candidates, (f) => f.state !== "coming_soon");
   candidates = preferSubset(candidates, (f) => f.instrument_type === "spot");
 
@@ -102,18 +105,26 @@ export function resolvedSymbolsField(resolved: Record<string, string>): {
 /**
  * Load the catalog for symbol resolution without making it a hard
  * dependency: if History is unavailable, return undefined so callers can
- * pass the symbols through unchanged (full symbols still work). Auth errors
- * are rethrown, since the same token would fail the price request too.
+ * pass the symbols through unchanged (full symbols still work).
+ *
+ * A 401 is rethrown, since the same token would fail the price request too.
+ * A 403 is rethrown only when the price also comes from History; with
+ * `priceFromRouter`, the Router may still accept the key, so the symbols are
+ * passed through instead.
  */
 export async function tryGetCatalog(
   historyClient: HistoryClient,
   token: string | undefined,
   logger: Logger,
+  options: { priceFromRouter?: boolean } = {},
 ): Promise<UpstreamResult<Feed[]> | undefined> {
   try {
     return await historyClient.getSymbols(token);
   } catch (err) {
-    if (authErrorFor(err)) throw err;
+    const authError = authErrorFor(err);
+    const passThrough =
+      options.priceFromRouter && err instanceof HttpError && err.status === 403;
+    if (authError && !passThrough) throw err;
     logger.warn(
       { err },
       "symbol catalog unavailable; passing symbols through unresolved",

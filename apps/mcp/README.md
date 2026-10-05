@@ -68,6 +68,7 @@ Every user brings their own Pyth Pro access token. It is required for `get_lates
 - Get a token at [pyth.network/pricing](https://pyth.network/pricing)
 - Pass the token as the `access_token` tool parameter; your AI assistant will ask for it when needed. This applies to the hosted and local servers alike: the server never reads a key from its own environment.
 - A 401 means the token is invalid or expired. A 403 means the token is valid but your plan is not entitled to that feed; the error names the entitlement group required.
+- Only feeds in state `stable` return prices. Requested feeds that come back without a price (e.g. `beta` or `coming_soon` feeds, or a channel faster than the feed's `min_channel`) are listed in `missing_feed_ids`.
 
 ## Example Queries
 

@@ -46,6 +46,64 @@ describe("TtlCache", () => {
     await cache.getOrLoad("b", load("b"));
     expect(loads).toEqual(["a", "b", "c", "b"]);
   });
+
+  it("does not let a failing load evict a good entry", async () => {
+    const cache = new TtlCache<string>(60_000, 1);
+    let aLoads = 0;
+    await cache.getOrLoad("a", () => Promise.resolve(`a${++aLoads}`));
+    await expect(
+      cache.getOrLoad("bad", () => Promise.reject(new Error("401"))),
+    ).rejects.toThrow("401");
+    const again = await cache.getOrLoad("a", () => Promise.resolve("reload"));
+    expect(again).toEqual({ hit: true, value: "a1" });
+  });
+
+  it("never evicts a pinned key", async () => {
+    const cache = new TtlCache<string>(60_000, 2, {
+      isPinned: (k) => k === "public",
+    });
+    await cache.getOrLoad("public", () => Promise.resolve("catalog"));
+    for (const k of ["t1", "t2", "t3", "t4"]) {
+      await cache.getOrLoad(k, () => Promise.resolve(k));
+    }
+    const pub = await cache.getOrLoad("public", () =>
+      Promise.resolve("refetched"),
+    );
+    expect(pub).toEqual({ hit: true, value: "catalog" });
+    // Only the newest unpinned key is kept next to the pinned one.
+    const t3 = await cache.getOrLoad("t3", () => Promise.resolve("reloaded"));
+    expect(t3.hit).toBe(false);
+  });
+
+  it("remembers a failure for failureTtlMs when asked to", async () => {
+    const cache = new TtlCache<string>(60_000, 10, {
+      failureTtlMs: 60_000,
+      shouldRememberFailure: (e) => (e as Error).message === "outage",
+    });
+    let loads = 0;
+    const failing = (message: string) => () => {
+      loads++;
+      return Promise.reject(new Error(message));
+    };
+    await expect(cache.getOrLoad("k", failing("outage"))).rejects.toThrow();
+    await expect(cache.getOrLoad("k", failing("outage"))).rejects.toThrow(
+      "outage",
+    );
+    expect(loads).toBe(1);
+
+    await expect(cache.getOrLoad("j", failing("400"))).rejects.toThrow();
+    await expect(cache.getOrLoad("j", failing("400"))).rejects.toThrow();
+    expect(loads).toBe(3);
+  });
+
+  it("does not remember failures by default", async () => {
+    const cache = new TtlCache<string>(60_000, 10);
+    await expect(
+      cache.getOrLoad("k", () => Promise.reject(new Error("x"))),
+    ).rejects.toThrow();
+    const ok = await cache.getOrLoad("k", () => Promise.resolve("v"));
+    expect(ok).toEqual({ hit: false, value: "v" });
+  });
 });
 
 describe("symbolsCacheKey", () => {

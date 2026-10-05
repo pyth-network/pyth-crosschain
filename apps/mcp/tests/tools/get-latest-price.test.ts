@@ -366,6 +366,88 @@ describe("get_latest_price tool", () => {
       expect(text).toContain("pyth-indices");
       expect(text).not.toContain("invalid or expired");
     });
+
+    it("reports the Router's 403 for an unknown feed ID as not found", async () => {
+      const { result, text } = await callWithUpstream(
+        403,
+        "Unknown feed: 4000000",
+      );
+      expect(result.isError).toBe(true);
+      expect(text).toContain("does not know this feed");
+      expect(text).not.toContain("not entitled");
+    });
+
+    it("shows the Router's reason for a 400 instead of 'try again'", async () => {
+      const { result, text } = await callWithUpstream(
+        400,
+        "Price feed id 3063 is not available for channel real_time",
+      );
+      expect(result.isError).toBe(true);
+      expect(text).toContain(
+        "Price feed id 3063 is not available for channel real_time",
+      );
+      expect(text).not.toMatch(/try again/i);
+    });
+  });
+
+  describe("partial results", () => {
+    it("names requested feeds that came back without a price", async () => {
+      const config = loadConfig();
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        { ...config, historyUrl: HISTORY_URL, routerUrl: ROUTER_URL },
+        new HistoryClient(
+          { ...config, historyUrl: HISTORY_URL, routerUrl: ROUTER_URL },
+          logger,
+        ),
+        new RouterClient(
+          { ...config, historyUrl: HISTORY_URL, routerUrl: ROUTER_URL },
+          logger,
+        ),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      // The default Router mock returns feed 1 only, as the live Router does
+      // for a coming_soon feed requested next to BTC.
+      const result = await client.callTool({
+        arguments: { access_token: "t", price_feed_ids: [1, 311] },
+        name: "get_latest_price",
+      });
+      const data = JSON.parse(
+        (result.content as Array<{ type: string; text: string }>)[0].text,
+      );
+      expect(data.prices).toHaveLength(1);
+      expect(data.missing_feed_ids).toEqual([311]);
+      expect(data.missing_feeds_hint).toContain("get_symbols");
+    });
+
+    it("omits missing_feed_ids when every feed came back", async () => {
+      const config = {
+        ...loadConfig(),
+        historyUrl: HISTORY_URL,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", price_feed_ids: [1] },
+        name: "get_latest_price",
+      });
+      const data = JSON.parse(
+        (result.content as Array<{ type: string; text: string }>)[0].text,
+      );
+      expect(data.missing_feed_ids).toBeUndefined();
+    });
   });
 
   describe("channel validation", () => {
@@ -598,6 +680,43 @@ describe("get_latest_price tool", () => {
       const text = (result.content as Array<{ type: string; text: string }>)[0]
         .text;
       expect(text).toContain("invalid or expired");
+    });
+
+    it("still calls the Router when History answers 403 for the catalog", async () => {
+      // The price comes from the Router, which may accept a key that
+      // History does not; the symbols are passed through unresolved.
+      let body: Record<string, unknown> | undefined;
+      msw.use(
+        http.get(
+          `${HISTORY_URL}/v1/symbols`,
+          () => new HttpResponse("forbidden", { status: 403 }),
+        ),
+        http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const config = {
+        ...loadConfig(),
+        historyUrl: HISTORY_URL,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", symbols: ["Crypto.BTC/USD"] },
+        name: "get_latest_price",
+      });
+      expect(result.isError).toBeFalsy();
+      expect(body?.symbols).toEqual(["Crypto.BTC/USD"]);
     });
 
     it("returns an error without calling the Router for unknown symbols", async () => {

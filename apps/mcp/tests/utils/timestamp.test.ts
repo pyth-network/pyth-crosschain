@@ -18,6 +18,20 @@ describe("normalizeTimestampToMicroseconds", () => {
     expect(normalizeTimestampToMicroseconds(ts)).toBe(ts * 1000);
   });
 
+  it("floors fractional input to whole microseconds", () => {
+    expect(normalizeTimestampToMicroseconds(1_717_000_000.5)).toBe(
+      1_717_000_000_500_000,
+    );
+    expect(normalizeTimestampToMicroseconds(1_717_000_000_000.25)).toBe(
+      1_717_000_000_000_250,
+    );
+    expect(
+      Number.isInteger(
+        normalizeTimestampToMicroseconds(1_717_000_000.123_456_7),
+      ),
+    ).toBe(true);
+  });
+
   it("passes microseconds (16 digits) through unchanged", () => {
     const ts = 1_708_300_800_000_000;
     expect(normalizeTimestampToMicroseconds(ts)).toBe(ts);

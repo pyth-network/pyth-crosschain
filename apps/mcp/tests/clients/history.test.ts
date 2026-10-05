@@ -135,7 +135,7 @@ describe("HistoryClient", () => {
       expect(seen).toEqual([null, "Bearer token-a", "Bearer token-b"]);
     });
 
-    it("does not cache failures", async () => {
+    it("does not remember a 4xx failure", async () => {
       let calls = 0;
       server.use(
         http.get(`${HISTORY_URL}/v1/symbols`, () => {
@@ -149,6 +149,41 @@ describe("HistoryClient", () => {
       const { data } = await client.getSymbols();
       expect(data).toHaveLength(2);
       expect(calls).toBe(2);
+    });
+
+    it("remembers an outage briefly instead of calling History again", async () => {
+      let calls = 0;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => {
+          calls++;
+          return HttpResponse.json({ error: "down" }, { status: 500 });
+        }),
+      );
+      await expect(client.getSymbols()).rejects.toThrow("500");
+      await expect(client.getSymbols()).rejects.toThrow("500");
+      expect(calls).toBe(1);
+    });
+
+    it("drops a feed that does not match the schema and keeps the rest", async () => {
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () =>
+          HttpResponse.json([
+            ...mockFeeds,
+            { pyth_lazer_id: 99, symbol: "Crypto.BROKEN/USD" },
+          ]),
+        ),
+      );
+      const { data } = await client.getSymbols();
+      expect(data.map((f) => f.pyth_lazer_id)).toEqual([1, 2]);
+    });
+
+    it("accepts feeds without hermes_id or quote_currency", async () => {
+      const { hermes_id: _h, quote_currency: _q, ...bare } = mockFeeds[0];
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => HttpResponse.json([bare])),
+      );
+      const { data } = await client.getSymbols();
+      expect(data).toHaveLength(1);
     });
   });
 
@@ -178,6 +213,30 @@ describe("HistoryClient", () => {
       expect(prices).toHaveLength(1);
       expect(prices[0].price_feed_id).toBe(1);
       expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it("accepts price: null (no publisher at that time)", async () => {
+      // Verified live: e.g. Pyth.BN.AMD/USDT returns price null with
+      // publisher_count 0.
+      server.use(
+        http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, () =>
+          HttpResponse.json([
+            ...mockPrice,
+            {
+              ...mockPrice[0],
+              price: null,
+              price_feed_id: 99_025,
+              publisher_count: 0,
+            },
+          ]),
+        ),
+      );
+      const { data } = await client.getHistoricalPrice(
+        "fixed_rate@200ms",
+        [1, 99_025],
+        1_708_300_800_000_000,
+      );
+      expect(data.map((p) => p.price)).toEqual([5_100_000_000_000, null]);
     });
   });
 

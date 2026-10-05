@@ -71,6 +71,21 @@ describe("resolveSymbols", () => {
     expect(ids(["BTC/USDT"])).toEqual([112]);
   });
 
+  it("prefers a stable feed over a beta one, and beta over coming_soon", () => {
+    // Beta feeds cannot be queried (History: "not ready. Currently in beta
+    // state"), so a stable perp wins over a beta spot feed.
+    const withBeta = [
+      feed(1, "Crypto.SOL/USD", "beta"),
+      feed(2, "Perp.SOL/USD", "stable", "perp"),
+      feed(3, "Crypto.ADA/USD", "coming_soon"),
+      feed(4, "Perp.ADA/USD", "beta", "perp"),
+    ];
+    const pick = (input: string) =>
+      resolveSymbols([input], withBeta).feeds[0]?.pyth_lazer_id;
+    expect(pick("SOL/USD")).toBe(2);
+    expect(pick("ADA/USD")).toBe(4);
+  });
+
   it("never resolves a bare pair to an inactive feed", () => {
     const r = resolveSymbols(["OLD/USD"], catalog);
     expect(r.feeds).toEqual([]);

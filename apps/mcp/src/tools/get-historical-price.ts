@@ -2,19 +2,24 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
-import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
+import {
+  authErrorFor,
+  ErrorMessages,
+  rejectionErrorFor,
+  toolError,
+} from "../utils/errors.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
   logToolCall,
 } from "../utils/logger.js";
+import { missingFeedsField } from "../utils/missing-feeds.js";
 import {
   resolvedSymbolsField,
   resolveSymbols,
@@ -224,6 +229,7 @@ export function registerGetHistoricalPrice(
 
         const responseText = JSON.stringify({
           prices: enriched,
+          ...missingFeedsField(ids, prices),
           ...resolvedSymbolsField(resolvedSymbols),
           ...getServerTime(),
         });
@@ -253,25 +259,22 @@ export function registerGetHistoricalPrice(
           return toolError(authError.message);
         }
 
-        if (
-          priceEndpointCalled &&
-          err instanceof HttpError &&
-          (err.status === 400 || err.status === 404)
-        ) {
-          const idSnippet = ids.slice(0, 5).join(", ");
-          const suffix = ids.length > 5 ? ` and ${ids.length - 5} more` : "";
-          const requestedSeconds = Math.floor(
-            normalizeTimestampToMicroseconds(params.timestamp) / 1_000_000,
-          );
+        // A 400/404 carries Pyth's reason, e.g. "Price feed id 112 is not
+        // available for channel real_time"; one bad feed fails the request.
+        const rejection = priceEndpointCalled
+          ? rejectionErrorFor(
+              err,
+              `Requested feeds (IDs: ${formatIds(ids)}) at ${requestedTimeLabel(params.timestamp)}. Check the feed IDs, their state and min_channel with get_symbols.`,
+            )
+          : undefined;
+        if (rejection) {
           logToolCall(logger, {
             ...baseMetrics,
-            errorType: "not_found",
+            errorType: rejection.errorType,
             latencyMs: Date.now() - start,
             status: "error",
           });
-          return toolError(
-            `No data found for feeds (IDs: ${idSnippet}${suffix}) at ${unixSecondsToISO(requestedSeconds)} (unix: ${requestedSeconds}). Verify feed IDs with get_symbols.`,
-          );
+          return toolError(rejection.message);
         }
 
         logger.warn({ err }, "get_historical_price upstream error");
@@ -285,4 +288,16 @@ export function registerGetHistoricalPrice(
       }
     },
   );
+}
+
+function formatIds(ids: readonly number[]): string {
+  const shown = ids.slice(0, 5).join(", ");
+  return ids.length > 5 ? `${shown} and ${ids.length - 5} more` : shown;
+}
+
+function requestedTimeLabel(timestamp: number): string {
+  const seconds = Math.floor(
+    normalizeTimestampToMicroseconds(timestamp) / 1_000_000,
+  );
+  return `${unixSecondsToISO(seconds)} (unix: ${seconds})`;
 }

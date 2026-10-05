@@ -2,13 +2,14 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
+import { HttpError } from "../clients/retry.js";
 import type { Feed } from "../clients/types.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES, INSTRUMENT_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { authErrorFor, toolError } from "../utils/errors.js";
-import { isActive } from "../utils/feeds.js";
+import { isActive, NOT_LIVE_STATES } from "../utils/feeds.js";
 import {
   computeTokenHash,
   getApiKeyLast4,
@@ -16,10 +17,11 @@ import {
 } from "../utils/logger.js";
 import { getServerTime } from "../utils/timestamp.js";
 
-const NOT_LIVE_STATES: ReadonlySet<string> = new Set([
-  "coming_soon",
-  "inactive",
-]);
+const ENTITLEMENTS_UNAVAILABLE_NOTE =
+  "Could not load which feeds your access token is entitled to, so feeds have no `entitled` flag this time. The list itself is complete; try again shortly for the flags.";
+
+const NOTHING_ENTITLED_NOTE =
+  "Your access token is not entitled to any feed. It may be invalid or expired: the symbols API does not reject unknown tokens, so check the token, or call get_latest_price with it, which does.";
 
 const PUBLIC_ONLY_NOTE =
   "Showing public feeds only. Pass `access_token` to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
@@ -99,7 +101,7 @@ export function registerGetSymbols(
         readOnlyHint: true,
       },
       description:
-        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, instrument_type, state, exponent, groups (entitlement groups that gate the feed), market_sessions (trading-hours schedules), expiration_time (futures) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is not live yet or retired (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
+        "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (e.g. crypto, equity, fx, metal, commodity, interest-rate, funding-rate, kalshi) or search by name/symbol. Narrow further with instrument_type (spot, future, ...) or symbol_chain_id (all contracts of one futures chain, e.g. VX). Retired (inactive) feeds are hidden unless include_inactive is true. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, instrument_type, state, exponent, groups (entitlement groups that gate the feed), market_sessions (trading-hours schedules), expiration_time (futures) and corporate_actions (e.g. stock splits). With an access token, the list also includes feeds visible only to Pro keys, and each feed has `entitled`: true means this key can query the feed right now. When `entitled` is false, `not_entitled_reason` says why: `not_live (...)` means the feed is in beta, not live yet, or retired, so no key can query it (NOT a plan limitation), `requires one of entitlement groups: ...` means the user's plan lacks that entitlement.",
       inputSchema: GetSymbolsInput,
       title: "List Pyth Price Feeds",
     },
@@ -120,11 +122,35 @@ export function registerGetSymbols(
       };
 
       try {
-        const [catalog, entitled] = await Promise.all([
+        const [catalog, entitledResult] = await Promise.all([
           historyClient.getSymbols(token),
-          token ? historyClient.getEntitledFeedIds(token) : undefined,
+          token
+            ? historyClient.getEntitledFeedIds(token).then(
+                (value) => ({ ok: true as const, value }),
+                (error: unknown) => ({ error, ok: false as const }),
+              )
+            : undefined,
         ]);
         const feeds = catalog.data;
+
+        // The entitlement list only adds flags, so its failure must not take
+        // the listing down; an invalid token, though, is reported as such.
+        let entitled:
+          | Awaited<ReturnType<HistoryClient["getEntitledFeedIds"]>>
+          | undefined;
+        let note = token ? undefined : PUBLIC_ONLY_NOTE;
+        if (entitledResult?.ok === false) {
+          const err = entitledResult.error;
+          if (err instanceof HttpError && err.status === 401) throw err;
+          logger.warn({ err }, "get_symbols: entitlement list unavailable");
+          note = ENTITLEMENTS_UNAVAILABLE_NOTE;
+        } else if (entitledResult?.ok) {
+          entitled = entitledResult.value;
+          // The symbols API answers 200 for an unknown token: the public
+          // list, and an empty entitled list. An empty list is the only
+          // sign the token may be wrong.
+          if (entitled.data.size === 0) note = NOTHING_ENTITLED_NOTE;
+        }
         const upstreamLatencyMs = Math.max(
           catalog.upstreamLatencyMs,
           entitled?.upstreamLatencyMs ?? 0,
@@ -167,7 +193,7 @@ export function registerGetSymbols(
           feeds: page,
           has_more: hasMore,
           next_offset: hasMore ? offset + limit : null,
-          ...(token ? {} : { note: PUBLIC_ONLY_NOTE }),
+          ...(note ? { note } : {}),
           offset,
           total_available: totalAvailable,
           ...getServerTime(),

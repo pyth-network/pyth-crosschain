@@ -1,4 +1,5 @@
 import type { Logger } from "pino";
+import { z } from "zod";
 import type { Config } from "../config.js";
 import { httpErrorFromResponse, withSingleRetry } from "./retry.js";
 import type { UpstreamResult } from "./router.js";
@@ -14,8 +15,8 @@ import type {
   PriceList,
 } from "./types.js";
 import {
-  FeedArraySchema,
   FeedIdArraySchema,
+  FeedSchema,
   HistoricalPriceArraySchema,
   OHLCResponseSchema,
   PriceListSchema,
@@ -79,8 +80,28 @@ export class HistoryClient {
     };
   }
 
+  /**
+   * Validate the catalog one feed at a time: a single feed that drifts from
+   * the schema is dropped (and logged) instead of failing the whole list.
+   */
   private async fetchSymbols(token?: string): Promise<Feed[]> {
-    return FeedArraySchema.parse(await this.fetchSymbolsJson(token, false));
+    const rows = z
+      .array(z.unknown())
+      .parse(await this.fetchSymbolsJson(token, false));
+    const feeds: Feed[] = [];
+    const dropped: unknown[] = [];
+    for (const row of rows) {
+      const result = FeedSchema.safeParse(row);
+      if (result.success) feeds.push(result.data);
+      else dropped.push((row as { pyth_lazer_id?: unknown })?.pyth_lazer_id);
+    }
+    if (dropped.length > 0) {
+      this.logger.warn(
+        { count: dropped.length, ids: dropped.slice(0, 20) },
+        "dropped symbols that do not match the expected schema",
+      );
+    }
+    return feeds;
   }
 
   private fetchSymbolsJson(

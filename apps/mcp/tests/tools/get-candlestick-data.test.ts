@@ -240,6 +240,33 @@ describe("get_candlestick_data tool", () => {
     expect(upstreamCalled).toBe(false);
   });
 
+  it("shows Pyth's reason for a 404 instead of 'try again'", async () => {
+    // Verified live: a channel faster than the feed's min_channel answers
+    // 404 "symbol not found.".
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/fixed_rate@200ms/history`,
+        () => new HttpResponse("symbol not found.", { status: 404 }),
+      ),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "BTC/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("(404): symbol not found. Check");
+    expect(text).toContain("min_channel");
+    expect(text).not.toMatch(/try again/i);
+  });
+
   it("maps upstream 401 to the invalid-token message", async () => {
     msw.use(
       http.get(
