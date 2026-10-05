@@ -61,6 +61,7 @@ function isRetryable(err: unknown): boolean {
   if (err instanceof TypeError && NETWORK_ERROR_PATTERN.test(err.message)) {
     return true; // network error
   }
+  if (isTerminatedBody(err)) return true;
   if (
     err instanceof DOMException &&
     (err.name === "AbortError" || err.name === "TimeoutError")
@@ -68,6 +69,24 @@ function isRetryable(err: unknown): boolean {
     return true; // timeout
   }
   return false;
+}
+
+/**
+ * Node's fetch rejects a body cut off mid-stream with TypeError "terminated"
+ * (cause UND_ERR_SOCKET). Checked by name: it may come from another realm.
+ */
+function isTerminatedBody(err: unknown): boolean {
+  const e = err as {
+    name?: unknown;
+    message?: unknown;
+    cause?: { code?: unknown };
+  };
+  if (e?.name !== "TypeError") return false;
+  const code = e.cause?.code;
+  return (
+    e.message === "terminated" ||
+    (typeof code === "string" && code.startsWith("UND_ERR_"))
+  );
 }
 
 function getDelay(err: unknown): number {

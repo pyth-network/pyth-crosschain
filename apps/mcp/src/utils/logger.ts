@@ -12,7 +12,6 @@ function redactBearer(text: string): string {
     .replace(/Bearer\s+(?!\[REDACTED\])\S+/g, "Bearer [REDACTED]");
 }
 
-/** pino's error serializer, with any bearer token removed. */
 export function serializeErrorRedacted(err: unknown) {
   const serialized = pino.stdSerializers.err(err as Error);
   if (!serialized || typeof serialized !== "object") return serialized;

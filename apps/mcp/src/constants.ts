@@ -69,6 +69,5 @@ export const RESOLUTIONS = [
   "M",
 ] as const;
 
-/** Where users get the Pyth Pro access token every price tool needs. */
 export const ACCESS_TOKEN_URL =
   "https://docs.pyth.network/price-feeds/pro/acquire-access-token";

@@ -22,7 +22,6 @@ import {
   PriceListSchema,
 } from "./types.js";
 
-/** Bearer auth header, or none without a token. */
 function authHeaders(token?: string): Record<string, string> | undefined {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 }
@@ -45,7 +44,7 @@ export class HistoryClient {
     this.timeoutMs = config.requestTimeoutMs;
   }
 
-  /** The symbol catalog for this token, cached; callers filter it. */
+  /** Cached per token; callers do all filtering. */
   async getSymbols(token?: string): Promise<UpstreamResult<Feed[]>> {
     const key = symbolsCacheKey(this.baseUrl, token, "all");
     const fetchStart = Date.now();
@@ -78,22 +77,36 @@ export class HistoryClient {
     };
   }
 
-  /** Validated feed by feed: a drifted feed is dropped and logged. */
+  /**
+   * Validated feed by feed. A feed whose metadata drifted from the schema
+   * keeps its identity, so its symbol still resolves; only rows without a
+   * symbol and ID are dropped.
+   */
   private async fetchSymbols(token?: string): Promise<Feed[]> {
     const rows = z
       .array(z.unknown())
       .parse(await this.fetchSymbolsJson(token, false));
     const feeds: Feed[] = [];
-    const dropped: unknown[] = [];
+    const degraded: number[] = [];
+    let dropped = 0;
     for (const row of rows) {
       const result = FeedSchema.safeParse(row);
-      if (result.success) feeds.push(result.data);
-      else dropped.push((row as { pyth_lazer_id?: unknown })?.pyth_lazer_id);
+      if (result.success) {
+        feeds.push(result.data);
+        continue;
+      }
+      const identity = FeedIdentitySchema.safeParse(row);
+      if (identity.success) {
+        feeds.push(minimalFeed(identity.data));
+        degraded.push(identity.data.pyth_lazer_id);
+      } else {
+        dropped++;
+      }
     }
-    if (dropped.length > 0) {
+    if (degraded.length > 0 || dropped > 0) {
       this.logger.warn(
-        { count: dropped.length, ids: dropped.slice(0, 20) },
-        "dropped symbols that do not match the expected schema",
+        { degraded: degraded.slice(0, 20), dropped },
+        "symbols that do not match the expected schema",
       );
     }
     return feeds;
@@ -225,4 +238,24 @@ export class HistoryClient {
     const upstreamLatencyMs = Date.now() - fetchStart;
     return { data, upstreamLatencyMs };
   }
+}
+
+const FeedIdentitySchema = z
+  .object({ pyth_lazer_id: z.number(), symbol: z.string() })
+  .passthrough();
+
+/** A feed reduced to what resolution needs, from a row that failed FeedSchema. */
+function minimalFeed(row: z.infer<typeof FeedIdentitySchema>): Feed {
+  const text = (value: unknown, fallback = "") =>
+    typeof value === "string" ? value : fallback;
+  return {
+    asset_type: text(row.asset_type),
+    description: text(row.description),
+    exponent: typeof row.exponent === "number" ? row.exponent : 0,
+    min_channel: text(row.min_channel),
+    name: text(row.name, row.symbol),
+    pyth_lazer_id: row.pyth_lazer_id,
+    state: text(row.state, "stable"),
+    symbol: row.symbol,
+  };
 }

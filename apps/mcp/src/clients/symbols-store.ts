@@ -134,11 +134,14 @@ export const entitledIdsCache = new TtlCache<ReadonlySet<number>>(TTL_MS, 100, {
   shouldRememberFailure: isOutage,
 });
 
-/** Router key checks: valid keys for the TTL, rejected (401) for a minute. */
+/**
+ * Router key checks: valid keys for the TTL; rejected keys (401) and Router
+ * outages for a minute, so an outage costs one probe per key, not one per call.
+ */
 export const keyCheckCache = new TtlCache<true>(TTL_MS, 1000, {
   failureTtlMs: 60_000,
   shouldRememberFailure: (error) =>
-    error instanceof HttpError && error.status === 401,
+    (error instanceof HttpError && error.status === 401) || isOutage(error),
 });
 
 /** Drop all cached catalogs and key checks (used by tests). */
