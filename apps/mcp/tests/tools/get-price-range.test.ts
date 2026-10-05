@@ -252,19 +252,141 @@ describe("get_price_range tool", () => {
     expect(result.isError).toBeFalsy();
   });
 
+  /** Count upstream calls so validation tests can prove none were made. */
+  function countUpstream() {
+    const counts = { range: 0, symbols: 0 };
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () => {
+        counts.symbols++;
+        return HttpResponse.json(mockFeeds);
+      }),
+      http.get(`${HISTORY_URL}/v1/:channel/price/range`, () => {
+        counts.range++;
+        return HttpResponse.json({ data: [] });
+      }),
+    );
+    return counts;
+  }
+
   it("requires feeds", async () => {
-    const { result } = await call({ end: START_S + 5, start: START_S });
+    const counts = countUpstream();
+    const { result, text } = await call({ end: START_S + 5, start: START_S });
     expect(result.isError).toBe(true);
+    expect(text).toContain("At least one of 'price_feed_ids' or 'symbols'");
+    expect(counts).toEqual({ range: 0, symbols: 0 });
   });
 
   it("caps limit at 500", async () => {
-    const { result } = await call({
+    const counts = countUpstream();
+    const { result, text } = await call({
       end: START_S + 5,
       limit: 1000,
       price_feed_ids: [1],
       start: START_S,
     });
     expect(result.isError).toBe(true);
+    expect(text).toContain("limit");
+    expect(counts.range).toBe(0);
+  });
+
+  it("rejects a long window before loading the catalog", async () => {
+    const counts = countUpstream();
+    const { result } = await call({
+      end: START_S + 61,
+      start: START_S,
+      symbols: ["BTC/USD"],
+    });
+    expect(result.isError).toBe(true);
+    expect(counts).toEqual({ range: 0, symbols: 0 });
+  });
+
+  describe("request query", () => {
+    function capture() {
+      const seen: { path?: string; query?: URLSearchParams } = {};
+      msw.use(
+        http.get(`${HISTORY_URL}/v1/:channel/price/range`, ({ request }) => {
+          const url = new URL(request.url);
+          seen.path = url.pathname;
+          seen.query = url.searchParams;
+          return HttpResponse.json({ data: [] });
+        }),
+      );
+      return seen;
+    }
+
+    it("uses price_feed_ids and ignores symbols when both are given", async () => {
+      const seen = capture();
+      await call({
+        end: START_S + 5,
+        price_feed_ids: [7],
+        start: START_S,
+        symbols: ["BTC/USD"],
+      });
+      expect(seen.query?.getAll("ids")).toEqual(["7"]);
+    });
+
+    it("deduplicates feed IDs", async () => {
+      const seen = capture();
+      await call({
+        end: START_S + 5,
+        price_feed_ids: [1, 1, 2],
+        start: START_S,
+      });
+      expect(seen.query?.getAll("ids")).toEqual(["1", "2"]);
+    });
+
+    it("puts a non-default channel in the path", async () => {
+      const seen = capture();
+      await call({
+        channel: "real_time",
+        end: START_S + 5,
+        price_feed_ids: [1],
+        start: START_S,
+      });
+      expect(seen.path).toBe("/v1/real_time/price/range");
+    });
+
+    it("forwards limit and the paging cursor", async () => {
+      const seen = capture();
+      await call({
+        after: "cursor-2",
+        end: START_S + 5,
+        limit: 250,
+        price_feed_ids: [1],
+        start: START_S,
+      });
+      expect(seen.query?.get("limit")).toBe("250");
+      expect(seen.query?.get("after")).toBe("cursor-2");
+    });
+  });
+
+  it("fails cleanly when the catalog is down and symbols need it", async () => {
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/symbols`,
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    );
+    const { result, text } = await call({
+      end: START_S + 5,
+      start: START_S,
+      symbols: ["Crypto.BTC/USD"],
+    });
+    expect(result.isError).toBe(true);
+    expect(text).toBe("Failed to fetch the price range. Please try again.");
+  });
+
+  it("reports a 500 from the range endpoint as a retryable failure", async () => {
+    msw.use(
+      http.get(RANGE_URL, () => new HttpResponse("boom", { status: 500 })),
+    );
+    const { result, text } = await call({
+      end: START_S + 5,
+      price_feed_ids: [1],
+      start: START_S,
+    });
+    expect(result.isError).toBe(true);
+    expect(text).toBe("Failed to fetch the price range. Please try again.");
   });
 
   it("maps 403 to the not-entitled message", async () => {

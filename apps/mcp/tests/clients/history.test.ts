@@ -187,6 +187,38 @@ describe("HistoryClient", () => {
     });
   });
 
+  describe("getEntitledFeedIds", () => {
+    it("asks for entitled_only with the token and returns the IDs", async () => {
+      let query: URLSearchParams | undefined;
+      let auth: string | null = null;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+          query = new URL(request.url).searchParams;
+          auth = request.headers.get("Authorization");
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      const { data } = await client.getEntitledFeedIds("pro-token");
+      expect(query?.get("entitled_only")).toBe("true");
+      expect(auth).toBe("Bearer pro-token");
+      expect([...data].sort()).toEqual([1, 2]);
+    });
+
+    it("caches per token", async () => {
+      let calls = 0;
+      server.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, () => {
+          calls++;
+          return HttpResponse.json(mockFeeds);
+        }),
+      );
+      await client.getEntitledFeedIds("a");
+      await client.getEntitledFeedIds("a");
+      await client.getEntitledFeedIds("b");
+      expect(calls).toBe(2);
+    });
+  });
+
   describe("getCandlestickData", () => {
     it("returns OHLC data", async () => {
       const { data, upstreamLatencyMs } = await client.getCandlestickData(

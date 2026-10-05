@@ -323,6 +323,49 @@ describe("get_candlestick_data tool", () => {
     expect(text).not.toContain("invalid or expired");
   });
 
+  it("resolves a Pro-only symbol with the caller's token", async () => {
+    const symbolAuth: Array<string | null> = [];
+    let upstreamSymbol: string | null = null;
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        const auth = request.headers.get("Authorization");
+        symbolAuth.push(auth);
+        const proOnly = {
+          ...mockFeeds[0],
+          pyth_lazer_id: 5000,
+          state: "stable",
+          symbol: "KLP.KXF1/USD",
+        };
+        return HttpResponse.json(auth ? [...mockFeeds, proOnly] : mockFeeds);
+      }),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+        upstreamSymbol = new URL(request.url).searchParams.get("symbol");
+        return HttpResponse.json({
+          c: [1],
+          h: [1],
+          l: [1],
+          o: [1],
+          s: "ok",
+          t: [1_708_300_800],
+          v: [1],
+        });
+      }),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "pro-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "KXF1/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+    expect(result.isError).toBeFalsy();
+    expect(symbolAuth).toEqual(["Bearer pro-token"]);
+    expect(upstreamSymbol).toBe("KLP.KXF1/USD");
+  });
+
   it("resolves a bare pair to the full symbol before calling upstream", async () => {
     let upstreamSymbol: string | null = null;
     msw.use(

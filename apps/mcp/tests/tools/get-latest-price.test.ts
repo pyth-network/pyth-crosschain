@@ -125,6 +125,19 @@ describe("get_latest_price tool", () => {
       createSessionContext(),
     );
 
+    let body: Record<string, unknown> | undefined;
+    let symbolLookups = 0;
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, () => {
+        symbolLookups++;
+        return HttpResponse.json(mockFeeds);
+      }),
+      http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(mockLatestPrice);
+      }),
+    );
+
     const client = await createTestClient(mcpServer);
     const ids = Array.from({ length: 100 }, (_, i) => i + 1);
     const result = await client.callTool({
@@ -138,6 +151,10 @@ describe("get_latest_price tool", () => {
 
     // Should NOT fail validation — symbols are ignored when price_feed_ids are present
     expect(result.isError).toBeFalsy();
+    // The Router rejects bodies with both; and IDs need no catalog lookup.
+    expect(body?.symbols).toBeUndefined();
+    expect(body?.priceFeedIds).toEqual(ids);
+    expect(symbolLookups).toBe(0);
   });
 
   it("rejects empty access_token", async () => {
@@ -390,6 +407,86 @@ describe("get_latest_price tool", () => {
     });
   });
 
+  describe("request contents", () => {
+    async function callCapturing(args: Record<string, unknown>) {
+      let body: Record<string, unknown> | undefined;
+      const symbolAuth: Array<string | null> = [];
+      msw.use(
+        http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+          const auth = request.headers.get("Authorization");
+          symbolAuth.push(auth);
+          // A Pro-only feed, listed only for authenticated callers.
+          const proOnly = {
+            ...mockFeeds[0],
+            pyth_lazer_id: 5000,
+            state: "stable",
+            symbol: "KLP.KXF1/USD",
+          };
+          return HttpResponse.json(auth ? [...mockFeeds, proOnly] : mockFeeds);
+        }),
+        http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json({
+            parsed: {
+              priceFeeds: [
+                {
+                  exponent: -12,
+                  fundingRate: "-15410000",
+                  priceFeedId: (body.priceFeedIds as number[])[0],
+                },
+              ],
+              timestampUs: "1708300800000000",
+            },
+          });
+        }),
+      );
+      const config = {
+        ...loadConfig(),
+        historyUrl: HISTORY_URL,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: args,
+        name: "get_latest_price",
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      return { body, result, symbolAuth, text };
+    }
+
+    it("forwards the requested properties and returns display_funding_rate", async () => {
+      const { body, text } = await callCapturing({
+        access_token: "t",
+        price_feed_ids: [112],
+        properties: ["fundingRate", "exponent"],
+      });
+      expect(body?.properties).toEqual(["fundingRate", "exponent"]);
+      const price = JSON.parse(text).prices[0];
+      expect(price.funding_rate).toBe(-15_410_000);
+      expect(price.display_funding_rate).toBeCloseTo(-1.541e-5, 12);
+    });
+
+    it("resolves a Pro-only symbol with the caller's token", async () => {
+      const { body, result, symbolAuth } = await callCapturing({
+        access_token: "pro-token",
+        symbols: ["KXF1/USD"],
+      });
+      expect(result.isError).toBeFalsy();
+      expect(symbolAuth).toEqual(["Bearer pro-token"]);
+      expect(body?.priceFeedIds).toEqual([5000]);
+    });
+  });
+
   describe("partial results", () => {
     it("names requested feeds that came back without a price", async () => {
       const config = loadConfig();
@@ -639,7 +736,8 @@ describe("get_latest_price tool", () => {
       const text = (result.content as Array<{ type: string; text: string }>)[0]
         .text;
       expect(text).toContain("feed catalog is unavailable");
-      expect(text).toContain("Crypto.BTC/USD");
+      // The user's input, not just the example in the message.
+      expect(text).toContain("rejected BTC/USD");
     });
 
     it("still reports an invalid token from the catalog lookup", async () => {

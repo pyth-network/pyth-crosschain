@@ -51,7 +51,12 @@ const config = {
 };
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  // So a test can never pass on a previous test's request.
+  lastRequestBody = {};
+  lastAuthHeader = null;
+});
 afterAll(() => server.close());
 
 describe("RouterClient", () => {
@@ -98,6 +103,7 @@ describe("RouterClient", () => {
     expect(lastRequestBody.parsed).toBe(true);
     expect(lastRequestBody.priceFeedIds).toEqual([1, 2]);
     expect(lastRequestBody).not.toHaveProperty("price_feed_ids");
+    expect(lastRequestBody.symbols).toBeUndefined();
   });
 
   it("maps the newer properties to snake_case numbers", async () => {
@@ -160,7 +166,7 @@ describe("RouterClient", () => {
     expect((err as HttpError).status).toBe(400);
   });
 
-  it("throws on 403 (invalid token)", async () => {
+  it("throws on 403 (token not entitled)", async () => {
     server.use(
       http.post(`${ROUTER_URL}/v1/latest_price`, () =>
         HttpResponse.json({ error: "Forbidden" }, { status: 403 }),
@@ -248,8 +254,16 @@ describe("RouterClient", () => {
     const shortClient = new RouterClient(shortTimeoutConfig, logger);
 
     server.use(
-      http.post(`${ROUTER_URL}/v1/latest_price`, async () => {
-        await new Promise((r) => setTimeout(r, 30_000));
+      http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+        // Stall until the client aborts, without leaving a timer behind
+        // that keeps Jest alive after the run.
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 30_000);
+          request.signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            resolve();
+          });
+        });
         return HttpResponse.json(mockLatestPrice);
       }),
     );
