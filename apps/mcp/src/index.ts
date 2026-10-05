@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { loadConfig } from "./config.js";
+import { loadConfig, loadStdioAccessToken } from "./config.js";
 import { createCleanupHandler, createServer } from "./server.js";
+import { clientTokenFromEnv } from "./utils/access-token.js";
 import { createLogger, logSessionStart } from "./utils/logger.js";
 
 const config = loadConfig();
 const logger = createLogger(config);
-const { server, sessionContext } = createServer(config, logger);
+// A local stdio server runs on the user's machine, so a key in the
+// environment their client gives it is the user's own.
+const { server, sessionContext } = createServer(
+  config,
+  logger,
+  clientTokenFromEnv(loadStdioAccessToken()),
+);
 
 // Log session_start after the client completes the MCP handshake.
 // server.connect() only sets up the transport — getClientVersion() isn't

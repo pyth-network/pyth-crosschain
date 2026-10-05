@@ -43,6 +43,8 @@ export type ToolCallMetrics = {
   errorType?: string;
   apiKeyLast4?: string | null;
   tokenHash?: string | null;
+  /** Where the key came from: the call, or the client configuration. */
+  tokenSource?: string;
   clientName?: string;
   clientVersion?: string;
   sessionId?: string;
@@ -67,6 +69,7 @@ export function logToolCall(logger: Logger, metrics: ToolCallMetrics): void {
       api_key_last4: metrics.apiKeyLast4,
     }),
     ...(metrics.tokenHash !== undefined && { token_hash: metrics.tokenHash }),
+    ...(metrics.tokenSource && { token_source: metrics.tokenSource }),
     ...(metrics.clientName && { client_name: metrics.clientName }),
     ...(metrics.clientVersion && { client_version: metrics.clientVersion }),
     ...(metrics.sessionId && { session_id: metrics.sessionId }),

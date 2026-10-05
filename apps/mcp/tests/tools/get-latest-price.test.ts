@@ -9,7 +9,13 @@ import { RouterClient } from "../../src/clients/router.js";
 import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import { loadConfig } from "../../src/config.js";
 import type { SessionContext } from "../../src/server.js";
+import { createServer } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
+import type { ClientAccessToken } from "../../src/utils/access-token.js";
+import {
+  clientTokenFromEnv,
+  clientTokenFromHeader,
+} from "../../src/utils/access-token.js";
 import { createTestClient } from "../helpers.js";
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
@@ -305,16 +311,8 @@ describe("get_latest_price tool", () => {
         }),
       );
       try {
-        const config = loadConfig();
-        const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
-        registerAllTools(
-          mcpServer,
-          config,
-          new HistoryClient(config, logger),
-          new RouterClient(config, logger),
-          logger,
-          createSessionContext(),
-        );
+        // What http.ts does for a request without an Authorization header.
+        const { server: mcpServer } = createServer(loadConfig(), logger);
         const client = await createTestClient(mcpServer);
         const result = await client.callTool({
           arguments: { price_feed_ids: [1] },
@@ -330,6 +328,62 @@ describe("get_latest_price tool", () => {
         if (previous === undefined) delete process.env.PYTH_PRO_ACCESS_TOKEN;
         else process.env.PYTH_PRO_ACCESS_TOKEN = previous;
       }
+    });
+
+    async function callWithClientToken(
+      clientAccessToken: ClientAccessToken | undefined,
+      args: Record<string, unknown>,
+    ) {
+      let auth: string | null = null;
+      let routerCalled = false;
+      msw.use(
+        http.post(`${ROUTER_URL}/v1/latest_price`, ({ request }) => {
+          routerCalled = true;
+          auth = request.headers.get("Authorization");
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const { server: mcpServer } = createServer(
+        { ...loadConfig(), historyUrl: HISTORY_URL, routerUrl: ROUTER_URL },
+        logger,
+        clientAccessToken,
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { price_feed_ids: [1], ...args },
+        name: "get_latest_price",
+      });
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      return { auth, result, routerCalled, text };
+    }
+
+    it("uses the key from the user's client configuration", async () => {
+      const { auth, result } = await callWithClientToken(
+        clientTokenFromHeader("Bearer from-client"),
+        {},
+      );
+      expect(result.isError).toBeFalsy();
+      expect(auth).toBe("Bearer from-client");
+    });
+
+    it("lets access_token on the call override the configured key", async () => {
+      const { auth } = await callWithClientToken(
+        clientTokenFromEnv("from-env"),
+        { access_token: "from-call" },
+      );
+      expect(auth).toBe("Bearer from-call");
+    });
+
+    it("reports a malformed configured key instead of 'missing'", async () => {
+      const { result, routerCalled, text } = await callWithClientToken(
+        clientTokenFromHeader("Basic nope"),
+        {},
+      );
+      expect(result.isError).toBe(true);
+      expect(routerCalled).toBe(false);
+      expect(text).toContain("Authorization header");
+      expect(text).not.toContain("nope");
     });
   });
 

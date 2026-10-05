@@ -7,7 +7,10 @@ import type { Feed } from "../clients/types.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES, INSTRUMENT_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { accessTokenSchema } from "../utils/access-token.js";
+import {
+  accessTokenSchema,
+  resolveAccessToken,
+} from "../utils/access-token.js";
 import { authErrorFor, toolError } from "../utils/errors.js";
 import { isActive, NOT_LIVE_STATES } from "../utils/feeds.js";
 import {
@@ -24,7 +27,7 @@ const NOTHING_ENTITLED_NOTE =
   "Your access token is not entitled to any feed. It may be invalid or expired: the symbols API does not reject unknown tokens, so check the token, or call get_latest_price with it, which does.";
 
 const PUBLIC_ONLY_NOTE =
-  "Showing public feeds only. Pass `access_token` to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
+  "Showing public feeds only. Pass `access_token` (or configure the key in your MCP client) to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
 
 /**
  * Why a feed is not in the key's entitled_only list. That list also leaves
@@ -41,7 +44,7 @@ function notEntitledReason(feed: Feed): string {
 
 const GetSymbolsInput = {
   access_token: accessTokenSchema(
-    "Optional. The user's own Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
+    "Optional. The user's own Pyth Pro access token; omit it when the user configured one in their MCP client. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
   ),
   asset_type: z
     .enum(ASSET_TYPES)
@@ -115,7 +118,11 @@ export function registerGetSymbols(
       sessionContext.toolCallCount++;
       const start = Date.now();
 
-      const token = params.access_token;
+      const auth = resolveAccessToken(
+        params.access_token,
+        sessionContext.clientAccessToken,
+      );
+      const token = auth.token;
 
       const baseMetrics = {
         apiKeyLast4: getApiKeyLast4(token),
@@ -124,8 +131,21 @@ export function registerGetSymbols(
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
         tokenHash: computeTokenHash(token),
+        tokenSource: auth.source,
         tool: "get_symbols" as const,
       };
+
+      // A malformed key in the client configuration is reported rather than
+      // silently treated as "no key".
+      if (auth.error) {
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "invalid_client_token",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
+        return toolError(auth.error);
+      }
 
       try {
         const [catalog, entitledResult] = await Promise.all([

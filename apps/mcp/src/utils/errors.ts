@@ -15,8 +15,8 @@ export const ErrorMessages = {
   FEED_NOT_FOUND: (input: string) =>
     `Feed not found: ${input}. Use get_symbols to discover available feeds.`,
   INVALID_TOKEN:
-    "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed.",
-  MISSING_TOKEN: `This tool requires your Pyth Pro access token. Pass it as the \`access_token\` parameter. Get a token at ${ACCESS_TOKEN_URL}`,
+    "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed, or the token configured in your MCP client.",
+  MISSING_TOKEN: `This tool requires your Pyth Pro access token. Pass it as the \`access_token\` parameter, or configure it once in your MCP client (an \`Authorization: Bearer <token>\` header for the hosted server, or PYTH_PRO_ACCESS_TOKEN for a local stdio server). Get a token at ${ACCESS_TOKEN_URL}`,
   NOT_ENTITLED: (detail?: string) =>
     `Pyth Pro denied access (403)${detail ? `: ${detail}` : ""}. Your access token is valid, but your plan is not entitled to this feed. Pick a feed your plan covers, or contact Pyth to add the entitlement.`,
 } as const;

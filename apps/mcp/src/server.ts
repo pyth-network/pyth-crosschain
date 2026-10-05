@@ -7,6 +7,7 @@ import { RouterClient } from "./clients/router.js";
 import type { Config } from "./config.js";
 import { registerAllResources } from "./resources/index.js";
 import { registerAllTools } from "./tools/index.js";
+import type { ClientAccessToken } from "./utils/access-token.js";
 import { logSessionEnd } from "./utils/logger.js";
 
 const require = createRequire(import.meta.url);
@@ -18,6 +19,11 @@ export { version };
  * Shared session context passed to tool handlers for metrics attribution.
  */
 export type SessionContext = {
+  /**
+   * The user's own key from their MCP client configuration (HTTP header or
+   * stdio env), used when a call has no `access_token`. Secret: never log.
+   */
+  clientAccessToken?: ClientAccessToken;
   clientName?: string;
   clientVersion?: string;
   sessionId: string;
@@ -33,6 +39,7 @@ export type SessionContext = {
 export function createServer(
   config: Config,
   logger: Logger,
+  clientAccessToken?: ClientAccessToken,
 ): {
   server: McpServer;
   sessionContext: SessionContext;
@@ -41,6 +48,7 @@ export function createServer(
   const routerClient = new RouterClient(config, logger);
 
   const sessionContext: SessionContext = {
+    clientAccessToken,
     serverVersion: version,
     sessionId: randomUUID(),
     sessionStartTime: Date.now(),

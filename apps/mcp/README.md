@@ -66,7 +66,13 @@ https://mcp.pyth.network/mcp
 Every user brings their own Pyth Pro access token. It is required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. `get_symbols` works without one, but with a token it also lists feeds visible only to Pro keys and marks each feed `entitled: true/false` (whether your token can query it right now). `convert_date_to_timestamp` never needs one.
 
 - Get a token at [pyth.network/pricing](https://pyth.network/pricing)
-- Pass the token as the `access_token` tool parameter; your AI assistant will ask for it when needed. This applies to the hosted and local servers alike: the server never reads a key from its own environment.
+- Give the server your token in one of three ways. A token passed on a call wins over a configured one.
+  - **Configure it once for the hosted server**: send it as an `Authorization: Bearer` header from your MCP client, so your assistant does not handle it on every call.
+    - Claude Code: `claude mcp add pyth --transport http https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"`
+    - Cursor / VS Code / Windsurf: add `"headers": { "Authorization": "Bearer YOUR_TOKEN" }` next to `"url"` in the server entry.
+  - **Configure it once for a local stdio server**: set `PYTH_PRO_ACCESS_TOKEN` in the server's `env` block in your client config (see [Local stdio config](#local-stdio-config)).
+  - **Per call**: the `access_token` tool parameter. Your assistant asks for it when no token is configured. Clients that cannot send headers (e.g. Claude Desktop custom connectors) use this.
+- The server never has a key of its own: the hosted server ignores `PYTH_PRO_ACCESS_TOKEN` in its own environment and only uses the key each user sends.
 - A 401 means the token is invalid or expired. A 403 means the token is valid but your plan is not entitled to that feed; the error names the entitlement group required.
 - Only feeds in state `stable` return prices. Requested feeds that come back without a price (e.g. `beta` or `coming_soon` feeds, or a channel faster than the feed's `min_channel`) are listed in `missing_feed_ids`.
 
@@ -109,7 +115,8 @@ To connect a client to a local build via stdio:
   "mcpServers": {
     "pyth-mcp": {
       "command": "node",
-      "args": ["<path-to-repo>/apps/mcp/dist/index.js"]
+      "args": ["<path-to-repo>/apps/mcp/dist/index.js"],
+      "env": { "PYTH_PRO_ACCESS_TOKEN": "YOUR_TOKEN" }
     }
   }
 }
@@ -122,6 +129,7 @@ To connect a client to a local build via stdio:
 | `PYTH_CHANNEL` | `fixed_rate@200ms` | Default price channel: `real_time`, `fixed_rate@50ms`, `fixed_rate@200ms` or `fixed_rate@1000ms` |
 | `PYTH_LOG_LEVEL` | `info` | Log level (debug/info/warn/error) |
 | `PYTH_REQUEST_TIMEOUT_MS` | `10000` | HTTP request timeout |
+| `PYTH_PRO_ACCESS_TOKEN` | — | Your own token, **stdio only**. Ignored by the HTTP server. |
 
 ## Links
 

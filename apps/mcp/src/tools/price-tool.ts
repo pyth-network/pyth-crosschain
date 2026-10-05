@@ -2,6 +2,7 @@ import type { Logger } from "pino";
 import type { HistoryClient } from "../clients/history.js";
 import type { Feed } from "../clients/types.js";
 import type { SessionContext } from "../server.js";
+import { resolveAccessToken } from "../utils/access-token.js";
 import {
   authErrorFor,
   ErrorMessages,
@@ -72,6 +73,7 @@ class CatalogUnavailableError extends Error {
  */
 export async function runPriceTool(
   options: PriceToolOptions,
+  /** `access_token` from the call; falls back to the client-configured key. */
   accessToken: string | undefined,
   extra: RequestExtra,
   run: (ctx: PriceToolContext) => Promise<ToolResult>,
@@ -79,15 +81,20 @@ export async function runPriceTool(
   const { logger, sessionContext, tool } = options;
   sessionContext.toolCallCount++;
   const start = Date.now();
+  const auth = resolveAccessToken(
+    accessToken,
+    sessionContext.clientAccessToken,
+  );
 
   const baseMetrics = {
-    apiKeyLast4: getApiKeyLast4(accessToken),
+    apiKeyLast4: getApiKeyLast4(auth.token),
     clientName: sessionContext.clientName,
     clientVersion: sessionContext.clientVersion,
     numFeedsRequested: undefined as number | undefined,
     requestId: extra.requestId,
     sessionId: extra.sessionId ?? sessionContext.sessionId,
-    tokenHash: computeTokenHash(accessToken),
+    tokenHash: computeTokenHash(auth.token),
+    tokenSource: auth.source,
     tool,
   };
 
@@ -106,7 +113,9 @@ export async function runPriceTool(
     return toolError(message);
   };
 
-  if (!accessToken) return fail("missing_token", ErrorMessages.MISSING_TOKEN);
+  if (auth.error) return fail("invalid_client_token", auth.error);
+  if (!auth.token) return fail("missing_token", ErrorMessages.MISSING_TOKEN);
+  const token = auth.token;
 
   const ctx: PriceToolContext = {
     fail,
@@ -125,7 +134,7 @@ export async function runPriceTool(
       });
       return { content: [{ text, type: "text" as const }] };
     },
-    token: accessToken,
+    token,
   };
 
   try {

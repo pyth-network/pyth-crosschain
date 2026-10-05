@@ -7,9 +7,9 @@ import { ACCESS_TOKEN_URL, CHANNELS } from "../constants.js";
  */
 
 export const TOKEN_REQUIRED =
-  "Requires the user's own Pyth Pro access token as `access_token`; ask the user for it if you do not have it.";
+  "Requires the user's own Pyth Pro access token. If the user configured it in their MCP client, omit `access_token`; otherwise pass it as `access_token`, and if the tool reports it missing, ask the user for it.";
 
-export const ACCESS_TOKEN_PARAM = `The user's own Pyth Pro access token. Get one at ${ACCESS_TOKEN_URL}`;
+export const ACCESS_TOKEN_PARAM = `The user's own Pyth Pro access token. Omit it when the user configured one in their MCP client; a value here overrides that. Get one at ${ACCESS_TOKEN_URL}`;
 
 export const FEED_IDS_PARAM =
   "Numeric feed IDs (pyth_lazer_id) from get_symbols";

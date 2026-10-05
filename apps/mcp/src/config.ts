@@ -32,3 +32,13 @@ export function loadConfig(): Config {
     routerUrl: process.env.PYTH_ROUTER_URL,
   });
 }
+
+/**
+ * The user's own key from the environment their MCP client gives a local
+ * stdio server. Only the stdio entry point (index.ts) calls this; the HTTP
+ * server (http.ts) never does, so a key set on a hosted deployment is
+ * ignored and the server never answers with a key of its own.
+ */
+export function loadStdioAccessToken(): string | undefined {
+  return process.env.PYTH_PRO_ACCESS_TOKEN;
+}

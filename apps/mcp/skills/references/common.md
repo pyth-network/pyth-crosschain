@@ -43,7 +43,7 @@ Never present raw integer `price` values to users.
 
 ## Auth
 
-`get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data` require the user's own Pyth Pro token as the `access_token` parameter. `get_symbols` works without one; with a token it also lists Pro-only feeds and marks each feed `entitled: true/false`.
+`get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data` require the user's own Pyth Pro token. If the user configured it in their MCP client, omit `access_token`; otherwise pass it as `access_token`, and ask the user for it only when a tool reports it missing. `get_symbols` works without one; with a token it also lists Pro-only feeds and marks each feed `entitled: true/false`.
 
 Requested feeds that return no price are listed in `missing_feed_ids` (e.g. feeds in beta or coming_soon, or not published on the requested channel).
 
@@ -75,7 +75,7 @@ Feed fields: `symbol`, `name`, `description`, `asset_type`, `instrument_type`, `
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
-| `access_token` | string | Yes | Pyth Pro token |
+| `access_token` | string | Unless configured in the client | Pyth Pro token |
 | `symbols` | string[] | One of symbols/ids | Full names from `get_symbols`, max 100 |
 | `price_feed_ids` | number[] | One of symbols/ids | Numeric IDs from `get_symbols`, max 100 |
 | `properties` | string[] | No | Fields to return; add `fundingRate` for funding-rate feeds, `emaPrice` for the EMA |
@@ -88,7 +88,7 @@ Response per feed: `price_feed_id`, `timestamp_us`, `price`, `exponent`, `confid
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
-| `access_token` | string | Yes | Pyth Pro token |
+| `access_token` | string | Unless configured in the client | Pyth Pro token |
 | `symbols` | string[] | One of symbols/ids | Max 50 |
 | `price_feed_ids` | number[] | One of symbols/ids | Max 50 |
 | `timestamp` | number | Yes | Unix seconds (ms/us auto-detected) |
@@ -101,7 +101,7 @@ Response per feed: `price_feed_id`, `publish_time`, `channel`, `price` (null whe
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
-| `access_token` | string | Yes | Pyth Pro token |
+| `access_token` | string | Unless configured in the client | Pyth Pro token |
 | `symbols` | string[] | One of symbols/ids | Max 50 |
 | `price_feed_ids` | number[] | One of symbols/ids | Max 50 |
 | `start` | number | Yes | Window start, inclusive (s/ms/us auto-detected) |
@@ -116,7 +116,7 @@ Response: `{ channel, count, has_more, next_cursor, prices[], window }`; each ro
 
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
-| `access_token` | string | Yes | Pyth Pro token |
+| `access_token` | string | Unless configured in the client | Pyth Pro token |
 | `symbol` | string | Yes | Single symbol from `get_symbols` |
 | `from` | number | Yes | Start time, Unix seconds |
 | `to` | number | Yes | End time, Unix seconds |
