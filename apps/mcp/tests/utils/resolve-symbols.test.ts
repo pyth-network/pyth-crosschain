@@ -71,6 +71,26 @@ describe("resolveSymbols", () => {
     expect(ids(["BTC/USDT"])).toEqual([112]);
   });
 
+  it("lists at most 8 candidates and counts the rest", () => {
+    const many = Array.from({ length: 11 }, (_, i) =>
+      feed(500 + i, `Venue${i}.XYZ/USD`, "stable", "rate"),
+    );
+    const r = resolveSymbols(["XYZ/USD"], many);
+    expect(r.errors[0]).toContain("Venue7.XYZ/USD");
+    expect(r.errors[0]).not.toContain("Venue8.XYZ/USD");
+    expect(r.errors[0]).toContain("and 3 more");
+  });
+
+  it("prefers live non-spot over coming_soon spot", () => {
+    // Liveness ranks above instrument type: swapping the two preferences
+    // would pick the coming_soon spot feed, which cannot be queried.
+    const mixed = [
+      feed(1, "Crypto.ABC/USD", "coming_soon", "spot"),
+      feed(2, "FundingRate.X.ABC/USD", "stable", "rate"),
+    ];
+    expect(resolveSymbols(["ABC/USD"], mixed).feeds[0]?.pyth_lazer_id).toBe(2);
+  });
+
   it("prefers a stable feed over a beta one, and beta over coming_soon", () => {
     // Beta feeds cannot be queried (History: "not ready. Currently in beta
     // state"), so a stable perp wins over a beta spot feed.

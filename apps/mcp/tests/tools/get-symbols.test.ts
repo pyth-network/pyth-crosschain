@@ -389,6 +389,8 @@ describe("get_symbols entitlement", () => {
       entitled: false,
       not_entitled_reason: "not_live (beta)",
     });
+    // Exactly the two authenticated lists, no anonymous or repeated fetch.
+    expect(requests).toHaveLength(2);
     expect(requests).toEqual(
       expect.arrayContaining([
         { auth: "Bearer pro-token", entitledOnly: false },
@@ -428,6 +430,38 @@ describe("get_symbols entitlement", () => {
       (data.feeds as FeedOut[]).every((f) => f.entitled === undefined),
     ).toBe(true);
     expect(data.note).toContain("Could not load which feeds");
+  });
+
+  it("caches the entitled list per token and never mixes tokens", async () => {
+    const calls: Array<{ auth: string | null; entitledOnly: boolean }> = [];
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+        const auth = request.headers.get("Authorization");
+        const entitledOnly =
+          new URL(request.url).searchParams.get("entitled_only") === "true";
+        calls.push({ auth, entitledOnly });
+        if (!entitledOnly) return HttpResponse.json(entitlementFeeds);
+        // token-a may query BTC; token-b may query the oil index.
+        return HttpResponse.json(
+          auth === "Bearer token-a"
+            ? [entitlementFeeds[0]]
+            : [entitlementFeeds[1]],
+        );
+      }),
+    );
+    const flags = async (token: string) => {
+      const { text } = await callGetSymbols({ access_token: token });
+      const feeds = JSON.parse(text).feeds as FeedOut[];
+      return [byId(feeds, 1)?.entitled, byId(feeds, 3063)?.entitled];
+    };
+
+    expect(await flags("token-a")).toEqual([true, false]);
+    expect(await flags("token-a")).toEqual([true, false]);
+    expect(await flags("token-b")).toEqual([false, true]);
+    // token-a's two lists once, then token-b's two lists.
+    expect(calls).toHaveLength(4);
+    expect(calls.filter((c) => c.auth === "Bearer token-a")).toHaveLength(2);
+    expect(calls.filter((c) => c.auth === "Bearer token-b")).toHaveLength(2);
   });
 
   it("warns when a token is entitled to nothing (the API accepts unknown tokens)", async () => {
