@@ -7,7 +7,6 @@ import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
 import { CHANNELS, PRICE_FEED_PROPERTIES } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
@@ -30,7 +29,7 @@ const GetLatestPriceInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+      "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   channel: z
     .enum(CHANNELS)
@@ -76,14 +75,14 @@ export function registerGetLatestPrice(
         readOnlyHint: true,
       },
       description:
-        "Get the most recent real-time price for one or more feeds. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find symbols or feed IDs. Symbols can be full names from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or bare pairs like 'BTC/USD'. A bare pair resolves to the live spot feed when there is one, otherwise to the only remaining match (inactive feeds excluded, live preferred over coming_soon), and `resolved_symbols` in the response shows what each input resolved to. Ambiguous inputs return an error listing the candidates. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.",
+        "Get the most recent real-time price for one or more feeds. Requires the user's own Pyth Pro access token as `access_token`. Use get_symbols first to find symbols or feed IDs. Symbols can be full names from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or bare pairs like 'BTC/USD'. A bare pair resolves to the live spot feed when there is one, otherwise to the only remaining match (inactive feeds excluded, live preferred over coming_soon), and `resolved_symbols` in the response shows what each input resolved to. Ambiguous inputs return an error listing the candidates. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.",
       inputSchema: GetLatestPriceInput,
       title: "Get Latest Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const token = resolveAccessToken(params.access_token, config);
+      const token = params.access_token;
 
       // The Router API rejects requests with both symbols and priceFeedIds.
       // When both are provided, prefer price_feed_ids and ignore symbols.

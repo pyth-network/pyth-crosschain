@@ -6,7 +6,6 @@ import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import { CHANNELS } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { resolveAccessToken } from "../utils/auth.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { authErrorFor, ErrorMessages, toolError } from "../utils/errors.js";
@@ -35,7 +34,7 @@ const GetHistoricalPriceInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Your Pyth Pro access token. Optional when the server was started with PYTH_PRO_ACCESS_TOKEN (local stdio setups); required otherwise. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
+      "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
     ),
   channel: z
     .enum(CHANNELS)
@@ -80,14 +79,14 @@ export function registerGetHistoricalPrice(
         readOnlyHint: true,
       },
       description:
-        "Get price data for specific feeds at a historical timestamp. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Get price data for specific feeds at a historical timestamp. Requires the user's own Pyth Pro access token as `access_token`. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetHistoricalPriceInput,
       title: "Get Historical Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const token = resolveAccessToken(params.access_token, config);
+      const token = params.access_token;
 
       // When both are provided, prefer price_feed_ids and ignore symbols.
       const effectiveSymbols =

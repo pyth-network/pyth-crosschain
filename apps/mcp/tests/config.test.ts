@@ -46,18 +46,9 @@ describe("loadConfig", () => {
     expect(() => loadConfig()).toThrow();
   });
 
-  it("reads the user's API key from PYTH_PRO_ACCESS_TOKEN", () => {
-    process.env.PYTH_PRO_ACCESS_TOKEN = "  user-key  ";
-    expect(loadConfig().accessToken).toBe("user-key");
-  });
-
-  it("treats a blank PYTH_PRO_ACCESS_TOKEN as unset", () => {
-    process.env.PYTH_PRO_ACCESS_TOKEN = "   ";
-    expect(loadConfig().accessToken).toBeUndefined();
-  });
-
-  it("leaves accessToken undefined by default", () => {
-    expect(loadConfig().accessToken).toBeUndefined();
+  it("never reads a Pyth Pro key from the environment", () => {
+    process.env.PYTH_PRO_ACCESS_TOKEN = "server-side-key";
+    expect(JSON.stringify(loadConfig())).not.toContain("server-side-key");
   });
 
   it("accepts fixed_rate@1000ms", () => {

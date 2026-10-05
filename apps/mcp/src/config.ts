@@ -4,12 +4,6 @@ import { z } from "zod";
 import { CHANNELS } from "./constants.js";
 
 const ConfigSchema = z.object({
-  // The user's own Pyth Pro API key. Only honored in stdio mode, where the
-  // server runs on the user's machine; http.ts refuses to start if it is set.
-  accessToken: z.preprocess(
-    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
-    z.string().trim().optional(),
-  ),
   channel: z.enum(CHANNELS).default("fixed_rate@200ms"),
   historyUrl: z
     .string()
@@ -31,7 +25,6 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(): Config {
   return ConfigSchema.parse({
-    accessToken: process.env.PYTH_PRO_ACCESS_TOKEN,
     channel: process.env.PYTH_CHANNEL,
     historyUrl: process.env.PYTH_HISTORY_URL,
     logLevel: process.env.PYTH_LOG_LEVEL,

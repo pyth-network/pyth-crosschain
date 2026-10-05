@@ -6,7 +6,6 @@ import type { Feed } from "../clients/types.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES, INSTRUMENT_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
-import { resolveAccessToken } from "../utils/auth.js";
 import { authErrorFor, toolError } from "../utils/errors.js";
 import { isActive } from "../utils/feeds.js";
 import {
@@ -22,7 +21,7 @@ const NOT_LIVE_STATES: ReadonlySet<string> = new Set([
 ]);
 
 const PUBLIC_ONLY_NOTE =
-  "Showing public feeds only. Pass `access_token` (or start the server with PYTH_PRO_ACCESS_TOKEN) to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
+  "Showing public feeds only. Pass `access_token` to also see feeds visible only to Pyth Pro keys, plus an `entitled` flag on each feed.";
 
 /**
  * Why a feed is not in the key's entitled_only list. That list also leaves
@@ -44,7 +43,7 @@ const GetSymbolsInput = {
     .min(1, "access_token must not be empty")
     .optional()
     .describe(
-      "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag. Not needed when the server was started with PYTH_PRO_ACCESS_TOKEN.",
+      "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
     ),
   asset_type: z
     .enum(ASSET_TYPES)
@@ -89,7 +88,7 @@ const GetSymbolsInput = {
 
 export function registerGetSymbols(
   server: McpServer,
-  config: Config,
+  _config: Config,
   historyClient: HistoryClient,
   logger: Logger,
   sessionContext: SessionContext,
@@ -112,7 +111,7 @@ export function registerGetSymbols(
       sessionContext.toolCallCount++;
       const start = Date.now();
 
-      const token = resolveAccessToken(params.access_token, config);
+      const token = params.access_token;
 
       const baseMetrics = {
         apiKeyLast4: getApiKeyLast4(token),

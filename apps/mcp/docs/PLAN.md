@@ -23,7 +23,7 @@ Both are called with plain `fetch`. The Lazer SDK is not used: since v7, `PythLa
 | Language | **TypeScript** — largest MCP ecosystem, npm distribution, fast to ship |
 | Transport | **Stdio + HTTP** — local dev via stdio, remote deployment via HTTP |
 | Package | **`@pyth-network/mcp-server`** |
-| Auth | **Every user brings their own key.** Per-call `access_token`, falling back to `PYTH_PRO_ACCESS_TOKEN` in stdio mode only (the server runs on the user's machine). HTTP mode refuses to start if `PYTH_PRO_ACCESS_TOKEN` is set, so a hosted server never holds a key. Required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. Optional for `get_symbols`, where it adds Pro-only feeds and a per-feed `entitled` flag. 401 = invalid token, 403 = valid token without the entitlement (the message names the group). |
+| Auth | **Every user brings their own key.** Only the per-call `access_token` counts, in stdio and HTTP mode. The server never reads a key from its environment (`PYTH_PRO_ACCESS_TOKEN` is ignored), so a hosted server can never answer with a shared key. Required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. Optional for `get_symbols`, where it adds Pro-only feeds and a per-feed `entitled` flag. 401 = invalid token, 403 = valid token without the entitlement (the message names the group). |
 | Shared trial token | **Dropped** (2026-10). Conflicts with bring-your-own-key. |
 | Graceful degradation | `get_symbols` (feed discovery) works **without** a token. `get_latest_price`, `get_historical_price`, and `get_candlestick_data` require a token and return a clear "bring your token" message if missing/invalid. |
 | Channel default | `fixed_rate@200ms` server-wide default via `PYTH_CHANNEL` env var. Per-tool `channel` parameter can override. Note: each feed has a minimum supported channel (most are 200ms, some support real_time). |
@@ -283,7 +283,7 @@ process.on("SIGINT", cleanup);
 
 **Returns:** Full `parsed` response payload (all fields included). Binary signed payload fields (`evm`, `solana`, `leUnsigned`, `leSigned`) are excluded. Includes `timestampUs`, `priceFeeds` with all available properties per feed.
 
-**Error when no token:** `"This tool requires a Pyth Pro access token. Set PYTH_PRO_ACCESS_TOKEN or get one at https://pyth.network/pricing"`
+**Error when no token:** `"This tool requires your Pyth Pro access token. Pass it as the access_token parameter. Get a token at https://pyth.network/pricing"`
 
 ---
 
@@ -355,8 +355,9 @@ process.on("SIGINT", cleanup);
 
 | Error | HTTP Code | Tool Behavior | LLM-Facing Message |
 |-------|-----------|---------------|---------------------|
-| Missing token | — | Return tool error | "This tool requires a Pyth Pro access token. Set PYTH_PRO_ACCESS_TOKEN environment variable. Get a token at https://pyth.network/pricing" |
-| Invalid token | 403 | Return tool error | "Your Pyth Pro access token is invalid or expired. Check your PYTH_PRO_ACCESS_TOKEN value." |
+| Missing token | — | Return tool error | "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter. Get a token at https://pyth.network/pricing" |
+| Invalid token | 401 | Return tool error | "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed." |
+| Not entitled | 403 | Return tool error | "Pyth Pro denied access (403): <upstream reason>. Your access token is valid, but your plan is not entitled to this feed. …" |
 | Feed not found | 400/404 | Return tool error | "Feed not found: {symbol}. Use get_symbols to discover available feeds." |
 | Timestamp not found | 404 | Return tool error | "No price data available at the requested timestamp. Try a different timestamp or check if the market was open." |
 | API timeout | — | Return tool error | "Pyth Pro API timed out. Try again or reduce the number of feeds." |
@@ -472,7 +473,6 @@ interface ToolInvocationLog {
 │
 ├── package.json
 ├── tsconfig.json
-├── .env.example                  # PYTH_PRO_ACCESS_TOKEN=your_token_here
 └── README.md
 ```
 
@@ -482,7 +482,6 @@ interface ToolInvocationLog {
 
 | Env Var | CLI Flag | Default | Description |
 |---------|----------|---------|-------------|
-| `PYTH_PRO_ACCESS_TOKEN` | `--token` | — | Pyth Pro bearer token. Required for Router API tools. |
 | `PYTH_CHANNEL` | `--channel` | `fixed_rate@200ms` | Default price channel |
 | `PYTH_ROUTER_URL` | `--router-url` | `https://pyth-lazer.dourolabs.app` | Router API base URL |
 | `PYTH_HISTORY_URL` | `--history-url` | `https://pyth.dourolabs.app` | History API base URL |
@@ -649,15 +648,14 @@ Automatically fetch and update key data types (Channel, AssetType, MarketSession
 ### Manual smoke test
 ```bash
 # 1. Install and run
-PYTH_PRO_ACCESS_TOKEN=your_token npx @pyth-network/mcp-server stdio
+npx @pyth-network/mcp-server stdio
 
 # 2. In Claude Desktop config, add:
 {
   "mcpServers": {
     "pyth-pro": {
       "command": "npx",
-      "args": ["@pyth-network/mcp-server", "stdio"],
-      "env": { "PYTH_PRO_ACCESS_TOKEN": "your_token" }
+      "args": ["@pyth-network/mcp-server", "stdio"]
     }
   }
 }
@@ -680,8 +678,8 @@ All architectural decisions made during the brainstorming session, with rational
 | 1 | MCP purpose | Market data only / Integration only / Both | **Both** | MCP tools serve data extraction; resources and prompts drive Pro integration and SDK adoption |
 | 2 | Language | TypeScript / Go / Rust / Python | **TypeScript** | Largest MCP ecosystem, npm distribution, fastest to ship. Rust was evaluated (Pyth DNA, performance) and confirmed TypeScript as the right choice for ecosystem reach and shipping speed. |
 | 3 | Transport | Stdio only / Stdio+HTTP / HTTP only | **Stdio + HTTP** | Stdio for local dev (Claude Desktop, Cursor); HTTP for remote deployment. Both built from day one. |
-| 4 | Auth v1 | Env var / Config file / OAuth | **Env var only** (`PYTH_PRO_ACCESS_TOKEN`) | Simplest model. Matches GitHub MCP server pattern. Config file adds complexity without v1 value. |
-| 5 | Auth v2 | Shared server token with rate limiting | **Dropped** (2026-10) | Every user brings their own key. Stdio may read the user's own `PYTH_PRO_ACCESS_TOKEN`; HTTP mode refuses to start with one set. |
+| 4 | Auth v1 | Env var / Config file / OAuth / Per-call parameter | **Per-call `access_token` only** (2026-10; was env var) | Every user brings their own key, and the server holds none, so a hosted deployment can never share a key across callers. |
+| 5 | Auth v2 | Shared server token with rate limiting | **Dropped** (2026-10) | Every user brings their own key, passed per call. The server never reads a key from its environment. |
 | 6 | Graceful degradation | Always require token / Graceful / Separate toolsets | **Graceful degradation** | History API is public — no reason to block symbol search and OHLC. Creates natural adoption funnel to Pro. |
 | 7 | Feed identifiers | Symbols only / IDs only / Both | **Both** | LLMs naturally use symbols ("BTC/USD"). Power users and code may use numeric IDs. Accept both. |
 | 8 | Channel default | Server-wide only / Per-tool only / Both | **Server-wide default + per-tool override** | Most feeds are 200ms. Default covers 90% of cases. Override for feeds supporting real_time. |

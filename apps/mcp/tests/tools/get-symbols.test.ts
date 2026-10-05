@@ -328,11 +328,8 @@ describe("get_symbols entitlement", () => {
     );
   });
 
-  async function callGetSymbols(
-    args: Record<string, unknown>,
-    accessToken?: string,
-  ) {
-    const config = { ...loadConfig(), accessToken };
+  async function callGetSymbols(args: Record<string, unknown>) {
+    const config = loadConfig();
     const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
     registerAllTools(
       mcpServer,
@@ -400,13 +397,6 @@ describe("get_symbols entitlement", () => {
     );
   });
 
-  it("uses PYTH_PRO_ACCESS_TOKEN when no access_token is passed", async () => {
-    const { text } = await callGetSymbols({}, "env-token");
-    const data = JSON.parse(text);
-    expect(byId(data.feeds, 1)).toMatchObject({ entitled: true });
-    expect(requests.every((r) => r.auth === "Bearer env-token")).toBe(true);
-  });
-
   it("maps a 401 to the invalid-token message", async () => {
     const { result, text } = await callGetSymbols({
       access_token: "bad-token",
@@ -435,7 +425,7 @@ describe("get_symbols inactive feeds", () => {
   let client: Client;
 
   beforeAll(async () => {
-    const config = { ...loadConfig(), accessToken: undefined };
+    const config = loadConfig();
     const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
     registerAllTools(
       mcpServer,
@@ -509,7 +499,7 @@ describe("get_symbols instrument and futures-chain filters", () => {
   let client: Client;
 
   beforeAll(async () => {
-    const config = { ...loadConfig(), accessToken: undefined };
+    const config = loadConfig();
     const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
     registerAllTools(
       mcpServer,

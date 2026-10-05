@@ -1,3 +1,5 @@
+// biome-ignore-all lint/style/noProcessEnv: sets PYTH_PRO_ACCESS_TOKEN to prove the server ignores it
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars: same
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
@@ -5,6 +7,7 @@ import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
 import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
+import { loadConfig } from "../../src/config.js";
 import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
@@ -237,69 +240,43 @@ describe("get_latest_price tool", () => {
     expect(data.prices[0].solana).toBeUndefined();
   });
 
-  describe("PYTH_PRO_ACCESS_TOKEN fallback", () => {
-    async function callWith(
-      configToken: string | undefined,
-      args: Record<string, unknown>,
-    ) {
-      let authHeader: string | null = null;
+  describe("bring your own key", () => {
+    it("ignores PYTH_PRO_ACCESS_TOKEN in the server environment", async () => {
+      const previous = process.env.PYTH_PRO_ACCESS_TOKEN;
+      process.env.PYTH_PRO_ACCESS_TOKEN = "server-side-key";
+      let routerCalled = false;
       msw.use(
-        http.post(`${ROUTER_URL}/v1/latest_price`, ({ request }) => {
-          authHeader = request.headers.get("Authorization");
+        http.post(`${ROUTER_URL}/v1/latest_price`, () => {
+          routerCalled = true;
           return HttpResponse.json(mockLatestPrice);
         }),
       );
-      const config = {
-        accessToken: configToken,
-        channel: "fixed_rate@200ms",
-        historyUrl: HISTORY_URL,
-        logLevel: "info" as const,
-        requestTimeoutMs: 10_000,
-        routerUrl: ROUTER_URL,
-      };
-      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
-      registerAllTools(
-        mcpServer,
-        config,
-        new HistoryClient(config, logger),
-        new RouterClient(config, logger),
-        logger,
-        createSessionContext(),
-      );
-      const client = await createTestClient(mcpServer);
-      const result = await client.callTool({
-        arguments: args,
-        name: "get_latest_price",
-      });
-      return { authHeader, result };
-    }
-
-    it("uses the env key when no access_token is passed", async () => {
-      const { authHeader, result } = await callWith("env-key", {
-        price_feed_ids: [1],
-      });
-      expect(result.isError).toBeFalsy();
-      expect(authHeader).toBe("Bearer env-key");
-    });
-
-    it("prefers a per-call access_token over the env key", async () => {
-      const { authHeader, result } = await callWith("env-key", {
-        access_token: "per-call-key",
-        price_feed_ids: [1],
-      });
-      expect(result.isError).toBeFalsy();
-      expect(authHeader).toBe("Bearer per-call-key");
-    });
-
-    it("returns the missing-token message when neither is set", async () => {
-      const { authHeader, result } = await callWith(undefined, {
-        price_feed_ids: [1],
-      });
-      expect(result.isError).toBe(true);
-      expect(authHeader).toBeNull();
-      const text = (result.content as Array<{ type: string; text: string }>)[0]
-        .text;
-      expect(text).toContain("PYTH_PRO_ACCESS_TOKEN");
+      try {
+        const config = loadConfig();
+        const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+        registerAllTools(
+          mcpServer,
+          config,
+          new HistoryClient(config, logger),
+          new RouterClient(config, logger),
+          logger,
+          createSessionContext(),
+        );
+        const client = await createTestClient(mcpServer);
+        const result = await client.callTool({
+          arguments: { price_feed_ids: [1] },
+          name: "get_latest_price",
+        });
+        expect(result.isError).toBe(true);
+        expect(routerCalled).toBe(false);
+        const text = (
+          result.content as Array<{ type: string; text: string }>
+        )[0].text;
+        expect(text).toContain("requires your Pyth Pro access token");
+      } finally {
+        if (previous === undefined) delete process.env.PYTH_PRO_ACCESS_TOKEN;
+        else process.env.PYTH_PRO_ACCESS_TOKEN = previous;
+      }
     });
   });
 
