@@ -110,9 +110,9 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 1. Discover feeds:
    ```json
-   get_symbols({ "asset_type": "funding-rate", "query": "Binance" })
+   get_symbols({ "asset_type": "funding-rate", "query": "Binance", "limit": 200 })
    ```
-   Pick `FundingRate.Binance.BTC/USDT` and `FundingRate.Binance.ETH/USDT` from results.
+   Pick `FundingRate.Binance.BTC/USDT` and `FundingRate.Binance.ETH/USDT` from results. If `has_more` is true and either is missing, page with `offset: next_offset`.
 
 2. Fetch current rates:
    ```json

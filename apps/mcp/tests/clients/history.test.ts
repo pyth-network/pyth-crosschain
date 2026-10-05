@@ -165,17 +165,30 @@ describe("HistoryClient", () => {
       expect(calls).toBe(1);
     });
 
-    it("drops a feed that does not match the schema and keeps the rest", async () => {
+    it("keeps a drifted feed's symbol and ID, and drops rows without them", async () => {
       server.use(
         http.get(`${HISTORY_URL}/v1/symbols`, () =>
           HttpResponse.json([
             ...mockFeeds,
-            { pyth_lazer_id: 99, symbol: "Crypto.BROKEN/USD" },
+            // market_sessions in a shape the schema does not expect.
+            {
+              ...mockFeeds[0],
+              market_sessions: "unexpected",
+              pyth_lazer_id: 99,
+              symbol: "Crypto.DRIFT/USD",
+            },
+            { description: "no identity" },
           ]),
         ),
       );
       const { data } = await client.getSymbols();
-      expect(data.map((f) => f.pyth_lazer_id)).toEqual([1, 2]);
+      expect(data.map((f) => f.pyth_lazer_id)).toEqual([1, 2, 99]);
+      expect(data[2]).toMatchObject({
+        name: "Bitcoin",
+        state: "active",
+        symbol: "Crypto.DRIFT/USD",
+      });
+      expect(data[2]?.market_sessions).toBeUndefined();
     });
 
     it("accepts feeds without hermes_id or quote_currency", async () => {

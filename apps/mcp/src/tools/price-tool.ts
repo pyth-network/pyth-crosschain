@@ -28,7 +28,6 @@ export type PriceToolContext = {
   token: string;
   /** Feeds sent upstream, after deduplication; logged with the call. */
   setFeedsRequested(count: number): void;
-  /** Log the call as failed and return `message` as a tool error. */
   fail(
     errorType: string,
     message: string,

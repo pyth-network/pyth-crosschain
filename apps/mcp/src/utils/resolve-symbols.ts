@@ -81,7 +81,6 @@ function resolveOne(input: string, catalog: readonly Feed[]): Feed | string {
   return `Ambiguous symbol: ${input} matches ${listed}${more}. Pass the full symbol.`;
 }
 
-/** Narrow to the matching subset when it is non-empty. */
 function preferSubset(feeds: Feed[], keep: (f: Feed) => boolean): Feed[] {
   const subset = feeds.filter(keep);
   return subset.length > 0 ? subset : feeds;

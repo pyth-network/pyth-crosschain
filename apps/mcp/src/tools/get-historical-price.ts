@@ -131,6 +131,7 @@ export function registerGetHistoricalPrice(
             return ctx.succeed(
               {
                 ...noDataPayload(normalizedUs),
+                ...missingFeedsField(ids, history.data),
                 ...resolvedSymbolsField(resolvedSymbols),
               },
               { numFeedsReturned: 0, upstreamLatencyMs },

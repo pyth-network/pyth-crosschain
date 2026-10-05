@@ -277,6 +277,35 @@ describe("RouterClient", () => {
     expect((err as DOMException).name).toBe("TimeoutError");
   }, 15_000);
 
+  it("retries when the connection drops mid-body ('terminated')", async () => {
+    let calls = 0;
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () => {
+        calls++;
+        if (calls === 1) {
+          // What Node's fetch rejects with when the socket closes mid-body.
+          const cut = new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode('{"parsed":'));
+              controller.error(
+                new TypeError("terminated", {
+                  cause: { code: "UND_ERR_SOCKET" },
+                }),
+              );
+            },
+          });
+          return new HttpResponse(cut, {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return HttpResponse.json(mockLatestPrice);
+      }),
+    );
+    const result = await client.getLatestPrice("test-token", undefined, [1]);
+    expect(calls).toBe(2);
+    expect(result.data).toHaveLength(1);
+  });
+
   it("retries when the body read times out after the headers arrive", async () => {
     let calls = 0;
     server.use(
@@ -363,10 +392,34 @@ describe("key check", () => {
     expect(router.probes).toEqual(["fake"]);
   });
 
-  it("lets the call through, uncached, when the Router is down", async () => {
+  it("lets calls through when the Router is down, probing once a minute", async () => {
     const router = routerAnswers({});
     await expect(verify("any")).resolves.toBeUndefined();
     await expect(verify("any")).resolves.toBeUndefined();
-    expect(router.probes).toEqual(["any", "any"]);
+    expect(router.probes).toEqual(["any"]);
   });
+
+  it("gives up on a hanging Router after ~2 s, not the request timeout", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 30_000);
+          request.signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            resolve();
+          });
+        });
+        return HttpResponse.json(mockLatestPrice);
+      }),
+    );
+    const slowClient = new RouterClient(
+      { ...config, requestTimeoutMs: 10_000 },
+      logger,
+    );
+    const started = Date.now();
+    await expect(
+      verifyKeyWithRouter(slowClient, ROUTER_URL, "any", logger),
+    ).resolves.toBeUndefined();
+    expect(Date.now() - started).toBeLessThan(4000);
+  }, 10_000);
 });

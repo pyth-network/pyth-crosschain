@@ -24,7 +24,6 @@ export type ClientAccessToken =
 export type ClientTokenSource = "http_header" | "stdio_env";
 export type TokenSource = "call" | ClientTokenSource;
 
-/** A key from the environment the user's client gave the stdio server. */
 export function clientTokenFromEnv(
   value: string | undefined,
 ): ClientAccessToken | undefined {
@@ -40,7 +39,6 @@ export function clientTokenFromEnv(
   return { kind: "token", source: "stdio_env", token };
 }
 
-/** A key from the `Authorization: Bearer <key>` header of the user's request. */
 export function clientTokenFromHeader(
   header: string | string[] | undefined,
 ): ClientAccessToken | undefined {

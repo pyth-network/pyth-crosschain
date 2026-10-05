@@ -188,6 +188,28 @@ describe("get_historical_price tool", () => {
     expect(data.missing_feed_ids).toBeUndefined();
   });
 
+  it("names every requested feed when History returns no rows", async () => {
+    msw.use(
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/price`, () =>
+        HttpResponse.json([]),
+      ),
+    );
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        price_feed_ids: [1, 555],
+        timestamp: 1_708_300_800,
+      },
+      name: "get_historical_price",
+    });
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.prices).toEqual([]);
+    expect(data.direction).toBeDefined();
+    expect(data.missing_feed_ids).toEqual([1, 555]);
+  });
+
   it("names requested feeds that came back without a row", async () => {
     const result = await client.callTool({
       arguments: {

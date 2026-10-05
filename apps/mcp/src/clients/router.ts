@@ -106,7 +106,10 @@ export class RouterClient {
         "Content-Type": "application/json",
       },
       method: "POST",
-      signal: AbortSignal.timeout(this.timeoutMs),
+      // Short: a hanging Router must not stall History-only tools.
+      signal: AbortSignal.timeout(
+        Math.min(this.timeoutMs, KEY_PROBE_TIMEOUT_MS),
+      ),
     });
     if (res.ok || res.status === 403) {
       // Tiny body; read it to free the connection.
@@ -122,6 +125,7 @@ export class RouterClient {
 
 // Crypto.BTC/USD: live on every channel since launch.
 const KEY_PROBE_FEED_ID = 1;
+const KEY_PROBE_TIMEOUT_MS = 2000;
 
 /**
  * Rejects made-up keys (Router 401) before a catalog download, since the
