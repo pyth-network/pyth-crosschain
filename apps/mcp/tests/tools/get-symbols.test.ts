@@ -8,6 +8,7 @@ import { RouterClient } from "../../src/clients/router.js";
 import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import { loadConfig } from "../../src/config.js";
 import type { SessionContext } from "../../src/server.js";
+import { createServer } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { clientTokenFromHeader } from "../../src/utils/access-token.js";
 import { createTestClient } from "../helpers.js";
@@ -425,6 +426,28 @@ describe("get_symbols entitlement", () => {
     expect(data.note).toBeUndefined();
     expect(data.total_available).toBe(5);
     expect(requests.every((r) => r.auth === "Bearer pro-token")).toBe(true);
+  });
+
+  it("rejects a made-up key via the Router without downloading the catalog", async () => {
+    // The symbols API would answer this key with 200 and the full public
+    // catalog; the server asks the Router first.
+    msw.use(
+      http.post(
+        "https://pyth-lazer.dourolabs.app/v1/latest_price",
+        () => new HttpResponse("invalid API key", { status: 401 }),
+      ),
+    );
+    const { server: mcpServer } = createServer(loadConfig(), logger);
+    const client = await createTestClient(mcpServer);
+    const result = await client.callTool({
+      arguments: { access_token: "made-up-key" },
+      name: "get_symbols",
+    });
+    expect(result.isError).toBe(true);
+    expect(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    ).toContain("invalid or expired");
+    expect(requests.filter((r) => r.auth !== null)).toEqual([]);
   });
 
   it("maps a 401 to the invalid-token message", async () => {

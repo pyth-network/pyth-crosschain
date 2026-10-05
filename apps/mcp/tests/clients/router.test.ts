@@ -2,7 +2,8 @@ import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
 import { HttpError } from "../../src/clients/retry.js";
-import { RouterClient } from "../../src/clients/router.js";
+import { RouterClient, verifyKeyWithRouter } from "../../src/clients/router.js";
+import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
 
@@ -53,6 +54,7 @@ const config = {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
+  clearSymbolsCache();
   // So a test can never pass on a previous test's request.
   lastRequestBody = {};
   lastAuthHeader = null;
@@ -302,5 +304,69 @@ describe("RouterClient", () => {
     const result = await client.getLatestPrice("test-token", undefined, [1]);
     expect(calls).toBe(2);
     expect(result.data).toHaveLength(1);
+  });
+});
+
+describe("key check", () => {
+  const client = new RouterClient(config, logger);
+
+  /** Router answers each key with the given status; counts probes. */
+  function routerAnswers(statusByToken: Record<string, number>) {
+    const probes: string[] = [];
+    let body: Record<string, unknown> | undefined;
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+        const token = (request.headers.get("Authorization") ?? "").replace(
+          "Bearer ",
+          "",
+        );
+        probes.push(token);
+        body = (await request.json()) as Record<string, unknown>;
+        const status = statusByToken[token] ?? 500;
+        return status === 200
+          ? HttpResponse.json(mockLatestPrice)
+          : new HttpResponse("invalid API key", { status });
+      }),
+    );
+    return { body: () => body, probes };
+  }
+
+  const verify = (token: string) =>
+    verifyKeyWithRouter(client, ROUTER_URL, token, logger);
+
+  it("probes with one property of one feed on the slowest channel", async () => {
+    const router = routerAnswers({ good: 200 });
+    await verify("good");
+    expect(router.body()).toMatchObject({
+      channel: "fixed_rate@1000ms",
+      priceFeedIds: [1],
+      properties: ["exponent"],
+    });
+  });
+
+  it("accepts a valid key once per TTL", async () => {
+    const router = routerAnswers({ good: 200 });
+    await verify("good");
+    await verify("good");
+    expect(router.probes).toEqual(["good"]);
+  });
+
+  it("accepts a valid key that is not entitled to the probe feed (403)", async () => {
+    routerAnswers({ limited: 403 });
+    await expect(verify("limited")).resolves.toBeUndefined();
+  });
+
+  it("rejects a made-up key with 401 and remembers it", async () => {
+    const router = routerAnswers({ fake: 401 });
+    await expect(verify("fake")).rejects.toMatchObject({ status: 401 });
+    await expect(verify("fake")).rejects.toMatchObject({ status: 401 });
+    expect(router.probes).toEqual(["fake"]);
+  });
+
+  it("lets the call through, uncached, when the Router is down", async () => {
+    const router = routerAnswers({});
+    await expect(verify("any")).resolves.toBeUndefined();
+    await expect(verify("any")).resolves.toBeUndefined();
+    expect(router.probes).toEqual(["any", "any"]);
   });
 });

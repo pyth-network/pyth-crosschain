@@ -3,6 +3,7 @@ import type { Config } from "../config.js";
 import type { Channel, PriceFeedProperty } from "../constants.js";
 import { CHANNELS, PRICE_FEED_PROPERTIES } from "../constants.js";
 import { HttpError, httpErrorFromResponse, withSingleRetry } from "./retry.js";
+import { keyCheckCache, symbolsCacheKey } from "./symbols-store.js";
 import type { LatestPriceParsedFeed } from "./types.js";
 
 // marketSession matters for equities (prices outside regular hours) and
@@ -89,6 +90,70 @@ export class RouterClient {
 
     const upstreamLatencyMs = Date.now() - fetchStart;
     return { data: normalizeFeeds(parsed), upstreamLatencyMs };
+  }
+
+  /**
+   * The cheapest authenticated Router request: one property of one feed on
+   * the slowest channel. Resolves when the key is accepted (200) or valid
+   * but not entitled to that feed (403); throws otherwise (401 = invalid).
+   */
+  async probeKey(token: string): Promise<true> {
+    const res = await fetch(new URL("/v1/latest_price", this.priceServiceUrl), {
+      body: JSON.stringify({
+        channel: "fixed_rate@1000ms",
+        formats: [],
+        parsed: true,
+        priceFeedIds: [KEY_PROBE_FEED_ID],
+        properties: ["exponent"],
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+    if (res.ok || res.status === 403) {
+      // Tiny body (one property of one feed); read it to free the connection.
+      await res.arrayBuffer();
+      return true;
+    }
+    throw await httpErrorFromResponse(
+      res,
+      `Router API key check returned ${res.status}`,
+    );
+  }
+}
+
+// Crypto.BTC/USD: live on every channel since launch.
+const KEY_PROBE_FEED_ID = 1;
+
+/**
+ * Confirm a key with the Router before the server downloads a multi-MB
+ * catalog for it. The symbols API answers any key, including a made-up one,
+ * with 200 and the full public catalog, so without this check every fake key
+ * costs a 5 MB download and a cache slot. The Router answers a made-up key
+ * with 401 "invalid API key" in about 0.3 s.
+ *
+ * Resolves for a valid key (200, or 403 when it is valid but not entitled
+ * to the probe feed). Throws the 401 for an invalid key. Any other failure
+ * (Router down, timeout) resolves too: the check is a guard against fake
+ * keys, not a reason to fail a call History could still answer.
+ */
+export async function verifyKeyWithRouter(
+  client: RouterClient,
+  routerUrl: string,
+  token: string,
+  logger: Logger,
+): Promise<void> {
+  try {
+    await keyCheckCache.getOrLoad(
+      symbolsCacheKey(routerUrl, token, "key-check"),
+      () => client.probeKey(token),
+    );
+  } catch (err) {
+    if (err instanceof HttpError && err.status === 401) throw err;
+    logger.warn({ err }, "key check unavailable; continuing without it");
   }
 }
 

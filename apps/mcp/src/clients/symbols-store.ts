@@ -150,8 +150,20 @@ export const entitledIdsCache = new TtlCache<ReadonlySet<number>>(TTL_MS, 100, {
   shouldRememberFailure: isOutage,
 });
 
-/** Drop all cached catalogs (used by tests). */
+/**
+ * Keys the Router has confirmed (true), cached so each key is checked once
+ * per TTL. A rejected key (401) is remembered for a minute, so repeated
+ * calls with a made-up key cost nothing upstream.
+ */
+export const keyCheckCache = new TtlCache<true>(TTL_MS, 1000, {
+  failureTtlMs: 60_000,
+  shouldRememberFailure: (error) =>
+    error instanceof HttpError && error.status === 401,
+});
+
+/** Drop all cached catalogs and key checks (used by tests). */
 export function clearSymbolsCache(): void {
   symbolsCache.clear();
   entitledIdsCache.clear();
+  keyCheckCache.clear();
 }
