@@ -373,4 +373,40 @@ describe("get_candlestick_data tool", () => {
       .text;
     expect(text).toContain("Feed not found: NOPE/USD");
   });
+
+  it("uses the symbol as given when the catalog is down", async () => {
+    let upstreamSymbol: string | null = null;
+    msw.use(
+      http.get(
+        `${HISTORY_URL}/v1/symbols`,
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+      http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, ({ request }) => {
+        upstreamSymbol = new URL(request.url).searchParams.get("symbol");
+        return HttpResponse.json({
+          c: [1],
+          h: [1],
+          l: [1],
+          o: [1],
+          s: "ok",
+          t: [1_708_300_800],
+          v: [0],
+        });
+      }),
+    );
+
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        from: 1_708_300_800,
+        resolution: "D",
+        symbol: "Crypto.ETH/USD",
+        to: 1_708_473_600,
+      },
+      name: "get_candlestick_data",
+    });
+
+    expect(result.isError).toBeFalsy();
+    expect(upstreamSymbol).toBe("Crypto.ETH/USD");
+  });
 });

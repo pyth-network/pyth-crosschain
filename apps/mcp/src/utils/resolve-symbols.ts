@@ -1,4 +1,8 @@
+import type { Logger } from "pino";
+import type { HistoryClient } from "../clients/history.js";
+import type { UpstreamResult } from "../clients/router.js";
 import type { Feed } from "../clients/types.js";
+import { authErrorFor } from "./errors.js";
 
 const MAX_LISTED_CANDIDATES = 8;
 
@@ -93,4 +97,27 @@ export function resolvedSymbolsField(resolved: Record<string, string>): {
   resolved_symbols?: Record<string, string>;
 } {
   return Object.keys(resolved).length > 0 ? { resolved_symbols: resolved } : {};
+}
+
+/**
+ * Load the catalog for symbol resolution without making it a hard
+ * dependency: if History is unavailable, return undefined so callers can
+ * pass the symbols through unchanged (full symbols still work). Auth errors
+ * are rethrown, since the same token would fail the price request too.
+ */
+export async function tryGetCatalog(
+  historyClient: HistoryClient,
+  token: string | undefined,
+  logger: Logger,
+): Promise<UpstreamResult<Feed[]> | undefined> {
+  try {
+    return await historyClient.getSymbols(token);
+  } catch (err) {
+    if (authErrorFor(err)) throw err;
+    logger.warn(
+      { err },
+      "symbol catalog unavailable; passing symbols through unresolved",
+    );
+    return undefined;
+  }
 }

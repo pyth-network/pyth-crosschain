@@ -470,6 +470,123 @@ describe("get_latest_price tool", () => {
       expect(JSON.parse(text).resolved_symbols).toBeUndefined();
     });
 
+    it("passes symbols through to the Router when the catalog is down", async () => {
+      let body: Record<string, unknown> | undefined;
+      msw.use(
+        http.get(
+          `${HISTORY_URL}/v1/symbols`,
+          () => new HttpResponse(null, { status: 500 }),
+        ),
+        http.post(`${ROUTER_URL}/v1/latest_price`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", symbols: ["Crypto.BTC/USD"] },
+        name: "get_latest_price",
+      });
+      expect(result.isError).toBeFalsy();
+      expect(body?.symbols).toEqual(["Crypto.BTC/USD"]);
+      expect(body?.priceFeedIds).toBeUndefined();
+    });
+
+    it("asks for full symbols when the catalog is down and the Router rejects a bare pair", async () => {
+      msw.use(
+        http.get(
+          `${HISTORY_URL}/v1/symbols`,
+          () => new HttpResponse(null, { status: 500 }),
+        ),
+        http.post(
+          `${ROUTER_URL}/v1/latest_price`,
+          () => new HttpResponse("unknown symbol", { status: 400 }),
+        ),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "t", symbols: ["BTC/USD"] },
+        name: "get_latest_price",
+      });
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      expect(text).toContain("feed catalog is unavailable");
+      expect(text).toContain("Crypto.BTC/USD");
+    });
+
+    it("still reports an invalid token from the catalog lookup", async () => {
+      let routerCalled = false;
+      msw.use(
+        http.get(
+          `${HISTORY_URL}/v1/symbols`,
+          () => new HttpResponse(null, { status: 401 }),
+        ),
+        http.post(`${ROUTER_URL}/v1/latest_price`, () => {
+          routerCalled = true;
+          return HttpResponse.json(mockLatestPrice);
+        }),
+      );
+      const config = {
+        channel: "fixed_rate@200ms",
+        historyUrl: HISTORY_URL,
+        logLevel: "info" as const,
+        requestTimeoutMs: 10_000,
+        routerUrl: ROUTER_URL,
+      };
+      const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+      registerAllTools(
+        mcpServer,
+        config,
+        new HistoryClient(config, logger),
+        new RouterClient(config, logger),
+        logger,
+        createSessionContext(),
+      );
+      const client = await createTestClient(mcpServer);
+      const result = await client.callTool({
+        arguments: { access_token: "bad", symbols: ["Crypto.BTC/USD"] },
+        name: "get_latest_price",
+      });
+      expect(result.isError).toBe(true);
+      expect(routerCalled).toBe(false);
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      expect(text).toContain("invalid or expired");
+    });
+
     it("returns an error without calling the Router for unknown symbols", async () => {
       const { body, result, text } = await callWithSymbols(["NOPE/USD"]);
       expect(result.isError).toBe(true);
