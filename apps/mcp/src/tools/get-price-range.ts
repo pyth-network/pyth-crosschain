@@ -10,6 +10,19 @@ import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
 import { normalizeTimestampToMicroseconds } from "../utils/timestamp.js";
+import {
+  ACCESS_TOKEN_PARAM,
+  AUTO_TIMESTAMP,
+  CHANNEL_PARAM,
+  DISPLAY_FIELDS,
+  FEED_IDS_PARAM,
+  HISTORY_START,
+  IDS_WIN,
+  PRICE_TOOL_CHOICE,
+  SYMBOL_INPUTS,
+  SYMBOLS_PARAM,
+  TOKEN_REQUIRED,
+} from "./descriptions.js";
 import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 /** The History API rejects windows longer than this. */
@@ -19,9 +32,7 @@ const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 500;
 
 const GetPriceRangeInput = {
-  access_token: accessTokenSchema(
-    "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
-  ),
+  access_token: accessTokenSchema(ACCESS_TOKEN_PARAM),
   after: z
     .string()
     .min(1)
@@ -29,17 +40,12 @@ const GetPriceRangeInput = {
     .describe(
       "Paging cursor: pass `next_cursor` from the previous response, with the same feeds, window and channel",
     ),
-  channel: z
-    .enum(CHANNELS)
-    .optional()
-    .describe(
-      `Override the default channel (update rate): ${CHANNELS.join(", ")}`,
-    ),
+  channel: z.enum(CHANNELS).optional().describe(CHANNEL_PARAM),
   end: z.coerce
     .number()
     .positive()
     .describe(
-      "Window end (inclusive). Unix seconds, milliseconds or microseconds (auto-detected). At most 60 seconds after `start`.",
+      `Window end, inclusive. ${AUTO_TIMESTAMP}. At most 60 seconds after \`start\`; equal to \`start\` for one instant.`,
     ),
   limit: z.coerce
     .number()
@@ -54,20 +60,16 @@ const GetPriceRangeInput = {
     .array(z.coerce.number().int().positive())
     .max(50)
     .optional()
-    .describe("Numeric feed IDs from get_symbols"),
+    .describe(`${FEED_IDS_PARAM}. Max 50.`),
   start: z.coerce
     .number()
     .positive()
-    .describe(
-      "Window start (inclusive). Unix seconds, milliseconds or microseconds (auto-detected).",
-    ),
+    .describe(`Window start, inclusive. ${AUTO_TIMESTAMP}.`),
   symbols: z
     .array(z.string())
     .max(50)
     .optional()
-    .describe(
-      "Symbols from get_symbols (e.g. ['Crypto.BTC/USD']) or bare pairs like 'BTC/USD'",
-    ),
+    .describe(`${SYMBOLS_PARAM}. Max 50.`),
 };
 
 export function registerGetPriceRange(
@@ -86,8 +88,16 @@ export function registerGetPriceRange(
         openWorldHint: true,
         readOnlyHint: true,
       },
-      description:
-        "Get every price update for one or more feeds within a short historical window (at most 60 seconds), e.g. to see exactly how a price moved around an event. Requires the user's own Pyth Pro access token as `access_token`. For a single point in time use get_historical_price; for longer periods use get_candlestick_data. Rows are ordered by time; a fixed_rate@200ms channel yields 5 rows per feed per second. When `has_more` is true, call again with `after` set to `next_cursor`. Prices are integers with an exponent; display_* fields apply it for you.",
+      description: [
+        "Get every price update for one or more feeds within a short historical window (at most 60 seconds), e.g. to see exactly how a price moved around an event.",
+        TOKEN_REQUIRED,
+        SYMBOL_INPUTS,
+        IDS_WIN,
+        "Rows are ordered by time and interleaved across feeds; a fixed_rate@200ms channel yields 5 rows per feed per second. When `has_more` is true, call again with `after` set to `next_cursor` and the same feeds, window and channel.",
+        HISTORY_START,
+        DISPLAY_FIELDS,
+        PRICE_TOOL_CHOICE,
+      ].join(" "),
       inputSchema: GetPriceRangeInput,
       title: "Get Price Range",
     },

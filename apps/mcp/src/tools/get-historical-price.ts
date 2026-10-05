@@ -17,36 +17,40 @@ import {
   normalizeTimestampToMicroseconds,
   unixSecondsToISO,
 } from "../utils/timestamp.js";
+import {
+  ACCESS_TOKEN_PARAM,
+  AUTO_TIMESTAMP,
+  CHANNEL_PARAM,
+  DISPLAY_FIELDS,
+  FEED_IDS_PARAM,
+  HISTORY_START,
+  IDS_WIN,
+  MISSING_FEEDS,
+  PRICE_TOOL_CHOICE,
+  SYMBOL_INPUTS,
+  SYMBOLS_PARAM,
+  TIMESTAMP_REFERENCE,
+  TOKEN_REQUIRED,
+} from "./descriptions.js";
 import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const GetHistoricalPriceInput = {
-  access_token: accessTokenSchema(
-    "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
-  ),
-  channel: z
-    .enum(CHANNELS)
-    .optional()
-    .describe(
-      `Override the default channel (update rate): ${CHANNELS.join(", ")}`,
-    ),
+  access_token: accessTokenSchema(ACCESS_TOKEN_PARAM),
+  channel: z.enum(CHANNELS).optional().describe(CHANNEL_PARAM),
   price_feed_ids: z
     .array(z.coerce.number().int().positive())
     .max(50)
     .optional()
-    .describe("Numeric feed IDs from get_symbols"),
+    .describe(`${FEED_IDS_PARAM}. Max 50.`),
   symbols: z
     .array(z.string())
     .max(50)
     .optional()
-    .describe(
-      "Symbols from get_symbols (e.g. ['Crypto.BTC/USD', 'Equity.US.AAPL/USD']) or bare pairs like 'BTC/USD'",
-    ),
+    .describe(`${SYMBOLS_PARAM}. Max 50.`),
   timestamp: z.coerce
     .number()
     .positive()
-    .describe(
-      "Unix timestamp — accepts seconds, milliseconds, or microseconds (auto-detected by magnitude)",
-    ),
+    .describe(`The instant to look up. ${AUTO_TIMESTAMP}.`),
 };
 
 export function registerGetHistoricalPrice(
@@ -66,7 +70,17 @@ export function registerGetHistoricalPrice(
         readOnlyHint: true,
       },
       description:
-        "Get price data for specific feeds at a historical timestamp. Requires the user's own Pyth Pro access token as `access_token`. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        [
+          "Get the price of one or more feeds at one past instant.",
+          TOKEN_REQUIRED,
+          SYMBOL_INPUTS,
+          IDS_WIN,
+          "The timestamp accepts Unix seconds, milliseconds or microseconds (auto-detected) and is rounded down to the channel rate (e.g. a multiple of 200 ms for fixed_rate@200ms).",
+          HISTORY_START,
+          MISSING_FEEDS,
+          DISPLAY_FIELDS,
+          PRICE_TOOL_CHOICE,
+        ].join(" ") + `\n\n${TIMESTAMP_REFERENCE}`,
       inputSchema: GetHistoricalPriceInput,
       title: "Get Historical Price",
     },

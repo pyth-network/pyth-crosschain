@@ -13,25 +13,27 @@ import {
   DATA_AVAILABLE_FROM_UNIX,
   unixSecondsToISO,
 } from "../utils/timestamp.js";
+import {
+  ACCESS_TOKEN_PARAM,
+  CHANNEL_PARAM,
+  HISTORY_START,
+  PRICE_TOOL_CHOICE,
+  SYMBOL_INPUTS,
+  TIMESTAMP_REFERENCE,
+  TOKEN_REQUIRED,
+} from "./descriptions.js";
 import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const MAX_CANDLES = 500;
 
 const GetCandlestickDataInput = {
-  access_token: accessTokenSchema(
-    "Your Pyth Pro access token. Get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token",
-  ),
-  channel: z
-    .enum(CHANNELS)
-    .optional()
-    .describe(
-      `Override the default channel (update rate): ${CHANNELS.join(", ")}`,
-    ),
+  access_token: accessTokenSchema(ACCESS_TOKEN_PARAM),
+  channel: z.enum(CHANNELS).optional().describe(CHANNEL_PARAM),
   from: z.coerce
     .number()
     .int()
     .positive()
-    .describe("Start time (Unix seconds)"),
+    .describe("Start time, Unix seconds only (not milliseconds)"),
   resolution: z
     .enum(RESOLUTIONS)
     .describe(
@@ -41,9 +43,13 @@ const GetCandlestickDataInput = {
     .string()
     .min(1)
     .describe(
-      "Symbol from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or a bare pair like 'BTC/USD'",
+      "One symbol from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or a bare pair like 'BTC/USD'",
     ),
-  to: z.coerce.number().int().positive().describe("End time (Unix seconds)"),
+  to: z.coerce
+    .number()
+    .int()
+    .positive()
+    .describe("End time, Unix seconds only (not milliseconds)"),
 };
 
 export function registerGetCandlestickData(
@@ -63,7 +69,14 @@ export function registerGetCandlestickData(
         readOnlyHint: true,
       },
       description:
-        "Fetch OHLC candlestick data for a symbol. Requires the user's own Pyth Pro access token as `access_token`. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the live spot feed when there is one, otherwise to the only remaining match (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        [
+          "Fetch OHLC candlestick bars for one symbol, for charting, technical analysis or backtesting. OHLC values are already human-readable (no exponent).",
+          TOKEN_REQUIRED,
+          SYMBOL_INPUTS,
+          "`from` and `to` are Unix seconds only. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). At most 500 candles are returned; `truncated: true` means narrow the range or use a larger resolution.",
+          HISTORY_START,
+          PRICE_TOOL_CHOICE,
+        ].join(" ") + `\n\n${TIMESTAMP_REFERENCE}`,
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },

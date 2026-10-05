@@ -1,4 +1,5 @@
 import { HttpError } from "../clients/retry.js";
+import { ACCESS_TOKEN_URL } from "../constants.js";
 
 export function toolError(message: string): {
   content: Array<{ type: "text"; text: string }>;
@@ -15,8 +16,7 @@ export const ErrorMessages = {
     `Feed not found: ${input}. Use get_symbols to discover available feeds.`,
   INVALID_TOKEN:
     "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed.",
-  MISSING_TOKEN:
-    "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter. Get a token at https://pyth.network/pricing",
+  MISSING_TOKEN: `This tool requires your Pyth Pro access token. Pass it as the \`access_token\` parameter. Get a token at ${ACCESS_TOKEN_URL}`,
   NOT_ENTITLED: (detail?: string) =>
     `Pyth Pro denied access (403)${detail ? `: ${detail}` : ""}. Your access token is valid, but your plan is not entitled to this feed. Pick a feed your plan covers, or contact Pyth to add the entitlement.`,
 } as const;
