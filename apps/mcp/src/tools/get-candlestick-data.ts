@@ -7,28 +7,13 @@ import { CHANNELS, RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
-import {
-  authErrorFor,
-  ErrorMessages,
-  rejectionErrorFor,
-  toolError,
-} from "../utils/errors.js";
-import {
-  computeTokenHash,
-  getApiKeyLast4,
-  logToolCall,
-} from "../utils/logger.js";
-import {
-  resolvedSymbolsField,
-  resolveSymbols,
-  tryGetCatalog,
-} from "../utils/resolve-symbols.js";
+import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
 import {
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
-  getServerTime,
   unixSecondsToISO,
 } from "../utils/timestamp.js";
+import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const MAX_CANDLES = 500;
 
@@ -82,221 +67,122 @@ export function registerGetCandlestickData(
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },
-    async (params, extra) => {
-      sessionContext.toolCallCount++;
-      const start = Date.now();
-      const token = params.access_token;
-
-      const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(token),
-        clientName: sessionContext.clientName,
-        clientVersion: sessionContext.clientVersion,
-        requestId: extra.requestId,
-        sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(token),
-        tool: "get_candlestick_data" as const,
-      };
-
-      if (!token) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "missing_token",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(ErrorMessages.MISSING_TOKEN);
-      }
-
-      if (params.from >= params.to) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "validation",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError("'from' must be before 'to'");
-      }
-
-      const channel = resolveChannel(params.channel, config);
-
-      try {
-        // Accept bare pairs like BTC/USD; the History API needs the full symbol.
-        // If the catalog is unavailable, use the symbol as given.
-        const catalog = await tryGetCatalog(historyClient, token, logger);
-        let symbol = params.symbol;
-        let resolvedSymbols: ReturnType<typeof resolvedSymbolsField> = {};
-        if (catalog) {
-          const resolution = resolveSymbols([params.symbol], catalog.data);
-          const feed = resolution.feeds[0];
-          if (resolution.errors.length > 0 || !feed) {
-            logToolCall(logger, {
-              ...baseMetrics,
-              errorType: "not_found",
-              latencyMs: Date.now() - start,
-              status: "error",
-            });
-            return toolError(resolution.errors.join("\n"));
+    (params, extra) =>
+      runPriceTool(
+        {
+          failureMessage: "Failed to fetch candlestick data. Please try again.",
+          logger,
+          // e.g. 404 "symbol not found." when the channel is faster than the
+          // feed's min_channel; retrying does not help.
+          rejectionHint:
+            "Check the symbol, its state and min_channel with get_symbols, and the resolution and time range.",
+          sessionContext,
+          tool: "get_candlestick_data",
+        },
+        params.access_token,
+        extra,
+        async (ctx) => {
+          if (params.from >= params.to) {
+            return ctx.fail("validation", "'from' must be before 'to'");
           }
-          symbol = feed.symbol;
-          resolvedSymbols = resolvedSymbolsField(resolution.resolved);
-        }
 
-        const { data, upstreamLatencyMs: historyUpstreamMs } =
-          await historyClient.getCandlestickData(
-            channel,
+          // Accept bare pairs like BTC/USD; the History API needs the full
+          // symbol. If the catalog is unavailable, use the symbol as given.
+          const inputs = await resolveFeedInputs({
+            catalog: "optional",
+            historyClient,
+            logger,
+            symbols: [params.symbol],
+            token: ctx.token,
+          });
+          if (!inputs.ok) return ctx.fail(inputs.errorType, inputs.message);
+          const symbol = inputs.feeds[0]?.symbol ?? params.symbol;
+          const resolvedSymbols = resolvedSymbolsField(inputs.resolvedSymbols);
+          ctx.setFeedsRequested(1);
+
+          const history = await historyClient.getCandlestickData(
+            resolveChannel(params.channel, config),
             symbol,
             params.resolution,
             params.from,
             params.to,
-            token,
+            ctx.token,
           );
-        const upstreamLatencyMs =
-          (catalog?.upstreamLatencyMs ?? 0) + historyUpstreamMs;
+          const data = history.data;
+          const upstreamLatencyMs =
+            inputs.upstreamLatencyMs + history.upstreamLatencyMs;
 
-        if (data.s === "no_data") {
-          const fromISO = unixSecondsToISO(params.from);
-          const toISO = unixSecondsToISO(params.to);
-          const nowSeconds = Math.floor(Date.now() / 1000);
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: "no_data",
-            latencyMs: Date.now() - start,
-            status: "error",
-            upstreamLatencyMs,
-          });
-          return toolError(
-            `No candlestick data for ${symbol} from ${fromISO} to ${toISO}. ` +
-              `Data available from ${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}. ` +
-              (params.from < DATA_AVAILABLE_FROM_UNIX
-                ? `Your 'from' (${fromISO}) is before data availability. Try from=${DATA_AVAILABLE_FROM_UNIX} (${DATA_AVAILABLE_FROM_ISO}).`
-                : `Try a different time range or symbol.`),
-          );
-        }
+          if (data.s === "no_data") {
+            const fromISO = unixSecondsToISO(params.from);
+            const toISO = unixSecondsToISO(params.to);
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            return ctx.fail(
+              "no_data",
+              `No candlestick data for ${symbol} from ${fromISO} to ${toISO}. ` +
+                `Data available from ${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}. ` +
+                (params.from < DATA_AVAILABLE_FROM_UNIX
+                  ? `Your 'from' (${fromISO}) is before data availability. Try from=${DATA_AVAILABLE_FROM_UNIX} (${DATA_AVAILABLE_FROM_ISO}).`
+                  : `Try a different time range or symbol.`),
+              upstreamLatencyMs,
+            );
+          }
 
-        if (data.s === "error") {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: "upstream",
-            latencyMs: Date.now() - start,
-            status: "error",
-            upstreamLatencyMs,
-          });
-          return toolError(
-            data.errmsg ?? "Unknown error from Pyth History API",
-          );
-        }
+          if (data.s === "error") {
+            return ctx.fail(
+              "upstream",
+              data.errmsg ?? "Unknown error from Pyth History API",
+              upstreamLatencyMs,
+            );
+          }
 
-        const totalCandles = data.t.length;
+          const totalCandles = data.t.length;
+          if (totalCandles === 0) {
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            return ctx.succeed(
+              {
+                candles: 0,
+                hint: `No candlestick data for this symbol/time range. Data available from ${DATA_AVAILABLE_FROM_ISO} onward.`,
+                requested_from_iso: unixSecondsToISO(params.from),
+                requested_to_iso: unixSecondsToISO(params.to),
+                ...resolvedSymbols,
+                s: "ok",
+                valid_range: {
+                  from_iso: DATA_AVAILABLE_FROM_ISO,
+                  from_unix: DATA_AVAILABLE_FROM_UNIX,
+                  to_iso: unixSecondsToISO(nowSeconds),
+                  to_unix: nowSeconds,
+                },
+              },
+              { numFeedsReturned: 0, upstreamLatencyMs },
+            );
+          }
 
-        if (totalCandles === 0) {
-          const nowSeconds = Math.floor(Date.now() / 1000);
-          const responseText = JSON.stringify({
-            candles: 0,
-            hint: `No candlestick data for this symbol/time range. Data available from ${DATA_AVAILABLE_FROM_ISO} onward.`,
-            requested_from_iso: unixSecondsToISO(params.from),
-            requested_to_iso: unixSecondsToISO(params.to),
-            ...resolvedSymbols,
-            s: "ok",
-            valid_range: {
-              from_iso: DATA_AVAILABLE_FROM_ISO,
-              from_unix: DATA_AVAILABLE_FROM_UNIX,
-              to_iso: unixSecondsToISO(nowSeconds),
-              to_unix: nowSeconds,
-            },
-            ...getServerTime(),
-          });
-          logToolCall(logger, {
-            ...baseMetrics,
-            latencyMs: Date.now() - start,
-            numFeedsReturned: 0,
-            responseSizeBytes: Buffer.byteLength(responseText),
-            status: "success",
-            upstreamLatencyMs,
-          });
-          return {
-            content: [{ text: responseText, type: "text" as const }],
-          };
-        }
-
-        const truncated = totalCandles > MAX_CANDLES;
-
-        // Note: The upstream History API (TradingView-format) returns OHLC values
-        // in human-readable (display) format, not raw integers with exponents.
-        // No addDisplayPrices() transformation is needed here, unlike get_latest_price
-        // and get_historical_price which return raw integer prices.
-        const result = truncated
-          ? {
+          // The History API (TradingView format) returns OHLC values already
+          // in display units, so no addDisplayPrices() here.
+          if (totalCandles <= MAX_CANDLES) {
+            return ctx.succeed(
+              { ...data, ...resolvedSymbols },
+              { numFeedsReturned: totalCandles, upstreamLatencyMs },
+            );
+          }
+          return ctx.succeed(
+            {
               c: data.c.slice(0, MAX_CANDLES),
               h: data.h.slice(0, MAX_CANDLES),
+              hint: "Narrow your time range or use a larger resolution to get all candles.",
               l: data.l.slice(0, MAX_CANDLES),
               o: data.o.slice(0, MAX_CANDLES),
+              returned: MAX_CANDLES,
               s: data.s,
               t: data.t.slice(0, MAX_CANDLES),
-              v: data.v.slice(0, MAX_CANDLES),
-            }
-          : data;
-
-        const response = truncated
-          ? {
-              ...result,
-              hint: "Narrow your time range or use a larger resolution to get all candles.",
-              returned: MAX_CANDLES,
               total_available: totalCandles,
               truncated: true,
+              v: data.v.slice(0, MAX_CANDLES),
               ...resolvedSymbols,
-              ...getServerTime(),
-            }
-          : { ...result, ...resolvedSymbols, ...getServerTime() };
-
-        const responseText = JSON.stringify(response);
-        logToolCall(logger, {
-          ...baseMetrics,
-          latencyMs: Date.now() - start,
-          numFeedsReturned: truncated ? MAX_CANDLES : totalCandles,
-          responseSizeBytes: Buffer.byteLength(responseText),
-          status: "success",
-          upstreamLatencyMs,
-        });
-        return {
-          content: [{ text: responseText, type: "text" as const }],
-        };
-      } catch (err) {
-        const authError = authErrorFor(err);
-        if (authError) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: authError.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(authError.message);
-        }
-
-        // e.g. 404 "symbol not found." when the channel is faster than the
-        // feed's min_channel; retrying does not help.
-        const rejection = rejectionErrorFor(
-          err,
-          "Check the symbol, its state and min_channel with get_symbols, and the resolution and time range.",
-        );
-        if (rejection) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: rejection.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(rejection.message);
-        }
-
-        logger.warn({ err }, "get_candlestick_data upstream error");
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "upstream",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError("Failed to fetch candlestick data. Please try again.");
-      }
-    },
+            },
+            { numFeedsReturned: MAX_CANDLES, upstreamLatencyMs },
+          );
+        },
+      ),
   );
 }

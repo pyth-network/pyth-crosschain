@@ -8,30 +8,16 @@ import type { SessionContext } from "../server.js";
 import { accessTokenSchema } from "../utils/access-token.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
-import {
-  authErrorFor,
-  ErrorMessages,
-  rejectionErrorFor,
-  toolError,
-} from "../utils/errors.js";
-import {
-  computeTokenHash,
-  getApiKeyLast4,
-  logToolCall,
-} from "../utils/logger.js";
 import { missingFeedsField } from "../utils/missing-feeds.js";
-import {
-  resolvedSymbolsField,
-  resolveSymbols,
-} from "../utils/resolve-symbols.js";
+import { resolvedSymbolsField } from "../utils/resolve-symbols.js";
 import {
   alignTimestampToChannel,
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
-  getServerTime,
   normalizeTimestampToMicroseconds,
   unixSecondsToISO,
 } from "../utils/timestamp.js";
+import { resolveFeedInputs, runPriceTool } from "./price-tool.js";
 
 const GetHistoricalPriceInput = {
   access_token: accessTokenSchema(
@@ -84,208 +70,70 @@ export function registerGetHistoricalPrice(
       inputSchema: GetHistoricalPriceInput,
       title: "Get Historical Price",
     },
-    async (params, extra) => {
-      sessionContext.toolCallCount++;
-      const start = Date.now();
-      const token = params.access_token;
-
-      // When both are provided, prefer price_feed_ids and ignore symbols.
-      const effectiveSymbols =
-        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
-
-      const baseMetrics = {
-        apiKeyLast4: getApiKeyLast4(token),
-        clientName: sessionContext.clientName,
-        clientVersion: sessionContext.clientVersion,
-        numFeedsRequested: 0,
-        requestId: extra.requestId,
-        sessionId: extra.sessionId ?? sessionContext.sessionId,
-        tokenHash: computeTokenHash(token),
-        tool: "get_historical_price" as const,
-      };
-
-      if (!token) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "missing_token",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(ErrorMessages.MISSING_TOKEN);
-      }
-
-      if (
-        !(params.price_feed_ids?.length ?? 0) &&
-        !(effectiveSymbols?.length ?? 0)
-      ) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "validation",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(
-          "At least one of 'price_feed_ids' or 'symbols' is required",
-        );
-      }
-
-      const channel = resolveChannel(params.channel, config);
-
-      let ids: number[] = [];
-      let priceEndpointCalled = false;
-      let resolvedSymbols: Record<string, string> = {};
-
-      try {
-        // Resolve symbols to IDs
-        ids = params.price_feed_ids ? [...params.price_feed_ids] : [];
-        let symbolLookupUpstreamMs = 0;
-        if ((effectiveSymbols?.length ?? 0) > 0) {
+    (params, extra) => {
+      // Named in Pyth's rejection message; set to the resolved IDs below.
+      let requestedIds = params.price_feed_ids ?? [];
+      return runPriceTool(
+        {
+          failureMessage: "Failed to fetch historical price. Please try again.",
+          logger,
+          rejectionHint: () =>
+            `Requested feeds (IDs: ${formatIds(requestedIds)}) at ${requestedTimeLabel(params.timestamp)}. Check the feed IDs, their state and min_channel with get_symbols.`,
+          sessionContext,
+          tool: "get_historical_price",
+        },
+        params.access_token,
+        extra,
+        async (ctx) => {
           // Look up with the caller's token: some feeds only appear in the
-          // catalog for authenticated callers.
-          const { data: allFeeds, upstreamLatencyMs } =
-            await historyClient.getSymbols(token);
-          symbolLookupUpstreamMs = upstreamLatencyMs;
-          const resolution = resolveSymbols(effectiveSymbols ?? [], allFeeds);
-          if (resolution.errors.length > 0) {
-            logToolCall(logger, {
-              ...baseMetrics,
-              errorType: "not_found",
-              latencyMs: Date.now() - start,
-              status: "error",
-            });
-            return toolError(resolution.errors.join("\n"));
-          }
-          resolvedSymbols = resolution.resolved;
-          ids.push(...resolution.feeds.map((f) => f.pyth_lazer_id));
-        }
+          // catalog for authenticated callers. The price endpoint needs IDs,
+          // so the catalog is required for symbol input.
+          const inputs = await resolveFeedInputs({
+            catalog: "required",
+            historyClient,
+            logger,
+            priceFeedIds: params.price_feed_ids,
+            symbols: params.symbols,
+            token: ctx.token,
+          });
+          if (!inputs.ok) return ctx.fail(inputs.errorType, inputs.message);
+          const { ids, resolvedSymbols } = inputs;
+          requestedIds = ids;
+          ctx.setFeedsRequested(ids.length);
 
-        // Deduplicate
-        ids = [...new Set(ids)];
-        baseMetrics.numFeedsRequested = ids.length;
-
-        // Check for future timestamps before channel alignment
-        const normalizedUs = normalizeTimestampToMicroseconds(params.timestamp);
-        const nowUs = Date.now() * 1000;
-
-        const timestampUs = alignTimestampToChannel(normalizedUs, channel);
-
-        priceEndpointCalled = true;
-        const { data: prices, upstreamLatencyMs: priceUpstreamMs } =
-          await historyClient.getHistoricalPrice(
+          const channel = resolveChannel(params.channel, config);
+          const normalizedUs = normalizeTimestampToMicroseconds(
+            params.timestamp,
+          );
+          const history = await historyClient.getHistoricalPrice(
             channel,
             ids,
-            timestampUs,
-            token,
+            alignTimestampToChannel(normalizedUs, channel),
+            ctx.token,
           );
 
-        const totalUpstreamMs = symbolLookupUpstreamMs + priceUpstreamMs;
-        const enriched = prices.map((p) => addDisplayPrices(p));
-
-        if (enriched.length === 0) {
-          const requestedSeconds = Math.floor(normalizedUs / 1_000_000);
-          const requestedISO = unixSecondsToISO(requestedSeconds);
-          const nowSeconds = Math.floor(Date.now() / 1000);
-
-          const direction =
-            normalizedUs > nowUs
-              ? ("too_late" as const)
-              : requestedSeconds < DATA_AVAILABLE_FROM_UNIX
-                ? ("too_early" as const)
-                : ("in_range_no_data" as const);
-
-          const hintByDirection = {
-            in_range_no_data: `No price data found at ${requestedISO} for these feeds. The timestamp is within the valid range but these specific feeds may not have data at this time. Try a slightly different timestamp or verify the feed IDs.`,
-            too_early: `Requested date ${requestedISO} is before the valid range (${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}). Try a timestamp after ${DATA_AVAILABLE_FROM_ISO}.`,
-            too_late: `Requested date ${requestedISO} is in the future. Latest available: ${unixSecondsToISO(nowSeconds)}.`,
-          };
-
-          const responseText = JSON.stringify({
-            direction,
-            hint: hintByDirection[direction],
-            prices: [],
-            ...resolvedSymbolsField(resolvedSymbols),
-            requested_timestamp_iso: requestedISO,
-            requested_timestamp_unix: requestedSeconds,
-            valid_range: {
-              from_iso: DATA_AVAILABLE_FROM_ISO,
-              from_unix: DATA_AVAILABLE_FROM_UNIX,
-              to_iso: unixSecondsToISO(nowSeconds),
-              to_unix: nowSeconds,
+          const upstreamLatencyMs =
+            inputs.upstreamLatencyMs + history.upstreamLatencyMs;
+          const prices = history.data.map((p) => addDisplayPrices(p));
+          if (prices.length === 0) {
+            return ctx.succeed(
+              {
+                ...noDataPayload(normalizedUs),
+                ...resolvedSymbolsField(resolvedSymbols),
+              },
+              { numFeedsReturned: 0, upstreamLatencyMs },
+            );
+          }
+          return ctx.succeed(
+            {
+              prices,
+              ...missingFeedsField(ids, history.data),
+              ...resolvedSymbolsField(resolvedSymbols),
             },
-            ...getServerTime(),
-          });
-          logToolCall(logger, {
-            ...baseMetrics,
-            latencyMs: Date.now() - start,
-            numFeedsReturned: 0,
-            responseSizeBytes: Buffer.byteLength(responseText),
-            status: "success",
-            upstreamLatencyMs: totalUpstreamMs,
-          });
-          return {
-            content: [{ text: responseText, type: "text" as const }],
-          };
-        }
-
-        const responseText = JSON.stringify({
-          prices: enriched,
-          ...missingFeedsField(ids, prices),
-          ...resolvedSymbolsField(resolvedSymbols),
-          ...getServerTime(),
-        });
-        logToolCall(logger, {
-          ...baseMetrics,
-          latencyMs: Date.now() - start,
-          numFeedsReturned: enriched.length,
-          responseSizeBytes: Buffer.byteLength(responseText),
-          status: "success",
-          upstreamLatencyMs: totalUpstreamMs,
-        });
-
-        return {
-          content: [{ text: responseText, type: "text" as const }],
-        };
-      } catch (err) {
-        // Both the symbol lookup and the /price call send the token, so an
-        // auth failure from either one is reported as such.
-        const authError = authErrorFor(err);
-        if (authError) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: authError.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(authError.message);
-        }
-
-        // A 400/404 carries Pyth's reason, e.g. "Price feed id 112 is not
-        // available for channel real_time"; one bad feed fails the request.
-        const rejection = priceEndpointCalled
-          ? rejectionErrorFor(
-              err,
-              `Requested feeds (IDs: ${formatIds(ids)}) at ${requestedTimeLabel(params.timestamp)}. Check the feed IDs, their state and min_channel with get_symbols.`,
-            )
-          : undefined;
-        if (rejection) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: rejection.errorType,
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(rejection.message);
-        }
-
-        logger.warn({ err }, "get_historical_price upstream error");
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "upstream",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError("Failed to fetch historical price. Please try again.");
-      }
+            { numFeedsReturned: prices.length, upstreamLatencyMs },
+          );
+        },
+      );
     },
   );
 }
@@ -300,4 +148,36 @@ function requestedTimeLabel(timestamp: number): string {
     normalizeTimestampToMicroseconds(timestamp) / 1_000_000,
   );
   return `${unixSecondsToISO(seconds)} (unix: ${seconds})`;
+}
+
+/** Empty result: say whether the time is too early, in the future, or just has no data. */
+function noDataPayload(normalizedUs: number): Record<string, unknown> {
+  const requestedSeconds = Math.floor(normalizedUs / 1_000_000);
+  const requestedISO = unixSecondsToISO(requestedSeconds);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  let direction: "too_late" | "too_early" | "in_range_no_data";
+  if (normalizedUs > Date.now() * 1000) direction = "too_late";
+  else if (requestedSeconds < DATA_AVAILABLE_FROM_UNIX) direction = "too_early";
+  else direction = "in_range_no_data";
+
+  const hintByDirection = {
+    in_range_no_data: `No price data found at ${requestedISO} for these feeds. The timestamp is within the valid range but these specific feeds may not have data at this time. Try a slightly different timestamp or verify the feed IDs.`,
+    too_early: `Requested date ${requestedISO} is before the valid range (${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}). Try a timestamp after ${DATA_AVAILABLE_FROM_ISO}.`,
+    too_late: `Requested date ${requestedISO} is in the future. Latest available: ${unixSecondsToISO(nowSeconds)}.`,
+  };
+
+  return {
+    direction,
+    hint: hintByDirection[direction],
+    prices: [],
+    requested_timestamp_iso: requestedISO,
+    requested_timestamp_unix: requestedSeconds,
+    valid_range: {
+      from_iso: DATA_AVAILABLE_FROM_ISO,
+      from_unix: DATA_AVAILABLE_FROM_UNIX,
+      to_iso: unixSecondsToISO(nowSeconds),
+      to_unix: nowSeconds,
+    },
+  };
 }
