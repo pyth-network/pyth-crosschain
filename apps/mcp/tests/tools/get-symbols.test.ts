@@ -9,6 +9,7 @@ import { clearSymbolsCache } from "../../src/clients/symbols-store.js";
 import { loadConfig } from "../../src/config.js";
 import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
+import { clientTokenFromHeader } from "../../src/utils/access-token.js";
 import { createTestClient } from "../helpers.js";
 
 const HISTORY_URL = "https://pyth.dourolabs.app";
@@ -397,6 +398,33 @@ describe("get_symbols entitlement", () => {
         { auth: "Bearer pro-token", entitledOnly: true },
       ]),
     );
+  });
+
+  it("uses the key from the user's client configuration", async () => {
+    const config = loadConfig();
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    registerAllTools(
+      mcpServer,
+      config,
+      new HistoryClient(config, logger),
+      new RouterClient(config, logger),
+      logger,
+      {
+        ...createSessionContext(),
+        clientAccessToken: clientTokenFromHeader("Bearer pro-token"),
+      },
+    );
+    const client = await createTestClient(mcpServer);
+    const result = await client.callTool({
+      arguments: {},
+      name: "get_symbols",
+    });
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.note).toBeUndefined();
+    expect(data.total_available).toBe(5);
+    expect(requests.every((r) => r.auth === "Bearer pro-token")).toBe(true);
   });
 
   it("maps a 401 to the invalid-token message", async () => {

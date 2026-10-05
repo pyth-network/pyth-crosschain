@@ -1,5 +1,5 @@
 // biome-ignore-all lint/style/noProcessEnv: test file that manipulates environment variables
-import { loadConfig } from "../src/config.js";
+import { loadConfig, loadStdioAccessToken } from "../src/config.js";
 
 describe("loadConfig", () => {
   const originalEnv = { ...process.env };
@@ -46,9 +46,14 @@ describe("loadConfig", () => {
     expect(() => loadConfig()).toThrow();
   });
 
-  it("never reads a Pyth Pro key from the environment", () => {
+  it("never puts a Pyth Pro key in the shared config", () => {
     process.env.PYTH_PRO_ACCESS_TOKEN = "server-side-key";
     expect(JSON.stringify(loadConfig())).not.toContain("server-side-key");
+  });
+
+  it("reads the user's key only through the stdio-only loader", () => {
+    process.env.PYTH_PRO_ACCESS_TOKEN = "user-key";
+    expect(loadStdioAccessToken()).toBe("user-key");
   });
 
   it("accepts fixed_rate@1000ms", () => {

@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { loadConfig } from "./config.js";
 import { recordHttpRequest, registry } from "./metrics.js";
 import { createServer } from "./server.js";
+import { clientTokenFromHeader } from "./utils/access-token.js";
 import { createLogger } from "./utils/logger.js";
 
 const config = loadConfig();
@@ -57,7 +58,12 @@ const httpServer = createHttpServer(async (req, res) => {
         return;
       }
 
-      const { server } = createServer(config, logger);
+      // The user's own key, if their client sends one: never a server key.
+      const { server } = createServer(
+        config,
+        logger,
+        clientTokenFromHeader(req.headers.authorization),
+      );
       const transport = new StreamableHTTPServerTransport({
         enableJsonResponse: true,
         sessionIdGenerator: undefined,
