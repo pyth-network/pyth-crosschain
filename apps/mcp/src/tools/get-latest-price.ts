@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
+import { HttpError } from "../clients/retry.js";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
 import { CHANNELS, PRICE_FEED_PROPERTIES } from "../constants.js";
@@ -18,6 +19,7 @@ import {
 import {
   resolvedSymbolsField,
   resolveSymbols,
+  tryGetCatalog,
 } from "../utils/resolve-symbols.js";
 import { getServerTime } from "../utils/timestamp.js";
 
@@ -74,7 +76,7 @@ export function registerGetLatestPrice(
         readOnlyHint: true,
       },
       description:
-        "Get the most recent real-time price for one or more feeds. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find symbols or feed IDs. Symbols can be full names from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or bare pairs like 'BTC/USD'; a bare pair resolves to the single live spot feed, and `resolved_symbols` in the response shows what each input resolved to. Ambiguous inputs return an error listing the candidates. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.",
+        "Get the most recent real-time price for one or more feeds. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use get_symbols first to find symbols or feed IDs. Symbols can be full names from get_symbols (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL/USD') or bare pairs like 'BTC/USD'. A bare pair resolves to the live spot feed when there is one, otherwise to the only remaining match (inactive feeds excluded, live preferred over coming_soon), and `resolved_symbols` in the response shows what each input resolved to. Ambiguous inputs return an error listing the candidates. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_* fields (display_price, display_bid, display_ask, display_confidence, display_ema_price, display_ema_confidence, display_funding_rate) apply the exponent for you.",
       inputSchema: GetLatestPriceInput,
       title: "Get Latest Price",
     },
@@ -137,14 +139,25 @@ export function registerGetLatestPrice(
 
       const channel = resolveChannel(params.channel, config);
 
+      // Set when the catalog is unavailable and symbols go to the Router as is.
+      let unresolvedSymbols: string[] | undefined;
+
       try {
         // Resolve symbols (including bare pairs like BTC/USD) to feed IDs
         // against the caller's catalog; the Router only accepts full symbols.
+        // If the catalog is unavailable, send the symbols to the Router as
+        // given so full symbols keep working.
         let ids = params.price_feed_ids ?? [];
         let resolvedSymbols: Record<string, string> = {};
         let symbolLookupUpstreamMs = 0;
-        if ((effectiveSymbols?.length ?? 0) > 0) {
-          const catalog = await historyClient.getSymbols(token);
+        const catalog =
+          (effectiveSymbols?.length ?? 0) > 0
+            ? await tryGetCatalog(historyClient, token, logger)
+            : undefined;
+        if ((effectiveSymbols?.length ?? 0) > 0 && !catalog) {
+          unresolvedSymbols = effectiveSymbols;
+        }
+        if (catalog) {
           symbolLookupUpstreamMs = catalog.upstreamLatencyMs;
           const resolution = resolveSymbols(
             effectiveSymbols ?? [],
@@ -166,7 +179,7 @@ export function registerGetLatestPrice(
         const { data: feeds, upstreamLatencyMs: priceUpstreamMs } =
           await routerClient.getLatestPrice(
             token,
-            undefined,
+            unresolvedSymbols,
             ids,
             params.properties,
             channel,
@@ -202,6 +215,16 @@ export function registerGetLatestPrice(
         });
 
         if (authError) return toolError(authError.message);
+
+        if (
+          unresolvedSymbols &&
+          err instanceof HttpError &&
+          err.status === 400
+        ) {
+          return toolError(
+            `The feed catalog is unavailable, so symbols could not be resolved, and Pyth Pro rejected ${unresolvedSymbols.join(", ")}. Pass full symbols from get_symbols (e.g. Crypto.BTC/USD) or price_feed_ids.`,
+          );
+        }
 
         logger.warn({ err }, "get_latest_price upstream error");
         return toolError("Failed to fetch latest price. Please try again.");

@@ -16,6 +16,7 @@ import {
 import {
   resolvedSymbolsField,
   resolveSymbols,
+  tryGetCatalog,
 } from "../utils/resolve-symbols.js";
 import {
   DATA_AVAILABLE_FROM_ISO,
@@ -77,7 +78,7 @@ export function registerGetCandlestickData(
         readOnlyHint: true,
       },
       description:
-        "Fetch OHLC candlestick data for a symbol. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the single live spot feed (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
+        "Fetch OHLC candlestick data for a symbol. Requires a Pyth Pro access token: pass `access_token`, unless the server was started with PYTH_PRO_ACCESS_TOKEN. Use for charting, technical analysis, backtesting. The symbol can be a full name from get_symbols (e.g. 'Crypto.BTC/USD', 'FX.EUR/USD') or a bare pair like 'BTC/USD', which resolves to the live spot feed when there is one, otherwise to the only remaining match (`resolved_symbols` in the response shows the result; ambiguous inputs return the candidates). Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetCandlestickDataInput,
       title: "Get Candlestick Data",
     },
@@ -120,20 +121,25 @@ export function registerGetCandlestickData(
 
       try {
         // Accept bare pairs like BTC/USD; the History API needs the full symbol.
-        const catalog = await historyClient.getSymbols(token);
-        const resolution = resolveSymbols([params.symbol], catalog.data);
-        const feed = resolution.feeds[0];
-        if (resolution.errors.length > 0 || !feed) {
-          logToolCall(logger, {
-            ...baseMetrics,
-            errorType: "not_found",
-            latencyMs: Date.now() - start,
-            status: "error",
-          });
-          return toolError(resolution.errors.join("\n"));
+        // If the catalog is unavailable, use the symbol as given.
+        const catalog = await tryGetCatalog(historyClient, token, logger);
+        let symbol = params.symbol;
+        let resolvedSymbols: ReturnType<typeof resolvedSymbolsField> = {};
+        if (catalog) {
+          const resolution = resolveSymbols([params.symbol], catalog.data);
+          const feed = resolution.feeds[0];
+          if (resolution.errors.length > 0 || !feed) {
+            logToolCall(logger, {
+              ...baseMetrics,
+              errorType: "not_found",
+              latencyMs: Date.now() - start,
+              status: "error",
+            });
+            return toolError(resolution.errors.join("\n"));
+          }
+          symbol = feed.symbol;
+          resolvedSymbols = resolvedSymbolsField(resolution.resolved);
         }
-        const symbol = feed.symbol;
-        const resolvedSymbols = resolvedSymbolsField(resolution.resolved);
 
         const { data, upstreamLatencyMs: historyUpstreamMs } =
           await historyClient.getCandlestickData(
@@ -144,7 +150,8 @@ export function registerGetCandlestickData(
             params.to,
             token,
           );
-        const upstreamLatencyMs = catalog.upstreamLatencyMs + historyUpstreamMs;
+        const upstreamLatencyMs =
+          (catalog?.upstreamLatencyMs ?? 0) + historyUpstreamMs;
 
         if (data.s === "no_data") {
           const fromISO = unixSecondsToISO(params.from);

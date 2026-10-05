@@ -4,6 +4,9 @@ const MAX_RETRY_DELAY_MS = 30_000;
 const NETWORK_ERROR_PATTERN = /fetch|network|ECONNREFUSED|ENOTFOUND/i;
 
 const MAX_DETAIL_CHARS = 500;
+// Read at most this much of an error body; enough for MAX_DETAIL_CHARS of
+// multi-byte text without buffering an arbitrarily large response.
+const MAX_DETAIL_BYTES = 2048;
 
 export class HttpError extends Error {
   constructor(
@@ -23,9 +26,33 @@ export async function httpErrorFromResponse(
   res: Response,
   message: string,
 ): Promise<HttpError> {
-  const body = await res.text().catch(() => "");
+  const body = await readCappedText(res, MAX_DETAIL_BYTES).catch(() => "");
   const detail = body.trim().slice(0, MAX_DETAIL_CHARS) || undefined;
   return new HttpError(res.status, message, parseRetryAfter(res), detail);
+}
+
+/** Read up to `maxBytes` of a response body, then cancel the rest. */
+async function readCappedText(
+  res: Response,
+  maxBytes: number,
+): Promise<string> {
+  if (!res.body) return "";
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (total < maxBytes) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.byteLength;
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+  const bytes = Buffer.concat(chunks).subarray(0, maxBytes);
+  // stream: true drops a multi-byte character cut at the boundary.
+  return new TextDecoder().decode(bytes, { stream: true });
 }
 
 function isRetryable(err: unknown): boolean {

@@ -62,4 +62,22 @@ describe("httpErrorFromResponse", () => {
     );
     expect(err.detail).toBeUndefined();
   });
+
+  it("stops reading a large body after the first few KB", async () => {
+    const chunk = new TextEncoder().encode("x".repeat(1024));
+    let pulled = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += chunk.byteLength;
+        if (pulled > 10 * 1024 * 1024) controller.close();
+        else controller.enqueue(chunk);
+      },
+    });
+    const err = await httpErrorFromResponse(
+      new Response(body, { status: 502 }),
+      "boom",
+    );
+    expect(err.detail).toHaveLength(500);
+    expect(pulled).toBeLessThan(64 * 1024);
+  });
 });

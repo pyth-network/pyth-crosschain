@@ -59,7 +59,7 @@ https://mcp.pyth.network/mcp
 | `get_candlestick_data` | OHLC candlestick bars for charting and analysis | Yes (access token) |
 | `convert_date_to_timestamp` | Convert date strings to Unix timestamps | No |
 
-> **Tip:** Use `get_symbols` first to discover available feeds. Price tools accept full symbols (`Crypto.BTC/USD`) or bare pairs (`BTC/USD`), which resolve to the single live spot feed.
+> **Tip:** Use `get_symbols` first to discover available feeds. Price tools accept full symbols (`Crypto.BTC/USD`) or bare pairs (`BTC/USD`). A bare pair resolves to the live spot feed when there is one, otherwise to the only remaining match (e.g. `BTC/USDT` → the Binance funding-rate feed); if several remain, the error lists them.
 
 ## Access Token
 
