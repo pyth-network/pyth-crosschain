@@ -6,6 +6,7 @@ import {
   logSessionEnd,
   logSessionStart,
   logToolCall,
+  serializeErrorRedacted,
 } from "../../src/utils/logger.js";
 
 describe("computeTokenHash", () => {
@@ -246,5 +247,38 @@ describe("logSessionEnd", () => {
     });
 
     expect(logs[0].session_id).toBe("unknown");
+  });
+});
+
+describe("serializeErrorRedacted", () => {
+  it("removes a token that fetch quotes in an invalid-header error", () => {
+    let err: unknown;
+    try {
+      new Headers().append("Authorization", "Bearer secretpart1\nsecretpart2");
+    } catch (e) {
+      err = e;
+    }
+    expect(String(err)).toContain("secretpart1");
+
+    const out = serializeErrorRedacted(err) as {
+      message: string;
+      stack: string;
+    };
+    expect(out.message).toContain("Bearer [REDACTED]");
+    expect(JSON.stringify(out)).not.toContain("secretpart");
+  });
+
+  it("removes an unquoted bearer token", () => {
+    const out = serializeErrorRedacted(
+      new Error("request failed with Bearer abc123 header"),
+    ) as { message: string };
+    expect(out.message).toBe("request failed with Bearer [REDACTED] header");
+  });
+
+  it("leaves other errors unchanged", () => {
+    const out = serializeErrorRedacted(new Error("socket hang up")) as {
+      message: string;
+    };
+    expect(out.message).toBe("socket hang up");
   });
 });

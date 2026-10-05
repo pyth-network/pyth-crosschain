@@ -4,9 +4,30 @@ import { pino } from "pino";
 import type { Config } from "../config.js";
 import { recordToolCallMetrics } from "../metrics.js";
 
+// fetch quotes a rejected header value in full, e.g.
+// `Headers.append: "Bearer <token>\n" is an invalid header value.`
+// The quoted form goes first, since the token may contain a line break.
+function redactBearer(text: string): string {
+  return text
+    .replace(/"Bearer [^"]*"/g, '"Bearer [REDACTED]"')
+    .replace(/Bearer\s+(?!\[REDACTED\])\S+/g, "Bearer [REDACTED]");
+}
+
+/** pino's error serializer, with any bearer token removed. */
+export function serializeErrorRedacted(err: unknown) {
+  const serialized = pino.stdSerializers.err(err as Error);
+  if (!serialized || typeof serialized !== "object") return serialized;
+  const out: Record<string, unknown> = { ...serialized };
+  for (const key of ["message", "stack"] as const) {
+    if (typeof out[key] === "string") out[key] = redactBearer(out[key]);
+  }
+  return out;
+}
+
 export function createLogger(config: Config): Logger {
   return pino({
     level: config.logLevel,
+    serializers: { err: serializeErrorRedacted },
     transport: {
       options: { destination: 2 }, // stderr
       target: "pino/file",

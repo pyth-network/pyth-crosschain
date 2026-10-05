@@ -6,6 +6,7 @@ import type { Feed } from "../clients/types.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES, INSTRUMENT_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
+import { accessTokenSchema } from "../utils/access-token.js";
 import { authErrorFor, toolError } from "../utils/errors.js";
 import { isActive } from "../utils/feeds.js";
 import {
@@ -37,14 +38,9 @@ function notEntitledReason(feed: Feed): string {
 }
 
 const GetSymbolsInput = {
-  access_token: z
-    .string()
-    .trim()
-    .min(1, "access_token must not be empty")
-    .optional()
-    .describe(
-      "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
-    ),
+  access_token: accessTokenSchema(
+    "Optional. Your Pyth Pro access token. With a token the list includes feeds visible only to Pro keys, and each feed gets an `entitled` flag.",
+  ),
   asset_type: z
     .enum(ASSET_TYPES)
     .optional()
