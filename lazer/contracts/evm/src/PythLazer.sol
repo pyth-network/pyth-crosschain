@@ -19,6 +19,9 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         uint256 expiresAt;
     }
 
+    /// @notice Emitted when the owner changes the verification fee.
+    event VerificationFeeSet(uint256 oldFee, uint256 newFee);
+
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
         __UUPSUpgradeable_init();
@@ -27,6 +30,14 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    /// @notice Sets the fee that `verifyUpdate` requires. Owner only.
+    /// @param fee The new fee in wei. A fee of 0 makes `verifyUpdate` free.
+    function setVerificationFee(uint256 fee) external onlyOwner {
+        uint256 oldFee = verification_fee;
+        verification_fee = fee;
+        emit VerificationFeeSet(oldFee, fee);
+    }
 
     function updateTrustedSigner(
         address trustedSigner,
@@ -139,6 +150,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function version() public pure returns (string memory) {
-        return "0.2.0";
+        return "0.3.0";
     }
 }

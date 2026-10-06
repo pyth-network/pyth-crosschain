@@ -6,10 +6,17 @@ import {PythLazer} from "../src/PythLazer.sol";
 import {PythLazerLib} from "../src/PythLazerLib.sol";
 import {PythLazerStructs} from "../src/PythLazerStructs.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract PythLazerTest is Test {
     PythLazer public pythLazer;
     address owner;
+
+    /// A signed update produced by the signer below.
+    bytes constant VERIFY_TEST_UPDATE =
+        hex"2a22999a9ee4e2a3df5affd0ad8c7c46c96d3b5ef197dd653bedd8f44a4b6b69b767fbc66341e80b80acb09ead98c60d169b9a99657ebada101f447378f227bffbc69d3d01003493c7d37500062cf28659c1e801010000000605000000000005f5e10002000000000000000001000000000000000003000104fff8";
+    address constant VERIFY_TEST_SIGNER =
+        0xb8d50f0bAE75BF6E03c104903d7C3aFc4a6596Da;
 
     function setUp() public {
         owner = address(1);
@@ -119,16 +126,90 @@ contract PythLazerTest is Test {
     }
 
     function test_version() public view {
-        assertEq(pythLazer.version(), "0.2.0");
+        assertEq(pythLazer.version(), "0.3.0");
+    }
+
+    function test_set_verification_fee_by_owner() public {
+        assertEq(pythLazer.verification_fee(), 1 wei);
+
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.VerificationFeeSet(1 wei, 100 wei);
+        vm.prank(owner);
+        pythLazer.setVerificationFee(100 wei);
+        assertEq(pythLazer.verification_fee(), 100 wei);
+
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.VerificationFeeSet(100 wei, 0);
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+        assertEq(pythLazer.verification_fee(), 0);
+    }
+
+    function test_set_verification_fee_by_non_owner_reverts() public {
+        address intruder = address(42);
+        vm.prank(intruder);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+                intruder
+            )
+        );
+        pythLazer.setVerificationFee(100 wei);
+
+        assertEq(pythLazer.verification_fee(), 1 wei);
+    }
+
+    function test_verify_with_raised_fee() public {
+        _addVerifyTestSigner();
+
+        vm.prank(owner);
+        pythLazer.setVerificationFee(100 wei);
+
+        address alice = makeAddr("alice");
+        vm.deal(alice, 1 ether);
+
+        // Below the new fee.
+        vm.prank(alice);
+        vm.expectRevert("Insufficient fee provided");
+        pythLazer.verifyUpdate{value: 99 wei}(VERIFY_TEST_UPDATE);
+        assertEq(alice.balance, 1 ether);
+
+        // Exactly the new fee.
+        vm.prank(alice);
+        pythLazer.verifyUpdate{value: 100 wei}(VERIFY_TEST_UPDATE);
+        assertEq(alice.balance, 1 ether - 100 wei);
+
+        // Above the new fee: the excess is refunded.
+        vm.prank(alice);
+        pythLazer.verifyUpdate{value: 0.5 ether}(VERIFY_TEST_UPDATE);
+        assertEq(alice.balance, 1 ether - 200 wei);
+    }
+
+    function test_verify_with_zero_fee() public {
+        _addVerifyTestSigner();
+
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+
+        address alice = makeAddr("alice");
+        vm.deal(alice, 1 ether);
+
+        // No value attached succeeds and no refund transfer is attempted.
+        vm.prank(alice);
+        pythLazer.verifyUpdate(VERIFY_TEST_UPDATE);
+        assertEq(alice.balance, 1 ether);
+        assertEq(address(pythLazer).balance, 0);
+
+        // Any value attached is refunded in full.
+        vm.prank(alice);
+        pythLazer.verifyUpdate{value: 1 wei}(VERIFY_TEST_UPDATE);
+        assertEq(alice.balance, 1 ether);
+        assertEq(address(pythLazer).balance, 0);
     }
 
     function test_verify() public {
-        // Prepare dummy update and signer
-        address trustedSigner = 0xb8d50f0bAE75BF6E03c104903d7C3aFc4a6596Da;
-        vm.prank(owner);
-        pythLazer.updateTrustedSigner(trustedSigner, 3000000000000000);
-        bytes
-            memory update = hex"2a22999a9ee4e2a3df5affd0ad8c7c46c96d3b5ef197dd653bedd8f44a4b6b69b767fbc66341e80b80acb09ead98c60d169b9a99657ebada101f447378f227bffbc69d3d01003493c7d37500062cf28659c1e801010000000605000000000005f5e10002000000000000000001000000000000000003000104fff8";
+        _addVerifyTestSigner();
+        bytes memory update = VERIFY_TEST_UPDATE;
 
         uint256 fee = pythLazer.verification_fee();
 
@@ -155,6 +236,11 @@ contract PythLazerTest is Test {
     }
 
     // Helper Methods
+    function _addVerifyTestSigner() internal {
+        vm.prank(owner);
+        pythLazer.updateTrustedSigner(VERIFY_TEST_SIGNER, 3000000000000000);
+    }
+
     function buildPayload(
         uint64 timestamp,
         PythLazerStructs.Channel channel,
