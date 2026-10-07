@@ -245,6 +245,42 @@ contract PythLazerTest is Test {
         assertEq(address(pythLazer).balance, 1 wei);
     }
 
+    function test_verify_refunds_caller_that_writes_storage_on_receive()
+        public
+    {
+        _addVerifyTestSigner();
+        PayableConsumer consumer = new PayableConsumer(pythLazer);
+        vm.deal(address(consumer), 1 ether);
+
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+
+        // The receive function writes storage, which costs far more than the
+        // 2300-gas stipend. The refund is delivered, not credited.
+        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(consumer.received(), 1 wei);
+        assertEq(address(consumer).balance, 1 ether);
+        assertEq(pythLazer.refundable(address(consumer)), 0);
+        assertEq(address(pythLazer).balance, 0);
+    }
+
+    function test_verify_from_gas_burning_caller() public {
+        _addVerifyTestSigner();
+        GasBurningConsumer consumer = new GasBurningConsumer(pythLazer);
+        vm.deal(address(consumer), 1 ether);
+
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+
+        // The receive function consumes everything it is forwarded and
+        // reverts. The refund is credited and verification still succeeds.
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.RefundFailed(address(consumer), 1 wei);
+        consumer.verify{gas: 300000}(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(pythLazer.refundable(address(consumer)), 1 wei);
+        assertEq(address(pythLazer).balance, 1 wei);
+    }
+
     function test_withdraw_refund_without_credit_reverts() public {
         address alice = makeAddr("alice");
         vm.prank(alice);
@@ -852,5 +888,48 @@ contract NonPayableConsumer {
 
     function withdraw(address payable recipient) external {
         pythLazer.withdrawRefund(recipient);
+    }
+}
+
+/// A consumer that accepts ETH and writes storage while doing so. The write
+/// costs more than the 2300-gas stipend, so the refund only reaches it if
+/// `_refundExcess` forwards more than the stipend.
+contract PayableConsumer {
+    PythLazer immutable pythLazer;
+    uint256 public received;
+
+    constructor(PythLazer _pythLazer) {
+        pythLazer = _pythLazer;
+    }
+
+    receive() external payable {
+        received += msg.value;
+    }
+
+    function verify(bytes calldata update, uint256 value) external {
+        pythLazer.verifyUpdate{value: value}(update);
+    }
+}
+
+/// A consumer whose receive function burns every unit of gas forwarded to it
+/// and then reverts out of gas.
+contract GasBurningConsumer {
+    PythLazer immutable pythLazer;
+    uint256 burned;
+
+    constructor(PythLazer _pythLazer) {
+        pythLazer = _pythLazer;
+    }
+
+    receive() external payable {
+        // Spins until the forwarded gas allocation is gone. Each iteration
+        // writes storage so the optimizer cannot drop the loop.
+        while (true) {
+            burned += 1;
+        }
+    }
+
+    function verify(bytes calldata update, uint256 value) external {
+        pythLazer.verifyUpdate{value: value}(update);
     }
 }
