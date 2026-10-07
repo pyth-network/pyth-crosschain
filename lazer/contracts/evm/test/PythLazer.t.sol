@@ -207,6 +207,58 @@ contract PythLazerTest is Test {
         assertEq(address(pythLazer).balance, 0);
     }
 
+    function test_verify_from_non_payable_caller_across_fee_change() public {
+        _addVerifyTestSigner();
+        NonPayableConsumer consumer = new NonPayableConsumer(pythLazer);
+        vm.deal(address(consumer), 1 ether);
+
+        // At the default fee the caller sends exactly the fee, so there is
+        // nothing to refund and the call succeeds.
+        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(address(consumer).balance, 1 ether - 1 wei);
+        assertEq(pythLazer.refundable(address(consumer)), 0);
+        assertEq(address(pythLazer).balance, 1 wei);
+
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+
+        // The same call still verifies. The caller cannot accept the refund,
+        // so the 1 wei is credited instead of reverting the call.
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.RefundFailed(address(consumer), 1 wei);
+        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(address(consumer).balance, 1 ether - 2 wei);
+        assertEq(pythLazer.refundable(address(consumer)), 1 wei);
+        assertEq(address(pythLazer).balance, 2 wei);
+
+        // Credits accumulate across calls.
+        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(pythLazer.refundable(address(consumer)), 2 wei);
+
+        // The caller withdraws the credit to an address that can accept it.
+        address payable sink = payable(makeAddr("sink"));
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.RefundWithdrawn(address(consumer), sink, 2 wei);
+        consumer.withdraw(sink);
+        assertEq(sink.balance, 2 wei);
+        assertEq(pythLazer.refundable(address(consumer)), 0);
+        assertEq(address(pythLazer).balance, 1 wei);
+    }
+
+    function test_withdraw_refund_without_credit_reverts() public {
+        address alice = makeAddr("alice");
+        vm.prank(alice);
+        vm.expectRevert("No refund available");
+        pythLazer.withdrawRefund(payable(alice));
+    }
+
+    function test_withdraw_refund_to_zero_address_reverts() public {
+        address alice = makeAddr("alice");
+        vm.prank(alice);
+        vm.expectRevert("Invalid recipient");
+        pythLazer.withdrawRefund(payable(address(0)));
+    }
+
     function test_verify() public {
         _addVerifyTestSigner();
         bytes memory update = VERIFY_TEST_UPDATE;
@@ -782,5 +834,23 @@ contract PythLazerTest is Test {
 
         vm.expectRevert("Unknown property");
         PythLazerLib.parseUpdateFromPayload(payload);
+    }
+}
+
+/// A consumer that pays the verification fee but cannot accept ETH: it
+/// declares no payable receive or fallback function.
+contract NonPayableConsumer {
+    PythLazer immutable pythLazer;
+
+    constructor(PythLazer _pythLazer) {
+        pythLazer = _pythLazer;
+    }
+
+    function verify(bytes calldata update, uint256 value) external {
+        pythLazer.verifyUpdate{value: value}(update);
+    }
+
+    function withdraw(address payable recipient) external {
+        pythLazer.withdrawRefund(recipient);
     }
 }

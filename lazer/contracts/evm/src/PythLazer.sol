@@ -9,6 +9,11 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
     uint256 public verification_fee;
     mapping(address => uint256) trustedSignerToExpiresAtMapping;
+    /// @notice Excess value that `verifyUpdate` could not refund, per caller.
+    /// Withdraw it with `withdrawRefund`.
+    /// @dev Append new state variables after this one. The contract sits behind
+    /// upgradeable proxies, so the existing slots must keep their order.
+    mapping(address => uint256) public refundable;
 
     constructor() {
         _disableInitializers();
@@ -21,6 +26,17 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
 
     /// @notice Emitted when the owner changes the verification fee.
     event VerificationFeeSet(uint256 oldFee, uint256 newFee);
+
+    /// @notice Emitted when `verifyUpdate` could not send a refund to the
+    /// caller. The amount is credited to `refundable[payee]` instead.
+    event RefundFailed(address indexed payee, uint256 amount);
+
+    /// @notice Emitted when a credited refund is withdrawn.
+    event RefundWithdrawn(
+        address indexed payee,
+        address recipient,
+        uint256 amount
+    );
 
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
@@ -114,11 +130,8 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     function verifyUpdate(
         bytes calldata update
     ) external payable returns (bytes calldata payload, address signer) {
-        // Require fee and refund excess
-        require(msg.value >= verification_fee, "Insufficient fee provided");
-        if (msg.value > verification_fee) {
-            payable(msg.sender).transfer(msg.value - verification_fee);
-        }
+        uint256 fee = verification_fee;
+        require(msg.value >= fee, "Insufficient fee provided");
 
         if (update.length < 71) {
             revert("input too short");
@@ -147,6 +160,44 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         if (!isValidSigner(signer)) {
             revert("invalid signer");
         }
+
+        _refundExcess(fee);
+    }
+
+    /// @dev Returns `msg.value - fee` to the caller. A failed refund does not
+    /// revert: a caller contract with no payable receive function would
+    /// otherwise lose the ability to verify as soon as the fee drops below the
+    /// value it sends. The amount is credited to `refundable` instead, and the
+    /// caller withdraws it with `withdrawRefund`.
+    ///
+    /// The call runs after verification and forwards all remaining gas, so a
+    /// caller with a payable receive function that does work still gets the
+    /// refund. Re-entering is harmless: `verifyUpdate` holds no state that a
+    /// nested call can observe or corrupt, and it never pays out more than the
+    /// value its own caller attached.
+    function _refundExcess(uint256 fee) internal {
+        uint256 excess = msg.value - fee;
+        if (excess == 0) {
+            return;
+        }
+        (bool sent, ) = msg.sender.call{value: excess}("");
+        if (!sent) {
+            refundable[msg.sender] += excess;
+            emit RefundFailed(msg.sender, excess);
+        }
+    }
+
+    /// @notice Sends the caller's credited refunds to `recipient`.
+    /// @param recipient The address that receives the refund. A caller that
+    /// cannot accept ETH itself can name an address that can.
+    function withdrawRefund(address payable recipient) external {
+        require(recipient != address(0), "Invalid recipient");
+        uint256 amount = refundable[msg.sender];
+        require(amount > 0, "No refund available");
+        refundable[msg.sender] = 0;
+        emit RefundWithdrawn(msg.sender, recipient, amount);
+        (bool sent, ) = recipient.call{value: amount}("");
+        require(sent, "Refund transfer failed");
     }
 
     function version() public pure returns (string memory) {

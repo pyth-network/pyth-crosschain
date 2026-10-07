@@ -62,7 +62,8 @@ export const OWNABLE_ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 
 export const EXTENDED_ENTROPY_ABI = [
   {
@@ -105,7 +106,8 @@ export const EXTENDED_ENTROPY_ABI = [
   },
   ...OWNABLE_ABI,
   ...EntropyAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 export const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
@@ -237,7 +239,8 @@ export const EXTENDED_PYTH_ABI = [
     type: "function",
   },
   ...PythInterfaceAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 export const WORMHOLE_ABI = [
   {
     inputs: [],
@@ -322,7 +325,8 @@ export const WORMHOLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 export const EXECUTOR_ABI = [
   {
     inputs: [
@@ -395,7 +399,8 @@ export const EXECUTOR_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 
 export const PULSE_UPGRADEABLE_ABI = [
   {
@@ -1397,7 +1402,8 @@ export const PULSE_UPGRADEABLE_ABI = [
     name: "TooManyPriceIds",
     type: "error",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
 
 export const LAZER_ABI = [
   { inputs: [], stateMutability: "nonpayable", type: "constructor" },
@@ -1467,8 +1473,22 @@ export const LAZER_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "refundable",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "fee", type: "uint256" }],
+    name: "setVerificationFee",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1546,6 +1566,13 @@ export const LAZER_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "address", name: "recipient", type: "address" }],
+    name: "withdrawRefund",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -1556,6 +1583,69 @@ export const LAZER_ABI = [
       },
     ],
     name: "Initialized",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "payee",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "RefundFailed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "payee",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "recipient",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "RefundWithdrawn",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "oldFee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFee",
+        type: "uint256",
+      },
+    ],
+    name: "VerificationFeeSet",
     type: "event",
   },
   {
@@ -1626,4 +1716,5 @@ export const LAZER_ABI = [
     name: "UUPSUnsupportedProxiableUUID",
     type: "error",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: web3 contract constructors take untyped ABI arrays
+] as any;
