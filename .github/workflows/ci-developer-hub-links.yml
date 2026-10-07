@@ -1,0 +1,35 @@
+name: Check developer-hub links
+
+on:
+  pull_request:
+    paths:
+      - "apps/developer-hub/content/**"
+      - "apps/developer-hub/src/**"
+      - .github/workflows/ci-developer-hub-links.yml
+      - .lycheeignore
+  push:
+    branches: [main]
+    paths:
+      - "apps/developer-hub/content/**"
+      - "apps/developer-hub/src/**"
+
+concurrency:
+  group: links-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --base https://docs.pyth.network
+            --no-progress
+            --exclude-path apps/developer-hub/node_modules
+            'apps/developer-hub/content/**/*.mdx'
+            'apps/developer-hub/content/**/*.md'
+          fail: true
