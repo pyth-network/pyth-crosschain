@@ -1116,6 +1116,30 @@ export class EvmLazerContract extends Storable {
     );
   }
 
+  async getVerificationFee(): Promise<bigint> {
+    const contract = this.getContract();
+    return BigInt(await contract.methods.verification_fee().call());
+  }
+
+  /**
+   * Generates an executor payload that sets the fee `verifyUpdate` charges.
+   * Use this when the executor contract owns the PythLazer contract.
+   * @param fee - The new fee in wei
+   */
+  async generateSetVerificationFeePayload(
+    fee: bigint | number | string,
+  ): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods
+      .setVerificationFee(fee.toString())
+      .encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data,
+    );
+  }
+
   async generateUpgradeLazerContractPayload(
     newImplementation: string,
   ): Promise<Buffer> {
