@@ -48,6 +48,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
 
     /// @notice Sends the whole contract balance to `recipient`. Owner only.
     function withdrawFees(address payable recipient) external onlyOwner {
+        require(recipient != address(0), "Invalid recipient");
         uint256 amount = address(this).balance;
         emit FeesWithdrawn(recipient, amount);
         (bool sent, ) = recipient.call{value: amount}("");
