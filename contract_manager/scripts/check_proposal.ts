@@ -443,24 +443,32 @@ async function main() {
                 "address",
                 args,
               ) as unknown as string;
-              const balance = await chain.getWeb3().eth.getBalance(callAddress);
               console.log(
                 `${chain.getId()}  call withdrawFees(${recipient}) on ${contract.getType()} at address:${callAddress} from executor:${executorAddress}.`,
               );
-              console.log(
-                `${chain.getId()}    sends the whole contract balance: ${balance} wei`,
-              );
-              const recipientCode = await chain
-                .getWeb3()
-                .eth.getCode(recipient);
-              if (recipientCode === "0x" || recipientCode === "") {
+              if (BigInt(recipient) === 0n) {
                 console.log(
-                  `${chain.getId()}    WARNING: recipient ${recipient} has NO code on this chain (expected a deployed multisig)`,
+                  `${chain.getId()}    WARNING: recipient is the zero address; this call will revert with "Invalid recipient"`,
                 );
               } else {
+                const balance = await chain
+                  .getWeb3()
+                  .eth.getBalance(callAddress);
                 console.log(
-                  `${chain.getId()}    recipient ${recipient} is a deployed contract (code digest:${Web3.utils.keccak256(recipientCode)})`,
+                  `${chain.getId()}    sends the whole contract balance: ${balance} wei`,
                 );
+                const recipientCode = await chain
+                  .getWeb3()
+                  .eth.getCode(recipient);
+                if (recipientCode === "0x" || recipientCode === "") {
+                  console.log(
+                    `${chain.getId()}    WARNING: recipient ${recipient} has NO code on this chain (expected a deployed multisig)`,
+                  );
+                } else {
+                  console.log(
+                    `${chain.getId()}    recipient ${recipient} is a deployed contract (code digest:${Web3.utils.keccak256(recipientCode)})`,
+                  );
+                }
               }
             } else {
               console.log(

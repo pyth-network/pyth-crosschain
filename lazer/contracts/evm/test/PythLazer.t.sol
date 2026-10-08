@@ -244,6 +244,24 @@ contract PythLazerTest is Test {
         assertEq(address(pythLazer).balance, 1 wei);
     }
 
+    function test_verify_from_storage_writing_receiver() public {
+        _addVerifyTestSigner();
+        vm.prank(owner);
+        pythLazer.setVerificationFee(0);
+        StorageWritingConsumer consumer = new StorageWritingConsumer(pythLazer);
+        vm.deal(address(consumer), 1 ether);
+
+        // A storage write costs more than the 2300-gas stipend, so the receive
+        // function cannot take the refund. Verification still succeeds and the
+        // excess stays in PythLazer.
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.RefundFailed(address(consumer), 1 wei);
+        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(consumer.received(), 0);
+        assertEq(address(consumer).balance, 1 ether - 1 wei);
+        assertEq(address(pythLazer).balance, 1 wei);
+    }
+
     function test_withdraw_fees() public {
         _addVerifyTestSigner();
         address alice = makeAddr("alice");
@@ -872,5 +890,16 @@ contract GasBurningConsumer is NonPayableConsumer {
 
     receive() external payable {
         while (true) {}
+    }
+}
+
+/// A consumer whose receive function writes to storage.
+contract StorageWritingConsumer is NonPayableConsumer {
+    uint256 public received;
+
+    constructor(PythLazer _pythLazer) NonPayableConsumer(_pythLazer) {}
+
+    receive() external payable {
+        received += msg.value;
     }
 }
