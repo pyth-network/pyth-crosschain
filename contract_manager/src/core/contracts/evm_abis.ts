@@ -1514,19 +1514,6 @@ export const LAZER_ABI = [
         name: "newImplementation",
         type: "address",
       },
-    ],
-    name: "upgradeTo",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newImplementation",
-        type: "address",
-      },
       { internalType: "bytes", name: "data", type: "bytes" },
     ],
     name: "upgradeToAndCall",
