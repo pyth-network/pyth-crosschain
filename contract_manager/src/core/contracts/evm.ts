@@ -1144,7 +1144,10 @@ export class EvmLazerContract extends Storable {
     newImplementation: string,
   ): Promise<Buffer> {
     const contract = this.getContract();
-    const data = contract.methods.upgradeTo(newImplementation).encodeABI();
+    // OpenZeppelin v5 UUPS has no `upgradeTo`, only `upgradeToAndCall`.
+    const data = contract.methods
+      .upgradeToAndCall(newImplementation, "0x")
+      .encodeABI();
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
