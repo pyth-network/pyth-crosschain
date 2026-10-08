@@ -1473,13 +1473,6 @@ export const LAZER_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
-    name: "refundable",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "renounceOwnership",
     outputs: [],
@@ -1566,11 +1559,32 @@ export const LAZER_ABI = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "recipient", type: "address" }],
-    name: "withdrawRefund",
+    inputs: [
+      { internalType: "address payable", name: "recipient", type: "address" },
+    ],
+    name: "withdrawFees",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "recipient",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "FeesWithdrawn",
+    type: "event",
   },
   {
     anonymous: false,
@@ -1602,31 +1616,6 @@ export const LAZER_ABI = [
       },
     ],
     name: "RefundFailed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "payee",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "RefundWithdrawn",
     type: "event",
   },
   {
