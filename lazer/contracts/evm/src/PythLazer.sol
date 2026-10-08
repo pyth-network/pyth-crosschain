@@ -9,11 +9,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
     uint256 public verification_fee;
     mapping(address => uint256) trustedSignerToExpiresAtMapping;
-    /// @notice Excess value that `verifyUpdate` could not refund, per caller.
-    /// Withdraw it with `withdrawRefund`.
-    /// @dev Append new state variables after this one. The contract sits behind
-    /// upgradeable proxies, so the existing slots must keep their order.
-    mapping(address => uint256) public refundable;
 
     constructor() {
         _disableInitializers();
@@ -27,25 +22,12 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     /// @notice Emitted when the owner changes the verification fee.
     event VerificationFeeSet(uint256 oldFee, uint256 newFee);
 
-    /// @notice Emitted when `verifyUpdate` could not send a refund to the
-    /// caller. The amount is credited to `refundable[payee]` instead.
+    /// @notice Emitted when `verifyUpdate` could not refund the excess to the
+    /// caller. The amount stays in the contract.
     event RefundFailed(address indexed payee, uint256 amount);
 
-    /// @notice Emitted when a credited refund is withdrawn.
-    event RefundWithdrawn(
-        address indexed payee,
-        address recipient,
-        uint256 amount
-    );
-
-    /// @dev Upper bound on the gas forwarded to a refund receiver. A plain
-    /// payable receive function needs a fraction of this.
-    uint256 private constant REFUND_GAS_LIMIT = 30000;
-
-    /// @dev Gas held back from the refund call to pay for the failure path: a
-    /// cold `SSTORE` into `refundable` (22100), the `RefundFailed` log, and
-    /// the return from `verifyUpdate`.
-    uint256 private constant REFUND_FAILURE_GAS = 50000;
+    /// @notice Emitted when the owner withdraws the contract balance.
+    event FeesWithdrawn(address recipient, uint256 amount);
 
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
@@ -62,6 +44,14 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         uint256 oldFee = verification_fee;
         verification_fee = fee;
         emit VerificationFeeSet(oldFee, fee);
+    }
+
+    /// @notice Sends the whole contract balance to `recipient`. Owner only.
+    function withdrawFees(address payable recipient) external onlyOwner {
+        uint256 amount = address(this).balance;
+        emit FeesWithdrawn(recipient, amount);
+        (bool sent, ) = recipient.call{value: amount}("");
+        require(sent, "Withdraw failed");
     }
 
     function updateTrustedSigner(
@@ -170,61 +160,13 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
             revert("invalid signer");
         }
 
-        _refundExcess(fee);
-    }
-
-    /// @dev Returns `msg.value - fee` to the caller. A failed refund does not
-    /// revert: a caller contract with no payable receive function would
-    /// otherwise lose the ability to verify as soon as the fee drops below the
-    /// value it sends. The amount is credited to `refundable` instead, and the
-    /// caller withdraws it with `withdrawRefund`.
-    ///
-    /// The call runs after verification and carries more than the 2300-gas
-    /// stipend, so a caller with a payable receive function that does work
-    /// still gets the refund. Re-entering is harmless: `verifyUpdate` holds no
-    /// state that a nested call can observe or corrupt, and it never pays out
-    /// more than the value its own caller attached.
-    function _refundExcess(uint256 fee) internal {
+        // `send` has the same 2300-gas stipend as the old `transfer`, but a
+        // caller that cannot take the refund is still verified and the excess
+        // stays in the contract.
         uint256 excess = msg.value - fee;
-        if (excess == 0) {
-            return;
-        }
-        (bool sent, ) = msg.sender.call{value: excess, gas: _refundGas()}("");
-        if (!sent) {
-            refundable[msg.sender] += excess;
+        if (excess > 0 && !payable(msg.sender).send(excess)) {
             emit RefundFailed(msg.sender, excess);
         }
-    }
-
-    /// @dev Gas to forward to the refund call: `REFUND_GAS_LIMIT`, reduced so
-    /// that `REFUND_FAILURE_GAS` always stays behind. Without a cap the call
-    /// takes all but a sixty-fourth of the remaining gas, and a receiver that
-    /// burns its whole allocation leaves too little to credit `refundable` --
-    /// the `SSTORE` then trips the 2300-gas sentry and reverts the
-    /// verification that already succeeded.
-    ///
-    /// A return of 0 still delivers the EVM's 2300-gas stipend, because the
-    /// call carries value.
-    function _refundGas() private view returns (uint256) {
-        uint256 available = gasleft();
-        if (available <= REFUND_FAILURE_GAS) {
-            return 0;
-        }
-        uint256 forward = available - REFUND_FAILURE_GAS;
-        return forward < REFUND_GAS_LIMIT ? forward : REFUND_GAS_LIMIT;
-    }
-
-    /// @notice Sends the caller's credited refunds to `recipient`.
-    /// @param recipient The address that receives the refund. A caller that
-    /// cannot accept ETH itself can name an address that can.
-    function withdrawRefund(address payable recipient) external {
-        require(recipient != address(0), "Invalid recipient");
-        uint256 amount = refundable[msg.sender];
-        require(amount > 0, "No refund available");
-        refundable[msg.sender] = 0;
-        emit RefundWithdrawn(msg.sender, recipient, amount);
-        (bool sent, ) = recipient.call{value: amount}("");
-        require(sent, "Refund transfer failed");
     }
 
     function version() public pure returns (string memory) {

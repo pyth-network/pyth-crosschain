@@ -216,83 +216,57 @@ contract PythLazerTest is Test {
         // nothing to refund and the call succeeds.
         consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
         assertEq(address(consumer).balance, 1 ether - 1 wei);
-        assertEq(pythLazer.refundable(address(consumer)), 0);
         assertEq(address(pythLazer).balance, 1 wei);
 
         vm.prank(owner);
         pythLazer.setVerificationFee(0);
 
         // The same call still verifies. The caller cannot accept the refund,
-        // so the 1 wei is credited instead of reverting the call.
+        // so the 1 wei stays in PythLazer instead of reverting the call.
         vm.expectEmit(address(pythLazer));
         emit PythLazer.RefundFailed(address(consumer), 1 wei);
         consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
         assertEq(address(consumer).balance, 1 ether - 2 wei);
-        assertEq(pythLazer.refundable(address(consumer)), 1 wei);
         assertEq(address(pythLazer).balance, 2 wei);
-
-        // Credits accumulate across calls.
-        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
-        assertEq(pythLazer.refundable(address(consumer)), 2 wei);
-
-        // The caller withdraws the credit to an address that can accept it.
-        address payable sink = payable(makeAddr("sink"));
-        vm.expectEmit(address(pythLazer));
-        emit PythLazer.RefundWithdrawn(address(consumer), sink, 2 wei);
-        consumer.withdraw(sink);
-        assertEq(sink.balance, 2 wei);
-        assertEq(pythLazer.refundable(address(consumer)), 0);
-        assertEq(address(pythLazer).balance, 1 wei);
     }
 
-    function test_verify_refunds_caller_that_writes_storage_on_receive()
-        public
-    {
+    function test_verify_from_gas_burning_receiver() public {
         _addVerifyTestSigner();
-        PayableConsumer consumer = new PayableConsumer(pythLazer);
-        vm.deal(address(consumer), 1 ether);
-
         vm.prank(owner);
         pythLazer.setVerificationFee(0);
-
-        // The receive function writes storage, which costs far more than the
-        // 2300-gas stipend. The refund is delivered, not credited.
-        consumer.verify(VERIFY_TEST_UPDATE, 1 wei);
-        assertEq(consumer.received(), 1 wei);
-        assertEq(address(consumer).balance, 1 ether);
-        assertEq(pythLazer.refundable(address(consumer)), 0);
-        assertEq(address(pythLazer).balance, 0);
-    }
-
-    function test_verify_from_gas_burning_caller() public {
-        _addVerifyTestSigner();
         GasBurningConsumer consumer = new GasBurningConsumer(pythLazer);
         vm.deal(address(consumer), 1 ether);
 
-        vm.prank(owner);
-        pythLazer.setVerificationFee(0);
-
-        // The receive function consumes everything it is forwarded and
-        // reverts. The refund is credited and verification still succeeds.
-        vm.expectEmit(address(pythLazer));
-        emit PythLazer.RefundFailed(address(consumer), 1 wei);
-        consumer.verify{gas: 300000}(VERIFY_TEST_UPDATE, 1 wei);
-        assertEq(pythLazer.refundable(address(consumer)), 1 wei);
+        // The refund gets only the 2300-gas stipend, so a receive function
+        // that burns all its gas cannot make verification run out of gas.
+        consumer.verify{gas: 100_000}(VERIFY_TEST_UPDATE, 1 wei);
+        assertEq(address(consumer).balance, 1 ether - 1 wei);
         assertEq(address(pythLazer).balance, 1 wei);
     }
 
-    function test_withdraw_refund_without_credit_reverts() public {
+    function test_withdraw_fees() public {
+        _addVerifyTestSigner();
         address alice = makeAddr("alice");
+        vm.deal(alice, 1 ether);
         vm.prank(alice);
-        vm.expectRevert("No refund available");
-        pythLazer.withdrawRefund(payable(alice));
-    }
+        pythLazer.verifyUpdate{value: 1 wei}(VERIFY_TEST_UPDATE);
 
-    function test_withdraw_refund_to_zero_address_reverts() public {
-        address alice = makeAddr("alice");
+        address payable sink = payable(makeAddr("sink"));
         vm.prank(alice);
-        vm.expectRevert("Invalid recipient");
-        pythLazer.withdrawRefund(payable(address(0)));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+                alice
+            )
+        );
+        pythLazer.withdrawFees(sink);
+
+        vm.expectEmit(address(pythLazer));
+        emit PythLazer.FeesWithdrawn(sink, 1 wei);
+        vm.prank(owner);
+        pythLazer.withdrawFees(sink);
+        assertEq(sink.balance, 1 wei);
+        assertEq(address(pythLazer).balance, 0);
     }
 
     function test_verify() public {
@@ -885,51 +859,13 @@ contract NonPayableConsumer {
     function verify(bytes calldata update, uint256 value) external {
         pythLazer.verifyUpdate{value: value}(update);
     }
-
-    function withdraw(address payable recipient) external {
-        pythLazer.withdrawRefund(recipient);
-    }
 }
 
-/// A consumer that accepts ETH and writes storage while doing so. The write
-/// costs more than the 2300-gas stipend, so the refund only reaches it if
-/// `_refundExcess` forwards more than the stipend.
-contract PayableConsumer {
-    PythLazer immutable pythLazer;
-    uint256 public received;
-
-    constructor(PythLazer _pythLazer) {
-        pythLazer = _pythLazer;
-    }
+/// A consumer whose receive function burns all the gas it gets.
+contract GasBurningConsumer is NonPayableConsumer {
+    constructor(PythLazer _pythLazer) NonPayableConsumer(_pythLazer) {}
 
     receive() external payable {
-        received += msg.value;
-    }
-
-    function verify(bytes calldata update, uint256 value) external {
-        pythLazer.verifyUpdate{value: value}(update);
-    }
-}
-
-/// A consumer whose receive function burns every unit of gas forwarded to it
-/// and then reverts out of gas.
-contract GasBurningConsumer {
-    PythLazer immutable pythLazer;
-    uint256 burned;
-
-    constructor(PythLazer _pythLazer) {
-        pythLazer = _pythLazer;
-    }
-
-    receive() external payable {
-        // Spins until the forwarded gas allocation is gone. Each iteration
-        // writes storage so the optimizer cannot drop the loop.
-        while (true) {
-            burned += 1;
-        }
-    }
-
-    function verify(bytes calldata update, uint256 value) external {
-        pythLazer.verifyUpdate{value: value}(update);
+        while (true) {}
     }
 }
