@@ -261,6 +261,11 @@ contract PythLazerTest is Test {
         );
         pythLazer.withdrawFees(sink);
 
+        vm.prank(owner);
+        vm.expectRevert("Invalid recipient");
+        pythLazer.withdrawFees(payable(address(0)));
+        assertEq(address(pythLazer).balance, 1 wei);
+
         vm.expectEmit(address(pythLazer));
         emit PythLazer.FeesWithdrawn(sink, 1 wei);
         vm.prank(owner);
