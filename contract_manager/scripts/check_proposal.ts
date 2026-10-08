@@ -413,6 +413,55 @@ async function main() {
                   );
                 }
               }
+            } else if (selector === selectorOf("setVerificationFee(uint256)")) {
+              const newFee = BigInt(
+                web3.eth.abi.decodeParameter(
+                  "uint256",
+                  args,
+                ) as unknown as string,
+              );
+              let currentFee = "<unavailable>";
+              try {
+                const currentFeeHex = await chain.getWeb3().eth.call({
+                  data: web3.eth.abi.encodeFunctionSignature(
+                    "verification_fee()",
+                  ),
+                  to: callAddress,
+                });
+                currentFee = BigInt(currentFeeHex).toString();
+              } catch {
+                // leave "<unavailable>"; the decoded proposal value is still shown
+              }
+              console.log(
+                `${chain.getId()}  call setVerificationFee(${newFee}) on ${contract.getType()} at address:${callAddress} from executor:${executorAddress}.`,
+              );
+              console.log(
+                `${chain.getId()}    current on-chain fee: ${currentFee} wei -> proposed: ${newFee} wei`,
+              );
+            } else if (selector === selectorOf("withdrawFees(address)")) {
+              const recipient = web3.eth.abi.decodeParameter(
+                "address",
+                args,
+              ) as unknown as string;
+              const balance = await chain.getWeb3().eth.getBalance(callAddress);
+              console.log(
+                `${chain.getId()}  call withdrawFees(${recipient}) on ${contract.getType()} at address:${callAddress} from executor:${executorAddress}.`,
+              );
+              console.log(
+                `${chain.getId()}    sends the whole contract balance: ${balance} wei`,
+              );
+              const recipientCode = await chain
+                .getWeb3()
+                .eth.getCode(recipient);
+              if (recipientCode === "0x" || recipientCode === "") {
+                console.log(
+                  `${chain.getId()}    WARNING: recipient ${recipient} has NO code on this chain (expected a deployed multisig)`,
+                );
+              } else {
+                console.log(
+                  `${chain.getId()}    recipient ${recipient} is a deployed contract (code digest:${Web3.utils.keccak256(recipientCode)})`,
+                );
+              }
             } else {
               console.log(
                 `${chain.getId()}  call with UNKNOWN selector 0x${selector} on ${contract.getType()} at address:${callAddress} from executor:${executorAddress}.`,
