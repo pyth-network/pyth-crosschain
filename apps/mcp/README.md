@@ -16,7 +16,7 @@ claude mcp add --transport http pyth https://mcp.pyth.network/mcp --header "Auth
 
 ### Claude Desktop
 
-Claude Desktop reaches remote servers only through custom connectors, which cannot send a header. To set the key once, bridge with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) (needs Node.js) in `claude_desktop_config.json`:
+Claude Desktop connects to remote servers as custom connectors, which can send your key as a header only where Anthropic's request-headers beta is enabled. To set the key once on any plan, bridge with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) (needs Node.js) in `claude_desktop_config.json` (Claude menu bar → **Settings… → Developer → Edit Config**):
 
 ```json
 {
@@ -32,7 +32,7 @@ Claude Desktop reaches remote servers only through custom connectors, which cann
 
 `mcp-remote` is a community package, not maintained by Pyth, and it handles your key; the snippet pins the version we tested.
 
-Or add `https://mcp.pyth.network/mcp` under **Settings → Connectors → Add custom connector**, and pass the key per call.
+Or add `https://mcp.pyth.network/mcp` under **Customize → Connectors → + Add → Add custom connector**. With the [request-headers beta](https://claude.com/docs/connectors/custom/add-unlisted#authenticate-with-request-headers), choose **No sign-in** and add an `authorization` header `Bearer YOUR_TOKEN` (on Team and Enterprise plans that key is shared by the whole organization); otherwise pass the key per call.
 
 ### Cursor
 
@@ -49,20 +49,20 @@ Add to `~/.cursor/mcp.json` (global, so the key stays out of your repo):
 }
 ```
 
+To keep the key out of the file, write `"Bearer ${env:PYTH_PRO_ACCESS_TOKEN}"` and set that variable in your shell profile or system environment.
+
 ### VS Code
 
-Add to `.vscode/mcp.json`. VS Code prompts for the key once and stores it securely:
+Add to `~/.copilot/mcp-config.json`, a user-level file that VS Code's chat and its Agent Host sessions both read. It holds your key in plain text, so never copy it into a repository. (VS Code's `${input:...}` prompt avoids that, but Agent Host sessions do not receive `.vscode/mcp.json` servers that use it.)
 
 ```json
 {
-  "inputs": [
-    { "type": "promptString", "id": "pyth-token", "description": "Pyth Pro API key", "password": true }
-  ],
-  "servers": {
+  "mcpServers": {
     "pyth": {
       "type": "http",
       "url": "https://mcp.pyth.network/mcp",
-      "headers": { "Authorization": "Bearer ${input:pyth-token}" }
+      "headers": { "Authorization": "Bearer YOUR_TOKEN" },
+      "tools": ["*"]
     }
   }
 }
@@ -93,7 +93,7 @@ Every user brings their own Pyth Pro access token. It is required for `get_lates
 - Give the server your token in one of three ways. A token passed on a call wins over a configured one.
   - **Configure it once for the hosted server**: send it as an `Authorization: Bearer` header from your MCP client (see [Quick Start](#quick-start)), so your assistant does not handle it on every call.
   - **Configure it once for a local stdio server**: set `PYTH_PRO_ACCESS_TOKEN` in the server's `env` block in your client config (see [Local stdio config](#local-stdio-config)).
-  - **Per call**: the `access_token` tool parameter. Your assistant asks for it when no token is configured. Clients that cannot send headers (e.g. Claude Desktop custom connectors) use this.
+  - **Per call**: the `access_token` tool parameter. Your assistant asks for it when no token is configured. Clients that cannot send headers (e.g. Claude Desktop custom connectors without the request-headers beta) use this.
 - The server never has a key of its own: the hosted server ignores `PYTH_PRO_ACCESS_TOKEN` in its own environment and only uses the key each user sends.
 - A 401 means the token is invalid or expired. A 403 means the token is valid but your plan is not entitled to that feed; the error names the entitlement group required.
 - Only feeds in state `stable` return prices. Requested feeds that come back without a price (e.g. `beta` or `coming_soon` feeds, or a channel faster than the feed's `min_channel`) are listed in `missing_feed_ids`.
