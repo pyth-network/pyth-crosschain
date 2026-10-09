@@ -34,7 +34,7 @@ Claude Desktop connects to remote servers as custom connectors, which can send y
 
 `mcp-remote` is a community package, not maintained by Pyth, and it handles your key; the snippet pins the version we tested.
 
-Or add `https://mcp.pyth.network/mcp` under **Customize → Connectors → + Add → Add custom connector**. With the [request-headers beta](https://claude.com/docs/connectors/custom/add-unlisted#authenticate-with-request-headers), choose **No sign-in** and add an `authorization` header `Bearer YOUR_TOKEN` (on Team and Enterprise plans that key is shared by the whole organization); otherwise pass the key per call.
+Or add `https://mcp.pyth.network/mcp` as a custom connector: on Free, Pro or Max under **Customize → Connectors → Add custom connector**; on Team or Enterprise an Owner adds it under **Organization settings → Connectors → Add → Custom**, and members click **Connect** under **Customize → Connectors**. With the [request-headers beta](https://claude.com/docs/connectors/custom/add-unlisted#authenticate-with-request-headers), choose **No sign-in** and add an `authorization` header `Bearer YOUR_TOKEN` (on Team and Enterprise plans the Owner sets it for the whole organization, so everyone shares that key); otherwise pass the key per call.
 
 ### Cursor
 
