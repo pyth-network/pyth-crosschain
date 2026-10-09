@@ -23,6 +23,20 @@ export default {
           value:
             "vibrate=(), geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=self",
         },
+        {
+          key: "X-Frame-Options",
+          value: "DENY",
+        },
+        {
+          key: "Content-Security-Policy",
+          value: "frame-ancestors 'none'",
+        },
+        {
+          // Severs `window.opener` for pages that navigate here, while keeping
+          // the opener link for popups we open ourselves (wallet flows).
+          key: "Cross-Origin-Opener-Policy",
+          value: "same-origin-allow-popups",
+        },
       ],
       source: "/:path*",
     },
