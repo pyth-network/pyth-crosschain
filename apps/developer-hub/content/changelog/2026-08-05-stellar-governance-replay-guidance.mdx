@@ -1,0 +1,24 @@
+---
+title: Stellar integration guidance for governance authorization and replay protection
+date: 2026-08-05
+product: pyth-core
+type: docs
+area: contracts
+---
+
+Stellar and Soroban integration guidance now makes two requirements explicit
+for governance and price-update consumers.
+
+Governance `Call` targets that require authorization must receive those
+authorizations as their own top-level authorization. Integrators should not
+assume they are bound to the outer Wormhole-governed action.
+
+`verify_update` is stateless: it proves signer trust, but it does not prevent
+replay by itself. Consumers must deduplicate updates and enforce freshness
+using the payload timestamp and, where relevant, each feed's
+`feed_update_timestamp`, not envelope bytes, signatures, or signature hashes.
+
+The Stellar SDK was bumped to 0.3.1 so the guidance reaches published SDK and
+documentation consumers. This is documentation and remediation guidance only;
+there is no behavior change to the current deployment, and the Soroban host
+already rejects high-s signatures.
