@@ -173,11 +173,11 @@ process.on("SIGINT", cleanup);
 
 **Shared by the price tools:**
 - `access_token` (optional): only needed when the user's MCP client does not send a key (see Auth in Key Decisions).
-- `symbols` accept full symbols (`Crypto.BTC/USD`) or bare pairs (`BTC/USD`). A bare pair resolves to the live spot feed, otherwise to the only remaining live match; an ambiguous input returns an error listing the candidates. `resolved_symbols` in the response shows each mapping.
-- If both `price_feed_ids` and `symbols` are given, only the IDs are used.
-- `channel`: `real_time`, `fixed_rate@50ms`, `fixed_rate@200ms` or `fixed_rate@1000ms`; default `fixed_rate@200ms` (`PYTH_CHANNEL`). A channel faster than the feed's `min_channel` returns no price.
-- Requested feeds that return no price (e.g. `beta` or `coming_soon` feeds) are listed in `missing_feed_ids`.
-- Prices are integers with an `exponent`; `display_*` fields (`display_price`, `display_bid`, `display_ask`, `display_confidence`, `display_ema_price`, `display_ema_confidence`, `display_funding_rate`) apply it.
+- `symbols` (and `get_candlestick_data`'s single `symbol`) accept full symbols (`Crypto.BTC/USD`) or bare pairs (`BTC/USD`). A bare pair resolves to the live spot feed, otherwise to the only remaining live match; an ambiguous input returns an error listing the candidates. `resolved_symbols` in the response shows each mapping.
+- In the tools that take both, if `price_feed_ids` and `symbols` are given, only the IDs are used.
+- `channel`: `real_time`, `fixed_rate@50ms`, `fixed_rate@200ms` or `fixed_rate@1000ms`; default `fixed_rate@200ms` (`PYTH_CHANNEL`). Must not be faster than the feed's `min_channel`.
+- `get_latest_price` and `get_historical_price` list requested feeds that return no price (e.g. `beta` or `coming_soon` feeds) in `missing_feed_ids`. `get_price_range` has no such field; `get_candlestick_data` reports an empty result with `candles: 0` and a `hint`.
+- Prices are integers with an `exponent` (candles excepted: they are already in display units); `display_*` fields (`display_price`, `display_bid`, `display_ask`, `display_confidence`, `display_ema_price`, `display_ema_confidence`, `display_funding_rate`) apply it.
 - Every response carries `server_time_utc` and `server_unix_seconds`.
 
 ### Toolset: `discovery` (no token needed)
@@ -273,7 +273,7 @@ process.on("SIGINT", cleanup);
 
 *At least one of `price_feed_ids` or `symbols` required.
 
-**Returns:** `{ prices, count, has_more, next_cursor, window, resolved_symbols? }`. Each row is one update for one feed, with `display_*`.
+**Returns:** `{ prices, count, has_more, next_cursor, channel, window, resolved_symbols? }`. Each row is one update for one feed, with `display_*`.
 
 ---
 
