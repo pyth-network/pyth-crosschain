@@ -6,47 +6,71 @@ Hosted at `https://mcp.pyth.network/mcp`
 
 ## Quick Start
 
-### Claude Desktop
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "pyth": {
-      "url": "https://mcp.pyth.network/mcp"
-    }
-  }
-}
-```
+Each snippet sends your own Pyth Pro API key as an `Authorization: Bearer` header, so you set it once (see [Access Token](#access-token)).
 
 ### Claude Code
 
 ```sh
-claude mcp add pyth --transport http https://mcp.pyth.network/mcp
+claude mcp add --transport http pyth https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Cursor
+### Claude Desktop
 
-Add to `.cursor/mcp.json` in your project:
+Claude Desktop reaches remote servers only through custom connectors, which cannot send a header. To set the key once, bridge with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) (needs Node.js) in `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "pyth": {
-      "url": "https://mcp.pyth.network/mcp"
+      "command": "npx",
+      "args": ["-y", "mcp-remote@0.14.3", "https://mcp.pyth.network/mcp", "--header", "Authorization:${PYTH_AUTH_HEADER}"],
+      "env": { "PYTH_AUTH_HEADER": "Bearer YOUR_TOKEN" }
     }
   }
 }
 ```
 
-### Windsurf / Other Clients
+`mcp-remote` is a community package, not maintained by Pyth, and it handles your key; the snippet pins the version we tested.
 
-Any MCP client that supports StreamableHTTP can connect using the URL:
+Or add `https://mcp.pyth.network/mcp` under **Settings → Connectors → Add custom connector**, and pass the key per call.
 
+### Cursor
+
+Add to `~/.cursor/mcp.json` (global, so the key stays out of your repo):
+
+```json
+{
+  "mcpServers": {
+    "pyth": {
+      "url": "https://mcp.pyth.network/mcp",
+      "headers": { "Authorization": "Bearer YOUR_TOKEN" }
+    }
+  }
+}
 ```
-https://mcp.pyth.network/mcp
+
+### VS Code
+
+Add to `.vscode/mcp.json`. VS Code prompts for the key once and stores it securely:
+
+```json
+{
+  "inputs": [
+    { "type": "promptString", "id": "pyth-token", "description": "Pyth Pro API key", "password": true }
+  ],
+  "servers": {
+    "pyth": {
+      "type": "http",
+      "url": "https://mcp.pyth.network/mcp",
+      "headers": { "Authorization": "Bearer ${input:pyth-token}" }
+    }
+  }
+}
 ```
+
+### Other Clients
+
+Any MCP client that supports Streamable HTTP: connect to `https://mcp.pyth.network/mcp` with the header `Authorization: Bearer YOUR_TOKEN`.
 
 ## Tools
 
@@ -65,11 +89,9 @@ https://mcp.pyth.network/mcp
 
 Every user brings their own Pyth Pro access token. It is required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. `get_symbols` works without one, but with a token it also lists feeds visible only to Pro keys and marks each feed `entitled: true/false` (whether your token can query it right now). `convert_date_to_timestamp` never needs one.
 
-- Get a token at [pyth.network/pricing](https://pyth.network/pricing)
+- Get a token: [Acquire an API key](https://docs.pyth.network/price-feeds/pro/acquire-api-key)
 - Give the server your token in one of three ways. A token passed on a call wins over a configured one.
-  - **Configure it once for the hosted server**: send it as an `Authorization: Bearer` header from your MCP client, so your assistant does not handle it on every call.
-    - Claude Code: `claude mcp add pyth --transport http https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"`
-    - Cursor / VS Code / Windsurf: add `"headers": { "Authorization": "Bearer YOUR_TOKEN" }` next to `"url"` in the server entry.
+  - **Configure it once for the hosted server**: send it as an `Authorization: Bearer` header from your MCP client (see [Quick Start](#quick-start)), so your assistant does not handle it on every call.
   - **Configure it once for a local stdio server**: set `PYTH_PRO_ACCESS_TOKEN` in the server's `env` block in your client config (see [Local stdio config](#local-stdio-config)).
   - **Per call**: the `access_token` tool parameter. Your assistant asks for it when no token is configured. Clients that cannot send headers (e.g. Claude Desktop custom connectors) use this.
 - The server never has a key of its own: the hosted server ignores `PYTH_PRO_ACCESS_TOKEN` in its own environment and only uses the key each user sends.
@@ -134,6 +156,6 @@ To connect a client to a local build via stdio:
 ## Links
 
 - [Pyth Pro Documentation](https://docs.pyth.network/price-feeds/pro)
-- [Get an Access Token](https://docs.pyth.network/price-feeds/pro/acquire-access-token)
+- [Get an API Key](https://docs.pyth.network/price-feeds/pro/acquire-api-key)
 - [Pricing](https://pyth.network/pricing)
 - [GitHub Repository](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/mcp)
