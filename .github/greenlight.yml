@@ -16,6 +16,9 @@ auto_approve_paths:
   - "apps/api-reference/**"
   # Read-only consumer frontends (consume prices, never produce them)
   - "apps/entropy-explorer/**"
+  # MCP server: reads prices with each caller's own key and serves them to AI
+  # clients; read-only, off the price path, and holds no key of its own
+  - "apps/mcp/**"
   # Presentational UI packages (not imported by any critical-path tool)
   - "packages/component-library/**"
   - "packages/known-publishers/**"
