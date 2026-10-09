@@ -70,4 +70,4 @@ export const RESOLUTIONS = [
 ] as const;
 
 export const ACCESS_TOKEN_URL =
-  "https://docs.pyth.network/price-feeds/pro/acquire-access-token";
+  "https://docs.pyth.network/price-feeds/pro/acquire-api-key";
