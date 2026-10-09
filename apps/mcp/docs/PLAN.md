@@ -5,7 +5,7 @@
 Pyth Pro delivers low-latency, cross-asset market data (crypto, equities, FX, metals, energy, rates) from first-party publishers via a subscription service. An MCP server wrapping these APIs would:
 
 1. **Validate the agentic market data thesis** — prove that AI agents consuming real-time financial data is a viable product category
-2. **Generate Pro subscription leads** — free-tier access to discovery/OHLC funnels users toward paid real-time feeds
+2. **Generate Pro subscription leads** — free feed discovery funnels users toward paid real-time and historical data
 3. **Reduce integration friction** — AI assistants can fetch prices, analyze history, and generate integration code without users reading API docs
 
 The server wraps two Pyth Pro APIs:
@@ -25,10 +25,10 @@ Both are called with plain `fetch`. The Lazer SDK is not used: since v7, `PythLa
 | Package | **`@pyth-network/mcp-server`** |
 | Auth | **Every user brings their own key.** In order: the per-call `access_token`, then the key from the user's MCP client configuration (the `Authorization: Bearer` header of their HTTP request, or `PYTH_PRO_ACCESS_TOKEN` in the env their client gives a local stdio server). The HTTP server never reads `PYTH_PRO_ACCESS_TOKEN` from its own environment, so a hosted server can never answer with a shared key. Required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. Optional for `get_symbols`, where it adds Pro-only feeds and a per-feed `entitled` flag. 401 = invalid token, 403 = valid token without the entitlement (the message names the group). |
 | Shared trial token | **Dropped** (2026-10). Conflicts with bring-your-own-key. |
-| Graceful degradation | `get_symbols` (feed discovery) works **without** a token. `get_latest_price`, `get_historical_price`, and `get_candlestick_data` require a token and return a clear "bring your token" message if missing/invalid. |
+| Graceful degradation | `get_symbols` (feed discovery) and `convert_date_to_timestamp` work **without** a token. `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data` require one and return a clear message, with setup steps, if it is missing or invalid. |
 | Channel default | `fixed_rate@200ms` server-wide default via `PYTH_CHANNEL` env var. Per-tool `channel` parameter can override. Note: each feed has a minimum supported channel (most are 200ms, some support real_time). |
 | Feed identifiers | Tools accept **both** `symbols` (string, e.g. `"BTC/USD"`) and `priceFeedIds` (numeric). LLMs will naturally use symbols. |
-| Properties default | `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount]` — overridable per-tool call. |
+| Properties default | `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount, marketSession, feedUpdateTimestamp]` — any of the 13 Router properties can be requested per call. |
 | Code sandbox | **v1.1 fast-follow** — standard tools in v1, sandbox execution tool in v1.1. Detailed plan below. |
 | Prompts | **2-3 starter prompts** in v1 |
 | Hosting | **Decide later** — focus on stdio for v1 launch. HTTP mode built but hosting deferred. |
@@ -169,9 +169,9 @@ process.on("SIGINT", cleanup);
 
 > **2026-10 API update.** Implemented: authenticated `get_symbols` with `entitled` / `not_entitled_reason`, new filters (`include_inactive`, `instrument_type`, `symbol_chain_id`) and asset types; per-token `/v1/symbols` cache; bare-symbol resolution (`BTC/USD` → `Crypto.BTC/USD`) in all price tools; all 13 Router properties; strict 4-value channel enum; `display_*` for confidence, EMA and funding rate; new `get_price_range`. The per-tool tables below predate this update where they disagree with the tool descriptions in `src/tools/`, which are the source of truth.
 
-> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). The other tools use the History API: `get_symbols` is public, while `get_historical_price` and `get_candlestick_data` require a token (passed per-call via `access_token`).
+> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). The other tools use the History API: `get_symbols` is public, while `get_historical_price`, `get_price_range` and `get_candlestick_data` require a token (from the client configuration, or per call as `access_token`).
 
-### Toolset: `discovery` (public, no token needed)
+### Toolset: `discovery` (History API; only `get_symbols` works without a token)
 
 #### 1. `get_symbols`
 > List and filter available Pyth Pro price feeds across all asset classes.
@@ -179,7 +179,7 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /symbols` (History API) |
-| Auth | None |
+| Auth | Optional: adds Pro-only feeds and a per-feed `entitled` flag |
 | Read-only | Yes |
 
 **Parameters:**
@@ -202,7 +202,7 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /{channel}/history` (History API) |
-| Auth | Required (per-call `access_token`) |
+| Auth | Required (client-configured key or per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**
@@ -226,7 +226,7 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /{channel}/price` (History API) |
-| Auth | Required (per-call `access_token`) |
+| Auth | Required (client-configured key or per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**
@@ -283,7 +283,7 @@ process.on("SIGINT", cleanup);
 
 **Returns:** Full `parsed` response payload (all fields included). Binary signed payload fields (`evm`, `solana`, `leUnsigned`, `leSigned`) are excluded. Includes `timestampUs`, `priceFeeds` with all available properties per feed.
 
-**Error when no token:** `"This tool requires your Pyth Pro access token. Pass it as the access_token parameter. Get a token at https://pyth.network/pricing"`
+**Error when no token:** "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter, or configure it once in your MCP client (an `Authorization: Bearer <token>` header for the hosted server, or PYTH_PRO_ACCESS_TOKEN for a local stdio server). Get a token at https://docs.pyth.network/price-feeds/pro/acquire-api-key"
 
 ---
 
@@ -355,8 +355,8 @@ process.on("SIGINT", cleanup);
 
 | Error | HTTP Code | Tool Behavior | LLM-Facing Message |
 |-------|-----------|---------------|---------------------|
-| Missing token | — | Return tool error | "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter. Get a token at https://pyth.network/pricing" |
-| Invalid token | 401 | Return tool error | "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed." |
+| Missing token | — | Return tool error | "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter, or configure it once in your MCP client (an `Authorization: Bearer <token>` header for the hosted server, or PYTH_PRO_ACCESS_TOKEN for a local stdio server). Get a token at https://docs.pyth.network/price-feeds/pro/acquire-api-key" |
+| Invalid token | 401 | Return tool error | "Your Pyth Pro access token is invalid or expired. Check the `access_token` you passed, or the token configured in your MCP client." |
 | Not entitled | 403 | Return tool error | "Pyth Pro denied access (403): <upstream reason>. Your access token is valid, but your plan is not entitled to this feed. …" |
 | Feed not found | 400/404 | Return tool error | "Feed not found: {symbol}. Use get_symbols to discover available feeds." |
 | Timestamp not found | 404 | Return tool error | "No price data available at the requested timestamp. Try a different timestamp or check if the market was open." |
@@ -480,23 +480,23 @@ interface ToolInvocationLog {
 
 ## Configuration
 
-| Env Var | CLI Flag | Default | Description |
-|---------|----------|---------|-------------|
-| `PYTH_CHANNEL` | `--channel` | `fixed_rate@200ms` | Default price channel |
-| `PYTH_ROUTER_URL` | `--router-url` | `https://pyth-lazer.dourolabs.app` | Router API base URL |
-| `PYTH_HISTORY_URL` | `--history-url` | `https://pyth.dourolabs.app` | History API base URL |
-| `PYTH_LOG_LEVEL` | `--log-level` | `info` | Log level: debug, info, warn, error |
-| `PYTH_LOG_FILE` | `--log-file` | stderr | Log output file (stdio mode logs to stderr to avoid polluting JSON-RPC) |
-| `PYTH_REQUEST_TIMEOUT_MS` | `--timeout` | `10000` | HTTP request timeout in milliseconds |
-| `PORT` | `--port` | `8080` | HTTP server port |
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `PYTH_CHANNEL` | `fixed_rate@200ms` | Default price channel |
+| `PYTH_ROUTER_URL` | `https://pyth-lazer.dourolabs.app` | Router API base URL |
+| `PYTH_HISTORY_URL` | `https://pyth.dourolabs.app` | History API base URL |
+| `PYTH_LOG_LEVEL` | `info` | Log level: debug, info, warn, error. Logs go to stderr, so stdio JSON-RPC stays clean |
+| `PYTH_REQUEST_TIMEOUT_MS` | `10000` | HTTP request timeout in milliseconds |
+| `PYTH_PRO_ACCESS_TOKEN` | — | The user's own key, **stdio only**. The HTTP server never reads it |
+| `PORT` | `8080` | HTTP server port |
 
-**CLI commands:**
+**Run:**
 ```bash
-# Stdio mode (for Claude Desktop, Cursor, etc.)
-npx @pyth-network/mcp-server stdio
+# Stdio mode (a local server for one user's client)
+pnpm --filter @pythnetwork/mcp start:stdio
 
-# HTTP mode (for remote deployment)
-npx @pyth-network/mcp-server http --port 8080
+# HTTP mode (the hosted server)
+pnpm --filter @pythnetwork/mcp start
 ```
 
 ---
@@ -611,7 +611,7 @@ Automatically fetch and update key data types (Channel, AssetType, MarketSession
 
 ## v2 — Shared Trial Token (Summary) — DROPPED
 
-> Dropped in 2026-10: every user brings their own key, passed per call as `access_token`; the server ignores any key in its environment. Kept for history.
+> Dropped in 2026-10: every user brings their own key, from their MCP client configuration or per call as `access_token`; the hosted server ignores any key in its own environment. Kept for history.
 
 - Server holds a `PYTH_PRO_SERVER_TOKEN` (env var, never exposed to clients)
 - When user has no `PYTH_PRO_ACCESS_TOKEN`, server uses its own token for Router API calls
@@ -647,20 +647,14 @@ Automatically fetch and update key data types (Channel, AssetType, MarketSession
 
 ### Manual smoke test
 ```bash
-# 1. Install and run
-npx @pyth-network/mcp-server stdio
+# 1. Connect Claude Code to the hosted server with your own key
+claude mcp add --transport http pyth https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"
 
-# 2. In Claude Desktop config, add:
-{
-  "mcpServers": {
-    "pyth-pro": {
-      "command": "npx",
-      "args": ["@pyth-network/mcp-server", "stdio"]
-    }
-  }
-}
+#    or to a local build over stdio
+pnpm --filter @pythnetwork/mcp build
+claude mcp add pyth-local -e PYTH_PRO_ACCESS_TOKEN=YOUR_TOKEN -- node <path-to-repo>/apps/mcp/dist/index.js
 
-# 3. Test queries:
+# 2. Test queries:
 # "What crypto feeds are available on Pyth Pro?"        → get_symbols
 # "What's the current price of BTC?"                    → get_latest_price
 # "Show me ETH/USD daily candles for the last month"    → get_candlestick_data
@@ -678,9 +672,9 @@ All architectural decisions made during the brainstorming session, with rational
 | 1 | MCP purpose | Market data only / Integration only / Both | **Both** | MCP tools serve data extraction; resources and prompts drive Pro integration and SDK adoption |
 | 2 | Language | TypeScript / Go / Rust / Python | **TypeScript** | Largest MCP ecosystem, npm distribution, fastest to ship. Rust was evaluated (Pyth DNA, performance) and confirmed TypeScript as the right choice for ecosystem reach and shipping speed. |
 | 3 | Transport | Stdio only / Stdio+HTTP / HTTP only | **Stdio + HTTP** | Stdio for local dev (Claude Desktop, Cursor); HTTP for remote deployment. Both built from day one. |
-| 4 | Auth v1 | Env var / Config file / OAuth / Per-call parameter | **Per-call `access_token` only** (2026-10; was env var) | Every user brings their own key, and the server holds none, so a hosted deployment can never share a key across callers. |
-| 5 | Auth v2 | Shared server token with rate limiting | **Dropped** (2026-10) | Every user brings their own key, passed per call. The server never reads a key from its environment. |
-| 6 | Graceful degradation | Always require token / Graceful / Separate toolsets | **Graceful degradation** | History API is public — no reason to block symbol search and OHLC. Creates natural adoption funnel to Pro. |
+| 4 | Auth v1 | Env var / Config file / OAuth / Per-call parameter | **The user's own key, from their client configuration or per call** (2026-10) | The per-call `access_token` wins; otherwise the client's `Authorization: Bearer` header (HTTP) or `PYTH_PRO_ACCESS_TOKEN` in the env the client gives a local stdio server. The server holds no key, so a hosted deployment can never share one across callers. |
+| 5 | Auth v2 | Shared server token with rate limiting | **Dropped** (2026-10) | Every user brings their own key. The hosted server never reads a key from its own environment. |
+| 6 | Graceful degradation | Always require token / Graceful / Separate toolsets | **Graceful degradation** | Symbol search is public — no reason to block it. Prices, history and OHLC need the user's key. Creates natural adoption funnel to Pro. |
 | 7 | Feed identifiers | Symbols only / IDs only / Both | **Both** | LLMs naturally use symbols ("BTC/USD"). Power users and code may use numeric IDs. Accept both. |
 | 8 | Channel default | Server-wide only / Per-tool only / Both | **Server-wide default + per-tool override** | Most feeds are 200ms. Default covers 90% of cases. Override for feeds supporting real_time. |
 | 9 | Properties | Explicit selection / Return all / Sensible defaults | **Sensible defaults** | `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount, marketSession, feedUpdateTimestamp]` covers most use cases. All 13 Router properties can be requested. |
