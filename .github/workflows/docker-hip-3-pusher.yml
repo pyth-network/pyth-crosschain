@@ -5,6 +5,7 @@ on:
       - hip-3-pusher-v*
   pull_request:
     paths:
+      - ".github/workflows/docker-hip-3-pusher.yml"
       - "apps/hip-3-pusher/**"
   workflow_dispatch:
     inputs:

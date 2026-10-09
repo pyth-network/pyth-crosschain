@@ -5,7 +5,9 @@ on:
       - hermes-v*
   pull_request:
     paths:
+      - ".github/workflows/docker-hermes.yml"
       - "apps/hermes/server/**"
+      - "pythnet/pythnet_sdk/**"
   workflow_dispatch:
     inputs:
       dispatch_description:
