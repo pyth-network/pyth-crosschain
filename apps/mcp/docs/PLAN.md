@@ -22,7 +22,7 @@ Both are called with plain `fetch`. The Lazer SDK is not used: since v7, `PythLa
 |----------|-----------|
 | Language | **TypeScript** — largest MCP ecosystem, npm distribution, fast to ship |
 | Transport | **Stdio + HTTP** — local dev via stdio, remote deployment via HTTP |
-| Package | **`@pyth-network/mcp-server`** |
+| Package | **`@pythnetwork/mcp`**, private (not on npm). Users connect to the hosted server or run a local build. |
 | Auth | **Every user brings their own key.** In order: the per-call `access_token`, then the key from the user's MCP client configuration (the `Authorization: Bearer` header of their HTTP request, or `PYTH_PRO_ACCESS_TOKEN` in the env their client gives a local stdio server). The HTTP server never reads `PYTH_PRO_ACCESS_TOKEN` from its own environment, so a hosted server can never answer with a shared key. Required for `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data`. Optional for `get_symbols`, where it adds Pro-only feeds and a per-feed `entitled` flag. 401 = invalid token, 403 = valid token without the entitlement (the message names the group). |
 | Shared trial token | **Dropped** (2026-10). Conflicts with bring-your-own-key. |
 | Graceful degradation | `get_symbols` (feed discovery) and `convert_date_to_timestamp` work **without** a token. `get_latest_price`, `get_historical_price`, `get_price_range` and `get_candlestick_data` require one and return a clear message, with setup steps, if it is missing or invalid. |
@@ -30,8 +30,8 @@ Both are called with plain `fetch`. The Lazer SDK is not used: since v7, `PythLa
 | Feed identifiers | Tools accept **both** `symbols` (string, e.g. `"BTC/USD"`) and `priceFeedIds` (numeric). LLMs will naturally use symbols. |
 | Properties default | `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount, marketSession, feedUpdateTimestamp]` — any of the 13 Router properties can be requested per call. |
 | Code sandbox | **v1.1 fast-follow** — standard tools in v1, sandbox execution tool in v1.1. Detailed plan below. |
-| Prompts | **2-3 starter prompts** in v1 |
-| Hosting | **Decide later** — focus on stdio for v1 launch. HTTP mode built but hosting deferred. |
+| Prompts | **2-3 starter prompts** planned; not built yet |
+| Hosting | **Hosted** at `https://mcp.pyth.network/mcp` (HTTP). Stdio for local builds. |
 | Observability | **Full** — structured JSON logs, every tool invocation tracked |
 
 ---
@@ -138,7 +138,7 @@ process.on("SIGINT", cleanup);
 └──────────────┬──────────────────┬───────────────┘
                │ stdio            │ HTTP
 ┌──────────────▼──────────────────▼───────────────┐
-│            @pyth-network/mcp-server              │
+│                @pythnetwork/mcp                  │
 │                                                   │
 │  ┌─────────┐  ┌───────────┐  ┌─────────┐        │
 │  │  Tools  │  │ Resources │  │ Prompts │        │
@@ -158,8 +158,8 @@ process.on("SIGINT", cleanup);
         │                         │
   ┌─────▼─────────┐   ┌──────────▼──────────────┐
   │ Router API    │   │ History API             │
-  │ pyth-lazer.   │   │ history.pyth-lazer.     │
-  │ dourolabs.app │   │ dourolabs.app           │
+  │ pyth-lazer.   │   │ pyth.dourolabs.app      │
+  │ dourolabs.app │   │                         │
   └───────────────┘   └─────────────────────────┘
 ```
 
@@ -167,85 +167,89 @@ process.on("SIGINT", cleanup);
 
 ## Tools (6 tools)
 
-> **2026-10 API update.** Implemented: authenticated `get_symbols` with `entitled` / `not_entitled_reason`, new filters (`include_inactive`, `instrument_type`, `symbol_chain_id`) and asset types; per-token `/v1/symbols` cache; bare-symbol resolution (`BTC/USD` → `Crypto.BTC/USD`) in all price tools; all 13 Router properties; strict 4-value channel enum; `display_*` for confidence, EMA and funding rate; new `get_price_range`. The per-tool tables below predate this update where they disagree with the tool descriptions in `src/tools/`, which are the source of truth.
+> The tool descriptions in `src/tools/` are the source of truth; this section summarizes them.
 
-> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). The other tools use the History API: `get_symbols` is public, while `get_historical_price`, `get_price_range` and `get_candlestick_data` require a token (from the client configuration, or per call as `access_token`).
+> **Naming convention:** Tool names match the underlying API endpoint names directly. Router API is only used for `get_latest_price` (real-time data requiring a token). The other price tools use the History API: `get_symbols` is public, while `get_historical_price`, `get_price_range` and `get_candlestick_data` require a token (from the client configuration, or per call as `access_token`).
 
-### Toolset: `discovery` (History API; only `get_symbols` works without a token)
+**Shared by the price tools:**
+- `access_token` (optional): only needed when the user's MCP client does not send a key (see Auth in Key Decisions).
+- `symbols` accept full symbols (`Crypto.BTC/USD`) or bare pairs (`BTC/USD`). A bare pair resolves to the live spot feed, otherwise to the only remaining live match; an ambiguous input returns an error listing the candidates. `resolved_symbols` in the response shows each mapping.
+- If both `price_feed_ids` and `symbols` are given, only the IDs are used.
+- `channel`: `real_time`, `fixed_rate@50ms`, `fixed_rate@200ms` or `fixed_rate@1000ms`; default `fixed_rate@200ms` (`PYTH_CHANNEL`). A channel faster than the feed's `min_channel` returns no price.
+- Requested feeds that return no price (e.g. `beta` or `coming_soon` feeds) are listed in `missing_feed_ids`.
+- Prices are integers with an `exponent`; `display_*` fields (`display_price`, `display_bid`, `display_ask`, `display_confidence`, `display_ema_price`, `display_ema_confidence`, `display_funding_rate`) apply it.
+- Every response carries `server_time_utc` and `server_unix_seconds`.
+
+### Toolset: `discovery` (no token needed)
 
 #### 1. `get_symbols`
-> List and filter available Pyth Pro price feeds across all asset classes.
+> List and filter Pyth Pro price feeds across all asset classes.
 
 | Field | Value |
 |-------|-------|
-| API | `GET /symbols` (History API) |
+| API | `GET /v1/symbols` (History API); with a token, also `GET /v1/symbols?entitled_only=true` |
 | Auth | Optional: adds Pro-only feeds and a per-feed `entitled` flag |
 | Read-only | Yes |
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `query` | string | No | Text filter (e.g. "BTC", "gold", "AAPL") |
-| `asset_type` | string | No | Filter: `crypto`, `fx`, `equity`, `metal`, `rates`, `commodity`, `funding-rate` |
-| `offset` | number | No | Pagination offset (default 0) |
+| `query` | string | No | Text filter on symbol, name and description (e.g. "BTC", "gold", "AAPL") |
+| `asset_type` | string | No | `crypto`, `crypto-index`, `crypto-redemption-rate`, `fx`, `equity`, `metal`, `rates`, `interest-rate`, `nav`, `commodity`, `funding-rate`, `eco`, `kalshi` |
+| `instrument_type` | string | No | `spot`, `future`, `perp`, `rate`, `index`, `nav` |
+| `symbol_chain_id` | string | No | Futures chain, exact and case-sensitive (e.g. `VX`) |
+| `include_inactive` | boolean | No | Include retired feeds (default `false`) |
+| `verbose` | boolean | No | Return every catalog field, e.g. `market_sessions`, `corporate_actions` (default `false`) |
 | `limit` | number | No | Results per page (default 50, max 200) |
+| `offset` | number | No | Pagination offset (default 0) |
+| `access_token` | string | No | The user's own token |
 
-**Returns:** Array of `{ pyth_lazer_id, name, symbol, description, asset_type, exponent, min_channel, state, hermes_id, quote_currency }`
-
-**LLM description:** *"List available Pyth Pro price feeds. Use this to discover what feeds exist before fetching prices. You can filter by asset type (crypto, equity, fx, metal, rates, commodity) or search by name/symbol."*
+**Returns:** `{ feeds, count, total_available, offset, has_more, next_offset, note? }`. Each feed is compact by default: `pyth_lazer_id`, `symbol`, `name`, `description`, `asset_type`, `instrument_type`, `state`, `exponent`, `min_channel`, `quote_currency`, plus `groups`, `expiration_time` and `symbol_chain_id` where set. With a token, each feed has `entitled`, and `not_entitled_reason` when it is `false` (not live yet, or the plan lacks an entitlement group).
 
 ---
 
-#### 2. `get_candlestick_data`
-> Get OHLC (Open/High/Low/Close) candlestick data for charting and technical analysis.
+#### 2. `convert_date_to_timestamp`
+> Convert a date to Unix timestamps for the other tools.
 
 | Field | Value |
 |-------|-------|
-| API | `GET /{channel}/history` (History API) |
-| Auth | Required (client-configured key or per-call `access_token`) |
+| API | None (computed locally) |
+| Auth | None |
 | Read-only | Yes |
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `symbol` | string | Yes | Trading pair (e.g. "BTC/USD") |
-| `resolution` | string | Yes | Candle size: `1`, `5`, `15`, `30`, `60`, `240`, `D`, `W`, `M` |
-| `from` | number | Yes | Start time (Unix seconds) |
-| `to` | number | Yes | End time (Unix seconds) |
-| `channel` | string | No | Override default channel |
+| `date_string` | string | Yes | ISO 8601 / RFC 3339, e.g. `2026-01-01T00:00:00Z` or `2026-01-01`. Dates without a timezone are UTC |
 
-**Returns:** `{ s: "ok", t: [timestamps], o: [opens], h: [highs], l: [lows], c: [closes], v: [volumes] }`
-
-**LLM description:** *"Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. Resolutions: 1/5/15/30/60 minutes, 240 (4h), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds."*
+**Returns:** `{ input, iso8601, unix_seconds, unix_microseconds, is_in_valid_range, valid_range }`. `valid_range` runs from 2025-04-01, when historical data starts, to now.
 
 ---
+
+### Toolset: `history` (History API, token required)
 
 #### 3. `get_historical_price`
-> Get historical price data at a specific timestamp.
+> Prices for one or more feeds at one past instant.
 
 | Field | Value |
 |-------|-------|
-| API | `GET /{channel}/price` (History API) |
+| API | `GET /v1/{channel}/price` (History API) |
 | Auth | Required (client-configured key or per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `ids` | number[] | No* | Price feed IDs |
-| `symbols` | string[] | No* | Symbol names (e.g. ["BTC/USD"]) — resolved to IDs internally |
-| `timestamp` | number | Yes | Unix timestamp in **seconds or milliseconds** (auto-detected by magnitude; converted to microseconds internally) |
-| `channel` | string | No | Override default channel |
+| `price_feed_ids` | number[] | No* | Feed IDs, max 50 |
+| `symbols` | string[] | No* | Symbols or bare pairs, max 50 |
+| `timestamp` | number | Yes | Unix seconds, milliseconds or microseconds (auto-detected by magnitude), aligned down to the channel interval |
+| `channel` | string | No | Override the default channel |
 
-*At least one of `ids` or `symbols` required.
+*At least one of `price_feed_ids` or `symbols` required.
 
-**Returns:** All fields from the API response for each feed (e.g. `price_feed_id`, `publish_time`, `channel`, `price`, `best_bid_price`, `best_ask_price`, `confidence`, `exponent`, `publisher_count`, and any additional fields present).
-
-**LLM description:** *"Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. Accepts Unix seconds or milliseconds (auto-detected). Prices are integers with an exponent field — human-readable price = price * 10^exponent."*
+**Returns:** `{ prices, missing_feed_ids?, resolved_symbols? }`. Each row has every field the API returns plus `display_*`. When nothing is found, `prices` is empty, with a `hint` (too early, in the future, or no data) and `valid_range`.
 
 ---
-
-### Toolset: `prices` (requires Pro token)
 
 #### 4. `get_price_range`
 > Every price update for one or more feeds within a window of at most 60 seconds.
@@ -253,41 +257,78 @@ process.on("SIGINT", cleanup);
 | Field | Value |
 |-------|-------|
 | API | `GET /v1/{channel}/price/range` (History API) |
-| Auth | Required |
-| Read-only | Yes |
-
-**Parameters:** `price_feed_ids` or `symbols` (bare pairs resolve), `start` / `end` (seconds, ms or µs; inclusive; at most 60 s apart, checked locally), `channel`, `limit` (default 100, max 500; the API allows 1000), `after` (cursor from `next_cursor`), `access_token`.
-
-**Returns:** `prices` (rows with `display_*`), `count`, `has_more`, `next_cursor`, `window`, `resolved_symbols` when an input was rewritten.
-
----
-
-#### 5. `get_latest_price`
-> Get the most recent real-time price data for one or more feeds.
-
-| Field | Value |
-|-------|-------|
-| API | `POST /v1/latest_price` (Router API) |
-| Auth | **Required** (Bearer token) |
+| Auth | Required (client-configured key or per-call `access_token`) |
 | Read-only | Yes |
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `symbols` | string[] | No* | Symbol names (e.g. ["BTC/USD", "ETH/USD"]) |
-| `priceFeedIds` | number[] | No* | Numeric feed IDs |
-| `properties` | string[] | No | Properties to return. Default: `[price, bestBidPrice, bestAskPrice, confidence, exponent, publisherCount]` |
-| `channel` | string | No | Override default channel |
+| `price_feed_ids` | number[] | No* | Feed IDs, max 50 |
+| `symbols` | string[] | No* | Symbols or bare pairs, max 50 |
+| `start` | number | Yes | Window start, inclusive; seconds, ms or µs |
+| `end` | number | Yes | Window end, inclusive; at most 60 s after `start` (checked locally), equal for one instant |
+| `limit` | number | No | Rows per page (default 100, max 500; the API allows 1000) |
+| `after` | string | No | Paging cursor: `next_cursor` from the previous page |
+| `channel` | string | No | Override the default channel |
 
-*At least one of `symbols` or `priceFeedIds` required.
+*At least one of `price_feed_ids` or `symbols` required.
 
-**Returns:** Full `parsed` response payload (all fields included). Binary signed payload fields (`evm`, `solana`, `leUnsigned`, `leSigned`) are excluded. Includes `timestampUs`, `priceFeeds` with all available properties per feed.
+**Returns:** `{ prices, count, has_more, next_cursor, window, resolved_symbols? }`. Each row is one update for one feed, with `display_*`.
+
+---
+
+#### 5. `get_candlestick_data`
+> OHLC candles for one feed, for charting and technical analysis.
+
+| Field | Value |
+|-------|-------|
+| API | `GET /v1/{channel}/history` (History API) |
+| Auth | Required (client-configured key or per-call `access_token`) |
+| Read-only | Yes |
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `symbol` | string | Yes | One symbol or bare pair (e.g. `BTC/USD`) |
+| `resolution` | string | Yes | `1`, `5`, `15`, `30`, `60`, `120`, `240`, `360`, `720` (minutes), `D`, `W`, `M` |
+| `from` | number | Yes | Start time, Unix seconds only |
+| `to` | number | Yes | End time, Unix seconds only |
+| `channel` | string | No | Override the default channel |
+
+**Returns:** `{ s: "ok", t, o, h, l, c, v }`, already in display units. Over 500 candles, the first 500 come back with `truncated: true`, `returned`, `total_available` and a `hint`. With no data, `candles: 0`, a `hint` and `valid_range`. For funding-rate feeds the candles chart the mark price, not the rate.
+
+---
+
+### Toolset: `prices` (Router API, token required)
+
+#### 6. `get_latest_price`
+> The most recent price data for one or more feeds.
+
+| Field | Value |
+|-------|-------|
+| API | `POST /v1/latest_price` (Router API) |
+| Auth | Required (client-configured key or per-call `access_token`) |
+| Read-only | Yes |
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `price_feed_ids` | number[] | No* | Feed IDs, max 100 |
+| `symbols` | string[] | No* | Symbols or bare pairs, max 100 |
+| `properties` | string[] | No | Any of the 13 Router properties: `price`, `bestBidPrice`, `bestAskPrice`, `exponent`, `publisherCount`, `confidence`, `fundingRate`, `fundingTimestamp`, `fundingRateInterval`, `marketSession`, `emaPrice`, `emaConfidence`, `feedUpdateTimestamp`. Default: the first six plus `marketSession` and `feedUpdateTimestamp` |
+| `channel` | string | No | Override the default channel |
+
+*At least one of `price_feed_ids` or `symbols` required.
+
+**Returns:** `{ prices, missing_feed_ids?, resolved_symbols? }`. Each row has `price_feed_id`, `timestamp_us` and the requested properties in snake_case (`best_bid_price`, `market_session`, `funding_rate`, …), plus `display_*`. Signed payloads (`evm`, `solana`, …) are never requested.
 
 **Error when no token:** "This tool requires your Pyth Pro access token. Pass it as the `access_token` parameter, or configure it once in your MCP client (an `Authorization: Bearer <token>` header for the hosted server, or PYTH_PRO_ACCESS_TOKEN for a local stdio server). Get a token at https://docs.pyth.network/price-feeds/pro/acquire-api-key"
 
 ---
 
-## Resources (9 resources)
+## Resources (2 built, 7 planned)
+
+> Built: `pyth://feeds` and `pyth://feeds/{asset_type}`. The rest are planned.
 
 ### Static documentation resources
 
@@ -310,7 +351,9 @@ process.on("SIGINT", cleanup);
 
 ---
 
-## Prompts (3 starters)
+## Prompts (3 starters, planned)
+
+> Not built yet.
 
 ### 1. `market_snapshot`
 > Cross-asset market overview — crypto, equities, FX, commodities in one view.
@@ -419,58 +462,51 @@ interface ToolInvocationLog {
 ## Project Structure
 
 ```
-@pyth-network/mcp-server/
+apps/mcp/  (@pythnetwork/mcp)
 ├── src/
-│   ├── index.ts                  # CLI entry point (stdio + http commands)
-│   ├── server.ts                 # MCP server creation, middleware, registration
-│   ├── config.ts                 # Configuration (env vars, CLI flags, defaults)
+│   ├── index.ts                  # Stdio entry point; reads PYTH_PRO_ACCESS_TOKEN
+│   ├── http.ts                   # HTTP entry point; /mcp, /health, /metrics
+│   ├── server.ts                 # MCP server creation and registration
+│   ├── config.ts                 # Configuration from env vars
+│   ├── constants.ts              # Channels, properties, asset/instrument types, resolutions
+│   ├── metrics.ts                # Prometheus metrics
 │   │
 │   ├── clients/
-│   │   ├── router.ts             # Pyth Pro Router API client (POST /v1/*)
-│   │   ├── history.ts            # Pyth Pro History API client (GET /*)
-│   │   └── types.ts              # Shared API response types
+│   │   ├── router.ts             # Router API client (POST /v1/latest_price), key check
+│   │   ├── history.ts            # History API client (GET /v1/symbols, /v1/{channel}/*)
+│   │   ├── symbols-store.ts      # Module-level TTL caches (catalog, entitlements, key checks)
+│   │   ├── retry.ts              # HttpError, single retry
+│   │   └── types.ts              # API response schemas
 │   │
 │   ├── tools/
-│   │   ├── index.ts              # Tool registry — exports all tools
-│   │   ├── get-symbols.ts        # get_symbols (History: GET /symbols)
-│   │   ├── get-candlestick-data.ts        # get_candlestick_data (History: GET /{channel}/history)
-│   │   ├── get-historical-price.ts          # get_historical_price (History: GET /{channel}/price)
-│   │   └── get-latest-price.ts   # get_latest_price (Router: POST /v1/latest_price)
+│   │   ├── index.ts              # Tool registry
+│   │   ├── price-tool.ts         # Shared token, feed-resolution and error handling
+│   │   ├── descriptions.ts       # Shared description fragments
+│   │   ├── get-symbols.ts
+│   │   ├── get-latest-price.ts
+│   │   ├── get-historical-price.ts
+│   │   ├── get-price-range.ts
+│   │   ├── get-candlestick-data.ts
+│   │   └── convert-date-to-timestamp.ts
 │   │
 │   ├── resources/
-│   │   ├── index.ts              # Resource registry
-│   │   ├── feeds.ts              # pyth://feeds, pyth://feeds/{asset_type}
-│   │   ├── schema.ts             # pyth://schema/* (streaming_payload, errors, openapi)
-│   │   ├── docs.ts               # pyth://docs/* (integration guide, chains)
-│   │   └── tradingview.ts        # pyth://tradingview/config
-│   │
-│   ├── prompts/
-│   │   ├── index.ts              # Prompt registry
-│   │   ├── market-snapshot.ts
-│   │   ├── price-analysis.ts
-│   │   └── setup-pyth-pro.ts
-│   │
-│   ├── middleware/
-│   │   ├── auth.ts               # Token extraction + validation
-│   │   └── logging.ts            # Structured invocation logging
+│   │   └── index.ts              # pyth://feeds, pyth://feeds/{asset_type}
 │   │
 │   └── utils/
-│       ├── errors.ts             # Error types (PythAPIError, PythAuthError, etc.)
-│       ├── channel.ts            # Channel resolution (default + override + feed min)
-│       └── logger.ts             # Structured JSON logger
+│       ├── access-token.ts       # Token validation; per-call vs client-configured key
+│       ├── channel.ts            # Channel: per call, else PYTH_CHANNEL, else default
+│       ├── display-price.ts      # display_* fields
+│       ├── errors.ts             # LLM-facing error messages
+│       ├── feeds.ts              # Feed state helpers
+│       ├── logger.ts             # Structured JSON logger, token redaction
+│       ├── missing-feeds.ts      # missing_feed_ids
+│       ├── resolve-symbols.ts    # Bare-symbol resolution
+│       └── timestamp.ts          # Timestamp normalization
 │
-├── content/
-│   ├── integration-guide.md      # Static content for pyth://docs/integration-guide
-│   ├── chains.md                 # Static content for pyth://docs/chains
-│   ├── streaming-payload-schema.md         # Static content for pyth://schema/streaming_payload
-│   └── error-codes.md            # Static content for pyth://schema/errors
-│
-├── tests/
-│   ├── tools/                    # Unit tests per tool
-│   ├── clients/                  # API client tests with mocked HTTP
-│   ├── resources/                # Resource handler tests
-│   └── e2e/                      # E2E tests with real API (optional token)
-│
+├── skills/                       # Agent skills that use the tools
+├── tests/                        # clients/, tools/, utils/, integration/ (stdio)
+├── docs/PLAN.md
+├── server.json                   # MCP registry metadata
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -681,8 +717,8 @@ All architectural decisions made during the brainstorming session, with rational
 | 10 | TradingView endpoints | Skip / Resource only / Tools | **Resource only** | TradingView compat is for chart widgets, not LLM interactions. Expose config as resource for developers. |
 | 11 | Code Mode | v1 / v1.1 / v2 | **v1.1 fast-follow** | Hybrid approach: standard MCP tools in v1, `execute_analysis` sandbox tool in v1.1. Ship tools first, add code execution once tool usage patterns are understood. |
 | 12 | Code sandbox runtime | Cloudflare Workers / isolated-vm / quickjs | **isolated-vm** (v1.1) | V8 isolate in Node.js. Works anywhere (not CF-locked). Memory/CPU isolation. Well-maintained. |
-| 13 | Prompts | Defer to v2 / Include 2-3 starters | **Include 3 starters** | `market_snapshot`, `price_analysis`, `setup_pyth_pro`. Low effort, high demo value for generating Pro leads. |
-| 14 | Hosting | Cloudflare Workers / Docker / Decide later | **Decide later** | Focus on stdio for v1 launch. HTTP mode built and tested but hosting infrastructure deferred. |
+| 13 | Prompts | Defer to v2 / Include 2-3 starters | **Include 3 starters** (not built yet) | `market_snapshot`, `price_analysis`, `setup_pyth_pro`. Low effort, high demo value for generating Pro leads. |
+| 14 | Hosting | Cloudflare Workers / Docker / Decide later | **Hosted HTTP** (was: decide later) | The HTTP server runs at `https://mcp.pyth.network/mcp`; stdio remains for local builds. |
 | 15 | Observability | Minimal / Analytics / Full | **Full observability** | 20+ fields per invocation. Structured JSON logs for Grafana/Loki. Tracks usage analytics + operational health. |
-| 16 | Package name | @pyth-network/mcp-server / pyth-pro-mcp-server | **@pyth-network/mcp-server** | Scoped under Pyth npm org. Clean, professional, discoverable. |
+| 16 | Package name | @pyth-network/mcp-server / pyth-pro-mcp-server | **`@pythnetwork/mcp`** (private) | Follows the monorepo's `@pythnetwork/*` naming. Not published to npm: users connect to the hosted server or run a local build. |
 
