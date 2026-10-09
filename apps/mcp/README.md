@@ -11,8 +11,10 @@ Each snippet sends your own Pyth Pro API key as an `Authorization: Bearer` heade
 ### Claude Code
 
 ```sh
-claude mcp add --transport http pyth https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add --transport http --scope user pyth https://mcp.pyth.network/mcp --header "Authorization: Bearer YOUR_TOKEN"
 ```
+
+`--scope user` makes Pyth available in every project. Without it, Claude Code adds the server only to the folder you run the command in.
 
 ### Claude Desktop
 
