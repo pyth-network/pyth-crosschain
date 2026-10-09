@@ -1,9 +1,4 @@
 {
-  "//": [
-    "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",
-    "wormhole-sdk can be built with the correct version of the package in nextjs (@pythnetwork/xc-admin-frontend).",
-    "Otherwise, the nextjs build will fail due to using a different version of the package."
-  ],
   "author": "",
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
@@ -11,7 +6,6 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.10.15",
     "@coral-xyz/anchor": "^0.29.0",
-    "@injectivelabs/token-metadata": "~1.10.42",
     "@project-serum/anchor": "^0.25.0",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
@@ -399,46 +393,6 @@
       "require": {
         "default": "./dist/cjs/price_store.cjs",
         "types": "./dist/cjs/price_store.d.ts"
-      }
-    },
-    "./programs/core/core_functions": {
-      "import": {
-        "default": "./dist/esm/programs/core/core_functions.mjs",
-        "types": "./dist/esm/programs/core/core_functions.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/programs/core/core_functions.cjs",
-        "types": "./dist/cjs/programs/core/core_functions.d.ts"
-      }
-    },
-    "./programs/lazer/lazer_functions": {
-      "import": {
-        "default": "./dist/esm/programs/lazer/lazer_functions.mjs",
-        "types": "./dist/esm/programs/lazer/lazer_functions.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/programs/lazer/lazer_functions.cjs",
-        "types": "./dist/cjs/programs/lazer/lazer_functions.d.ts"
-      }
-    },
-    "./programs/program_registry": {
-      "import": {
-        "default": "./dist/esm/programs/program_registry.mjs",
-        "types": "./dist/esm/programs/program_registry.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/programs/program_registry.cjs",
-        "types": "./dist/cjs/programs/program_registry.d.ts"
-      }
-    },
-    "./programs/types": {
-      "import": {
-        "default": "./dist/esm/programs/types.mjs",
-        "types": "./dist/esm/programs/types.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/programs/types.cjs",
-        "types": "./dist/cjs/programs/types.d.ts"
       }
     },
     "./propose": {

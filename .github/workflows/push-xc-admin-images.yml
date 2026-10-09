@@ -30,9 +30,7 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-crank-executor" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-executor:${{ env.IMAGE_TAG }} -f Dockerfile.node .
           DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-crank-pythnet-relayer" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-pythnet-relayer:${{ env.IMAGE_TAG }} -f Dockerfile.node .
-          DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/xc-admin-proposer-server" -t ${{ env.REGISTRY }}/pyth-network/xc-admin-proposer-server:${{ env.IMAGE_TAG }} -f Dockerfile.node .
       - name: Push docker image
         run: |
           docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-executor:${{ env.IMAGE_TAG }}
           docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-crank-pythnet-relayer:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/pyth-network/xc-admin-proposer-server:${{ env.IMAGE_TAG }}
