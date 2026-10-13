@@ -1208,5 +1208,11 @@
     "chain": "arc",
     "type": "EvmPriceFeedContract",
     "deploymentType": "pro-compatible-production"
+  },
+  {
+    "address": "0xf77705A55aA859A80f60b8d8C4A03D7f69D2D7Ba",
+    "chain": "etherlink_new_testnet",
+    "type": "EvmPriceFeedContract",
+    "deploymentType": "pro-compatible-production"
   }
 ]
