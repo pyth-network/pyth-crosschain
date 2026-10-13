@@ -3,7 +3,6 @@ import {
   UpgradeStellarExecutor,
 } from "@pythnetwork/xc-admin-common";
 import {
-  BASE_FEE,
   Contract,
   nativeToScVal,
   Keypair as StellarKeypair,
@@ -13,11 +12,10 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
-import { sleep } from "../../utils/sleep";
 import type { PrivateKey, TxResult } from "../base";
 import { Storable } from "../base";
 import type { Chain } from "../chains";
-import { StellarChain } from "../chains";
+import { STELLAR_TX_VALIDITY_SECONDS, StellarChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 /**
@@ -349,11 +347,11 @@ export class StellarExecutorContract extends WormholeContract {
     const executor = new Contract(this.address);
 
     const tx = new TransactionBuilder(account, {
-      fee: BASE_FEE,
+      fee: this.chain.getInclusionFee(),
       networkPassphrase: this.chain.networkPassphrase,
     })
       .addOperation(executor.call(method, xdr.ScVal.scvBytes(vaa)))
-      .setTimeout(30)
+      .setTimeout(STELLAR_TX_VALIDITY_SECONDS)
       .build();
 
     const prepared = await server.prepareTransaction(tx);
@@ -366,15 +364,7 @@ export class StellarExecutorContract extends WormholeContract {
       );
     }
 
-    let result = await server.getTransaction(sent.hash);
-    while (result.status === stellarRpc.Api.GetTransactionStatus.NOT_FOUND) {
-      await sleep(1000);
-      result = await server.getTransaction(sent.hash);
-    }
-
-    if (result.status !== stellarRpc.Api.GetTransactionStatus.SUCCESS) {
-      throw new Error(`${method} transaction ${sent.hash} failed`);
-    }
+    const result = await this.chain.waitForTransaction(sent.hash, method);
 
     return { id: sent.hash, info: result };
   }
