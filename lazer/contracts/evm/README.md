@@ -6,6 +6,55 @@ This package is built using [Foundry](https://book.getfoundry.sh/).
 
 `PythLazerReceiver` contains utilities required to validate and parse Pyth Lazer payloads. Contracts should use `PythLazerReceiver` as the base contract (or one of the base contracts) of their contracts to gain access to the provided functions.
 
+### Packed EVM payloads
+
+`PythLazerPackedEvmLib` reads `packedEvmEcdsa` payloads. A packed payload carries up to 255 feeds. Each group of four feeds shares one 32-byte word: four 6-byte lanes (price, exponent, confidence code, spread code) and the payload timestamp. A consumer can store a whole word in one storage slot. `Codebook256` decodes the confidence and spread codes into 0.01 bps.
+
+Every function is `internal`, so it compiles into your contract and needs no linked library. The payload readers take `bytes calldata`. `verifyUpdate` is an external call and returns its payload as `bytes memory`, so `getPayloadFromUpdate` slices the same payload out of your own calldata instead. Call it only after `verifyUpdate` has succeeded.
+
+```solidity
+import {PythLazer} from "pyth-lazer/PythLazer.sol";
+import {PythLazerPackedEvmLib} from "pyth-lazer/PythLazerPackedEvmLib.sol";
+
+contract PriceStore {
+    PythLazer public immutable pythLazer;
+    mapping(uint32 => bytes32) public wordOf; // feed id => the word holding it
+    mapping(uint32 => uint256) public slotOf; // feed id => its lane in that word
+
+    constructor(PythLazer _pythLazer) {
+        pythLazer = _pythLazer;
+    }
+
+    function updatePrice(bytes calldata update, uint32 feedId) external payable {
+        // 1. Verify the signature.
+        pythLazer.verifyUpdate{value: pythLazer.verification_fee()}(update);
+        bytes calldata payload = PythLazerPackedEvmLib.getPayloadFromUpdate(update);
+
+        // 2. Decode. `findFeed` checks the `PEVM` magic.
+        (bool found, uint256 index) = PythLazerPackedEvmLib.findFeed(payload, feedId);
+        require(found, "feed not in payload");
+
+        // 3. Store the word: four feeds and the timestamp in one slot.
+        wordOf[feedId] = PythLazerPackedEvmLib.getBlockWord(payload, index / 4);
+        slotOf[feedId] = index % 4;
+    }
+
+    function price(uint32 feedId) external view returns (uint32 mantissa, int16 exponent, uint64 timestampUs) {
+        bytes32 word = wordOf[feedId];
+        uint48 lane = PythLazerPackedEvmLib.getWordLane(word, slotOf[feedId]);
+        // Reverts with `PriceUnavailable` when the feed had no fresh price.
+        (mantissa, exponent) = PythLazerPackedEvmLib.getPrice(lane);
+        timestampUs = PythLazerPackedEvmLib.getWordTimestamp(word);
+    }
+}
+```
+
+When you know the order you subscribed in, skip `findFeed` and call `parseHeader` once, to check the magic, and then `getBlockWord` or `getLane` by index. Feed `i` is lane `i % 4` of block `i / 4`.
+
+The price, the confidence and the spread of a lane are independent. Check each with `hasPrice`, `hasConfidence` and `hasSpread`, or let the matching getter revert. A real price stays readable when both codes are unavailable.
+
+The decoder checks only the magic and the payload length. It does not check the reserved byte, the zero padding in the last block, or that every block has the same timestamp. The payload is signed by Pyth, so those checks would only cost gas. Slots past `numFeeds` hold a zero lane, which reads as a price of 0, so do not read them.
+
 ### Build
 
 ```shell
