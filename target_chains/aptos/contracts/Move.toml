@@ -4,6 +4,12 @@ version = "0.0.1"
 upgrade_policy = "compatible"
 
 [dependencies]
+# The AptosFramework / MoveStdlib / AptosStdlib / AptosToken revisions below
+# are pinned to match the version of `aptos-core` that the on-chain Wormhole
+# package (pinned just under here) was compiled and deployed against. Bumping
+# them in isolation will produce bytecode that no longer links against the
+# deployed Wormhole package, so do not update either pin without coordinating a
+# matching Wormhole upgrade on every network we ship to.
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
 MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
 AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
