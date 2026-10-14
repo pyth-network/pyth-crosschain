@@ -1,6 +1,6 @@
 use {
     crate::{
-        api::{ApiBlockChainState, NetworkId, RestError, StateTag},
+        api::{examples, ApiBlockChainState, NetworkId, RestError, StateTag},
         config::LATENCY_BUCKETS,
         history::{RequestQueryBuilder, RequestStatus, SearchField},
     },
@@ -93,23 +93,28 @@ pub struct ExplorerQueryParams {
     #[param(value_type = Option<String>, example = "2033-10-01T00:00:00Z")]
     pub max_timestamp: Option<DateTime<Utc>>,
     /// The query string to search for. This can be a transaction hash, sender address, or sequence number.
+    #[param(example = "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32")]
     pub query: Option<String>,
-    /// The network ID to filter the results by.
-    #[param(value_type = Option<u64>)]
+    /// The network ID to filter the results by (e.g., 1 for Ethereum mainnet, 43114 for Avalanche).
+    #[param(value_type = Option<u64>, example = examples::network_id_example)]
     pub network_id: Option<NetworkId>,
-    /// The state to filter the results by.
+    /// The state to filter the results by (Pending, Completed, Failed, or CallbackErrored).
+    #[param(example = "Completed")]
     pub state: Option<StateTag>,
     /// The maximum number of logs to return. Max value is 1000.
-    #[param(default = 1000)]
+    #[param(default = 1000, example = examples::limit_example)]
     pub limit: Option<u64>,
     /// The offset to start returning logs from.
-    #[param(default = 0)]
+    #[param(default = 0, example = examples::offset_example)]
     pub offset: Option<u64>,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct ExplorerResponse {
+    /// List of entropy request logs matching the query
     pub requests: Vec<RequestStatus>,
+    /// Total number of results matching the query (may be more than returned due to limit)
+    #[schema(example = 42)]
     pub total_results: i64,
 }
 
@@ -120,7 +125,33 @@ pub struct ExplorerResponse {
 #[utoipa::path(
     get,
     path = "/v1/logs",
-    responses((status = 200, description = "A list of Entropy request logs", body = ExplorerResponse)),
+    responses((status = 200, description = "A list of Entropy request logs", body = ExplorerResponse,
+        example = json!({
+            "requests": [{
+                "chain_id": "ethereum",
+                "network_id": 1,
+                "provider": "0x6cc14824ea2918f5de5c2f75a9da968ad4bd6344",
+                "sequence": 12345,
+                "created_at": "2023-10-01T00:00:00Z",
+                "last_updated_at": "2023-10-01T00:00:05Z",
+                "request_block_number": 19000000,
+                "request_tx_hash": "0x5a3a984f41bb5443f5efa6070ed59ccb25edd8dbe6ce7f9294cf5caa64ed00ae",
+                "gas_limit": 500000,
+                "user_random_number": "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe",
+                "sender": "0x78357316239040e19fc823372cc179ca75e64b81",
+                "state": "completed",
+                "reveal_block_number": 19000005,
+                "reveal_tx_hash": "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32",
+                "provider_random_number": "deeb67cb894c33f7b20ae484228a9096b51e8db11461fcb0975c681cf0875d37",
+                "gas_used": "567890",
+                "combined_random_number": "1c26ffa1f8430dc91cb755a98bf37ce82ac0e2cfd961e10111935917694609d5",
+                "callback_failed": false,
+                "callback_return_value": "0x",
+                "callback_gas_used": 100000
+            }],
+            "total_results": 42
+        })
+    )),
     params(ExplorerQueryParams)
 )]
 pub async fn explorer(
