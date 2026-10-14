@@ -23,7 +23,7 @@ Within this monorepo you will find the following subprojects:
 
 ## Target Chains
 
-> [target_chains](./target_chains/)
+> [target_chains](./target_chains/) ([Solana](./target_chains/solana/))
 
 This directory contains on-chain contracts and SDKs for all of the various
 blockchain runtimes that Pyth supports. Each subdirectory corresponds to a
