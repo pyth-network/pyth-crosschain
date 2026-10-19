@@ -1,5 +1,8 @@
-# Copy this file into your repository as
-# `.github/workflows/greenlight-review.yml`, unchanged.
+# Copy this file into your repository verbatim, as
+# `.github/workflows/greenlight-review.yml`.
+#
+# Greenlight invokes it to AI review PRs when configured to do so.
+# Setup: README.md in dourolabs/greenlight-actions.
 
 name: greenlight AI review
 
@@ -30,13 +33,20 @@ on:
         description: The check-run name to post against `head_sha`.
         required: true
         type: string
+      verdict_url:
+        description: Where the report job sends the verdict.
+        required: false
+        type: string
 
 jobs:
   review:
+    # Do not edit: these permissions are required for the workflow to
+    # post its result.
     permissions:
       contents: read
       checks: write
-    uses: dourolabs/greenlight-actions/.github/workflows/greenlight-review-impl.yml@v1
+      id-token: write
+    uses: dourolabs/greenlight-actions/.github/workflows/greenlight-review-impl.yml@v2
     with:
       head_sha: ${{ inputs.head_sha }}
       pr_number: ${{ inputs.pr_number }}
@@ -44,6 +54,8 @@ jobs:
       review_name: ${{ inputs.review_name }}
       prompt_path: ${{ inputs.prompt_path }}
       check_name: ${{ inputs.check_name }}
+      verdict_url: ${{ inputs.verdict_url }}
+    # Named, not `inherit`: `inherit` does not cross org boundaries.
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
