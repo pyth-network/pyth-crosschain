@@ -1,3 +1,6 @@
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; metrics wiring asserts on optional config */
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; yargs argv is untyped */
+/* biome-ignore-all lint/suspicious/noEmptyBlockStatements: pre-existing; Jito bundle results are ignored */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */

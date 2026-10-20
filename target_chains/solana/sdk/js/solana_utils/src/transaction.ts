@@ -1,3 +1,5 @@
+/* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; the builder asserts on its last transaction */
+/* biome-ignore-all lint/suspicious/useAwait: pre-existing */
 /* eslint-disable no-console */
 /* eslint-disable unicorn/no-null */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */

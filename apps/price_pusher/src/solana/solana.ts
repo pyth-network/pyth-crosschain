@@ -1,3 +1,4 @@
+/* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; untyped Hermes and Jito errors */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { HermesClient } from "@pythnetwork/hermes-client";
