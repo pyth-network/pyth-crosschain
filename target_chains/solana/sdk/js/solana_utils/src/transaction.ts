@@ -5,6 +5,7 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type {
   AddressLookupTableAccount,
+  BlockhashWithExpiryBlockHeight,
   SignatureResult,
   Signer,
   TransactionInstruction,
@@ -417,6 +418,88 @@ export const isVersionedTransaction = (
 const TX_RETRY_INTERVAL = 500;
 
 /**
+ * Send a signed, serialized transaction and resend it every `TX_RETRY_INTERVAL` milliseconds until it is confirmed, based on https://github.com/rpcpool/optimized-txs-examples
+ *
+ * This function only handles bytes, so it works for every transaction version, including v1 transactions built with a more recent `@solana/web3.js`.
+ *
+ * @param serializedTransaction the signed transaction in its wire format
+ * @param txSignature the base58 signature of the fee payer, used to track the confirmation
+ * @param blockhash the blockhash used to confirm the transaction, and its last valid block height
+ */
+export async function sendAndConfirmSerializedTransaction(
+  serializedTransaction: Uint8Array,
+  txSignature: string,
+  blockhash: BlockhashWithExpiryBlockHeight,
+  connection: Connection,
+  maxRetries?: number,
+  logger: Logger = dummyLogger,
+): Promise<void> {
+  // In the following section, we wait and constantly check for the transaction to be confirmed
+  // and resend the transaction if it is not confirmed within a certain time interval
+  // thus handling tx retries on the client side rather than relying on the RPC
+  let confirmedTx: SignatureResult | null | undefined;
+  let retryCount = 0;
+
+  const confirmTransactionPromise = connection.confirmTransaction(
+    {
+      blockhash: blockhash.blockhash,
+      lastValidBlockHeight: blockhash.lastValidBlockHeight,
+      signature: txSignature,
+    },
+    "confirmed",
+  );
+
+  confirmedTx = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  while (!confirmedTx) {
+    confirmedTx = await Promise.race([
+      new Promise<SignatureResult>((resolve) => {
+        void confirmTransactionPromise.then((result) => {
+          resolve(result.value);
+        });
+      }),
+      new Promise<null>((resolve) =>
+        setTimeout(() => {
+          resolve(null);
+        }, TX_RETRY_INTERVAL),
+      ),
+    ]);
+    if (confirmedTx) {
+      break;
+    }
+    if (maxRetries && maxRetries < retryCount) {
+      break;
+    }
+    logger.debug(
+      { retryCount, txSignature },
+      `Retrying transaction with signature ${txSignature} and retry count ${retryCount}`,
+    );
+    retryCount++;
+
+    await connection.sendRawTransaction(serializedTransaction, {
+      // Setting max retries to 0 as we are handling retries manually
+      // Set this manually so that the default is skipped
+      maxRetries: 0,
+      preflightCommitment: "confirmed",
+      // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
+      // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
+      skipPreflight: true,
+    });
+  }
+  if (confirmedTx?.err) {
+    throw new Error(
+      `Transaction ${txSignature} has failed with error: ${JSON.stringify(
+        confirmedTx.err,
+      )}`,
+    );
+  }
+
+  if (!confirmedTx) {
+    throw new Error("Failed to land the transaction");
+  }
+}
+
+/**
  * Send a set of transactions to the network based on https://github.com/rpcpool/optimized-txs-examples
  */
 export async function sendTransactions(
@@ -436,7 +519,7 @@ export async function sendTransactions(
   const signatures: string[] = [];
 
   // Signing logic for versioned transactions is different from legacy transactions
-  for (const [index, transaction] of transactions.entries()) {
+  for (const transaction of transactions) {
     const signers = transaction.signers;
     let tx = transaction.tx;
 
@@ -457,12 +540,6 @@ export async function sendTransactions(
 
     tx = await wallet.signTransaction(tx);
 
-    // In the following section, we wait and constantly check for the transaction to be confirmed
-    // and resend the transaction if it is not confirmed within a certain time interval
-    // thus handling tx retries on the client side rather than relying on the RPC
-    let confirmedTx: SignatureResult | null | undefined;
-    let retryCount = 0;
-
     // Get the signature of the transaction with different logic for versioned transactions
     const txSignature = bs58.encode(
       isVersionedTransaction(tx)
@@ -470,63 +547,14 @@ export async function sendTransactions(
         : (tx.signature ?? new Uint8Array()),
     );
 
-    const confirmTransactionPromise = connection.confirmTransaction(
-      {
-        blockhash: blockhashResult.value.blockhash,
-        lastValidBlockHeight: blockhashResult.value.lastValidBlockHeight,
-        signature: txSignature,
-      },
-      "confirmed",
+    await sendAndConfirmSerializedTransaction(
+      tx.serialize(),
+      txSignature,
+      blockhashResult.value,
+      connection,
+      maxRetries,
+      logger,
     );
-
-    confirmedTx = undefined;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    while (!confirmedTx) {
-      confirmedTx = await Promise.race([
-        new Promise<SignatureResult>((resolve) => {
-          void confirmTransactionPromise.then((result) => {
-            resolve(result.value);
-          });
-        }),
-        new Promise<null>((resolve) =>
-          setTimeout(() => {
-            resolve(null);
-          }, TX_RETRY_INTERVAL),
-        ),
-      ]);
-      if (confirmedTx) {
-        break;
-      }
-      if (maxRetries && maxRetries < retryCount) {
-        break;
-      }
-      logger.debug(
-        { index, retryCount, txSignature },
-        `Retrying transaction ${index} of ${transactions.length - 1} with signature ${txSignature} and retry count ${retryCount}`,
-      );
-      retryCount++;
-
-      await connection.sendRawTransaction(tx.serialize(), {
-        // Setting max retries to 0 as we are handling retries manually
-        // Set this manually so that the default is skipped
-        maxRetries: 0,
-        preflightCommitment: "confirmed",
-        // Skipping preflight i.e. tx simulation by RPC as we simulated the tx above
-        // This allows Triton RPCs to send the transaction through multiple pathways for the fastest delivery
-        skipPreflight: true,
-      });
-    }
-    if (confirmedTx?.err) {
-      throw new Error(
-        `Transaction ${txSignature} has failed with error: ${JSON.stringify(
-          confirmedTx.err,
-        )}`,
-      );
-    }
-
-    if (!confirmedTx) {
-      throw new Error("Failed to land the transaction");
-    }
 
     signatures.push(txSignature);
   }

@@ -38,7 +38,8 @@ import {
 export default {
   builder: {
     "address-lookup-table-account": {
-      description: "The pubkey of the ALT to use when updating price feeds",
+      description:
+        "The pubkey of the ALT to use when updating price feeds with Jito. v1 transactions do not support ALTs, so the pusher ignores this option without Jito.",
       optional: true,
       type: "string",
     } as Options,
@@ -277,7 +278,7 @@ export default {
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
         computeUnitPriceMicroLamports,
-        lookupTableAccount,
+        keypair,
       );
     }
 

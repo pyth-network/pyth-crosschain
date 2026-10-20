@@ -6,6 +6,7 @@ export {
   type InstructionWithEphemeralSigners,
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
   type PriorityFeeConfig,
+  sendAndConfirmSerializedTransaction,
   sendTransactions,
   TransactionBuilder,
 } from "./transaction";

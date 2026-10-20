@@ -188,6 +188,8 @@ pnpm run start solana \
   [--polling-frequency 5]
 
 # For Solana, using Solana RPC
+# The pusher sends v1 transactions (SIMD-0385). Each transaction posts the VAA, updates as many
+# price feeds as fit in 4096 bytes, and closes the encoded VAA account.
 pnpm run start solana \
   --endpoint https://api.devnet.solana.com \
   --keypair-file ./id.json \
