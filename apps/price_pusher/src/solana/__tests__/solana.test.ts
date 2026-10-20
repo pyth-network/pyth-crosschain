@@ -44,11 +44,25 @@ const connection = new Connection("http://127.0.0.1:8899", "confirmed");
 jest
   .spyOn(connection, "getMinimumBalanceForRentExemption")
   .mockResolvedValue(10_000_000);
+// The v0 transaction builder fetches the blockhash itself.
+jest.spyOn(connection, "getLatestBlockhash").mockResolvedValue({
+  blockhash: RECENT_BLOCKHASH,
+  lastValidBlockHeight: 0,
+});
 const pythSolanaReceiver = new PythSolanaReceiver({
   connection,
   wallet: new NodeWallet(payer),
 });
 const pusher = new SolanaPricePusher(
+  pythSolanaReceiver,
+  {} as HermesClient,
+  {} as Logger,
+  0,
+  COMPUTE_UNIT_PRICE_MICRO_LAMPORTS,
+  payer,
+  "v1",
+);
+const v0Pusher = new SolanaPricePusher(
   pythSolanaReceiver,
   {} as HermesClient,
   {} as Logger,
@@ -170,6 +184,20 @@ describe("SolanaPricePusher v1 transactions", () => {
     expect(tx.signatures).toHaveLength(2);
     for (const signature of tx.signatures) {
       expect(signature.some((byte) => byte !== 0)).toBe(true);
+    }
+  });
+});
+
+describe("SolanaPricePusher v0 transactions", () => {
+  it("builds v0 transactions by default", async () => {
+    const transactions = await v0Pusher.buildV0Transactions([
+      PRICE_UPDATE_DATA,
+    ]);
+
+    expect(transactions.length).toBeGreaterThan(1);
+    for (const { tx } of transactions) {
+      expect(tx.version).toBe(0);
+      expect(tx.serialize().length).toBeLessThanOrEqual(1232);
     }
   });
 });

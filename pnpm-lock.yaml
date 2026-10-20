@@ -87,6 +87,9 @@ catalogs:
     '@solana/web3.js':
       specifier: ^1.98.0
       version: 1.98.0
+    '@solana/web3.js-v3':
+      specifier: npm:@solana/web3.js@^3.1.1
+      version: 3.1.1
     '@stellar/stellar-sdk':
       specifier: ^14.6.1
       version: 14.6.1
@@ -748,7 +751,7 @@ importers:
         specifier: ^1.93.0
         version: 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@solana/web3.js-v3':
-        specifier: npm:@solana/web3.js@^3.1.1
+        specifier: 'catalog:'
         version: '@solana/web3.js@3.1.1(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@5.0.10)'
       '@ton/core':
         specifier: ^0.59.0
@@ -766,8 +769,8 @@ importers:
         specifier: ^1.8.5
         version: 1.21.0
       bs58:
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: 'catalog:'
+        version: 6.0.0
       express:
         specifier: ^4.18.2
         version: 4.21.2

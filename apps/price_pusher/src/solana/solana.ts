@@ -10,6 +10,7 @@ import type { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 import {
   sendAndConfirmSerializedTransaction,
+  sendTransactions,
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
 import type {
@@ -53,6 +54,11 @@ const MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES = 64 * 1024 * 1024;
  * The maximum number of accounts a transaction can lock.
  */
 const MAX_ACCOUNT_LOCKS_PER_TRANSACTION = 64;
+
+/**
+ * The transaction version that `SolanaPricePusher` sends. Some SVM chains, such as Fogo, cannot parse v1 transactions.
+ */
+export type SolanaTransactionVersion = "v0" | "v1";
 
 /**
  * An unsigned v1 transaction, plus the ephemeral signers that must sign it with the payer.
@@ -149,9 +155,12 @@ export class SolanaPriceListener extends ChainPriceListener {
 }
 
 /**
- * Pushes price updates with v1 transactions (SIMD-0385).
+ * Pushes price updates with v0 or v1 transactions (SIMD-0385).
  *
- * Each transaction is self-contained: it creates an encoded VAA account, writes and verifies the VAA,
+ * With v0 transactions, the pusher posts the VAA, updates the price feeds and closes the encoded VAA account in
+ * separate transactions, and can use an address lookup table.
+ *
+ * With v1 transactions, each transaction is self-contained: it creates an encoded VAA account, writes and verifies the VAA,
  * updates as many price feed accounts as fit in the transaction, and closes the encoded VAA account.
  * No on-chain state remains after the transaction, and a failed transaction leaves no account behind.
  */
@@ -165,6 +174,8 @@ export class SolanaPricePusher implements IPricePusher {
     private shardId: number,
     private computeUnitPriceMicroLamports: number,
     private payer: Keypair,
+    private transactionVersion: SolanaTransactionVersion = "v0",
+    private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
@@ -195,38 +206,80 @@ export class SolanaPricePusher implements IPricePusher {
     }
 
     try {
-      const blockhash =
-        await this.pythSolanaReceiver.connection.getLatestBlockhash({
-          commitment: "confirmed",
-        });
-      const transactions = await this.buildV1Transactions(
-        priceFeedUpdateData,
-        blockhash.blockhash,
-      );
-
-      const signatures: string[] = [];
-      for (const transaction of transactions) {
-        const tx = await this.signV1Transaction(transaction);
-        const [payerSignature] = tx.signatures;
-        if (payerSignature === undefined) {
-          throw new Error("The transaction has no payer signature");
-        }
-        const signature = bs58.encode(payerSignature);
-        await sendAndConfirmSerializedTransaction(
-          tx.serialize(),
-          signature,
-          blockhash,
-          this.pythSolanaReceiver.connection,
-          undefined,
-          this.logger,
-        );
-        signatures.push(signature);
-      }
+      const signatures =
+        this.transactionVersion === "v1"
+          ? await this.sendV1Transactions(priceFeedUpdateData)
+          : await this.sendV0Transactions(priceFeedUpdateData);
       this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
       return;
     }
+  }
+
+  /**
+   * Build v0 transactions that post the VAA, update the price feeds and close the encoded VAA account.
+   */
+  async buildV0Transactions(priceFeedUpdateData: string[]) {
+    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder(
+      {
+        closeUpdateAccounts: true,
+      },
+      this.addressLookupTableAccount,
+    );
+    await transactionBuilder.addUpdatePriceFeed(
+      priceFeedUpdateData,
+      this.shardId,
+    );
+    return transactionBuilder.buildVersionedTransactions({
+      computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+      tightComputeBudget: true,
+    });
+  }
+
+  private async sendV0Transactions(
+    priceFeedUpdateData: string[],
+  ): Promise<string[]> {
+    return sendTransactions(
+      await this.buildV0Transactions(priceFeedUpdateData),
+      this.pythSolanaReceiver.connection,
+      this.pythSolanaReceiver.wallet,
+      undefined,
+      this.logger,
+    );
+  }
+
+  private async sendV1Transactions(
+    priceFeedUpdateData: string[],
+  ): Promise<string[]> {
+    const blockhash =
+      await this.pythSolanaReceiver.connection.getLatestBlockhash({
+        commitment: "confirmed",
+      });
+    const transactions = await this.buildV1Transactions(
+      priceFeedUpdateData,
+      blockhash.blockhash,
+    );
+
+    const signatures: string[] = [];
+    for (const transaction of transactions) {
+      const tx = await this.signV1Transaction(transaction);
+      const [payerSignature] = tx.signatures;
+      if (payerSignature === undefined) {
+        throw new Error("The transaction has no payer signature");
+      }
+      const signature = bs58.encode(payerSignature);
+      await sendAndConfirmSerializedTransaction(
+        tx.serialize(),
+        signature,
+        blockhash,
+        this.pythSolanaReceiver.connection,
+        undefined,
+        this.logger,
+      );
+      signatures.push(signature);
+    }
+    return signatures;
   }
 
   /**

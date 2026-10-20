@@ -32,6 +32,7 @@ import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { filterInvalidPriceItems } from "../utils.js";
 import { createSolanaBalanceTracker } from "./balance-tracker.js";
+import type { SolanaTransactionVersion } from "./solana.js";
 import {
   SolanaPriceListener,
   SolanaPricePusher,
@@ -42,7 +43,7 @@ export default {
   builder: {
     "address-lookup-table-account": {
       description:
-        "The pubkey of the ALT to use when updating price feeds with Jito. v1 transactions do not support ALTs, so the pusher ignores this option without Jito.",
+        "The pubkey of the ALT to use when updating price feeds. v1 transactions do not support ALTs, so the pusher ignores this option with --transaction-version v1.",
       optional: true,
       type: "string",
     } as Options,
@@ -102,6 +103,13 @@ export default {
       required: true,
       type: "number",
     } as Options,
+    "transaction-version": {
+      choices: ["v0", "v1"],
+      default: "v0",
+      description:
+        "The transaction version to send without Jito. v1 transactions (SIMD-0385) post the VAA, update the price feeds and close the encoded VAA account in one transaction. Only use v1 on clusters that support it.",
+      type: "string",
+    } as Options,
     "treasury-id": {
       description:
         "The treasuryId to use. Useful when the corresponding treasury account is indexed in the ALT passed to --address-lookup-table-account. This is a tx size optimization and is optional; if not set, a random treasury account will be used.",
@@ -150,6 +158,7 @@ export default {
       maxJitoTipLamports,
       updatesPerJitoBundle,
       addressLookupTableAccount,
+      transactionVersion,
       treasuryId,
       logLevel,
       controllerLogLevel,
@@ -231,12 +240,15 @@ export default {
       await balanceTracker.start();
     }
 
-    // Fetch the account lookup table if provided
-    const lookupTableAccount = addressLookupTableAccount
-      ? await connection
-          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
-          .then((result) => result.value ?? undefined)
-      : undefined;
+    // Fetch the account lookup table if provided and used. v1 transactions do not support ALTs.
+    const usesLookupTable =
+      Boolean(jitoTipLamports) || transactionVersion === "v0";
+    const lookupTableAccount =
+      addressLookupTableAccount && usesLookupTable
+        ? await connection
+            .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+            .then((result) => result.value ?? undefined)
+        : undefined;
 
     let solanaPricePusher;
     if (jitoTipLamports) {
@@ -282,6 +294,8 @@ export default {
         shardId,
         computeUnitPriceMicroLamports,
         keypair,
+        transactionVersion as SolanaTransactionVersion,
+        lookupTableAccount,
       );
     }
 
