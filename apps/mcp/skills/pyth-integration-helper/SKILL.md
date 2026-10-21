@@ -39,10 +39,10 @@ Key response fields for integration:
 
 | Field | Purpose |
 |-------|---------|
-| `symbol` | Full name with prefix (e.g., `Equity.US.AAPL`). Pass to tools. |
+| `symbol` | Full name with prefix (e.g., `Equity.US.AAPL/USD`). Pass to tools. |
 | `pyth_lazer_id` | Numeric ID for this MCP server's `price_feed_ids` parameter |
 | `exponent` | Power of 10 to convert raw price to human price |
-| `asset_type` | crypto, fx, equity, metal, rates, commodity, funding-rate |
+| `asset_type` | crypto, fx, equity, metal, interest-rate, commodity, funding-rate |
 | `min_channel` | Minimum update frequency for this feed |
 | `quote_currency` | Price denomination (usually "USD") |
 
@@ -68,12 +68,12 @@ Continue until `has_more: false`.
 | Asset type | Example symbol |
 |------------|---------------|
 | crypto | `Crypto.BTC/USD` |
-| equity | `Equity.US.AAPL` |
+| equity | `Equity.US.AAPL/USD` |
 | fx | `FX.EUR/USD` |
 | metal | `Metal.XAU/USD` |
-| rates | `Rates.US_FED_FUNDS` |
-| commodity | `Commodity.WTI/USD` |
-| funding-rate | `FundingRate.BTC/USD` |
+| interest-rate | `InterestRate.SOFR` |
+| commodity | `Commodities.Index.WTI1M/USD` |
+| funding-rate | `FundingRate.Binance.BTC/USDT` |
 
 Always use symbols exactly as returned by `get_symbols`. Never construct them manually.
 
@@ -150,9 +150,9 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
    | Field | Value |
    |-------|-------|
-   | `symbol` | `Equity.US.AAPL` |
+   | `symbol` | `Equity.US.AAPL/USD` |
    | `pyth_lazer_id` | (numeric ID from response) — use this with MCP tools |
    | `exponent` | -5 |
    | `asset_type` | equity |
 
-3. Use `symbol: "Equity.US.AAPL"` or `price_feed_ids: [<pyth_lazer_id>]` when calling other tools.
+3. Use `symbol: "Equity.US.AAPL/USD"` or `price_feed_ids: [<pyth_lazer_id>]` when calling other tools.
