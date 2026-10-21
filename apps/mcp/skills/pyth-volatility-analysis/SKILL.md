@@ -145,14 +145,14 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 1. Discover feeds (batch where possible — crypto in one call, equity in another):
    ```json
    get_symbols({ "asset_type": "crypto" })  // -> find BTC, ETH
-   get_symbols({ "query": "AAPL" })         // -> "Equity.US.AAPL"
+   get_symbols({ "query": "AAPL" })         // -> "Equity.US.AAPL/USD"
    ```
 
 2. Fetch daily candles for 30 days (same range for all):
    ```json
    get_candlestick_data({ "access_token": "<token>", "symbol": "Crypto.BTC/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
    get_candlestick_data({ "access_token": "<token>", "symbol": "Crypto.ETH/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
-   get_candlestick_data({ "access_token": "<token>", "symbol": "Equity.US.AAPL", "from": 1748736000, "to": 1751328000, "resolution": "D" })
+   get_candlestick_data({ "access_token": "<token>", "symbol": "Equity.US.AAPL/USD", "from": 1748736000, "to": 1751328000, "resolution": "D" })
    ```
 
 3. Compute annualized vol for each (crypto = `sqrt(365)`, equity = `sqrt(252)`):
