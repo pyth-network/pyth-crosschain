@@ -1,9 +1,5 @@
 /* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; the builder asserts on its last transaction */
 /* biome-ignore-all lint/suspicious/useAwait: pre-existing */
-/* eslint-disable no-console */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type {
   AddressLookupTableAccount,
@@ -426,11 +422,13 @@ const TX_RETRY_INTERVAL = 500;
  *
  * @param serializedTransaction the signed transaction in its wire format
  * @param txSignature the base58 signature of the fee payer, used to track the confirmation
+ * @param position the index of the transaction in its batch and the last index of the batch, used in the retry log
  * @param blockhash the blockhash used to confirm the transaction, and its last valid block height
  */
 export async function sendAndConfirmSerializedTransaction(
   serializedTransaction: Uint8Array,
   txSignature: string,
+  position: { index: number; lastIndex: number },
   blockhash: BlockhashWithExpiryBlockHeight,
   connection: Connection,
   maxRetries?: number,
@@ -452,7 +450,6 @@ export async function sendAndConfirmSerializedTransaction(
   );
 
   confirmedTx = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (!confirmedTx) {
     confirmedTx = await Promise.race([
       new Promise<SignatureResult>((resolve) => {
@@ -473,8 +470,8 @@ export async function sendAndConfirmSerializedTransaction(
       break;
     }
     logger.debug(
-      { retryCount, txSignature },
-      `Retrying transaction with signature ${txSignature} and retry count ${retryCount}`,
+      { index: position.index, retryCount, txSignature },
+      `Retrying transaction ${position.index} of ${position.lastIndex} with signature ${txSignature} and retry count ${retryCount}`,
     );
     retryCount++;
 
@@ -521,7 +518,7 @@ export async function sendTransactions(
   const signatures: string[] = [];
 
   // Signing logic for versioned transactions is different from legacy transactions
-  for (const transaction of transactions) {
+  for (const [index, transaction] of transactions.entries()) {
     const signers = transaction.signers;
     let tx = transaction.tx;
 
@@ -552,6 +549,7 @@ export async function sendTransactions(
     await sendAndConfirmSerializedTransaction(
       tx.serialize(),
       txSignature,
+      { index, lastIndex: transactions.length - 1 },
       blockhashResult.value,
       connection,
       maxRetries,

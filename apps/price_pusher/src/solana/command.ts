@@ -1,13 +1,6 @@
 /* biome-ignore-all lint/style/noNonNullAssertion: pre-existing; metrics wiring asserts on optional config */
 /* biome-ignore-all lint/suspicious/noExplicitAny: pre-existing; yargs argv is untyped */
 /* biome-ignore-all lint/suspicious/noEmptyBlockStatements: pre-existing; Jito bundle results are ignored */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
@@ -240,15 +233,12 @@ export default {
       await balanceTracker.start();
     }
 
-    // Fetch the account lookup table if provided and used. v1 transactions do not support ALTs.
-    const usesLookupTable =
-      Boolean(jitoTipLamports) || transactionVersion === "v0";
-    const lookupTableAccount =
-      addressLookupTableAccount && usesLookupTable
-        ? await connection
-            .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
-            .then((result) => result.value ?? undefined)
-        : undefined;
+    // Fetch the account lookup table if provided
+    const lookupTableAccount = addressLookupTableAccount
+      ? await connection
+          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+          .then((result) => result.value ?? undefined)
+      : undefined;
 
     let solanaPricePusher;
     if (jitoTipLamports) {
@@ -326,7 +316,6 @@ export default {
 export const onBundleResult = (c: SearcherClient, logger: Logger) => {
   try {
     c.onBundleResult(
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
       (err) => {
         logger.error(err, "Error in bundle result");

@@ -248,7 +248,7 @@ export async function sendV1Transactions(
   );
 
   const signatures: string[] = [];
-  for (const transaction of transactions) {
+  for (const [index, transaction] of transactions.entries()) {
     const tx = await signV1Transaction(options.payer, transaction);
     const [payerSignature] = tx.signatures;
     if (payerSignature === undefined) {
@@ -258,6 +258,7 @@ export async function sendV1Transactions(
     await sendAndConfirmSerializedTransaction(
       tx.serialize(),
       signature,
+      { index, lastIndex: transactions.length - 1 },
       blockhash,
       connection,
       undefined,
