@@ -49,6 +49,7 @@ exclude = [
     # Near contract
     "target_chains/near/example",
     "target_chains/near/receiver",
+    "target_chains/near/wormhole",
     "target_chains/near/wormhole-stub",
     # Solana contracts
     "target_chains/solana",
