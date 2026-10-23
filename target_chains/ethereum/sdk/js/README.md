@@ -75,3 +75,18 @@ if (pythUpdate) {
     console.log("No Pyth data needed for this transaction");
 }
 ```
+
+## Important Integration Notes
+
+### On-Chain Payload Validation
+
+> [!WARNING]
+> Price update payloads (for example, those retrieved from Hermes) are **authoritatively validated on-chain** during transaction execution.
+>
+> Client SDKs forward the provided payload bytes and do not perform full validation of:
+> - Wormhole VAA integrity or structure
+> - Data source / emitter identity
+>
+> If an invalid or malformed payload is supplied to `updatePriceFeeds` (or equivalent methods), the SDK will not reject it before submission. Instead, the transaction will revert on-chain with native contract errors such as `InvalidWormholeVaa()` or `InvalidUpdateDataSource()`.
+>
+> To minimize failed transactions, obtain payloads from trusted providers (such as Hermes) and consider simulating transactions before broadcasting.
