@@ -166,6 +166,10 @@
       "default": "./dist/solana/solana.cjs",
       "types": "./dist/solana/solana.d.ts"
     },
+    "./solana/transaction-v1": {
+      "default": "./dist/solana/transaction-v1.cjs",
+      "types": "./dist/solana/transaction-v1.d.ts"
+    },
     "./sui/balance-tracker": {
       "default": "./dist/sui/balance-tracker.cjs",
       "types": "./dist/sui/balance-tracker.d.ts"
