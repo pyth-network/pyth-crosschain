@@ -103,3 +103,17 @@ export const metricsPort = {
     type: "number",
   } as Options,
 };
+
+export const metricsChain = {
+  "metrics-chain": {
+    description:
+      "Value emitted as the `chain` label on every Prometheus metric. " +
+      "The sample Grafana dashboard filters by `chain=$chain`, so set this " +
+      "to your deployment's chain/network name (e.g. `bsc-mainnet`, `sui-testnet`). " +
+      "Defaults to the chain command name (e.g. `evm`, `sui`, `aptos`, `solana`). " +
+      "Named `chain` rather than `namespace` to avoid colliding with the " +
+      "Kubernetes Prometheus service-discovery `namespace` label.",
+    type: "string",
+    required: false,
+  } as Options,
+};
