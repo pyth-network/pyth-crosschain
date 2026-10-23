@@ -250,10 +250,10 @@ contains the same configuration for `BTC/USD` and `BNB/USD` on Pyth beta data so
 You can also provide a config file instead of providing command line options, run the following command:
 
 ```sh
-pnpm run start injective --config "./config.injective.sample.json"
+pnpm run start injective --config "./config.injective.testnet.sample.json"
 ```
 
-[`config.injective.sample.json`](./config.injective.sample.json) contains configuration to publish on Injective testnet.
+[`config.injective.testnet.sample.json`](./config.injective.testnet.sample.json) contains configuration to publish on Injective testnet.
 
 ## Running via docker-compose
 
