@@ -20,11 +20,13 @@
     "@pythnetwork/pyth-ton-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/web3.js": "^1.93.0",
+    "@solana/web3.js-v3": "catalog:",
     "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/pino": "^7.0.5",
     "aptos": "^1.8.5",
+    "bs58": "catalog:",
     "express": "^4.18.2",
     "fuels": "catalog:",
     "jito-ts": "^3.0.1",
@@ -164,6 +166,10 @@
       "default": "./dist/solana/solana.cjs",
       "types": "./dist/solana/solana.d.ts"
     },
+    "./solana/transaction-v1": {
+      "default": "./dist/solana/transaction-v1.cjs",
+      "types": "./dist/solana/transaction-v1.d.ts"
+    },
     "./sui/balance-tracker": {
       "default": "./dist/sui/balance-tracker.cjs",
       "types": "./dist/sui/balance-tracker.d.ts"
@@ -226,5 +232,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "13.0.0"
+  "version": "13.1.0"
 }

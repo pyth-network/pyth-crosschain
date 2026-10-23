@@ -188,10 +188,15 @@ pnpm run start solana \
   [--polling-frequency 5]
 
 # For Solana, using Solana RPC
+# By default the pusher sends v0 transactions. With `--transaction-version v1`, it sends v1 transactions
+# (SIMD-0385): each transaction posts the VAA, updates as many price feeds as fit in 4096 bytes, and closes
+# the encoded VAA account. v1 transactions ignore `--address-lookup-table-account`. Only use v1 on clusters
+# that support it; Fogo does not.
 pnpm run start solana \
   --endpoint https://api.devnet.solana.com \
   --keypair-file ./id.json \
   --shard-id 1 \
+  [--transaction-version v1] \
   --price-config-file ./price-config.yaml \
   --price-service-endpoint https://hermes.pyth.network/ \
   --pyth-contract-address pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT \
