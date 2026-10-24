@@ -1,4 +1,4 @@
-FROM rust:1.89.0 AS build
+FROM rust:1.89.0-bookworm AS build
 
 # Install OS packages
 RUN apt-get update && apt-get install --yes \
