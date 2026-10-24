@@ -2,6 +2,7 @@
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import type { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
 import {
   sendTransactions,
   sendTransactionsJito,
@@ -22,6 +23,41 @@ const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
  * The transaction version that `SolanaPricePusher` sends. Some SVM chains, such as Fogo, cannot parse v1 transactions.
  */
 export type SolanaTransactionVersion = "v0" | "v1";
+
+// Encoded VAA accounts created by a partially-landed batch are only closed by
+// the builder that created them, so a failed send orphans their rent. Rebuild a
+// sweep from all accounts the wallet still owns (this also drains orphans from
+// earlier cycles) and send it best-effort; never mask the caller's error path.
+async function closeStaleEncodedVaas(
+  pythSolanaReceiver: PythSolanaReceiver,
+  logger: Logger,
+  priorityFeeConfig: PriorityFeeConfig,
+): Promise<void> {
+  try {
+    const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
+      closeUpdateAccounts: false,
+    });
+    await transactionBuilder.addClosePreviousEncodedVaasInstructions();
+    const transactions =
+      await transactionBuilder.buildVersionedTransactions(priorityFeeConfig);
+    if (transactions.length === 0) {
+      return;
+    }
+    const signatures = await sendTransactions(
+      transactions,
+      pythSolanaReceiver.connection,
+      pythSolanaReceiver.wallet,
+      undefined,
+      logger,
+    );
+    logger.debug(
+      { signatures },
+      "closed stale encoded VAA accounts after a failed send",
+    );
+  } catch (error: unknown) {
+    logger.error(error, "closeStaleEncodedVaas failed");
+  }
+}
 
 export class SolanaPriceListener extends ChainPriceListener {
   constructor(
@@ -139,7 +175,7 @@ export class SolanaPricePusher implements IPricePusher {
         },
       );
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed:");
       return;
     }
@@ -152,6 +188,14 @@ export class SolanaPricePusher implements IPricePusher {
       this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
+      // v1 transactions close their own encoded VAA accounts, so only the v0 path
+      // can leave orphans behind.
+      if (this.transactionVersion === "v0") {
+        await closeStaleEncodedVaas(this.pythSolanaReceiver, this.logger, {
+          computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+          tightComputeBudget: true,
+        });
+      }
       return;
     }
   }
@@ -230,12 +274,17 @@ export class SolanaPricePusherJito implements IPricePusher {
         );
         return undefined;
       }
-      // TODO: fix this type here to be more specific
-      const data = (await response.json()) as any[];
-      return Math.floor(
-        Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
-      );
-    } catch (error: any) {
+      const data = (await response.json()) as {
+        landed_tips_50th_percentile: number | string;
+      }[];
+      const tipFloor = data[0]?.landed_tips_50th_percentile;
+      if (tipFloor === undefined) {
+        this.logger.warn("getRecentJitoTips returned no tip entries");
+        return undefined;
+      }
+      return Math.floor(Number(tipFloor) * LAMPORTS_PER_SOL);
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.logger.warn({ err: error }, "getRecentJitoTips failed");
       return undefined;
     }
@@ -257,7 +306,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         encoding: "base64",
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -285,15 +334,25 @@ export class SolanaPricePusherJito implements IPricePusher {
         tightComputeBudget: true,
       });
 
-      await sendTransactionsJito(
-        transactions,
-        this.searcherClients,
-        this.pythSolanaReceiver.wallet,
-        {
-          maxRetryTimeMs: this.maxRetryTimeMs,
-        },
-        this.logger,
-      );
+      try {
+        await sendTransactionsJito(
+          transactions,
+          this.searcherClients,
+          this.pythSolanaReceiver.wallet,
+          {
+            maxRetryTimeMs: this.maxRetryTimeMs,
+          },
+          this.logger,
+        );
+      } catch (error: unknown) {
+        // The failed bundle's create instructions may have landed before the
+        // bundle dropped; reclaim their rent, then keep the original error
+        // propagation the caller already relies on.
+        await closeStaleEncodedVaas(this.pythSolanaReceiver, this.logger, {
+          tightComputeBudget: true,
+        });
+        throw error;
+      }
     }
   }
 }
