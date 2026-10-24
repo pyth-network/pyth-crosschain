@@ -350,23 +350,23 @@ catalogs:
       version: 3.25.76
 
 overrides:
-  '@babel/plugin-transform-modules-systemjs@<7.29.4': ^7.29.4
+  '@babel/plugin-transform-modules-systemjs@>=7.0.0 <7.29.4': ^7.29.4
   '@grpc/grpc-js@>=1.0.0 <1.13.6': ^1.13.6
-  '@isaacs/brace-expansion@<5.0.1': ^5.0.1
-  '@modelcontextprotocol/sdk@<1.32.0': ^1.32.0
+  '@isaacs/brace-expansion@>=5.0.0 <5.0.1': ^5.0.1
+  '@modelcontextprotocol/sdk@>=1.0.0 <1.32.0': ^1.32.0
   '@solana/web3.js@1.77.4>rpc-websockets': 7.11.0
   axios@>=1.0.0 <1.20.0: ^1.20.0
   body-parser@>=1.0.0 <1.20.9: ^1.20.9
   body-parser@>=2.0.0 <2.4.0: ^2.4.0
   brace-expansion@>=1.0.0 <1.1.20: ^1.1.20
   brace-expansion@>=2.0.0 <2.1.6: ^2.1.6
-  browserslist@<4.28.7: ^4.28.7
-  elliptic@<6.6.1: ^6.6.1
+  browserslist@>=4.0.0 <4.28.7: ^4.28.7
+  elliptic@>=6.0.0 <6.6.1: ^6.6.1
   fast-uri@>=3.0.0 <3.1.7: ^3.1.7
   fast-xml-parser@>=4.0.0 <4.5.5: ^4.5.5
   fflate@>=0.8.0 <0.8.3: ^0.8.3
   flatted@>=3.0.0 <3.4.2: ^3.4.2
-  follow-redirects@<1.16.1: ^1.16.1
+  follow-redirects@>=1.0.0 <1.16.1: ^1.16.1
   form-data@>=2.0.0 <2.5.6: ^2.5.6
   form-data@>=4.0.0 <4.0.6: ^4.0.6
   glob@>=10.0.0 <10.5.0: ^10.5.0
@@ -379,8 +379,8 @@ overrides:
   joi@>=17.0.0 <17.13.7: ^17.13.7
   js-yaml@>=3.0.0 <3.15.2: ^3.15.2
   js-yaml@>=4.0.0 <4.3.2: ^4.3.2
-  lodash@<4.18.0: ^4.18.0
-  lodash-es@<4.18.0: ^4.18.0
+  lodash@>=4.0.0 <4.18.0: ^4.18.0
+  lodash-es@>=4.0.0 <4.18.0: ^4.18.0
   minimatch@>=3.0.0 <3.1.4: ^3.1.4
   minimatch@>=4.0.0 <4.2.5: ^4.2.5
   minimatch@>=5.0.0 <5.1.8: ^5.1.8
@@ -388,23 +388,23 @@ overrides:
   minimatch@>=9.0.0 <9.0.7: ^9.0.7
   minimatch@>=10.0.0 <10.2.3: ^10.2.3
   nanoid@>=3.0.0 <3.3.18: ^3.3.18
-  node-forge@<1.4.0: ^1.4.0
+  node-forge@>=1.0.0 <1.4.0: ^1.4.0
   path-to-regexp@>=0.1.0 <0.1.13: ^0.1.13
   path-to-regexp@>=6.0.0 <6.3.0: ^6.3.0
   path-to-regexp@>=8.0.0 <8.4.0: ^8.4.0
-  pbkdf2@<3.1.3: ^3.1.3
+  pbkdf2@>=3.0.0 <3.1.3: ^3.1.3
   picomatch@>=2.0.0 <2.3.2: ^2.3.2
   picomatch@>=4.0.0 <4.0.4: ^4.0.4
   postcss@>=8.0.0 <8.5.18: ^8.5.18
   protobufjs@>=7.0.0 <7.6.1: ^7.6.1
-  proxy-addr@<2.0.8: ^2.0.8
+  proxy-addr@>=2.0.0 <2.0.8: ^2.0.8
   rollup@>=4.0.0 <4.59.0: ^4.59.0
   secp256k1@>=3.0.0 <3.8.1: ^3.8.1
   secp256k1@>=4.0.0 <4.0.4: ^4.0.4
   semver@>=5.0.0 <5.7.2: ^5.7.2
   semver@>=7.0.0 <7.5.2: ^7.5.2
-  shell-quote@<1.9.0: ^1.9.0
-  source-map-js@<1.2.2: ^1.2.2
+  shell-quote@>=1.0.0 <1.9.0: ^1.9.0
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
   tar@>=7.0.0 <7.5.21: ^7.5.21
   tar-fs@>=1.0.0 <1.16.6: ^1.16.6
   tar-fs@>=2.0.0 <2.1.4: ^2.1.4
@@ -11424,6 +11424,7 @@ packages:
 
   '@ton/blueprint@0.22.0':
     resolution: {integrity: sha512-+2HeuyGTogitavxZvH4TP0Cpr7y1muSTRva4uLxiiF9emliCqzKLuHgv+3rGr+lZGCcmjsld+U3TKsX+LVEqsg==}
+    deprecated: This version is deprecated. Please upgrade to @ton/blueprint@0.47.1 or later.
     hasBin: true
     peerDependencies:
       '@ton/core': '>=0.56.0'
@@ -15716,6 +15717,7 @@ packages:
 
   fireblocks-sdk@5.39.0:
     resolution: {integrity: sha512-hK4Ic8mOEHN8olRyIshEx3W0axm0eBVjFOGodmzTxA8FM+h5YQwP5Ii4BKHPI1jjbX11PVMTYZaSDdo7a1BCFA==}
+    deprecated: fireblocks-sdk is deprecated and reaches end-of-life (no further updates or fixes) on Nov 1, 2026. Existing installs continue to work. Migrate to @fireblocks/ts-sdk — https://developers.fireblocks.com/reference/sdk-migration-guide
 
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
@@ -20545,6 +20547,7 @@ packages:
 
   starknet@6.24.1:
     resolution: {integrity: sha512-g7tiCt73berhcNi41otlN3T3kxZnIvZhMi8WdC21Y6GC6zoQgbI2z1t7JAZF9c4xZiomlanwVnurcpyfEdyMpg==}
+    deprecated: starknet <10 is end-of-life and no longer receives security fixes. Upgrade to starknet@10 (10.8.0 or later).
 
   stat-mode@0.3.0:
     resolution: {integrity: sha512-QjMLR0A3WwFY2aZdV0okfFEJB5TRjkggXZjxP3A1RsWsNHNu3YPv8btmtc6iCFZ0Rul3FE93OYogvhOUClU+ng==}
