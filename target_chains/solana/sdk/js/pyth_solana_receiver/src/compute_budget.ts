@@ -1,7 +1,7 @@
 /**
  * A hard-coded budget for the compute units required for the `verifyEncodedVaa` instruction in the Wormhole program.
  */
-export const VERIFY_ENCODED_VAA_COMPUTE_BUDGET = 350_000;
+export const VERIFY_ENCODED_VAA_COMPUTE_BUDGET = 85_000;
 /**
  * A hard-coded budget for the compute units required for the `postUpdateAtomic` instruction in the Pyth Solana Receiver program.
  */
@@ -13,16 +13,16 @@ export const POST_UPDATE_COMPUTE_BUDGET = 35_000;
 /**
  * A hard-coded budget for the compute units required for the `updatePriceFeed` instruction in the Pyth Push Oracle program.
  */
-export const UPDATE_PRICE_FEED_COMPUTE_BUDGET = 55_000;
+export const UPDATE_PRICE_FEED_COMPUTE_BUDGET = 60_000;
 /**
  * A hard-coded budget for the compute units required for the `initEncodedVaa` instruction in the Wormhole program.
  */
-export const INIT_ENCODED_VAA_COMPUTE_BUDGET = 3000;
+export const INIT_ENCODED_VAA_COMPUTE_BUDGET = 1_500;
 /**
  * A hard-coded budget for the compute units required for the `writeEncodedVaa` instruction in the Wormhole program.
  */
-export const WRITE_ENCODED_VAA_COMPUTE_BUDGET = 3000;
+export const WRITE_ENCODED_VAA_COMPUTE_BUDGET = 1_500;
 /**
  * A hard-coded budget for the compute units required for the `closeEncodedVaa` instruction in the Wormhole program.
  */
-export const CLOSE_ENCODED_VAA_COMPUTE_BUDGET = 30_000;
+export const CLOSE_ENCODED_VAA_COMPUTE_BUDGET = 1_500;
