@@ -212,21 +212,24 @@ onlyBuiltDependencies:
 
 overrides:
   "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
-  # Security fixes for transitive dependencies. Each selector only matches
-  # vulnerable versions and keeps the same major version. Most of them are
-  # needed because a parent pins an exact vulnerable version: for example,
-  # `fuels` pins handlebars@4.7.8, `express` pins body-parser@1.20.3 and
-  # `@ethersproject/signing-key` pins elliptic@6.5.4.
-  # Remove an override once its parent ships a fixed version.
+  # Security fixes for transitive dependencies. Each selector matches only the
+  # vulnerable range inside one major version, so a package never moves to a
+  # new major. They are needed because parents pin exact vulnerable versions:
+  # for example `fuels` pins handlebars 4.7.8, `express` pins body-parser
+  # 1.20.3, and `@ethersproject/signing-key` pins elliptic 6.5.4. Remove an
+  # override once its parent ships a fixed version.
+  "@babel/plugin-transform-modules-systemjs@>=7 <7.29.4": ^7.29.4
+  "@cprussin/jest-config>next@>=15 <15.5.28": ^15.5.28
+  "@grpc/grpc-js@>=1 <1.13.6": ^1.13.6
+  "@isaacs/brace-expansion@>=5 <5.0.1": ^5.0.1
+  "@modelcontextprotocol/sdk@>=1 <1.32.0": ^1.32.0
   "axios@>=1 <1.20.0": ^1.20.0
-  "@babel/plugin-transform-modules-systemjs@<7.29.4": ^7.29.4
   "body-parser@>=1 <1.20.9": ^1.20.9
   "body-parser@>=2 <2.4.0": ^2.4.0
   "brace-expansion@>=1 <1.1.20": ^1.1.20
   "brace-expansion@>=2 <2.1.6": ^2.1.6
   "browserslist@>=4 <4.28.7": ^4.28.7
-  "@cprussin/jest-config>next@>=15 <15.5.28": ^15.5.28
-  "defu@<6.1.5": ^6.1.5
+  "defu@>=6 <6.1.5": ^6.1.5
   "devalue@>=5 <5.9.3": ^5.9.3
   "elliptic@>=6 <6.6.1": ^6.6.1
   "fast-uri@>=3 <3.1.7": ^3.1.7
@@ -237,7 +240,6 @@ overrides:
   "form-data@>=2 <2.5.6": ^2.5.6
   "form-data@>=4 <4.0.6": ^4.0.6
   "glob@>=10 <10.5.0": ^10.5.0
-  "@grpc/grpc-js@>=1 <1.13.6": ^1.13.6
   "h3@>=1 <1.15.6": ^1.15.6
   "handlebars@>=4 <4.7.10": ^4.7.10
   "hono@>=4 <4.12.25": ^4.12.25
@@ -245,19 +247,17 @@ overrides:
   "immutable@>=4 <4.3.9": ^4.3.9
   "immutable@>=5 <5.1.8": ^5.1.8
   "ip-address@>=10 <10.3.1": ^10.3.1
-  "@isaacs/brace-expansion@>=5 <5.0.1": ^5.0.1
   "joi@>=17 <17.13.7": ^17.13.7
   "js-yaml@>=3 <3.15.2": ^3.15.2
   "js-yaml@>=4 <4.3.2": ^4.3.2
-  "lodash-es@<4.18.0": ^4.18.0
   "lodash@>=4 <4.18.0": ^4.18.0
-  "minimatch@>=10 <10.2.3": ^10.2.3
+  "lodash-es@>=4 <4.18.0": ^4.18.0
   "minimatch@>=3 <3.1.4": ^3.1.4
   "minimatch@>=4 <4.2.5": ^4.2.5
   "minimatch@>=5 <5.1.8": ^5.1.8
   "minimatch@>=7 <7.4.8": ^7.4.8
   "minimatch@>=9 <9.0.7": ^9.0.7
-  "@modelcontextprotocol/sdk@>=1 <1.32.0": ^1.32.0
+  "minimatch@>=10 <10.2.3": ^10.2.3
   "nanoid@>=3 <3.3.18": ^3.3.18
   "node-forge@>=1 <1.4.0": ^1.4.0
   "path-to-regexp@>=0.1 <0.1.13": ^0.1.13
@@ -275,15 +275,15 @@ overrides:
   "semver@>=5 <5.7.2": ^5.7.2
   "semver@>=7 <7.5.2": ^7.5.2
   "shell-quote@>=1 <1.9.0": ^1.9.0
-  "smol-toml@<1.7.1": ^1.7.1
+  "smol-toml@>=1 <1.7.1": ^1.7.1
   "socket.io-parser@>=4 <4.2.7": ^4.2.7
   "source-map-js@>=1 <1.2.2": ^1.2.2
   "svgo@>=2 <2.8.4": ^2.8.4
   "svgo@>=3 <3.3.5": ^3.3.5
   "svgo@>=4 <4.1.0": ^4.1.0
+  "tar@>=7 <7.5.21": ^7.5.21
   "tar-fs@>=1 <1.16.6": ^1.16.6
   "tar-fs@>=2 <2.1.4": ^2.1.4
-  "tar@>=7 <7.5.21": ^7.5.21
   "tmp@>=0.2 <0.2.6": ^0.2.6
   "undici@>=6 <6.29.1": ^6.29.1
   "undici@>=7 <7.30.1": ^7.30.1
