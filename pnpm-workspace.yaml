@@ -154,11 +154,11 @@ catalog:
   throttleit: ^2.1.0
   ts-node: ^10.9.2
   tsx: 4.20.6
-  turbo: ^2.7.4
+  turbo: ^2.9.14
   type-fest: ^5.2.0
   typedoc: ^0.26.8
   typescript: ^5.9.3
-  uuid: ^13.0.0
+  uuid: ^13.0.1
   vercel: ^50.32.4
   viem: ^2.39.0
   wagmi: ^2.14.16
@@ -213,23 +213,88 @@ onlyBuiltDependencies:
 overrides:
   "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
   # Security fixes for transitive dependencies. Each selector only matches
-  # vulnerable versions and keeps the same major version.
+  # vulnerable versions and keeps the same major version. Most of them are
+  # needed because a parent pins an exact vulnerable version: for example,
+  # `fuels` pins handlebars@4.7.8, `express` pins body-parser@1.20.3 and
+  # `@ethersproject/signing-key` pins elliptic@6.5.4.
+  # Remove an override once its parent ships a fixed version.
+  "axios@>=1 <1.20.0": ^1.20.0
   "@babel/plugin-transform-modules-systemjs@<7.29.4": ^7.29.4
+  "body-parser@>=1 <1.20.9": ^1.20.9
+  "body-parser@>=2 <2.4.0": ^2.4.0
+  "brace-expansion@>=1 <1.1.20": ^1.1.20
+  "brace-expansion@>=2 <2.1.6": ^2.1.6
+  "browserslist@>=4 <4.28.7": ^4.28.7
+  "@cprussin/jest-config>next@>=15 <15.5.28": ^15.5.28
   "defu@<6.1.5": ^6.1.5
   "devalue@>=5 <5.9.3": ^5.9.3
+  "elliptic@>=6 <6.6.1": ^6.6.1
+  "fast-uri@>=3 <3.1.7": ^3.1.7
+  "fast-xml-parser@>=4 <4.5.5": ^4.5.5
+  "fflate@>=0.8 <0.8.3": ^0.8.3
+  "flatted@>=3 <3.4.2": ^3.4.2
+  "follow-redirects@>=1 <1.16.1": ^1.16.1
+  "form-data@>=2 <2.5.6": ^2.5.6
+  "form-data@>=4 <4.0.6": ^4.0.6
+  "glob@>=10 <10.5.0": ^10.5.0
+  "@grpc/grpc-js@>=1 <1.13.6": ^1.13.6
   "h3@>=1 <1.15.6": ^1.15.6
+  "handlebars@>=4 <4.7.10": ^4.7.10
+  "hono@>=4 <4.12.25": ^4.12.25
   "image-size@>=2 <2.0.3": ^2.0.3
+  "immutable@>=4 <4.3.9": ^4.3.9
+  "immutable@>=5 <5.1.8": ^5.1.8
+  "ip-address@>=10 <10.3.1": ^10.3.1
+  "@isaacs/brace-expansion@>=5 <5.0.1": ^5.0.1
+  "joi@>=17 <17.13.7": ^17.13.7
+  "js-yaml@>=3 <3.15.2": ^3.15.2
+  "js-yaml@>=4 <4.3.2": ^4.3.2
   "lodash-es@<4.18.0": ^4.18.0
-  "@cprussin/jest-config>next@>=15 <15.5.28": ^15.5.28
+  "lodash@>=4 <4.18.0": ^4.18.0
+  "minimatch@>=10 <10.2.3": ^10.2.3
+  "minimatch@>=3 <3.1.4": ^3.1.4
+  "minimatch@>=4 <4.2.5": ^4.2.5
+  "minimatch@>=5 <5.1.8": ^5.1.8
+  "minimatch@>=7 <7.4.8": ^7.4.8
+  "minimatch@>=9 <9.0.7": ^9.0.7
+  "@modelcontextprotocol/sdk@>=1 <1.32.0": ^1.32.0
+  "nanoid@>=3 <3.3.18": ^3.3.18
+  "node-forge@>=1 <1.4.0": ^1.4.0
+  "path-to-regexp@>=0.1 <0.1.13": ^0.1.13
   "path-to-regexp@>=6 <6.3.0": ^6.3.0
+  "path-to-regexp@>=8 <8.4.0": ^8.4.0
+  "pbkdf2@>=3 <3.1.3": ^3.1.3
+  "picomatch@>=2 <2.3.2": ^2.3.2
+  "picomatch@>=4 <4.0.4": ^4.0.4
   "postcss@>=8 <8.5.18": ^8.5.18
+  "protobufjs@>=7 <7.6.1": ^7.6.1
+  "proxy-addr@>=2 <2.0.8": ^2.0.8
+  "rollup@>=4 <4.59.0": ^4.59.0
+  "secp256k1@>=3 <3.8.1": ^3.8.1
+  "secp256k1@>=4 <4.0.4": ^4.0.4
+  "semver@>=5 <5.7.2": ^5.7.2
   "semver@>=7 <7.5.2": ^7.5.2
+  "shell-quote@>=1 <1.9.0": ^1.9.0
   "smol-toml@<1.7.1": ^1.7.1
   "socket.io-parser@>=4 <4.2.7": ^4.2.7
+  "source-map-js@>=1 <1.2.2": ^1.2.2
   "svgo@>=2 <2.8.4": ^2.8.4
   "svgo@>=3 <3.3.5": ^3.3.5
   "svgo@>=4 <4.1.0": ^4.1.0
+  "tar-fs@>=1 <1.16.6": ^1.16.6
+  "tar-fs@>=2 <2.1.4": ^2.1.4
   "tar@>=7 <7.5.21": ^7.5.21
+  "tmp@>=0.2 <0.2.6": ^0.2.6
+  "undici@>=6 <6.29.1": ^6.29.1
+  "undici@>=7 <7.30.1": ^7.30.1
+  "uuid@>=11 <11.1.1": ^11.1.1
+  "uuid@>=13 <13.0.1": ^13.0.1
+  "vite@>=6 <6.4.4": ^6.4.4
+  "ws@>=5 <5.2.5": ^5.2.5
+  "ws@>=6 <6.2.4": ^6.2.4
+  "ws@>=7 <7.5.11": ^7.5.11
+  "ws@>=8 <8.21.0": ^8.21.0
+  "zod@>=4 <4.6.6": ^4.6.6
 
 packageManagerStrict: true
 
