@@ -6,6 +6,8 @@ This package is built using [Foundry](https://book.getfoundry.sh/).
 
 `PythLazerReceiver` contains utilities required to validate and parse Pyth Lazer payloads. Contracts should use `PythLazerReceiver` as the base contract (or one of the base contracts) of their contracts to gain access to the provided functions.
 
+`PackedEvmLib` decodes the `packedEvmEcdsa` (`PackedEvm`) payload without allocating memory. It does not verify signatures: decode the payload that `PythLazer.verifyUpdate` returned. See the library's NatSpec for the payload layout and an example.
+
 ### Build
 
 ```shell
