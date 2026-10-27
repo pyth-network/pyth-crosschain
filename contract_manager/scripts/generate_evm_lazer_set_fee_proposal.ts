@@ -7,8 +7,9 @@
  * `setVerificationFee(fee)`.
  *
  * Every chain is checked first: its proxy must be owned by the executor in the
- * store, its fee must differ from the new one, and `setVerificationFee` must
- * succeed when simulated from the owner (it does not exist before 0.3.0).
+ * store, that executor must trust the vault's emitter, its fee must differ from
+ * the new one, and `setVerificationFee` must succeed when simulated from the
+ * owner (it does not exist before 0.3.0).
  *
  * Default is a dry run. Pass --submit with --ops-key-path to create the
  * proposal.
@@ -67,6 +68,9 @@ async function main() {
     chain: argv.chain,
     testnet: false,
   });
+  const vault = DefaultStore.vaults[argv.vault];
+  if (!vault) throw new Error(`Vault '${argv.vault}' does not exist.`);
+  const vaultEmitter = (await vault.getEmitter()).toBuffer().toString("hex");
 
   const payloads: Buffer[] = [];
   const summary: string[] = [];
@@ -85,14 +89,25 @@ async function main() {
     }
     try {
       const executor = findExecutorContract(chain);
-      const [version, owner, currentFee] = await Promise.all([
+      if (!executor) {
+        problems.push(`${chain.getId()}: no executor contract in the store`);
+        continue;
+      }
+      const [version, owner, currentFee, governance] = await Promise.all([
         contract.getVersion(),
         contract.getOwner(),
         contract.getVerificationFee(),
+        executor.getGovernanceDataSource(),
       ]);
-      if (owner.toLowerCase() !== executor?.address.toLowerCase()) {
+      if (owner.toLowerCase() !== executor.address.toLowerCase()) {
         problems.push(
-          `${chain.getId()}: owner ${owner} is not the store executor ${executor?.address}`,
+          `${chain.getId()}: owner ${owner} is not the store executor ${executor.address}`,
+        );
+        continue;
+      }
+      if (governance.emitterAddress.toLowerCase() !== vaultEmitter) {
+        problems.push(
+          `${chain.getId()}: executor trusts emitter ${governance.emitterAddress}, not vault ${vault.getId()} (${vaultEmitter})`,
         );
         continue;
       }
@@ -139,8 +154,6 @@ async function main() {
   }
   if (!argv["ops-key-path"])
     throw new Error("--submit requires --ops-key-path");
-  const vault = DefaultStore.vaults[argv.vault];
-  if (!vault) throw new Error(`Vault '${argv.vault}' does not exist.`);
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log(
     "Using vault",
