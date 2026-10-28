@@ -1,6 +1,6 @@
 name: AI Gatekeeper
 
-# Wrapper around the reusable workflow in pyth-network/shared-actions.
+# Wrapper around the reusable workflow in pyth-network/shared-actions-public.
 #
 # Why a wrapper instead of attaching the workflow via the org ruleset's
 # "Require workflows to pass before merging" rule?
@@ -18,6 +18,12 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   pull_request_review:
     types: [submitted, dismissed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to re-evaluate. Break-glass for a run that was cancelled or died before it published.
+        type: string
+        required: true
 
 jobs:
   gatekeeper:
@@ -28,3 +34,5 @@ jobs:
       pull-requests: write
       issues: write
       checks: write
+    with:
+      pr: ${{ inputs.pr }}
