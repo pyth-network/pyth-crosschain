@@ -4,7 +4,7 @@ Pyth Crosschain is a monorepo for the components that make up the Pyth protocols
 The primary languages are **Rust** (Hermes, Fortuna, Argus, on-chain SDKs, and
 other services) and **TypeScript** (SDKs, web apps, tooling).
 
-## The `ai-context` MCP is required
+## The `ai-context` MCP is highly recommended
 
 *For agents working on behalf of a Douro Labs / Pyth teammate. External
 contributors have no access to this hub and can skip this section.*
@@ -14,39 +14,42 @@ Our team's operational skills live in the private
 the **ai-context MCP server**. For this repo it owns the procedures for cutting
 release tags and deployment PRs for Pyth services, rolling those deployments
 out, triaging production alerts, and reading logs from the platform clusters.
-The hub is the authoritative source for those procedures — it is not a hint and
-it is not optional.
+Where the hub covers a task, it is the authoritative source.
 
-**Before you start a task the hub might cover — anything operational, and
-anything you are unsure about — ask it: call its `route_task` tool.** If it
+**Before you start a task the hub might cover, call its `route_task` tool.**
+That includes anything operational and anything you are unsure about. If it
 routes you to a skill, follow that skill instead of improvising.
 
-**If the hub's tools (`route_task`, `list_skills` / `get_skill`, `list_access` /
-`get_access`, `search_hub`, ...) are not in your tool list, or a call to one
-fails with an authentication error, stop and tell your human:**
+The hub goes stale without warning. A person's login holds an access token that
+lasts about an hour and a refresh window that closes after 14 days without a
+connection. When that lapses, the hub's tools disappear from your tool list and
+nothing reports it. **If the hub's tools (`route_task`, `list_skills` /
+`get_skill`, `list_access` / `get_access`, `search_hub`, ...) are not in your
+tool list, or a call to one fails with an authentication error, tell your
+human:**
 
-> The `ai-context` MCP is not connected — its auth has most likely gone stale.
-> Please re-authenticate (Claude Code: `/mcp` -> `ai-context` ->
-> **Authenticate**) and tell me when it is done. I am not going to proceed
-> without it.
+> The `ai-context` MCP is not connected. Its auth has most likely gone stale.
+> Re-authenticate, then tell me when it is done. In Claude Code, run `/mcp` ->
+> `ai-context` -> **Authenticate**. For Cursor, Codex, and the headless bearer
+> path, follow
+> [`access/ai-context-mcp.md`](https://github.com/dourolabs/ai-context/blob/main/access/ai-context-mcp.md).
 
-Then wait for them. Do **not**:
+For operational work, such as cutting a release, rolling out a deployment,
+changing a production cluster, or triaging an alert, wait for them. For ordinary
+code and docs changes, you may continue, but say first that you are working
+without the hub. In both cases, do not:
 
-- quietly carry on without the hub and work the task out from first principles;
-- improvise a procedure the hub already defines — hand-rolling a deployment
-  rollout is the exact failure this rule exists to prevent;
-- fall back to a local `npx skills add` copy of the skills, which is a
-  point-in-time snapshot and goes stale;
+- improvise a procedure the hub already defines, such as hand-rolling a
+  deployment rollout;
+- fall back to a local `npx skills add` copy of the skills, a point-in-time
+  snapshot that goes stale;
 - route around the auth failure with tunnels, proxies, or someone else's token.
 
-If you are running headless with no human to ask, fail the task with that
-message rather than substituting your own procedure.
-
-Stale auth is the normal failure mode here, not an exotic one: the MCP access
-token lasts about an hour, and its refresh window closes after 14 days without a
-connection. The failure is quiet — the tools simply are not there — so noticing
-it is your job. Setup and troubleshooting live in
-[`access/ai-context-mcp.md`](https://github.com/dourolabs/ai-context/blob/main/access/ai-context-mcp.md).
+If you run headless with no human to ask, put the same message in your output
+and fail any operational task. Unattended workloads such as CI jobs and agent
+fleets connect with a service identity instead of a person's login. It has no
+14-day window, so an auth error there is a real failure to report. Setup is in
+the same access entry.
 
 ## Standards
 
