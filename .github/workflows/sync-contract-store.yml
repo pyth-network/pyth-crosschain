@@ -140,8 +140,6 @@ jobs:
             - pyth-lazer CI runs on this PR because it is authored by the
               PYTH_PUSHER GitHub App rather than GITHUB_TOKEN. Schema drift
               fails the `contract-data` test suite.
-            - The Bot Proxy Gatekeeper exempts this PR since every changed
-              file lives under `packages/contract-data/src/store/`.
             - Branch rules still require **one human approval**. Auto-merge is
               armed and lands the PR after that approval.
 
