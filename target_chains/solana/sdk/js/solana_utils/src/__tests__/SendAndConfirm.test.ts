@@ -1,7 +1,7 @@
 import type { Connection } from "@solana/web3.js";
 import { TransactionExpiredBlockheightExceededError } from "@solana/web3.js";
 
-import { sendAndConfirmSerializedTransaction } from "..";
+import { sendAndConfirmSerializedTransaction } from "../transaction";
 
 it("rejects with the confirmation error when the blockhash expires", async () => {
   const signature = "expired-signature";
