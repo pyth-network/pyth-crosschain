@@ -7,8 +7,10 @@ import { hideBin } from "yargs/helpers";
 
 import {
   CardanoLazerContract,
+  EvmExecutorContract,
   EvmLazerContract,
   SolanaLazerContract,
+  StellarExecutorContract,
   StellarLazerContract,
   SuiLazerContract,
 } from "../src/core/contracts";
@@ -29,6 +31,14 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
+type GovernanceInfo = {
+  /** The executor contract, or Solana's `top_authority`, that can govern the contract. */
+  governed_by: string;
+  /** Wormhole governance emitter the executor accepts VAAs from. */
+  gov_emitter_chain: string;
+  gov_emitter_address: string;
+};
+
 type SignerRow = {
   contract_id: string;
   chain: string;
@@ -36,7 +46,64 @@ type SignerRow = {
   expires_at_unix: string;
   expires_at_iso: string;
   status: string;
+} & GovernanceInfo;
+
+const UNKNOWN_GOVERNANCE: GovernanceInfo = {
+  gov_emitter_address: "",
+  gov_emitter_chain: "",
+  governed_by: "",
 };
+
+/**
+ * Resolve who governs a Lazer contract. EVM and Stellar are owned by a Wormhole
+ * executor, so we report the executor and the emitter it trusts. Solana has no
+ * Wormhole path: `top_authority` signs directly. Other ecosystems don't have a
+ * governance reader yet and are left blank.
+ */
+async function getGovernance(
+  contract: (typeof DefaultStore.lazer_contracts)[string],
+): Promise<GovernanceInfo> {
+  if (contract instanceof EvmLazerContract) {
+    const executor = await contract.getOwner();
+    // An owner without code can't be an executor; flag it rather than failing
+    // on the executor's getters.
+    if ((await contract.chain.getWeb3().eth.getCode(executor)) === "0x") {
+      return {
+        gov_emitter_address: "(owner has no code)",
+        gov_emitter_chain: "",
+        governed_by: executor,
+      };
+    }
+    const source = await new EvmExecutorContract(
+      contract.chain,
+      executor,
+    ).getGovernanceDataSource();
+    return {
+      gov_emitter_address: source.emitterAddress,
+      gov_emitter_chain: source.emitterChain.toString(),
+      governed_by: executor,
+    };
+  }
+  if (contract instanceof StellarLazerContract) {
+    const executor = await contract.getExecutor();
+    const config = await new StellarExecutorContract(
+      contract.chain,
+      executor,
+    ).getConfig();
+    return {
+      gov_emitter_address: config.ownerEmitterAddress,
+      gov_emitter_chain: config.ownerEmitterChain.toString(),
+      governed_by: executor,
+    };
+  }
+  if (contract instanceof SolanaLazerContract) {
+    return {
+      ...UNKNOWN_GOVERNANCE,
+      governed_by: await contract.getTopAuthority(),
+    };
+  }
+  return UNKNOWN_GOVERNANCE;
+}
 
 function statusFor(
   expiresAt: bigint,
@@ -55,6 +122,7 @@ function makeRow(
   expiresAt: bigint,
   nowSeconds: bigint,
   warnWithinSeconds: bigint,
+  governance: GovernanceInfo,
 ): SignerRow {
   return {
     chain,
@@ -63,6 +131,7 @@ function makeRow(
     expires_at_unix: expiresAt.toString(),
     signer,
     status: statusFor(expiresAt, nowSeconds, warnWithinSeconds),
+    ...governance,
   };
 }
 
@@ -81,6 +150,13 @@ async function main() {
     const contractId = contract.getId();
     const chain = contract.chain.getId();
 
+    let governance = UNKNOWN_GOVERNANCE;
+    try {
+      governance = await getGovernance(contract);
+    } catch (error) {
+      console.error(`Error fetching governance for ${contractId}`, error);
+    }
+
     try {
       if (contract instanceof SuiLazerContract) {
         for (const signer of await contract.getTrustedSigners()) {
@@ -92,6 +168,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
@@ -105,6 +182,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
@@ -118,6 +196,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
@@ -131,6 +210,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
@@ -146,6 +226,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
@@ -158,6 +239,7 @@ async function main() {
               signer.expiresAt,
               nowSeconds,
               warnWithinSeconds,
+              governance,
             ),
           );
         }
