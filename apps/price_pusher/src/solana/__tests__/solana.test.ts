@@ -44,6 +44,45 @@ const v0Pusher = new SolanaPricePusher(
   payer,
 );
 
+describe("SolanaPricePusher failed pushes", () => {
+  // The controller counts a push as failed only when updatePriceFeed rejects.
+  const pusherWithHermes = (getLatestPriceUpdates: () => Promise<unknown>) =>
+    new SolanaPricePusher(
+      pythSolanaReceiver,
+      { getLatestPriceUpdates } as unknown as HermesClient,
+      { debug: jest.fn() } as unknown as Logger,
+      0,
+      COMPUTE_UNIT_PRICE_MICRO_LAMPORTS,
+      payer,
+    );
+
+  it("rejects when sending fails", async () => {
+    const pusher = pusherWithHermes(() =>
+      Promise.resolve({ binary: { data: [PRICE_UPDATE_DATA] } }),
+    );
+    jest
+      .spyOn(
+        pusher as unknown as { sendV0Transactions: () => Promise<string[]> },
+        "sendV0Transactions",
+      )
+      .mockRejectedValue(new Error("block height exceeded"));
+
+    await expect(pusher.updatePriceFeed(["feed"])).rejects.toThrow(
+      "block height exceeded",
+    );
+  });
+
+  it("rejects when Hermes fails", async () => {
+    const pusher = pusherWithHermes(() =>
+      Promise.reject(new Error("Hermes unavailable")),
+    );
+
+    await expect(pusher.updatePriceFeed(["feed"])).rejects.toThrow(
+      "Hermes unavailable",
+    );
+  });
+});
+
 describe("SolanaPricePusher v0 transactions", () => {
   it("builds v0 transactions by default", async () => {
     const transactions = await v0Pusher.buildV0Transactions([

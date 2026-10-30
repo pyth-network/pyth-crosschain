@@ -440,23 +440,24 @@ export async function sendAndConfirmSerializedTransaction(
   let confirmedTx: SignatureResult | null | undefined;
   let retryCount = 0;
 
-  const confirmTransactionPromise = connection.confirmTransaction(
-    {
-      blockhash: blockhash.blockhash,
-      lastValidBlockHeight: blockhash.lastValidBlockHeight,
-      signature: txSignature,
-    },
-    "confirmed",
-  );
+  // Racing this promise itself, rather than a wrapper around it, makes a rejection
+  // (such as an expired blockhash) reach the caller instead of being unhandled,
+  // which would kill the process.
+  const confirmTransactionPromise = connection
+    .confirmTransaction(
+      {
+        blockhash: blockhash.blockhash,
+        lastValidBlockHeight: blockhash.lastValidBlockHeight,
+        signature: txSignature,
+      },
+      "confirmed",
+    )
+    .then((result) => result.value);
 
   confirmedTx = undefined;
   while (!confirmedTx) {
     confirmedTx = await Promise.race([
-      new Promise<SignatureResult>((resolve) => {
-        void confirmTransactionPromise.then((result) => {
-          resolve(result.value);
-        });
-      }),
+      confirmTransactionPromise,
       new Promise<null>((resolve) =>
         setTimeout(() => {
           resolve(null);
