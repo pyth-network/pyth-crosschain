@@ -291,6 +291,9 @@ export class CosmWasmChain extends Chain {
       gasPrice: this.gasPrice,
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       prefix: this.prefix,
       type: CosmWasmChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -469,6 +472,9 @@ export class SuiChain extends Chain {
       endpointType: this.endpointType,
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       rpcUrl: this.rpcUrl,
       type: SuiChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -969,6 +975,9 @@ export class IotaChain extends Chain {
       endpointType: this.endpointType,
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       rpcUrl: this.rpcUrl,
       type: IotaChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -1802,6 +1811,9 @@ export class SvmChain extends Chain {
       id: this.id,
       isRemote: this.isRemote,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       rpcUrl: this.rpcUrl,
       type: SvmChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -1932,6 +1944,9 @@ export class EvmChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       networkId: this.networkId,
       rpcUrl: this.rpcUrl,
       type: EvmChain.type,
@@ -2117,6 +2132,9 @@ export class AptosChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       rpcUrl: this.rpcUrl,
       type: AptosChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -2208,6 +2226,9 @@ export class FuelChain extends Chain {
       gqlUrl: this.gqlUrl,
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       type: FuelChain.type,
       wormholeChainName: this.wormholeChainName,
     };
@@ -2325,6 +2346,7 @@ export class TonChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     private rpcUrl: string,
+    private networkId: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -2389,6 +2411,10 @@ export class TonChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
+      networkId: this.networkId,
       rpcUrl: this.rpcUrl,
       type: TonChain.type,
       wormholeChainName: this.wormholeChainName,
@@ -2403,6 +2429,7 @@ export class TonChain extends Chain {
       parsed.wormholeChainName ?? "",
       parsed.nativeToken,
       parsed.rpcUrl ?? "",
+      parsed.networkId ?? "",
     );
   }
 
@@ -2453,6 +2480,9 @@ export class NearChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
+      ...(this.nativeToken !== undefined && {
+        nativeToken: this.nativeToken,
+      }),
       networkId: this.networkId,
       rpcUrl: this.rpcUrl,
       type: NearChain.type,
