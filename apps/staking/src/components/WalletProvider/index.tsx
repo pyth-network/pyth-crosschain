@@ -10,7 +10,6 @@ import {
   CoinbaseWalletAdapter,
   LedgerWalletAdapter,
   PhantomWalletAdapter,
-  SolflareWalletAdapter,
   TorusWalletAdapter,
   WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
@@ -53,7 +52,6 @@ export const WalletProvider = ({
       new CoinbaseWalletAdapter(),
       new PhantomWalletAdapter(),
       new LedgerWalletAdapter(),
-      new SolflareWalletAdapter(),
       new TorusWalletAdapter(),
       ...(walletConnectProjectId
         ? [
