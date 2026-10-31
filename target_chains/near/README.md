@@ -47,4 +47,4 @@ near view --network-id mainnet contract-url.near get_price_unsafe '{ "price_iden
 You can find more in-depth documentation on the [Pyth Website][pyth website] for a more in-depth guide to
 working with Pyth concepts in general in the context of NEAR.
 
-[pyth website]: https://docs.pyth.network/documentation/pythnet-price-feeds/near
+[pyth website]: https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/near
