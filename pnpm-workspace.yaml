@@ -221,6 +221,9 @@ overrides:
   "@babel/plugin-transform-modules-systemjs@>=7 <7.29.4": ^7.29.4
   "@cprussin/jest-config>next@>=15 <15.5.28": ^15.5.28
   "@grpc/grpc-js@>=1 <1.13.6": ^1.13.6
+  # Exception to the one-major rule: no 1.x release of @hono/node-server fixes
+  # GHSA-rmxm-3fg6-px4f. `@modelcontextprotocol/sdk` accepts `^2.0.5`.
+  "@hono/node-server@>=1.19.10 <2.1.3": ^2.1.3
   "@isaacs/brace-expansion@>=5 <5.0.1": ^5.0.1
   "@modelcontextprotocol/sdk@>=1 <1.32.0": ^1.32.0
   "axios@>=1 <1.20.0": ^1.20.0
