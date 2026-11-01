@@ -96,6 +96,64 @@ export class SolanaPriceListener extends ChainPriceListener {
 }
 
 /**
+ * Default interval in milliseconds (10 minutes) between periodic cleanups of leaked encoded VAA accounts.
+ */
+export const ENCODED_VAA_CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
+
+/**
+ * Options for closing previously leaked encoded VAA accounts.
+ */
+export type ClosePreviousEncodedVaasOptions = {
+  addressLookupTableAccount?: AddressLookupTableAccount | undefined;
+  computeUnitPriceMicroLamports?: number | undefined;
+  maxInstructions?: number | undefined;
+};
+
+/**
+ * Closes previous encoded VAA accounts owned by the wallet to reclaim rent
+ * and prevent accounts from leaking after failed update transactions (#4049).
+ */
+export async function closePreviousEncodedVaas(
+  pythSolanaReceiver: PythSolanaReceiver,
+  logger: Logger,
+  options?: ClosePreviousEncodedVaasOptions,
+): Promise<string[]> {
+  try {
+    const transactionBuilder = pythSolanaReceiver.newTransactionBuilder(
+      {},
+      options?.addressLookupTableAccount,
+    );
+    await transactionBuilder.addClosePreviousEncodedVaasInstructions(
+      options?.maxInstructions ?? 40,
+    );
+    const transactions = await transactionBuilder.buildVersionedTransactions(
+      options?.computeUnitPriceMicroLamports !== undefined
+        ? {
+            computeUnitPriceMicroLamports:
+              options.computeUnitPriceMicroLamports,
+          }
+        : {},
+    );
+    if (transactions.length === 0) {
+      return [];
+    }
+    logger.info(
+      `Closing ${transactions.length} transaction(s) of previous encoded VAA accounts`,
+    );
+    return await sendTransactions(
+      transactions,
+      pythSolanaReceiver.connection,
+      pythSolanaReceiver.wallet,
+      undefined,
+      logger,
+    );
+  } catch (error: any) {
+    logger.error(error, "Failed to close previous encoded VAA accounts:");
+    return [];
+  }
+}
+
+/**
  * Pushes price updates with v0 or v1 transactions (SIMD-0385).
  *
  * With v0 transactions, the pusher posts the VAA, updates the price feeds and closes the encoded VAA account in
@@ -106,6 +164,9 @@ export class SolanaPriceListener extends ChainPriceListener {
  * No on-chain state remains after the transaction, and a failed transaction leaves no account behind.
  */
 export class SolanaPricePusher implements IPricePusher {
+  private lastCleanupTime = 0;
+  private cleanupIntervalMs: number;
+
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private hermesClient: HermesClient,
@@ -114,12 +175,39 @@ export class SolanaPricePusher implements IPricePusher {
     private computeUnitPriceMicroLamports: number,
     private payer: Keypair,
     private transactionVersion: SolanaTransactionVersion = "v0",
-    private addressLookupTableAccount?: AddressLookupTableAccount,
-  ) {}
+    private addressLookupTableAccount?: AddressLookupTableAccount | undefined,
+    cleanupIntervalMs?: number | undefined,
+  ) {
+    this.cleanupIntervalMs =
+      cleanupIntervalMs ?? ENCODED_VAA_CLEANUP_INTERVAL_MS;
+  }
+
+  /**
+   * Closes previously leaked or unclosed encoded VAA accounts owned by this pusher's wallet.
+   */
+  async closePreviousEncodedVaas(maxInstructions = 40): Promise<string[]> {
+    return await closePreviousEncodedVaas(
+      this.pythSolanaReceiver,
+      this.logger,
+      {
+        addressLookupTableAccount: this.addressLookupTableAccount,
+        computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+        maxInstructions,
+      },
+    );
+  }
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
+    }
+
+    if (
+      this.cleanupIntervalMs > 0 &&
+      Date.now() - this.lastCleanupTime > this.cleanupIntervalMs
+    ) {
+      this.lastCleanupTime = Date.now();
+      await this.closePreviousEncodedVaas();
     }
 
     const shuffledPriceIds = priceIds
@@ -152,6 +240,9 @@ export class SolanaPricePusher implements IPricePusher {
       this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
+      if (this.transactionVersion === "v0") {
+        await this.closePreviousEncodedVaas();
+      }
       return;
     }
   }
@@ -204,6 +295,9 @@ export class SolanaPricePusher implements IPricePusher {
 }
 
 export class SolanaPricePusherJito implements IPricePusher {
+  private lastCleanupTime = 0;
+  private cleanupIntervalMs: number;
+
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private hermesClient: HermesClient,
@@ -215,8 +309,26 @@ export class SolanaPricePusherJito implements IPricePusher {
     private searcherClients: SearcherClient[],
     private updatesPerJitoBundle: number,
     private maxRetryTimeMs: number,
-    private addressLookupTableAccount?: AddressLookupTableAccount,
-  ) {}
+    private addressLookupTableAccount?: AddressLookupTableAccount | undefined,
+    cleanupIntervalMs?: number | undefined,
+  ) {
+    this.cleanupIntervalMs =
+      cleanupIntervalMs ?? ENCODED_VAA_CLEANUP_INTERVAL_MS;
+  }
+
+  /**
+   * Closes previously leaked or unclosed encoded VAA accounts owned by this pusher's wallet.
+   */
+  async closePreviousEncodedVaas(maxInstructions = 40): Promise<string[]> {
+    return await closePreviousEncodedVaas(
+      this.pythSolanaReceiver,
+      this.logger,
+      {
+        addressLookupTableAccount: this.addressLookupTableAccount,
+        maxInstructions,
+      },
+    );
+  }
 
   async getRecentJitoTipLamports(): Promise<number | undefined> {
     try {
@@ -242,6 +354,18 @@ export class SolanaPricePusherJito implements IPricePusher {
   }
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
+    if (priceIds.length === 0) {
+      return;
+    }
+
+    if (
+      this.cleanupIntervalMs > 0 &&
+      Date.now() - this.lastCleanupTime > this.cleanupIntervalMs
+    ) {
+      this.lastCleanupTime = Date.now();
+      await this.closePreviousEncodedVaas();
+    }
+
     const recentJitoTip = await this.getRecentJitoTipLamports();
     const jitoTip =
       this.dynamicJitoTips && recentJitoTip !== undefined
@@ -262,38 +386,50 @@ export class SolanaPricePusherJito implements IPricePusher {
       return;
     }
 
-    for (let i = 0; i < priceIds.length; i += this.updatesPerJitoBundle) {
-      const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder(
-        {
-          closeUpdateAccounts: true,
-        },
-        this.addressLookupTableAccount,
-      );
-      await transactionBuilder.addUpdatePriceFeed(
-        priceFeedUpdateData.map((x) => {
-          return sliceAccumulatorUpdateData(
-            Buffer.from(x, "base64"),
-            i,
-            i + this.updatesPerJitoBundle,
-          ).toString("base64");
-        }),
-        this.shardId,
-      );
+    if (priceFeedUpdateData.length === 0) {
+      return;
+    }
 
-      const transactions = await transactionBuilder.buildVersionedTransactions({
-        jitoTipLamports: cappedJitoTip,
-        tightComputeBudget: true,
-      });
+    try {
+      for (let i = 0; i < priceIds.length; i += this.updatesPerJitoBundle) {
+        const transactionBuilder =
+          this.pythSolanaReceiver.newTransactionBuilder(
+            {
+              closeUpdateAccounts: true,
+            },
+            this.addressLookupTableAccount,
+          );
+        await transactionBuilder.addUpdatePriceFeed(
+          priceFeedUpdateData.map((x) => {
+            return sliceAccumulatorUpdateData(
+              Buffer.from(x, "base64"),
+              i,
+              i + this.updatesPerJitoBundle,
+            ).toString("base64");
+          }),
+          this.shardId,
+        );
 
-      await sendTransactionsJito(
-        transactions,
-        this.searcherClients,
-        this.pythSolanaReceiver.wallet,
-        {
-          maxRetryTimeMs: this.maxRetryTimeMs,
-        },
-        this.logger,
-      );
+        const transactions =
+          await transactionBuilder.buildVersionedTransactions({
+            jitoTipLamports: cappedJitoTip,
+            tightComputeBudget: true,
+          });
+
+        await sendTransactionsJito(
+          transactions,
+          this.searcherClients,
+          this.pythSolanaReceiver.wallet,
+          {
+            maxRetryTimeMs: this.maxRetryTimeMs,
+          },
+          this.logger,
+        );
+      }
+    } catch (error: any) {
+      this.logger.error(error, "updatePriceFeed failed");
+      await this.closePreviousEncodedVaas();
+      return;
     }
   }
 }

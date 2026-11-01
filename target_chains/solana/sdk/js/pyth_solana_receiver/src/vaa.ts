@@ -278,6 +278,7 @@ export async function findEncodedVaaAccountsByWriteAuthority(
   wormholeProgramId: PublicKey,
 ): Promise<PublicKey[]> {
   const result = await connection.getProgramAccounts(wormholeProgramId, {
+    dataSlice: { length: 0, offset: 0 },
     filters: [
       {
         memcmp: {

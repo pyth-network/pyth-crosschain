@@ -50,6 +50,12 @@ export default {
       description: "Use dynamic jito tips",
       type: "boolean",
     } as Options,
+    "encoded-vaa-cleanup-interval-minutes": {
+      default: 10,
+      description:
+        "Interval in minutes to clean up leaked encoded VAA accounts (0 to disable periodic cleanup)",
+      type: "number",
+    } as Options,
     endpoint: {
       description: "Solana RPC API endpoint",
       required: true,
@@ -148,6 +154,7 @@ export default {
       jitoKeypairFile,
       jitoTipLamports,
       dynamicJitoTips,
+      encodedVaaCleanupIntervalMinutes,
       maxJitoTipLamports,
       updatesPerJitoBundle,
       addressLookupTableAccount,
@@ -271,6 +278,9 @@ export default {
         // Set max retry time to pushing frequency, since we want to stop retrying before the next push attempt
         pushingFrequency * 1000,
         lookupTableAccount,
+        encodedVaaCleanupIntervalMinutes !== undefined
+          ? encodedVaaCleanupIntervalMinutes * 60 * 1000
+          : undefined,
       );
 
       for (const [index, client] of jitoClients.entries()) {
@@ -286,6 +296,9 @@ export default {
         keypair,
         transactionVersion as SolanaTransactionVersion,
         lookupTableAccount,
+        encodedVaaCleanupIntervalMinutes !== undefined
+          ? encodedVaaCleanupIntervalMinutes * 60 * 1000
+          : undefined,
       );
     }
 
