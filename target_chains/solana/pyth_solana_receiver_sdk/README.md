@@ -53,6 +53,44 @@ pub struct Initialize<'info> {
     pub price_update: Account<'info, PriceUpdateV2>,
     // Add more accounts here
 }
-
-
 ```
+
+## Anchor Compatibility Matrix
+
+`pyth-solana-receiver-sdk` has major versions aligned with Anchor framework releases and their underlying `borsh` serializer:
+
+| `pyth-solana-receiver-sdk` Version | Anchor Framework (`anchor-lang`) | Borsh Version | Status |
+|:---|:---|:---|:---|
+| `^2.0.0` | `1.0.x` | `1.5`+ / `1.6`+ | **Current / Recommended** for Anchor 1.x and Solana 2.x/3.x |
+| `1.2.0` | `0.30.x` – `0.32.1` | `0.10.x` | Legacy release for Anchor 0.30–0.32 |
+
+### Version Conflict Resolution (Issue #3756)
+
+If your project uses `anchor-lang 1.0.x` and you specify `pyth-solana-receiver-sdk = "1.2.0"`, cargo compilation will fail with:
+
+```text
+error[E0277]: the trait bound `pythnet_sdk::messages::PriceFeedMessage: BorshSerialize` is not satisfied
+  --> src/price_update.rs:49:1
+   |
+49 | #[account]
+   | ^^^^^^^^^^ the trait `BorshSerialize` is not implemented for `pythnet_sdk::messages::PriceFeedMessage`
+   |
+note: there are multiple different versions of crate `borsh` in the dependency graph
+```
+
+This error is caused by a transitive `borsh` mismatch between `anchor-lang 0.32.1` (which uses `borsh 0.10.4`) and `anchor-lang 1.0.x` / `pythnet-sdk` (which use `borsh 1.x`).
+
+**To resolve:**
+- For projects using **Anchor 1.0.x**, update `Cargo.toml`:
+  ```toml
+  [dependencies]
+  anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
+  pyth-solana-receiver-sdk = "^2.0.0"
+  ```
+- For legacy projects using **Anchor 0.32.1**, pin to the 1.x series:
+  ```toml
+  [dependencies]
+  anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+  pyth-solana-receiver-sdk = "~1.2.0"
+  ```
+
