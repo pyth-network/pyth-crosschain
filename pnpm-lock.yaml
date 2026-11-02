@@ -380,7 +380,7 @@ overrides:
   immutable@>=4 <4.3.9: ^4.3.9
   immutable@>=5 <5.1.8: ^5.1.8
   ip-address@>=10 <10.3.1: ^10.3.1
-  joi@>=17 <17.13.7: ^17.13.7
+  joi@>=17 <17.13.9: ^17.13.9
   js-yaml@>=3 <3.15.2: ^3.15.2
   js-yaml@>=4 <4.3.2: ^4.3.2
   lodash@>=4 <4.18.0: ^4.18.0
@@ -392,7 +392,7 @@ overrides:
   minimatch@>=9 <9.0.7: ^9.0.7
   minimatch@>=10 <10.2.3: ^10.2.3
   nanoid@>=3 <3.3.18: ^3.3.18
-  node-forge@>=1 <1.4.0: ^1.4.0
+  node-forge@>=1 <1.4.1: ^1.4.1
   path-to-regexp@>=0.1 <0.1.13: ^0.1.13
   path-to-regexp@>=6 <6.3.0: ^6.3.0
   path-to-regexp@>=8 <8.4.0: ^8.4.0
@@ -667,8 +667,8 @@ importers:
         specifier: workspace:*
         version: link:../../contract_manager
       joi:
-        specifier: ^17.13.7
-        version: 17.13.8
+        specifier: ^17.13.9
+        version: 17.13.9
       pino:
         specifier: 'catalog:'
         version: 9.6.0
@@ -859,8 +859,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       joi:
-        specifier: ^17.13.7
-        version: 17.13.8
+        specifier: ^17.13.9
+        version: 17.13.9
       near-api-js:
         specifier: ^3.0.2
         version: 3.0.4(encoding@0.1.13)
@@ -17538,8 +17538,8 @@ packages:
   jito-ts@3.0.1:
     resolution: {integrity: sha512-TSofF7KqcwyaWGjPaSYC8RDoNBY1TPRNBHdrw24bdIi7mQ5bFEDdYK3D//llw/ml8YDvcZlgd644WxhjLTS9yg==}
 
-  joi@17.13.8:
-    resolution: {integrity: sha512-iPKOGmiRw1jxf/JOPwxmCcUQAOdF359mdzYiP2DJ+TMX0YK2zjK3D+zYOaGjpumWxOFF/l2xVWjRVK5bGSLdEw==}
+  joi@17.13.9:
+    resolution: {integrity: sha512-llFCT2rVtfwgBCaIqxtjim+iHqrgss4ONiGSYiiGH9jnjWq90ppSRffqmqKvwpa8W+YfILyQV6XyGcegXX2T4g==}
 
   jose@5.9.6:
     resolution: {integrity: sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==}
@@ -18926,8 +18926,8 @@ packages:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  node-forge@1.4.0:
-    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
+  node-forge@1.4.2:
+    resolution: {integrity: sha512-rRtAR5XLJ8gCKd9du4qrKAsgCG1ObGP4gLeNJMa4vYSeq4bmBMOJk5IHkrviBV0q7uoAJlVd8HEQYQSVUb4FGQ==}
     engines: {node: '>= 6.13.0'}
 
   node-gyp-build-optional-packages@5.2.2:
@@ -46036,7 +46036,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  joi@17.13.8:
+  joi@17.13.9:
     dependencies:
       '@hapi/hoek': 9.3.0
       '@hapi/topo': 5.1.0
@@ -47898,7 +47898,7 @@ snapshots:
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
 
-  node-forge@1.4.0: {}
+  node-forge@1.4.2: {}
 
   node-gyp-build-optional-packages@5.2.2:
     dependencies:
@@ -50239,7 +50239,7 @@ snapshots:
   selfsigned@2.4.1:
     dependencies:
       '@types/node-forge': 1.3.11
-      node-forge: 1.4.0
+      node-forge: 1.4.2
 
   semaphore@1.1.0: {}
 
