@@ -40,6 +40,7 @@
   "files": [
     "dist/**"
   ],
+  "license": "Apache-2.0",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
   "name": "@pythnetwork/pyth-lazer-cardano-js",
