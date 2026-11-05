@@ -31,7 +31,7 @@ $ yarn add fuels @pythnetwork/hermes-client
 ```
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
+See [Pull Integration on Fuel](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/fuel) for more information about this approach.
 To use Pyth prices on chain,
 they must be fetched from a Hermes instance. The `HermesClient` class from Pyth's `hermes-client` library can be used to interact with Hermes,
 providing a way to fetch these prices directly in your code.
@@ -40,4 +40,4 @@ chain.
 
 For a complete example of how to obtain Pyth prices and submit them to a Fuel network, check out the [usage example](src/examples/usage.ts) in the `src/examples` directory.
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
+We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/price-feeds/core/best-practices).
