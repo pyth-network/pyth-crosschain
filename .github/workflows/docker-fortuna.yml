@@ -5,7 +5,21 @@ on:
       - fortuna-v*
   pull_request:
     paths:
+      # This image builds the root Cargo workspace with `cargo build --locked`, so the
+      # filter has to cover every path its Dockerfile COPYs — not just its own crate.
+      # `scripts/check-docker-workflow-paths.py` derives this list from those COPY lines.
+      - ".github/workflows/docker-fortuna.yml"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "apps/argus/**"
       - "apps/fortuna/**"
+      - "apps/hermes/client/rust/**"
+      - "apps/pyth-lazer-pusher/**"
+      - "apps/quorum/**"
+      - "lazer/contracts/cardano/cli/rust/**"
+      - "pythnet/pythnet_sdk/**"
+      - "target_chains/ethereum/entropy_sdk/solidity/abis/**"
+      - "target_chains/starknet/tools/test_vaas/**"
   workflow_dispatch:
     inputs:
       dispatch_description:

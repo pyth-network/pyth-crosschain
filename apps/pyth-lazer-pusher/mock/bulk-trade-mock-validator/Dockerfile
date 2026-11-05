@@ -21,7 +21,7 @@ COPY --from=planner /src/recipe.json recipe.json
 RUN --mount=type=cache,target=/src/target/ \
     --mount=type=cache,target=/usr/local/cargo/git/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-    cargo chef cook --release --recipe-path recipe.json -p bulk-trade-mock-validator
+    cargo chef cook --release --locked --recipe-path recipe.json -p bulk-trade-mock-validator
 
 # Copy source and build
 COPY . .
