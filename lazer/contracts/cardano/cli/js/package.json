@@ -109,6 +109,7 @@
   "files": [
     "dist/**"
   ],
+  "license": "Apache-2.0",
   "name": "@pythnetwork/pyth-lazer-cardano-cli",
   "private": true,
   "repository": {

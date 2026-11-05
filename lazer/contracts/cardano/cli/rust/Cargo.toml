@@ -2,6 +2,7 @@
 name = "pyth_lazer_cardano"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
 
 [dependencies]
 aiken-lang = "1.1.21"

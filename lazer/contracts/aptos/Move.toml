@@ -1,7 +1,7 @@
 [package]
 name = "pyth_lazer"
 version = "0.1.0"
-license = "UNLICENSED"
+license = "Apache-2.0"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "1d54fe08792ea702f840965808520f057d1321bb" }
