@@ -91,6 +91,7 @@ export default {
     ...options.controllerLogLevel,
     ...options.enableMetrics,
     ...options.metricsPort,
+    ...options.metricsChain,
   },
   command: "sui",
   describe:
@@ -118,6 +119,7 @@ export default {
       controllerLogLevel,
       enableMetrics,
       metricsPort,
+      metricsChain,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -167,7 +169,10 @@ export default {
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
     if (enableMetrics) {
-      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics = new PricePusherMetrics(
+        logger.child({ module: "Metrics" }),
+        metricsChain ?? "sui",
+      );
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);
     }
