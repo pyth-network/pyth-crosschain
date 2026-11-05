@@ -17,7 +17,7 @@ jobs:
       run:
         working-directory: target_chains/aptos/contracts/
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download CLI
         run: wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.1.1/aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
