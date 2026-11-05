@@ -278,6 +278,10 @@ export async function findEncodedVaaAccountsByWriteAuthority(
   wormholeProgramId: PublicKey,
 ): Promise<PublicKey[]> {
   const result = await connection.getProgramAccounts(wormholeProgramId, {
+    // Only the public keys are returned to the caller; the discriminator and
+    // write authority filters below need no account data, and a wallet with
+    // thousands of leftover accounts does not need ~1 KB of each streamed.
+    dataSlice: { length: 0, offset: 0 },
     filters: [
       {
         memcmp: {
