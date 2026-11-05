@@ -20,6 +20,7 @@ import type { Logger } from "pino";
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
+import { EndpointPool, withEndpointFailover } from "./endpoint-pool.js";
 
 const DEFAULT_GAS_PRICE = 160_000_000;
 const DEFAULT_GAS_MULTIPLIER = 1.05;
@@ -47,9 +48,11 @@ type InjectiveConfig = {
 
 // this use price without leading 0x
 export class InjectivePriceListener extends ChainPriceListener {
+  private readonly endpoints: EndpointPool;
+
   constructor(
     private pythContractAddress: string,
-    private grpcEndpoint: string,
+    grpcEndpoints: string | readonly string[],
     priceItems: PriceItem[],
     private logger: Logger,
     config: {
@@ -57,6 +60,10 @@ export class InjectivePriceListener extends ChainPriceListener {
     },
   ) {
     super(config.pollingFrequency, priceItems);
+    this.endpoints = new EndpointPool(
+      typeof grpcEndpoints === "string" ? [grpcEndpoints] : grpcEndpoints,
+      logger,
+    );
   }
 
   async getOnChainPriceInfo(
@@ -64,14 +71,20 @@ export class InjectivePriceListener extends ChainPriceListener {
   ): Promise<PriceInfo | undefined> {
     let priceQueryResponse: PriceQueryResponse;
     try {
-      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
-      const { data } = await api.fetchSmartContractState(
-        this.pythContractAddress,
-        Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64"),
+      priceQueryResponse = await withEndpointFailover(
+        this.endpoints,
+        async (endpoint) => {
+          const api = new ChainGrpcWasmApi(endpoint);
+          const { data } = await api.fetchSmartContractState(
+            this.pythContractAddress,
+            Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString(
+              "base64",
+            ),
+          );
+          const json = Buffer.from(data).toString();
+          return JSON.parse(json) as PriceQueryResponse;
+        },
       );
-
-      const json = Buffer.from(data).toString();
-      priceQueryResponse = JSON.parse(json);
     } catch (error) {
       this.logger.error(error, `Polling on-chain price for ${priceId} failed.`);
       return undefined;
@@ -95,11 +108,12 @@ export class InjectivePricePusher implements IPricePusher {
   private mnemonic: string;
   private chainConfig: InjectiveConfig;
   private accounts: Record<string, Account | undefined> = {};
+  private readonly endpoints: EndpointPool;
 
   constructor(
     private hermesClient: HermesClient,
     private pythContractAddress: string,
-    private grpcEndpoint: string,
+    grpcEndpoints: string | readonly string[],
     private logger: Logger,
     mnemonic: string,
     chainConfig?: Partial<InjectiveConfig>,
@@ -113,6 +127,10 @@ export class InjectivePricePusher implements IPricePusher {
         chainConfig?.priceIdsProcessChunkSize ??
         DEFAULT_PRICE_IDS_PROCESS_CHUNK_SIZE,
     };
+    this.endpoints = new EndpointPool(
+      typeof grpcEndpoints === "string" ? [grpcEndpoints] : grpcEndpoints,
+      logger,
+    );
   }
 
   private getWallet(index: number) {
@@ -130,13 +148,15 @@ export class InjectivePricePusher implements IPricePusher {
     msg: Msgs,
     index: number,
   ): Promise<TxResponse> {
-    const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
     const wallet = this.getWallet(index);
     const injectiveAddress = wallet.toAddress().toBech32();
 
     // Fetch the latest account details only if it's not stored.
-    this.accounts[injectiveAddress] ??=
-      await chainGrpcAuthApi.fetchAccount(injectiveAddress);
+    this.accounts[injectiveAddress] ??= await withEndpointFailover(
+      this.endpoints,
+      (endpoint) =>
+        new ChainGrpcAuthApi(endpoint).fetchAccount(injectiveAddress),
+    );
 
     const account = this.accounts[injectiveAddress];
 
@@ -157,8 +177,9 @@ export class InjectivePricePusher implements IPricePusher {
       txRaw.signatures = [sig];
 
       // this takes approx 5 seconds
-      const txResponse = await new TxGrpcApi(this.grpcEndpoint).broadcast(
-        txRaw,
+      const txResponse = await withEndpointFailover(
+        this.endpoints,
+        (endpoint) => new TxGrpcApi(endpoint).broadcast(txRaw),
       );
 
       account.baseAccount.sequence++;
@@ -271,8 +292,8 @@ export class InjectivePricePusher implements IPricePusher {
     });
 
     try {
-      const result = await new TxGrpcApi(this.grpcEndpoint).simulate(
-        simulateTxRaw,
+      const result = await withEndpointFailover(this.endpoints, (endpoint) =>
+        new TxGrpcApi(endpoint).simulate(simulateTxRaw),
       );
 
       const gas = (
@@ -326,22 +347,24 @@ export class InjectivePricePusher implements IPricePusher {
    */
   private async getUpdateFee(vaas: string[]) {
     try {
-      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
-      const { data } = await api.fetchSmartContractState(
-        this.pythContractAddress,
-        Buffer.from(
-          JSON.stringify({
-            get_update_fee: {
-              vaas,
-            },
-          }),
-        ).toString("base64"),
-      );
+      return await withEndpointFailover(this.endpoints, async (endpoint) => {
+        const api = new ChainGrpcWasmApi(endpoint);
+        const { data } = await api.fetchSmartContractState(
+          this.pythContractAddress,
+          Buffer.from(
+            JSON.stringify({
+              get_update_fee: {
+                vaas,
+              },
+            }),
+          ).toString("base64"),
+        );
 
-      const json = Buffer.from(data).toString();
+        const json = Buffer.from(data).toString();
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return JSON.parse(json);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return JSON.parse(json);
+      });
     } catch (error) {
       this.logger.error(error, `Error fetching update fee.`);
 
