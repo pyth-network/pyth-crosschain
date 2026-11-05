@@ -14,3 +14,21 @@ export function camelToSnakeCaseObject(
   }
   return result;
 }
+
+/**
+ * Merges several `HeadersInit` values into a single `Headers` object. Later
+ * sources take precedence over earlier ones. Unlike object spread, this
+ * supports every `HeadersInit` form (plain objects, `Headers` instances and
+ * arrays of name/value pairs).
+ */
+export function mergeHeaders(...sources: (HeadersInit | undefined)[]): Headers {
+  const result = new Headers();
+  for (const source of sources) {
+    if (source !== undefined) {
+      for (const [key, value] of new Headers(source)) {
+        result.set(key, value);
+      }
+    }
+  }
+  return result;
+}

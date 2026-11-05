@@ -22,6 +22,9 @@
       "cache": false,
       "dependsOn": ["//#install:modules"],
       "outputs": ["schema.json"]
+    },
+    "test:unit": {
+      "dependsOn": ["//#install:modules", "build:schemas", "^build"]
     }
   }
 }

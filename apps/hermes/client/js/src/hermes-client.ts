@@ -4,7 +4,7 @@
 import { EventSource } from "eventsource";
 import type { z } from "zod";
 
-import { camelToSnakeCaseObject } from "./utils.js";
+import { camelToSnakeCaseObject, mergeHeaders } from "./utils.js";
 import { schemas } from "./zodSchemas.js";
 
 // Accessing schema objects
@@ -87,7 +87,7 @@ export class HermesClient {
       const response = await fetch(url, {
         ...options,
 
-        headers: { ...authHeaders, ...this.headers, ...options?.headers },
+        headers: mergeHeaders(authHeaders, this.headers, options?.headers),
         signal: AbortSignal.any([
           ...(options?.signal ? [options.signal] : []),
           AbortSignal.timeout(this.timeout),
@@ -298,11 +298,7 @@ export class HermesClient {
       fetch: (input, init) =>
         fetch(input, {
           ...init,
-          headers: {
-            ...init?.headers,
-            ...authHeaders,
-            ...this.headers,
-          },
+          headers: mergeHeaders(init?.headers, authHeaders, this.headers),
         }),
     });
   }
