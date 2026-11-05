@@ -42,6 +42,34 @@ near call --network-id mainnet contract-url.near update_price_feeds '{ "data": "
 near view --network-id mainnet contract-url.near get_price_unsafe '{ "price_identifier": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43" }'
 ```
 
+## Pointing the receiver at a new Wormhole contract
+
+The receiver verifies every price and governance VAA by calling out to a Wormhole core
+bridge contract (the `wormhole` `AccountId` stored in contract state). To migrate the receiver
+onto a different Wormhole contract — for example a Pyth-owned core bridge whose guardian set is
+the Pyth Pro routers rather than the default Wormhole guardians — use the `SetWormhole`
+governance action.
+
+`SetWormhole` is a standard `Target`-module governance action signed by the receiver's current
+governance source. Its wire payload is the usual `PTGM` header (magic + module + action
+discriminant + target chain) followed by the new Wormhole `AccountId` encoded as its UTF-8
+string representation. It is replay-protected by the same governance sequence number as every
+other action, so an action with a sequence at or below the last executed governance VAA is
+rejected.
+
+When the new Wormhole contract requires a fresh receiver code deploy (e.g. its `verify_vaa` ABI
+changed), the migration is two independent governance steps, applied after the new Wormhole
+contract has been deployed at its own account:
+
+1. `UpgradeContract { codehash }` → call `update_contract(new_wasm)`. This replaces the
+   receiver's code and runs `migrate()` (the existing upgrade flow).
+2. `SetWormhole { new_wormhole }` → the receiver starts verifying against the new Wormhole
+   contract on the next `update_price_feeds` / `execute_governance_instruction`.
+
+If the receiver code does not need to change, step 2 alone is sufficient. The two contracts are
+deployed and upgraded independently: bring up the new Wormhole contract first, then issue the
+receiver upgrade and/or `SetWormhole`.
+
 ## Further Documentation
 
 You can find more in-depth documentation on the [Pyth Website][pyth website] for a more in-depth guide to

@@ -79,6 +79,7 @@ pub enum GovernanceAction {
     SetFee { base: u64, expo: u64 },
     SetValidPeriod { valid_seconds: u64 },
     RequestGovernanceDataSourceTransfer { governance_data_source_index: u32 },
+    SetWormhole { new_wormhole: AccountId },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -168,6 +169,17 @@ impl GovernanceInstruction {
                         governance_data_source_index,
                     }
                 }
+
+                GovernanceActionId::SetWormhole => {
+                    // The new Wormhole `AccountId` occupies the remainder of the payload, encoded
+                    // as its UTF-8 string representation.
+                    let (_input, bytes) = all_consuming(take(input.len()))(input)?;
+                    let new_wormhole = std::str::from_utf8(bytes)
+                        .map_err(|_| InvalidPayload)?
+                        .parse::<AccountId>()
+                        .map_err(|_| InvalidPayload)?;
+                    GovernanceAction::SetWormhole { new_wormhole }
+                }
             },
         })
     }
@@ -222,6 +234,12 @@ impl GovernanceInstruction {
                 buf.push(GovernanceActionId::RequestGovernanceDataSourceTransfer as u8);
                 buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
                 buf.extend_from_slice(&governance_data_source_index.to_be_bytes());
+            }
+
+            GovernanceAction::SetWormhole { new_wormhole } => {
+                buf.push(GovernanceActionId::SetWormhole as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(new_wormhole.as_str().as_bytes());
             }
         }
 
@@ -327,6 +345,7 @@ impl Pyth {
             SetDataSources { data_sources } => self.set_sources(data_sources),
             SetFee { base, expo } => self.set_update_fee(base, expo)?,
             SetValidPeriod { valid_seconds } => self.set_valid_period(valid_seconds),
+            SetWormhole { new_wormhole } => self.set_wormhole(new_wormhole),
             RequestGovernanceDataSourceTransfer { .. } => Err(InvalidPayload)?,
             UpgradeContract { codehash } => {
                 // Additionally restrict to only Near for upgrades. This is a safety measure to
@@ -535,6 +554,10 @@ impl Pyth {
     pub fn set_upgrade_hash(&mut self, codehash: [u8; 32]) {
         self.codehash = codehash;
     }
+
+    pub fn set_wormhole(&mut self, new_wormhole: AccountId) {
+        self.wormhole = new_wormhole;
+    }
 }
 
 #[cfg(test)]
@@ -631,6 +654,41 @@ mod tests {
 
         contract.set_update_fee(100, 2).expect("Failed to set fee");
         assert_eq!(contract.update_fee, NearToken::from_yoctonear(10000));
+    }
+
+    #[test]
+    fn test_set_wormhole_roundtrip() {
+        let instruction = GovernanceInstruction {
+            module: GovernanceModule::Target,
+            target: Chain::from(WormholeChain::Near),
+            action: GovernanceAction::SetWormhole {
+                new_wormhole: "new-wormhole.near".parse().unwrap(),
+            },
+        };
+
+        assert_eq!(
+            instruction,
+            GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_set_wormhole_handler() {
+        let mut context = get_context();
+        context.is_view(false);
+        testing_env!(context.build());
+
+        let mut contract = Pyth::new(
+            "pyth.near".parse::<near_sdk::AccountId>().unwrap(),
+            Source::default(),
+            Source::default(),
+            0.into(),
+            32,
+        );
+
+        let new_wormhole: AccountId = "new-wormhole.near".parse().unwrap();
+        contract.set_wormhole(new_wormhole.clone());
+        assert_eq!(contract.wormhole, new_wormhole);
     }
 
     #[test]
@@ -739,6 +797,21 @@ mod tests {
 
             GovernanceActionId::RequestGovernanceDataSourceTransfer => {
                 unimplemented!()
+            }
+
+            GovernanceActionId::SetWormhole => {
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::SetWormhole {
+                        new_wormhole: "wormhole.near".parse().unwrap(),
+                    },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
             }
         }
     }
