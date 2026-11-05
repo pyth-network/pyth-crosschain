@@ -42,6 +42,30 @@ near call --network-id mainnet contract-url.near update_price_feeds '{ "data": "
 near view --network-id mainnet contract-url.near get_price_unsafe '{ "price_identifier": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43" }'
 ```
 
+## Wormhole core bridge
+
+The receiver verifies accumulator VAAs against a Pyth-owned Wormhole core bridge, vendored under
+`wormhole/` (see `wormhole/VENDOR.md` for the upstream pin and the deltas). Its guardian set 0 is the
+5 Pyth Pro routers (3-of-5 quorum); standard `UpgradeGuardianSet` VAAs rotate it going forward.
+
+Deploy it before the receiver upgrade. Build:
+
+```
+cd wormhole
+cargo near build reproducible-wasm
+```
+
+Then create its account and deploy, initializing guardian set 0 with the 5 router addresses
+(20-byte secp256k1 addresses, hex):
+
+```
+near deploy wormhole-pyth.near target/near/pyth_wormhole_near.wasm --network-id mainnet \
+  --init-function new \
+  --init-args '{"initial_guardians":["<router_addr_0>","<router_addr_1>","<router_addr_2>","<router_addr_3>","<router_addr_4>"]}'
+```
+
+The receiver is then pointed at this contract via the `SetWormhole` governance action.
+
 ## Further Documentation
 
 You can find more in-depth documentation on the [Pyth Website][pyth website] for a more in-depth guide to
