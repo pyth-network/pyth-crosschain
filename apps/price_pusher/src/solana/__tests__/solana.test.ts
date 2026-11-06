@@ -4,7 +4,7 @@ import path from "node:path";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import type { Logger } from "pino";
 
 import { SolanaPricePusher } from "../solana.js";
@@ -22,11 +22,9 @@ const RECENT_BLOCKHASH = "11111111111111111111111111111111";
 
 const payer = Keypair.generate();
 const connection = new Connection("http://127.0.0.1:8899", "confirmed");
-// Creating the encoded VAA account is the only instruction that reads the cluster.
 jest
   .spyOn(connection, "getMinimumBalanceForRentExemption")
   .mockResolvedValue(10_000_000);
-// The v0 transaction builder fetches the blockhash itself.
 jest.spyOn(connection, "getLatestBlockhash").mockResolvedValue({
   blockhash: RECENT_BLOCKHASH,
   lastValidBlockHeight: 0,
@@ -55,5 +53,21 @@ describe("SolanaPricePusher v0 transactions", () => {
       expect(tx.version).toBe(0);
       expect(tx.serialize().length).toBeLessThanOrEqual(1232);
     }
+  });
+
+  it("enqueues and drains unclosed VAA accounts on transaction failure (#4049)", async () => {
+    const fakeVaaAccount = Keypair.generate().publicKey;
+
+    // Simulate failed transaction enqueuing unclosed account
+    v0Pusher.enqueueLeakedVaaAccount(fakeVaaAccount);
+    expect(v0Pusher.getPendingReclamationCount()).toBe(1);
+
+    // Build reclamation transactions without blocking price update hot path
+    const reclaimTxs = await v0Pusher.buildReclamationTransactions(5);
+    expect(reclaimTxs.length).toBe(1);
+    expect(reclaimTxs[0].tx.serialize().length).toBeLessThanOrEqual(1232);
+
+    // Assert queue is drained
+    expect(v0Pusher.getPendingReclamationCount()).toBe(0);
   });
 });
