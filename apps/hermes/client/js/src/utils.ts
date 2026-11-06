@@ -14,3 +14,28 @@ export function camelToSnakeCaseObject(
   }
   return result;
 }
+
+export function mergeHeaders(
+  ...sources: (HeadersInit | undefined)[]
+): Record<string, string> {
+  const merged: Record<string, string> = {};
+  for (const source of sources) {
+    if (!source) continue;
+    if (typeof Headers !== "undefined" && source instanceof Headers) {
+      source.forEach((val, key) => {
+        merged[key.toLowerCase()] = val;
+      });
+    } else if (Array.isArray(source)) {
+      for (const [key, val] of source) {
+        if (key) merged[key.toLowerCase()] = String(val);
+      }
+    } else if (typeof source === "object") {
+      for (const [key, val] of Object.entries(source)) {
+        if (val !== undefined && val !== null) {
+          merged[key.toLowerCase()] = String(val);
+        }
+      }
+    }
+  }
+  return merged;
+}
