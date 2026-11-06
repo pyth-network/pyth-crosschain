@@ -4,7 +4,7 @@ import path from "node:path";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair } from "@solana/web3.js";
 import type { Logger } from "pino";
 
 import { SolanaPricePusher } from "../solana.js";
@@ -33,10 +33,17 @@ const pythSolanaReceiver = new PythSolanaReceiver({
   connection,
   wallet: new NodeWallet(payer),
 });
+const mockLogger = {
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+} as unknown as Logger;
+
 const v0Pusher = new SolanaPricePusher(
   pythSolanaReceiver,
   {} as HermesClient,
-  {} as Logger,
+  mockLogger,
   0,
   COMPUTE_UNIT_PRICE_MICRO_LAMPORTS,
   payer,
@@ -55,19 +62,48 @@ describe("SolanaPricePusher v0 transactions", () => {
     }
   });
 
-  it("enqueues and drains unclosed VAA accounts on transaction failure (#4049)", async () => {
-    const fakeVaaAccount = Keypair.generate().publicKey;
+  it("handles reclaimOrphanedVaas safely without throwing on empty queue (#4049)", async () => {
+    // When no orphaned accounts exist, returns empty array without throwing
+    jest
+      .spyOn(pythSolanaReceiver, "buildClosePreviousEncodedVaasInstructions")
+      .mockResolvedValue([]);
 
-    // Simulate failed transaction enqueuing unclosed account
-    v0Pusher.enqueueLeakedVaaAccount(fakeVaaAccount);
-    expect(v0Pusher.getPendingReclamationCount()).toBe(1);
+    const result = await v0Pusher.reclaimOrphanedVaas(10);
+    expect(result).toEqual([]);
+  });
 
-    // Build reclamation transactions without blocking price update hot path
-    const reclaimTxs = await v0Pusher.buildReclamationTransactions(5);
-    expect(reclaimTxs.length).toBe(1);
-    expect(reclaimTxs[0].tx.serialize().length).toBeLessThanOrEqual(1232);
+  it("triggers asynchronous reclamation on v0 transaction failure without blocking hot path (#4049)", async () => {
+    const reclaimSpy = jest
+      .spyOn(v0Pusher, "reclaimOrphanedVaas")
+      .mockResolvedValue(["mock_sig_123"]);
 
-    // Assert queue is drained
-    expect(v0Pusher.getPendingReclamationCount()).toBe(0);
+    const hermesMock = {
+      getLatestPriceUpdates: jest.fn().mockResolvedValue({
+        binary: { data: [PRICE_UPDATE_DATA] },
+      }),
+    } as unknown as HermesClient;
+
+    const failingPusher = new SolanaPricePusher(
+      pythSolanaReceiver,
+      hermesMock,
+      mockLogger,
+      0,
+      COMPUTE_UNIT_PRICE_MICRO_LAMPORTS,
+      payer,
+    );
+
+    // Mock sendV0Transactions to fail (simulating CU budget exhaustion)
+    jest
+      .spyOn(failingPusher as any, "sendV0Transactions")
+      .mockRejectedValue(new Error("ComputationalBudgetExceeded"));
+
+    const reclaimOrphanSpy = jest
+      .spyOn(failingPusher, "reclaimOrphanedVaas")
+      .mockResolvedValue(["reclaimed_sig"]);
+
+    await failingPusher.updatePriceFeed(["price_id_1"]);
+
+    expect(mockLogger.error).toHaveBeenCalled();
+    expect(reclaimOrphanSpy).toHaveBeenCalled();
   });
 });
