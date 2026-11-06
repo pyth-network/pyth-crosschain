@@ -106,6 +106,38 @@ export class SolanaPriceListener extends ChainPriceListener {
  * No on-chain state remains after the transaction, and a failed transaction leaves no account behind.
  */
 export class SolanaPricePusher implements IPricePusher {
+  private pendingReclaimAccounts: Set<string> = new Set();
+
+  public enqueueLeakedVaaAccount(account: PublicKey) {
+    this.pendingReclaimAccounts.add(account.toBase58());
+  }
+
+  public getPendingReclamationCount(): number {
+    return this.pendingReclaimAccounts.size;
+  }
+
+  public async buildReclamationTransactions(maxBatch = 10) {
+    if (this.pendingReclaimAccounts.size === 0) return [];
+    const accountsToClose: PublicKey[] = [];
+    for (const base58 of this.pendingReclaimAccounts) {
+      accountsToClose.push(new PublicKey(base58));
+      if (accountsToClose.length >= maxBatch) break;
+    }
+    const instructions = await Promise.all(
+      accountsToClose.map((acc) =>
+        this.pythSolanaReceiver.buildCloseEncodedVaaInstruction(acc),
+      ),
+    );
+    for (const acc of accountsToClose) {
+      this.pendingReclaimAccounts.delete(acc.toBase58());
+    }
+    return this.pythSolanaReceiver.batchIntoVersionedTransactions(
+      instructions,
+      { computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports },
+      this.addressLookupTableAccount,
+    );
+  }
+
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
     private hermesClient: HermesClient,
