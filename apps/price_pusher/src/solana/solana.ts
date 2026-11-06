@@ -7,7 +7,7 @@ import {
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
 import type { AddressLookupTableAccount, Keypair } from "@solana/web3.js";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
 
@@ -106,36 +106,38 @@ export class SolanaPriceListener extends ChainPriceListener {
  * No on-chain state remains after the transaction, and a failed transaction leaves no account behind.
  */
 export class SolanaPricePusher implements IPricePusher {
-  private pendingReclaimAccounts: Set<string> = new Set();
+  private lastReclaimAttemptMs = 0;
+  private static readonly RECLAIM_COOLDOWN_MS = 60_000;
 
-  public enqueueLeakedVaaAccount(account: PublicKey) {
-    this.pendingReclaimAccounts.add(account.toBase58());
-  }
-
-  public getPendingReclamationCount(): number {
-    return this.pendingReclaimAccounts.size;
-  }
-
-  public async buildReclamationTransactions(maxBatch = 10) {
-    if (this.pendingReclaimAccounts.size === 0) return [];
-    const accountsToClose: PublicKey[] = [];
-    for (const base58 of this.pendingReclaimAccounts) {
-      accountsToClose.push(new PublicKey(base58));
-      if (accountsToClose.length >= maxBatch) break;
+  /**
+   * Reclaim orphaned encoded VAA accounts left behind by failed v0 transactions (#4049).
+   * Leverages the SDK's buildClosePreviousEncodedVaasInstructions to recover rent
+   * without blocking the latency-sensitive price push hot path.
+   */
+  public async reclaimOrphanedVaas(maxInstructions = 20): Promise<string[]> {
+    try {
+      const builder = this.pythSolanaReceiver.newTransactionBuilder(
+        {},
+        this.addressLookupTableAccount,
+      );
+      await builder.addClosePreviousEncodedVaasInstructions(maxInstructions);
+      const txs = await builder.buildVersionedTransactions({
+        computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports,
+      });
+      if (txs.length === 0) {
+        return [];
+      }
+      return await sendTransactions(
+        txs,
+        this.pythSolanaReceiver.connection,
+        this.pythSolanaReceiver.wallet,
+        undefined,
+        this.logger,
+      );
+    } catch (err: any) {
+      this.logger.warn(err, "Failed to reclaim orphaned encoded VAA accounts");
+      return [];
     }
-    const instructions = await Promise.all(
-      accountsToClose.map((acc) =>
-        this.pythSolanaReceiver.buildCloseEncodedVaaInstruction(acc),
-      ),
-    );
-    for (const acc of accountsToClose) {
-      this.pendingReclaimAccounts.delete(acc.toBase58());
-    }
-    return this.pythSolanaReceiver.batchIntoVersionedTransactions(
-      instructions,
-      { computeUnitPriceMicroLamports: this.computeUnitPriceMicroLamports },
-      this.addressLookupTableAccount,
-    );
   }
 
   constructor(
@@ -184,6 +186,17 @@ export class SolanaPricePusher implements IPricePusher {
       this.logger.debug({ signatures }, "updatePriceFeed successful");
     } catch (error: any) {
       this.logger.error(error, "updatePriceFeed failed");
+      // Trigger non-blocking reclamation of unclosed VAA rent accounts on v0 failure
+      const now = Date.now();
+      if (
+        this.transactionVersion === "v0" &&
+        now - this.lastReclaimAttemptMs > SolanaPricePusher.RECLAIM_COOLDOWN_MS
+      ) {
+        this.lastReclaimAttemptMs = now;
+        this.reclaimOrphanedVaas().catch((reclaimErr) => {
+          this.logger.warn(reclaimErr, "Async VAA reclamation encountered an error");
+        });
+      }
       return;
     }
   }
