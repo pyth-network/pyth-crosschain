@@ -66,4 +66,44 @@ describe("HermesClient headers", () => {
     expect(headers.get("authorization")).toBe("Bearer config");
     expect(headers.get("x-custom")).toBe("request");
   });
+
+  it("ignores null fetchOptions headers", async () => {
+    const client = new HermesClient(ENDPOINT, {
+      headers: { "x-api-key": "config-key" },
+    });
+
+    await client.getPriceFeeds({
+      // Plain JavaScript callers can pass `null`, which object spread ignored.
+      fetchOptions: { headers: null as unknown as HeadersInit },
+    });
+
+    expect(sentHeaders(fetchMock).get("x-api-key")).toBe("config-key");
+  });
+
+  it("merges stream headers with config headers taking precedence", async () => {
+    let streamRequested: () => void = () => undefined;
+    const requested = new Promise<void>((resolve) => {
+      streamRequested = resolve;
+    });
+    fetchMock.mockImplementation(() => {
+      streamRequested();
+      return new Promise<Response>(() => undefined);
+    });
+    const client = new HermesClient(ENDPOINT, {
+      accessToken: "token",
+      headers: new Headers({
+        authorization: "Bearer config",
+        "x-api-key": "config-key",
+      }),
+    });
+
+    const eventSource = await client.getPriceUpdatesStream(["0x01"]);
+    await requested;
+    eventSource.close();
+
+    const headers = sentHeaders(fetchMock);
+    expect(headers.get("accept")).toBe("text/event-stream");
+    expect(headers.get("authorization")).toBe("Bearer config");
+    expect(headers.get("x-api-key")).toBe("config-key");
+  });
 });
