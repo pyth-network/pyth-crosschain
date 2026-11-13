@@ -2,6 +2,7 @@
   {
     "id": "ton_testnet",
     "mainnet": false,
+    "networkId": "0x2",
     "rpcUrl": "https://testnet.toncenter.com/api/v2/jsonRPC#$ENV_TON_TESTNET_API_KEY",
     "type": "TonChain",
     "wormholeChainName": "ton_testnet"
@@ -9,6 +10,7 @@
   {
     "id": "ton_mainnet",
     "mainnet": true,
+    "networkId": "0x27",
     "rpcUrl": "https://toncenter.com/api/v2/jsonRPC#$ENV_TON_MAINNET_API_KEY",
     "type": "TonChain",
     "wormholeChainName": "ton_mainnet"
