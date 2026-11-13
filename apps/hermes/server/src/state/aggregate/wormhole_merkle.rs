@@ -16,6 +16,7 @@ use {
             v1::{AccumulatorUpdateData, MerklePriceUpdate, Proof, WormholeMerkleRoot},
         },
     },
+    std::sync::Arc,
 };
 
 // The number of messages in a single update data is defined as a
@@ -31,7 +32,10 @@ pub struct WormholeMerkleState {
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
     pub proof: MerklePath<Keccak160>,
-    pub vaa: VaaBytes,
+    /// Shared VAA for the message's slot. All messages in a slot share the same
+    /// VAA, so we store it behind an `Arc` to avoid cloning the (~1-2KB) bytes
+    /// once per feed (which, across ~6000 feeds × cache depth, dominated memory).
+    pub vaa: Arc<VaaBytes>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -83,12 +87,16 @@ pub fn construct_message_states_proofs(
         return Err(anyhow!("Invalid merkle root"));
     }
 
+    // Clone the VAA bytes once for the whole slot; every message proof shares it
+    // via the `Arc` (refcount bump only), instead of duplicating the bytes per feed.
+    let shared_vaa = Arc::new(wormhole_merkle_state.vaa.clone());
+
     accumulator_messages
         .raw_messages
         .iter()
         .map(|m| {
             Ok(WormholeMerkleMessageProof {
-                vaa: wormhole_merkle_state.vaa.clone(),
+                vaa: shared_vaa.clone(),
                 proof: merkle_acc
                     .prove(m.as_ref())
                     .ok_or(anyhow!("Failed to prove message"))?,
@@ -107,7 +115,7 @@ pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Re
 
     while let Some(message) = iter.next() {
         let slot = message.slot;
-        let vaa = message.proof.vaa;
+        let vaa: VaaBytes = (*message.proof.vaa).clone();
         let mut updates = vec![MerklePriceUpdate {
             message: message.raw_message.into(),
             proof: message.proof.proof,
@@ -174,7 +182,7 @@ mod test {
         RawMessageWithMerkleProof {
             slot: slot_and_pubtime,
             proof: WormholeMerkleMessageProof {
-                vaa: vec![],
+                vaa: std::sync::Arc::new(vec![]),
                 proof: MerklePath::default(),
             },
             raw_message: to_vec::<_, byteorder::BE>(&price_feed_message).unwrap(),
