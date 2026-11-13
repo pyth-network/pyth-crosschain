@@ -7,6 +7,25 @@ import type { z } from "zod";
 import { camelToSnakeCaseObject } from "./utils.js";
 import { schemas } from "./zodSchemas.js";
 
+/**
+ * Merges several `HeadersInit` values into a single `Headers` object. Later
+ * sources take precedence over earlier ones. Unlike object spread, this
+ * supports every `HeadersInit` form (plain objects, `Headers` instances and
+ * arrays of name/value pairs). `null` and `undefined` sources are skipped,
+ * as object spread did.
+ */
+function mergeHeaders(...sources: (HeadersInit | null | undefined)[]): Headers {
+  const result = new Headers();
+  for (const source of sources) {
+    if (source !== undefined && source !== null) {
+      for (const [key, value] of new Headers(source)) {
+        result.set(key, value);
+      }
+    }
+  }
+  return result;
+}
+
 // Accessing schema objects
 export type AssetType = z.infer<typeof schemas.AssetType>;
 export type BinaryPriceUpdate = z.infer<typeof schemas.BinaryUpdate>;
@@ -87,7 +106,7 @@ export class HermesClient {
       const response = await fetch(url, {
         ...options,
 
-        headers: { ...authHeaders, ...this.headers, ...options?.headers },
+        headers: mergeHeaders(authHeaders, this.headers, options?.headers),
         signal: AbortSignal.any([
           ...(options?.signal ? [options.signal] : []),
           AbortSignal.timeout(this.timeout),
@@ -298,11 +317,7 @@ export class HermesClient {
       fetch: (input, init) =>
         fetch(input, {
           ...init,
-          headers: {
-            ...init?.headers,
-            ...authHeaders,
-            ...this.headers,
-          },
+          headers: mergeHeaders(init?.headers, authHeaders, this.headers),
         }),
     });
   }
