@@ -617,4 +617,40 @@ pub mod tests {
             Err(GetPriceError::MismatchedFeedId)
         );
     }
+
+    #[test]
+    fn test_price_update_serialization_compatibility() {
+        use anchor_lang::{AnchorDeserialize, AnchorSerialize};
+
+        let price_update = PriceUpdateV2 {
+            write_authority: Pubkey::new_unique(),
+            verification_level: VerificationLevel::Partial { num_signatures: 5 },
+            price_message: PriceFeedMessage {
+                feed_id: [42; 32],
+                price: 12345678,
+                conf: 100,
+                exponent: -8,
+                publish_time: 1700000000,
+                prev_publish_time: 1699999990,
+                ema_price: 12345600,
+                ema_conf: 95,
+            },
+            posted_slot: 123456,
+        };
+
+        let mut buffer = Vec::new();
+        price_update.serialize(&mut buffer).unwrap();
+        // PriceUpdateV2::LEN includes the 8-byte Anchor discriminator and 2 bytes for Partial
+        assert_eq!(buffer.len(), PriceUpdateV2::LEN - 8);
+
+        let deserialized = PriceUpdateV2::deserialize(&mut &buffer[..]).unwrap();
+        assert_eq!(deserialized.write_authority, price_update.write_authority);
+        assert_eq!(deserialized.posted_slot, price_update.posted_slot);
+        assert_eq!(deserialized.price_message.price, 12345678);
+        assert_eq!(deserialized.price_message.feed_id, [42; 32]);
+        assert_eq!(
+            deserialized.verification_level,
+            VerificationLevel::Partial { num_signatures: 5 }
+        );
+    }
 }
