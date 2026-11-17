@@ -63,7 +63,7 @@ Price feed pushers that deliver Pyth Lazer data to external systems. Currently s
 
 Please install the following tools in order to work in this repository:
 
-- [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to manage your node version, then run `nvm use 22` to ensure you are using node version 22.
+- [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to manage your node version, then run `nvm use` in the root of the repo to switch to the node version pinned in `.nvmrc` (currently node 24).
   - Optionally, you can also use [mise](https://mise.jdx.dev/). If you install `mise`, you can run all of your commands like the following: `mise x -- pnpm <SOME_COMMAND>`, which will ensure you are running your commands while using the correct tool versions for this repository.
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) in order to use `forge` for Ethereum contract development
 - [Solana CLI](https://solana.com/docs/intro/installation) for working with Solana programs.
