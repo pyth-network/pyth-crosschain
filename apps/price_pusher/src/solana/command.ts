@@ -32,21 +32,6 @@ import {
   SolanaPricePusherJito,
 } from "./solana.js";
 
-/**
- * The options whose values may hold a credential, for the logger's redactor.
- * `--jito-endpoints` is left out: its values are bare relay hostnames, which
- * would be redacted whole, and Jito authenticates with `--jito-keypair-file`.
- */
-export function secretSources(argv: {
-  endpoint?: unknown;
-  priceServiceEndpoint?: unknown;
-  hermesAccessToken?: unknown;
-}): (string | undefined)[] {
-  return [argv.endpoint, argv.priceServiceEndpoint, argv.hermesAccessToken].map(
-    (value) => (typeof value === "string" ? value : undefined),
-  );
-}
-
 export default {
   builder: {
     "address-lookup-table-account": {
@@ -176,7 +161,13 @@ export default {
       wormholeProgramId,
     } = argv;
 
-    const logger = createLogger(logLevel, secretSources(argv));
+    // `--jito-endpoints` is left out: its values are bare relay hostnames, and
+    // Jito authenticates with `--jito-keypair-file`.
+    const logger = createLogger(logLevel, [
+      endpoint,
+      priceServiceEndpoint,
+      hermesAccessToken,
+    ]);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 

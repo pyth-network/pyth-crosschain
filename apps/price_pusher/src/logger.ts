@@ -1,43 +1,27 @@
 import type { DestinationStream, Logger } from "pino";
 import { pino } from "pino";
 
-export const REDACTED = "[REDACTED]";
+export const REDACTED = "<token>";
 
-// URL path segments and query values shorter than this are kept, so that
-// common words such as `v2`, `rpc` or `mainnet` stay readable in the logs.
-// RPC providers' tokens (Alchemy, Infura, QuickNode, Ankr, ...) are all
-// longer than this.
-const MIN_URL_SECRET_LENGTH = 12;
+// RPC provider keys (Alchemy, QuickNode, Ankr, ...) are all longer than this.
+// Shorter values, such as `v2` or `evm`, stay readable.
+const MAX_PLAIN_LENGTH = 30;
 
-// No secret shorter than this is registered, whatever its source (URL
-// userinfo, header values, raw tokens, and their decoded forms). The redactor
-// runs on the serialized JSON line, so a short secret such as `30` would
-// rewrite `"level":30` and break the JSON.
-const MIN_SECRET_LENGTH = 6;
-
-// `URL` keeps invalid percent sequences such as `%zz` as they are, and
-// `decodeURIComponent` throws on them. Fall back to the raw value so a
-// malformed endpoint reaches the RPC client instead of crashing here.
-function safeDecode(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
+const X_TOKEN_PREFIX = "x-token=";
 
 /**
- * Collect the parts of a configured value that may hold a credential.
+ * Collect the secrets in a configured value:
  *
- * - For a URL: the userinfo, the long path segments, and the long query
- *   values. RPC providers put API keys in any of these places.
- * - For anything else (e.g. a bearer token): the whole string, and, for a
- *   `key=value` header (e.g. Sui `--grpc-metadata`), also the value.
+ * - `x-token=<token>` (Sui `--grpc-metadata`): the token.
+ * - A URL: each path segment longer than 30 characters.
+ * - Anything else (e.g. the Hermes access token): the whole value, if it is
+ *   longer than 30 characters.
  */
 export function extractSecrets(value: string): string[] {
   const trimmed = value.trim();
-  if (trimmed === "") {
-    return [];
+  if (trimmed.startsWith(X_TOKEN_PREFIX)) {
+    const token = trimmed.slice(X_TOKEN_PREFIX.length);
+    return token === "" ? [] : [token];
   }
 
   let url: URL | undefined;
@@ -46,53 +30,18 @@ export function extractSecrets(value: string): string[] {
   } catch {
     url = undefined;
   }
-
   if (url?.host) {
-    const secrets: string[] = [];
-    for (const userinfo of [url.username, url.password]) {
-      if (userinfo.length >= MIN_SECRET_LENGTH) {
-        secrets.push(userinfo, safeDecode(userinfo));
-      }
-    }
-    for (const segment of url.pathname.split("/")) {
-      if (segment.length >= MIN_URL_SECRET_LENGTH) {
-        secrets.push(segment, safeDecode(segment));
-      }
-    }
-    // Use the raw query values, as written in the configured URL, because
-    // that is how clients such as viem log them. `searchParams` would
-    // normalize the encoding (e.g. `%2f` to `/` and back to `%2F`).
-    for (const param of url.search.slice(1).split("&")) {
-      const eq = param.indexOf("=");
-      const raw = eq === -1 ? "" : param.slice(eq + 1);
-      if (raw.length >= MIN_URL_SECRET_LENGTH) {
-        secrets.push(raw, safeDecode(raw.replaceAll("+", " ")));
-      }
-    }
-    return secrets;
+    return url.pathname
+      .split("/")
+      .filter((segment) => segment.length > MAX_PLAIN_LENGTH);
   }
 
-  // A raw token (e.g. a base64 token ending in `=`) may contain `=`, so
-  // keep the whole string. When it is a `key=value` header, the value is the
-  // credential and may be logged on its own.
-  const secrets: string[] = [];
-  if (trimmed.length >= MIN_SECRET_LENGTH) {
-    secrets.push(trimmed);
-  }
-  const eq = trimmed.indexOf("=");
-  if (eq !== -1) {
-    const headerValue = trimmed.slice(eq + 1);
-    if (headerValue.length >= MIN_SECRET_LENGTH) {
-      secrets.push(headerValue);
-    }
-  }
-  return secrets;
+  return trimmed.length > MAX_PLAIN_LENGTH ? [trimmed] : [];
 }
 
 /**
  * Build a function that replaces every secret found in `sources` with
- * `[REDACTED]`. Sources may be URLs, `key=value` headers or raw tokens;
- * `undefined` and empty entries are ignored.
+ * `<token>`. `undefined` entries are ignored.
  */
 export function createRedactor(
   sources: (string | undefined)[],
@@ -101,32 +50,21 @@ export function createRedactor(
     ...new Set(
       sources
         .filter((source): source is string => typeof source === "string")
-        .flatMap((source) => extractSecrets(source))
-        // Decoded forms may be shorter than the raw value (`%30%30%30` is
-        // `000`), so apply the floor to every secret here.
-        .filter((secret) => secret.length >= MIN_SECRET_LENGTH),
+        .flatMap((source) => extractSecrets(source)),
     ),
   ]
-    // Replace longer secrets first so a secret that contains another one is
-    // removed whole.
+    // Replace longer secrets first, so a secret that contains another one is
+    // replaced whole.
     .sort((a, b) => b.length - a.length);
-
-  if (secrets.length === 0) {
-    return (line) => line;
-  }
-
-  return (line) => {
-    let result = line;
-    for (const secret of secrets) {
-      result = result.replaceAll(secret, REDACTED);
-    }
-    return result;
-  };
+  return (line) =>
+    secrets.reduce(
+      (result, secret) => result.replaceAll(secret, REDACTED),
+      line,
+    );
 }
 
 // The redactor of the last logger built by `createLogger`. The CLI uses it to
-// scrub errors that escape a command handler, since yargs prints those
-// directly to stderr instead of through the logger.
+// scrub errors that escape a command handler.
 let activeRedactor: (line: string) => string = (line) => line;
 
 /** Remove the secrets known to the active logger from `text`. */
@@ -135,13 +73,9 @@ export function redactSecrets(text: string): string {
 }
 
 /**
- * Create the pusher's root logger. Every line it (and its children) writes is
- * scrubbed of the secrets found in `secretSources`, such as API keys embedded
- * in RPC endpoint URLs. Libraries like viem put the full request URL in their
- * error messages, so the error logs would otherwise leak these keys.
- *
- * It also sets the process-wide redactor used by `redactSecrets`. The CLI
- * builds one logger per run, so the last call wins.
+ * Create the pusher's root logger. Every line it (and its children) writes has
+ * the secrets found in `secretSources` replaced with `<token>`. Libraries like
+ * viem put the full request URL in their error messages.
  */
 export function createLogger(
   level: string,
