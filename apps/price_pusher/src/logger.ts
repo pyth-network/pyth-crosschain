@@ -22,28 +22,28 @@ function parseUrl(value: string): URL | undefined {
 }
 
 /**
- * Collect the secrets in a configured value. Only values longer than 30
- * characters count:
+ * Collect the parts of a configured value that may be a secret:
  *
  * - `x-token=<token>` (Sui `--grpc-metadata`): the token.
- * - A URL: each long path segment.
+ * - A URL: each path segment.
  * - Anything else (e.g. the Hermes access token): the whole value.
  */
-export function extractSecrets(value: string): string[] {
+function secretCandidates(value: string): string[] {
   const trimmed = value.trim();
   if (trimmed.startsWith(X_TOKEN_PREFIX)) {
-    return [trimmed.slice(X_TOKEN_PREFIX.length)].filter(isSecret);
+    return [trimmed.slice(X_TOKEN_PREFIX.length)];
   }
   const url = parseUrl(trimmed);
   if (url?.host) {
-    return url.pathname.split("/").filter(isSecret);
+    return url.pathname.split("/");
   }
-  return [trimmed].filter(isSecret);
+  return [trimmed];
 }
 
 /**
- * Build a function that replaces every secret found in `sources` with
- * `<token>`. `undefined` entries are ignored.
+ * Build a function that replaces with `<token>` every candidate from
+ * `secretCandidates` that is longer than 30 characters. `undefined` entries
+ * are ignored.
  */
 export function createRedactor(
   sources: (string | undefined)[],
@@ -52,7 +52,8 @@ export function createRedactor(
     ...new Set(
       sources
         .filter((source): source is string => typeof source === "string")
-        .flatMap((source) => extractSecrets(source)),
+        .flatMap((source) => secretCandidates(source))
+        .filter(isSecret),
     ),
   ]
     // Replace longer secrets first, so a secret that contains another one is

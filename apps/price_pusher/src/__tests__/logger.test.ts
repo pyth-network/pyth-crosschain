@@ -1,52 +1,52 @@
 import { Writable } from "node:stream";
 
-import {
-  createLogger,
-  createRedactor,
-  extractSecrets,
-  REDACTED,
-} from "../logger.js";
+import { createLogger, createRedactor, REDACTED } from "../logger.js";
 
 // Fake keys with the same shapes as the providers' keys.
 const ALCHEMY_KEY = "Ab0CdEfGh1IjKlMnOpQrStUvWxYz_234"; // 32 chars
 const QUICKNODE_KEY = "0123456789abcdef0123456789abcdef01234567"; // 40 chars
 const ANKR_KEY = "0123456789abcdef".repeat(4); // 64 chars
 
-describe("extractSecrets", () => {
-  it("returns path segments longer than 30 characters", () => {
+describe("createRedactor", () => {
+  const redacts = (source: string, secret: string) =>
+    createRedactor([source])(`log ${secret} log`) === `log ${REDACTED} log`;
+
+  it("redacts URL path segments longer than 30 characters", () => {
     expect(
-      extractSecrets(`https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`),
-    ).toEqual([ALCHEMY_KEY]);
-    expect(
-      extractSecrets(
-        `https://a-b-c.hype-mainnet.quiknode.pro/${QUICKNODE_KEY}/evm`,
+      redacts(
+        `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+        ALCHEMY_KEY,
       ),
-    ).toEqual([QUICKNODE_KEY]);
+    ).toBe(true);
+    const endpoint = `https://a-b-c.hype-mainnet.quiknode.pro/${QUICKNODE_KEY}/evm`;
+    expect(createRedactor([endpoint])(endpoint)).toBe(
+      `https://a-b-c.hype-mainnet.quiknode.pro/${REDACTED}/evm`,
+    );
   });
 
   it("keeps a URL with no long path segment", () => {
-    expect(extractSecrets("https://hermes-stable-green.dourolabs.app")).toEqual(
-      [],
+    for (const endpoint of [
+      "https://hermes-stable-green.dourolabs.app",
+      "http://erpc.erpc:4000/price-pusher/evm/1",
+    ]) {
+      expect(createRedactor([endpoint])(endpoint)).toBe(endpoint);
+    }
+  });
+
+  it("redacts an x-token value longer than 30 characters", () => {
+    expect(redacts(`x-token=${ANKR_KEY}`, ANKR_KEY)).toBe(true);
+    expect(redacts("x-token=short-token", "short-token")).toBe(false);
+  });
+
+  it("redacts any other value longer than 30 characters whole", () => {
+    expect(redacts(QUICKNODE_KEY, QUICKNODE_KEY)).toBe(true);
+    expect(redacts("sui.grpc.ankr.com:443", "sui.grpc.ankr.com:443")).toBe(
+      false,
     );
-    expect(extractSecrets("http://erpc.erpc:4000/price-pusher/evm/1")).toEqual(
-      [],
-    );
+    expect(redacts("short-token", "short-token")).toBe(false);
   });
 
-  it("returns the x-token value", () => {
-    expect(extractSecrets(`x-token=${ANKR_KEY}`)).toEqual([ANKR_KEY]);
-    expect(extractSecrets("x-token=short-token")).toEqual([]);
-  });
-
-  it("returns any other value longer than 30 characters whole", () => {
-    expect(extractSecrets(QUICKNODE_KEY)).toEqual([QUICKNODE_KEY]);
-    expect(extractSecrets("sui.grpc.ankr.com:443")).toEqual([]);
-    expect(extractSecrets("short-token")).toEqual([]);
-  });
-});
-
-describe("createRedactor", () => {
-  it("replaces every secret with <token>", () => {
+  it("replaces every secret, longest first", () => {
     const redact = createRedactor([
       `https://x.quiknode.pro/${QUICKNODE_KEY}/`,
       undefined,
