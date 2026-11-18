@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
@@ -42,6 +38,7 @@ export default {
   },
   command: "fuel",
   describe: "run price pusher for Fuel",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs argv is untyped
   handler: async function (argv: any) {
     const {
       endpoint,

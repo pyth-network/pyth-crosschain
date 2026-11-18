@@ -14,6 +14,19 @@ import solana from "./solana/command.js";
 import sui from "./sui/command.js";
 import ton from "./ton/command.js";
 
+// Print an error that escapes the logger, with known secrets removed, and
+// exit. Library errors (such as viem's) embed the RPC URL.
+function exitWithRedactedError(err: unknown): never {
+  // biome-ignore lint/suspicious/noConsole: the logger may not exist yet
+  console.error(redactSecrets(inspect(err)));
+  process.exit(1);
+}
+
+// Commands start their controller with `void controller.start()`, so a failed
+// first RPC call surfaces here instead of in the yargs `.fail` handler.
+process.on("unhandledRejection", exitWithRedactedError);
+process.on("uncaughtException", exitWithRedactedError);
+
 const yargs = createCLI(hideBin(process.argv));
 
 // let the application run but don't await on the value here, per existing behavior
@@ -36,15 +49,12 @@ void yargs
   .fail((msg, err, cli) => {
     if (err) {
       // An error thrown by a command handler, e.g. an RPC request failing at
-      // startup. Library errors (such as viem's) embed the RPC URL, so scrub
-      // it before printing.
-      // biome-ignore lint/suspicious/noConsole: the logger may not exist yet
-      console.error(redactSecrets(inspect(err)));
-    } else {
-      cli.showHelp();
-      // biome-ignore lint/suspicious/noConsole: usage errors go to stderr
-      console.error(`\n${msg}`);
+      // startup.
+      exitWithRedactedError(err);
     }
+    cli.showHelp();
+    // biome-ignore lint/suspicious/noConsole: usage errors go to stderr
+    console.error(`\n${msg}`);
     process.exit(1);
   })
   .help().argv;

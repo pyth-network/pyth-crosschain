@@ -40,6 +40,19 @@ describe("extractSecrets", () => {
     expect(extractSecrets("my-bearer-token")).toEqual(["my-bearer-token"]);
   });
 
+  it("keeps a segment with an invalid percent sequence as it is", () => {
+    expect(extractSecrets("https://rpc.example.com/abcdefghijkl%zz")).toEqual([
+      "abcdefghijkl%zz",
+      "abcdefghijkl%zz",
+    ]);
+    expect(extractSecrets("https://us%zz:pa%zz@rpc.example.com/")).toEqual([
+      "us%zz",
+      "us%zz",
+      "pa%zz",
+      "pa%zz",
+    ]);
+  });
+
   it("returns nothing for an empty string", () => {
     expect(extractSecrets("  ")).toEqual([]);
   });

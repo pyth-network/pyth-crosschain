@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HermesClient } from "@pythnetwork/hermes-client";
 import type { Options } from "yargs";
 
@@ -46,6 +43,7 @@ export default {
   },
   command: "near",
   describe: "run price pusher for near",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs argv is untyped
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {

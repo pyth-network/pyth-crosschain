@@ -9,6 +9,17 @@ export const REDACTED = "[REDACTED]";
 // longer than this.
 const MIN_URL_SECRET_LENGTH = 12;
 
+// `URL` keeps invalid percent sequences such as `%zz` as they are, and
+// `decodeURIComponent` throws on them. Fall back to the raw value so a
+// malformed endpoint reaches the RPC client instead of crashing here.
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 /**
  * Collect the parts of a configured value that may hold a credential.
  *
@@ -33,14 +44,14 @@ export function extractSecrets(value: string): string[] {
   if (url?.host) {
     const secrets: string[] = [];
     if (url.username !== "") {
-      secrets.push(url.username, decodeURIComponent(url.username));
+      secrets.push(url.username, safeDecode(url.username));
     }
     if (url.password !== "") {
-      secrets.push(url.password, decodeURIComponent(url.password));
+      secrets.push(url.password, safeDecode(url.password));
     }
     for (const segment of url.pathname.split("/")) {
       if (segment.length >= MIN_URL_SECRET_LENGTH) {
-        secrets.push(segment, decodeURIComponent(segment));
+        secrets.push(segment, safeDecode(segment));
       }
     }
     for (const [, paramValue] of url.searchParams) {
@@ -108,6 +119,9 @@ export function redactSecrets(text: string): string {
  * scrubbed of the secrets found in `secretSources`, such as API keys embedded
  * in RPC endpoint URLs. Libraries like viem put the full request URL in their
  * error messages, so the error logs would otherwise leak these keys.
+ *
+ * It also sets the process-wide redactor used by `redactSecrets`. The CLI
+ * builds one logger per run, so the last call wins.
  */
 export function createLogger(
   level: string,

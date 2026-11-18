@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
@@ -54,6 +49,7 @@ export default {
   },
   command: "aptos",
   describe: "run price pusher for aptos",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs argv is untyped
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
@@ -144,6 +140,7 @@ export default {
       aptosPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
+        // biome-ignore lint/style/noNonNullAssertion: pre-existing; Controller checks for undefined metrics
         metrics: metrics!,
         pushingFrequency,
       },
