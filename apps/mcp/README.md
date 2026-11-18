@@ -25,7 +25,7 @@ Claude Desktop connects to remote servers as custom connectors, which can send y
   "mcpServers": {
     "pyth": {
       "command": "npx",
-      "args": ["-y", "mcp-remote@0.14.3", "https://mcp.pyth.network/mcp", "--header", "Authorization:${PYTH_AUTH_HEADER}"],
+      "args": ["-y", "mcp-remote@0.16.6", "https://mcp.pyth.network/mcp", "--header", "Authorization:${PYTH_AUTH_HEADER}"],
       "env": { "PYTH_AUTH_HEADER": "Bearer YOUR_TOKEN" }
     }
   }
