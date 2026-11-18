@@ -29,7 +29,6 @@ justfile
 dist/
 
 **/.ai/** 
-apps/mcp/docs/
 CLAUDE.md
 !/CLAUDE.md
 .claude/**
