@@ -5,7 +5,6 @@ import {
   createRedactor,
   extractSecrets,
   REDACTED,
-  redactSecrets,
 } from "../logger.js";
 
 // Fake keys with the same shapes as the providers' keys.
@@ -36,6 +35,7 @@ describe("extractSecrets", () => {
 
   it("returns the x-token value", () => {
     expect(extractSecrets(`x-token=${ANKR_KEY}`)).toEqual([ANKR_KEY]);
+    expect(extractSecrets("x-token=short-token")).toEqual([]);
   });
 
   it("returns any other value longer than 30 characters whole", () => {
@@ -80,14 +80,5 @@ describe("createLogger", () => {
     for (const line of output.split("\n").filter((l) => l !== "")) {
       expect(() => JSON.parse(line) as unknown).not.toThrow();
     }
-  });
-});
-
-describe("redactSecrets", () => {
-  it("uses the secrets of the last logger created", () => {
-    createLogger("info", [`https://rpc.example.com/${QUICKNODE_KEY}`]);
-    expect(redactSecrets(`https://rpc.example.com/${QUICKNODE_KEY}`)).toBe(
-      `https://rpc.example.com/${REDACTED}`,
-    );
   });
 });

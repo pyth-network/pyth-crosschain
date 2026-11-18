@@ -9,34 +9,36 @@ const MAX_PLAIN_LENGTH = 30;
 
 const X_TOKEN_PREFIX = "x-token=";
 
+function isSecret(value: string): boolean {
+  return value.length > MAX_PLAIN_LENGTH;
+}
+
+function parseUrl(value: string): URL | undefined {
+  try {
+    return new URL(value);
+  } catch {
+    return undefined;
+  }
+}
+
 /**
- * Collect the secrets in a configured value:
+ * Collect the secrets in a configured value. Only values longer than 30
+ * characters count:
  *
  * - `x-token=<token>` (Sui `--grpc-metadata`): the token.
- * - A URL: each path segment longer than 30 characters.
- * - Anything else (e.g. the Hermes access token): the whole value, if it is
- *   longer than 30 characters.
+ * - A URL: each long path segment.
+ * - Anything else (e.g. the Hermes access token): the whole value.
  */
 export function extractSecrets(value: string): string[] {
   const trimmed = value.trim();
   if (trimmed.startsWith(X_TOKEN_PREFIX)) {
-    const token = trimmed.slice(X_TOKEN_PREFIX.length);
-    return token === "" ? [] : [token];
+    return [trimmed.slice(X_TOKEN_PREFIX.length)].filter(isSecret);
   }
-
-  let url: URL | undefined;
-  try {
-    url = new URL(trimmed);
-  } catch {
-    url = undefined;
-  }
+  const url = parseUrl(trimmed);
   if (url?.host) {
-    return url.pathname
-      .split("/")
-      .filter((segment) => segment.length > MAX_PLAIN_LENGTH);
+    return url.pathname.split("/").filter(isSecret);
   }
-
-  return trimmed.length > MAX_PLAIN_LENGTH ? [trimmed] : [];
+  return [trimmed].filter(isSecret);
 }
 
 /**
@@ -63,15 +65,6 @@ export function createRedactor(
     );
 }
 
-// The redactor of the last logger built by `createLogger`. The CLI uses it to
-// scrub errors that escape a command handler.
-let activeRedactor: (line: string) => string = (line) => line;
-
-/** Remove the secrets known to the active logger from `text`. */
-export function redactSecrets(text: string): string {
-  return activeRedactor(text);
-}
-
 /**
  * Create the pusher's root logger. Every line it (and its children) writes has
  * the secrets found in `secretSources` replaced with `<token>`. Libraries like
@@ -83,7 +76,6 @@ export function createLogger(
   destination?: DestinationStream,
 ): Logger {
   const redact = createRedactor(secretSources);
-  activeRedactor = redact;
   const options = { hooks: { streamWrite: redact }, level };
   return destination === undefined ? pino(options) : pino(options, destination);
 }
