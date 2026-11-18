@@ -71,11 +71,7 @@ export default {
       priceIdsProcessChunkSize,
     } = argv;
 
-    const logger = createLogger(logLevel, [
-      grpcEndpoint,
-      priceServiceEndpoint,
-      hermesAccessToken,
-    ]);
+    const logger = createLogger(logLevel, [grpcEndpoint, hermesAccessToken]);
 
     if (network !== "testnet" && network !== "mainnet") {
       throw new Error("Please specify network. One of [testnet, mainnet]");

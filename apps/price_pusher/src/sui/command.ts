@@ -123,7 +123,6 @@ export default {
     const logger = createLogger(logLevel, [
       endpoint,
       ...(grpcMetadataArgs as string[]),
-      priceServiceEndpoint,
       hermesAccessToken,
     ]);
 

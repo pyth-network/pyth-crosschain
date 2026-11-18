@@ -61,11 +61,7 @@ export default {
       controllerLogLevel,
     } = argv;
 
-    const logger = createLogger(logLevel, [
-      nodeUrl,
-      priceServiceEndpoint,
-      hermesAccessToken,
-    ]);
+    const logger = createLogger(logLevel, [nodeUrl, hermesAccessToken]);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {

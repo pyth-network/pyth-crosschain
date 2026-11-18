@@ -163,11 +163,7 @@ export default {
 
     // `--jito-endpoints` is left out: its values are bare relay hostnames, and
     // Jito authenticates with `--jito-keypair-file`.
-    const logger = createLogger(logLevel, [
-      endpoint,
-      priceServiceEndpoint,
-      hermesAccessToken,
-    ]);
+    const logger = createLogger(logLevel, [endpoint, hermesAccessToken]);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 

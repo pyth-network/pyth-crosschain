@@ -166,11 +166,7 @@ export default {
       metricsPort,
     } = argv;
 
-    const logger = createLogger(logLevel, [
-      endpoint,
-      priceServiceEndpoint,
-      hermesAccessToken,
-    ]);
+    const logger = createLogger(logLevel, [endpoint, hermesAccessToken]);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint, {
