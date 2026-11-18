@@ -28,8 +28,7 @@ __pycache__
 justfile
 dist/
 
-**/.ai/** 
-apps/mcp/docs/
+**/.ai/**
 CLAUDE.md
 !/CLAUDE.md
 .claude/**
