@@ -5,9 +5,9 @@ import fs from "node:fs";
 
 import { getNetworkInfo } from "@injectivelabs/networks";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { pino } from "pino";
 import type { Options } from "yargs";
 import { Controller } from "../controller.js";
+import { createLogger } from "../logger.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
@@ -73,7 +73,11 @@ export default {
       priceIdsProcessChunkSize,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel, [
+      grpcEndpoint,
+      priceServiceEndpoint,
+      hermesAccessToken,
+    ]);
 
     if (network !== "testnet" && network !== "mainnet") {
       throw new Error("Please specify network. One of [testnet, mainnet]");

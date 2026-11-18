@@ -1,3 +1,5 @@
+import { inspect } from "node:util";
+
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -5,6 +7,7 @@ import aptos from "./aptos/command.js";
 import evm from "./evm/command.js";
 import fuel from "./fuel/command.js";
 import injective from "./injective/command.js";
+import { redactSecrets } from "./logger.js";
 import near from "./near/command.js";
 import { enableMetrics, metricsPort } from "./options.js";
 import solana from "./solana/command.js";
@@ -30,4 +33,18 @@ void yargs
   .command(near)
   .command(solana)
   .command(ton)
+  .fail((msg, err, cli) => {
+    if (err) {
+      // An error thrown by a command handler, e.g. an RPC request failing at
+      // startup. Library errors (such as viem's) embed the RPC URL, so scrub
+      // it before printing.
+      // biome-ignore lint/suspicious/noConsole: the logger may not exist yet
+      console.error(redactSecrets(inspect(err)));
+    } else {
+      cli.showHelp();
+      // biome-ignore lint/suspicious/noConsole: usage errors go to stderr
+      console.error(`\n${msg}`);
+    }
+    process.exit(1);
+  })
   .help().argv;

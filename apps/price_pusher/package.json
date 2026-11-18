@@ -129,6 +129,10 @@
       "default": "./dist/interface.cjs",
       "types": "./dist/interface.d.ts"
     },
+    "./logger": {
+      "default": "./dist/logger.cjs",
+      "types": "./dist/logger.d.ts"
+    },
     "./metrics": {
       "default": "./dist/metrics.cjs",
       "types": "./dist/metrics.d.ts"
@@ -232,5 +236,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "13.2.1"
+  "version": "13.2.2"
 }
