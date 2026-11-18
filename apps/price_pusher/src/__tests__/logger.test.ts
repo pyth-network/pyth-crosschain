@@ -58,6 +58,11 @@ describe("extractSecrets", () => {
     expect(extractSecrets("https://30:a@rpc.example.com/")).toEqual([]);
   });
 
+  it("keeps a short raw value and a short header", () => {
+    expect(extractSecrets("x=1")).toEqual([]);
+    expect(extractSecrets("abc")).toEqual([]);
+  });
+
   it("returns a raw token whole", () => {
     expect(extractSecrets("my-bearer-token")).toEqual(["my-bearer-token"]);
   });
@@ -151,10 +156,25 @@ describe("createLogger with short credentials", () => {
     logger.info("pushed a price");
     logger.error(new Error("failed"), "push failed");
 
+    // Neither source has a secret long enough to register.
+    expect(redactSecrets('"level":30 x=1')).toBe('"level":30 x=1');
     expect(lines).toHaveLength(2);
     for (const line of lines) {
       expect(() => JSON.parse(line) as unknown).not.toThrow();
     }
+  });
+});
+
+describe("createRedactor length floor", () => {
+  it("drops decoded secrets shorter than the floor", () => {
+    // The raw path segment is 15 chars, but it decodes to `00000`, which is
+    // under the floor and would rewrite `10000` in the JSON line.
+    const redact = createRedactor([
+      "https://rpc.example.com/%30%30%30%30%30?x=1",
+    ]);
+    expect(redact('{"level":30,"time":10000}')).toBe(
+      '{"level":30,"time":10000}',
+    );
   });
 });
 
@@ -179,5 +199,26 @@ describe("redactSecrets", () => {
     expect(
       redactSecrets("URL: https://rpc.example.com/?key=0123456789abcdef"),
     ).toBe(`URL: https://rpc.example.com/?key=${REDACTED}`);
+  });
+});
+
+describe("solana secretSources", () => {
+  it("leaves out the Jito relay hostnames", async () => {
+    const { secretSources } = await import("../solana/command.js");
+    const argv = {
+      endpoint: "https://rpc.example.com/abcdefghijklmnop",
+      hermesAccessToken: "hermes-token-123",
+      jitoEndpoints:
+        "mainnet.block-engine.jito.wtf,ny.mainnet.block-engine.jito.wtf",
+      priceServiceEndpoint: "https://hermes.pyth.network",
+    };
+    const sources = secretSources(argv);
+    const redact = createRedactor(sources);
+    expect(redact("endpoint mainnet.block-engine.jito.wtf")).toBe(
+      "endpoint mainnet.block-engine.jito.wtf",
+    );
+    expect(redact("https://rpc.example.com/abcdefghijklmnop")).toBe(
+      `https://rpc.example.com/${REDACTED}`,
+    );
   });
 });

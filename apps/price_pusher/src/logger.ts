@@ -9,9 +9,10 @@ export const REDACTED = "[REDACTED]";
 // longer than this.
 const MIN_URL_SECRET_LENGTH = 12;
 
-// Credentials without a natural boundary (URL userinfo, header values) shorter
-// than this are kept. The redactor runs on the serialized JSON line, so a
-// short secret such as `30` would rewrite `"level":30` and break the JSON.
+// No secret shorter than this is registered, whatever its source (URL
+// userinfo, header values, raw tokens, and their decoded forms). The redactor
+// runs on the serialized JSON line, so a short secret such as `30` would
+// rewrite `"level":30` and break the JSON.
 const MIN_SECRET_LENGTH = 6;
 
 // `URL` keeps invalid percent sequences such as `%zz` as they are, and
@@ -72,9 +73,12 @@ export function extractSecrets(value: string): string[] {
   }
 
   // A raw token (e.g. a base64 token ending in `=`) may contain `=`, so
-  // always keep the whole string. When it is a `key=value` header, the value
-  // is the credential and may be logged on its own.
-  const secrets = [trimmed];
+  // keep the whole string. When it is a `key=value` header, the value is the
+  // credential and may be logged on its own.
+  const secrets: string[] = [];
+  if (trimmed.length >= MIN_SECRET_LENGTH) {
+    secrets.push(trimmed);
+  }
   const eq = trimmed.indexOf("=");
   if (eq !== -1) {
     const headerValue = trimmed.slice(eq + 1);
@@ -98,7 +102,9 @@ export function createRedactor(
       sources
         .filter((source): source is string => typeof source === "string")
         .flatMap((source) => extractSecrets(source))
-        .filter((secret) => secret !== ""),
+        // Decoded forms may be shorter than the raw value (`%30%30%30` is
+        // `000`), so apply the floor to every secret here.
+        .filter((secret) => secret.length >= MIN_SECRET_LENGTH),
     ),
   ]
     // Replace longer secrets first so a secret that contains another one is

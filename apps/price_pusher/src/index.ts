@@ -1,3 +1,4 @@
+import { writeSync } from "node:fs";
 import { inspect } from "node:util";
 
 import createCLI from "yargs";
@@ -14,11 +15,17 @@ import solana from "./solana/command.js";
 import sui from "./sui/command.js";
 import ton from "./ton/command.js";
 
+// Write to stderr synchronously. When stderr is a pipe (as in the container),
+// `console.error` writes asynchronously, and the `process.exit` that follows
+// can drop the message.
+function writeStderrSync(text: string): void {
+  writeSync(2, `${text}\n`);
+}
+
 // Print an error that escapes the logger, with known secrets removed, and
 // exit. Library errors (such as viem's) embed the RPC URL.
 function exitWithRedactedError(err: unknown): never {
-  // biome-ignore lint/suspicious/noConsole: the logger may not exist yet
-  console.error(redactSecrets(inspect(err)));
+  writeStderrSync(redactSecrets(inspect(err)));
   process.exit(1);
 }
 
@@ -52,9 +59,8 @@ void yargs
       // startup.
       exitWithRedactedError(err);
     }
-    cli.showHelp();
-    // biome-ignore lint/suspicious/noConsole: usage errors go to stderr
-    console.error(`\n${msg}`);
+    cli.showHelp((help) => writeStderrSync(help));
+    writeStderrSync(`\n${msg}`);
     process.exit(1);
   })
   .help().argv;
