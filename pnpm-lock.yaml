@@ -824,7 +824,7 @@ importers:
         specifier: ^3.0.2
         version: 3.0.4(encoding@0.1.13)
       pino:
-        specifier: ^9.2.0
+        specifier: ^9.6.0
         version: 9.6.0
       prom-client:
         specifier: ^15.1.0

@@ -9,6 +9,11 @@ export const REDACTED = "[REDACTED]";
 // longer than this.
 const MIN_URL_SECRET_LENGTH = 12;
 
+// Credentials without a natural boundary (URL userinfo, header values) shorter
+// than this are kept. The redactor runs on the serialized JSON line, so a
+// short secret such as `30` would rewrite `"level":30` and break the JSON.
+const MIN_SECRET_LENGTH = 6;
+
 // `URL` keeps invalid percent sequences such as `%zz` as they are, and
 // `decodeURIComponent` throws on them. Fall back to the raw value so a
 // malformed endpoint reaches the RPC client instead of crashing here.
@@ -25,8 +30,8 @@ function safeDecode(value: string): string {
  *
  * - For a URL: the userinfo, the long path segments, and the long query
  *   values. RPC providers put API keys in any of these places.
- * - For a `key=value` header (e.g. Sui `--grpc-metadata`): the value.
- * - For anything else (e.g. a bearer token): the whole string.
+ * - For anything else (e.g. a bearer token): the whole string, and, for a
+ *   `key=value` header (e.g. Sui `--grpc-metadata`), also the value.
  */
 export function extractSecrets(value: string): string[] {
   const trimmed = value.trim();
@@ -43,32 +48,41 @@ export function extractSecrets(value: string): string[] {
 
   if (url?.host) {
     const secrets: string[] = [];
-    if (url.username !== "") {
-      secrets.push(url.username, safeDecode(url.username));
-    }
-    if (url.password !== "") {
-      secrets.push(url.password, safeDecode(url.password));
+    for (const userinfo of [url.username, url.password]) {
+      if (userinfo.length >= MIN_SECRET_LENGTH) {
+        secrets.push(userinfo, safeDecode(userinfo));
+      }
     }
     for (const segment of url.pathname.split("/")) {
       if (segment.length >= MIN_URL_SECRET_LENGTH) {
         secrets.push(segment, safeDecode(segment));
       }
     }
-    for (const [, paramValue] of url.searchParams) {
-      if (paramValue.length >= MIN_URL_SECRET_LENGTH) {
-        secrets.push(paramValue, encodeURIComponent(paramValue));
+    // Use the raw query values, as written in the configured URL, because
+    // that is how clients such as viem log them. `searchParams` would
+    // normalize the encoding (e.g. `%2f` to `/` and back to `%2F`).
+    for (const param of url.search.slice(1).split("&")) {
+      const eq = param.indexOf("=");
+      const raw = eq === -1 ? "" : param.slice(eq + 1);
+      if (raw.length >= MIN_URL_SECRET_LENGTH) {
+        secrets.push(raw, safeDecode(raw.replaceAll("+", " ")));
       }
     }
     return secrets;
   }
 
+  // A raw token (e.g. a base64 token ending in `=`) may contain `=`, so
+  // always keep the whole string. When it is a `key=value` header, the value
+  // is the credential and may be logged on its own.
+  const secrets = [trimmed];
   const eq = trimmed.indexOf("=");
   if (eq !== -1) {
     const headerValue = trimmed.slice(eq + 1);
-    return headerValue === "" ? [] : [headerValue];
+    if (headerValue.length >= MIN_SECRET_LENGTH) {
+      secrets.push(headerValue);
+    }
   }
-
-  return [trimmed];
+  return secrets;
 }
 
 /**
