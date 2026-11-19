@@ -2,6 +2,18 @@
 
 This directory includes all implementations of pyth contracts in different chains.
 
+Supported chain runtimes:
+- [Solana](./solana/)
+- [Ethereum](./ethereum/)
+- [Sui](./sui/)
+- [Aptos](./aptos/)
+- [CosmWasm](./cosmwasm/)
+- [Near](./near/)
+- [Starknet](./starknet/)
+- [Stylus](./stylus/)
+- [TON](./ton/)
+- [Fuel](./fuel/)
+
 Each implementation includes:
 
 - Pyth contract in the target chain native contract development language (rust, move, solidity)

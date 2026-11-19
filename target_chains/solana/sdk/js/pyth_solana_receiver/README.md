@@ -3,7 +3,7 @@
 [@pythnetwork/pyth-solana-receiver](https://www.npmjs.com/package/@pythnetwork/pyth-solana-receiver) is a Typescript SDK for interacting with the Pyth Solana Receiver contract.
 The SDK enables users to construct transactions that post Pyth price updates to the Solana blockchain and use them in downstream applications.
 
-The code for the underlying Pyth Solana Receiver program lives [here](/target_chains/solana).
+The code for the underlying Pyth Solana Receiver program lives [here](../../..).
 
 ## Installation
 

@@ -30,6 +30,18 @@ blockchain runtimes that Pyth supports. Each subdirectory corresponds to a
 blockchain runtime. Inside each subdirectory, there are subfolders for
 contracts and SDKs.
 
+Supported chain runtimes:
+- [Solana](./target_chains/solana/)
+- [Ethereum / EVM](./target_chains/ethereum/)
+- [Sui](./target_chains/sui/)
+- [Aptos](./target_chains/aptos/)
+- [CosmWasm](./target_chains/cosmwasm/)
+- [Near](./target_chains/near/)
+- [Starknet](./target_chains/starknet/)
+- [Stylus](./target_chains/stylus/)
+- [TON](./target_chains/ton/)
+- [Fuel](./target_chains/fuel/)
+
 ## Hermes
 
 > [hermes](./apps/hermes/)
