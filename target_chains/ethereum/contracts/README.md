@@ -130,3 +130,18 @@ optimization with it. For more information, please refer to [Gas Snapshots docum
 Once you optimized the code, please share the snapshot difference (generated using `forge snapshot --diff <old-snapshot>`) in the PR too.
 This snapshot gas value also includes an initial transaction cost as well as reading from the contract storage itself. You can get the
 most accurate result by looking at the gas report or the gas shown in the call trace with `-vvvv` argument to `forge test`.
+
+## Important Integration Notes
+
+### On-Chain Payload Validation
+
+> [!WARNING]
+> Price update payloads (for example, those retrieved from Hermes) are **authoritatively validated on-chain** during transaction execution.
+>
+> Applications and SDKs forward the provided payload bytes and do not perform full validation of:
+> - Wormhole VAA integrity or structure
+> - Data source / emitter identity
+>
+> If an invalid or malformed payload is supplied to `updatePriceFeeds` (or equivalent methods), the application or SDK will not reject it before submission. Instead, the transaction will revert on-chain with native contract errors such as `InvalidWormholeVaa()` or `InvalidUpdateDataSource()`.
+>
+> To minimize failed transactions, obtain payloads from trusted providers (such as Hermes) and consider simulating transactions before broadcasting.
