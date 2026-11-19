@@ -3,7 +3,7 @@
 This package provides utilities for consuming prices from the [Pyth Network](https://pyth.network/) Oracle using Solidity. Also, it contains [the Pyth Interface ABI](./abis/IPyth.json) that you can use in your libraries
 to communicate with the Pyth contract.
 
-It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices) when consuming Pyth data.
+It is **strongly recommended** to follow the [consumer best practices](https://docs.pyth.network/price-feeds/core/best-practices) when consuming Pyth data.
 
 ## Installation
 
@@ -76,7 +76,7 @@ Pyth prices are published on Pythnet, and relayed to EVM chains using the [Wormh
 
 This signed message can then be submitted to the Pyth contract on the EVM networks along the required update fee for it, which will verify the Wormhole message and update the Pyth contract with the new price.
 
-Please refer to [Pyth On-Demand Updates page](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information.
+Please refer to [Pull Integration on EVM](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/evm) for more information.
 
 ## Solidity Target Chains
 

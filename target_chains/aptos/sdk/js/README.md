@@ -19,7 +19,7 @@ $ yarn add @pythnetwork/pyth-aptos-js
 ## Quickstart
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
+See [Pull Integration on Aptos](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/aptos) for more information about this approach.
 To use Pyth prices on chain,
 they must be fetched from a Hermes instance. The `AptosPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
@@ -79,7 +79,7 @@ module example::your_module {
 }
 ```
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
+We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/price-feeds/core/best-practices).
 
 ### Off-chain prices
 
@@ -136,4 +136,4 @@ npm run example-relay -- \
 
 ## Hermes endpoints
 
-Please find the list of public Hermes endpoints [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#public-endpoints).
+Please find the list of public Hermes endpoints [here](https://docs.pyth.network/price-feeds/core/api-instances-and-providers/hermes#public-endpoints).
