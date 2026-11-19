@@ -1,14 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { Provider, Wallet } from "fuels";
-import pino from "pino";
 import type { Options } from "yargs";
 import { Controller } from "../controller.js";
+import { createLogger } from "../logger.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
@@ -42,6 +38,7 @@ export default {
   },
   command: "fuel",
   describe: "run price pusher for Fuel",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs argv is untyped
   handler: async function (argv: any) {
     const {
       endpoint,
@@ -56,7 +53,7 @@ export default {
       controllerLogLevel,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel, [endpoint, hermesAccessToken]);
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
