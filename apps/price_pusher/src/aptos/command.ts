@@ -46,6 +46,7 @@ export default {
     ...options.controllerLogLevel,
     ...options.enableMetrics,
     ...options.metricsPort,
+    ...options.metricsChain,
   },
   command: "aptos",
   describe: "run price pusher for aptos",
@@ -66,6 +67,7 @@ export default {
       controllerLogLevel,
       enableMetrics,
       metricsPort,
+      metricsChain,
     } = argv;
 
     const logger = createLogger(logLevel, [endpoint, hermesAccessToken]);
@@ -78,7 +80,10 @@ export default {
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
     if (enableMetrics) {
-      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics = new PricePusherMetrics(
+        logger.child({ module: "Metrics" }),
+        metricsChain ?? "aptos",
+      );
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);
     }
