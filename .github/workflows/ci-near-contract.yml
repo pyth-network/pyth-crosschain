@@ -47,3 +47,23 @@ jobs:
           name: pyth_near.wasm
           path: target_chains/near/receiver/target/near/pyth_near.wasm
           retention-days: 90
+  reproducible-build-wormhole:
+    name: Reproducible build (vendored wormhole)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/near/wormhole
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache-workspaces: "target_chains/near/wormhole -> target"
+      - run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - run: cargo install --locked cargo-near@0.13.3
+      - run: cargo near build reproducible-wasm
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyth_wormhole_near.wasm
+          path: target_chains/near/wormhole/target/near/pyth_wormhole_near.wasm
+          retention-days: 90

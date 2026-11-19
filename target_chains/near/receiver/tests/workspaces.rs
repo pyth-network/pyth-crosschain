@@ -9,7 +9,9 @@ use {
         BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
     },
     pythnet_sdk::test_utils::{
-        create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload,
+        create_accumulator_message, create_accumulator_message_with_signers,
+        create_dummy_price_feed_message, create_vaa_from_payload,
+        create_vaa_from_payload_with_signers, dummy_guardians, dummy_guardians_addresses,
         DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD,
         SECONDARY_DATA_SOURCE, SECONDARY_GOVERNANCE_SOURCE,
     },
@@ -976,5 +978,271 @@ async fn test_borsh_field_cmopat() {
             expo: 100,
             bad_field_name: 100,
         }
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Vendored Wormhole core bridge (PR-A) end-to-end tests.
+//
+// Unlike `initialize_chain`, which deploys the always-verifies `wormhole-stub`, these tests deploy
+// the real vendored `pyth-wormhole-near` core bridge initialized with a 5-key Pyth Pro router set, and
+// drive it through the two flows the upgrade relies on: a 3-of-5 quorum accumulator update and a
+// standard `UpgradeGuardianSet` rotation. The first five dummy guardians stand in for the router
+// keys; the next five are the rotation target.
+// ---------------------------------------------------------------------------
+
+const NUM_ROUTERS: usize = 5;
+const ROUTER_QUORUM: usize = 3;
+
+/// Builds a Wormhole-format `UpgradeGuardianSet` (Core module, action 2) governance VAA payload.
+fn guardian_set_upgrade_payload(new_index: u32, new_addresses: &[[u8; 20]]) -> Vec<u8> {
+    let mut payload = vec![0u8; 32];
+    payload[28..32].copy_from_slice(b"Core"); // 0x436f7265, right-aligned in the 32-byte module
+    payload.push(2u8); // action: UpgradeGuardianSet
+    payload.extend_from_slice(&0u16.to_be_bytes()); // chain: 0 (applies to all chains)
+    payload.extend_from_slice(&new_index.to_be_bytes());
+    payload.push(new_addresses.len() as u8);
+    for address in new_addresses {
+        payload.extend_from_slice(address);
+    }
+    payload
+}
+
+/// Deploys the vendored `pyth-wormhole-near` core bridge (guardian set 0 = first `NUM_ROUTERS` dummy
+/// keys) plus a receiver pointing at it.
+async fn initialize_chain_with_vendored_wormhole() -> (
+    near_workspaces::Worker<near_workspaces::network::Sandbox>,
+    near_workspaces::Contract,
+    near_workspaces::Contract,
+) {
+    let worker = near_workspaces::sandbox().await.expect("Workspaces Failed");
+
+    let contract = worker
+        .dev_deploy(&std::fs::read("pyth_near.wasm").expect("Failed to find pyth_near.wasm"))
+        .await
+        .expect("Failed to deploy pyth_near.wasm");
+
+    let wormhole = worker
+        .dev_deploy(
+            &std::fs::read("pyth_wormhole_near.wasm")
+                .expect("Failed to find pyth_wormhole_near.wasm"),
+        )
+        .await
+        .expect("Failed to deploy pyth_wormhole_near.wasm");
+
+    let initial_guardians: Vec<String> = dummy_guardians_addresses()[..NUM_ROUTERS]
+        .iter()
+        .map(hex::encode)
+        .collect();
+
+    wormhole
+        .call("new")
+        .args_json(json!({ "initial_guardians": initial_guardians }))
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .transact()
+        .await
+        .expect("Failed to initialize Wormhole")
+        .unwrap();
+
+    let codehash = [0u8; 32];
+    contract
+        .call("new")
+        .args_json(json!({
+            "wormhole":        wormhole.id(),
+            "codehash":        codehash,
+            "initial_source":  Source {
+                emitter: DEFAULT_DATA_SOURCE.address.0,
+                chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+            },
+            "gov_source":      Source {
+                emitter: DEFAULT_GOVERNANCE_SOURCE.address.0,
+                chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_GOVERNANCE_SOURCE.chain))),
+            },
+            "update_fee":      U128::from(1u128),
+            "stale_threshold": DEFAULT_VALID_TIME_PERIOD,
+        }))
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .transact()
+        .await
+        .expect("Failed to initialize Pyth")
+        .unwrap();
+
+    (worker, contract, wormhole)
+}
+
+/// Reads back a price feed, returning `None` if the feed isn't present.
+async fn get_price(contract: &near_workspaces::Contract, first_byte: u8) -> Option<Price> {
+    let mut identifier = [0; 32];
+    identifier[0] = first_byte;
+    serde_json::from_slice::<Option<Price>>(
+        &contract
+            .view("get_price_unsafe")
+            .args_json(json!({ "price_identifier": PriceIdentifier(identifier) }))
+            .await
+            .unwrap()
+            .result,
+    )
+    .unwrap()
+}
+
+#[tokio::test]
+async fn test_vendored_wormhole_accumulator_three_of_five() {
+    let (_, contract, _) = initialize_chain_with_vendored_wormhole().await;
+    let routers = dummy_guardians();
+
+    let feed_1 = create_dummy_price_feed_message(100);
+    let feed_2 = create_dummy_price_feed_message(200);
+
+    // Signing with only 2 of 5 routers is below quorum: the vendored bridge rejects the VAA and the
+    // price must not land.
+    let under_quorum = create_accumulator_message_with_signers(
+        &[&feed_1, &feed_2],
+        &[&feed_1],
+        false,
+        None,
+        &routers[..NUM_ROUTERS],
+        ROUTER_QUORUM - 1,
+        0,
+    );
+    contract
+        .call("update_price_feeds")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "data": hex::encode(under_quorum) }))
+        .transact()
+        .await
+        .expect("Failed to submit VAA")
+        .unwrap();
+    assert_eq!(get_price(&contract, 100).await, None);
+
+    // Signing with 3 of 5 routers meets quorum: the price lands.
+    let at_quorum = create_accumulator_message_with_signers(
+        &[&feed_1, &feed_2],
+        &[&feed_1],
+        false,
+        None,
+        &routers[..NUM_ROUTERS],
+        ROUTER_QUORUM,
+        0,
+    );
+    assert!(contract
+        .call("update_price_feeds")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({ "data": hex::encode(at_quorum) }))
+        .transact()
+        .await
+        .expect("Failed to submit VAA")
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    assert_eq!(
+        get_price(&contract, 100).await,
+        Some(Price {
+            price: 100.into(),
+            conf: 100.into(),
+            expo: 100,
+            publish_time: 100,
+        }),
+    );
+}
+
+#[tokio::test]
+async fn test_vendored_wormhole_guardian_set_rotation() {
+    let (_, _, wormhole) = initialize_chain_with_vendored_wormhole().await;
+    let guardians = dummy_guardians();
+    let addresses = dummy_guardians_addresses();
+
+    // Before rotation the active guardian set index is 0.
+    let probe_set_0 = create_vaa_from_payload_with_signers(
+        b"probe",
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
+        1,
+        &guardians[..NUM_ROUTERS],
+        ROUTER_QUORUM,
+        0,
+    );
+    let probe_set_0 = hex::encode(serde_wormhole::to_vec(&probe_set_0).unwrap());
+    assert_eq!(
+        serde_json::from_slice::<u32>(
+            &wormhole
+                .view("verify_vaa")
+                .args_json(json!({ "vaa": probe_set_0 }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+        0,
+    );
+
+    // Rotate to guardian set 1 (the next five dummy keys), signed by the current 3-of-5 quorum.
+    // The VAA must come from the Wormhole governance emitter on Solana (chain 1, address 0x..0004),
+    // which `submit_vaa` checks. Reuse the data-source address value to get the right `Address` type.
+    let mut governance_emitter = DEFAULT_DATA_SOURCE.address;
+    governance_emitter.0 = [0u8; 32];
+    governance_emitter.0[31] = 4;
+    let new_addresses: Vec<[u8; 20]> = addresses[NUM_ROUTERS..2 * NUM_ROUTERS].to_vec();
+    let rotation_vaa = create_vaa_from_payload_with_signers(
+        &guardian_set_upgrade_payload(1, &new_addresses),
+        governance_emitter,
+        DEFAULT_DATA_SOURCE.chain,
+        1,
+        &guardians[..NUM_ROUTERS],
+        ROUTER_QUORUM,
+        0,
+    );
+    let rotation_vaa = hex::encode(serde_wormhole::to_vec(&rotation_vaa).unwrap());
+
+    assert!(wormhole
+        .call("submit_vaa")
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_near(3))
+        .args_json(json!({ "vaa": rotation_vaa }))
+        .transact()
+        .await
+        .expect("Failed to submit rotation VAA")
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // A VAA signed by the new set verifies and reports the advanced index (1).
+    let probe_set_1 = create_vaa_from_payload_with_signers(
+        b"probe",
+        DEFAULT_DATA_SOURCE.address,
+        DEFAULT_DATA_SOURCE.chain,
+        2,
+        &guardians[NUM_ROUTERS..2 * NUM_ROUTERS],
+        ROUTER_QUORUM,
+        1,
+    );
+    let probe_set_1 = hex::encode(serde_wormhole::to_vec(&probe_set_1).unwrap());
+    assert_eq!(
+        serde_json::from_slice::<u32>(
+            &wormhole
+                .view("verify_vaa")
+                .args_json(json!({ "vaa": probe_set_1 }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+        1,
+    );
+
+    // Grace period: the rotated-out set 0 still verifies for in-flight VAAs.
+    assert_eq!(
+        serde_json::from_slice::<u32>(
+            &wormhole
+                .view("verify_vaa")
+                .args_json(json!({ "vaa": probe_set_0 }))
+                .await
+                .unwrap()
+                .result
+        )
+        .unwrap(),
+        1,
     );
 }
