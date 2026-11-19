@@ -12,7 +12,7 @@ jobs:
       run:
         working-directory: target_chains/starknet/contracts/
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Verify version
         run: |
           version1=$(grep version Scarb.toml | cut -d '"' -f 2)

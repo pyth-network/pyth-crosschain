@@ -16,7 +16,7 @@ jobs:
   xc-admin-frontend-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set image tag to timestamp and shortened commit hash
         run: |
           SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)

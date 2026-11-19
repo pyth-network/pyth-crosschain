@@ -12,7 +12,7 @@ jobs:
       run:
         working-directory: target_chains/cosmwasm/deploy-scripts
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup tool
         run: pnpm i
       - name: Build generic cosmwasm contract
