@@ -72,7 +72,7 @@ By default, these updates are returned as binary data and is serialized as eithe
 
 ### Examples
 
-The [HermesClient](./src/examples/HermesClient.ts) example demonstrates both the
+The [HermesClient](./src/examples/hermes-client.ts) example demonstrates both the
 examples above. To run the example:
 
 1. Clone [the Pyth monorepo](https://github.com/pyth-network/pyth-crosschain)

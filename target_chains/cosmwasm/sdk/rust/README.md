@@ -1,7 +1,7 @@
 # Pyth SDK CW
 
 This crate exposes utilities to interact with the contract on the CosmWasm ecosystem.
-You can also look at the [example contract](../examples/cw-contract/) which demonstrates how to read price feeds from on-chain CosmWasm applications.
+You can also look at the [example contract](../../examples/cw-contract/) which demonstrates how to read price feeds from on-chain CosmWasm applications.
 
 ## Installation
 

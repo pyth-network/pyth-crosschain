@@ -164,7 +164,7 @@ verified updates passed into the transaction.
 [`parser`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/parser.ak
 [`pyth`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/pyth.ak
 [`pyth/message`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/pyth/message.ak
-[`wormhole.ts`]: ./sdk/js/src/wormhole.ts
+[`wormhole.ts`]: ./cli/js/src/wormhole.ts
 [`secp256k1`]: ./lib/secp256k1.ak
 [`state`]: ./lib/state.ak
 [`types/i16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/i16.ak
