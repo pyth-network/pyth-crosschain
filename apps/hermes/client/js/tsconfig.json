@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"]
+    "lib": ["DOM", "DOM.Iterable", "ESNext"]
   },
   "exclude": ["node_modules"],
   "extends": "@cprussin/tsconfig/base.json",
