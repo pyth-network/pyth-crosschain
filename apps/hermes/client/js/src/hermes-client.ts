@@ -76,7 +76,13 @@ export class HermesClient {
     options?: RequestInit,
     retries = this.httpRetries,
     backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
+    // One deadline for the request and all of its retries, as `timeout` is documented
+    deadline: AbortSignal = AbortSignal.timeout(this.timeout),
   ): Promise<ResponseData> {
+    const signal = AbortSignal.any([
+      ...(options?.signal ? [options.signal] : []),
+      deadline,
+    ]);
     try {
       // Build auth headers if access token is provided
       const authHeaders: Record<string, string> = {};
@@ -88,10 +94,7 @@ export class HermesClient {
         ...options,
 
         headers: { ...authHeaders, ...this.headers, ...options?.headers },
-        signal: AbortSignal.any([
-          ...(options?.signal ? [options.signal] : []),
-          AbortSignal.timeout(this.timeout),
-        ]),
+        signal,
       });
       if (!response.ok) {
         const errorBody = await response.text();
@@ -104,13 +107,18 @@ export class HermesClient {
       const data = await response.json();
       return schema.parse(data);
     } catch (error) {
-      if (
-        retries > 0 &&
-        !(error instanceof Error && error.name === "AbortError")
-      ) {
+      // Do not retry once the deadline has passed or the caller aborted
+      if (retries > 0 && !signal.aborted) {
         // Wait for a backoff period before retrying
         await new Promise((resolve) => setTimeout(resolve, backoff));
-        return this.httpRequest(url, schema, options, retries - 1, backoff * 2); // Exponential backoff
+        return this.httpRequest(
+          url,
+          schema,
+          options,
+          retries - 1,
+          backoff * 2, // Exponential backoff
+          deadline,
+        );
       }
       throw error;
     }
