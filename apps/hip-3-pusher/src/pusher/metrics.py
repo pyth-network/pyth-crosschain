@@ -47,8 +47,9 @@ class Metrics:
         # Adapted from opentelemetry-exporter-prometheus example code.
         # Start Prometheus client
         start_http_server(port=config.prometheus_port)
-        # Exporter to export metrics to Prometheus
-        reader = PrometheusMetricReader()
+        # Exporter to export metrics to Prometheus. Without scope_info_enabled=False,
+        # opentelemetry-exporter-prometheus 0.66 adds otel_scope_* labels to every series.
+        reader = PrometheusMetricReader(scope_info_enabled=False)
         # Meter is responsible for creating and recording metrics
         set_meter_provider(MeterProvider(metric_readers=[reader]))
         self.meter = get_meter_provider().get_meter(METER_NAME)

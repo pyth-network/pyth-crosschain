@@ -1,6 +1,6 @@
 [project]
 name = "hip-3-pusher"
-version = "0.4.1"
+version = "0.4.2"
 description = "Hyperliquid HIP-3 market oracle pusher"
 readme = "README.md"
 requires-python = "==3.13.*"
@@ -10,8 +10,8 @@ dependencies = [
     "httpx~=0.28.1",
     "hyperliquid-python-sdk~=0.22.0",
     "loguru~=0.7.3",
-    "opentelemetry-exporter-prometheus~=0.58b0",
-    "opentelemetry-sdk~=1.37.0",
+    "opentelemetry-exporter-prometheus~=0.66b2",
+    "opentelemetry-sdk~=1.45.2",
     "prometheus-client~=0.23.1",
     "tenacity~=9.1.2",
     "websockets~=15.0.1",
