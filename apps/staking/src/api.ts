@@ -222,9 +222,7 @@ const loadPublisherData = async (
   const [poolData, publisherRankings, publisherCaps] = await Promise.all([
     client.getPoolDataAccount(),
     getPublisherRankings(),
-    hermesClient.getLatestPublisherCaps({
-      parsed: true,
-    }),
+    getLatestPublisherCaps(hermesClient),
   ]);
 
   return extractPublisherData(poolData).map((publisher) => {
@@ -256,9 +254,27 @@ const loadPublisherData = async (
 
 const getPublisherRankings = () => PUBLISHER_RANKINGS;
 
-const getPublisherCap = (publisherCaps: PublisherCaps, publisher: PublicKey) =>
+// Publisher caps are optional data.  If Hermes can't serve them (e.g. a 404,
+// which browsers surface as an opaque "Failed to fetch" because the error
+// response has no CORS headers) we degrade to "no caps" instead of failing
+// the whole page.
+const getLatestPublisherCaps = async (
+  hermesClient: HermesClient,
+): Promise<PublisherCaps | undefined> => {
+  try {
+    return await hermesClient.getLatestPublisherCaps({ parsed: true });
+  } catch (error: unknown) {
+    console.warn("Failed to load publisher caps", error);
+    return undefined;
+  }
+};
+
+const getPublisherCap = (
+  publisherCaps: PublisherCaps | undefined,
+  publisher: PublicKey,
+) =>
   BigInt(
-    publisherCaps.parsed?.[0]?.publisher_stake_caps.find(
+    publisherCaps?.parsed?.[0]?.publisher_stake_caps.find(
       ({ publisher: p }) => p === publisher.toBase58(),
     )?.cap ?? 0,
   );
