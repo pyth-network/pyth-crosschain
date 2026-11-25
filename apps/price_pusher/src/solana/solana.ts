@@ -163,20 +163,14 @@ export class SolanaPricePusher implements IPricePusher {
       .sort((a, b) => a.key - b.key)
       .map((x) => x.element);
 
-    let priceFeedUpdateData;
-    try {
-      const response = await this.hermesClient.getLatestPriceUpdates(
-        shuffledPriceIds,
-        {
-          encoding: "base64",
-          ignoreInvalidPriceIds: true,
-        },
-      );
-      priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
-      this.logger.error(error, "getPriceFeedsUpdateData failed:");
-      return;
-    }
+    const response = await this.hermesClient.getLatestPriceUpdates(
+      shuffledPriceIds,
+      {
+        encoding: "base64",
+        ignoreInvalidPriceIds: true,
+      },
+    );
+    const priceFeedUpdateData = response.binary.data;
 
     try {
       const signatures =
@@ -296,16 +290,10 @@ export class SolanaPricePusherJito implements IPricePusher {
     const cappedJitoTip = Math.min(jitoTip, this.maxJitoTipLamports);
     this.logger.debug({ cappedJitoTip }, "using jito tip of");
 
-    let priceFeedUpdateData: string[];
-    try {
-      const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
-        encoding: "base64",
-      });
-      priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
-      this.logger.error(error, "getPriceFeedsUpdateData failed");
-      return;
-    }
+    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+    });
+    const priceFeedUpdateData = response.binary.data;
 
     for (let i = 0; i < priceIds.length; i += this.updatesPerJitoBundle) {
       const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder(

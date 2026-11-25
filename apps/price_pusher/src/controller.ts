@@ -138,7 +138,7 @@ export class Controller {
           }
         } catch (error) {
           this.logger.error(
-            { error, priceIds },
+            { err: error, priceIds },
             "Error pushing price updates to chain",
           );
 

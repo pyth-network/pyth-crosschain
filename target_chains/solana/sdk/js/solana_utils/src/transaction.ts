@@ -440,23 +440,21 @@ export async function sendAndConfirmSerializedTransaction(
   let confirmedTx: SignatureResult | null | undefined;
   let retryCount = 0;
 
-  const confirmTransactionPromise = connection.confirmTransaction(
-    {
-      blockhash: blockhash.blockhash,
-      lastValidBlockHeight: blockhash.lastValidBlockHeight,
-      signature: txSignature,
-    },
-    "confirmed",
-  );
+  const confirmTransactionPromise = connection
+    .confirmTransaction(
+      {
+        blockhash: blockhash.blockhash,
+        lastValidBlockHeight: blockhash.lastValidBlockHeight,
+        signature: txSignature,
+      },
+      "confirmed",
+    )
+    .then((result) => result.value);
 
   confirmedTx = undefined;
   while (!confirmedTx) {
     confirmedTx = await Promise.race([
-      new Promise<SignatureResult>((resolve) => {
-        void confirmTransactionPromise.then((result) => {
-          resolve(result.value);
-        });
-      }),
+      confirmTransactionPromise,
       new Promise<null>((resolve) =>
         setTimeout(() => {
           resolve(null);

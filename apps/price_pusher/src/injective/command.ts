@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import { getNetworkInfo } from "@injectivelabs/networks";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { pino } from "pino";
 import type { Options } from "yargs";
 import { Controller } from "../controller.js";
+import { createLogger } from "../logger.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
@@ -54,6 +51,7 @@ export default {
   },
   command: "injective",
   describe: "run price pusher for injective",
+  // biome-ignore lint/suspicious/noExplicitAny: yargs argv is untyped
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
@@ -73,7 +71,7 @@ export default {
       priceIdsProcessChunkSize,
     } = argv;
 
-    const logger = pino({ level: logLevel });
+    const logger = createLogger(logLevel, [grpcEndpoint, hermesAccessToken]);
 
     if (network !== "testnet" && network !== "mainnet") {
       throw new Error("Please specify network. One of [testnet, mainnet]");
